@@ -10,98 +10,9 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for APEtag 1.0 and 2.0 tags manipulation
     /// </summary>
-	public class TAPEtag : IMetaDataReader
+	public class TAPEtag : MetaDataReader
 	{
-		private bool FExists;
-		private int FVersion;
-		private long FSize;
-		private String FTitle;
-		private String FArtist;
-        private String FComposer;
-		private String FAlbum;
-		private ushort FTrack;
-        private byte FDisc;
-        private ushort FRating;
-        private String FRatingStr;
-		private String FYear;
-		private String FGenre;
-		private String FComment;
-		private String FCopyright;
-        private IList<MetaReaderFactory.PIC_CODE> FPictures;
         private StreamUtils.StreamHandlerDelegate FPictureStreamHandler;
-      
-		public bool Exists // True if tag found
-		{
-			get { return this.FExists; }
-		}
-		public int Version // Tag version
-		{
-			get { return this.FVersion; }
-		}
-		public long Size // Total tag size
-		{
-			get { return this.FSize; }
-		}
-		public String Title // Song title
-		{
-			get { return this.FTitle ; } 
-			set { FSetTitle(value); }
-		}
-		public String Artist // Artist name
-		{
-			get { return this.FArtist; }
-			set { FSetArtist(value); }
-		}
-        public String Composer // Composer name
-        {
-            get { return this.FComposer; }
-            set { FSetComposer(value); }
-        }
-		public String Album // Album title
-		{
-			get { return this.FAlbum; }
-			set { FSetAlbum(value); }
-		}
-		public ushort Track // Track number
-		{
-			get { return this.FTrack; }
-			set { FSetTrack(value); }
-		}
-        public ushort Disc // Disc number
-        {
-            get { return (ushort)this.FDisc; }
-            set { FSetDisc((byte)value); }
-        }
-        public ushort Rating // Rating
-        {
-            get { return this.FRating; }
-            set { FSetRating(value); }
-        }
-		public String Year // Release year
-		{
-			get { return this.FYear; }
-			set { FSetYear(value); }
-		}
-		public String Genre // Genre name
-		{
-			get { return this.FGenre; }
-			set { FSetGenre(value); }
-		}
-		public String Comment // Comment
-		{
-			get { return this.FComment; }
-			set { FSetComment(value); }
-		}
-		public String Copyright // (c)
-		{
-			get { return this.FCopyright; }
-			set { FSetCopyright(value); }
-		}
-        public IList<MetaReaderFactory.PIC_CODE> Pictures // (Embedded pictures flags)
-        {
-            get { return this.FPictures; }
-        }
-
 
 		// Tag ID
 		public const String APE_ID = "APETAGEX";							// APE
@@ -250,64 +161,6 @@ namespace ATL.AudioReaders.BinaryLogic
 			}			
 		}
         
-		// ********************** Private functions & voids *********************
-
-		void FSetTitle(String newTrack)
-		{
-			// Set song title
-			FTitle = newTrack.Trim();	
-		}
-		void FSetArtist(String NewArtist)
-		{
-			// Set artist name
-			FArtist = NewArtist.Trim();
-		}
-        void FSetComposer(String NewComposer)
-        {
-            // Set artist name
-            FComposer = NewComposer.Trim();
-        }
-		void FSetAlbum(String NewAlbum)
-		{
-			// Set album title
-			FAlbum = NewAlbum.Trim();
-		}
-		void FSetTrack(ushort NewTrack)
-		{
-			// Set track number
-			FTrack = NewTrack;
-		}
-        void FSetDisc(byte NewDisc)
-        {
-            // Set disc number
-            FDisc = NewDisc;
-        }
-        void FSetRating(ushort NewRating)
-        {
-            // Set rating
-            FRating = NewRating;
-        }
-		void FSetYear(String NewYear)
-		{
-			// Set release year
-			FYear = NewYear.Trim();
-		}
-		void FSetGenre(String NewGenre)
-		{
-			// Set genre name
-			FGenre = NewGenre.Trim();
-		}
-		void FSetComment(String NewComment)
-		{
-			// Set comment
-			FComment = NewComment.Trim();
-		}
-		void FSetCopyright(String NewCopyright)
-		{
-			// Set copyright information
-			FCopyright = NewCopyright.Trim();
-		}
-
 		// ********************** Public functions & voids **********************
 
 		public void TAPETag()
@@ -318,29 +171,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		public void ResetData()
-		{
-			// Reset all variables
-			FExists = false;
-			FVersion = 0;
-			FSize = 0;
-			FTitle = "";
-			FArtist = "";
-            FComposer = "";
-			FAlbum = "";
-			FTrack = 0;
-            FDisc = 0;
-            FRating = 0;
-			FYear = "";
-			FGenre = "";
-			FComment = "";
-			FCopyright = "";
-            FPictures = new List<MetaReaderFactory.PIC_CODE>();
-		}
-
-		// ---------------------------------------------------------------------------
-
-        public bool ReadFromFile(BinaryReader SourceFile, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
 			TagInfo Tag = new TagInfo();
             FPictureStreamHandler = pictureStreamHandler;
@@ -349,7 +180,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			ResetData();
             Tag.Reset();
 				
-			bool result = ReadFooter(SourceFile, ref Tag);
+			bool result = ReadFooter(source, ref Tag);
 		
 			// Process data if loaded and footer valid
 			if ( result )
@@ -359,7 +190,7 @@ namespace ATL.AudioReaders.BinaryLogic
 				FVersion = Tag.Version;
 				FSize = Tag.Size;
 				// Get information from fields
-                ReadFields(SourceFile, ref Tag);
+                ReadFields(source, ref Tag);
 				FTitle = Tag.Field[0];
 				FArtist = Tag.Field[1];
 				FAlbum = Tag.Field[2];

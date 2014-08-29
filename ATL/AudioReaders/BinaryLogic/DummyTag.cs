@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL.AudioReaders.BinaryLogic
 {
@@ -55,6 +56,10 @@ namespace ATL.AudioReaders.BinaryLogic
         public IList<MetaReaderFactory.PIC_CODE> Pictures
         {
             get { return new List<MetaReaderFactory.PIC_CODE>(); }
+        }
+        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        {
+            return true;
         }
 
 		public DummyTag()

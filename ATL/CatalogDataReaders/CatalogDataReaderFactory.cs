@@ -1,15 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace ATL.CatalogDataReaders
 {
 	/// <summary>
-	/// Description r¨¦sum¨¦e de CatalogDataReaderFactory.
+	/// Factory for Catalog data readers
 	/// </summary>
-	public class CatalogDataReaderFactory
+    public class CatalogDataReaderFactory : ReaderFactory
 	{
 		// Defines the supported formats
-		public const int CR_CUE = 0;
+        public const int CR_CUE     = 0;
 
 		// The instance of this factory
 		private static CatalogDataReaderFactory theFactory = null;
@@ -20,21 +21,31 @@ namespace ATL.CatalogDataReaders
 			if (null == theFactory)
 			{
 				theFactory = new CatalogDataReaderFactory();
+                theFactory.formatList = new Dictionary<String,ATL.Format>();
+
+                Format tempFmt = new Format("CUE sheet");
+                tempFmt.ID = CR_CUE;
+                tempFmt.AddExtension(".cue");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
 		}
-
-
+        
 		public ICatalogDataReader GetCatalogDataReader(String path)
 		{
-			ICatalogDataReader theReader = null;
+			ICatalogDataReader theReader = GetCatalogDataReader(getFormatIDFromPath(path));
+            theReader.Path = path;
+            return theReader;
+        }
 
-			String ext = Path.GetExtension(path).ToUpper();
+        private ICatalogDataReader GetCatalogDataReader(int formatId)
+        {
+            ICatalogDataReader theReader = null;
 
-			if (".CUE" == ext)
-			{
-				theReader = new BinaryLogic.CueAdapter(path);
+            if (CR_CUE == formatId)
+            {
+				theReader = new BinaryLogic.CueAdapter();
 			}
 
 			return theReader;

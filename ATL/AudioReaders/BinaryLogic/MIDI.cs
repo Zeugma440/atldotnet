@@ -246,7 +246,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		// imports Standard MIDI File (typ 0 or 1) (and RMID)
 		// (if optional parameter $tn set, only track $tn is imported)
 		//---------------------------------------------------------------
-		public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+		public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             Stream fs = source.BaseStream;
 			byte[] header;

@@ -21,7 +21,7 @@ namespace ATL.AudioReaders
 		// Defines the default reading priority of the metadata
 		private int[] tagPriority = new int[TAG_TYPE_COUNT] { TAG_ID3V2, TAG_APE, TAG_ID3V1 };
 
-		// Defines wether the next created metadatareaders should use cross-tag reading
+		// Defines whether the next created metadatareaders should use cross-tag reading
 		private bool m_enableCrossReading = false;
 
 		// The instance of this factory
@@ -29,7 +29,7 @@ namespace ATL.AudioReaders
 
 
 		/// <summary>
-		/// Sets wether the next created metadatareaders should use cross-tag reading
+		/// Sets whether the next created metadatareaders should use cross-tag reading
 		/// </summary>
 		public bool CrossReading
 		{

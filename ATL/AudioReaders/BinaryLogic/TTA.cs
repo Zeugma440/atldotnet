@@ -120,7 +120,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
         /* -------------------------------------------------------------------------- */
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             Stream fs = source.BaseStream;
 
@@ -131,9 +131,9 @@ namespace ATL.AudioReaders.BinaryLogic
 			bool result = false;
     
             // load tags first
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FID3v1.ReadFromFile(source);
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v2.Read(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            FAPEtag.Read(source, pictureStreamHandler);
 
             // calulate total tag size
             TagSize = 0;

@@ -11,130 +11,35 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for ID3v2.2-2.4 tags manipulation
     /// </summary>
-    public class TID3v2 : IMetaDataReader
+    public class TID3v2 : MetaDataReader
     {
         public const byte TAG_VERSION_2_2 = 2;             // Code for ID3v2.2.x tag
         public const byte TAG_VERSION_2_3 = 3;             // Code for ID3v2.3.x tag
         public const byte TAG_VERSION_2_4 = 4;             // Code for ID3v2.4.x tag
 
-        private bool FExists;
-        private byte FVersionID;
-        private int FSize;
-        private String FTitle;
-        private String FArtist;
-        private String FComposer;
-        private String FAlbum;
-        private ushort FTrack;
-        private ushort FDisc;
-        private ushort FRating;
         private String FTrackString;
         private String FDiscString;
-        private String FYear;
-        private String FGenre;
-        private String FComment;
-        private IList<MetaReaderFactory.PIC_CODE> FPictures;
         private StreamUtils.StreamHandlerDelegate FPictureStreamHandler;
 
         private String FEncoder;
-        private String FCopyright;
         private String FLanguage;
         private String FLink;
-
-        public bool Exists // True if tag found
-        {
-            get { return this.FExists; }
-        }
-        public byte VersionID // Version code
-        {
-            get { return this.FVersionID; }
-        }
-        public int Size // Total tag size
-        {
-            get { return this.FSize; }
-        }
-        public String Title // Song title
-        {
-            get { return this.FTitle; }
-            set { FSetTitle(value); }
-        }
-        public String Artist // Artist name
-        {
-            get { return this.FArtist; }
-            set { FSetArtist(value); }
-        }
-        public String Composer // Composer name
-        {
-            get { return this.FComposer; }
-            set { FSetComposer(value); }
-        }
-        public String Album // Album title
-        {
-            get { return this.FAlbum; }
-            set { FSetAlbum(value); }
-        }
-        public ushort Track // Track number 
-        {
-            get { return this.FTrack; }
-            set { FSetTrack(value); }
-        }
-        public String TrackString // Track number (string)
-        {
-            get { return this.FTrackString; }
-        }
-        public ushort Disc // Disc number 
-        {
-            get { return this.FDisc; }
-            set { FSetDisc(value); }
-        }
-        public ushort Rating // Rating
-        {
-            get { return this.FRating; }
-            set { FSetRating(value); }
-        }
-        public String DiscString // Disc number (string)
-        {
-            get { return this.FDiscString; }
-        }
-        public String Year // Release year
-        {
-            get { return this.FYear; }
-            set { FSetYear(value); }
-        }
-        public String Genre // Genre name
-        {
-            get { return this.FGenre; }
-            set { FSetGenre(value); }
-        }
-        public String Comment // Comment
-        {
-            get { return this.FComment; }
-            set { FSetComment(value); }
-        }
-        public IList<MetaReaderFactory.PIC_CODE> Pictures // Tags indicating the presence of embedded pictures
-        {
-            get { return this.FPictures; }
-        }
 
 
         public String Encoder // Encoder
         {
             get { return this.FEncoder; }
-            set { FSetEncoder(value); }
-        }
-        public String Copyright // (c)
-        {
-            get { return this.FCopyright; }
-            set { FSetCopyright(value); }
+            set { FEncoder = value; }
         }
         public String Language // Language
         {
             get { return this.FLanguage; }
-            set { FSetLanguage(value); }
+            set { FLanguage = value; }
         }
         public String Link // URL link
         {
             get { return this.FLink; }
-            set { FSetLink(value); }
+            set { FLink = value; }
         }
 
         // ID3v2 tag ID
@@ -300,8 +205,8 @@ namespace ATL.AudioReaders.BinaryLogic
                 // Frame size measures number of bytes between end of flag and end of payload
                 // ID3v2.3 : 4 byte size descriptor 
                 // ID3v2.4 : Size descriptor is coded as a synch-safe Int32
-                if (TAG_VERSION_2_3 == FVersionID) Frame.Size = StreamUtils.ReverseInt32(SourceFile.ReadInt32());
-                else if (TAG_VERSION_2_4 == FVersionID)
+                if (TAG_VERSION_2_3 == FVersion) Frame.Size = StreamUtils.ReverseInt32(SourceFile.ReadInt32());
+                else if (TAG_VERSION_2_4 == FVersion)
                 {
                     byte[] size = SourceFile.ReadBytes(4);
                     Frame.Size = StreamUtils.ExtractSynchSafeInt32(size);
@@ -512,119 +417,6 @@ namespace ATL.AudioReaders.BinaryLogic
             return result;
         }
 
-
-        // ********************** Private functions & voids *********************
-
-        private void FSetTitle(String newTrack)
-        {
-            // Set song title
-            FTitle = newTrack.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetArtist(String NewArtist)
-        {
-            // Set artist name
-            FArtist = NewArtist.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetAlbum(String NewAlbum)
-        {
-            // Set album title
-            FAlbum = NewAlbum.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetTrack(ushort NewTrack)
-        {
-            // Set track number
-            FTrack = NewTrack;
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetDisc(ushort NewDisc)
-        {
-            // Set disc number
-            FDisc = NewDisc;
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetRating(ushort NewRating)
-        {
-            // Set rating
-            FRating = NewRating;
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetYear(String NewYear)
-        {
-            // Set release year
-            FYear = NewYear.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetGenre(String NewGenre)
-        {
-            // Set genre name
-            FGenre = NewGenre.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetComment(String NewComment)
-        {
-            // Set comment
-            FComment = NewComment.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetComposer(String NewComposer)
-        {
-            // Set composer name
-            FComposer = NewComposer.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetEncoder(String NewEncoder)
-        {
-            // Set encoder name
-            FEncoder = NewEncoder.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetCopyright(String NewCopyright)
-        {
-            // Set copyright information
-            FCopyright = NewCopyright.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetLanguage(String NewLanguage)
-        {
-            // Set language
-            FLanguage = NewLanguage.Trim();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        private void FSetLink(String NewLink)
-        {
-            // Set URL link
-            FLink = NewLink.Trim();
-        }
-
         // ********************** Public functions & voids **********************
 
         public TID3v2()
@@ -634,53 +426,27 @@ namespace ATL.AudioReaders.BinaryLogic
 
         // ---------------------------------------------------------------------------
 
-        public void ResetData()
-        {
-            // Reset all variables
-            FExists = false;
-            FVersionID = 0;
-            FSize = 0;
-            FTitle = "";
-            FArtist = "";
-            FAlbum = "";
-            FTrack = 0;
-            FDisc = 0;
-            FTrackString = "";
-            FDiscString = "";
-            FYear = "";
-            FGenre = "";
-            FComment = "";
-            FComposer = "";
-            FPictures = new List<MetaReaderFactory.PIC_CODE>();
-            FEncoder = "";
-            FCopyright = "";
-            FLanguage = "";
-            FLink = "";
-        }
-
-        // ---------------------------------------------------------------------------
-
-        public bool ReadFromFile(BinaryReader SourceFile, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
             TagInfo Tag = new TagInfo();
             this.FPictureStreamHandler = pictureStreamHandler;
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = ReadHeader(SourceFile, ref Tag);
+            bool result = ReadHeader(source, ref Tag);
 
             // Process data if loaded and header valid
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, Tag.ID))
             {
                 FExists = true;
                 // Fill properties with header data
-                FVersionID = Tag.Version;
+                FVersion = Tag.Version;
                 FSize = GetTagSize(Tag);
                 // Get information from frames if version supported
-                if ((TAG_VERSION_2_2 <= FVersionID) && (FVersionID <= TAG_VERSION_2_4) && (FSize > 0))
+                if ((TAG_VERSION_2_2 <= FVersion) && (FVersion <= TAG_VERSION_2_4) && (FSize > 0))
                 {
-                    if (FVersionID > TAG_VERSION_2_2) ReadFramesNew(SourceFile, ref Tag);
-                    else ReadFrames_v22(SourceFile, ref Tag);
+                    if (FVersion > TAG_VERSION_2_2) ReadFramesNew(source, ref Tag);
+                    else ReadFrames_v22(source, ref Tag);
 
                     FTitle = GetContent(Tag.Frame[0], Tag.Frame[14]);
                     FArtist = GetContent(Tag.Frame[1], Tag.Frame[13]);

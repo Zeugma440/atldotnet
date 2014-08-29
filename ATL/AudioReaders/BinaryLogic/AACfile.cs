@@ -347,7 +347,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			int Position;
             FValid = true;
 
-			Position = FID3v2.Size * 8 + 32;
+            Position = (int)(FID3v2.Size * 8 + 32);
 			if ( 0 == ReadBits(Source, Position, 1) ) Position += 3;
 			else Position += 75;
 			if ( 0 == ReadBits(Source, Position, 1) ) FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
@@ -388,7 +388,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			do
 			{
 				Frames++;
-				Position = (FID3v2.Size + TotalSize) * 8;
+				Position = (int)(FID3v2.Size + TotalSize) * 8;
 
 				if ( ReadBits(Source, Position, 12) != 0xFFF ) break;
 			
@@ -616,14 +616,14 @@ namespace ATL.AudioReaders.BinaryLogic
 		// --------------------------------------------------------------------------- 
 
 		// Read data from file
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{		
 			bool result = false;
 	  
             // At first search for tags, then try to recognize header type
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FID3v1.ReadFromFile(source);
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v2.Read(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            FAPEtag.Read(source, pictureStreamHandler);
 
             FHeaderTypeID = FRecognizeHeaderType(source);
 			// Read header data

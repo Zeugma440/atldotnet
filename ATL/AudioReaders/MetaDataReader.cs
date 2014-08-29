@@ -6,76 +6,132 @@ using System.Text;
 
 namespace ATL.AudioReaders
 {
-    abstract class MetaDataReader : IMetaDataReader
+    public abstract class MetaDataReader : IMetaDataReader
     {
-        abstract public bool Exists
+        protected bool FExists;
+        protected int FVersion;
+        protected long FSize;
+        protected String FTitle;
+        protected String FArtist;
+        protected String FComposer;
+        protected String FAlbum;
+        protected ushort FTrack;
+        protected ushort FDisc;
+        protected ushort FRating;
+        protected String FRatingStr;
+        protected String FYear;
+        protected String FGenre;
+        protected String FComment;
+        protected String FCopyright;
+        protected IList<MetaReaderFactory.PIC_CODE> FPictures;
+
+
+        public bool Exists // True if tag found
         {
-            get;
+            get { return this.FExists; }
         }
-        abstract public String Title
+        public int Version // Tag version
         {
-            get;
+            get { return this.FVersion; }
         }
-        abstract public String Artist
+        public long Size // Total tag size
         {
-            get;
+            get { return this.FSize; }
         }
-        abstract public String Composer
+        public String Title // Song title
         {
-            get;
+            get { return this.FTitle; }
+            set { FTitle = value; }
         }
-        abstract public String Comment
+        public String Artist // Artist name
         {
-            get;
+            get { return this.FArtist; }
+            set { FArtist = value; }
         }
-        abstract public String Genre
+        public String Composer // Composer name
         {
-            get;
+            get { return this.FComposer; }
+            set { FComposer = value; }
         }
-        abstract public ushort Track
+        public String Album // Album title
         {
-            get;
+            get { return this.FAlbum; }
+            set { FAlbum = value; }
         }
-        abstract public ushort Disc
+        public ushort Track // Track number
         {
-            get;
+            get { return this.FTrack; }
+            set { FTrack = value; }
         }
-        abstract public String Year
+        public ushort Disc // Disc number
         {
-            get;
+            get { return (ushort)this.FDisc; }
+            set { FDisc = ((byte)value); }
         }
-        abstract public String Album
+        public ushort Rating // Rating
         {
-            get;
+            get { return this.FRating; }
+            set { FRating = value; }
         }
-        abstract public ushort Rating
+        public String Year // Release year
         {
-            get;
+            get { return this.FYear; }
+            set { FYear = value; }
         }
-        abstract public IList<MetaReaderFactory.PIC_CODE> Pictures
+        public String Genre // Genre name
         {
-            get;
+            get { return this.FGenre; }
+            set { FGenre = value; }
+        }
+        public String Comment // Comment
+        {
+            get { return this.FComment; }
+            set { FComment = value; }
+        }
+        public String Copyright // (c)
+        {
+            get { return this.FCopyright; }
+            set { FCopyright = value; }
+        }
+        public IList<MetaReaderFactory.PIC_CODE> Pictures // (Embedded pictures flags)
+        {
+            get { return this.FPictures; }
         }
 
-        abstract protected void ResetData();
+        public virtual void ResetData()
+        {
+            FExists = false;
+            FVersion = 0;
+            FSize = 0;
+            FTitle = "";
+            FArtist = "";
+            FComposer = "";
+            FAlbum = "";
+            FTrack = 0;
+            FDisc = 0;
+            FRating = 0;
+            FYear = "";
+            FGenre = "";
+            FComment = "";
+            FCopyright = "";
+            FPictures = new List<MetaReaderFactory.PIC_CODE>();
+        }
 
-        abstract public bool ReadFromFile(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
+        abstract public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 
         public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
-            FileStream fs = null;
-            BinaryReader source = null;
-
             bool result = false;
             ResetData();
 
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                fs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
-                source = new BinaryReader(fs);
-
-                return ReadFromFile(source, pictureStreamHandler);
+                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
+                using (BinaryReader source = new BinaryReader(fs))
+                {
+                    result = Read(source, pictureStreamHandler);
+                }
             }
             catch (Exception e)
             {
@@ -83,9 +139,6 @@ namespace ATL.AudioReaders
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
                 result = false;
             }
-
-            if (source != null) source.Close();
-            if (fs != null) fs.Close();
 
             return result;
         }

@@ -400,7 +400,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+		public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			HeaderRecord Header = new HeaderRecord();
 			bool result;
@@ -412,9 +412,9 @@ namespace ATL.AudioReaders.BinaryLogic
 			Array.Clear(Header.IntegerArray,0,Header.IntegerArray.Length);
 
             // At first try to load ID3v2 tag data, then header
-            FID3v1.ReadFromFile(source);
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            FID3v2.Read(source, pictureStreamHandler);
+            FAPEtag.Read(source, pictureStreamHandler);
 
             result = ReadHeader(source, ref Header);
             version = GetStreamVersion(Header);

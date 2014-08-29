@@ -14,7 +14,7 @@ namespace ATL
 		// ID of the format
 		protected int fID;
 		// List of file extensions proper to this format
-		protected IList<String> extList;
+		protected IDictionary<String,int> extList;
 		// true if the format is readable by ATL
 		protected bool fReadable;
 
@@ -29,7 +29,7 @@ namespace ATL
         {
             fName = iName;
 			fReadable = true;
-			extList = new List<String>();
+			extList = new Dictionary<String,int>();
         }
 
         protected void copyFrom(Format iFormat)
@@ -37,7 +37,7 @@ namespace ATL
             this.fName = iFormat.fName;
             this.fID = iFormat.fID;
             this.fReadable = iFormat.fReadable;
-            this.extList = new List<String>(iFormat.extList);
+            this.extList = new Dictionary<String,int>(iFormat.extList);
         }
 
 		public String Name
@@ -64,7 +64,7 @@ namespace ATL
 
 		public IEnumerator GetEnumerator() 
 		{
-			return extList.GetEnumerator();
+			return extList.Keys.GetEnumerator();
 		}
 
 		#endregion
@@ -72,14 +72,14 @@ namespace ATL
 		// Adds the extension ext to the extensions list of this Format
 		public void AddExtension(String ext)
 		{
-			if ( !extList.Contains(ext.ToUpper()) )
-				extList.Add(ext.ToUpper());
+			if ( !extList.ContainsKey(ext.ToUpper()) )
+				extList.Add(ext.ToUpper(),0);
 		}
 
 		// Tests if the extension ext is a valid extension of the current Format
 		public bool IsValidExtension(String ext)
 		{
-			return extList.Contains(ext.ToUpper());
+			return extList.ContainsKey(ext.ToUpper());
 		}
 	}
 }

@@ -212,14 +212,14 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			bool result = false;
 
 			// Search for file tag
-            FID3v1.ReadFromFile(source);
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            FID3v2.Read(source, pictureStreamHandler);
+            FAPEtag.Read(source, pictureStreamHandler);
 
 			// Read header data
 			source.BaseStream.Seek(ID3v2.Size, SeekOrigin.Begin);

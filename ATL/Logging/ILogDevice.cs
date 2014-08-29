@@ -5,7 +5,7 @@ namespace ATL.Logging
 	/// <summary>
 	/// This interface describes a logical device able to log messages
 	/// </summary>
-	public interface LogDevice
+	public interface ILogDevice
 	{
 		/// <summary>
 		/// Logs the message described by the provided LogItem object

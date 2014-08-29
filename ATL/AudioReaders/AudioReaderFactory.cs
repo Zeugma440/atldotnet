@@ -9,7 +9,7 @@ namespace ATL.AudioReaders
 	/// <summary>
 	/// Factory for audio data readers
 	/// </summary>
-	public class AudioReaderFactory
+	public class AudioReaderFactory : ReaderFactory
 	{
 		// Codec families
 		public const int CF_LOSSY		= 0; // Streamed, lossy data
@@ -23,7 +23,6 @@ namespace ATL.AudioReaders
 		private static AudioReaderFactory theFactory = null;
 	
 		// Codec IDs
-		public const int CID_NONE		= -1;
 		public const int CID_MP3		= 0;
 		public const int CID_OGG		= 1;
 		public const int CID_MPC		= 2;
@@ -44,8 +43,6 @@ namespace ATL.AudioReaders
 
 		public const int NB_CODECS = 17;
 
-        private IList<ATL.Format> formatList;
-
 		// ------------------------------------------------------------------------------------------
 		
 		/// <summary>
@@ -58,86 +55,86 @@ namespace ATL.AudioReaders
 			{
 				theFactory = new AudioReaderFactory();
 
-                theFactory.formatList = new List<ATL.Format>();
+                theFactory.formatList = new Dictionary<string, Format>();
 
                 Format tempFmt = new Format("MPEG Audio Layer");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MP3;
                 tempFmt.AddExtension(".mp1");
                 tempFmt.AddExtension(".mp2");
                 tempFmt.AddExtension(".mp3");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("OGG Vorbis");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_OGG;
                 tempFmt.AddExtension(".ogg");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Musepack / MPEGplus");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MPC;
                 tempFmt.AddExtension(".mp+");
                 tempFmt.AddExtension(".mpc");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Windows Media Audio");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_WMA;
                 tempFmt.AddExtension(".wma");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Advanced Audio Coding");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_AAC;
                 tempFmt.AddExtension(".aac");
                 tempFmt.AddExtension(".mp4");
                 tempFmt.AddExtension(".m4a");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Dolby Digital");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_AC3;
                 tempFmt.AddExtension(".ac3");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Digital Theatre System");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_DTS;
                 tempFmt.AddExtension(".dts");
                 tempFmt.Readable = false;
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("TwinVQ");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_VQF;
                 tempFmt.AddExtension(".vqf");
                 tempFmt.Readable = false;
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Free Lossless Audio Codec");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_FLAC;
                 tempFmt.AddExtension(".flac");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Monkey's Audio");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_APE;
                 tempFmt.AddExtension(".ape");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("OptimFROG");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_OFR;
                 tempFmt.AddExtension(".ofr");
                 tempFmt.AddExtension(".ofs");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("WAVPack");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_WAVPACK;
                 tempFmt.AddExtension(".wv");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("PCM (uncompressed audio)");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_WAV;
                 tempFmt.AddExtension(".wav");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Musical Instruments Digital Interface");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MIDI;
                 tempFmt.AddExtension(".mid");
                 tempFmt.AddExtension(".midi");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Portable Sound Format");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_PSF;
@@ -155,48 +152,26 @@ namespace ATL.AudioReaders
                 tempFmt.AddExtension(".minigsf");
                 tempFmt.AddExtension(".qsf");
                 tempFmt.AddExtension(".miniqsf");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("SPC700 Sound Files");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_SPC;
                 tempFmt.AddExtension(".spc");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("True Audio");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_TTA;
                 tempFmt.AddExtension(".tta");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
-		}
-		
-		private int getFormatIDFromPath(String path)
-		{
-			int result = CID_NONE;
-
-			if (File.Exists(path))
-			{
-				String ext = Path.GetExtension(path);
-
-                foreach (Format f in formatList)
-                {
-                    if (f.IsValidExtension(ext)) result = f.ID;
-                }
-			}
-
-			return result;
 		}
 
 		public IAudioDataReader GetDataReader(String path)
 		{
 			return GetDataReader(getFormatIDFromPath(path));
 		}
-
-        public IList<ATL.Format> getFormats()
-        {
-            return new List<Format>(formatList);
-        }
 
 		/// <summary>
 		/// Gets the appropriate physical data reader for a given file

@@ -333,7 +333,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// === PUBLIC METHODS ===
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			bool result = true;
 			PSFHeader header = new PSFHeader();

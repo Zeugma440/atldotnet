@@ -9,28 +9,18 @@ using Commons;
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
 	/// <summary>
-	/// Adapter / Wrapper for CueParser to work with ATL's definition of CatalogDataReader
+	/// Adapter / Wrapper for CueSharp.CueParser to work with ATL's definition of CatalogDataReader
 	/// </summary>
 	public class CueAdapter : ICatalogDataReader
 	{
 		private CueSheet m_cueParser = null;
 		private String m_path = "";
 
-		public CueAdapter(String path)
-		{
-			m_path = path;
-			m_cueParser = new CueSheet(path);
-		}
-
 
 		public String Path
 		{
 			get { return m_path; }
-		}
-
-		public String BaseFilePath
-		{
-			get { return System.IO.Path.GetDirectoryName(m_path)+System.IO.Path.DirectorySeparatorChar+System.IO.Path.GetFileName(m_path); }
+            set { m_path = value; }
 		}
 
 		public String Title
@@ -53,11 +43,13 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 			get { return m_cueParser.Performer; }
 		}
 
-        public List<ATL.Track> Tracks
+        public IList<ATL.Track> Tracks
 		{
 			get
 			{
-                List<ATL.Track> trackList = new List<ATL.Track>();
+                if (null == m_cueParser) m_cueParser = new CueSheet(m_path);
+
+                IList<ATL.Track> trackList = new List<ATL.Track>();
 				
 				ATL.Track cueTrack;
                 ATL.Track previousCueTrack = null;

@@ -5,31 +5,39 @@ using System.Collections.Generic;
 namespace ATL.CatalogDataReaders
 {
 	/// <summary>
-	/// Description r¨¦sum¨¦e de CatalogDataReader.
+    /// Reads all tracks described in a container (e.g. : CUE sheet)
 	/// </summary>
 	public interface ICatalogDataReader
 	{
-		String Path
-		{
-			get;
-		}
+        /// <summary>
+        /// Absolute path of the container file
+        /// </summary>
+        String Path
+        {
+            get;
+            set;
+        }
 
-		String BaseFilePath
-		{
-			get;
-		}
-
+        /// <summary>
+        /// Title of the container
+        /// </summary>
 		String Title
 		{
 			get;
 		}
 
+        /// <summary>
+        /// Artist of the container
+        /// </summary>
 		String Artist
 		{
 			get;
 		}
 
-		List<ATL.Track> Tracks
+        /// <summary>
+        /// List of the tracks described in the container
+        /// </summary>
+		IList<ATL.Track> Tracks
 		{
 			get;
 		}

@@ -402,7 +402,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		/* -------------------------------------------------------------------------- */
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
             Stream fs = source.BaseStream;
 
@@ -418,7 +418,7 @@ namespace ATL.AudioReaders.BinaryLogic
   
 
             // Try to read data from ID3 tags
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
+            FID3v2.Read(source, pictureStreamHandler);
 
             FReadHeader(source);
 

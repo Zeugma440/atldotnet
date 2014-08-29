@@ -8,10 +8,9 @@ namespace ATL.PlaylistReaders
 	/// <summary>
 	/// Description r¨¦sum¨¦e de PlaylistReaderFactory.
 	/// </summary>
-	public class PlaylistReaderFactory
+	public class PlaylistReaderFactory : ReaderFactory
 	{
 		// Defines the supported formats
-        public const int PL_NONE = -1;
 		public const int PL_M3U = 0;
 		public const int PL_PLS = 1;
         public const int PL_FPL = 2;
@@ -19,57 +18,33 @@ namespace ATL.PlaylistReaders
 		// The instance of this factory
 		private static PlaylistReaderFactory theFactory = null;
 
-        private IList<ATL.Format> formatList;
-
 
 		public static PlaylistReaderFactory GetInstance()
 		{
 			if (null == theFactory)
 			{
 				theFactory = new PlaylistReaderFactory();
-                theFactory.formatList = new List<ATL.Format>();
+                theFactory.formatList = new Dictionary<string, Format>();
 
                 Format tempFmt = new Format("PLS");
                 tempFmt.ID = PL_PLS;
                 tempFmt.AddExtension(".pls");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("M3U");
                 tempFmt.ID = PL_M3U;
                 tempFmt.AddExtension(".m3u");
                 tempFmt.AddExtension(".m3u8");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("FPL (experimental)");
                 tempFmt.ID = PL_FPL;
                 tempFmt.AddExtension(".fpl");
-                theFactory.formatList.Add(tempFmt);
+                theFactory.addFormat(tempFmt);
             }
 
 			return theFactory;
 		}
-
-        public IList<ATL.Format> getFormats()
-        {
-            return new List<Format>(formatList);
-        }
-
-        private int getFormatIDFromPath(String path)
-        {
-            int result = PL_NONE;
-
-            if (File.Exists(path))
-            {
-                String ext = Path.GetExtension(path);
-
-                foreach (Format f in formatList)
-                {
-                    if (f.IsValidExtension(ext)) result = f.ID;
-                }
-            }
-
-            return result;
-        }
 
 		public IPlaylistReader GetPlaylistReader(String path)
 		{

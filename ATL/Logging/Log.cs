@@ -29,7 +29,7 @@ namespace ATL.Logging
         private IList<LogItem> masterLog;
 		
 		// Storage structure containing each LogDevice registered by this class
-        private IList<LogDevice> logDevices;
+        private IList<ILogDevice> logDevices;
 
         
         // ASYNCHRONOUS LOGGING
@@ -49,7 +49,7 @@ namespace ATL.Logging
 		public Log()
 		{
             masterLog = new List<LogItem>();
-			logDevices = new List<LogDevice>();
+			logDevices = new List<ILogDevice>();
 		}
 
 		/// <summary>
@@ -123,7 +123,7 @@ namespace ATL.Logging
             else
             {
                 // Asks each registered LogDevice to log the new LogItem
-                foreach (LogDevice aLogger in logDevices)
+                foreach (ILogDevice aLogger in logDevices)
                 {
                     aLogger.DoLog(theItem);
                 }
@@ -176,7 +176,7 @@ namespace ATL.Logging
 		/// (see Write method) 
 		/// </summary>
 		/// <param name="aLogger">Device to register</param>
-		public void Register(LogDevice aLogger)
+		public void Register(ILogDevice aLogger)
 		{
 			logDevices.Add(aLogger);
 		}

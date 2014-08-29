@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL.AudioReaders
 {
@@ -93,5 +94,13 @@ namespace ATL.AudioReaders
         {
             get;
         }
+
+        /// <summary>
+        /// Parses the binary data read from the given reader
+        /// </summary>
+        /// <param name="source">Reader to parse data from</param>
+        /// <param name="pictureStreamHandler">Delegate to use when reading picture data</param>
+        /// <returns></returns>
+        bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 	}
 }

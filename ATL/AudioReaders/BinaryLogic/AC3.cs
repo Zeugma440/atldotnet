@@ -83,14 +83,14 @@ namespace ATL.AudioReaders.BinaryLogic
                 return 0;
         }
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             ushort signatureChunk;
 			byte tehByte;
 
 			bool result = false;
 
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FAPEtag.Read(source, pictureStreamHandler);
 
 			signatureChunk = source.ReadUInt16();
             

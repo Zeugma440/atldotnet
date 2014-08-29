@@ -10,7 +10,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for ID3v1.0-1.1 tags manipulation
     /// </summary>
-	public class TID3v1 : IMetaDataReader
+	public class TID3v1 : MetaDataReader
 	{
 		public const int MAX_MUSIC_GENRES = 148;        // Max. number of music genres
 		public const int DEFAULT_GENRE = 255;               // Index for default genre
@@ -177,90 +177,8 @@ namespace ATL.AudioReaders.BinaryLogic
 		};
 		#endregion
 	
-		private bool FExists;
-		private byte FVersionID;
-		private String FTitle; // String30
-		private String FArtist; // String30
-        private String FComposer; // String30
-		private String FAlbum; // String30
-		private String FYear; // String04
-		private String FComment; // String30
-		private ushort FTrack;
-        private byte FDisc;
 		private byte FGenreID;
-        private IList<MetaReaderFactory.PIC_CODE> FPictures;
 			
-		public bool Exists // True if tag found
-		{
-			get { return this.FExists; }
-		}
-		public byte VersionID // Version code
-		{
-			get { return this.FVersionID; }
-		}
-        public int Size
-        {
-            get { if (Exists) return ID3V1_TAG_SIZE; else return 0; }
-        }
-		public String Title // Song title (String30)
-		{
-			get { return this.FTitle; }
-			set { FSetTitle(value); }
-		}
-		public String Artist // Artist name (String30)
-		{
-			get { return this.FArtist; }
-			set { FSetArtist(value); }
-		}
-        public String Composer // Composer name (String30)
-        {
-            get { return this.FComposer; }
-            set { FSetComposer(value); }
-        }
-		public String Album // Album name (String30)
-		{
-			get { return this.FAlbum; }
-			set { FSetAlbum(value); }
-		}	
-		public String Year // Year (String04)
-		{
-			get { return this.FYear; }
-			set { FSetYear(value); }
-		}	
-		public String Comment // Comment (String30)
-		{
-			get { return this.FComment; }
-			set { FSetComment(value); }
-		}	
-		public ushort Track // Track number
-		{
-			get { return this.FTrack; }
-			set { FSetTrack(value); }
-		}
-        public ushort Disc // Disc number
-        {
-            get { return (ushort)this.FDisc; }
-            set { FSetDisc((byte)value); }
-        }
-        public ushort Rating // Rating -- not part of ID3v1 standard
-        {
-            get { return 0; }
-            set {  }
-        }
-		public byte GenreID // Genre code
-		{
-			get { return this.FGenreID; }
-			set { FSetGenreID(value); }
-		}
-		public String Genre // Genre name
-		{
-			get { return FGetGenre(); }
-		}
-        public IList<MetaReaderFactory.PIC_CODE> Pictures // Flags indicating the presence of embedded pictures
-        {
-            get { return this.FPictures; }
-        }
-
 		// Real structure of ID3v1 tag
 		private class TagRecord
 		{
@@ -331,52 +249,6 @@ namespace ATL.AudioReaders.BinaryLogic
 			return result;
 		}
 
-		// ********************** Private functions & voids *********************
-
-		void FSetTitle(String newTrack)
-		{
-			FTitle = newTrack.TrimEnd();
-		}
-		void FSetArtist(String NewArtist)
-		{
-			FArtist = NewArtist.TrimEnd();
-		}
-        void FSetComposer(String NewComposer)
-        {
-            FComposer = NewComposer.TrimEnd();
-        }
-        void FSetAlbum(String NewAlbum)
-		{
-			FAlbum = NewAlbum.TrimEnd();
-		}
-		void FSetYear(String NewYear)
-		{
-			FYear = NewYear.TrimEnd();
-		}
-		void FSetComment(String NewComment)
-		{
-			FComment = NewComment.TrimEnd();
-		}
-		void FSetTrack(ushort NewTrack)
-		{
-			FTrack = NewTrack;
-		}
-        void FSetDisc(byte NewDisc)
-        {
-            FDisc = NewDisc;
-        }
-		void FSetGenreID(byte NewGenreID)
-		{
-			FGenreID = NewGenreID;
-		}
-		string FGetGenre()
-		{
-			String result = "";
-			// Return an empty string if the current GenreID is not valid
-			if ( FGenreID < MAX_MUSIC_GENRES ) result = MusicGenre[FGenreID];
-			return result;
-		}
-
 		// ********************** Public functions & voids **********************
 
 		public TID3v1()
@@ -386,43 +258,35 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		public void ResetData()
+		public override void ResetData()
 		{
-			FExists = false;
-			FVersionID = TAG_VERSION_1_0;
-			FTitle = "";
-			FArtist = "";
-            FComposer = "";
-			FAlbum = "";
-			FYear = "";
-			FComment = "";
-			FTrack = 0;
-            FDisc = 0;
+            base.ResetData();
+			FVersion = TAG_VERSION_1_0;
 			FGenreID = DEFAULT_GENRE;
-            FPictures = new List<MetaReaderFactory.PIC_CODE>();
 		}
 
 		// ---------------------------------------------------------------------------
 
-        public bool ReadFromFile(BinaryReader SourceFile)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
 			TagRecord TagData = new TagRecord();
 	
 			// Reset and load tag data from file to variable
 			ResetData();
-            bool result = ReadTag(SourceFile, ref TagData);
+            bool result = ReadTag(source, ref TagData);
 
 			// Process data if loaded successfuly
 			if (result)
 			{
 				FExists = true;
-				FVersionID = GetTagVersion(TagData);
+                FSize = ID3V1_TAG_SIZE;
+				FVersion = GetTagVersion(TagData);
 				// Fill properties with tag data
                 FTitle = TagData.Title;
                 FArtist = TagData.Artist;
                 FAlbum = TagData.Album;
                 FYear = TagData.Year;
-				if (TAG_VERSION_1_0 == FVersionID)
+				if (TAG_VERSION_1_0 == FVersion)
 				{
                     FComment = TagData.Comment + Utils.StripZeroChars(TagData.EndComment);
 				}
@@ -432,6 +296,7 @@ namespace ATL.AudioReaders.BinaryLogic
 					FTrack = (byte)TagData.EndComment[1];
 				}
 				FGenreID = TagData.Genre;
+                FGenre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";
 			}
 			return result;
 		}

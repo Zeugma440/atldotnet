@@ -495,7 +495,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 			// Get info from file
 			bool result = false;
-            FID3v2.ReadFromFile(source, FPictureStreamHandler);
+            FID3v2.Read(source, FPictureStreamHandler);
 
             // Check for ID3v2
 			source.BaseStream.Seek(FID3v2.Size, SeekOrigin.Begin);    
@@ -666,7 +666,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             FPictureStreamHandler = pictureStreamHandler;
 			bool result = false;

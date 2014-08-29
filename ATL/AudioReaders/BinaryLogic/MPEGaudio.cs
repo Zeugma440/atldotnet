@@ -808,7 +808,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
             Stream fs = source.BaseStream;
 			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];  
@@ -816,9 +816,9 @@ namespace ATL.AudioReaders.BinaryLogic
 			bool result = false;
 
 			// At first search for tags, then search for a MPEG frame and VBR data
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FID3v1.ReadFromFile(source);
-            APEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v2.Read(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            APEtag.Read(source, pictureStreamHandler);
 
 			fs.Seek(FID3v2.Size, SeekOrigin.Begin);
 			Data = source.ReadBytes(Data.Length);

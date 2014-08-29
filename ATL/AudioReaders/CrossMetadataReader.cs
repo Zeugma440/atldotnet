@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL.AudioReaders
 {
@@ -215,6 +216,11 @@ namespace ATL.AudioReaders
                 }
                 return pictures;
             }
+        }
+
+        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        {
+            return true;
         }
 	}
 }

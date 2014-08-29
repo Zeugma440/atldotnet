@@ -245,14 +245,14 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			WAVRecord WAVData = new WAVRecord();
 
 			// Reset and load header data from file to variable
 			WAVData.Reset();
 
-            FID3v1.ReadFromFile(source);
+            FID3v1.Read(source);
   
 			bool result = ReadWAV(source, ref WAVData);
 			// Process data if loaded and header valid

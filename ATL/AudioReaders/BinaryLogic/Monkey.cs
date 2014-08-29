@@ -220,7 +220,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			APE.nVersion = source.ReadUInt16();
         }
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{   
 			APE_HEADER_OLD APE_OLD = new APE_HEADER_OLD();	// old header   <= 3.97
 			APE_HEADER_NEW APE_NEW = new APE_HEADER_NEW();	// new header   >= 3.98
@@ -238,9 +238,9 @@ namespace ATL.AudioReaders.BinaryLogic
 
 
             // load tags first
-            FID3v2.ReadFromFile(source, pictureStreamHandler);
-            FID3v1.ReadFromFile(source);
-            FAPEtag.ReadFromFile(source, pictureStreamHandler);
+            FID3v2.Read(source, pictureStreamHandler);
+            FID3v1.Read(source);
+            FAPEtag.Read(source, pictureStreamHandler);
 
             // calculate total tag size
             TagSize = 0;

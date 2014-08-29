@@ -26,7 +26,7 @@ namespace ATL.AudioReaders
 
         public double BitRate // Bitrate (KBit/s)
         {
-            get { return (int)Math.Round((double)FBitrate/1000.00); }
+            get { return Math.Round(FBitrate/1000.00); }
         }
         public double Duration // Duration (s)
         {
@@ -81,26 +81,24 @@ namespace ATL.AudioReaders
         }
 
 
-        abstract public bool ReadFromFile(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
+        abstract public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 
         public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
-            FileStream fs = null;
-            BinaryReader SourceFile = null;
-
             bool result = false;
             resetData();
 
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                fs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
-                SourceFile = new BinaryReader(fs);
+                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
+                using (BinaryReader SourceFile = new BinaryReader(fs))
+                {
+                    FFileSize = fs.Length;
+                    FFileName = FileName;
 
-                FFileSize = fs.Length;
-                FFileName = FileName;
-
-                result = ReadFromFile(SourceFile, pictureStreamHandler);
+                    result = Read(SourceFile, pictureStreamHandler);
+                }
             }
             catch (Exception e)
             {
@@ -108,9 +106,6 @@ namespace ATL.AudioReaders
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
                 result = false;
             }
-
-            if (SourceFile != null) SourceFile.Close();
-            if (fs != null) fs.Close();
 
             return result;
         }

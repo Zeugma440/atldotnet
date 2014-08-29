@@ -85,7 +85,7 @@ namespace ATL.AudioReaders.BinaryLogic
                 return 0;
         }
 
-        public override bool ReadFromFile(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             Stream fs = source.BaseStream;
             uint signatureChunk;  
