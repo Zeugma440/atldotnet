@@ -12,7 +12,7 @@ namespace ATL.AudioReaders
 	/// It calls AudioReaderFactory and queries AudioDataReader/MetaDataReader to provide physical 
 	/// _and_ meta information about the given file.
 	/// </summary>
-	public class AudioFileReader
+	public class AudioFileReader : IMetaDataReader
 	{	
 		private AudioReaderFactory theReaderFactory;			// Reader Factory
 		private MetaReaderFactory theMetaFactory;				// Meta Factory
@@ -38,6 +38,8 @@ namespace ATL.AudioReaders
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
 		}
+
+
 
 
 		/// <summary>
@@ -85,21 +87,21 @@ namespace ATL.AudioReaders
 		/// <summary>
 		/// Track number
 		/// </summary>
-		public int Track
+		public ushort Track
 		{
 			get { return metaData.Track; }
 		}
         /// <summary>
         /// Disc number
         /// </summary>
-        public int Disc
+        public ushort Disc
         {
             get { return metaData.Disc; }
         }
 		/// <summary>
-		/// Year
+		/// Year, converted to int
 		/// </summary>
-		public int Year
+		public int IntYear
 		{
 			get { return TrackUtils.ExtractIntYear(metaData.Year); }
 		}
@@ -127,7 +129,7 @@ namespace ATL.AudioReaders
         /// <summary>
         /// Track rating
         /// </summary>
-        public int Rating
+        public ushort Rating
         {
             get { return metaData.Rating; }
         }
@@ -145,5 +147,33 @@ namespace ATL.AudioReaders
         {
             get { return audioData.IsVBR; }
         }
-	}
+        /// <summary>
+        /// Indicates whether the audio format allows parsable metadata to exist
+        /// </summary>
+        public bool AllowsParsableMetadata
+        {
+            get { return audioData.AllowsParsableMetadata; }
+        }
+        /// <summary>
+        /// Does the tag exist ?
+        /// </summary>
+        public bool Exists
+        {
+            get { return metaData.Exists; }
+        }
+        /// <summary>
+        /// Year, in its original form
+        /// </summary>
+        public string Year
+        {
+            get { return metaData.Year; }
+        }
+        /// <summary>
+        /// See definition of Read on IMetaDataReader interface
+        /// </summary>
+        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        {
+            return metaData.Read(source, pictureStreamHandler);
+        }
+    }
 }
