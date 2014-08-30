@@ -72,7 +72,7 @@ namespace ATL
             Update(null);
         }
 
-        protected void Update(StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        protected void Update(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
             AudioFileReader theReader;
 
@@ -112,6 +112,7 @@ namespace ATL
                 CodecFamily = theReader.CodecFamily;
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
+                IsVBR = theReader.IsVBR;
                 Pictures = new List<MetaReaderFactory.PIC_CODE>(theReader.Pictures);
             }
         }
