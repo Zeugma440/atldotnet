@@ -563,7 +563,11 @@ namespace ATL.AudioReaders.BinaryLogic
 					if ( (sFieldID == "TRACKNUMBER") && (FTrackString == "00") )  
 					{
 						FTrackString = sFieldData;
-					} 
+					}
+                    else if ((sFieldID == "DISCNUMBER") && (FDiscString == "0"))
+                    {
+                        FDiscString = sFieldData;
+                    } 
 					else if ( (sFieldID == "ARTIST") && (FArtist == "") ) 
 					{
 						FArtist = sFieldData;
