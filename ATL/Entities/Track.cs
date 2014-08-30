@@ -1,9 +1,8 @@
-using System;
-using System.IO;
 using ATL.AudioReaders;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
+using System.IO;
 
 namespace ATL
 {
@@ -65,11 +64,6 @@ namespace ATL
             {
                 coverArt = Image.FromStream(s);
             }
-        }
-
-        public void Update()
-        {
-            Update(null);
         }
 
         protected void Update(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
