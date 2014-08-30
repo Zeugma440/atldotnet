@@ -30,7 +30,12 @@ namespace ATL.AudioReaders
 
 		/// <summary>
 		/// Sets whether the next created metadatareaders should use cross-tag reading
-		/// </summary>
+        ///   - false (default) :  the most important tagging standard (according to priorities)
+        ///                        detected on the track is exclusively used to populate fields
+        ///   - true            :  for each field, the most important tagging standard (according to
+        ///                        priorities) is first read. If the value is empty, the next
+        ///                        tagging standard (according to priorities) is read, and so on...
+        /// </summary>
 		public bool CrossReading
 		{
 			get { return m_enableCrossReading; }
