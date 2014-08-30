@@ -12,7 +12,7 @@ namespace ATL.AudioReaders
 	/// It calls AudioReaderFactory and queries AudioDataReader/MetaDataReader to provide physical 
 	/// _and_ meta information about the given file.
 	/// </summary>
-	public class AudioFileReader : IMetaDataReader
+	public class AudioFileReader : IMetaDataReader, IAudioDataReader
 	{	
 		private AudioReaderFactory theReaderFactory;			// Reader Factory
 		private MetaReaderFactory theMetaFactory;				// Meta Factory
@@ -113,16 +113,16 @@ namespace ATL.AudioReaders
             get { return metaData.Album.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
 		}
 		/// <summary>
-		/// Track duration (seconds)
+		/// Track duration (seconds), rounded
 		/// </summary>
-		public int Duration
+		public int IntDuration
 		{
 			get { return (int)Math.Round(audioData.Duration); }
 		}
 		/// <summary>
-		/// Bitrate
+		/// Track bitrate (KBit/s), rounded
 		/// </summary>
-		public int BitRate
+		public int IntBitRate
 		{
 			get { return (int)Math.Round(audioData.BitRate); }
 		}
@@ -169,11 +169,41 @@ namespace ATL.AudioReaders
             get { return metaData.Year; }
         }
         /// <summary>
-        /// See definition of Read on IMetaDataReader interface
+        /// Track bitrate (Kbit/s)
         /// </summary>
+        public double BitRate
+        {
+            get { return audioData.BitRate; }
+        }
+        /// <summary>
+        /// Track duration (seconds)
+        /// </summary>
+        public double Duration
+        {
+            get { return audioData.Duration; }
+        }
+
+        // AudioFileReader aims at simplifying standard interfaces
+        // => the below methods are not implemented
+        public TID3v1 ID3v1
+        {
+            get { throw new NotImplementedException(); }
+        }
+        public TID3v2 ID3v2
+        {
+            get { throw new NotImplementedException(); }
+        }
+        public TAPEtag APEtag
+        {
+            get { throw new NotImplementedException(); }
+        }
         public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
-            return metaData.Read(source, pictureStreamHandler);
+            throw new NotImplementedException();
+        }
+        public bool ReadFromFile(string fileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

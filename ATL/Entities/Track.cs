@@ -104,13 +104,13 @@ namespace ATL
                 if (null == Comment) { Comment = ""; }
                 Genre = theReader.Genre;
                 if (null == Genre) { Genre = ""; }
-                Year = theReader.Year;
+                Year = theReader.IntYear;
                 Album = theReader.Album;
                 TrackNumber = theReader.Track;
                 DiscNumber = theReader.Disc;
-                Bitrate = theReader.BitRate;
+                Bitrate = theReader.IntBitRate;
                 CodecFamily = theReader.CodecFamily;
-                Duration = theReader.Duration;
+                Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 Pictures = new List<MetaReaderFactory.PIC_CODE>(theReader.Pictures);
             }
