@@ -70,6 +70,6 @@ namespace ATL.AudioReaders
 		/// <param name="fileName">Path of the file</param>
         /// <param name="pictureStreamHandler">Delegate for reading picture data stream</param>
 		/// <returns>True if the parsing is successful; false if not</returns>
-        bool ReadFromFile(String fileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
+        bool ReadFromFile(String fileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null);
 	}
 }

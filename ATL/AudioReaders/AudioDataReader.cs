@@ -83,7 +83,7 @@ namespace ATL.AudioReaders
 
         abstract public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 
-        public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
             bool result = false;
             resetData();
