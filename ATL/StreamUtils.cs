@@ -398,6 +398,8 @@ namespace ATL
             return encoding.GetString(readBytesArr);
         }
 
+        // Checks if the JPEG picture scanned by the given stream
+        // may contain abnormalities (0xff 0x00 instead of 0xff)
         public static bool isBrokenJpeg(Stream s)
         {
             int[] header = new int[5];
@@ -411,27 +413,29 @@ namespace ATL
             return (header[0] == 0xff && header[1] == 0xd8 && header[2] == 0xff && (header[3] == 0x00 && header[4] == 0xe0));
         }
 
-        // Clean anomalies in JPEG binary streams
+        // Clean abnormalities in JPEG binary streams
         //   - Badly formatted data (0xff 0x00 => 0xff)
         public static MemoryStream FixBrokenJPEG(ref MemoryStream s)
         {
-            BinaryReader r = new BinaryReader(s);
             MemoryStream mem = new MemoryStream(s.Capacity);
-            BinaryWriter w = new BinaryWriter(mem);
-            byte prevB = 0;
-            byte b;
 
-            r.BaseStream.Seek(0, SeekOrigin.Begin);
-            while (r.BaseStream.Position < r.BaseStream.Length)
+            using(BinaryReader r = new BinaryReader(s))
+            using (BinaryWriter w = new BinaryWriter(mem))
             {
-                b = r.ReadByte();
-                if ((0xFF == prevB) && (0x00 == b)) b = r.ReadByte();
+                byte prevB = 0;
+                byte b;
 
-                w.Write(b);
-                prevB = b;
+                s.Seek(0, SeekOrigin.Begin);
+                while (s.Position < s.Length)
+                {
+                    b = r.ReadByte();
+                    if ((0xFF == prevB) && (0x00 == b)) b = r.ReadByte();
+
+                    w.Write(b);
+                    prevB = b;
+                }
             }
 
-            r.Close();
             return mem;
         }
 
