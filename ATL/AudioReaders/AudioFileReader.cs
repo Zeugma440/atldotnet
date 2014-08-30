@@ -138,5 +138,12 @@ namespace ATL.AudioReaders
 		{
 			get { return audioData.CodecFamily; }
 		}
+        /// <summary>
+        /// Indicates whether the audio stream is in VBR
+        /// </summary>
+        public bool IsVBR
+        {
+            get { return audioData.IsVBR; }
+        }
 	}
 }
