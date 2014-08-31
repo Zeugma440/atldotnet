@@ -48,6 +48,8 @@ namespace ATL.CatalogDataReaders
 				theReader = new BinaryLogic.CueAdapter();
 			}
 
+            if (null == theReader) theReader = new BinaryLogic.DummyReader();
+
 			return theReader;
 		}
 	}

@@ -26,8 +26,10 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 		public String Title
 		{
 			get 
-			{ 
-				if (m_cueParser.Title.Trim() != "")
+			{
+                if (null == m_cueParser) m_cueParser = new CueSheet(m_path);
+
+				if (m_cueParser.Title.Trim().Length > 0)
 				{
 					return m_cueParser.Title;
 				}
@@ -40,7 +42,11 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
 		public String Artist
 		{
-			get { return m_cueParser.Performer; }
+			get
+            {
+                if (null == m_cueParser) m_cueParser = new CueSheet(m_path);
+                return m_cueParser.Performer;
+            }
 		}
 
         public IList<ATL.Track> Tracks

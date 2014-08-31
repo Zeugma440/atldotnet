@@ -72,6 +72,7 @@
     <Compile Include="AudioReaders\BinaryLogic\WMAfile.cs" />
     <Compile Include="AudioReaders\Interfaces\IMetaDataReader.cs" />
     <Compile Include="AudioReaders\MetaReaderFactory.cs" />
+    <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueAdapter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
