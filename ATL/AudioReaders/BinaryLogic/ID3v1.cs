@@ -22,6 +22,8 @@ namespace ATL.AudioReaders.BinaryLogic
 		public const byte TAG_VERSION_1_0 = 1;                // Index for ID3v1.0 tag
 		public const byte TAG_VERSION_1_1 = 2;                // Index for ID3v1.1 tag
 
+        private static Encoding ID3v1Encoding = Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
+
 		#region music genres
 		public static String[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
 		{	// Standard genres
@@ -182,54 +184,53 @@ namespace ATL.AudioReaders.BinaryLogic
 		// Real structure of ID3v1 tag
 		private class TagRecord
 		{
-			public char[] Header = new char[3];                // Tag header - must be "TAG"
+			public String Header = "";                // Tag header - must be "TAG"
             public String Title = "";
             public String Artist = "";
             public String Album = "";
             public String Year = "";
             public String Comment = "";
-            public String EndComment = "";
+            public byte[] EndComment = new byte[2];
 			public byte Genre;                                                 // Genre data
 
 			public void Reset()
 			{
+                Header = "";
                 Title = "";
+                Album = "";
                 Artist = "";
                 Year = "";
                 Comment = "";
-                EndComment = "";
 				Genre = 0;
 			}
 		}
 
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(BinaryReader source, ref TagRecord TagData)
+        private static bool ReadTag(BinaryReader source, ref TagRecord TagData)
         {
-			bool result;
-            Encoding encoding = Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
+            bool result = false;
 
-            result = true;
-			
 			// Read tag
             source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
-			
+
+#if DEBUG
+            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
+#endif
+
 			// ID3v1 tags are C-String(null-terminated)-based tags
 			// they are not unicode-encoded, hence the use of ReadOneByteChars
-			TagData.Header = StreamUtils.ReadOneByteChars(source,3);
-            if (StreamUtils.StringEqualsArr(ID3V1_ID, TagData.Header))
+            TagData.Header = ID3v1Encoding.GetString(source.ReadBytes(3), 0, 3);
+            if (ID3V1_ID == TagData.Header)
             {
-                TagData.Title = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, 30);
-                TagData.Artist = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, 30);
-                TagData.Album = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, 30);
-                TagData.Year = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, 4);
-                TagData.Comment = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, 28);
-                TagData.EndComment = new String(StreamUtils.ReadOneByteChars(source, 2));
+                TagData.Title = Utils.StripZeroChars(ID3v1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Artist = Utils.StripZeroChars(ID3v1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Album = Utils.StripZeroChars(ID3v1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Year = Utils.StripZeroChars(ID3v1Encoding.GetString(source.ReadBytes(4), 0, 4));
+                TagData.Comment = Utils.StripZeroChars(ID3v1Encoding.GetString(source.ReadBytes(28), 0, 28));
+                TagData.EndComment = source.ReadBytes(2);
                 TagData.Genre = source.ReadByte();
-            }
-            else
-            {
-                result = false;
+                result = true;
             }
 
             return result;
@@ -238,12 +239,12 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		byte GetTagVersion(TagRecord TagData)
+		private static byte GetTagVersion(TagRecord TagData)
 		{
 			byte result = TAG_VERSION_1_0;
 			// Terms for ID3v1.1
-            if ((('\0' == TagData.EndComment[0]) && ('\0' != TagData.EndComment[1])) ||
-                ((32 == (byte)TagData.EndComment[0]) && (32 != (byte)TagData.EndComment[1])))
+            if (((0 == TagData.EndComment[0]) && (0 != TagData.EndComment[1])) ||
+                ((32 == TagData.EndComment[0]) && (32 != TagData.EndComment[1])))
 				result = TAG_VERSION_1_1;
 
 			return result;
@@ -288,12 +289,12 @@ namespace ATL.AudioReaders.BinaryLogic
                 FYear = TagData.Year;
 				if (TAG_VERSION_1_0 == FVersion)
 				{
-                    FComment = TagData.Comment + Utils.StripZeroChars(TagData.EndComment);
+                    FComment = TagData.Comment + Utils.StripZeroChars(ID3v1Encoding.GetString(TagData.EndComment,0,2));
 				}
 				else
 				{
                     FComment = TagData.Comment;
-					FTrack = (byte)TagData.EndComment[1];
+					FTrack = TagData.EndComment[1];
 				}
 				FGenreID = TagData.Genre;
                 FGenre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";

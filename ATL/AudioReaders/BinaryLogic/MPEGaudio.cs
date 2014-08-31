@@ -11,7 +11,7 @@ namespace ATL.AudioReaders.BinaryLogic
 	{
 
 		// Table for bit rates (KBit/s)
-		public ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
+		public static ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
    {
 	   // For MPEG 2.5
 		{
@@ -50,7 +50,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		public const byte MPEG_SAMPLE_RATE_UNKNOWN = 3;              // Unknown value
 
 		// Table for sample rates
-		public ushort[,] MPEG_SAMPLE_RATE = new ushort[4,4]
+		public static ushort[,] MPEG_SAMPLE_RATE = new ushort[4,4]
 	{
 		{11025, 12000, 8000, 0},                                   // For MPEG 2.5
 		{0, 0, 0, 0},                                                  // Reserved
@@ -133,6 +133,16 @@ namespace ATL.AudioReaders.BinaryLogic
 			public int Bytes;                                // Total number of bytes
 			public byte Scale;                                  // VBR scale (1..100)
 			public String VendorID;                         // Vendor ID (if present)
+
+            public void Reset()
+            {
+                Found = false;
+                Array.Clear(ID, 0, ID.Length);
+                Frames = 0;
+                Bytes = 0;
+                Scale = 0;
+                VendorID = "";
+            }
 		}
 
 		// MPEG frame header data}
@@ -260,27 +270,24 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ********************* Auxiliary functions & voids ********************
 
-		private bool IsFrameHeader(byte[] HeaderData)
+		private static bool IsFrameHeader(byte[] HeaderData)
 		{
 			// Check for valid frame header
-			if (
-				((HeaderData[0] & 0xFF) != 0xFF) ||
-				((HeaderData[1] & 0xE0) != 0xE0) ||
-				(((HeaderData[1] >> 3) & 3) == 1) ||
-				(((HeaderData[1] >> 1) & 3) == 0) ||
-				((HeaderData[2] & 0xF0) == 0xF0) ||
-				((HeaderData[2] & 0xF0) == 0) ||
-				(((HeaderData[2] >> 2) & 3) == 3) ||
-				((HeaderData[3] & 3) == 2) 
-				)
-				return false;
-			else
-				return true;
+            return !(
+                ((HeaderData[0] & 0xFF) != 0xFF) ||
+                ((HeaderData[1] & 0xE0) != 0xE0) ||
+                (((HeaderData[1] >> 3) & 3) == 1) ||
+                (((HeaderData[1] >> 1) & 3) == 0) ||
+                ((HeaderData[2] & 0xF0) == 0xF0) ||
+                ((HeaderData[2] & 0xF0) == 0) ||
+                (((HeaderData[2] >> 2) & 3) == 3) ||
+                ((HeaderData[3] & 3) == 2)
+                );
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private void DecodeHeader(byte[] HeaderData, ref FrameData Frame)
+		private static void DecodeHeader(byte[] HeaderData, ref FrameData Frame)
 		{
 			// Decode frame header data
 			Array.Copy(HeaderData, Frame.Data, 4);
@@ -300,40 +307,39 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private bool ValidFrameAt(ushort Index, byte[] Data)
+		private static bool ValidFrameAt(int Index, byte[] Data)
 		{
 			byte[] HeaderData = new byte[4];
 
-			// Check for frame at given position
+/*
 			HeaderData[0] = Data[Index];
 			HeaderData[1] = Data[Index + 1];
 			HeaderData[2] = Data[Index + 2];
 			HeaderData[3] = Data[Index + 3];
-			if (IsFrameHeader(HeaderData)) return true;
-			else return false;
+*/
+            Array.ConstrainedCopy(Data, Index, HeaderData, 0, 4);
+
+            // Check for frame at given position
+            return IsFrameHeader(HeaderData);
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private byte GetCoefficient(FrameData Frame)
+		private static byte GetCoefficient(FrameData Frame)
 		{
-			byte result;
-
 			// Get frame size coefficient
 			if (MPEG_VERSION_1 == Frame.VersionID)
-				if (MPEG_LAYER_I == Frame.LayerID) result = 48;
-				else result = 144;
+				if (MPEG_LAYER_I == Frame.LayerID) return 48;
+				else return 144;
 			else
-				if (MPEG_LAYER_I == Frame.LayerID) result = 24;
-			else if (MPEG_LAYER_II == Frame.LayerID) result = 144;
-			else result = 72;
-
-			return result;
+				if (MPEG_LAYER_I == Frame.LayerID) return 24;
+			else if (MPEG_LAYER_II == Frame.LayerID) return 144;
+			else return 72;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private ushort GetBitRate(FrameData Frame)
+		private static ushort GetBitRate(FrameData Frame)
 		{
 			// Get bit rate
 			return MPEG_BIT_RATE[Frame.VersionID, Frame.LayerID, Frame.BitRateID];
@@ -341,7 +347,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private ushort GetSampleRate(FrameData Frame)
+		private static ushort GetSampleRate(FrameData Frame)
 		{
 			// Get sample rate
 			return MPEG_SAMPLE_RATE[Frame.VersionID, Frame.SampleRateID];
@@ -349,21 +355,18 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private byte GetPadding(FrameData Frame)
+		private static byte GetPadding(FrameData Frame)
 		{
-			byte result;
 			// Get frame padding
 			if (Frame.PaddingBit)
-				if (MPEG_LAYER_I == Frame.LayerID) result = 4;
-				else result = 1;
-			else result = 0;
-
-			return result;
+				if (MPEG_LAYER_I == Frame.LayerID) return 4;
+				else return 1;
+			else return 0;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private ushort GetFrameLength(FrameData Frame)
+		private static ushort GetFrameLength(FrameData Frame)
 		{
 			ushort Coefficient;
 			ushort BitRate;
@@ -381,7 +384,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private bool IsXing(ushort Index, byte[] Data)
+		private static bool IsXing(int Index, byte[] Data)
 		{
 			// Get true if Xing encoder
 			return ( (Data[Index] == 0) &&
@@ -394,18 +397,10 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private VBRData GetXingInfo(ushort Index, byte[] Data)
+		private static VBRData GetXingInfo(int Index, byte[] Data)
 		{
 			VBRData result = new VBRData();
 	
-			// Extract Xing VBR info at given position
-			result.Found = false;
-			Array.Clear(result.ID,0,result.ID.Length);
-			result.Frames = 0;
-			result.Bytes = 0;
-			result.Scale = 0;
-			result.VendorID = "";	
-
 			result.Found = true;
 			result.ID = VBR_ID_XING.ToCharArray();
 			result.Frames =
@@ -419,7 +414,10 @@ namespace ATL.AudioReaders.BinaryLogic
 				Data[Index + 14] * 0x100 +
 				Data[Index + 15];
 			result.Scale = Data[Index + 119];
-			// Vendor ID can be not present
+			
+            // Vendor ID may not be present
+            result.VendorID = System.Text.Encoding.ASCII.GetString(Data, Index+120, 8);
+/*
 			char[] tempArray = new char[8] {
 											   (char)(Data[Index + 120]),
 											   (char)(Data[Index + 121]),
@@ -429,25 +427,18 @@ namespace ATL.AudioReaders.BinaryLogic
 											   (char)(Data[Index + 125]),
 											   (char)(Data[Index + 126]),
 											   (char)(Data[Index + 127]) };
-			result.VendorID = new String(tempArray);
-		
+ */		
+	
 			return result;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private VBRData GetFhGInfo(ushort Index, byte[] Data)
+		private static VBRData GetFhGInfo(int Index, byte[] Data)
 		{
 			VBRData result = new VBRData();
 
 			// Extract FhG VBR info at given position
-			result.Found = false;
-			Array.Clear(result.ID,0,result.ID.Length);
-			result.Frames = 0;
-			result.Bytes = 0;
-			result.Scale = 0;
-			result.VendorID = "";	
-
 			result.Found = true;
 			result.ID = VBR_ID_FHG.ToCharArray();
 			result.Scale = Data[Index + 9];
@@ -461,113 +452,121 @@ namespace ATL.AudioReaders.BinaryLogic
 				Data[Index + 15] * 0x10000 +
 				Data[Index + 16] * 0x100 +
 				Data[Index + 17];
+            result.VendorID = "";
 	
 			return result;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private VBRData FindVBR(ushort Index, byte[] Data) 
+		private static VBRData FindVBR(int Index, byte[] Data) 
 		{
-			VBRData result = new VBRData();
+			VBRData result;
 
-			// Check for VBR header at given position  
-			result.Found = false;
-			Array.Clear(result.ID,0,result.ID.Length);
-			result.Frames = 0;
-			result.Bytes = 0;
-			result.Scale = 0;
-			result.VendorID = "";
+            // Check for VBR header at given position  
+            String vbrId = System.Text.Encoding.ASCII.GetString(Data, Index, 4);
+			
+            //char[] tempArray = new char[4] { (char)Data[Index], (char)Data[Index + 1], (char)Data[Index + 2], (char)Data[Index + 3] };
 
-			char[] tempArray = new char[4] { (char)Data[Index], (char)Data[Index+1], (char)Data[Index+2], (char)Data[Index+3] };			
+			if ( VBR_ID_XING == vbrId ) result = GetXingInfo(Index, Data);
+            else if (VBR_ID_FHG == vbrId) result = GetFhGInfo(Index, Data);
+            else
+            {
+                result = new VBRData();
+                result.Reset();
+            }
 
-			if ( StreamUtils.StringEqualsArr(VBR_ID_XING,tempArray) ) result = GetXingInfo(Index, Data);
-			if ( StreamUtils.StringEqualsArr(VBR_ID_FHG,tempArray) ) result = GetFhGInfo(Index, Data);
 			return result;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private byte GetVBRDeviation(FrameData Frame)
+		private static byte GetVBRDeviation(FrameData Frame)
 		{
-			byte result;
-
 			// Calculate VBR deviation
 			if (MPEG_VERSION_1 == Frame.VersionID)
-				if (Frame.ModeID != MPEG_CM_MONO) result = 36;
-				else result = 21;
+				if (Frame.ModeID != MPEG_CM_MONO) return 36;
+				else return 21;
 			else
-				if (Frame.ModeID != MPEG_CM_MONO) result = 21;
-			else result = 13;
-
-			return result;
+				if (Frame.ModeID != MPEG_CM_MONO) return 21;
+			else return 13;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private FrameData FindFrame(byte[] Data, ref VBRData oVBR)
+		private static FrameData FindFrame(byte[] Data, ref VBRData oVBR)
 		{
 			byte[] HeaderData = new byte[4];  
 			FrameData result = new FrameData();
+            ushort frameLength;
 
             result.Found = false;
 
 			Array.Copy(Data, HeaderData, 4);
 
-			for (uint i=0; i <= Data.Length - MAX_MPEG_FRAME_LENGTH; i++)
+			for (int i=0; i <= Data.Length - MAX_MPEG_FRAME_LENGTH; i++)
 			{
 				// Decode data if frame header found
 				if ( IsFrameHeader(HeaderData) )
 				{
                     result.Reset();
 					DecodeHeader(HeaderData, ref result);
+                    frameLength = GetFrameLength(result);
 					// Check for next frame and try to find VBR header
-					if ( ValidFrameAt((ushort)(i + GetFrameLength(result)), Data) )
+                    if (ValidFrameAt(i + frameLength, Data))
 					{
                         result.Found = true;
-						result.Position = (int)i;
-						result.Size = GetFrameLength(result);
-						result.Xing = IsXing((ushort)(i + 4), Data);
-						oVBR = FindVBR((ushort)(i + GetVBRDeviation(result)), Data);
+						result.Position = i;
+                        result.Size = frameLength;
+						result.Xing = IsXing(i + 4, Data);
+						oVBR = FindVBR(i + GetVBRDeviation(result), Data);
 						break;
 					}
 				}
 				// Prepare next data block
+                Array.ConstrainedCopy(Data, i + 1, HeaderData, 0, 4);
+/*
 				HeaderData[0] = HeaderData[1];
 				HeaderData[1] = HeaderData[2];
 				HeaderData[2] = HeaderData[3];
 				HeaderData[3] = Data[i + 4];
+ */
 			}
 			return result;
 		}
 
 		// ---------------------------------------------------------------------------
 
-		private String FindVendorID(byte[] Data, ushort Size)
+		private static String FindVendorID(byte[] Data, int Size)
 		{
 			String VendorID;
 			String result = "";
-			char[] tempArray = new char[4];
+//			char[] tempArray = new char[4];
 
-			// Search for vendor ID  
-			if ( (Data.Length - Size - 8) < 0 ) Size = (ushort)(Data.Length - 8);
-			for (int iterator=0; iterator <= Size; iterator++)
+			// Search for vendor ID
+			if ( (Data.Length - Size - 8) < 0 ) Size = Data.Length - 8;
+			for (int i=0; i <= Size; i++)
 			{
-				tempArray[0] = (char)Data[Data.Length - iterator - 8];
-				tempArray[1] = (char)Data[Data.Length - iterator - 7];
-				tempArray[2] = (char)Data[Data.Length - iterator - 6];
-				tempArray[3] = (char)Data[Data.Length - iterator - 5];
+                VendorID = System.Text.Encoding.ASCII.GetString(Data, Data.Length - i - 8, 4);
+/*
+				tempArray[0] = (char)Data[Data.Length - i - 8];
+				tempArray[1] = (char)Data[Data.Length - i - 7];
+				tempArray[2] = (char)Data[Data.Length - i - 6];
+				tempArray[3] = (char)Data[Data.Length - i - 5];
 				VendorID = new String(tempArray);
+ */
 				if (VENDOR_ID_LAME == VendorID)
 				{
-					tempArray[0] = (char)Data[Data.Length - iterator - 4];
-					tempArray[1] = (char)Data[Data.Length - iterator - 3];
-					tempArray[2] = (char)Data[Data.Length - iterator - 2];
-					tempArray[3] = (char)Data[Data.Length - iterator - 1];
-					result = VendorID + new String(tempArray);
+/*
+					tempArray[0] = (char)Data[Data.Length - i - 4];
+					tempArray[1] = (char)Data[Data.Length - i - 3];
+					tempArray[2] = (char)Data[Data.Length - i - 2];
+					tempArray[3] = (char)Data[Data.Length - i - 1];
+ */
+                    result = VendorID + System.Text.Encoding.ASCII.GetString(Data, Data.Length - i - 4, 4);
 					break;
 				}
-				if (VENDOR_ID_GOGO_NEW == VendorID)
+				else if (VENDOR_ID_GOGO_NEW == VendorID)
 				{
 					result = VendorID;
 					break;
@@ -583,13 +582,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			// Reset all variables
 			FVendorID = "";
 
-			FVBR.Found = false;
-			Array.Clear(FVBR.ID,0,FVBR.ID.Length);
-			FVBR.Frames = 0;
-			FVBR.Bytes = 0;
-			FVBR.Scale = 0;
-			FVBR.VendorID = "";
-
+            FVBR.Reset();
             FFrame.Reset();
 		}
 
@@ -655,9 +648,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			if (FVBR.Found) return FVBR.Frames;
 			else
 			{
-				// Gambit - todo: ape tag
-				if (FID3v1.Exists) MPEGSize = FFileSize - FID3v2.Size - 128;
-				else MPEGSize = FFileSize - FID3v2.Size;
+				MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
     
 				return (long)Math.Floor(1.0*(MPEGSize - FFrame.Position) / GetFrameLength(FFrame));
 			}
@@ -667,17 +658,13 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		private double FGetDuration()
 		{
-			long MPEGSize;
-
 			// Calculate song duration
 			if (FFrame.Found)
 				if ((FVBR.Found) && (FVBR.Frames > 0))
 					return FVBR.Frames * GetCoefficient(FFrame) * 8 / GetSampleRate(FFrame);
 				else
 				{
-					// Gambit - todo: ape tag
-					if (FID3v1.Exists) MPEGSize = FFileSize - FID3v2.Size - 128;
-					else MPEGSize = FFileSize - FID3v2.Size;
+                    long MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
 					return (MPEGSize - FFrame.Position) / GetBitRate(FFrame) / 1000 * 8;
 				}
 			else
@@ -834,10 +821,9 @@ namespace ATL.AudioReaders.BinaryLogic
 			// Search for vendor ID at the end if CBR encoded
 			if ( (FFrame.Found) && (! FVBR.Found) )
 			{
-				if (! FID3v1.Exists) fs.Seek(FFileSize - Data.Length, SeekOrigin.Begin);
-				else fs.Seek(FFileSize - Data.Length - FID3v1.Size, SeekOrigin.Begin);
+                fs.Seek(FFileSize - Data.Length - FID3v1.Size - FAPEtag.Size, SeekOrigin.Begin);
 				Data = source.ReadBytes(Data.Length);
-				FVendorID = FindVendorID(Data, (ushort)(FFrame.Size * 5));
+				FVendorID = FindVendorID(Data, FFrame.Size * 5);
 			}
 			result = true;
 

@@ -14,8 +14,6 @@ namespace ATL.AudioReaders
 	/// </summary>
 	public class AudioFileReader : IMetaDataReader, IAudioDataReader
 	{	
-		private AudioReaderFactory theReaderFactory;			// Reader Factory
-		private MetaReaderFactory theMetaFactory;				// Meta Factory
 		private IAudioDataReader audioData;						// Audio data reader used for this file
 		private IMetaDataReader metaData;						// Metadata reader used for this file
 		private String thePath;									// Path of this file
@@ -29,12 +27,10 @@ namespace ATL.AudioReaders
 		public AudioFileReader(String path, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			thePath = path;
-			theReaderFactory = AudioReaderFactory.GetInstance();
-			theMetaFactory = MetaReaderFactory.GetInstance();
 
-			audioData = theReaderFactory.GetDataReader(path);
+            audioData = AudioReaderFactory.GetInstance().GetDataReader(path);
             audioData.ReadFromFile(path, pictureStreamHandler);
-			metaData = theMetaFactory.GetMetaReader(ref audioData);
+			metaData = MetaReaderFactory.GetInstance().GetMetaReader(ref audioData);
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
 		}

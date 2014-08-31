@@ -366,24 +366,26 @@ namespace ATL
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
         /// <returns>The string read, without the zeroes at its end</returns>
-        private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, Boolean moveStreamToLimit)
+        private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbEndingZeroChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
             //char[] endingChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? new char[] { '\0', '\0' } : new char[] { '\0' };
-            IList<byte> readBytes = new List<byte>();
+            IList<byte> readBytes = new List<byte>(limit>0?limit:40);
+            byte justRead;
             long distance = 0;
 
             while (r.BaseStream.Position < r.BaseStream.Length && ( (0 == limit) || (distance < limit) ) )
             {
-                readBytes.Add(r.ReadByte());
+                justRead = r.ReadByte();
+                readBytes.Add(justRead);
                 distance++;
 
-                if ((1 == nbEndingZeroChars) && (0 == readBytes[readBytes.Count - 1]))
+                if ((1 == nbEndingZeroChars) && (0 == justRead))
                 {
                     readBytes.RemoveAt(readBytes.Count - 1);
                     break;
                 }
-                if ((2 == nbEndingZeroChars) && (readBytes.Count > 1) && (0 == readBytes[readBytes.Count - 1] + readBytes[readBytes.Count - 2]))
+                if ((2 == nbEndingZeroChars) && (readBytes.Count > 1) && (0 == justRead) && (0 == readBytes[readBytes.Count - 2]) )
                 {
                     readBytes.RemoveAt(readBytes.Count - 1);
                     readBytes.RemoveAt(readBytes.Count - 1);
