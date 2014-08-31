@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
-    class DummyReader : ICatalogDataReader
+    public class DummyReader : ICatalogDataReader
     {
         String path = "";
 

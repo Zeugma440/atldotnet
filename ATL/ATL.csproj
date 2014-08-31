@@ -82,6 +82,7 @@
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogDelegator.cs" />
+    <Compile Include="PlaylistReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\FPLReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\M3UReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\PLSReader.cs" />

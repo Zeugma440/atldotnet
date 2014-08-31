@@ -70,6 +70,8 @@ namespace ATL.PlaylistReaders
                 theReader = new FPLReader();
             }
 
+            if (null == theReader) theReader = new DummyReader();
+
 			return theReader;
 		}
 	}
