@@ -108,8 +108,11 @@ namespace ATL.Logging
 			theItem.Level = level;
 			theItem.Message = msg;
 
-			// Adding to the list of logged items
-			masterLog.Add(theItem);
+            lock (masterLog)
+            {
+                // Adding to the list of logged items
+                masterLog.Add(theItem);
+            }
 
             doWrite(theItem, forceDisplay);
         }
@@ -118,7 +121,10 @@ namespace ATL.Logging
         {
             if (asynchronous && !forceDisplay)
             {
-                asyncQueue.Add(theItem);
+                lock (asyncQueue)
+                {
+                    asyncQueue.Add(theItem);
+                }
             }
             else
             {
@@ -136,7 +142,10 @@ namespace ATL.Logging
 		/// </summary>
 		public void ClearAll()
 		{
-			masterLog.Clear();
+            lock (masterLog)
+            {
+                masterLog.Clear();
+            }
 		}
 
 
@@ -159,13 +168,16 @@ namespace ATL.Logging
 		{
 			ArrayList result = new ArrayList();
 
-			foreach(LogItem anItem in masterLog)
-			{
-				if ( (levelMask & anItem.Level) > 0)
-				{
-					result.Add(anItem);
-				}
-			}
+            lock (masterLog)
+            {
+                foreach (LogItem anItem in masterLog)
+                {
+                    if ((levelMask & anItem.Level) > 0)
+                    {
+                        result.Add(anItem);
+                    }
+                }
+            }
 			return result;
 		}
 
@@ -195,11 +207,14 @@ namespace ATL.Logging
         /// </summary>
         public void FlushQueue()
         {
-            foreach (LogItem item in asyncQueue)
+            lock (asyncQueue)
             {
-                doWrite(item, true);
+                foreach (LogItem item in asyncQueue)
+                {
+                    doWrite(item, true);
+                }
+                asyncQueue.Clear();
             }
-            asyncQueue.Clear();
         }
 
         /// <summary>
