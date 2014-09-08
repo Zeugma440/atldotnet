@@ -76,6 +76,7 @@
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\duck hunt.wav" />
     <Content Include="Resources\playlist.m3u" />
+    <Content Include="Resources\ROQ.MID" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

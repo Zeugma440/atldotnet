@@ -111,17 +111,12 @@ namespace ATL.AudioReaders
 
 			// Step 2 : Nothing found in step 1 -> consider specific tagging (data+meta file formats)
             // TODO : what is cross-tagging is enabled _and_ additional info exists in specific tagging ?
-            // => Need to consider specific tagging information withing CrossMetadataReader
+            // => Need to consider specific tagging information within the CrossMetadataReader code, above
 			if (null == theMetaReader)
 			{
-				if ((theDataReader is BinaryLogic.TOggVorbis) ||
-					(theDataReader is BinaryLogic.TWMAfile) ||
-                    (theDataReader is BinaryLogic.TAACfile) ||
-					(theDataReader is BinaryLogic.TFLACFile) ||
-					(theDataReader is BinaryLogic.TPSFFile) ||
-					(theDataReader is BinaryLogic.TSPCFile) )
+				if (theDataReader is IMetaDataReader)
 				{
-					theMetaReader = (IMetaDataReader)theDataReader; // Boorish but correct cast
+					theMetaReader = (IMetaDataReader)theDataReader;
 				}
 			}
 

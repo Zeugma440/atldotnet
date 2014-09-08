@@ -37,13 +37,14 @@ using System.IO;
 using System.Collections;
 using ATL.Logging;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ATL.AudioReaders.BinaryLogic
 {
     /// <summary>
     /// Class for Musical Instruments Digital Interface files manipulation (extension : .MID, .MIDI)
     /// </summary>
-	class Midi : AudioDataReader
+	class Midi : AudioDataReader, IMetaDataReader
 	{
 
 		//Private properties
@@ -207,6 +208,69 @@ namespace ATL.AudioReaders.BinaryLogic
         private const String MIDI_FILE_HEADER = "MThd";
         private const String MIDI_TRACK_HEADER = "MTrk";
 
+        public StringBuilder FComment;
+
+
+        public bool Exists
+        {
+            get { return true; }
+        }
+
+        public string Title
+        {
+            get { return ""; }
+        }
+
+        public string Artist
+        {
+            get { return ""; }
+        }
+
+        public string Composer
+        {
+            get { return ""; }
+        }
+
+        public string Comment
+        {
+            get { return FComment.ToString(); }
+        }
+
+        public string Genre
+        {
+            get { return ""; }
+        }
+
+        public ushort Track
+        {
+            get { return 0; }
+        }
+
+        public ushort Disc
+        {
+            get { return 0; }
+        }
+
+        public string Year
+        {
+            get { return ""; }
+        }
+
+        public string Album
+        {
+            get { return ""; }
+        }
+
+        public ushort Rating
+        {
+            get { return 0; }
+        }
+
+        public IList<MetaReaderFactory.PIC_CODE> Pictures
+        {
+            get { return new List<MetaReaderFactory.PIC_CODE>(); }
+        }
+
     	public override bool IsVBR
 		{
 			get { return false; }
@@ -217,7 +281,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		}
         public override bool AllowsParsableMetadata
         {
-            get { return false; }
+            get { return true; } // Only true for comments
         }
 
         private double getDuration()
@@ -233,7 +297,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
         protected override void resetSpecificData()
         {
-            // Nothing
+            FComment = new StringBuilder("");
         }
 
         /****************************************************************************
@@ -340,6 +404,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
             this.tracks = tracks;
 
+            FComment.Remove(FComment.Length - 1, 1);
             FDuration = getDuration();
             FBitrate = FFileSize / FDuration;
 
@@ -576,17 +641,22 @@ namespace ATL.AudioReaders.BinaryLogic
 							case 0x06: // Meta Marker
 							case 0x07: // Meta Cue
 								String[] texttypes = new String[7] {"Text","Copyright","TrkName","InstrName","Lyric","Marker","Cue"};
+
 								String type = texttypes[meta-1];
 								p +=2;
 								len = _readVarLen(ref data,ref p);
 								if ( (len+p) > trackLen ) throw new Exception("Meta "+type+" has corrupt variable length field ("+len+") [track: "+tn+" dt: "+dt+"]");
 										
 								//txt = data.Substring(p,len);
+                                txt = Encoding.ASCII.GetString(data, p, len);
+                                /*
 								txt = "";
 								for (int i=p; i<p+len; i++)
 								{
 									txt = txt + (char)data[i];
 								}
+                                 */
+                                if (0x01 == meta || 0x02 == meta || 0x03 == meta || 0x06 == meta) FComment.Append(txt).Append("/");
 
 								track.Add(time+" Meta "+type+" \""+txt+"\"");
 								p+=len;
@@ -785,5 +855,6 @@ namespace ATL.AudioReaders.BinaryLogic
 			}
 			return(value);
 		}
-	} // END OF CLASS
+
+    } // END OF CLASS
 }

@@ -54,6 +54,19 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 400);
         }
 
+        [TestMethod]
+        public void TestMIDITrack()
+        {
+            Track theTrack = new Track("../../Resources/ROQ.MID");
+
+            //Assert.AreEqual(504, theTrack.Duration); Nobody's perfect...
+            //Assert.AreEqual(694, theTrack.Bitrate);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ, theTrack.CodecFamily);
+
+            Assert.AreEqual("The Music Shoppe - Path to God/base/Midi of the Week/The Music Shoppe/http://cctr.umkc.edu/user/dschmid/midiweek.htm/816 373.1710", theTrack.Comment);
+        }
+
         /* ------------------------- */
 
         [TestMethod]
