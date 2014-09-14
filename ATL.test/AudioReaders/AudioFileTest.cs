@@ -57,14 +57,23 @@ namespace ATL.test
         [TestMethod]
         public void TestMIDITrack()
         {
+            // Type 1 song; comprehensive tempo map in 1st track
             Track theTrack = new Track("../../Resources/ROQ.MID");
 
-            //Assert.AreEqual(504, theTrack.Duration); Nobody's perfect...
-            //Assert.AreEqual(694, theTrack.Bitrate);
+            Assert.AreEqual(504, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ, theTrack.CodecFamily);
 
             Assert.AreEqual("The Music Shoppe - Path to God/base/Midi of the Week/The Music Shoppe/http://cctr.umkc.edu/user/dschmid/midiweek.htm/816 373.1710", theTrack.Comment);
+
+            // Type 1 song; duration = duration of longest track
+            theTrack = new Track("../../Resources/ataezou - I (HEART) RUEAMATASU.mid");
+
+            Assert.AreEqual(66, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ, theTrack.CodecFamily);
+
+            Assert.AreEqual("untitled", theTrack.Comment);
         }
 
         /* ------------------------- */

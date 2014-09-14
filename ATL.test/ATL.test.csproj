@@ -74,9 +74,11 @@
   <ItemGroup>
     <Content Include="Resources\01 - Title Screen.mp3" />
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
+    <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\duck hunt.wav" />
     <Content Include="Resources\playlist.m3u" />
     <Content Include="Resources\ROQ.MID" />
+    <Content Include="Resources\TRANSIT1.MID" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
