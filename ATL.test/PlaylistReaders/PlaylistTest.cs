@@ -33,5 +33,19 @@ namespace ATL.test
                 Assert.IsTrue(System.IO.File.Exists(s));
             }
         }
+
+        [TestMethod]
+        public void TestSMIL()
+        {
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader("../../Resources/playlist.smil");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+            Assert.AreEqual(2, theReader.GetFiles().Count);
+            foreach (string s in theReader.GetFiles())
+            {
+                System.Console.WriteLine(s);
+                Assert.IsTrue(System.IO.File.Exists(s));
+            }
+        }
     }
 }
