@@ -11,9 +11,10 @@ namespace ATL.PlaylistReaders
 	public class PlaylistReaderFactory : ReaderFactory
 	{
 		// Defines the supported formats
-		public const int PL_M3U = 0;
-		public const int PL_PLS = 1;
-        public const int PL_FPL = 2;
+		public const int PL_M3U     = 0;
+		public const int PL_PLS     = 1;
+        public const int PL_FPL     = 2;
+        public const int PL_XSPF    = 3;
 
 		// The instance of this factory
 		private static PlaylistReaderFactory theFactory = null;
@@ -40,6 +41,11 @@ namespace ATL.PlaylistReaders
                 tempFmt = new Format("FPL (experimental)");
                 tempFmt.ID = PL_FPL;
                 tempFmt.AddExtension(".fpl");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("XSPF");
+                tempFmt.ID = PL_XSPF;
+                tempFmt.AddExtension(".xspf");
                 theFactory.addFormat(tempFmt);
             }
 
@@ -68,6 +74,10 @@ namespace ATL.PlaylistReaders
             else if (PL_FPL == formatId)
             {
                 theReader = new FPLReader();
+            }
+            else if (PL_XSPF == formatId)
+            {
+                theReader = new XSPFReader();
             }
 
             if (null == theReader) theReader = new DummyReader();

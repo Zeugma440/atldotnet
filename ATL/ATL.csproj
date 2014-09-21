@@ -39,6 +39,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AudioReaders\AudioDataReader.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogDelegator.cs" />
+    <Compile Include="PlaylistReaders\BinaryLogic\XSPFReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\FPLReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\M3UReader.cs" />

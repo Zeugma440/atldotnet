@@ -26,7 +26,7 @@ namespace ATL.test
             // Removes the last separator
             filter.Remove(filter.Length - 1, 1);
 
-            Assert.AreEqual(".PLS;.M3U;.M3U8;.FPL", filter.ToString());
+            Assert.AreEqual(".PLS;.M3U;.M3U8;.FPL;.XSPF", filter.ToString());
         }
     }
 }
