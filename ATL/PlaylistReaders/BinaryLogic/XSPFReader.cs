@@ -1,3 +1,4 @@
+using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,7 +30,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
             {
                 switch (source.NodeType)
                 {
-                    case XmlNodeType.Element: // The node is an element.
+                    case XmlNodeType.Element: // Element start
                         if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
                         {
                             inPlaylist = true;
@@ -52,24 +53,31 @@ namespace ATL.PlaylistReaders.BinaryLogic
                         }
                         break;
 
-                    case XmlNodeType.Text: //Display the text in each element.
+                    case XmlNodeType.Text:
                         if (inLocation || inImage)
                         {
-                            uri = new Uri(source.Value);
-                            if (uri.IsFile)
+                            if (Uri.IsWellFormedUriString(source.Value, UriKind.RelativeOrAbsolute))
                             {
-                                if (inLocation) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
-                                //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
-                                //TODO fetch track picture from playlists info ?
+                                uri = new Uri(source.Value);
+                                if (uri.IsFile)
+                                {
+                                    if (inLocation) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                    //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                    //TODO fetch track picture from playlists info ?
+                                }
+                                else // other protocols (e.g. HTTP, SMB)
+                                {
+                                    //TODO
+                                }
                             }
-                            else // other protocols (e.g. HTTP, SMB)
+                            else
                             {
-                                //TODO
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, FFileName+ " : "+source.Value+" is not a valid URI");
                             }
                         }
                         break;
 
-                    case XmlNodeType.EndElement: //Display the end of the element.
+                    case XmlNodeType.EndElement: // Element end
                         if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
                         {
                             inPlaylist = false;
