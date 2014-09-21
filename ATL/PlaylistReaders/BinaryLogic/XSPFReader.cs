@@ -56,12 +56,22 @@ namespace ATL.PlaylistReaders.BinaryLogic
                     case XmlNodeType.Text:
                         if (inLocation || inImage)
                         {
-                            if (Uri.IsWellFormedUriString(source.Value, UriKind.RelativeOrAbsolute))
+                            try
                             {
                                 uri = new Uri(source.Value);
                                 if (uri.IsFile)
                                 {
-                                    if (inLocation) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                    if (inLocation)
+                                    {
+                                        if (!System.IO.Path.IsPathRooted(uri.LocalPath))
+                                        {
+                                            result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
+                                        }
+                                        else
+                                        {
+                                            result.Add(uri.LocalPath);
+                                        }
+                                    }
                                     //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
                                     //TODO fetch track picture from playlists info ?
                                 }
@@ -70,9 +80,9 @@ namespace ATL.PlaylistReaders.BinaryLogic
                                     //TODO
                                 }
                             }
-                            else
+                            catch (UriFormatException)
                             {
-                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, FFileName+ " : "+source.Value+" is not a valid URI");
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
                             }
                         }
                         break;
