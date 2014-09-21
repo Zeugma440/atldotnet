@@ -16,10 +16,14 @@ namespace ATL.PlaylistReaders.BinaryLogic
         {
             Uri uri;
             XmlTextReader source = new XmlTextReader(fs);
+
+            // The following flags indicate if the parser is currently reading
+            // the content of the corresponding tag
             bool inPlaylist = false;
             bool inTracklist = false;
             bool inTrack = false;
             bool inLocation = false;
+            bool inImage = false;
 
             while (source.Read())
             {
@@ -42,17 +46,23 @@ namespace ATL.PlaylistReaders.BinaryLogic
                         {
                             inLocation = true;
                         }
+                        else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
+                        {
+                            inImage = true;
+                        }
                         break;
 
                     case XmlNodeType.Text: //Display the text in each element.
-                        if (inLocation)
+                        if (inLocation || inImage)
                         {
                             uri = new Uri(source.Value);
                             if (uri.IsFile)
                             {
-                                result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                if (inLocation) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                //TODO fetch track picture from playlists info ?
                             }
-                            else // other protocols (e.g. HTTP)
+                            else // other protocols (e.g. HTTP, SMB)
                             {
                                 //TODO
                             }
@@ -75,6 +85,10 @@ namespace ATL.PlaylistReaders.BinaryLogic
                         else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
                         {
                             inLocation = false;
+                        }
+                        else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
+                        {
+                            inImage = false;
                         }
                         break;
                 }
