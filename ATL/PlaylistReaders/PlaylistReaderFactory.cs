@@ -58,8 +58,6 @@ namespace ATL.PlaylistReaders
 
                 tempFmt = new Format("ASX");
                 tempFmt.ID = PL_ASX;
-                // TODO implement
-                tempFmt.Readable = false;
                 tempFmt.AddExtension(".asx");
                 theFactory.addFormat(tempFmt);
             }
@@ -97,6 +95,10 @@ namespace ATL.PlaylistReaders
             else if (PL_SMIL == formatId)
             {
                 theReader = new SMILReader();
+            }
+            else if (PL_ASX == formatId)
+            {
+                theReader = new ASXReader();
             }
 
             if (null == theReader) theReader = new DummyReader();
