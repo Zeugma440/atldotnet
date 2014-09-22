@@ -72,6 +72,7 @@
     <None Include="Resources\duck hunt.cue" />
     <None Include="Resources\playlist.smil" />
     <None Include="Resources\playlist.xspf" />
+    <None Include="Resources\tutte.b4s" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\01 - Title Screen.mp3" />

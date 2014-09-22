@@ -61,5 +61,19 @@ namespace ATL.test
                 Assert.IsTrue(System.IO.File.Exists(s));
             }
         }
+
+        [TestMethod]
+        public void TestB4S()
+        {
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader("../../Resources/playlist.b4s");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+            Assert.AreEqual(4, theReader.GetFiles().Count);
+            foreach (string s in theReader.GetFiles())
+            {
+                System.Console.WriteLine(s);
+                Assert.IsTrue(System.IO.File.Exists(s));
+            }
+        }
     }
 }

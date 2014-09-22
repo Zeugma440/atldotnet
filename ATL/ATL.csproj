@@ -84,6 +84,7 @@
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogDelegator.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\ASXReader.cs" />
+    <Compile Include="PlaylistReaders\BinaryLogic\B4SReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\SMILReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\XSPFReader.cs" />
     <Compile Include="PlaylistReaders\BinaryLogic\DummyReader.cs" />

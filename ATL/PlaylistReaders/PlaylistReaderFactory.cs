@@ -17,6 +17,7 @@ namespace ATL.PlaylistReaders
         public const int PL_XSPF    = 3;
         public const int PL_SMIL    = 4;
         public const int PL_ASX     = 5;
+        public const int PL_B4S     = 6;
 
 		// The instance of this factory
 		private static PlaylistReaderFactory theFactory = null;
@@ -59,6 +60,13 @@ namespace ATL.PlaylistReaders
                 tempFmt = new Format("ASX");
                 tempFmt.ID = PL_ASX;
                 tempFmt.AddExtension(".asx");
+                tempFmt.AddExtension(".wax");
+                tempFmt.AddExtension(".wvx");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("B4S");
+                tempFmt.ID = PL_B4S;
+                tempFmt.AddExtension(".b4s");
                 theFactory.addFormat(tempFmt);
             }
 
@@ -99,6 +107,10 @@ namespace ATL.PlaylistReaders
             else if (PL_ASX == formatId)
             {
                 theReader = new ASXReader();
+            }
+            else if (PL_B4S == formatId)
+            {
+                theReader = new B4SReader();
             }
 
             if (null == theReader) theReader = new DummyReader();
