@@ -76,6 +76,37 @@ namespace ATL.test
             Assert.AreEqual("untitled", theTrack.Comment);
         }
 
+        [TestMethod]
+        public void TestDSF_streamedTrack()
+        {
+            Track theTrack = new Track("../../Resources/Yeah.dsf");
+
+            Assert.AreEqual(4, theTrack.Duration);
+            Assert.AreEqual(5953, theTrack.Bitrate);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theTrack.CodecFamily);
+
+            Assert.AreEqual("Yeah", theTrack.Title);
+            Assert.AreEqual("oh", theTrack.Artist);
+            Assert.AreEqual("yeah", theTrack.Album);
+            Assert.AreEqual(2000, theTrack.Year);
+            Assert.AreEqual(44, theTrack.TrackNumber);
+            Assert.AreEqual("Other", theTrack.Genre);
+            Assert.IsNotNull(theTrack.GetEmbeddedPicture());
+        }
+
+        [TestMethod]
+        public void TestDSF_PSFTrack()
+        {
+            Track theTrack = new Track("../../Resources/adgpp_PLAY_01_05.dsf");
+
+            Assert.AreEqual(26, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theTrack.CodecFamily);
+
+            Assert.AreEqual("Akihabara Dennou-gumi Pata Pies!", theTrack.Album);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

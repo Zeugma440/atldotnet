@@ -7,7 +7,7 @@ using System.IO;
 namespace ATL
 {
 	/// <summary>
-	/// Description r¨¦sum¨¦ de Titre.
+	/// TRack description
 	/// </summary>
 	public class Track
 	{

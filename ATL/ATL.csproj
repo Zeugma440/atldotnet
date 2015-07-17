@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AudioReaders\AudioDataReader.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\DSF.cs" />
     <Compile Include="AudioReaders\MetaDataReader.cs" />
     <Compile Include="AudioReaders\Interfaces\IAudioDataReader.cs" />
     <Compile Include="AudioReaders\AudioFileReader.cs" />

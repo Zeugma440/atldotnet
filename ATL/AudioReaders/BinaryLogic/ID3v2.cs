@@ -117,7 +117,7 @@ namespace ATL.AudioReaders.BinaryLogic
                 fs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
                 SourceFile = new BinaryReader(fs);
 
-                return ReadHeader(SourceFile, ref Tag);
+                return ReadHeader(SourceFile, ref Tag, 0);
             }
             catch (Exception e)
             {
@@ -132,12 +132,12 @@ namespace ATL.AudioReaders.BinaryLogic
             return result;
         }
 
-        private bool ReadHeader(BinaryReader SourceFile, ref TagInfo Tag)
+        private bool ReadHeader(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             bool result = true;
 
             // Read header and get file size
-            SourceFile.BaseStream.Seek(0, SeekOrigin.Begin);
+            SourceFile.BaseStream.Seek(offset, SeekOrigin.Begin);
             Tag.ID = StreamUtils.ReadOneByteChars(SourceFile, 3);
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
@@ -187,7 +187,7 @@ namespace ATL.AudioReaders.BinaryLogic
         }
 
         // Get information from frames (ID3v2.3.x & ID3v2.4.x : frame identifier has 4 characters)
-        private void ReadFramesNew(BinaryReader SourceFile, ref TagInfo Tag)
+        private void ReadFramesNew(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             Stream fs = SourceFile.BaseStream;
             FrameHeaderNew Frame = new FrameHeaderNew();
@@ -195,8 +195,8 @@ namespace ATL.AudioReaders.BinaryLogic
             long DataSize;
             String strData;
 
-            fs.Seek(10, SeekOrigin.Begin);
-            while ((fs.Position < GetTagSize(Tag)) && (fs.Position < fs.Length))
+            fs.Seek(offset+10, SeekOrigin.Begin);
+            while ((fs.Position-offset < GetTagSize(Tag)) && (fs.Position < fs.Length))
             {
                 // Read frame header and check frame ID
                 // ID3v2.3+ : 4 characters
@@ -344,7 +344,7 @@ namespace ATL.AudioReaders.BinaryLogic
         // ---------------------------------------------------------------------------
 
         // Get information from frames (ID3v2.2.x : frame identifier has 3 characters)
-        private void ReadFrames_v22(BinaryReader SourceFile, ref TagInfo Tag)
+        private void ReadFrames_v22(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             Stream fs = SourceFile.BaseStream;
             FrameHeaderOld Frame = new FrameHeaderOld();
@@ -353,8 +353,8 @@ namespace ATL.AudioReaders.BinaryLogic
             int FrameSize;
             int DataSize;
 
-            fs.Seek(10, SeekOrigin.Begin);
-            while ((fs.Position < GetTagSize(Tag)) && (fs.Position < fs.Length))
+            fs.Seek(offset+10, SeekOrigin.Begin);
+            while ((fs.Position - offset < GetTagSize(Tag)) && (fs.Position < fs.Length))
             {
                 Array.Clear(Data, 0, Data.Length);
 
@@ -428,12 +428,17 @@ namespace ATL.AudioReaders.BinaryLogic
 
         public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
+            return Read(source, pictureStreamHandler, 0);
+        }
+
+        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler, long offset)
+        {
             TagInfo Tag = new TagInfo();
             this.FPictureStreamHandler = pictureStreamHandler;
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = ReadHeader(source, ref Tag);
+            bool result = ReadHeader(source, ref Tag, offset);
 
             // Process data if loaded and header valid
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, Tag.ID))
@@ -445,8 +450,8 @@ namespace ATL.AudioReaders.BinaryLogic
                 // Get information from frames if version supported
                 if ((TAG_VERSION_2_2 <= FVersion) && (FVersion <= TAG_VERSION_2_4) && (FSize > 0))
                 {
-                    if (FVersion > TAG_VERSION_2_2) ReadFramesNew(source, ref Tag);
-                    else ReadFrames_v22(source, ref Tag);
+                    if (FVersion > TAG_VERSION_2_2) ReadFramesNew(source, ref Tag, offset);
+                    else ReadFrames_v22(source, ref Tag, offset);
 
                     FTitle = GetContent(Tag.Frame[0], Tag.Frame[14]);
                     FArtist = GetContent(Tag.Frame[1], Tag.Frame[13]);

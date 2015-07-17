@@ -160,7 +160,7 @@ namespace ATL
 			initialPosition = r.BaseStream.Position;
 			if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
 
-			while (r.BaseStream.Position < initialPosition+effectiveLength)
+			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
 				w.Write(r.ReadBytes(BUFFERSIZE));
 		}
 

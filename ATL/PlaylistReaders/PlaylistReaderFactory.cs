@@ -28,7 +28,7 @@ namespace ATL.PlaylistReaders
 			if (null == theFactory)
 			{
 				theFactory = new PlaylistReaderFactory();
-                theFactory.formatList = new Dictionary<string, Format>();
+                theFactory.formatList = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("PLS");
                 tempFmt.ID = PL_PLS;
@@ -73,11 +73,22 @@ namespace ATL.PlaylistReaders
 			return theFactory;
 		}
 
-		public IPlaylistReader GetPlaylistReader(String path)
+        public IPlaylistReader GetPlaylistReader(String path, int alternate = 0)
 		{
-            IPlaylistReader reader = GetPlaylistReader(getFormatIDFromPath(path));
-            reader.Path = path;
-            return reader;
+            IList<Format> formats = getFormatsFromPath(path);
+            IPlaylistReader result;
+
+            if (formats != null && formats.Count > alternate)
+            {
+                result = GetPlaylistReader(formats[alternate].ID);
+            }
+            else
+            {
+                result = GetPlaylistReader(NO_FORMAT);
+            }
+
+            result.Path = path;
+            return result;
         }
 
         public IPlaylistReader GetPlaylistReader(int formatId)

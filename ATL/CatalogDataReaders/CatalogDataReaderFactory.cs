@@ -21,7 +21,7 @@ namespace ATL.CatalogDataReaders
 			if (null == theFactory)
 			{
 				theFactory = new CatalogDataReaderFactory();
-                theFactory.formatList = new Dictionary<String,ATL.Format>();
+                theFactory.formatList = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("CUE sheet");
                 tempFmt.ID = CR_CUE;
@@ -31,12 +31,23 @@ namespace ATL.CatalogDataReaders
 
 			return theFactory;
 		}
-        
-		public ICatalogDataReader GetCatalogDataReader(String path)
+
+        public ICatalogDataReader GetCatalogDataReader(String path, int alternate = 0)
 		{
-			ICatalogDataReader theReader = GetCatalogDataReader(getFormatIDFromPath(path));
-            theReader.Path = path;
-            return theReader;
+            IList<Format> formats = getFormatsFromPath(path);
+            ICatalogDataReader result;
+
+            if (formats != null && formats.Count > alternate)
+            {
+                result = GetCatalogDataReader(formats[alternate].ID);
+            }
+            else
+            {
+                result = GetCatalogDataReader(NO_FORMAT);
+            }
+
+            result.Path = path;
+            return result;
         }
 
         private ICatalogDataReader GetCatalogDataReader(int formatId)

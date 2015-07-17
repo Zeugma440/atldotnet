@@ -26,10 +26,17 @@ namespace ATL.AudioReaders
 		/// <param name="path">Path of the file to be parsed</param>
 		public AudioFileReader(String path, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
+            byte alternate = 0;
 			thePath = path;
 
             audioData = AudioReaderFactory.GetInstance().GetDataReader(path);
-            audioData.ReadFromFile(path, pictureStreamHandler);
+
+            while (!audioData.ReadFromFile(path, pictureStreamHandler))
+            {
+                alternate++;
+                audioData = AudioReaderFactory.GetInstance().GetDataReader(path, alternate);
+            }
+            
 			metaData = MetaReaderFactory.GetInstance().GetMetaReader(ref audioData);
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);

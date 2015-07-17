@@ -40,8 +40,9 @@ namespace ATL.AudioReaders
 		public const int CID_DTS		= 14;
 		public const int CID_VQF		= 15;
         public const int CID_TTA        = 16;
+        public const int CID_DSF        = 17;
 
-		public const int NB_CODECS = 17;
+		public const int NB_CODECS = 18;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -55,7 +56,7 @@ namespace ATL.AudioReaders
 			{
 				theFactory = new AudioReaderFactory();
 
-                theFactory.formatList = new Dictionary<string, Format>();
+                theFactory.formatList = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("MPEG Audio Layer");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MP3;
@@ -136,6 +137,12 @@ namespace ATL.AudioReaders
                 tempFmt.AddExtension(".midi");
                 theFactory.addFormat(tempFmt);
 
+                tempFmt = new Format("Direct Stream Digital");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_DSF;
+                tempFmt.AddExtension(".dsf");
+                tempFmt.AddExtension(".dsd");
+                theFactory.addFormat(tempFmt);
+
                 tempFmt = new Format("Portable Sound Format");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_PSF;
                 tempFmt.AddExtension(".psf");
@@ -168,9 +175,18 @@ namespace ATL.AudioReaders
 			return theFactory;
 		}
 
-		public IAudioDataReader GetDataReader(String path)
+		public IAudioDataReader GetDataReader(String path, int alternate = 0)
 		{
-			return GetDataReader(getFormatIDFromPath(path));
+            IList<Format> formats = getFormatsFromPath(path);
+
+            if (formats != null && formats.Count > alternate)
+            {
+                return GetDataReader(formats[alternate].ID);
+            }
+            else
+            {
+                return GetDataReader(NO_FORMAT);
+            }
 		}
 
 		/// <summary>
@@ -240,6 +256,10 @@ namespace ATL.AudioReaders
 				case CID_SPC :		
 					theDataReader = new BinaryLogic.TSPCFile();
 					break;
+
+                case CID_DSF :
+                    theDataReader = new BinaryLogic.TDSF();
+                    break;
 
 				default:
 					theDataReader = new BinaryLogic.DummyReader();
