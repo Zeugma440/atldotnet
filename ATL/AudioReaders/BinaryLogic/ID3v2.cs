@@ -93,6 +93,12 @@ namespace ATL.AudioReaders.BinaryLogic
             public byte[] Size = new byte[4];             // Tag size excluding header
             // Extended data
             public long FileSize;		                          // File size (bytes)
+
+            public bool UsesUnsynchronisation;          // Determinated from flags; indicates if tag uses unsynchronisation (ID3v2.2+)
+            public bool HasExtendedHeader;              // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
+            public bool IsExperimental;                 // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
+            public bool HasFooter;                      // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+
             public String[] Frame = new String[ID3V2_FRAME_COUNT];
         }
 
@@ -141,7 +147,13 @@ namespace ATL.AudioReaders.BinaryLogic
             Tag.ID = StreamUtils.ReadOneByteChars(SourceFile, 3);
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
+            
             Tag.Flags = SourceFile.ReadByte();
+            Tag.UsesUnsynchronisation = ((Tag.Flags & 128) > 0);
+            Tag.HasExtendedHeader = (((Tag.Flags & 64) > 0) && (Tag.Version > TAG_VERSION_2_2));
+            Tag.IsExperimental = ((Tag.Flags & 32) > 0);
+            Tag.HasFooter = ((Tag.Flags & 0x10) > 0);
+            
             Tag.Size = SourceFile.ReadBytes(4);
 
             //BlockRead(SourceFile, Tag, 10, Transferred);
@@ -158,7 +170,7 @@ namespace ATL.AudioReaders.BinaryLogic
             // Get total tag size
             int result = StreamUtils.ExtractSynchSafeInt32(Tag.Size) + 10;
 
-            if (0x10 == (Tag.Flags & 0x10)) result += 10;
+            if (Tag.HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
             if (result > Tag.FileSize) result = 0;
 
             return result;
@@ -325,13 +337,28 @@ namespace ATL.AudioReaders.BinaryLogic
                     if (StreamUtils.StringEqualsArr("APIC",Frame.ID))
                     {
                         // mime-type always coded in ASCII
+                        if (1 == encoding) fs.Seek(-1, SeekOrigin.Current);
                         String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, 0);
                         FPictures.Add(ReadAPICPictureType(SourceFile,8));
+
+                        // However, description can be coded with another convention
+                        if (1 == encoding)
+                        {
+                            readBOM(ref fs);
+                        }
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, encoding);
                         if (FPictureStreamHandler != null)
                         {
-                            MemoryStream mem = new MemoryStream(Frame.Size);
-                            StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, Frame.Size);
+                            int picSize = (int)(DataSize - (fs.Position - Position));
+                            MemoryStream mem = new MemoryStream(picSize);
+                            if (Tag.UsesUnsynchronisation)
+                            {
+                                CopyUnsynchronizedStream(mem, SourceFile, picSize);
+                            }
+                            else
+                            {
+                                StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, picSize);
+                            }
                             FPictureStreamHandler(ref mem);
                             mem.Close();
                         }
@@ -397,8 +424,18 @@ namespace ATL.AudioReaders.BinaryLogic
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, textEncoding);
                         if (FPictureStreamHandler != null)
                         {
-                            MemoryStream mem = new MemoryStream(FrameSize);
-                            StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, FrameSize);
+                            int picSize = (int)(DataSize - (fs.Position - Position));
+                            MemoryStream mem = new MemoryStream(picSize);
+
+                            if (Tag.UsesUnsynchronisation)
+                            {
+                                CopyUnsynchronizedStream(mem, SourceFile, picSize);
+                            }
+                            else
+                            {
+                                StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, picSize);
+                            }
+
                             FPictureStreamHandler(ref mem);
                         }
                     }
@@ -560,5 +597,33 @@ namespace ATL.AudioReaders.BinaryLogic
             else if (6 == pictureType) return MetaReaderFactory.PIC_CODE.CD;
             else return MetaReaderFactory.PIC_CODE.Generic;
         }
+
+        // Copies the stream while cleaning abnormalities du to unsynchronization
+        // => 0xff 0x00 => 0xff
+        protected static void CopyUnsynchronizedStream(Stream mTo, BinaryReader r, long length)
+        {
+            BinaryWriter w = new BinaryWriter(mTo);
+
+            long effectiveLength;
+            long initialPosition;
+            byte prevB_2 = 0;
+            byte prevB_1 = 0;
+            byte b;
+
+            initialPosition = r.BaseStream.Position;
+            if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+
+            while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
+            {
+                b = r.ReadByte();
+                //if ((0xFF == prevB_2) && (0x00 == prevB_1) && (0x00 == b)) b = r.ReadByte();
+                if ((0xFF == prevB_1) && (0x00 == b)) b = r.ReadByte();
+
+                w.Write(b);
+                prevB_2 = prevB_1;
+                prevB_1 = b;
+            }
+        }
+
     }
 }

@@ -54,16 +54,7 @@ namespace ATL
 
         protected void readImageData(ref MemoryStream s)
         {
-            if (StreamUtils.isBrokenJpeg(s))
-            {
-                MemoryStream mem = StreamUtils.FixBrokenJPEG(ref s);
-                s.Close();
-                coverArt = Image.FromStream(mem);
-            }
-            else
-            {
                 coverArt = Image.FromStream(s);
-            }
         }
 
         protected void Update(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)

@@ -117,9 +117,9 @@ namespace ATL
 		/// <param name="length">Number of bytes to be copied</param>
 		public static void CopyMemoryStreamFrom(Stream mTo, Stream mFrom, long length)
 		{
-			BinaryWriter w = new BinaryWriter(mTo);
-			BinaryReader r = new BinaryReader(mFrom);
-			CopyMemoryStreamFrom(w, r, length);
+            BinaryWriter w = new BinaryWriter(mTo);
+            BinaryReader r = new BinaryReader(mFrom);
+            CopyMemoryStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -130,8 +130,8 @@ namespace ATL
 		/// <param name="length">Number of bytes to be copied</param>
 		public static void CopyMemoryStreamFrom(BinaryWriter w, Stream mFrom, long length)
 		{
-			BinaryReader r = new BinaryReader(mFrom);			
-			CopyMemoryStreamFrom(w, r, length);
+            BinaryReader r = new BinaryReader(mFrom);
+            CopyMemoryStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -142,8 +142,8 @@ namespace ATL
 		/// <param name="length">Number of bytes to be copied</param>
 		public static void CopyMemoryStreamFrom(Stream mTo, BinaryReader r, long length)
 		{
-			BinaryWriter w = new BinaryWriter(mTo);
-			CopyMemoryStreamFrom(w, r, length);
+            BinaryWriter w = new BinaryWriter(mTo);
+            CopyMemoryStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -368,24 +368,26 @@ namespace ATL
         /// <returns>The string read, without the zeroes at its end</returns>
         private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
-            int nbEndingZeroChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
-            //char[] endingChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? new char[] { '\0', '\0' } : new char[] { '\0' };
+            int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
             IList<byte> readBytes = new List<byte>(limit>0?limit:40);
-            byte justRead;
+            byte justRead = 0;
             long distance = 0;
 
             while (r.BaseStream.Position < r.BaseStream.Length && ( (0 == limit) || (distance < limit) ) )
             {
-                justRead = r.ReadByte();
-                readBytes.Add(justRead);
-                distance++;
+                for (int i = 0; i < nbChars; i++)
+                {
+                    justRead = r.ReadByte();
+                    readBytes.Add(justRead);
+                    distance++;
+                }
 
-                if ((1 == nbEndingZeroChars) && (0 == justRead))
+                if ((1 == nbChars) && (0 == justRead))
                 {
                     readBytes.RemoveAt(readBytes.Count - 1);
                     break;
                 }
-                if ((2 == nbEndingZeroChars) && (readBytes.Count > 1) && (0 == justRead) && (0 == readBytes[readBytes.Count - 2]) )
+                if ((2 == nbChars) && (readBytes.Count > 1) && (0 == justRead) && (0 == readBytes[readBytes.Count - 2]))
                 {
                     readBytes.RemoveAt(readBytes.Count - 1);
                     readBytes.RemoveAt(readBytes.Count - 1);
@@ -398,47 +400,6 @@ namespace ATL
             byte[] readBytesArr = new byte[readBytes.Count];
             readBytes.CopyTo(readBytesArr,0);
             return encoding.GetString(readBytesArr);
-        }
-
-        // Checks if the JPEG picture scanned by the given stream
-        // may contain abnormalities (0xff 0x00 instead of 0xff)
-        public static bool isBrokenJpeg(Stream s)
-        {
-            int[] header = new int[5];
-            s.Seek(0, SeekOrigin.Begin);
-            header[0] = s.ReadByte();
-            header[1] = s.ReadByte();
-            header[2] = s.ReadByte();
-            header[3] = s.ReadByte();
-            header[4] = s.ReadByte();
-
-            return (header[0] == 0xff && header[1] == 0xd8 && header[2] == 0xff && (header[3] == 0x00 && header[4] == 0xe0));
-        }
-
-        // Clean abnormalities in JPEG binary streams
-        //   - Badly formatted data (0xff 0x00 => 0xff)
-        public static MemoryStream FixBrokenJPEG(ref MemoryStream s)
-        {
-            MemoryStream mem = new MemoryStream(s.Capacity);
-
-            using(BinaryReader r = new BinaryReader(s))
-            using (BinaryWriter w = new BinaryWriter(mem))
-            {
-                byte prevB = 0;
-                byte b;
-
-                s.Seek(0, SeekOrigin.Begin);
-                while (s.Position < s.Length)
-                {
-                    b = r.ReadByte();
-                    if ((0xFF == prevB) && (0x00 == b)) b = r.ReadByte();
-
-                    w.Write(b);
-                    prevB = b;
-                }
-            }
-
-            return mem;
         }
 
         // Extracts a "synch-safe" Int32 from a byte array
