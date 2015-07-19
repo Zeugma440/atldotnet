@@ -49,6 +49,7 @@ namespace ATL.test
             Assert.AreEqual("comment", theTrack.Comment);
 
             Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
             Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
             Assert.AreEqual(picture.Height, 550);
             Assert.AreEqual(picture.Width, 400);
@@ -92,7 +93,12 @@ namespace ATL.test
             Assert.AreEqual(2000, theTrack.Year);
             Assert.AreEqual(44, theTrack.TrackNumber);
             Assert.AreEqual("Other", theTrack.Genre);
-            Assert.IsNotNull(theTrack.GetEmbeddedPicture());
+            
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+            Assert.AreEqual(picture.Height, 298);
+            Assert.AreEqual(picture.Width, 300);
         }
 
         [TestMethod]
