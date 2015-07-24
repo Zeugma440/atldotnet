@@ -63,7 +63,7 @@
     <Compile Include="AudioReaders\BinaryLogic\Monkey.cs" />
     <Compile Include="AudioReaders\BinaryLogic\MPEGaudio.cs" />
     <Compile Include="AudioReaders\BinaryLogic\MPEGplus.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\OggVorbis.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\Ogg.cs" />
     <Compile Include="AudioReaders\BinaryLogic\OptimFROG.cs" />
     <Compile Include="AudioReaders\BinaryLogic\PSF.cs" />
     <Compile Include="AudioReaders\BinaryLogic\SPC.cs" />

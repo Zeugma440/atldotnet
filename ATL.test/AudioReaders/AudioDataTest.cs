@@ -68,5 +68,45 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestOpusAudio()
+        {
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/01_2_32.opus");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile("../../Resources/01_2_32.opus");
+
+            Assert.AreEqual(31, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(33, (int)Math.Round(theReader.BitRate));
+            Assert.IsTrue(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+        }
+
+        [TestMethod]
+        public void TestVorbisAudio()
+        {
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Rayman_2_music_sample.ogg");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile("../../Resources/Rayman_2_music_sample.ogg");
+
+            Assert.AreEqual(33, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(69, (int)Math.Round(theReader.BitRate));
+            Assert.IsTrue(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+        }
     }
 }

@@ -65,9 +65,10 @@ namespace ATL.AudioReaders
                 tempFmt.AddExtension(".mp3");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("OGG Vorbis");
+                tempFmt = new Format("OGG : Vorbis, Opus");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_OGG;
                 tempFmt.AddExtension(".ogg");
+                tempFmt.AddExtension(".opus");
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Musepack / MPEGplus");
@@ -206,7 +207,7 @@ namespace ATL.AudioReaders
 					break;
 
 				case CID_OGG :		
-					theDataReader = new BinaryLogic.TOggVorbis();
+					theDataReader = new BinaryLogic.TOgg();
 					break;
 
 				case CID_MPC :		

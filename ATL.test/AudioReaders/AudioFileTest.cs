@@ -102,6 +102,60 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void TestOpusTrack()
+        {
+            Track theTrack = new Track("../../Resources/01_2_32.opus");
+
+            Assert.AreEqual(31, theTrack.Duration);
+            Assert.AreEqual(33, theTrack.Bitrate);
+            Assert.IsTrue(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theTrack.CodecFamily);
+
+            Assert.AreEqual("01_2_32", theTrack.Title);
+            Assert.AreEqual("sample", theTrack.Artist);
+            Assert.AreEqual("opus demo", theTrack.Album);
+            Assert.AreEqual(2014, theTrack.Year);
+            Assert.AreEqual(01, theTrack.TrackNumber);
+            Assert.AreEqual("opus", theTrack.Genre);
+            Assert.AreEqual("sample rules", theTrack.Comment);
+            Assert.AreEqual("opus2", theTrack.Composer);
+            Assert.AreEqual(1, theTrack.DiscNumber);
+
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.AreEqual(picture.Height, 150);
+            Assert.AreEqual(picture.Width, 150);
+        }
+
+        [TestMethod]
+        public void TestVorbisTrack()
+        {
+            Track theTrack = new Track("../../Resources/Rayman_2_music_sample.ogg");
+
+            Assert.AreEqual(33, theTrack.Duration);
+            Assert.AreEqual(69, theTrack.Bitrate);
+            Assert.IsTrue(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theTrack.CodecFamily);
+
+            Assert.AreEqual("Rayman 2 sample", theTrack.Title);
+            Assert.AreEqual("Ray", theTrack.Artist);
+            Assert.AreEqual("Rayman 2", theTrack.Album);
+            Assert.AreEqual(2015, theTrack.Year);
+            Assert.AreEqual(01, theTrack.TrackNumber);
+            Assert.AreEqual("Game", theTrack.Genre);
+            Assert.AreEqual("Ray", theTrack.Comment);
+            Assert.AreEqual("Comp", theTrack.Composer);
+            Assert.AreEqual(1, theTrack.DiscNumber);
+
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.AreEqual(picture.Height, 150);
+            Assert.AreEqual(picture.Width, 150);
+        }
+
+        [TestMethod]
         public void TestDSF_PSFTrack()
         {
             Track theTrack = new Track("../../Resources/adgpp_PLAY_01_05.dsf");
