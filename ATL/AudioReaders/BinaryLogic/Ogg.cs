@@ -338,9 +338,8 @@ namespace ATL.AudioReaders.BinaryLogic
                 if (FPictureStreamHandler != null)
                 {
                     size = size - 1 - PICTURE_METADATA_ID_NEW.Length;
-
                     // Make sure total size is a multiple of 4
-                    size = (int)Math.Floor((double)size / 4)*4;
+                    size = size - (size % 4);
 
                     // Read the whole base64-encoded picture header _and_ binary data
                     MemoryStream mem = new MemoryStream(size);
@@ -375,6 +374,9 @@ namespace ATL.AudioReaders.BinaryLogic
                 if (FPictureStreamHandler != null)
                 {
                     size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
+                    // Make sure total size is a multiple of 4
+                    size = size - (size % 4);
+
                     // Read the whole base64-encoded picture binary data
                     MemoryStream mem = new MemoryStream(size);
                         StreamUtils.CopyMemoryStreamFrom(mem, Source, size);

@@ -296,6 +296,7 @@ namespace ATL
         /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
         public static void DecodeFrom64(byte[] encodedData, Stream s)
         {
+            if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
 
             char[] encodedDataChar = new char[encodedData.Length];
             for (int i = 0; i < encodedData.Length;i++ )
