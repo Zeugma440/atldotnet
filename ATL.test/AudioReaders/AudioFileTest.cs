@@ -156,6 +156,35 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void TestTakTrack()
+        {
+            //Track theTrack = new Track("../../Resources/003 BlackBird.tak");
+            Track theTrack = new Track("c:/temp/tak/2.2.0/bebop02.tak");
+            
+
+            Assert.AreEqual(6,theTrack.Duration);
+            Assert.AreEqual(634, theTrack.Bitrate);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theTrack.CodecFamily);
+
+            Assert.AreEqual("blackbird", theTrack.Title);
+            Assert.AreEqual("tak", theTrack.Artist);
+            Assert.AreEqual("takSongs", theTrack.Album);
+            Assert.AreEqual(2015, theTrack.Year);
+            Assert.AreEqual(01, theTrack.TrackNumber);
+            Assert.AreEqual("test", theTrack.Genre);
+            Assert.AreEqual("tak test", theTrack.Comment);
+            Assert.AreEqual("takMan", theTrack.Composer);
+            Assert.AreEqual(1, theTrack.DiscNumber);
+
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.AreEqual(picture.Height, 150);
+            Assert.AreEqual(picture.Width, 150);
+        }
+
+        [TestMethod]
         public void TestDSF_PSFTrack()
         {
             Track theTrack = new Track("../../Resources/adgpp_PLAY_01_05.dsf");

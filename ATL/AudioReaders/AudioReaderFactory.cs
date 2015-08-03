@@ -41,8 +41,9 @@ namespace ATL.AudioReaders
 		public const int CID_VQF		= 15;
         public const int CID_TTA        = 16;
         public const int CID_DSF        = 17;
+        public const int CID_TAK        = 18;
 
-		public const int NB_CODECS = 18;
+		public const int NB_CODECS = 19;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -171,6 +172,11 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_TTA;
                 tempFmt.AddExtension(".tta");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Tom's Audio Kompressor (TAK)");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_TAK;
+                tempFmt.AddExtension(".tak");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
@@ -260,6 +266,10 @@ namespace ATL.AudioReaders
 
                 case CID_DSF :
                     theDataReader = new BinaryLogic.TDSF();
+                    break;
+
+                case CID_TAK:
+                    theDataReader = new BinaryLogic.TTAK();
                     break;
 
 				default:

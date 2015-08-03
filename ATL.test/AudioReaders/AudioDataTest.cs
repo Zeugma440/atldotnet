@@ -108,5 +108,25 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestTakAudio()
+        {
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/003 BlackBird.tak");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile("../../Resources/003 BlackBird.tak");
+
+            Assert.AreEqual(6, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(634, (int)Math.Round(theReader.BitRate));
+            Assert.IsFalse(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+        }
     }
 }
