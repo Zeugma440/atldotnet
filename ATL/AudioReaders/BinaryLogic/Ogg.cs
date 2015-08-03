@@ -33,7 +33,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
         private FileInfo Info = new FileInfo();
 
-        private int contents = -1;
+        private int contents;
         
         private byte FChannelModeID;
 		private int FSampleRate;
@@ -655,6 +655,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			FComment = "";
 			FVendor = "";
             FPictures = new List<MetaReaderFactory.PIC_CODE>();
+            contents = -1;
 		}
 
 		// ---------------------------------------------------------------------------

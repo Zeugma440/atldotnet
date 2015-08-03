@@ -58,6 +58,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
         protected override void resetSpecificData()
 		{
+            formatVersion = -1;
 			FChannels = 0;
 			FBits = 0;
 			FSampleRate = 0;
