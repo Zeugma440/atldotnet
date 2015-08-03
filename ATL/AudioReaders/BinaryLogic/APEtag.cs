@@ -25,14 +25,14 @@ namespace ATL.AudioReaders.BinaryLogic
 		public const int APE_VERSION_1_0 = 1000;
 
 		// Max. number of supported tag fields
-		public const byte APE_FIELD_COUNT = 12;
+		public const byte APE_FIELD_COUNT = 13;
 
 		// Names of supported tag fields
         // NB : "preference" is a synonym to "rating" used by certain softwares
 		public static String[] APE_FIELD = new String[APE_FIELD_COUNT]
 		{
 			"Title", "Artist", "Album", "Track", "Year", "Genre",
-			"Comment", "Copyright", "Composer", "Cover Art (front)", "rating", "preference" };
+			"Comment", "Copyright", "Composer", "Cover Art (front)", "rating", "preference","Discnumber" };
 
 		// APE tag data - for internal use
 		private class TagInfo
@@ -200,6 +200,7 @@ namespace ATL.AudioReaders.BinaryLogic
 				FComment = Tag.Field[6];
 				FCopyright = Tag.Field[7];
                 FComposer = Tag.Field[8];
+                FDisc = TrackUtils.ExtractTrackNumber(Tag.Field[12]);
 
                 // Rating can be containted in two fields
                 FRatingStr = Utils.ProtectValue(Tag.Field[10]);
