@@ -173,7 +173,7 @@ namespace ATL.AudioReaders
                 tempFmt.AddExtension(".tta");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Tom's Audio Kompressor (TAK)");
+                tempFmt = new Format("Tom's lossless Audio Kompressor (TAK)");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_TAK;
                 tempFmt.AddExtension(".tak");
                 theFactory.addFormat(tempFmt);

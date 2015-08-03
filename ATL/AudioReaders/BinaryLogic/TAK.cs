@@ -5,7 +5,7 @@ using System.IO;
 namespace ATL.AudioReaders.BinaryLogic
 {
     /// <summary>
-    /// Class for TAK Stream File files manipulation (extension : .TAK)
+    /// Class for Tom's lossless Audio Kompressor files manipulation (extension : .TAK)
     /// </summary>
 	class TTAK : AudioDataReader
 	{
@@ -13,6 +13,7 @@ namespace ATL.AudioReaders.BinaryLogic
         public const int TAK_VERSION_100 = 0;
         public const int TAK_VERSION_210 = 210;
         public const int TAK_VERSION_220 = 220;
+
         public const String TAK_ID = "tBaK";
 
  
