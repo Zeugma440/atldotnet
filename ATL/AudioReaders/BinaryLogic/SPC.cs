@@ -151,7 +151,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			public const int TAG_IN_HEADER = 26;
 
 			public String FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
-            public long size;
+            public long Size;
 			public byte TagInHeader;					// Set to TAG_IN_HEADER if header contains ID666 info
 			public byte VersionByte;					// Version mark
 
@@ -159,7 +159,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			{
 				FormatTag = "";
 				VersionByte = 0;
-                size = 0;
+                Size = 0;
 			}
 		}
 
@@ -167,14 +167,14 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			public byte ID;
 			public byte Type;
-			public int Length;
+			public int Size;
 			public object Data; // String or int32
 
 			public void Reset()
 			{
 				ID = 0;
 				Type = 0;
-				Length = 0;
+				Size = 0;
 				Data = null;
 			}
 		}
@@ -232,7 +232,7 @@ namespace ATL.AudioReaders.BinaryLogic
 				source.BaseStream.Seek(8,SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
 				header.TagInHeader = source.ReadByte();
 				header.VersionByte = source.ReadByte();
-                header.size = source.BaseStream.Position - initialPosition;
+                header.Size = source.BaseStream.Position - initialPosition;
 				return true;
 			}
 			else
@@ -324,7 +324,7 @@ namespace ATL.AudioReaders.BinaryLogic
             if (songVal > 0) FDuration = Math.Round((double)fadeVal / 1000) + songVal;
 						
 			FArtist = new String(StreamUtils.ReadOneByteChars(source,32));
-            header.size += source.BaseStream.Position - initialPosition;
+            header.Size += source.BaseStream.Position - initialPosition;
 		}
 
 		private int isText(char[] str)
@@ -352,7 +352,7 @@ namespace ATL.AudioReaders.BinaryLogic
 					anItem = new ExtendedItem();
 					anItem.ID = source.ReadByte();
 					anItem.Type = source.ReadByte();
-					anItem.Length = source.ReadUInt16();
+					anItem.Size = source.ReadUInt16();
 
 					switch(anItem.Type)
 					{
@@ -360,7 +360,7 @@ namespace ATL.AudioReaders.BinaryLogic
 							// nothing; value is stored into the Length field
 							break;
 						case XID6_TSTR :
-							anItem.Data = new String(StreamUtils.ReadOneByteChars(source,anItem.Length));
+							anItem.Data = new String(StreamUtils.ReadOneByteChars(source,anItem.Size));
 							while(0 == source.ReadByte()); // Ending zeroes
 							source.BaseStream.Seek(-1,SeekOrigin.Current);
 							break;
@@ -405,15 +405,15 @@ namespace ATL.AudioReaders.BinaryLogic
 				if (footer.Items.ContainsKey(XID6_ARTIST)) FArtist = (String)((ExtendedItem)footer.Items[XID6_ARTIST]).Data;
 				if (footer.Items.ContainsKey(XID6_CMNTS)) FComment = (String)((ExtendedItem)footer.Items[XID6_CMNTS]).Data;
 				if (footer.Items.ContainsKey(XID6_SONG)) FTitle = (String)((ExtendedItem)footer.Items[XID6_SONG]).Data;
-				if (footer.Items.ContainsKey(XID6_COPY)) FYear = ((ExtendedItem)footer.Items[XID6_COPY]).Length.ToString();
-				if (footer.Items.ContainsKey(XID6_TRACK)) FTrack = ((ExtendedItem)footer.Items[XID6_TRACK]).Length >> 8;
-                if (footer.Items.ContainsKey(XID6_DISC)) FDisc = ((ExtendedItem)footer.Items[XID6_DISC]).Length;
+				if (footer.Items.ContainsKey(XID6_COPY)) FYear = ((ExtendedItem)footer.Items[XID6_COPY]).Size.ToString();
+				if (footer.Items.ContainsKey(XID6_TRACK)) FTrack = ((ExtendedItem)footer.Items[XID6_TRACK]).Size >> 8;
+                if (footer.Items.ContainsKey(XID6_DISC)) FDisc = ((ExtendedItem)footer.Items[XID6_DISC]).Size;
 				if (footer.Items.ContainsKey(XID6_OST)) FAlbum = (String)((ExtendedItem)footer.Items[XID6_OST]).Data;
 				if (("" == FAlbum) && (footer.Items.ContainsKey(XID6_GAME))) FAlbum = (String)((ExtendedItem)footer.Items[XID6_GAME]).Data;
 					
 				long ticks = 0;
 				if (footer.Items.ContainsKey(XID6_LOOP)) ticks += Math.Min(XID6_MAXTICKS, (int)((ExtendedItem)footer.Items[XID6_LOOP]).Data);
-				if (footer.Items.ContainsKey(XID6_LOOPX)) ticks = ticks * Math.Min(XID6_MAXLOOP, (int)((ExtendedItem)footer.Items[XID6_LOOPX]).Length );
+				if (footer.Items.ContainsKey(XID6_LOOPX)) ticks = ticks * Math.Min(XID6_MAXLOOP, (int)((ExtendedItem)footer.Items[XID6_LOOPX]).Size );
 				if (footer.Items.ContainsKey(XID6_INTRO)) ticks += Math.Min(XID6_MAXTICKS, (int)((ExtendedItem)footer.Items[XID6_INTRO]).Data);
 				if (footer.Items.ContainsKey(XID6_END)) ticks += Math.Min(XID6_MAXTICKS, (int)((ExtendedItem)footer.Items[XID6_END]).Data);
                 if (footer.Items.ContainsKey(XID6_FADE)) ticks += Math.Min(XID6_MAXTICKS, (int)((ExtendedItem)footer.Items[XID6_FADE]).Data);
@@ -422,7 +422,7 @@ namespace ATL.AudioReaders.BinaryLogic
 					FDuration = Math.Round( (double)ticks / XID6_TICKSSEC );
 			}
 
-            FBitrate = (FFileSize - header.size) * 8 / FDuration;
+            FBitrate = (FFileSize - header.Size) * 8 / FDuration;
 
             return result;
 		}
