@@ -42,8 +42,9 @@ namespace ATL.AudioReaders
         public const int CID_TTA        = 16;
         public const int CID_DSF        = 17;
         public const int CID_TAK        = 18;
+        public const int CID_MOD        = 19;
 
-		public const int NB_CODECS = 19;
+		public const int NB_CODECS = 20;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -177,6 +178,11 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_TAK;
                 tempFmt.AddExtension(".tak");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Noisetracker/Soundtracker/Protracker Module");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MOD;
+                tempFmt.AddExtension(".mod");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
@@ -270,6 +276,10 @@ namespace ATL.AudioReaders
 
                 case CID_TAK:
                     theDataReader = new BinaryLogic.TTAK();
+                    break;
+
+                case CID_MOD:
+                    theDataReader = new BinaryLogic.TMOD();
                     break;
 
 				default:

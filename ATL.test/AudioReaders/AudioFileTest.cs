@@ -196,6 +196,18 @@ namespace ATL.test
             Assert.AreEqual("Akihabara Dennou-gumi Pata Pies!", theTrack.Album);
         }
 
+        [TestMethod]
+        public void TestMODTrack()
+        {
+            Track theTrack = new Track("../../Resources/4-mat - Thala-Music (Sanxion).mod");
+
+            Assert.AreEqual(330, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theTrack.CodecFamily);
+
+            Assert.AreEqual("THALAMUSIC-SP", theTrack.Title);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

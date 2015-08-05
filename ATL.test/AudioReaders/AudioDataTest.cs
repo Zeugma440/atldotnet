@@ -126,7 +126,40 @@ namespace ATL.test
             System.Console.WriteLine(theReader.Duration);
             System.Console.WriteLine(theReader.BitRate);
             System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+            System.Console.WriteLine(AudioReaderFactory.CF_LOSSLESS == theReader.CodecFamily);
+        }
+
+        [TestMethod]
+        public void TestModAudio()
+        {
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/4-mat - Thala-Music (Sanxion).mod");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile("../../Resources/4-mat - Thala-Music (Sanxion).mod");
+
+            Assert.AreEqual(330, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
+            Assert.IsFalse(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+        }
+
+        [TestMethod]
+        public void TestWIP()
+        {
+            String location = "C:/temp/mod/goto8o - 80megamix.mod";
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile(location);
+
+            System.Console.WriteLine("WIP");
         }
     }
 }
