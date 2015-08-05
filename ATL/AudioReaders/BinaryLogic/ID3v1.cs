@@ -215,7 +215,7 @@ namespace ATL.AudioReaders.BinaryLogic
             source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
 
 #if DEBUG
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
+//            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
 #endif
 
 			// ID3v1 tags are C-String(null-terminated)-based tags
