@@ -158,9 +158,7 @@ namespace ATL.test
         [TestMethod]
         public void TestTakTrack()
         {
-            //Track theTrack = new Track("../../Resources/003 BlackBird.tak");
-            Track theTrack = new Track("c:/temp/tak/2.2.0/bebop02.tak");
-            
+            Track theTrack = new Track("../../Resources/003 BlackBird.tak");
 
             Assert.AreEqual(6,theTrack.Duration);
             Assert.AreEqual(634, theTrack.Bitrate);
