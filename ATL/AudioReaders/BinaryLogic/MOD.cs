@@ -269,7 +269,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
                             // Processes position jump only if the jump is forward
                             // => Prevents processing "forced" song loops ad infinitum
-                            if (temp >= currentPattern)
+                            if (temp > currentPattern)
                             {
                                 currentPattern = temp;
                                 currentLine = 0;
