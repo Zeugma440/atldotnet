@@ -34,18 +34,8 @@ namespace ATL.AudioReaders.BinaryLogic
         private static IDictionary<String, ModFormat> modFormats;
 
 		// Standard fields
-		private int FSampleRate;
-		private bool FTagExists;
 		private String FTitle;
-		private String FArtist;
-        private String FComposer;
-		private String FAlbum;
-		private int FTrack;
-        private int FDisc;
-		private String FYear;
-		private String FGenre;
 		private String FComment;
-        private IList<MetaReaderFactory.PIC_CODE> FPictures;
 
         private IList<Sample> FSamples;
         private IList<IList<IList<int>>> FPatterns;
@@ -58,11 +48,11 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		public bool Exists // for compatibility with other tag readers
 		{
-			get { return FTagExists; }
+			get { return true; }
 		}
 		public int SampleRate // Sample rate (hz)
 		{
-			get { return this.FSampleRate; }
+			get { return 0; }
 		}	
 
         public override bool IsVBR
@@ -84,23 +74,23 @@ namespace ATL.AudioReaders.BinaryLogic
 		}	
 		public String Artist // Artist name
 		{
-			get { return this.FArtist; }
+			get { return ""; }
 		}
         public String Composer // Composer name
         {
-            get { return this.FComposer; }
+            get { return ""; }
         }
 		public String Album // Album name
 		{
-			get { return this.FAlbum; }
+			get { return ""; }
 		}	
 		public ushort Track // Track number
 		{
-			get { return (ushort)this.FTrack; }
+			get { return 0; }
 		}
         public ushort Disc // Disc number
         {
-            get { return (ushort)this.FDisc; }
+            get { return 0; }
         }
         public ushort Rating // Rating; not in SPC tag standard
         {
@@ -108,11 +98,11 @@ namespace ATL.AudioReaders.BinaryLogic
         }
 		public String Year // Year
 		{
-			get { return this.FYear; }
+			get { return ""; }
 		}	
 		public String Genre // Genre name
 		{
-			get { return this.FGenre; }
+			get { return ""; }
 		}	
 		public String Comment // Comment
 		{
@@ -120,7 +110,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		}
         public IList<MetaReaderFactory.PIC_CODE> Pictures // Flags indicating presence of pictures
         {
-            get { return this.FPictures; }
+            get { return new List<MetaReaderFactory.PIC_CODE>(); }
         }
 
 
@@ -210,19 +200,9 @@ namespace ATL.AudioReaders.BinaryLogic
 		protected override void resetSpecificData()
 		{
 			// Reset variables
-			FSampleRate = 0;
 			FDuration = 0;
-			FTagExists = false;
 			FTitle = "";
-			FArtist = "";
-            FComposer = "";
-			FAlbum = "";
-			FTrack = 0;
-            FDisc = 0;
-			FYear = "";
-			FGenre = "";
 			FComment = "";
-            FPictures = new List<MetaReaderFactory.PIC_CODE>();
 
             FSamples = new List<Sample>();
             FPatterns = new List<IList<IList<int>>>();
@@ -240,10 +220,15 @@ namespace ATL.AudioReaders.BinaryLogic
         {
             double result = 0;
 
+            // Jump and break control variables
             int currentPattern = 0;
             int currentLine = 0;
             bool positionJump = false;
             bool patternBreak = false;
+
+            // Loop control variables
+            bool isInsideLoop = false;
+            double loopDuration = 0;
 
             IList<int> line;
             
@@ -290,13 +275,32 @@ namespace ATL.AudioReaders.BinaryLogic
                             currentLine = arg1 * 10 + arg2;
                             patternBreak = true;
                         }
+                        else if (effect.Equals(EFFECT_EXTENDED))
+                        {
+                            if (arg1.Equals(EFFECT_EXTENDED_LOOP))
+                            {
+                                if (arg2.Equals(0)) // Beginning of loop
+                                {
+                                    loopDuration = 0;
+                                    isInsideLoop = true; 
+                                }
+                                else // End of loop + nb. repeat indicator
+                                {
+                                    result += loopDuration * arg2;
+                                    isInsideLoop = false;
+                                }
+                            }
+                        }
                         else if ((effect > 10) && (effect != 12) && (effect != 14))
                         {
                             result += 0; // TODO implement
                         }
                         if (positionJump || patternBreak) break;
                     } // end channels loop
+                    
                     result += 60 * (ticksPerLine / (24 * bpm));
+                    if (isInsideLoop) loopDuration += 60 * (ticksPerLine / (24 * bpm));
+                    
                     if (positionJump || patternBreak) break;
 
                     currentLine++;
