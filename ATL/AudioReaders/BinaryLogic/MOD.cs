@@ -265,9 +265,16 @@ namespace ATL.AudioReaders.BinaryLogic
                         }
                         else if (effect.Equals(EFFECT_POSITION_JUMP))
                         {
-                            currentPattern = arg1 * 16 + arg2;
-                            currentLine = 0;
-                            positionJump = true;
+                            temp = arg1 * 16 + arg2;
+
+                            // Processes position jump only if the jump is forward
+                            // => Prevents processing "forced" song loops ad infinitum
+                            if (temp >= currentPattern)
+                            {
+                                currentPattern = temp;
+                                currentLine = 0;
+                                positionJump = true;
+                            }
                         }
                         else if (effect.Equals(EFFECT_PATTERN_BREAK))
                         {
@@ -289,11 +296,8 @@ namespace ATL.AudioReaders.BinaryLogic
                                     result += loopDuration * arg2;
                                     isInsideLoop = false;
                                 }
+                                // TODO implement other extended effects
                             }
-                        }
-                        else if ((effect > 10) && (effect != 12) && (effect != 14))
-                        {
-                            result += 0; // TODO implement
                         }
                         if (positionJump || patternBreak) break;
                     } // end channels loop
