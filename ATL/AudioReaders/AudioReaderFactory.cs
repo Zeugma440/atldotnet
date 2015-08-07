@@ -43,8 +43,9 @@ namespace ATL.AudioReaders
         public const int CID_DSF        = 17;
         public const int CID_TAK        = 18;
         public const int CID_MOD        = 19;
+        public const int CID_S3M        = 20;
 
-		public const int NB_CODECS = 20;
+		public const int NB_CODECS = 21;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -183,6 +184,11 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_MOD;
                 tempFmt.AddExtension(".mod");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("ScreamTracker Module");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_S3M;
+                tempFmt.AddExtension(".s3m");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
@@ -280,6 +286,10 @@ namespace ATL.AudioReaders
 
                 case CID_MOD:
                     theDataReader = new BinaryLogic.TMOD();
+                    break;
+
+                case CID_S3M:
+                    theDataReader = new BinaryLogic.TS3M();
                     break;
 
 				default:

@@ -206,6 +206,18 @@ namespace ATL.test
             Assert.AreEqual("THALAMUSIC-SP", theTrack.Title);
         }
 
+        [TestMethod]
+        public void TestS3MTrack()
+        {
+            Track theTrack = new Track("../../Resources/2ND_PM.S3M");
+
+            Assert.AreEqual(405, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theTrack.CodecFamily);
+
+            Assert.AreEqual("Unreal ][ / PM", theTrack.Title);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

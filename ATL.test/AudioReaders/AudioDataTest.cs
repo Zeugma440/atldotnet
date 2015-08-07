@@ -150,16 +150,24 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestWIP()
+        public void TestS3MAudio()
         {
-            String location = "C:/temp/mod/goto8o - 80megamix.mod";
+            String location = "../../Resources/2ND_PM.S3M";
             IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
             theReader.ReadFromFile(location);
 
-            System.Console.WriteLine("WIP");
+            Assert.AreEqual(405, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
+            Assert.IsFalse(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
         }
     }
 }
