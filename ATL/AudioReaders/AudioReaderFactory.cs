@@ -44,8 +44,9 @@ namespace ATL.AudioReaders
         public const int CID_TAK        = 18;
         public const int CID_MOD        = 19;
         public const int CID_S3M        = 20;
+        public const int CID_XM         = 21;
 
-		public const int NB_CODECS = 21;
+		public const int NB_CODECS = 22;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -189,6 +190,11 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_S3M;
                 tempFmt.AddExtension(".s3m");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Extended Module");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_XM;
+                tempFmt.AddExtension(".xm");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
@@ -290,6 +296,10 @@ namespace ATL.AudioReaders
 
                 case CID_S3M:
                     theDataReader = new BinaryLogic.TS3M();
+                    break;
+
+                case CID_XM:
+                    theDataReader = new BinaryLogic.TXM();
                     break;
 
 				default:

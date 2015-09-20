@@ -218,6 +218,18 @@ namespace ATL.test
             Assert.AreEqual("Unreal ][ / PM", theTrack.Title);
         }
 
+        [TestMethod]
+        public void TestXMTrack()
+        {
+            Track theTrack = new Track("../../Resources/v_chrtrg.xm");
+
+            Assert.AreEqual(261, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theTrack.CodecFamily);
+
+            Assert.AreEqual("Chrono Trigger", theTrack.Title);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

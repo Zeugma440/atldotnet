@@ -169,5 +169,26 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestXMAudio()
+        {
+            String location = "../../Resources/v_chrtrg.xm";
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile(location);
+
+            Assert.AreEqual(261, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
+            Assert.IsFalse(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+        }
     }
 }
