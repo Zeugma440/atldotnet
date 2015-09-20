@@ -120,18 +120,11 @@ namespace ATL.AudioReaders.BinaryLogic
 
         private class Instrument
         {
-            public byte Type;
-            public String FileName;
-            public String DisplayName;
+            public byte Type = 0;
+            public String FileName = "";
+            public String DisplayName = "";
 
             // Other fields not useful for ATL
-
-            public void Reset()
-            {
-                Type = 0;
-                FileName = "";
-                DisplayName = "";
-            }
         }
 
         private class S3MEvent
@@ -355,11 +348,13 @@ namespace ATL.AudioReaders.BinaryLogic
                 Instrument instrument = new Instrument();
                 instrument.Type = source.ReadByte();
                 instrument.FileName = new String(StreamUtils.ReadOneByteChars(source, 12)).Trim();
+                instrument.FileName = instrument.FileName.Replace("\0", "");
 
                 if (instrument.Type > 0) // Same offsets for PCM and AdLib display names
                 {
                     source.BaseStream.Seek(35, SeekOrigin.Current);
                     instrument.DisplayName = StreamUtils.ReadNullTerminatedStringFixed(source, Encoding.ASCII, 28);
+                    instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
                     source.BaseStream.Seek(4, SeekOrigin.Current);
                 }
 
@@ -492,11 +487,14 @@ namespace ATL.AudioReaders.BinaryLogic
             readInstruments(ref source, instrumentPointers);
             readPatterns(ref source, patternPointers);
 
+
+            // == Computing track properties
+
             FDuration = calculateDuration();
 
             foreach (Instrument i in FInstruments)
             {
-                if (i.FileName.Length > 0) comment.Append(i.DisplayName).Append("/");
+                if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append("/");
             }
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
