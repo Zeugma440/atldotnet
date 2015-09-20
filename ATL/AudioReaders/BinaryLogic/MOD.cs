@@ -375,6 +375,7 @@ namespace ATL.AudioReaders.BinaryLogic
             {
                 sample = new Sample();
                 sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 22).Trim();
+                sample.Name = sample.Name.Replace("\0", "");
                 sample.Size = StreamUtils.ReverseInt16(source.ReadUInt16())*2;
                 sample.Finetune = source.ReadSByte();
                 sample.Volume = source.ReadByte();
@@ -432,6 +433,9 @@ namespace ATL.AudioReaders.BinaryLogic
                     } // end channels loop
                 } // end lines loop
             } // end patterns loop
+
+
+            // == Computing track properties
 
             FDuration = calculateDuration();
 
