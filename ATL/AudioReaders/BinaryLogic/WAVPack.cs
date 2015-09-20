@@ -7,7 +7,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for WavPack files manipulation (extension : .WV)
     /// </summary>
-	class TWAVPackfile : AudioDataReader
+	class TWAVPack : AudioDataReader
 	{
 		private int FFormatTag;
 		private int FVersion;
@@ -209,7 +209,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		public TWAVPackfile()
+		public TWAVPack()
 		{	
 			resetData();
 		}

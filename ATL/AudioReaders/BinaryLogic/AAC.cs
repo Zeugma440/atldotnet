@@ -9,7 +9,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for Advanced Audio Coding files manipulation (extensions : .AAC, .MP4, .M4A)
     /// </summary>
-	class TAACfile : AudioDataReader, IMetaDataReader
+	class TAAC : AudioDataReader, IMetaDataReader
 	{
 
 		// Header type codes
@@ -604,7 +604,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		// ********************** Public functions & procedures ********************** 
 
 		// constructor
-		public TAACfile()
+		public TAAC()
 		{
 			resetData();		
 		}

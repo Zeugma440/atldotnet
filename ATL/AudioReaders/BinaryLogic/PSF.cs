@@ -7,11 +7,11 @@ using System.Collections.Generic;
 namespace ATL.AudioReaders.BinaryLogic
 {
 	/// <summary>
-	/// Class for Playstation Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+	/// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
 	/// </summary>
-	class TPSFFile : AudioDataReader, IMetaDataReader
+	class TPSF : AudioDataReader, IMetaDataReader
 	{
 		// Format Type Names
 		public const String PSF_FORMAT_UNKNOWN = "Unknown";
@@ -159,7 +159,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// === CONSTRUCTOR ===
 
-		public TPSFFile()
+		public TPSF()
 		{
 			// Create object
 			resetData();

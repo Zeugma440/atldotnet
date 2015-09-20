@@ -7,7 +7,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for PCM (uncompressed audio) files manipulation (extension : .WAV)
     /// </summary>
-	class TWAVfile : AudioDataReader
+	class TWAV : AudioDataReader
 	{
 		// Format type names
 		public const String WAV_FORMAT_UNKNOWN = "Unknown";
@@ -237,7 +237,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ********************** Public functions & voids **********************
 
-		public TWAVfile()
+		public TWAV()
 		{
 			// Create object  
 			resetData();

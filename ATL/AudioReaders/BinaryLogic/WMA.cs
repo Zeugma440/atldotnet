@@ -9,7 +9,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for Windows Media Audio 7,8 and 9 files manipulation (extension : .WMA)
     /// </summary>
-	class TWMAfile : AudioDataReader, IMetaDataReader
+	class TWMA : AudioDataReader, IMetaDataReader
 	{
 		// Channel modes
 		public const byte WMA_CM_UNKNOWN = 0;                                               // Unknown
@@ -413,7 +413,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ********************** Public functions & voids **********************
 
-		public TWMAfile()
+		public TWMA()
 		{
 			// Create object  
 			resetData();

@@ -44,7 +44,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for Musical Instruments Digital Interface files manipulation (extension : .MID, .MIDI)
     /// </summary>
-    class Midi : AudioDataReader, IMetaDataReader
+    class TMidi : AudioDataReader, IMetaDataReader
     {
 
         //Private properties

@@ -353,7 +353,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     mem = new MemoryStream();
                         StreamUtils.DecodeFrom64(encodedData, mem);
                         mem.Seek(0, SeekOrigin.Begin);
-                        TFLACFile.FlacMetaDataBlockPicture block = TFLACFile.ReadMetadataBlockPicture(mem);
+                        TFLAC.FlacMetaDataBlockPicture block = TFLAC.ReadMetadataBlockPicture(mem);
                         FPictures.Add(block.picCode);
 
                         MemoryStream picMem = new MemoryStream(block.picDataLength);

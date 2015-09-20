@@ -10,7 +10,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// Class for SPC700 files manipulation (extensions : .SPC)
     /// According to file format v0.30; inspired by the SNESamp source (ID666.cpp)
 	/// </summary>
-	class TSPCFile : AudioDataReader, IMetaDataReader
+	class TSPC : AudioDataReader, IMetaDataReader
 	{
 		//private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data v0.30";
         private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data"; // v0.10 can be parsed as well
@@ -195,7 +195,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// === CONSTRUCTOR ===
 
-		public TSPCFile()
+		public TSPC()
 		{
 			// Create object
 			resetData();

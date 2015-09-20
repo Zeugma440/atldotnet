@@ -233,7 +233,7 @@ namespace ATL.AudioReaders
 					break;
 
 				case CID_FLAC :		
-					theDataReader = new BinaryLogic.TFLACFile();
+					theDataReader = new BinaryLogic.TFLAC();
 					break;
 
 				case CID_APE :		
@@ -241,15 +241,15 @@ namespace ATL.AudioReaders
 					break;
 
 				case CID_WMA :		
-					theDataReader = new BinaryLogic.TWMAfile();
+					theDataReader = new BinaryLogic.TWMA();
 					break;
 
 				case CID_MIDI :		
-					theDataReader = new BinaryLogic.Midi();
+					theDataReader = new BinaryLogic.TMidi();
 					break;
 
 				case CID_AAC :		
-					theDataReader = new BinaryLogic.TAACfile();
+					theDataReader = new BinaryLogic.TAAC();
 					break;
 
 				case CID_AC3 :		
@@ -261,19 +261,19 @@ namespace ATL.AudioReaders
 					break;
 
 				case CID_WAVPACK :		
-					theDataReader = new BinaryLogic.TWAVPackfile();
+					theDataReader = new BinaryLogic.TWAVPack();
 					break;
 
 				case CID_WAV :		
-					theDataReader = new BinaryLogic.TWAVfile();
+					theDataReader = new BinaryLogic.TWAV();
 					break;
 
 				case CID_PSF :		
-					theDataReader = new BinaryLogic.TPSFFile();
+					theDataReader = new BinaryLogic.TPSF();
 					break;
 
 				case CID_SPC :		
-					theDataReader = new BinaryLogic.TSPCFile();
+					theDataReader = new BinaryLogic.TSPC();
 					break;
 
                 case CID_DSF :

@@ -10,7 +10,7 @@ namespace ATL.AudioReaders.BinaryLogic
     /// <summary>
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
-	class TFLACFile : AudioDataReader, IMetaDataReader
+	class TFLAC : AudioDataReader, IMetaDataReader
 	{
 
 		private const int META_STREAMINFO      = 0;
@@ -390,7 +390,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		/* -------------------------------------------------------------------------- */
 
-		public TFLACFile()
+		public TFLAC()
 		{  
 			FHeader = new TFlacHeader();
 			aMetaBlockOther = new ArrayList();
