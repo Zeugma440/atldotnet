@@ -190,5 +190,26 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestITAudio()
+        {
+            String location = "../../Resources/sommix.it";
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile(location);
+
+            Assert.AreEqual(476, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(1, (int)Math.Round(theReader.BitRate));
+            Assert.IsFalse(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+        }
     }
 }

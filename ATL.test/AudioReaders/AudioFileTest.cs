@@ -230,6 +230,18 @@ namespace ATL.test
             Assert.AreEqual("Chrono Trigger", theTrack.Title);
         }
 
+        [TestMethod]
+        public void TestITTrack()
+        {
+            Track theTrack = new Track("../../Resources/SuperMario28bits(tssf).it");
+
+            Assert.AreEqual(42, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theTrack.CodecFamily);
+
+            Assert.AreEqual("God I'm Bored-Part 2", theTrack.Title);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

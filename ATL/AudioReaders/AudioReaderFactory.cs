@@ -45,8 +45,9 @@ namespace ATL.AudioReaders
         public const int CID_MOD        = 19;
         public const int CID_S3M        = 20;
         public const int CID_XM         = 21;
+        public const int CID_IT         = 22;
 
-		public const int NB_CODECS = 22;
+		public const int NB_CODECS = 23;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -195,6 +196,11 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_XM;
                 tempFmt.AddExtension(".xm");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Impulse Tracker");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_IT;
+                tempFmt.AddExtension(".it");
+                theFactory.addFormat(tempFmt);
 			}
 
 			return theFactory;
@@ -300,6 +306,10 @@ namespace ATL.AudioReaders
 
                 case CID_XM:
                     theDataReader = new BinaryLogic.TXM();
+                    break;
+
+                case CID_IT:
+                    theDataReader = new BinaryLogic.TIT();
                     break;
 
 				default:
