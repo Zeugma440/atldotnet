@@ -15,8 +15,9 @@ namespace ATL.AudioReaders.BinaryLogic
 	{
         private const String SIG_POWERPACKER = "PP20";
         private const byte NB_CHANNELS_DEFAULT = 4;
+        private const byte MAX_ROWS = 64;
 
-        private const byte DEFAULT_TICKS_PER_LINE = 6;
+        private const byte DEFAULT_TICKS_PER_ROW = 6;
         private const byte DEFAULT_BPM = 125;
 
         // Effects
@@ -222,7 +223,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
             // Jump and break control variables
             int currentPattern = 0;
-            int currentLine = 0;
+            int currentRow = 0;
             bool positionJump = false;
             bool patternBreak = false;
 
@@ -230,10 +231,10 @@ namespace ATL.AudioReaders.BinaryLogic
             bool isInsideLoop = false;
             double loopDuration = 0;
 
-            IList<int> line;
+            IList<int> row;
             
             int temp;
-            double ticksPerLine = DEFAULT_TICKS_PER_LINE;
+            double ticksPerRow = DEFAULT_TICKS_PER_ROW;
             double bpm = DEFAULT_BPM;
 
             int effect;
@@ -242,10 +243,10 @@ namespace ATL.AudioReaders.BinaryLogic
 
             do // Patterns loop
             {
-                do // Lines loop
+                do // Rows loop
                 {
-                    line = FPatterns[FPatternTable[currentPattern]][currentLine];
-                    foreach (int note in line) // Channels loop
+                    row = FPatterns[FPatternTable[currentPattern]][currentRow];
+                    foreach (int note in row) // Channels loop
                     {
                         effect = (note & 0xF00) >> 8;
                         arg1 = (note & 0xF0) >> 4;
@@ -258,9 +259,9 @@ namespace ATL.AudioReaders.BinaryLogic
                             {
                                 bpm = temp;
                             }
-                            else // ticks per line
+                            else // ticks per row
                             {
-                                ticksPerLine = temp;
+                                ticksPerRow = temp;
                             }
                         }
                         else if (effect.Equals(EFFECT_POSITION_JUMP))
@@ -272,14 +273,14 @@ namespace ATL.AudioReaders.BinaryLogic
                             if (temp > currentPattern)
                             {
                                 currentPattern = temp;
-                                currentLine = 0;
+                                currentRow = 0;
                                 positionJump = true;
                             }
                         }
                         else if (effect.Equals(EFFECT_PATTERN_BREAK))
                         {
                             currentPattern++;
-                            currentLine = arg1 * 10 + arg2;
+                            currentRow = arg1 * 10 + arg2;
                             patternBreak = true;
                         }
                         else if (effect.Equals(EFFECT_EXTENDED))
@@ -302,13 +303,13 @@ namespace ATL.AudioReaders.BinaryLogic
                         if (positionJump || patternBreak) break;
                     } // end channels loop
                     
-                    result += 60 * (ticksPerLine / (24 * bpm));
-                    if (isInsideLoop) loopDuration += 60 * (ticksPerLine / (24 * bpm));
+                    result += 60 * (ticksPerRow / (24 * bpm));
+                    if (isInsideLoop) loopDuration += 60 * (ticksPerRow / (24 * bpm));
                     
                     if (positionJump || patternBreak) break;
 
-                    currentLine++;
-                } while (currentLine < 64);
+                    currentRow++;
+                } while (currentRow < MAX_ROWS);
 
                 if (positionJump || patternBreak)
                 {
@@ -318,7 +319,7 @@ namespace ATL.AudioReaders.BinaryLogic
                 else
                 {
                     currentPattern++;
-                    currentLine = 0;
+                    currentRow = 0;
                 }
             } while (currentPattern < nbValidPatterns); // end patterns loop
 
@@ -355,7 +356,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
             Sample sample;
             IList<IList<int>> pattern;
-            IList<int> line;
+            IList<int> row;
 
             // == TITLE ==
             readString = new String(StreamUtils.ReadOneByteChars(source, 4));
@@ -422,16 +423,16 @@ namespace ATL.AudioReaders.BinaryLogic
             {
                 FPatterns.Add(new List<IList<int>>());
                 pattern = FPatterns[FPatterns.Count - 1];
-                // Lines loop
-                for (int l = 0; l < 64; l++)
+                // Rows loop
+                for (int l = 0; l < MAX_ROWS; l++)
                 {
                     pattern.Add(new List<int>());
-                    line = pattern[pattern.Count - 1];
+                    row = pattern[pattern.Count - 1];
                     for (int c = 0; c < nbChannels; c++) // Channels loop
                     {
-                        line.Add( StreamUtils.ReverseInt32(source.ReadInt32()) );
+                        row.Add( StreamUtils.ReverseInt32(source.ReadInt32()) );
                     } // end channels loop
-                } // end lines loop
+                } // end rows loop
             } // end patterns loop
 
 

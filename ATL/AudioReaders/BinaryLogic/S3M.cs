@@ -20,6 +20,7 @@ namespace ATL.AudioReaders.BinaryLogic
     class TS3M : AudioDataReader, IMetaDataReader
     {
         private const String S3M_SIGNATURE = "SCRM";
+        private const byte MAX_ROWS = 64;
 
         // Effects
         private const byte EFFECT_SET_SPEED = 0x01;
@@ -291,7 +292,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     if (positionJump || patternBreak) break;
 
                     currentRow++;
-                } while (currentRow < 64);
+                } while (currentRow < MAX_ROWS);
 
                 if (positionJump || patternBreak)
                 {
@@ -403,7 +404,7 @@ namespace ATL.AudioReaders.BinaryLogic
                         aRow = new List<S3MEvent>();
                         rowNum++;
                     }
-                } while (rowNum < 64);
+                } while (rowNum < MAX_ROWS);
 
                 FPatterns.Add(aPattern);
             }
