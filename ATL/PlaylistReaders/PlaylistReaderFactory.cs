@@ -55,6 +55,8 @@ namespace ATL.PlaylistReaders
                 tempFmt.ID = PL_SMIL;
                 tempFmt.AddExtension(".smil");
                 tempFmt.AddExtension(".smi");
+                tempFmt.AddExtension(".zpl");
+                tempFmt.AddExtension(".wpl");
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("ASX");
