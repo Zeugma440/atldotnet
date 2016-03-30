@@ -442,7 +442,8 @@ namespace ATL.AudioReaders.BinaryLogic
             int metadataSize = 0;
             byte dataClass = 0;
 
-            ushort intData = 0;
+            ushort int16Data = 0;
+            int int32Data = 0;
             String strData = "";
             char[] atomHeader;
 
@@ -454,12 +455,6 @@ namespace ATL.AudioReaders.BinaryLogic
             Source.BaseStream.Seek(atomSize-4, SeekOrigin.Current);
 
             // MOOV atom
-            /*
-            atomSize = StreamUtils.ReverseInt32(Source.ReadInt32());
-            atomHeader = StreamUtils.ReadOneByteChars(Source, 4);
-
-            if (!StreamUtils.StringEqualsArr("moov", atomHeader)) throw new Exception("Invalid MP4 file : moov atom not found");
-             */
             lookForMP4Atom(Source, "moov"); // === Physical data
 
             long moovPosition = Source.BaseStream.Position;
@@ -470,6 +465,40 @@ namespace ATL.AudioReaders.BinaryLogic
 
             FSampleRate = StreamUtils.ReverseInt32(Source.ReadInt32());
             if (1 == version) FSampleSize = StreamUtils.ReverseInt64(Source.ReadUInt64()); else FSampleSize = StreamUtils.ReverseInt32(Source.ReadInt32());
+
+            // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
+            Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+            lookForMP4Atom(Source, "trak");
+            lookForMP4Atom(Source, "mdia");
+            lookForMP4Atom(Source, "minf");
+            lookForMP4Atom(Source, "stbl");
+            lookForMP4Atom(Source, "stsz");
+            Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+            int32Data = StreamUtils.ReverseInt32(Source.ReadInt32());
+            if (0 == int32Data) // If value other than 0, same size everywhere => CBR
+            {
+                int nbSizes = StreamUtils.ReverseInt32(Source.ReadInt32());
+                int max = 0;
+                int min = Int32.MaxValue;
+                for (int i=0; i<nbSizes; i++)
+                {
+                    int32Data = StreamUtils.ReverseInt32(Source.ReadInt32());
+                    min = Math.Min(min, int32Data);
+                    max = Math.Max(max, int32Data);
+                }
+                if ((min * 1.01) < max)
+                {
+                    FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
+                }
+                else
+                {
+                    FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+                }
+            }
+            else
+            {
+                FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            }
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             lookForMP4Atom(Source, "udta");
@@ -503,7 +532,7 @@ namespace ATL.AudioReaders.BinaryLogic
                 }
                 else if (21 == dataClass) // uint8
                 {
-                    intData = Source.ReadByte();
+                    int16Data = Source.ReadByte();
                     Source.BaseStream.Seek(metadataSize - 17, SeekOrigin.Current); // Potential remaining padding bytes
                 }
                 else if (13 == dataClass || 14 == dataClass) // JPEG/PNG picture
@@ -526,12 +555,12 @@ namespace ATL.AudioReaders.BinaryLogic
                     if (StreamUtils.StringEqualsArr("trkn", atomHeader) || StreamUtils.StringEqualsArr("disk", atomHeader))
                     {
                         Source.BaseStream.Seek(3, SeekOrigin.Current);
-                        intData = Source.ReadByte();
+                        int16Data = Source.ReadByte();
                         Source.BaseStream.Seek(metadataSize - 20, SeekOrigin.Current); // Potential remaining padding bytes
                     }
                     else if (StreamUtils.StringEqualsArr("gnre", atomHeader))
                     {
-                        intData = StreamUtils.ReverseInt16( Source.ReadUInt16() );
+                        int16Data = StreamUtils.ReverseInt16( Source.ReadUInt16() );
                     } else { // Other unhandled cases
                         Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
                     }
@@ -550,21 +579,21 @@ namespace ATL.AudioReaders.BinaryLogic
                 if (StreamUtils.StringEqualsArr("©gen", atomHeader))
                 {
                     if (1 == dataClass) FGenre = strData;
-                    else if (0 == dataClass && intData < TID3v1.MAX_MUSIC_GENRES) FGenre = TID3v1.MusicGenre[intData];
+                    else if (0 == dataClass && int16Data < TID3v1.MAX_MUSIC_GENRES) FGenre = TID3v1.MusicGenre[int16Data];
                 }
                 if (StreamUtils.StringEqualsArr("trkn", atomHeader))
                 {
-                    FTrack = intData;
+                    FTrack = int16Data;
                     FTrackString = FTrack.ToString();
                 }
                 if (StreamUtils.StringEqualsArr("disk", atomHeader))
                 {
-                    FDisc = intData;
+                    FDisc = int16Data;
                     FDiscString = FDisc.ToString();
                 }
                 if (StreamUtils.StringEqualsArr("rtng", atomHeader))
                 {
-                    FRating = intData;
+                    FRating = int16Data;
                 }
                 if (StreamUtils.StringEqualsArr("©wrt", atomHeader)) FComposer = strData;
 
