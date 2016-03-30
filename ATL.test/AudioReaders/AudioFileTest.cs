@@ -242,6 +242,32 @@ namespace ATL.test
             Assert.AreEqual("God I'm Bored-Part 2", theTrack.Title);
         }
 
+        [TestMethod]
+        public void TestM4Track()
+        {
+            Track theTrack = new Track("../../Resources/06 I'm All In Love.m4a");
+
+            Assert.AreEqual(54, theTrack.Duration);
+            Assert.IsTrue(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theTrack.CodecFamily);
+
+            Assert.AreEqual("I'm All In Love", theTrack.Title);
+            Assert.AreEqual("Yoko Kanno", theTrack.Artist);
+            Assert.AreEqual("Surely Someday", theTrack.Album);
+            Assert.AreEqual(2010, theTrack.Year);
+            Assert.AreEqual(6, theTrack.TrackNumber);
+            Assert.AreEqual("J-Pop", theTrack.Genre);
+            Assert.AreEqual("a", theTrack.Comment);
+            Assert.AreEqual("b", theTrack.Composer);
+            Assert.AreEqual(1, theTrack.DiscNumber);
+
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.AreEqual(picture.Height, 600);
+            Assert.AreEqual(picture.Width, 600);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

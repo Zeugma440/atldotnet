@@ -211,5 +211,25 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestM4AAudio()
+        {
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/06 I'm All In Love.m4a");
+
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+
+            theReader.ReadFromFile("../../Resources/06 I'm All In Love.m4a");
+
+            Assert.AreEqual(54, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(260, (int)Math.Round(theReader.BitRate));
+            Assert.IsTrue(theReader.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
+
+            System.Console.WriteLine(theReader.Duration);
+            System.Console.WriteLine(theReader.BitRate);
+            System.Console.WriteLine(theReader.IsVBR);
+            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+        }
     }
 }
