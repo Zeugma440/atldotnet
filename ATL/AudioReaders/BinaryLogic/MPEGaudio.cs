@@ -196,7 +196,7 @@ namespace ATL.AudioReaders.BinaryLogic
       
 		private String FVendorID;
 		private VBRData FVBR = new VBRData();
-		private FrameData FFrame = new FrameData();
+		private FrameData HeaderFrame = new FrameData();
     
 		public VBRData VBR // VBR header data
 		{
@@ -204,7 +204,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		}	
 		public FrameData Frame // Frame header data
 		{
-			get { return this.FFrame; }
+			get { return this.HeaderFrame; }
 		}
         public String Version // MPEG version name
         {
@@ -242,7 +242,6 @@ namespace ATL.AudioReaders.BinaryLogic
         {
             get { return this.FGetValid(); }
         }
-
 
         public override bool IsVBR
 		{
@@ -583,7 +582,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			FVendorID = "";
 
             FVBR.Reset();
-            FFrame.Reset();
+            HeaderFrame.Reset();
 		}
 
 		// ---------------------------------------------------------------------------
@@ -591,7 +590,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private String FGetVersion()
 		{
 			// Get MPEG version name
-			return MPEG_VERSION[FFrame.VersionID];
+			return MPEG_VERSION[HeaderFrame.VersionID];
 		}
 
 		// ---------------------------------------------------------------------------
@@ -599,7 +598,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private String FGetLayer()
 		{
 			// Get MPEG layer name
-			return MPEG_LAYER[FFrame.LayerID];
+			return MPEG_LAYER[HeaderFrame.LayerID];
 		}
 
 		// ---------------------------------------------------------------------------
@@ -608,10 +607,10 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			// Get bit rate, calculate average bit rate if VBR header found
 			if ((FVBR.Found) && (FVBR.Frames > 0))
-				return Math.Round(((double)FVBR.Bytes / FVBR.Frames - GetPadding(FFrame)) *
-					GetSampleRate(FFrame) / GetCoefficient(FFrame));
+				return Math.Round(((double)FVBR.Bytes / FVBR.Frames - GetPadding(HeaderFrame)) *
+					GetSampleRate(HeaderFrame) / GetCoefficient(HeaderFrame));
 			else
-				return GetBitRate(FFrame) * 1000;
+				return GetBitRate(HeaderFrame) * 1000;
 		}
 
 		// ---------------------------------------------------------------------------
@@ -619,7 +618,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private ushort FGetSampleRate()
 		{
 			// Get sample rate
-			return GetSampleRate(FFrame);
+			return GetSampleRate(HeaderFrame);
 		}
 
 		// ---------------------------------------------------------------------------
@@ -627,7 +626,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private String FGetChannelMode()
 		{
 			// Get channel mode name
-			return MPEG_CM_MODE[FFrame.ModeID];
+			return MPEG_CM_MODE[HeaderFrame.ModeID];
 		}
 
 		// ---------------------------------------------------------------------------
@@ -635,7 +634,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private String FGetEmphasis()
 		{
 			// Get emphasis name
-			return MPEG_EMPHASIS[FFrame.EmphasisID];
+			return MPEG_EMPHASIS[HeaderFrame.EmphasisID];
 		}
 
 		// ---------------------------------------------------------------------------
@@ -650,7 +649,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			{
 				MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
     
-				return (long)Math.Floor(1.0*(MPEGSize - FFrame.Position) / GetFrameLength(FFrame));
+				return (long)Math.Floor(1.0*(MPEGSize - HeaderFrame.Position) / GetFrameLength(HeaderFrame));
 			}
 		}
 
@@ -659,13 +658,13 @@ namespace ATL.AudioReaders.BinaryLogic
 		private double FGetDuration()
 		{
 			// Calculate song duration
-			if (FFrame.Found)
+			if (HeaderFrame.Found)
 				if ((FVBR.Found) && (FVBR.Frames > 0))
-					return FVBR.Frames * GetCoefficient(FFrame) * 8 / GetSampleRate(FFrame);
+					return FVBR.Frames * GetCoefficient(HeaderFrame) * 8 / GetSampleRate(HeaderFrame);
 				else
 				{
                     long MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
-					return (MPEGSize - FFrame.Position) / GetBitRate(FFrame) / 1000 * 8;
+					return (MPEGSize - HeaderFrame.Position) / GetBitRate(HeaderFrame) / 1000 * 8;
 				}
 			else
 				return 0;
@@ -702,23 +701,23 @@ namespace ATL.AudioReaders.BinaryLogic
 			// Guess CBR encoder and get ID
 			byte result = MPEG_ENCODER_FHG;
 
-			if ( (FFrame.OriginalBit) &&
-				(FFrame.ProtectionBit) )
+			if ( (HeaderFrame.OriginalBit) &&
+				(HeaderFrame.ProtectionBit) )
 				result = MPEG_ENCODER_LAME;
-			if ( (GetBitRate(FFrame) <= 160) &&
-				(MPEG_CM_STEREO == FFrame.ModeID)) 
+			if ( (GetBitRate(HeaderFrame) <= 160) &&
+				(MPEG_CM_STEREO == HeaderFrame.ModeID)) 
 				result = MPEG_ENCODER_BLADE;
-			if ((FFrame.CopyrightBit) &&
-				(FFrame.OriginalBit) &&
-				(! FFrame.ProtectionBit) )
+			if ((HeaderFrame.CopyrightBit) &&
+				(HeaderFrame.OriginalBit) &&
+				(! HeaderFrame.ProtectionBit) )
 				result = MPEG_ENCODER_XING;
-			if ((FFrame.Xing) &&
-				(FFrame.OriginalBit) )
+			if ((HeaderFrame.Xing) &&
+				(HeaderFrame.OriginalBit) )
 				result = MPEG_ENCODER_XING;
-			if (MPEG_LAYER_II == FFrame.LayerID)
+			if (MPEG_LAYER_II == HeaderFrame.LayerID)
 				result = MPEG_ENCODER_QDESIGN;
-			if ((MPEG_CM_DUAL_CHANNEL == FFrame.ModeID) &&
-				(FFrame.ProtectionBit) )
+			if ((MPEG_CM_DUAL_CHANNEL == HeaderFrame.ModeID) &&
+				(HeaderFrame.ProtectionBit) )
 				result = MPEG_ENCODER_SHINE;
 			if (VENDOR_ID_LAME == FVendorID.Substring(0, 4))
 				result = MPEG_ENCODER_LAME;
@@ -733,7 +732,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		private byte FGetEncoderID()
 		{
 			// Get guessed encoder ID
-			if (FFrame.Found)
+			if (HeaderFrame.Found)
 				if (FVBR.Found) return FGetVBREncoderID();
 				else return FGetCBREncoderID();
 			else
@@ -772,7 +771,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			// Check for right MPEG file data
 			return
-				((FFrame.Found) &&
+				((HeaderFrame.Found) &&
 				(FGetBitRate() >= MIN_MPEG_BIT_RATE) &&
 				(FGetBitRate() <= MAX_MPEG_BIT_RATE) &&
 				(FGetDuration() >= MIN_ALLOWED_DURATION));
@@ -802,32 +801,33 @@ namespace ATL.AudioReaders.BinaryLogic
 
 			bool result = false;
 
-			// At first search for tags, then search for a MPEG frame and VBR data
+			// At first search for tags...
             FID3v2.Read(source, pictureStreamHandler);
             FID3v1.Read(source);
             APEtag.Read(source, pictureStreamHandler);
 
-			fs.Seek(FID3v2.Size, SeekOrigin.Begin);
+            // ...then search for a MPEG frame and VBR data
+            fs.Seek(FID3v2.Size, SeekOrigin.Begin);
 			Data = source.ReadBytes(Data.Length);
-			FFrame = FindFrame(Data, ref FVBR);
-		  
-			// Try to search in the middle if no frame at the beginning found
-			if ( ! FFrame.Found ) 
+			HeaderFrame = FindFrame(Data, ref FVBR);
+
+            // Try to search in the middle if no frame found at the beginning
+            if ( ! HeaderFrame.Found ) 
 			{
 				fs.Seek((long)Math.Floor((FFileSize - FID3v2.Size) / 2.0),SeekOrigin.Begin);
 				Data = source.ReadBytes(Data.Length);
-				FFrame = FindFrame(Data, ref FVBR);
+				HeaderFrame = FindFrame(Data, ref FVBR);
 			}
 			// Search for vendor ID at the end if CBR encoded
-			if ( (FFrame.Found) && (! FVBR.Found) )
+			if ( (HeaderFrame.Found) && (! FVBR.Found) )
 			{
                 fs.Seek(FFileSize - Data.Length - FID3v1.Size - FAPEtag.Size, SeekOrigin.Begin);
 				Data = source.ReadBytes(Data.Length);
-				FVendorID = FindVendorID(Data, FFrame.Size * 5);
+				FVendorID = FindVendorID(Data, HeaderFrame.Size * 5);
 			}
 			result = true;
 
-            FValid = FFrame.Found;
+            FValid = HeaderFrame.Found;
 
             if (!FValid)
             {

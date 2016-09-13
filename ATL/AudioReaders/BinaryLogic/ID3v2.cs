@@ -357,7 +357,7 @@ namespace ATL.AudioReaders.BinaryLogic
                             }
                             else
                             {
-                                StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, picSize);
+                                StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
                             }
                             FPictureStreamHandler(ref mem);
                             mem.Close();
@@ -433,7 +433,7 @@ namespace ATL.AudioReaders.BinaryLogic
                             }
                             else
                             {
-                                StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, picSize);
+                                StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
                             }
 
                             FPictureStreamHandler(ref mem);

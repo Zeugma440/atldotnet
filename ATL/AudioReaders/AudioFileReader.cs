@@ -16,7 +16,7 @@ namespace ATL.AudioReaders
 	{	
 		private IAudioDataReader audioData;						// Audio data reader used for this file
 		private IMetaDataReader metaData;						// Metadata reader used for this file
-		private String thePath;									// Path of this file
+		private string thePath;									// Path of this file
 
 		// ------------------------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ namespace ATL.AudioReaders
 		/// Constructor
 		/// </summary>
 		/// <param name="path">Path of the file to be parsed</param>
-		public AudioFileReader(String path, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+		public AudioFileReader(string path, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
             byte alternate = 0;
 			thePath = path;
@@ -48,28 +48,28 @@ namespace ATL.AudioReaders
 		/// <summary>
 		/// Title of the track
 		/// </summary>
-		public String Title
+		public string Title
 		{
 			get { return metaData.Title.Replace('\t',',').Replace("\r","").Replace('\n',',').Replace("\0",""); }
 		}
 		/// <summary>
 		/// Artist
 		/// </summary>
-		public String Artist
+		public string Artist
 		{
 			get { return metaData.Artist.Replace('\t',',').Replace("\r","").Replace('\n',',').Replace("\0",""); }
 		}
         /// <summary>
         /// Composer
         /// </summary>
-        public String Composer
+        public string Composer
         {
             get { return metaData.Composer.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
         }
 		/// <summary>
 		/// Comments
 		/// </summary>
-		public String Comment
+		public string Comment
 		{
 			get { return metaData.Comment.Replace('\t',',').Replace("\r","").Replace('\n',' ').Replace("\0",""); }
 		}
@@ -83,7 +83,7 @@ namespace ATL.AudioReaders
 		/// <summary>
 		/// Genre
 		/// </summary>
-		public String Genre
+		public string Genre
 		{
             get { return metaData.Genre.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
 		}
@@ -111,7 +111,7 @@ namespace ATL.AudioReaders
 		/// <summary>
 		/// Album title
 		/// </summary>
-		public String Album
+		public string Album
 		{
             get { return metaData.Album.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
 		}

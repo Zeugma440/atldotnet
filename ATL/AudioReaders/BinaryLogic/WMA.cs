@@ -262,7 +262,7 @@ namespace ATL.AudioReaders.BinaryLogic
                             Source.BaseStream.Seek(2, SeekOrigin.Current);
 
                             MemoryStream mem = new MemoryStream(DataSize - 3 - (2 * mimeType.Length + 1) - 2);
-                            StreamUtils.CopyMemoryStreamFrom(mem, Source, DataSize - 3 - (2 * mimeType.Length + 1) - 2);
+                            StreamUtils.CopyStreamFrom(mem, Source, DataSize - 3 - (2 * mimeType.Length + 1) - 2);
                             FPictureStreamHandler(ref mem);
                             mem.Close();
                         }

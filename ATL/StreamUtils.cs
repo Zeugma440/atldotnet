@@ -115,11 +115,11 @@ namespace ATL
 		/// <param name="mTo">Target stream</param>
 		/// <param name="mFrom">Source stream</param>
 		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyMemoryStreamFrom(Stream mTo, Stream mFrom, long length)
+		public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
 		{
             BinaryWriter w = new BinaryWriter(mTo);
             BinaryReader r = new BinaryReader(mFrom);
-            CopyMemoryStreamFrom(w, r, length);
+            CopyStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -128,10 +128,10 @@ namespace ATL
 		/// <param name="mTo">Writer to be used</param>
 		/// <param name="mFrom">Source stream</param>
 		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyMemoryStreamFrom(BinaryWriter w, Stream mFrom, long length)
+		public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
 		{
             BinaryReader r = new BinaryReader(mFrom);
-            CopyMemoryStreamFrom(w, r, length);
+            CopyStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -140,10 +140,10 @@ namespace ATL
 		/// <param name="mTo">Target stream</param>
 		/// <param name="r">Reader to be used</param>
 		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyMemoryStreamFrom(Stream mTo, BinaryReader r, long length)
+		public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
 		{
             BinaryWriter w = new BinaryWriter(mTo);
-            CopyMemoryStreamFrom(w, r, length);
+            CopyStreamFrom(w, r, length);
 		}
 
 		/// <summary>
@@ -152,7 +152,7 @@ namespace ATL
 		/// <param name="mTo">Writer to be used</param>
 		/// <param name="r">Reader to be used</param>
 		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyMemoryStreamFrom(BinaryWriter w, BinaryReader r, long length)
+		public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
 		{			
 			long effectiveLength;
 			long initialPosition;
@@ -163,6 +163,61 @@ namespace ATL
 			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
 				w.Write(r.ReadBytes(BUFFERSIZE));
 		}
+
+        // TODO DOC
+        public static void ShortenStream(BinaryReader r, BinaryWriter w, long oldIndex, long newIndex) // Forward loop
+        {
+            if (newIndex >= oldIndex) throw new InvalidDataException("oldIndex should be located before newIndex");
+
+            byte[] data = new byte[BUFFERSIZE];
+            long diffBytes = (oldIndex - newIndex);
+            long i = newIndex;
+            int bufSize;
+
+            while (i < r.BaseStream.Length - diffBytes)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, r.BaseStream.Length - oldIndex - i);
+                r.BaseStream.Seek(oldIndex + i, SeekOrigin.Begin);
+                data = r.ReadBytes(bufSize);
+                w.BaseStream.Seek(newIndex + i, SeekOrigin.Begin);
+                w.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+
+            w.BaseStream.SetLength(w.BaseStream.Length - diffBytes);
+          }
+
+        // TODO DOC
+        public static void LengthenStream(BinaryReader r, BinaryWriter w, long oldIndex, long newIndex, bool useNeutralBytes = false, byte neutralByte = 0) // Backward loop
+        {
+            if (newIndex <= oldIndex) throw new InvalidDataException("newIndex should be located before oldIndex");
+
+            byte[] data = new byte[BUFFERSIZE];
+            long diffBytes = (newIndex - oldIndex);
+            long oldLength = w.BaseStream.Length;
+            long newLength = w.BaseStream.Length + diffBytes;
+            w.BaseStream.SetLength(newLength);
+
+            long i = 0;
+            int bufSize;
+
+            while (newLength - i > newIndex)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
+                r.BaseStream.Seek(-i - bufSize - diffBytes, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
+                data = r.ReadBytes(bufSize);
+                w.BaseStream.Seek(-i - bufSize, SeekOrigin.End);
+                w.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+
+            if (useNeutralBytes)
+            {
+                // Replace old copied data with neutral bytes
+                w.BaseStream.Seek(oldIndex, SeekOrigin.Begin);
+                for (i = oldIndex; i < newIndex; i++) w.Write(neutralByte);
+            }
+        }
 
         /// <summary>
         /// Switches the format of an Int64 between big endian and little endian

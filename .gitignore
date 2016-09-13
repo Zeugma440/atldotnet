@@ -154,3 +154,12 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/ATL/AudioData
+/ATL.online
+/ATL.test/AudioReaders/WIPTest.cs
+/ATL.test/WebConnectors/WebTest.cs
+/ATL.test/_var
+/packages
+/ATL.test/app.config
+/ATL.test/packages.config
+/git tagging.txt

@@ -343,7 +343,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
                     // Read the whole base64-encoded picture header _and_ binary data
                     MemoryStream mem = new MemoryStream(size);
-                        StreamUtils.CopyMemoryStreamFrom(mem, Source, size);
+                        StreamUtils.CopyStreamFrom(mem, Source, size);
                         byte[] encodedData = mem.GetBuffer();
                     mem.Close();
 
@@ -357,7 +357,7 @@ namespace ATL.AudioReaders.BinaryLogic
                         FPictures.Add(block.picCode);
 
                         MemoryStream picMem = new MemoryStream(block.picDataLength);
-                            StreamUtils.CopyMemoryStreamFrom(picMem, mem, block.picDataLength);
+                            StreamUtils.CopyStreamFrom(picMem, mem, block.picDataLength);
                             //for (int i = 0; i < block.picDataLength; i++) picMem.WriteByte((byte)mem.ReadByte());
                             FPictureStreamHandler(ref picMem);
                         picMem.Close();
@@ -379,7 +379,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
                     // Read the whole base64-encoded picture binary data
                     MemoryStream mem = new MemoryStream(size);
-                        StreamUtils.CopyMemoryStreamFrom(mem, Source, size);
+                        StreamUtils.CopyStreamFrom(mem, Source, size);
                         byte[] encodedData = mem.GetBuffer();
                     mem.Close();
 

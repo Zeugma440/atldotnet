@@ -366,7 +366,7 @@ namespace Commons
             }
         }
 
-        public static String buildStrictLengthString(String value, int length, char paddingChar)
+        public static String BuildStrictLengthString(String value, int length, char paddingChar)
         {
             String result = (null == value) ? "" : value;
 

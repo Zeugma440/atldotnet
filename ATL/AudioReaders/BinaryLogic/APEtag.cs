@@ -151,7 +151,7 @@ namespace ATL.AudioReaders.BinaryLogic
                         {
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile,0);
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
-                            StreamUtils.CopyMemoryStreamFrom(mem, SourceFile, ValueSize-description.Length-1);
+                            StreamUtils.CopyStreamFrom(mem, SourceFile, ValueSize-description.Length-1);
                             FPictureStreamHandler(ref mem);
                             mem.Close();
                         }

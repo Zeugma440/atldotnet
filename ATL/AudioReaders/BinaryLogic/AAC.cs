@@ -541,7 +541,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     if (PictureStreamHandler != null)
                     {
                         MemoryStream mem = new MemoryStream(metadataSize - 16);
-                        StreamUtils.CopyMemoryStreamFrom(mem, Source, metadataSize - 16);
+                        StreamUtils.CopyStreamFrom(mem, Source, metadataSize - 16);
                         PictureStreamHandler(ref mem);
                         mem.Close();
                     }

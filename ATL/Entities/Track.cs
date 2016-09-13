@@ -7,7 +7,7 @@ using System.IO;
 namespace ATL
 {
 	/// <summary>
-	/// TRack description
+	/// Track description
 	/// </summary>
 	public class Track
 	{

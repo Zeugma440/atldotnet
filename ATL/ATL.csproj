@@ -26,6 +26,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,6 +35,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -42,13 +44,32 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioData\AudioDataIO.cs" />
+    <Compile Include="AudioData\AudioDataIOFactory.cs" />
+    <Compile Include="AudioData\CrossMetadataReader.cs" />
+    <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
+    <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
+    <Compile Include="AudioData\IO\APEtag.cs" />
+    <Compile Include="AudioData\IO\DummyReader.cs" />
+    <Compile Include="AudioData\IO\DummyTag.cs" />
+    <Compile Include="AudioData\IO\ID3v1.cs" />
+    <Compile Include="AudioData\IO\ID3v2.cs" />
+    <Compile Include="AudioData\IO\MPEGaudio.cs" />
+    <Compile Include="AudioData\MetaDataIO.cs" />
+    <Compile Include="AudioData\MetaDataIOFactory.cs" />
+    <Compile Include="AudioData\TrackUtils.cs" />
     <Compile Include="AudioReaders\AudioDataReader.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\IT.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\XM.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\S3M.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\MOD.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\TAK.cs" />
     <Compile Include="AudioReaders\BinaryLogic\DSF.cs" />
     <Compile Include="AudioReaders\MetaDataReader.cs" />
     <Compile Include="AudioReaders\Interfaces\IAudioDataReader.cs" />
     <Compile Include="AudioReaders\AudioFileReader.cs" />
     <Compile Include="AudioReaders\AudioReaderFactory.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\AACfile.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\AAC.cs" />
     <Compile Include="AudioReaders\BinaryLogic\AC3.cs" />
     <Compile Include="AudioReaders\BinaryLogic\APEtag.cs" />
     <Compile Include="AudioReaders\TrackUtils.cs" />
@@ -56,7 +77,7 @@
     <Compile Include="AudioReaders\BinaryLogic\DTS.cs" />
     <Compile Include="AudioReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="AudioReaders\BinaryLogic\DummyTag.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\FLACfile.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\FLAC.cs" />
     <Compile Include="AudioReaders\BinaryLogic\ID3v1.cs" />
     <Compile Include="AudioReaders\BinaryLogic\ID3v2.cs" />
     <Compile Include="AudioReaders\BinaryLogic\MIDI.cs" />
@@ -69,9 +90,9 @@
     <Compile Include="AudioReaders\BinaryLogic\SPC.cs" />
     <Compile Include="AudioReaders\BinaryLogic\TTA.cs" />
     <Compile Include="AudioReaders\BinaryLogic\TwinVQ.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\WAVfile.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\WAVPackfile.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\WMAfile.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\WAV.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\WAVPack.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\WMA.cs" />
     <Compile Include="AudioReaders\Interfaces\IMetaDataReader.cs" />
     <Compile Include="AudioReaders\MetaReaderFactory.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
@@ -80,6 +101,7 @@
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\Format.cs" />
+    <Compile Include="AudioData\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
@@ -103,6 +125,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
