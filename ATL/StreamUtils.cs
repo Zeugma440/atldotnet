@@ -165,38 +165,40 @@ namespace ATL
 		}
 
         // TODO DOC
-        public static void ShortenStream(BinaryReader r, BinaryWriter w, long oldIndex, long newIndex) // Forward loop
+        public static void ShortenStream(Stream s, long oldIndex, long newIndex) // Forward loop
         {
-            if (newIndex >= oldIndex) throw new InvalidDataException("oldIndex should be located before newIndex");
+            if (newIndex >= oldIndex) throw new InvalidDataException("oldIndex should be located after newIndex"); // Change interface to avoid such control mechanism ?
 
             byte[] data = new byte[BUFFERSIZE];
             long diffBytes = (oldIndex - newIndex);
-            long i = newIndex;
+            long i = 0;
             int bufSize;
 
-            while (i < r.BaseStream.Length - diffBytes)
+            while (i < s.Length - oldIndex)
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, r.BaseStream.Length - oldIndex - i);
-                r.BaseStream.Seek(oldIndex + i, SeekOrigin.Begin);
-                data = r.ReadBytes(bufSize);
-                w.BaseStream.Seek(newIndex + i, SeekOrigin.Begin);
-                w.Write(data, 0, bufSize);
+                bufSize = (int)Math.Min(BUFFERSIZE, s.Length - oldIndex - i);
+                s.Seek(oldIndex + i, SeekOrigin.Begin);
+                s.Read(data, 0, bufSize);
+                s.Seek(newIndex + i, SeekOrigin.Begin);
+                s.Write(data, 0, bufSize);
                 i += bufSize;
             }
 
-            w.BaseStream.SetLength(w.BaseStream.Length - diffBytes);
-          }
+            s.SetLength(s.Length - diffBytes);
+        }
+
+
 
         // TODO DOC
-        public static void LengthenStream(BinaryReader r, BinaryWriter w, long oldIndex, long newIndex, bool useNeutralBytes = false, byte neutralByte = 0) // Backward loop
+        public static void LengthenStream(Stream s, long oldIndex, long newIndex, bool fillZeroes = false) // Backward loop
         {
-            if (newIndex <= oldIndex) throw new InvalidDataException("newIndex should be located before oldIndex");
+            if (newIndex <= oldIndex) throw new InvalidDataException("newIndex should be located after oldIndex"); // Change interface to avoid such control mechanism ?
 
             byte[] data = new byte[BUFFERSIZE];
             long diffBytes = (newIndex - oldIndex);
-            long oldLength = w.BaseStream.Length;
-            long newLength = w.BaseStream.Length + diffBytes;
-            w.BaseStream.SetLength(newLength);
+            long oldLength = s.Length;
+            long newLength = s.Length + diffBytes;
+            s.SetLength(newLength);
 
             long i = 0;
             int bufSize;
@@ -204,18 +206,18 @@ namespace ATL
             while (newLength - i > newIndex)
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
-                r.BaseStream.Seek(-i - bufSize - diffBytes, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
-                data = r.ReadBytes(bufSize);
-                w.BaseStream.Seek(-i - bufSize, SeekOrigin.End);
-                w.Write(data, 0, bufSize);
+                s.Seek(-i - bufSize - diffBytes, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
+                s.Read(data, 0, bufSize);
+                s.Seek(-i - bufSize, SeekOrigin.End);
+                s.Write(data, 0, bufSize);
                 i += bufSize;
             }
 
-            if (useNeutralBytes)
+            if (fillZeroes)
             {
-                // Replace old copied data with neutral bytes
-                w.BaseStream.Seek(oldIndex, SeekOrigin.Begin);
-                for (i = oldIndex; i < newIndex; i++) w.Write(neutralByte);
+                // Fill the location of old copied data with zeroes
+                s.Seek(oldIndex, SeekOrigin.Begin);
+                for (i = oldIndex; i < newIndex; i++) s.WriteByte(0);
             }
         }
 
