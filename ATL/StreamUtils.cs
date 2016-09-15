@@ -165,12 +165,10 @@ namespace ATL
 		}
 
         // TODO DOC
-        public static void ShortenStream(Stream s, long oldIndex, long newIndex) // Forward loop
+        public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
         {
-            if (newIndex >= oldIndex) throw new InvalidDataException("oldIndex should be located after newIndex"); // Change interface to avoid such control mechanism ?
-
             byte[] data = new byte[BUFFERSIZE];
-            long diffBytes = (oldIndex - newIndex);
+            long newIndex = oldIndex - delta;
             long i = 0;
             int bufSize;
 
@@ -184,20 +182,18 @@ namespace ATL
                 i += bufSize;
             }
 
-            s.SetLength(s.Length - diffBytes);
+            s.SetLength(s.Length - delta);
         }
 
 
 
         // TODO DOC
-        public static void LengthenStream(Stream s, long oldIndex, long newIndex, bool fillZeroes = false) // Backward loop
+        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false) // Backward loop
         {
-            if (newIndex <= oldIndex) throw new InvalidDataException("newIndex should be located after oldIndex"); // Change interface to avoid such control mechanism ?
-
             byte[] data = new byte[BUFFERSIZE];
-            long diffBytes = (newIndex - oldIndex);
+            long newIndex = oldIndex + delta;
             long oldLength = s.Length;
-            long newLength = s.Length + diffBytes;
+            long newLength = s.Length + delta;
             s.SetLength(newLength);
 
             long i = 0;
@@ -206,7 +202,7 @@ namespace ATL
             while (newLength - i > newIndex)
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
-                s.Seek(-i - bufSize - diffBytes, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
+                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
                 s.Read(data, 0, bufSize);
                 s.Seek(-i - bufSize, SeekOrigin.End);
                 s.Write(data, 0, bufSize);

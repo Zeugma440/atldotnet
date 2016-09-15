@@ -17,7 +17,7 @@ namespace ATL.test
             using (MemoryStream stream = new MemoryStream(12))
             {
                 foreach (byte i in list) stream.WriteByte(i);
-                StreamUtils.ShortenStream(stream, 6, 4);
+                StreamUtils.ShortenStream(stream, 6, 2);
                 list.RemoveAt(4);
                 list.RemoveAt(4);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -35,7 +35,7 @@ namespace ATL.test
             using (MemoryStream stream = new MemoryStream(12))
             {
                 foreach (byte i in list) stream.WriteByte(i);
-                StreamUtils.LengthenStream(stream, 6, 8, true);
+                StreamUtils.LengthenStream(stream, 6, 2, true);
                 list.Insert(6, 0);
                 list.Insert(6, 0);
                 stream.Seek(0, SeekOrigin.Begin);
