@@ -80,6 +80,7 @@
     <None Include="Resources\Yeah.dsf" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\empty.mp3" />
     <Content Include="Resources\01 - Title Screen.mp3" />
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />

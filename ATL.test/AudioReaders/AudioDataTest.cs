@@ -1,4 +1,5 @@
 ﻿using ATL.AudioReaders;
+using ATL.AudioData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
@@ -215,11 +216,12 @@ namespace ATL.test
         [TestMethod]
         public void TestM4AAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/06 I'm All In Love.m4a");
+            String location = "../../Resources/06 I'm All In Love.m4a";
+            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            theReader.ReadFromFile("../../Resources/06 I'm All In Love.m4a");
+            theReader.ReadFromFile(location);
 
             Assert.AreEqual(54, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(260, (int)Math.Round(theReader.BitRate));
@@ -231,5 +233,63 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
         }
+
+        [TestMethod]
+        public void TestID3v1ReadWrite()
+        {
+            String location = "../../Resources/empty.mp3";
+
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            if (theFile.ReadFromFile(location))
+            {
+                Assert.IsNotNull(theFile.ID3v1);
+                Assert.IsFalse(theFile.ID3v1.Exists);
+            }
+            else
+            {
+                Assert.Fail();
+            }
+
+            TagData theTag = new TagData();
+            theTag.Title = "test !!";
+
+            if (theFile.AddTagToFile(location, theTag, MetaDataIOFactory.TAG_ID3V1))
+            {
+                if (theFile.ReadFromFile(location))
+                {
+                    Assert.IsNotNull(theFile.ID3v1);
+                    Assert.IsTrue(theFile.ID3v1.Exists);
+                    Assert.AreEqual(theFile.ID3v1.Title, "test !!");
+                }
+                else
+                {
+                    Assert.Fail();
+                }
+            }
+            else
+            {
+                Assert.Fail();
+            }
+
+            if (theFile.RemoveTagFromFile(location, MetaDataIOFactory.TAG_ID3V1))
+            {
+                if (theFile.ReadFromFile(location))
+                {
+                    Assert.IsNotNull(theFile.ID3v1);
+                    Assert.IsFalse(theFile.ID3v1.Exists);
+                }
+                else
+                {
+                    Assert.Fail();
+                }
+            }
+            else
+            {
+                Assert.Fail();
+            }
+
+        }
+
     }
 }

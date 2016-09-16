@@ -93,7 +93,7 @@ namespace ATL.test
             Assert.AreEqual(2000, theTrack.Year);
             Assert.AreEqual(44, theTrack.TrackNumber);
             Assert.AreEqual("Other", theTrack.Genre);
-            
+
             Image picture = theTrack.GetEmbeddedPicture();
             Assert.IsNotNull(picture);
             Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
@@ -160,7 +160,7 @@ namespace ATL.test
         {
             Track theTrack = new Track("../../Resources/003 BlackBird.tak");
 
-            Assert.AreEqual(6,theTrack.Duration);
+            Assert.AreEqual(6, theTrack.Duration);
             Assert.AreEqual(634, theTrack.Bitrate);
             Assert.IsFalse(theTrack.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theTrack.CodecFamily);
@@ -301,5 +301,7 @@ namespace ATL.test
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(1984, theTrack.Year); // Empty on the ID3v1 tag => cross-reading should read it on ID3v2
         }
+
+        // TODO test access to native tag on MP4 file
     }
 }

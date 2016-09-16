@@ -370,8 +370,8 @@ namespace Commons
         {
             String result = (null == value) ? "" : value;
 
-            if (value.Length > length) value = value.Substring(0, length);
-            if (value.Length < length) value = value.PadRight(30, paddingChar);
+            if (result.Length > length) result = result.Substring(0, length);
+            if (result.Length < length) result = result.PadRight(length, paddingChar);
 
             return result;
         }
