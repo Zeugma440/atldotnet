@@ -210,7 +210,7 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             // Read tag
-                source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
+            source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
             FOffset = source.BaseStream.Position;
 
 #if DEBUG
@@ -327,19 +327,18 @@ namespace ATL.AudioData.IO
             
             // ID3v1.1 standard
             w.Write('\0');
-            w.Write(TrackUtils.ExtractTrackNumber(tag.TrackNumber));
+            w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber),Byte.MaxValue));
 
             byte genre = 0;
             for (byte i = 0; i < MAX_MUSIC_GENRES; i++)
             {
-                if (tag.Genre.Equals(MusicGenre[i]))
+                if (tag.Genre.ToUpper().Equals(MusicGenre[i].ToUpper()))
                 {
                     genre = i;
                     break;
                 }
             }
             w.Write(genre);
-            w.BaseStream.SetLength(ID3V1_TAG_SIZE);
 
             return result;
         }
