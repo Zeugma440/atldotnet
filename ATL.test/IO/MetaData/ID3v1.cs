@@ -82,6 +82,11 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
 
+            string originalMD5 = TestUtils.GetMD5Hash(location);
+            string testMD5 = TestUtils.GetMD5Hash(testFileLocation);
+
+            Assert.IsTrue(originalMD5.Equals(testMD5));
+
             File.Delete(testFileLocation);
         }
     }
