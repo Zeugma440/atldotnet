@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, TagData tag)
         {
             return true;
         }

@@ -233,63 +233,7 @@ namespace ATL.test
             System.Console.WriteLine(theReader.IsVBR);
             System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
         }
-
-        [TestMethod]
-        public void TestID3v1ReadWrite()
-        {
-            String location = "../../Resources/empty.mp3";
-
-            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
-
-            if (theFile.ReadFromFile(location))
-            {
-                Assert.IsNotNull(theFile.ID3v1);
-                Assert.IsFalse(theFile.ID3v1.Exists);
-            }
-            else
-            {
-                Assert.Fail();
-            }
-
-            TagData theTag = new TagData();
-            theTag.Title = "test !!";
-
-            if (theFile.AddTagToFile(location, theTag, MetaDataIOFactory.TAG_ID3V1))
-            {
-                if (theFile.ReadFromFile(location))
-                {
-                    Assert.IsNotNull(theFile.ID3v1);
-                    Assert.IsTrue(theFile.ID3v1.Exists);
-                    Assert.AreEqual(theFile.ID3v1.Title, "test !!");
-                }
-                else
-                {
-                    Assert.Fail();
-                }
-            }
-            else
-            {
-                Assert.Fail();
-            }
-
-            if (theFile.RemoveTagFromFile(location, MetaDataIOFactory.TAG_ID3V1))
-            {
-                if (theFile.ReadFromFile(location))
-                {
-                    Assert.IsNotNull(theFile.ID3v1);
-                    Assert.IsFalse(theFile.ID3v1.Exists);
-                }
-                else
-                {
-                    Assert.Fail();
-                }
-            }
-            else
-            {
-                Assert.Fail();
-            }
-
-        }
+        
 
     }
 }

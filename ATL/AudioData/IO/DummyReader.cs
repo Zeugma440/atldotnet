@@ -47,7 +47,7 @@ namespace ATL.AudioData.IO
         {
             get { return new DummyTag(); }
         }
-        public bool ReadFromFile(String fileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler)
 		{
 			return true;
 		}
@@ -55,11 +55,11 @@ namespace ATL.AudioData.IO
         {
             return false;
         }
-        public bool RemoveTagFromFile(string FileName, int tagType)
+        public bool RemoveTagFromFile(int tagType)
         {
             return true;
         }
-        public bool AddTagToFile(string FileName, TagData theTag, int tagType)
+        public bool AddTagToFile(TagData theTag, int tagType)
         {
             return true;
         }

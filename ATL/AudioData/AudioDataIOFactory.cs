@@ -209,31 +209,19 @@ namespace ATL.AudioData
 		public IAudioDataIO GetDataReader(String path, int alternate = 0)
 		{
             IList<Format> formats = getFormatsFromPath(path);
+            int formatId = NO_FORMAT;
 
             if (formats != null && formats.Count > alternate)
             {
-                return GetDataReader(formats[alternate].ID);
+                formatId = formats[alternate].ID;
             }
-            else
-            {
-                return GetDataReader(NO_FORMAT);
-            }
-		}
 
-		/// <summary>
-		/// Gets the appropriate physical data reader for a given file
-		/// </summary>
-		/// <param name="formatId">ID of the format</param>
-		/// <param name="path">Path of the file</param>
-		/// <returns>AudioDataReader able to give info about the file's contents (or the dummy reader if the format is unknown)</returns>
-		public IAudioDataIO GetDataReader(int formatId)
-		{
             IAudioDataIO theDataReader = null;
 			
 			switch ( formatId )
 			{
 				case CID_MP3 :		
-					theDataReader = new IO.MPEGaudio();
+					theDataReader = new IO.MPEGaudio(path);
 					break;
                     /*
 				case CID_OGG :		

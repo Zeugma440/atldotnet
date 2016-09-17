@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ATL.AudioData
 {
-    public abstract class MetaDataIO : IMetaDataIO
+    public abstract class MetaDataIO : IOBase, IMetaDataIO
     {
         // Default tag offset
         protected const int TO_EOF = 0; // End Of File
@@ -152,7 +152,7 @@ namespace ATL.AudioData
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
+                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader source = new BinaryReader(fs))
                 {
                     result = Read(source, pictureStreamHandler);
@@ -160,6 +160,7 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
+                System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
                 result = false;
@@ -168,13 +169,13 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, TagData tag)
         {
             bool result = false;
             long newTagSize = -1;
 
             // Read all the fields in the existing tag
-            result = Read(r, null, true);
+            result = Read(r, null, true); // TODO get a better use of the return value
 
             // Write new tag to a MemoryStream
             using (MemoryStream s = new MemoryStream(Size))
@@ -206,19 +207,19 @@ namespace ATL.AudioData
                 // Needs to build a larger file
                 if (newTagSize > FSize)
                 {
-                    StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - FSize));
+                    StreamUtils.LengthenStream(r.BaseStream, audioDataOffset, (uint)(newTagSize - FSize));
                 } else if (newTagSize < FSize) // Need to reduce file size
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
+                    StreamUtils.ShortenStream(r.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
                 }
 
                 // Copy memoryStream contents to the new slot
-                w.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
+                r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
                 s.Seek(0, SeekOrigin.Begin);
-                StreamUtils.CopyStreamFrom(w.BaseStream, s, s.Length);
+                StreamUtils.CopyStreamFrom(r.BaseStream, s, s.Length);
             }
 
-            return true;
+            return result;
         }
     }
 }

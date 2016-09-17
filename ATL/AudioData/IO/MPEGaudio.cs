@@ -779,14 +779,11 @@ namespace ATL.AudioData.IO
 
 		// ********************** Public functions & voids **********************
 
-		public MPEGaudio()
-		{
-			// Object constructor  
-			FID3v1 = new ID3v1();
-			FID3v2 = new ID3v2();
-			FAPEtag = new APEtag();
-			resetData();
-		}
+        public MPEGaudio(string theFile)
+        {
+            FFileName = theFile;
+            resetData();
+        }
 
         // ---------------------------------------------------------------------------
 
@@ -799,41 +796,31 @@ namespace ATL.AudioData.IO
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
         }
 
-        public override bool HasNativeMeta()
-        {
-            return false;
-        }
-
-        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        protected override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
         {
             Stream fs = source.BaseStream;
 			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];  
 
 			bool result = false;
 
-			// At first search for tags...
-            FID3v2.Read(source, pictureStreamHandler);
-            FID3v1.Read(source);
-            APEtag.Read(source, pictureStreamHandler);
-
             // ...then search for a MPEG frame and VBR data
             fs.Seek(FID3v2.Size, SeekOrigin.Begin);
-			Data = source.ReadBytes(Data.Length);
+            fs.Read(Data, 0, Data.Length);
 			HeaderFrame = FindFrame(Data, ref FVBR);
 
             // Try to search in the middle if no frame found at the beginning
             if ( ! HeaderFrame.Found ) 
 			{
 				fs.Seek((long)Math.Floor((FFileSize - FID3v2.Size) / 2.0),SeekOrigin.Begin);
-				Data = source.ReadBytes(Data.Length);
-				HeaderFrame = FindFrame(Data, ref FVBR);
+                fs.Read(Data, 0, Data.Length);
+                HeaderFrame = FindFrame(Data, ref FVBR);
 			}
 			// Search for vendor ID at the end if CBR encoded
 			if ( (HeaderFrame.Found) && (! FVBR.Found) )
 			{
                 fs.Seek(FFileSize - Data.Length - FID3v1.Size - FAPEtag.Size, SeekOrigin.Begin);
-				Data = source.ReadBytes(Data.Length);
-				FVendorID = FindVendorID(Data, HeaderFrame.Size * 5);
+                fs.Read(Data, 0, Data.Length);
+                FVendorID = FindVendorID(Data, HeaderFrame.Size * 5);
 			}
 			result = true;
 
@@ -852,7 +839,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        public override bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
+        protected override bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
         {
             // No file size in MPEGAudio header
             return true;

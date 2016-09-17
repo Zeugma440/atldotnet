@@ -118,6 +118,6 @@ namespace ATL.AudioData
         bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 
         // TODO Doc
-        bool Write(BinaryReader r, BinaryWriter w, TagData tag);
+        bool Write(BinaryReader r, TagData tag);
     }
 }

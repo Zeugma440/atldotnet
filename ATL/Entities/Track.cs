@@ -1,3 +1,4 @@
+using ATL.AudioData;
 using ATL.AudioReaders;
 using System;
 using System.Collections.Generic;
@@ -13,12 +14,15 @@ namespace ATL
 	{
 		public Track() {}
 
-        public Track(String iPath)
+        public Track(String iPath, bool useOldImplementation = false)
         {
             Path = iPath;
+            this.useOldImplementation = useOldImplementation;
 
             Update();
         }
+
+        private bool useOldImplementation;
 
 		public String Path;		
 		public String Title;
@@ -37,7 +41,9 @@ namespace ATL
 		public int TrackNumber;
         public int DiscNumber;
         public int Rating;
+        [Obsolete]
         public IList<MetaReaderFactory.PIC_CODE> Pictures;
+        public IList<MetaDataIOFactory.PIC_CODE> PictureTokens;
 
         protected Image coverArt = null;
 
@@ -59,8 +65,6 @@ namespace ATL
 
         protected void Update(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
-            AudioFileReader theReader;
-
             FileInfo theFileInfo = new FileInfo(Path);
 
             if (theFileInfo.Exists)
@@ -69,36 +73,72 @@ namespace ATL
                 LastModified = theFileInfo.LastWriteTime.Ticks;
             }
 
-            //TODO when tag is not available, customize by naming options // tracks (...)
-            theReader = new AudioFileReader(Path, pictureStreamHandler);
-
-            // Per convention, the presence of a pictureStreamHandler
-            // indicates that we only want coverArt updated
-            if (null == pictureStreamHandler)
+            if (useOldImplementation)
             {
-                Title = theReader.Title;
-                if ("" == Title || null == Title)
+                //TODO when tag is not available, customize by naming options // tracks (...)
+                AudioFileReader theReader = new AudioFileReader(Path, pictureStreamHandler);
+
+                // Per convention, the presence of a pictureStreamHandler
+                // indicates that we only want coverArt updated
+                if (null == pictureStreamHandler)
                 {
-                    Title = System.IO.Path.GetFileNameWithoutExtension(Path);
+                    Title = theReader.Title;
+                    if ("" == Title || null == Title)
+                    {
+                        Title = System.IO.Path.GetFileNameWithoutExtension(Path);
+                    }
+                    Artist = theReader.Artist;
+                    if (null == Artist) { Artist = ""; }
+                    Composer = theReader.Composer;
+                    if (null == Composer) { Composer = ""; }
+                    Comment = theReader.Comment;
+                    if (null == Comment) { Comment = ""; }
+                    Genre = theReader.Genre;
+                    if (null == Genre) { Genre = ""; }
+                    Year = theReader.IntYear;
+                    Album = theReader.Album;
+                    TrackNumber = theReader.Track;
+                    DiscNumber = theReader.Disc;
+                    Bitrate = theReader.IntBitRate;
+                    CodecFamily = theReader.CodecFamily;
+                    Duration = theReader.IntDuration;
+                    Rating = theReader.Rating;
+                    IsVBR = theReader.IsVBR;
+                    Pictures = new List<MetaReaderFactory.PIC_CODE>(theReader.Pictures);
                 }
-                Artist = theReader.Artist;
-                if (null == Artist) { Artist = ""; }
-                Composer = theReader.Composer;
-                if (null == Composer) { Composer = ""; }
-                Comment = theReader.Comment;
-                if (null == Comment) { Comment = ""; }
-                Genre = theReader.Genre;
-                if (null == Genre) { Genre = ""; }
-                Year = theReader.IntYear;
-                Album = theReader.Album;
-                TrackNumber = theReader.Track;
-                DiscNumber = theReader.Disc;
-                Bitrate = theReader.IntBitRate;
-                CodecFamily = theReader.CodecFamily;
-                Duration = theReader.IntDuration;
-                Rating = theReader.Rating;
-                IsVBR = theReader.IsVBR;
-                Pictures = new List<MetaReaderFactory.PIC_CODE>(theReader.Pictures);
+            } else
+            {
+                //TODO when tag is not available, customize by naming options // tracks (...)
+                AudioFileIO theReader = new AudioFileIO(Path, pictureStreamHandler);
+
+                // Per convention, the presence of a pictureStreamHandler
+                // indicates that we only want coverArt updated
+                if (null == pictureStreamHandler)
+                {
+                    Title = theReader.Title;
+                    if ("" == Title || null == Title)
+                    {
+                        Title = System.IO.Path.GetFileNameWithoutExtension(Path);
+                    }
+                    Artist = theReader.Artist;
+                    if (null == Artist) { Artist = ""; }
+                    Composer = theReader.Composer;
+                    if (null == Composer) { Composer = ""; }
+                    Comment = theReader.Comment;
+                    if (null == Comment) { Comment = ""; }
+                    Genre = theReader.Genre;
+                    if (null == Genre) { Genre = ""; }
+                    Year = theReader.IntYear;
+                    Album = theReader.Album;
+                    TrackNumber = theReader.Track;
+                    DiscNumber = theReader.Disc;
+                    Bitrate = theReader.IntBitRate;
+                    CodecFamily = theReader.CodecFamily;
+                    Duration = theReader.IntDuration;
+                    Rating = theReader.Rating;
+                    IsVBR = theReader.IsVBR;
+                    PictureTokens = new List<MetaDataIOFactory.PIC_CODE>(theReader.Pictures);
+                }
             }
         }
 	}

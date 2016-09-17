@@ -77,11 +77,11 @@ namespace ATL.AudioData
         /// <param name="fileName">Path of the file</param>
         /// <param name="pictureStreamHandler">Delegate for reading picture data stream</param>
         /// <returns>True if the parsing is successful; false if not</returns>
-        bool ReadFromFile(String fileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null);
+        bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null);
 
-        bool RemoveTagFromFile(String FileName, int tagType);
+        bool RemoveTagFromFile(int tagType);
 
-        bool AddTagToFile(String FileName, TagData theTag, int tagType);
+        bool AddTagToFile(TagData theTag, int tagType);
 
         /// <summary>
         /// Indicates if file format has a native metadata tagging system (e.g. not ID3v1, ID3v2 nor APEtag)

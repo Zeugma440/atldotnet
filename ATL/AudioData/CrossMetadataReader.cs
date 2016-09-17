@@ -243,7 +243,7 @@ namespace ATL.AudioData
             throw new NotImplementedException();
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, TagData tag)
         {
             throw new NotImplementedException();
         }

@@ -357,7 +357,8 @@ namespace ATL.AudioData.IO
                             }
                             else
                             {
-                                StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
+                                //StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
+                                StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
                             FPictureStreamHandler(ref mem);
                             mem.Close();

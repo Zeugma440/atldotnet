@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ATL.AudioData
 {
-    abstract class AudioDataIO : IAudioDataIO
+    public abstract class AudioDataIO : IOBase, IAudioDataIO
     {
         // Audio data
         protected double FBitrate;
@@ -22,7 +22,6 @@ namespace ATL.AudioData
         protected ID3v2 FID3v2 = new ID3v2();
         protected APEtag FAPEtag = new APEtag();
         protected IMetaDataIO FNativeTag;
-
 
 
         public double BitRate // Bitrate (KBit/s)
@@ -71,16 +70,15 @@ namespace ATL.AudioData
 
         protected void resetData()
         {
-            FFileName = "";
             FFileSize = 0;
             FValid = false;
 
             FBitrate = 0;
             FDuration = 0;
 
-            if (FID3v1 != null) FID3v1.ResetData();
-            if (FID3v2 != null) FID3v2.ResetData();
-            if (FAPEtag != null) FAPEtag.ResetData();
+            FID3v1.ResetData();
+            FID3v2.ResetData();
+            FAPEtag.ResetData();
 
             resetSpecificData();
         }
@@ -88,11 +86,9 @@ namespace ATL.AudioData
 
         abstract public bool IsMetaSupported(int metaType);
 
-        abstract public bool HasNativeMeta();
+        abstract protected bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
 
-        abstract public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
-
-        abstract public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
+        abstract protected bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
 
 
         public bool hasMeta(int tagType)
@@ -112,7 +108,7 @@ namespace ATL.AudioData
             } else return false;
         }
 
-        public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
+        public bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
             bool result = false;
             resetData();
@@ -120,28 +116,37 @@ namespace ATL.AudioData
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
-                using (BinaryReader SourceFile = new BinaryReader(fs))
+                using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
+                using (BinaryReader source = new BinaryReader(fs))
                 {
                     FFileSize = fs.Length;
-                    FFileName = FileName;
 
-                    result = Read(SourceFile, pictureStreamHandler);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
+                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1");
+                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V2)) FID3v2.Read(source, pictureStreamHandler);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2");
+                    if (IsMetaSupported(MetaDataIOFactory.TAG_APE)) FAPEtag.Read(source, pictureStreamHandler);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape");
 
-                    if (result && HasNativeMeta()) FNativeTag = (IMetaDataIO)this; // TODO : This is dirty as ****; there must be a better way !
+                    result = Read(source, pictureStreamHandler);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read");
+
+                    if (result && IsMetaSupported(MetaDataIOFactory.TAG_NATIVE)) FNativeTag = (IMetaDataIO)this; // TODO : This is dirty as ****; there must be a better way !
                 }
             }
             catch (Exception e)
             {
+                System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
                 result = false;
             }
 
             return result;
         }
 
-        public bool AddTagToFile(String FileName, TagData theTag, int tagType)
+        public bool AddTagToFile(TagData theTag, int tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO = null;
@@ -171,36 +176,36 @@ namespace ATL.AudioData
 
                     if (theMetaIO != null)
                     {
-                        using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.ReadWrite))
-                        using (BinaryWriter w = new BinaryWriter(fs))
+                        using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                         using (BinaryReader r = new BinaryReader(fs))
                         {
-                            theMetaIO.Write(r, w, theTag);
+                            theMetaIO.Write(r, theTag);
                         }
                         // TODO : update the tag to its new values
                     }
                 }
                 catch (Exception e)
                 {
+                    System.Console.WriteLine(e.Message);
                     System.Console.WriteLine(e.StackTrace);
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
                     result = false;
                 }
             } else
             {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported in " + FileName);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported in " + FFileName);
             }
 
             return result;
         }
 
-        public bool RemoveTagFromFile(String FileName, int tagType)
+        public bool RemoveTagFromFile(int tagType)
         {
             bool result = false;
 
             try
             {
-                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.ReadWrite))
+                using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader reader = new BinaryReader(fs))
                 {
                     result = Read(reader, null);
@@ -241,12 +246,18 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
+                System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
                 result = false;
             }
 
             return result;
+        }
+
+        public bool HasNativeMeta()
+        {
+            return IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
         }
     }
 }

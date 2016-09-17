@@ -14,9 +14,8 @@ namespace ATL
 	/// </summary>
 	public class StreamUtils
 	{	
-		// Size of the buffer used for memory stream copies
-		// (see CopyMemoryStreamFrom method)
-		private const int BUFFERSIZE = 1;
+		// Size of the buffer used by memory stream copies methods
+		private const int BUFFERSIZE = 4096;
 
         public delegate void StreamHandlerDelegate(ref MemoryStream stream);
 
@@ -67,20 +66,24 @@ namespace ATL
         }
 
 
-		/// <summary>
-		/// Reads a given number of one-byte chars from the provided source
-		/// (this method is there because the default behaviour of .NET's binary char reading
-		/// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
-		/// </summary>
-		/// <param name="r">Source to read from</param>
-		/// <param name="length">Number of one-byte chars to read</param>
-		/// <returns>Array of chars read from the source</returns>
-		public static char[] ReadOneByteChars(BinaryReader r, int length)
+        /// <summary>
+        /// Reads a given number of one-byte chars from the provided source
+        /// (this method is there because the default behaviour of .NET's binary char reading
+        /// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
+        /// </summary>
+        /// <param name="r">Source to read from</param>
+        /// <param name="length">Number of one-byte chars to read</param>
+        /// <returns>Array of chars read from the source</returns>
+        public static char[] ReadOneByteChars(BinaryReader r, int length)
+        {
+            return ReadOneByteChars(r.BaseStream, length);
+        }
+        public static char[] ReadOneByteChars(Stream s, int length)
 		{
-			byte[] byteArr;
-			char[] result = new char[length];
+			byte[] byteArr = new byte[length];
+            char[] result = new char[length];
 
-			byteArr = r.ReadBytes(length);
+            s.Read(byteArr, 0, length);
 			for (int i=0; i<length; i++)
 			{
 				result[i] = (char)byteArr[i];
@@ -109,38 +112,41 @@ namespace ATL
             return (char)r.ReadByte();
         }
 
-		/// <summary>
-		/// Copies a given number of bytes from a stream to another
-		/// </summary>
-		/// <param name="mTo">Target stream</param>
-		/// <param name="mFrom">Source stream</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
+        /// <summary>
+        /// Copies a given number of bytes from a stream to another
+        /// </summary>
+        /// <param name="mTo">Target stream</param>
+        /// <param name="mFrom">Source stream</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
+        public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
 		{
             BinaryWriter w = new BinaryWriter(mTo);
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
 		}
 
-		/// <summary>
-		/// Writes a given number of bytes from a stream to a writer
-		/// </summary>
-		/// <param name="mTo">Writer to be used</param>
-		/// <param name="mFrom">Source stream</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
+        /// <summary>
+        /// Writes a given number of bytes from a stream to a writer
+        /// </summary>
+        /// <param name="mTo">Writer to be used</param>
+        /// <param name="mFrom">Source stream</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
+        public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
 		{
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
 		}
 
-		/// <summary>
-		/// Writes a given number of bytes from a reader to a stream
-		/// </summary>
-		/// <param name="mTo">Target stream</param>
-		/// <param name="r">Reader to be used</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
+        /// <summary>
+        /// Writes a given number of bytes from a reader to a stream
+        /// </summary>
+        /// <param name="mTo">Target stream</param>
+        /// <param name="r">Reader to be used</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
+        public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
 		{
             BinaryWriter w = new BinaryWriter(mTo);
             CopyStreamFrom(w, r, length);
@@ -152,6 +158,7 @@ namespace ATL
 		/// <param name="mTo">Writer to be used</param>
 		/// <param name="r">Reader to be used</param>
 		/// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
 		public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
 		{			
 			long effectiveLength;
@@ -163,6 +170,24 @@ namespace ATL
 			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
 				w.Write(r.ReadBytes(BUFFERSIZE));
 		}
+
+        public static void CopyStream(Stream from, Stream to, long length = 0)
+        {
+            byte[] data = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
+
+            if (0 == length) bytesToRead = from.Length-from.Position; else bytesToRead = Math.Min(from.Length - from.Position,length);
+
+            while (i< bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i);
+                from.Read(data, 0, bufSize);
+                to.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+        }
 
         // TODO DOC
         public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
