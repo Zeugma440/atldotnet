@@ -15,17 +15,24 @@ namespace ATL.AudioData
         {
             Pictures = new Dictionary<MetaDataIOFactory.PIC_CODE, Image>();
         }
-        /*
-        public static String META_TITLE = "TITLE";
-        public static String META_ARTIST = "ARTIST";
-        public static String META_COMPOSER = "COMPOSER";
-        public static String META_COMMENT = "COMMENT";
-        public static String META_GENRE = "GENRE";
-        public static String META_ALBUM = "ALBUM";
-        public static String META_DATE = "DATE";
-        public static String META_TRACKNUM = "TRACKNUM";
-        public static String META_DISCNUM = "DISCNUM";
-        public static String META_RATING = "RATING";
+        
+        /* Not really useful
+        public TagData(IMetaDataIO meta)
+        {
+            Title = meta.Title;
+            Artist = meta.Artist;
+            Composer = meta.Composer;
+            Genre = meta.Genre;
+            Album = meta.Album;
+            Date = meta.Year;
+            TrackNumber = meta.Track.ToString();
+            DiscNumber = meta.Disc.ToString();
+            Rating = meta.Rating.ToString();
+
+            Pictures = new Dictionary<MetaDataIOFactory.PIC_CODE, Image>();
+
+//            AudioFileIO theReader = new AudioFileIO(Path, new StreamUtils.StreamHandlerDelegate(this.readImageData));
+        }
         */
 
         public String Title = "";
@@ -40,7 +47,7 @@ namespace ATL.AudioData
         public String Rating = "";
         public IDictionary<MetaDataIOFactory.PIC_CODE, Image> Pictures;
 
-        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_CODE picCode)
+        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_CODE picCode)
         {
             if (Pictures.ContainsKey(picCode))
             {

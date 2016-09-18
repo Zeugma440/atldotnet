@@ -132,9 +132,23 @@ namespace ATL.AudioData
             FPictures = new List<MetaDataIOFactory.PIC_CODE>();
         }
 
-        abstract public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields);
+        protected void fromTagData(TagData info)
+        {
+            FAlbum = info.Album;
+            FArtist = info.Artist;
+            FComment = info.Comment;
+            FComposer = info.Composer;
+            FYear = TrackUtils.ExtractStrYear(info.Date);
+            FDisc = TrackUtils.ExtractTrackNumber(info.DiscNumber);
+            FTrack = TrackUtils.ExtractTrackNumber(info.TrackNumber);
+            FGenre = info.Genre;
+            FRating = TrackUtils.ExtractIntRating(info.Rating);
+            FTitle = info.Title;
+        }
 
-        public bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields);
+
+        public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             return Read(Source, pictureStreamHandler, false);
         }
@@ -142,32 +156,6 @@ namespace ATL.AudioData
         abstract public bool Write(TagData tag, BinaryWriter w);
 
         abstract protected int getDefaultTagOffset();
-
-
-        public bool ReadFromFile(String FileName, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
-        {
-            bool result = false;
-            ResetData();
-
-            try
-            {
-                // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
-                using (BinaryReader source = new BinaryReader(fs))
-                {
-                    result = Read(source, pictureStreamHandler);
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e.Message);
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
-                result = false;
-            }
-
-            return result;
-        }
 
         public bool Write(BinaryReader r, TagData tag)
         {
@@ -181,7 +169,7 @@ namespace ATL.AudioData
             using (MemoryStream s = new MemoryStream(Size))
             using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
             {
-                Write(tag, msw);
+                Write(tag, msw);  // TODO get a better use of the return value
                 newTagSize = s.Length;
 
 
@@ -216,8 +204,10 @@ namespace ATL.AudioData
                 // Copy memoryStream contents to the new slot
                 r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
                 s.Seek(0, SeekOrigin.Begin);
-                StreamUtils.CopyStreamFrom(r.BaseStream, s, s.Length);
+                StreamUtils.CopyStream(s, r.BaseStream, s.Length);
             }
+
+            fromTagData(tag);
 
             return result;
         }

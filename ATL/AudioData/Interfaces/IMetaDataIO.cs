@@ -115,7 +115,7 @@ namespace ATL.AudioData
         /// <param name="source">Reader to parse data from</param>
         /// <param name="pictureStreamHandler">Delegate to use when reading picture data</param>
         /// <returns></returns>
-        bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
+        bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler);
 
         // TODO Doc
         bool Write(BinaryReader r, TagData tag);

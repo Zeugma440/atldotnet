@@ -268,7 +268,7 @@ namespace ATL.AudioData.IO
 
 		// ---------------------------------------------------------------------------
 
-        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler = null, bool storeUnsupportedMetaFields = false)
+        public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null, bool storeUnsupportedMetaFields = false)
         {
 			TagRecord tagData = new TagRecord();
 	

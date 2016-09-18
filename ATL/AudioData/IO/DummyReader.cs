@@ -47,7 +47,7 @@ namespace ATL.AudioData.IO
         {
             get { return new DummyTag(); }
         }
-        public bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
 		{
 			return true;
 		}

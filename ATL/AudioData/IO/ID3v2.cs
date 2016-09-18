@@ -19,7 +19,7 @@ namespace ATL.AudioData.IO
 
         private String FTrackString;
         private String FDiscString;
-        private StreamUtils.StreamHandlerDelegate FPictureStreamHandler;
+        private MetaDataIOFactory.PictureStreamHandlerDelegate FPictureStreamHandler;
 
         private String FEncoder;
         private String FLanguage;
@@ -339,7 +339,8 @@ namespace ATL.AudioData.IO
                         // mime-type always coded in ASCII
                         if (1 == encoding) fs.Seek(-1, SeekOrigin.Current);
                         String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, 0);
-                        FPictures.Add(ReadAPICPictureType(SourceFile,8));
+                        MetaDataIOFactory.PIC_CODE picCode = ReadAPICPictureType(SourceFile, 8);
+                        FPictures.Add(picCode);
 
                         // However, description can be coded with another convention
                         if (1 == encoding)
@@ -360,7 +361,7 @@ namespace ATL.AudioData.IO
                                 //StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
-                            FPictureStreamHandler(ref mem);
+                            FPictureStreamHandler(ref mem, picCode);
                             mem.Close();
                         }
                     }
@@ -421,7 +422,9 @@ namespace ATL.AudioData.IO
                         // ID3v2.2 specific layout
                         byte textEncoding = SourceFile.ReadByte();
                         String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3));
-                        FPictures.Add(ReadAPICPictureType(SourceFile, 8));
+                        MetaDataIOFactory.PIC_CODE picCode = ReadAPICPictureType(SourceFile, 8);
+                        FPictures.Add(picCode);
+
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, textEncoding);
                         if (FPictureStreamHandler != null)
                         {
@@ -434,10 +437,10 @@ namespace ATL.AudioData.IO
                             }
                             else
                             {
-                                StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
+                                StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
 
-                            FPictureStreamHandler(ref mem);
+                            FPictureStreamHandler(ref mem, picCode);
                         }
                     }
                     fs.Seek(Position + DataSize, SeekOrigin.Begin);
@@ -464,12 +467,12 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
+        public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
         {
             return Read(source, pictureStreamHandler, 0);
         }
 
-        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler, long offset)
+        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset)
         {
             TagInfo Tag = new TagInfo();
             this.FPictureStreamHandler = pictureStreamHandler;

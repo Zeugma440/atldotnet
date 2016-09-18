@@ -86,7 +86,7 @@ namespace ATL.AudioData
 
         abstract public bool IsMetaSupported(int metaType);
 
-        abstract protected bool Read(BinaryReader Source, StreamUtils.StreamHandlerDelegate pictureStreamHandler);
+        abstract protected bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler);
 
         abstract protected bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
 
@@ -108,7 +108,7 @@ namespace ATL.AudioData
             } else return false;
         }
 
-        public bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
+        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
             bool result = false;
             resetData();
@@ -181,7 +181,6 @@ namespace ATL.AudioData
                         {
                             theMetaIO.Write(r, theTag);
                         }
-                        // TODO : update the tag to its new values
                     }
                 }
                 catch (Exception e)

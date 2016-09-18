@@ -238,7 +238,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler)
+        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             throw new NotImplementedException();
         }

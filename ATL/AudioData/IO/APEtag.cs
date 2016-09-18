@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	public class APEtag : MetaDataIO
     {
-        private StreamUtils.StreamHandlerDelegate FPictureStreamHandler;
+        private MetaDataIOFactory.PictureStreamHandlerDelegate FPictureStreamHandler;
 
 		// Tag ID
 		public const String APE_ID = "APETAGEX";							// APE
@@ -151,8 +151,8 @@ namespace ATL.AudioData.IO
                         {
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile,0);
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
-                            StreamUtils.CopyStreamFrom(mem, SourceFile, ValueSize-description.Length-1);
-                            FPictureStreamHandler(ref mem);
+                            StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
+                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_CODE.Front);
                             mem.Close();
                         }
                     }
@@ -171,7 +171,7 @@ namespace ATL.AudioData.IO
 
 		// ---------------------------------------------------------------------------
 
-        public override bool Read(BinaryReader source, StreamUtils.StreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
+        public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
         {
 			TagInfo Tag = new TagInfo();
             FPictureStreamHandler = pictureStreamHandler;

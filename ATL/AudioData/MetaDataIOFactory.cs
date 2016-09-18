@@ -1,5 +1,6 @@
 using ATL.Logging;
 using System;
+using System.IO;
 
 namespace ATL.AudioData
 {
@@ -10,8 +11,11 @@ namespace ATL.AudioData
 	{
         public enum PIC_CODE { Generic, Front, Back, CD };
 
-		// Defines the types of supported "cross-format" metadata
-		public const int TAG_ID3V1 = 0;
+        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_CODE picCode);
+
+
+        // Defines the types of supported "cross-format" metadata
+        public const int TAG_ID3V1 = 0;
 		public const int TAG_ID3V2 = 1;
 		public const int TAG_APE = 2;
         public const int TAG_NATIVE = 3; // Native tag format associated with the audio container (ex : MP4 built-in tagging format)

@@ -77,7 +77,7 @@ namespace ATL.AudioData
         /// <param name="fileName">Path of the file</param>
         /// <param name="pictureStreamHandler">Delegate for reading picture data stream</param>
         /// <returns>True if the parsing is successful; false if not</returns>
-        bool ReadFromFile(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null);
+        bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null);
 
         bool RemoveTagFromFile(int tagType);
 
