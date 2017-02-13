@@ -68,22 +68,31 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\003 BlackBird.tak" />
     <None Include="Resources\01_2_32.opus" />
+    <None Include="Resources\2ND_PM.S3M" />
     <None Include="Resources\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\mustang_12kHz.flac" />
     <None Include="Resources\mustang_12kHz_tagged.flac" />
     <None Include="Resources\duck hunt.cue" />
+    <None Include="Resources\playlist.b4s" />
     <None Include="Resources\playlist.smil" />
     <None Include="Resources\playlist.xspf" />
     <None Include="Resources\Rayman_2_music_sample.ogg" />
+    <None Include="Resources\sommix.it" />
+    <None Include="Resources\SuperMario28bits%28tssf%29.it" />
     <None Include="Resources\tutte.b4s" />
+    <None Include="Resources\v_chrtrg.xm" />
     <None Include="Resources\Yeah.dsf" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\01 - Title Screen.mp3" />
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
+    <Content Include="Resources\06 I%27m All In Love.m4a" />
+    <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
     <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\duck hunt.wav" />
+    <Content Include="Resources\M1F1-int32-AFsp.aif" />
     <Content Include="Resources\playlist.asx" />
     <Content Include="Resources\playlist.m3u" />
     <Content Include="Resources\ROQ.MID" />

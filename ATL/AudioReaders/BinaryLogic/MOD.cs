@@ -377,11 +377,11 @@ namespace ATL.AudioReaders.BinaryLogic
                 sample = new Sample();
                 sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 22).Trim();
                 sample.Name = sample.Name.Replace("\0", "");
-                sample.Size = StreamUtils.ReverseInt16(source.ReadUInt16())*2;
+                sample.Size = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
                 sample.Finetune = source.ReadSByte();
                 sample.Volume = source.ReadByte();
-                sample.RepeatOffset = StreamUtils.ReverseInt16(source.ReadUInt16())*2;
-                sample.RepeatLength = StreamUtils.ReverseInt16(source.ReadUInt16())*2;
+                sample.RepeatOffset = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
+                sample.RepeatLength = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
                 FSamples.Add(sample);
             }
 

@@ -46,8 +46,9 @@ namespace ATL.AudioReaders
         public const int CID_S3M        = 20;
         public const int CID_XM         = 21;
         public const int CID_IT         = 22;
+        public const int CID_AIFF       = 23;
 
-		public const int NB_CODECS = 23;
+        public const int NB_CODECS = 24;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -201,7 +202,15 @@ namespace ATL.AudioReaders
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_IT;
                 tempFmt.AddExtension(".it");
                 theFactory.addFormat(tempFmt);
-			}
+
+                tempFmt = new Format("Audio Interchange File Format: (Audio IFF)");
+                tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_AIFF;
+                tempFmt.AddExtension(".aif");
+                tempFmt.AddExtension(".aiff");
+                tempFmt.AddExtension(".aifc");
+                tempFmt.AddExtension(".snd");
+                theFactory.addFormat(tempFmt);
+            }
 
 			return theFactory;
 		}
@@ -312,7 +321,11 @@ namespace ATL.AudioReaders
                     theDataReader = new BinaryLogic.TIT();
                     break;
 
-				default:
+                case CID_AIFF:
+                    theDataReader = new BinaryLogic.TAIFF();
+                    break;
+
+                default:
 					theDataReader = new BinaryLogic.DummyReader();
 					break;
 			}

@@ -44,21 +44,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioData\AudioDataIO.cs" />
-    <Compile Include="AudioData\AudioDataIOFactory.cs" />
-    <Compile Include="AudioData\CrossMetadataReader.cs" />
-    <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
-    <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
-    <Compile Include="AudioData\IO\APEtag.cs" />
-    <Compile Include="AudioData\IO\DummyReader.cs" />
-    <Compile Include="AudioData\IO\DummyTag.cs" />
-    <Compile Include="AudioData\IO\ID3v1.cs" />
-    <Compile Include="AudioData\IO\ID3v2.cs" />
-    <Compile Include="AudioData\IO\MPEGaudio.cs" />
-    <Compile Include="AudioData\MetaDataIO.cs" />
-    <Compile Include="AudioData\MetaDataIOFactory.cs" />
-    <Compile Include="AudioData\TrackUtils.cs" />
     <Compile Include="AudioReaders\AudioDataReader.cs" />
+    <Compile Include="AudioReaders\BinaryLogic\AIFF.cs" />
     <Compile Include="AudioReaders\BinaryLogic\IT.cs" />
     <Compile Include="AudioReaders\BinaryLogic\XM.cs" />
     <Compile Include="AudioReaders\BinaryLogic\S3M.cs" />
@@ -95,13 +82,13 @@
     <Compile Include="AudioReaders\BinaryLogic\WMA.cs" />
     <Compile Include="AudioReaders\Interfaces\IMetaDataReader.cs" />
     <Compile Include="AudioReaders\MetaReaderFactory.cs" />
+    <Compile Include="BitConverter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueAdapter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\Format.cs" />
-    <Compile Include="AudioData\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />

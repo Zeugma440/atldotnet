@@ -560,7 +560,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     }
                     else if (StreamUtils.StringEqualsArr("gnre", atomHeader))
                     {
-                        int16Data = StreamUtils.ReverseInt16( Source.ReadUInt16() );
+                        int16Data = StreamUtils.ReverseUInt16( Source.ReadUInt16() );
                     } else { // Other unhandled cases
                         Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
                     }
