@@ -46,8 +46,6 @@
   <ItemGroup>
     <Compile Include="AudioData\AudioDataIO.cs" />
     <Compile Include="AudioData\AudioDataIOFactory.cs" />
-    <Compile Include="AudioData\AudioFileIO.cs" />
-    <Compile Include="AudioData\IOBase.cs" />
     <Compile Include="AudioData\CrossMetadataReader.cs" />
     <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
     <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />

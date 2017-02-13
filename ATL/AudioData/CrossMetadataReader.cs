@@ -8,7 +8,7 @@ namespace ATL.AudioData
 	/// <summary>
 	/// Wrapper for reading multiple tags according to a priority
 	/// </summary>
-	public class CrossMetadataReader : IMetaDataIO
+	public class CrossMetadataReader : IMetaDataIO 
 	{
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
 		private IList<IMetaDataIO> metaReaders = null;
