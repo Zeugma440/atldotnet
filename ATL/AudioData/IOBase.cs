@@ -5,7 +5,7 @@ namespace ATL.AudioData
 {
     public class IOBase
     {
-        // Optimal settings
+        // Optimal settings according to performance test
         public static int bufferSize = 2048;
         public static FileOptions fileOptions = FileOptions.RandomAccess;
 
