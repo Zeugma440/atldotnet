@@ -1,4 +1,5 @@
-﻿using ATL.AudioReaders;
+﻿using ATL;
+using ATL.AudioReaders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
@@ -10,7 +11,7 @@ namespace ATL.test
         [TestMethod]
         public void TestFLACAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/mustang_12kHz.flac");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/mustang_12kHz.flac");
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
@@ -32,7 +33,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Yeah.dsf");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Yeah.dsf");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -52,7 +53,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/adgpp_PLAY_01_05.dsf", 1); // Force alternate
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/adgpp_PLAY_01_05.dsf", 1); // Force alternate
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -72,7 +73,7 @@ namespace ATL.test
         [TestMethod]
         public void TestOpusAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/01_2_32.opus");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/01_2_32.opus");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -92,7 +93,7 @@ namespace ATL.test
         [TestMethod]
         public void TestVorbisAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Rayman_2_music_sample.ogg");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Rayman_2_music_sample.ogg");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -112,7 +113,7 @@ namespace ATL.test
         [TestMethod]
         public void TestTakAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/003 BlackBird.tak");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/003 BlackBird.tak");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -132,7 +133,7 @@ namespace ATL.test
         [TestMethod]
         public void TestModAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/4-mat - Thala-Music (Sanxion).mod");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/4-mat - Thala-Music (Sanxion).mod");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -153,7 +154,7 @@ namespace ATL.test
         public void TestS3MAudio()
         {
             String location = "../../Resources/2ND_PM.S3M";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(location);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -174,7 +175,7 @@ namespace ATL.test
         public void TestXMAudio()
         {
             String location = "../../Resources/v_chrtrg.xm";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(location);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -195,7 +196,7 @@ namespace ATL.test
         public void TestITAudio()
         {
             String location = "../../Resources/sommix.it";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(location);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -215,7 +216,7 @@ namespace ATL.test
         [TestMethod]
         public void TestM4AAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/06 I'm All In Love.m4a");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/06 I'm All In Love.m4a");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -235,7 +236,7 @@ namespace ATL.test
         [TestMethod]
         public void TestAIFFAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/M1F1-int32-AFsp.aif");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/M1F1-int32-AFsp.aif");
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
@@ -255,11 +256,13 @@ namespace ATL.test
         [TestMethod]
         public void TestAIFCAudio()
         {
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader("../../Resources/M1F1-AlawC-AFsp_tagged.aif");
+            string resource = "../../Resources/M1F1-AlawC-AFsp_tagged.aif";
+
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resource);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            theReader.ReadFromFile("../../Resources/M1F1-AlawC-AFsp_tagged.aif");
+            theReader.ReadFromFile(resource);
 
             Assert.AreEqual(3, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(128, (int)Math.Round(theReader.BitRate));

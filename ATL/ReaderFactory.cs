@@ -54,10 +54,13 @@ namespace ATL
 
             if (File.Exists(path))
             {
-                IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
-                if (formats != null && formats.Count > 0)
+                if (formatList.ContainsKey(Path.GetExtension(path).ToUpper()))
                 {
-                    result = formats;
+                    IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
+                    if (formats != null && formats.Count > 0)
+                    {
+                        result = formats;
+                    }
                 }
             }
 

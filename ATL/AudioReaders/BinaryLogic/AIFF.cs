@@ -219,23 +219,30 @@ namespace ATL.AudioReaders.BinaryLogic
         /// <returns>Local chunk header information</returns>
         private ChunkHeader readLocalChunkHeader(ref BinaryReader source)
         {
-            ChunkHeader header;
+            ChunkHeader header = new ChunkHeader();
 
             char testChar = StreamUtils.ReadOneByteChar(source);
-            while (!( (testChar=='(') || ((64 < testChar) && (testChar < 91)) ) ) // In case previous field size is not correctly documented, tries to advance to find a suitable first character for an ID
+            while (!( (testChar=='(') || ((64 < testChar) && (testChar < 91)) ) && (source.BaseStream.Position < source.BaseStream.Length) ) // In case previous field size is not correctly documented, tries to advance to find a suitable first character for an ID
             {
                 testChar = StreamUtils.ReadOneByteChar(source);
             }
-            source.BaseStream.Seek(-1, SeekOrigin.Current);
 
-            // Chunk ID
-            char[] id = StreamUtils.ReadOneByteChars(source, 4);
-            header.ID = new string(id);
+            if (source.BaseStream.Position < source.BaseStream.Length)
+            {
+                source.BaseStream.Seek(-1, SeekOrigin.Current);
 
-            // Chunk size
-            header.Size = source.ReadInt32();
-            // Convert to big endian
-            header.Size = StreamUtils.ReverseInt32(header.Size);
+                // Chunk ID
+                char[] id = StreamUtils.ReadOneByteChars(source, 4);
+                header.ID = new string(id);
+
+                // Chunk size
+                header.Size = source.ReadInt32();
+                // Convert to big endian
+                header.Size = StreamUtils.ReverseInt32(header.Size);
+            } else
+            {
+                header.ID = "";
+            }
 
             return header;
         }
@@ -295,7 +302,7 @@ namespace ATL.AudioReaders.BinaryLogic
                                     else if (FCompression.ToLower().Equals("alaw")) FSampleSize = 8;
                                     else if (FCompression.ToLower().Equals("ulaw")) FSampleSize = 8;
                                 }
-                                FBitrate = FSampleSize * FNumSampleFrames * FChannels / FDuration;
+                                if (FDuration > 0) FBitrate = FSampleSize * FNumSampleFrames * FChannels / FDuration;
                             }
                         }
                         else if (header.ID.Equals(CHUNKTYPE_NAME))

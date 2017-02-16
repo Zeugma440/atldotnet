@@ -46,13 +46,16 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+          <Private>False</Private>
+        </Reference>
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
     <Compile Include="AudioReaders\AudioDataTest.cs" />
     <Compile Include="AudioReaders\AudioFileTest.cs" />
+    <Compile Include="AudioReaders\MassAudioTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="FactoryTest.cs" />
     <Compile Include="Logging\LoggingTest.cs" />
