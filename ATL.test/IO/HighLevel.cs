@@ -8,7 +8,7 @@ namespace ATL.test.IO
     public class HighLevel
     {
         [TestMethod]
-        public void HL_SingleTagging_ID3v1()
+        public void TagIO_R_Single_ID3v1()
         {
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at aff if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = false;                            // default behaviour anyway
@@ -25,7 +25,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void HL_MultiTagging()
+        public void TagIO_R_Multi()
         {
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at aff if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = true;

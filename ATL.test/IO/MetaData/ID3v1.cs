@@ -9,7 +9,7 @@ namespace ATL.test.IO.MetaData
     public class ID3v1
     {
         [TestMethod]
-        public void ID3v1ReadWrite()
+        public void TagIO_RW_ID3v1()
         {
             String location = "../../Resources/empty.mp3";
             String testFileLocation = location.Replace("empty", "testID3v1");
@@ -82,8 +82,8 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
 
-            string originalMD5 = TestUtils.GetMD5Hash(location);
-            string testMD5 = TestUtils.GetMD5Hash(testFileLocation);
+            string originalMD5 = TestUtils.GetFileMD5Hash(location);
+            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
             Assert.IsTrue(originalMD5.Equals(testMD5));
 

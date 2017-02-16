@@ -9,7 +9,7 @@ namespace ATL.test
     public class FactoryTest
     {
         [TestMethod]
-        public void TestGetPlaylistFormats()
+        public void Fact_TestGetPlaylistFormats()
         {
             StringBuilder filter = new StringBuilder("");
 
@@ -28,5 +28,6 @@ namespace ATL.test
 
             Assert.AreEqual(".PLS;.M3U;.M3U8;.FPL;.XSPF;.SMIL;.SMI;.ZPL;.WPL;.ASX;.WAX;.WVX;.B4S", filter.ToString());
         }
+        
     }
 }

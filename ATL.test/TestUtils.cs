@@ -8,7 +8,7 @@ namespace ATL.test
 {
     class TestUtils
     {
-        public static string GetMD5Hash(string filename)
+        public static string GetFileMD5Hash(string filename)
         {
             using (var md5 = MD5.Create())
             {
