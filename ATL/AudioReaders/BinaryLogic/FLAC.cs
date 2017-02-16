@@ -483,7 +483,6 @@ namespace ATL.AudioReaders.BinaryLogic
                                 }
                                 else
                                 {
-                                    FSamples = 0; //ops...
                                     break;
                                 }
 							}
