@@ -229,6 +229,7 @@ namespace ATL.AudioData
                     }
                     else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE) && (hasMeta(MetaDataIOFactory.TAG_NATIVE)))
                     {
+                        // TODO : handle native tags scattered amond various, not necessarily contiguous chunks (e.g. AIFF)
                         tagOffset = NativeTag.Offset;
                         tagSize = NativeTag.Size;
                     }
