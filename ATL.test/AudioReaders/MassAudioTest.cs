@@ -10,7 +10,7 @@ namespace ATL.test.AudioReaders
         [TestMethod]
         public void MassTest()
         {
-            String folder = "E:/temp/aiff";
+            String folder = "../../Resources";
             Track t;
 
             string[] files = Directory.GetFiles(folder);
