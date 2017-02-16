@@ -9,46 +9,46 @@ using System.Text.RegularExpressions;
 
 namespace ATL
 {
-	/// <summary>
-	/// Misc. utilities used by binary readers
-	/// </summary>
-	public class StreamUtils
-	{	
-		// Size of the buffer used for memory stream copies
-		// (see CopyMemoryStreamFrom method)
-		private const int BUFFERSIZE = 1;
+    /// <summary>
+    /// Misc. utilities used by binary readers
+    /// </summary>
+    public class StreamUtils
+    {
+        // Size of the buffer used for memory stream copies
+        // (see CopyMemoryStreamFrom method)
+        private const int BUFFERSIZE = 1;
 
         public delegate void StreamHandlerDelegate(ref MemoryStream stream);
 
 
-		/// <summary>
-		/// Determines if the contents of a string (character by character) is the same
-		/// as the contents of a char array
-		/// </summary>
-		/// <param name="a">String to be tested</param>
-		/// <param name="b">Char array to be tested</param>
-		/// <returns>True if both contain the same character sequence; false if not</returns>
-		public static bool StringEqualsArr(String a, char[] b)
-		{
+        /// <summary>
+        /// Determines if the contents of a string (character by character) is the same
+        /// as the contents of a char array
+        /// </summary>
+        /// <param name="a">String to be tested</param>
+        /// <param name="b">Char array to be tested</param>
+        /// <returns>True if both contain the same character sequence; false if not</returns>
+        public static bool StringEqualsArr(String a, char[] b)
+        {
             return ArrEqualsArr(a.ToCharArray(), b);
-		}
+        }
 
 
-		/// <summary>
-		/// Determines if two char arrays have the same contents
-		/// </summary>
-		/// <param name="a">First array to be tested</param>
-		/// <param name="b">Second array to be tested</param>
-		/// <returns>True if both arrays have the same contents; false if not</returns>
-		public static bool ArrEqualsArr(char[] a, char[] b)
-		{			
-			if (b.Length != a.Length) return false;
-			for (int i=0; i<b.Length; i++)
-			{
-				if (a[i] != b[i]) return false;
-			}
-			return true;
-		}
+        /// <summary>
+        /// Determines if two char arrays have the same contents
+        /// </summary>
+        /// <param name="a">First array to be tested</param>
+        /// <param name="b">Second array to be tested</param>
+        /// <returns>True if both arrays have the same contents; false if not</returns>
+        public static bool ArrEqualsArr(char[] a, char[] b)
+        {
+            if (b.Length != a.Length) return false;
+            for (int i = 0; i < b.Length; i++)
+            {
+                if (a[i] != b[i]) return false;
+            }
+            return true;
+        }
 
         /// <summary>
         /// Determines if two byte arrays have the same contents
@@ -67,37 +67,37 @@ namespace ATL
         }
 
 
-		/// <summary>
-		/// Reads a given number of one-byte chars from the provided source
-		/// (this method is there because the default behaviour of .NET's binary char reading
-		/// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
-		/// </summary>
-		/// <param name="r">Source to read from</param>
-		/// <param name="length">Number of one-byte chars to read</param>
-		/// <returns>Array of chars read from the source</returns>
-		public static char[] ReadOneByteChars(BinaryReader r, int length)
-		{
-			byte[] byteArr;
-			char[] result = new char[length];
+        /// <summary>
+        /// Reads a given number of one-byte chars from the provided source
+        /// (this method is there because the default behaviour of .NET's binary char reading
+        /// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
+        /// </summary>
+        /// <param name="r">Source to read from</param>
+        /// <param name="length">Number of one-byte chars to read</param>
+        /// <returns>Array of chars read from the source</returns>
+        public static char[] ReadOneByteChars(BinaryReader r, int length)
+        {
+            byte[] byteArr;
+            char[] result = new char[length];
 
-			byteArr = r.ReadBytes(length);
-			for (int i=0; i<length; i++)
-			{
-				result[i] = (char)byteArr[i];
-			}
+            byteArr = r.ReadBytes(length);
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = (char)byteArr[i];
+            }
 
-			return result;
-		}
+            return result;
+        }
 
-		/// <summary>
-		/// Reads one one-byte char from the provided source
-		/// </summary>
-		/// <param name="r">Source to read from</param>
-		/// <returns>Chars read from the source</returns>
-		public static char ReadOneByteChar(BinaryReader r)
-		{
-			return (char)r.ReadByte();
-		}
+        /// <summary>
+        /// Reads one one-byte char from the provided source
+        /// </summary>
+        /// <param name="r">Source to read from</param>
+        /// <returns>Chars read from the source</returns>
+        public static char ReadOneByteChar(BinaryReader r)
+        {
+            return (char)r.ReadByte();
+        }
 
         /// <summary>
         /// Reads one one-byte char from the provided source
@@ -109,60 +109,60 @@ namespace ATL
             return (char)r.ReadByte();
         }
 
-		/// <summary>
-		/// Copies a given number of bytes from a stream to another
-		/// </summary>
-		/// <param name="mTo">Target stream</param>
-		/// <param name="mFrom">Source stream</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
-		{
+        /// <summary>
+        /// Copies a given number of bytes from a stream to another
+        /// </summary>
+        /// <param name="mTo">Target stream</param>
+        /// <param name="mFrom">Source stream</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
+        {
             BinaryWriter w = new BinaryWriter(mTo);
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
-		}
+        }
 
-		/// <summary>
-		/// Writes a given number of bytes from a stream to a writer
-		/// </summary>
-		/// <param name="mTo">Writer to be used</param>
-		/// <param name="mFrom">Source stream</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
-		{
+        /// <summary>
+        /// Writes a given number of bytes from a stream to a writer
+        /// </summary>
+        /// <param name="mTo">Writer to be used</param>
+        /// <param name="mFrom">Source stream</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
+        {
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
-		}
+        }
 
-		/// <summary>
-		/// Writes a given number of bytes from a reader to a stream
-		/// </summary>
-		/// <param name="mTo">Target stream</param>
-		/// <param name="r">Reader to be used</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
-		{
+        /// <summary>
+        /// Writes a given number of bytes from a reader to a stream
+        /// </summary>
+        /// <param name="mTo">Target stream</param>
+        /// <param name="r">Reader to be used</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
+        {
             BinaryWriter w = new BinaryWriter(mTo);
             CopyStreamFrom(w, r, length);
-		}
+        }
 
-		/// <summary>
-		/// Writes a given number of bytes from a reader to a writer
-		/// </summary>
-		/// <param name="mTo">Writer to be used</param>
-		/// <param name="r">Reader to be used</param>
-		/// <param name="length">Number of bytes to be copied</param>
-		public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
-		{			
-			long effectiveLength;
-			long initialPosition;
+        /// <summary>
+        /// Writes a given number of bytes from a reader to a writer
+        /// </summary>
+        /// <param name="mTo">Writer to be used</param>
+        /// <param name="r">Reader to be used</param>
+        /// <param name="length">Number of bytes to be copied</param>
+        public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
+        {
+            long effectiveLength;
+            long initialPosition;
 
-			initialPosition = r.BaseStream.Position;
-			if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+            initialPosition = r.BaseStream.Position;
+            if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
 
-			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
-				w.Write(r.ReadBytes(BUFFERSIZE));
-		}
+            while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
+                w.Write(r.ReadBytes(BUFFERSIZE));
+        }
 
         // TODO DOC
         public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
@@ -245,25 +245,25 @@ namespace ATL
             return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
         }
 
-		/// <summary>
-		/// Switches the format of an Int32 between big endian and little endian
-		/// </summary>
-		/// <param name="n">value to convert</param>
-		/// <returns>converted value</returns>
-		public static Int32 ReverseInt32(Int32 n)
-		{
-			byte b0;
-			byte b1;
-			byte b2;
-			byte b3;
+        /// <summary>
+        /// Switches the format of an Int32 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
+        public static Int32 ReverseInt32(Int32 n)
+        {
+            byte b0;
+            byte b1;
+            byte b2;
+            byte b3;
 
-			b0 = (byte)((n & 0x000000FF) >> 0); 
-			b1 = (byte)((n & 0x0000FF00) >> 8); 
-			b2 = (byte)((n & 0x00FF0000) >> 16); 
-			b3 = (byte)((n & 0xFF000000) >> 24); 
-			
-			return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
-		}
+            b0 = (byte)((n & 0x000000FF) >> 0);
+            b1 = (byte)((n & 0x0000FF00) >> 8);
+            b2 = (byte)((n & 0x00FF0000) >> 16);
+            b3 = (byte)((n & 0xFF000000) >> 24);
+
+            return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
+        }
         public static uint ReverseUInt32(uint n)
         {
             byte b0;
@@ -376,7 +376,7 @@ namespace ATL
             if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
 
             char[] encodedDataChar = new char[encodedData.Length];
-            for (int i = 0; i < encodedData.Length;i++ )
+            for (int i = 0; i < encodedData.Length; i++)
             {
                 encodedDataChar[i] = System.Convert.ToChar(encodedData[i]);
             }
@@ -447,11 +447,11 @@ namespace ATL
         private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
-            IList<byte> readBytes = new List<byte>(limit>0?limit:40);
+            IList<byte> readBytes = new List<byte>(limit > 0 ? limit : 40);
             byte justRead = 0;
             long distance = 0;
 
-            while (r.BaseStream.Position < r.BaseStream.Length && ( (0 == limit) || (distance < limit) ) )
+            while (r.BaseStream.Position < r.BaseStream.Length && ((0 == limit) || (distance < limit)))
             {
                 for (int i = 0; i < nbChars; i++)
                 {
@@ -476,7 +476,7 @@ namespace ATL
             if (moveStreamToLimit && distance < limit) r.BaseStream.Seek(limit - distance, SeekOrigin.Current);
 
             byte[] readBytesArr = new byte[readBytes.Count];
-            readBytes.CopyTo(readBytesArr,0);
+            readBytes.CopyTo(readBytesArr, 0);
             return encoding.GetString(readBytesArr);
         }
 
@@ -484,7 +484,7 @@ namespace ATL
         // according to ID3v2 definition (§6.2)
         public static int ExtractSynchSafeInt32(byte[] bytes)
         {
-            return                 
+            return
                 bytes[0] * 0x200000 +
                 bytes[1] * 0x4000 +
                 bytes[2] * 0x80 +
@@ -510,7 +510,7 @@ namespace ATL
             bool found = false;
             int i;
 
-            while (r.BaseStream.Position < r.BaseStream.Length || (maxDistance > 0 && distance > maxDistance) )
+            while (r.BaseStream.Position < r.BaseStream.Length || (maxDistance > 0 && distance > maxDistance))
             {
                 if (ArrEqualsArr(sequence, window))
                 {
@@ -531,5 +531,144 @@ namespace ATL
 
             return found;
         }
+
+        /// <summary>Converts the given extended-format byte array (which
+        /// is assumed to be in little-endian form) to a .NET Double,
+        /// as closely as possible. Values which are too small to be 
+        /// represented are returned as an appropriately signed 0. Values 
+        /// which are too large
+        /// to be represented (but not infinite) are returned as   
+        /// Double.NaN,
+        /// as are unsupported values and actual NaN values.</summary>
+        /// 
+        /// Credits : Jon Skeet (http://groups.google.com/groups?selm=MPG.19a6985d4683f5d398a313%40news.microsoft.com)
+        public static double ExtendedToDouble(byte[] extended)
+        {
+            // Read information from the extended form - variable names as 
+            // used in http://cch.loria.fr/documentation/
+            // IEEE754/numerical_comp_guide/ncg_math.doc.html
+            int s = extended[9] >> 7;
+
+            int e = (((extended[9] & 0x7f) << 8) | (extended[8]));
+
+            int j = extended[7] >> 7;
+            long f = extended[7] & 0x7f;
+            for (int i = 6; i >= 0; i--)
+            {
+                f = (f << 8) | extended[i];
+            }
+
+            // Now go through each possibility
+            if (j == 1)
+            {
+                if (e == 0)
+                {
+                    // Value = (-1)^s * 2^16382*1.f 
+                    // (Pseudo-denormal numbers)
+                    // Anything pseudo-denormal in extended form is 
+                    // definitely 0 in double form.
+                    return FromComponents(s, 0, 0);
+                }
+                else if (e != 32767)
+                {
+                    // Value = (-1)^s * 2^(e-16383)*1.f  (Normal numbers)
+
+                    // Lose the last 11 bits of the fractional part
+                    f = f >> 11;
+
+                    // Convert exponent to the appropriate one
+                    e += 1023 - 16383;
+
+                    // Out of range - too large
+                    if (e > 2047)
+                        return Double.NaN;
+
+                    // Out of range - too small
+                    if (e < 0)
+                    {
+                        // See if we can get a subnormal version
+                        if (e >= -51)
+                        {
+                            // Put a 1 at the front of f
+                            f = f | (1 << 52);
+                            // Now shift it appropriately
+                            f = f >> (1 - e);
+                            // Return a subnormal version
+                            return FromComponents(s, 0, f);
+                        }
+                        else // Return an appropriate 0
+                        {
+                            return FromComponents(s, 0, 0);
+                        }
+                    }
+
+                    return FromComponents(s, e, f);
+                }
+                else
+                {
+                    if (f == 0)
+                    {
+                        // Value = positive/negative infinity
+                        return FromComponents(s, 2047, 0);
+                    }
+                    else
+                    {
+                        // Don't really understand the document about the 
+                        // remaining two values, but they're both NaN...
+                        return Double.NaN;
+                    }
+                }
+            }
+            else // Okay, j==0
+            {
+                if (e == 0)
+                {
+                    // Either 0 or a subnormal number, which will 
+                    // still be 0 in double form
+                    return FromComponents(s, 0, 0);
+                }
+                else
+                {
+                    // Unsupported
+                    return Double.NaN;
+                }
+            }
+        }
+
+        /// <summary>Returns a double from the IEEE sign/exponent/fraction
+        /// components.</summary>
+        /// 
+        /// Credits : Jon Skeet (http://groups.google.com/groups?selm=MPG.19a6985d4683f5d398a313%40news.microsoft.com)
+        private static double FromComponents(int s, int e, long f)
+        {
+            byte[] data = new byte[8];
+
+            // Put the data into appropriate slots based on endianness.
+            if (BitConverter.IsLittleEndian)
+            {
+                data[7] = (byte)((s << 7) | (e >> 4));
+                data[6] = (byte)(((e & 0xf) << 4) | (int)(f >> 48));
+                data[5] = (byte)((f & 0xff0000000000L) >> 40);
+                data[4] = (byte)((f & 0xff00000000L) >> 32);
+                data[3] = (byte)((f & 0xff000000L) >> 24);
+                data[2] = (byte)((f & 0xff0000L) >> 16);
+                data[1] = (byte)((f & 0xff00L) >> 8);
+                data[0] = (byte)(f & 0xff);
+            }
+            else
+            {
+                data[0] = (byte)((s << 7) | (e >> 4));
+                data[1] = (byte)(((e & 0xf) << 4) | (int)(f >> 48));
+                data[2] = (byte)((f & 0xff0000000000L) >> 40);
+                data[3] = (byte)((f & 0xff00000000L) >> 32);
+                data[4] = (byte)((f & 0xff000000L) >> 24);
+                data[5] = (byte)((f & 0xff0000L) >> 16);
+                data[6] = (byte)((f & 0xff00L) >> 8);
+                data[7] = (byte)(f & 0xff);
+            }
+
+            return BitConverter.ToDouble(data, 0);
+        }
     }
+
 }

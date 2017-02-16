@@ -82,7 +82,6 @@
     <Compile Include="AudioReaders\BinaryLogic\WMA.cs" />
     <Compile Include="AudioReaders\Interfaces\IMetaDataReader.cs" />
     <Compile Include="AudioReaders\MetaReaderFactory.cs" />
-    <Compile Include="BitConverter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueAdapter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />
@@ -106,8 +105,8 @@
     <Compile Include="PlaylistReaders\PlaylistReaderFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReaderFactory.cs" />
-    <Compile Include="StreamUtils.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Utils\StreamUtils.cs" />
+    <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

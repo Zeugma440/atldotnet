@@ -1,3 +1,4 @@
+using ATL.AudioReaders.BinaryLogic;
 using ATL.Logging;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,8 @@ namespace ATL.AudioReaders.BinaryLogic
 {
     /// <summary>
     /// Class for Audio Interchange File Format files manipulation (extension : .AIF, .AIFF, .AIFC)
+    /// 
+    /// NB : This class does not implement embedded MIDI data detection nor parsing
     /// </summary>
 	class TAIFF : AudioDataReader, IMetaDataReader
 	{
@@ -14,6 +17,9 @@ namespace ATL.AudioReaders.BinaryLogic
 
         private const string FORMTYPE_AIFF = "AIFF";
         private const string FORMTYPE_AIFC = "AIFC";
+
+        private const string COMPRESSION_NONE       = "NONE";
+        private const string COMPRESSION_NONE_LE    = "sowt";
 
         private const string CHUNKTYPE_COMMON       = "COMM";
         private const string CHUNKTYPE_MARKER       = "MARK";
@@ -24,6 +30,7 @@ namespace ATL.AudioReaders.BinaryLogic
         private const string CHUNKTYPE_AUTHOR       = "AUTH";
         private const string CHUNKTYPE_COPYRIGHT    = "(c) ";
         private const string CHUNKTYPE_ANNOTATION   = "ANNO";
+        private const string CHUNKTYPE_ID3TAG       = "ID3 ";
 
         private struct ChunkHeader
         {
@@ -38,6 +45,8 @@ namespace ATL.AudioReaders.BinaryLogic
         private uint FSampleSize;
         private uint FNumSampleFrames;
 
+        private String FFormat;
+        private String FCompression;
         private bool FExists;
         private byte FVersionID;
         private long FSize;
@@ -147,7 +156,7 @@ namespace ATL.AudioReaders.BinaryLogic
 		}
         public override int CodecFamily
 		{
-			get { return AudioReaderFactory.CF_LOSSLESS; }
+			get { return (FCompression.Equals(COMPRESSION_NONE)|| FCompression.Equals(COMPRESSION_NONE_LE)) ?AudioReaderFactory.CF_LOSSLESS:AudioReaderFactory.CF_LOSSY; }
 		}
         public override bool AllowsParsableMetadata
         {
@@ -212,6 +221,13 @@ namespace ATL.AudioReaders.BinaryLogic
         {
             ChunkHeader header;
 
+            char testChar = StreamUtils.ReadOneByteChar(source);
+            while (!( (testChar=='(') || ((64 < testChar) && (testChar < 91)) ) ) // In case previous field size is not correctly documented, tries to advance to find a suitable first character for an ID
+            {
+                testChar = StreamUtils.ReadOneByteChar(source);
+            }
+            source.BaseStream.Seek(-1, SeekOrigin.Current);
+
             // Chunk ID
             char[] id = StreamUtils.ReadOneByteChars(source, 4);
             header.ID = new string(id);
@@ -236,16 +252,14 @@ namespace ATL.AudioReaders.BinaryLogic
 				source.BaseStream.Seek(4, SeekOrigin.Current);
 
                 // Form type
-                char[] id = StreamUtils.ReadOneByteChars(source, 4);
+                FFormat = new String(StreamUtils.ReadOneByteChars(source, 4));
 
-                if (StreamUtils.StringEqualsArr(FORMTYPE_AIFF, id) || StreamUtils.StringEqualsArr(FORMTYPE_AIFF, id))
+                if (FFormat.Equals(FORMTYPE_AIFF) || FFormat.Equals(FORMTYPE_AIFC))
                 {
                     FValid = true;
                     FExists = true;
 
-                    position = source.BaseStream.Position;
-
-                    while (position<source.BaseStream.Length)
+                    while (source.BaseStream.Position < source.BaseStream.Length)
                     {
                         ChunkHeader header = readLocalChunkHeader(ref source);
 
@@ -255,20 +269,49 @@ namespace ATL.AudioReaders.BinaryLogic
                         {
                             FChannels = (uint)StreamUtils.ReverseInt16(source.ReadInt16());
                             FNumSampleFrames = StreamUtils.ReverseUInt32(source.ReadUInt32());
-                            FSampleSize = (uint)StreamUtils.ReverseInt16(source.ReadInt16());
-                            FSampleRate = (uint)Math.Round(Nato.LongDouble.BitConverter.ToDouble(source.ReadBytes(80), 0));
+                            FSampleSize = (uint)StreamUtils.ReverseInt16(source.ReadInt16());   // This sample size is for uncompressed data only
+                            byte[] byteArray = source.ReadBytes(10);
+                            Array.Reverse(byteArray);
+                            double sampleRate = StreamUtils.ExtendedToDouble(byteArray);
+
+                            if (FFormat.Equals(FORMTYPE_AIFC))
+                            {
+                                FCompression = new String(StreamUtils.ReadOneByteChars(source, 4));
+                            }
+                            else // AIFF <=> no compression
+                            {
+                                FCompression = COMPRESSION_NONE;
+                            }
+
+                            if (sampleRate > 0)
+                            {
+                                FSampleRate = (uint)Math.Round(sampleRate);
+                                FDuration = FNumSampleFrames / sampleRate;
+
+                                if (!FCompression.Equals(COMPRESSION_NONE)) // Sample size is specific to selected compression method
+                                {
+                                    if (FCompression.ToLower().Equals("fl32")) FSampleSize = 32;
+                                    else if (FCompression.ToLower().Equals("fl64")) FSampleSize = 64;
+                                    else if (FCompression.ToLower().Equals("alaw")) FSampleSize = 8;
+                                    else if (FCompression.ToLower().Equals("ulaw")) FSampleSize = 8;
+                                }
+                                FBitrate = FSampleSize * FNumSampleFrames * FChannels / FDuration;
+                            }
                         }
                         else if (header.ID.Equals(CHUNKTYPE_NAME))
                         {
-                            FTitle = new string(StreamUtils.ReadOneByteChars(source,header.Size));
-                        } else if (header.ID.Equals(CHUNKTYPE_AUTHOR))
+                            FTitle = new string(StreamUtils.ReadOneByteChars(source, header.Size));
+                        }
+                        else if (header.ID.Equals(CHUNKTYPE_AUTHOR))
                         {
                             FArtist = new string(StreamUtils.ReadOneByteChars(source, header.Size));
-                        } else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
+                        }
+                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
                             if (FComment.Length > 0) FComment += "/";
                             FComment += new string(StreamUtils.ReadOneByteChars(source, header.Size));
-                        } else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
+                        }
+                        else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
                             ushort numComs = source.ReadUInt16();
                             numComs = StreamUtils.ReverseUInt16(numComs);
@@ -287,13 +330,15 @@ namespace ATL.AudioReaders.BinaryLogic
                                 FComment += new string(StreamUtils.ReadOneByteChars(source, comLength));
                             }
                         }
+                        else if (header.ID.Equals(CHUNKTYPE_ID3TAG))
+                        {
+                            FID3v2.Read(source, pictureStreamHandler, source.BaseStream.Position);
+                        }
 
-                        source.BaseStream.Seek(position + header.Size, SeekOrigin.Begin);
+                        source.BaseStream.Position = position + header.Size;
+
+                        if (header.ID.Equals(CHUNKTYPE_SOUND) && header.Size % 2 > 0) source.BaseStream.Position += 1; // Sound chunk size must be even
                     }
-                    
-                    // TODO
-                    FBits = 16;
-                    FDuration = (double)FFileSize * 8 / FBitrate;
 
                     result = true;
                 }

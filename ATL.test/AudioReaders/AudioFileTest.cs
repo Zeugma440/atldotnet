@@ -268,6 +268,32 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 600);
         }
 
+        [TestMethod]
+        public void TestAIFCTrack()
+        {
+            Track theTrack = new Track("../../Resources/M1F1-AlawC-AFsp_tagged.aif");
+
+            Assert.AreEqual(3, theTrack.Duration);
+            Assert.IsFalse(theTrack.IsVBR);
+            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theTrack.CodecFamily);
+
+            Assert.AreEqual("A", theTrack.Title);
+            Assert.AreEqual("B", theTrack.Artist);
+            Assert.AreEqual("C", theTrack.Album);
+            Assert.AreEqual(2017, theTrack.Year);
+            Assert.AreEqual(2, theTrack.TrackNumber);
+            Assert.AreEqual("theGenre", theTrack.Genre);
+            Assert.AreEqual("theComment", theTrack.Comment);
+            Assert.AreEqual("composer", theTrack.Composer);
+            Assert.AreEqual(4, theTrack.DiscNumber);
+
+            Image picture = theTrack.GetEmbeddedPicture();
+            Assert.IsNotNull(picture);
+            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.AreEqual(picture.Height, 80);
+            Assert.AreEqual(picture.Width, 195);
+        }
+
         /* ------------------------- */
 
         [TestMethod]

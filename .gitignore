@@ -154,7 +154,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
-/ATL/AudioData
 /ATL.online
 /ATL.test/AudioReaders/WIPTest.cs
 /ATL.test/WebConnectors/WebTest.cs
