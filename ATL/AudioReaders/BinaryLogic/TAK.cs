@@ -21,7 +21,6 @@ namespace ATL.AudioReaders.BinaryLogic
         private uint formatVersion;
 		private uint FChannels;
 		private uint FBits;
-		private uint FSampleRate;
 
 
         // Public declarations 
@@ -32,10 +31,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public uint Bits
 		{
 			get { return FBits; }
-		}
-		public uint SampleRate
-		{
-			get { return FSampleRate; }
 		}
         public double CompressionRatio
         {

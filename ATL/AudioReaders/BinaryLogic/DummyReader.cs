@@ -19,7 +19,11 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return 0; }
 		}
-		public bool IsVBR
+        public double SampleRate
+        {
+            get { return 0.0; }
+        }
+        public bool IsVBR
 		{
 			get { return false; }
 		}

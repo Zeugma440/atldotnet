@@ -12,7 +12,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private int FFormatTag;
 		private int FVersion;
 		private int FChannels;
-		private int FSampleRate;
 		private int FBits;
 	
 		private String FEncoder;
@@ -38,10 +37,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public int Bits
 		{
 			get { return FBits; }
-		}
-		public int SampleRate
-		{
-			get { return FSampleRate; }
 		}
 
 		public override bool IsVBR
@@ -267,6 +262,7 @@ namespace ATL.AudioReaders.BinaryLogic
 			wavpack_header4 wvh4 = new wavpack_header4();
 			byte[] EncBuf = new byte[4096];
 			int tempo;
+            int sampleRateIndex;
 			byte encoderbyte;
 
 			bool result = false;
@@ -295,14 +291,14 @@ namespace ATL.AudioReaders.BinaryLogic
 				FBits = (int)((wvh4.flags & 3) * 16);   // bytes stored flag
 				FSamples = wvh4.total_samples;
 				FBSamples = wvh4.block_samples;
-				FSampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
-				if ( (FSampleRate > 14) || (FSampleRate < 0) )
+                sampleRateIndex = (int)((wvh4.flags & (0x1F << 23)) >> 23);
+				if ( (sampleRateIndex > 14) || (sampleRateIndex < 0) )
 				{
 					FSampleRate = 44100;
 				}
 				else
 				{
-					FSampleRate = sample_rates[ FSampleRate ];
+					FSampleRate = sample_rates[sampleRateIndex];
 				}
 
 				if (8 == (wvh4.flags & 8) )  // hybrid flag

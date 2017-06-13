@@ -21,6 +21,7 @@ namespace ATL.test
 
             Assert.AreEqual(5, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(694, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(44100, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
 
@@ -41,6 +42,7 @@ namespace ATL.test
 
             Assert.AreEqual(4, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(5953, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(2822400, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
 
@@ -61,6 +63,7 @@ namespace ATL.test
 
             Assert.AreEqual(26, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(0, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
 
@@ -81,6 +84,7 @@ namespace ATL.test
 
             Assert.AreEqual(31, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(33, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(48000, (int)Math.Round(theReader.SampleRate));
             Assert.IsTrue(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
 
@@ -101,6 +105,7 @@ namespace ATL.test
 
             Assert.AreEqual(33, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(69, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(22050, (int)Math.Round(theReader.SampleRate));
             Assert.IsTrue(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
 
@@ -121,6 +126,7 @@ namespace ATL.test
 
             Assert.AreEqual(6, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(634, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(44100, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
 
@@ -141,6 +147,7 @@ namespace ATL.test
 
             Assert.AreEqual(330, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(0, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
 
@@ -162,6 +169,7 @@ namespace ATL.test
 
             Assert.AreEqual(405, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(0, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
 
@@ -183,6 +191,7 @@ namespace ATL.test
 
             Assert.AreEqual(261, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(0, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
 
@@ -204,6 +213,7 @@ namespace ATL.test
 
             Assert.AreEqual(476, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(1, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(0, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
 
@@ -224,6 +234,7 @@ namespace ATL.test
 
             Assert.AreEqual(54, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(260, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(44100, (int)Math.Round(theReader.SampleRate));
             Assert.IsTrue(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
 
@@ -244,6 +255,7 @@ namespace ATL.test
 
             Assert.AreEqual(3, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(512, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(8000, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
 
@@ -266,6 +278,7 @@ namespace ATL.test
 
             Assert.AreEqual(3, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(128, (int)Math.Round(theReader.BitRate));
+            Assert.AreEqual(8000, (int)Math.Round(theReader.SampleRate));
             Assert.IsFalse(theReader.IsVBR);
             Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
 

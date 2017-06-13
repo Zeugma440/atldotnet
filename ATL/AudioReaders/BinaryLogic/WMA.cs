@@ -20,7 +20,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public static String[] WMA_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
 
 		private byte FChannelModeID;
-		private int FSampleRate;
 		private bool FIsVBR;
 		private bool FIsLossless;
 		private String FTitle;
@@ -48,10 +47,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FGetChannelMode(); }
 		}
-		public int SampleRate // Sample rate (hz)
-		{
-			get { return this.FSampleRate; }
-		}	
 
         public override bool IsVBR
 		{

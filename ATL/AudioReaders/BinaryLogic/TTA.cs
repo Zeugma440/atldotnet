@@ -33,7 +33,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private uint FAudioFormat;
 		private uint FChannels;
 		private uint FBits;
-		private uint FSampleRate;
 		private uint FSamples;
 		private uint FCRC32;
 
@@ -45,10 +44,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public uint Bits
 		{
 			get { return FBits; }
-		}
-		public uint SampleRate
-		{
-			get { return FSampleRate; }
 		}
         
 		public override bool IsVBR

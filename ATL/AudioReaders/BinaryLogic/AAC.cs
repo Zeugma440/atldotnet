@@ -54,7 +54,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private byte FMPEGVersionID;
 		private byte FProfileID;
 		private byte FChannels;
-		private int FSampleRate;
         private long FSampleSize;
 		private byte FBitrateTypeID;
 
@@ -170,10 +169,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public byte Channels // Number of channels
 		{
 			get { return this.FChannels; }
-		}
-		public int SampleRate // Sample rate (Hz)
-		{
-			get { return this.FSampleRate; }
 		}
         public byte BitRateTypeID // Bit rate type code
         {

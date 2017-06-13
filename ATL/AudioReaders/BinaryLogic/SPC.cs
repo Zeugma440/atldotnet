@@ -62,7 +62,6 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		
 		// Standard fields
-		private int FSampleRate;
 		private bool FTagExists;
 		private String FTitle;
 		private String FArtist;
@@ -80,10 +79,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return FTagExists; }
 		}
-		public int SampleRate // Sample rate (hz)
-		{
-			get { return this.FSampleRate; }
-		}	
 
         public override bool IsVBR
 		{

@@ -53,10 +53,6 @@ namespace ATL.AudioReaders.BinaryLogic
         {
             get { return true; }
         }
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return 0; }
-        }
 
         public override bool IsVBR
         {
@@ -163,6 +159,7 @@ namespace ATL.AudioReaders.BinaryLogic
             FDuration = 0;
             FTitle = "";
             FComment = "";
+            FSampleRate = 0;
 
             FPatternTable = new List<byte>();
             FChannelTable = new List<byte>();

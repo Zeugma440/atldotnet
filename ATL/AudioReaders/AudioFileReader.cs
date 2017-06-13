@@ -179,6 +179,14 @@ namespace ATL.AudioReaders
             get { return audioData.BitRate; }
         }
         /// <summary>
+        /// Track sample rate (Hz)
+        /// </summary>
+        public double SampleRate
+        {
+            get { return audioData.SampleRate; }
+        }
+
+        /// <summary>
         /// Track duration (seconds)
         /// </summary>
         public double Duration

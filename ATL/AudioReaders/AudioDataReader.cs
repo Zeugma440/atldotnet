@@ -12,6 +12,7 @@ namespace ATL.AudioReaders
         // Audio data
         protected double FBitrate;
         protected double FDuration;
+        protected double FSampleRate;
 
         // File data
         protected long FFileSize;
@@ -31,6 +32,10 @@ namespace ATL.AudioReaders
         public double Duration // Duration (s)
         {
             get { return FDuration; }
+        }
+        public double SampleRate // Sample rate (Hz)
+        {
+            get { return FSampleRate; }
         }
 
         // To be overriden by children classes

@@ -19,7 +19,6 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// Private declarations
 		private byte FChannelModeID;
-		private ushort FSampleRate;
 		private String FTitle;
 		private String FComment;
 		private String FAuthor;
@@ -35,10 +34,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FGetChannelMode(); }
 		}	
-		public ushort SampleRate // Sample rate (hz)
-		{
-			get { return this.FSampleRate; }
-		}
 
         public override bool IsVBR
 		{

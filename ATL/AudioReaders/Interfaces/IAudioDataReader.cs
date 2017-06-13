@@ -21,10 +21,17 @@ namespace ATL.AudioReaders
 		{
 			get;
 		}
-		/// <summary>
-		/// Returns true if the bitrate is variable; false if not
+        /// <summary>
+		/// Sample rate of the file (Hz)
 		/// </summary>
-		bool IsVBR
+		double SampleRate
+        {
+            get;
+        }
+        /// <summary>
+        /// Returns true if the bitrate is variable; false if not
+        /// </summary>
+        bool IsVBR
 		{
 			get;
 		}

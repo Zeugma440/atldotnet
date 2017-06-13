@@ -19,7 +19,6 @@ namespace ATL.AudioReaders.BinaryLogic
         private int formatVersion;
 		private uint FChannels;
 		private uint FBits;
-		private uint FSampleRate;
 
 
         // Public declarations 
@@ -30,10 +29,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public uint Bits
 		{
 			get { return FBits; }
-		}
-		public uint SampleRate
-		{
-			get { return FSampleRate; }
 		}
         public double CompressionRatio
         {
@@ -118,7 +113,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     UInt64 sampleCount = source.ReadUInt64();
 
                     FDuration = (double)sampleCount / FSampleRate;
-                    FBitrate = Math.Round(((double)(FFileSize - source.BaseStream.Position)) * 8 / FDuration); //time to calculate average bitrate
+                    FBitrate = Math.Round(((double)(FFileSize - source.BaseStream.Position)) * 8 / FDuration); // Average bitrate
 
                     result = true;
                 }

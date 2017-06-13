@@ -78,11 +78,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FGetSamples(); }
 		}
-		public int SampleRate // Sample rate (Hz)
-		{
-			get { return this.FGetSampleRate(); }
-		}
-		
         public override bool IsVBR
 		{
 			get { return false; }
@@ -164,7 +159,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private double FGetDuration()
+		private double getDuration()
 		{
 			double nbSamples = (double)FGetSamples();
 			// Get song duration
@@ -176,7 +171,7 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		// ---------------------------------------------------------------------------
 
-		private int FGetSampleRate()
+		private int getSampleRate()
 		{
 			return Header.SampleRate;
 		}
@@ -238,8 +233,9 @@ namespace ATL.AudioReaders.BinaryLogic
             {
                 FValid = true;
                 result = true;
-                FDuration = FGetDuration();
+                FDuration = getDuration();
                 FBitrate = getBitrate();
+                FSampleRate = getSampleRate();
             }
 
 			return result;

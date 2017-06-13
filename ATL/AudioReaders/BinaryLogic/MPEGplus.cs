@@ -42,7 +42,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private byte FChannelModeID;
 		private int FFrameCount;
         private long FSampleCount;
-		private int FSampleRate;
 		private byte FStreamVersion;
 		private byte FProfileID;
 		private String FEncoder;
@@ -81,10 +80,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FStreamVersion; }
 		}	
-		public int SampleRate
-		{
-			get { return this.FSampleRate; }
-		}
 		public byte ProfileID // Profile code
 		{
 			get { return this.FProfileID; }

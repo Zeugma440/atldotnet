@@ -77,7 +77,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private int FVCOffset;
 		private long FAudioOffset;
 		private byte FChannels;
-		private int FSampleRate;
 		private byte FBitsPerSample;
 		private long FSamples;
 
@@ -128,16 +127,11 @@ namespace ATL.AudioReaders.BinaryLogic
 		public String ISRC;
     
 		public ArrayList aExtraFields;
-		//public String[][] aExtraFields;
 
 
 		public byte Channels // Number of channels
 		{
 			get { return FChannels; }
-		}
-		public int SampleRate // Sample rate (hz)
-		{
-			get { return FSampleRate; }
 		}
 		public byte BitsPerSample // Bits per sample
 		{

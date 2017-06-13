@@ -27,7 +27,6 @@ namespace ATL.AudioReaders.BinaryLogic
 
 		private ushort FFormatID;
 		private byte FChannelNumber;
-		private uint FSampleRate;
 		private uint FBytesPerSecond;
 		private ushort FBlockAlign;
 		private byte FBitsPerSample;
@@ -50,10 +49,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FGetChannelMode(); }
 		}	
-		public uint SampleRate // Sample rate (hz)
-		{
-			get { return this.FSampleRate; }
-		}
 		public byte BitsPerSample // Bits/sample
 		{
 			get { return this.FBitsPerSample; }

@@ -40,7 +40,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		private int FVersion;
 		private String FVersionStr;
 		private int	FChannels;
-		private int	FSampleRate;
 		private int	FBits;
 		private uint FPeakLevel;
 		private double FPeakLevelRatio;
@@ -66,10 +65,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		public int Channels
 		{
 			get { return this.FChannels; }
-		}	
-		public int SampleRate
-		{
-			get { return this.FSampleRate; }
 		}	
 		public int Bits 
 		{

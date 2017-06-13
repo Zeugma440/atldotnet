@@ -36,7 +36,6 @@ namespace ATL.AudioReaders.BinaryLogic
         private int contents;
         
         private byte FChannelModeID;
-		private int FSampleRate;
 		private ushort FBitRateNominal;
 		private int FSamples;
 		private String FTitle;
@@ -61,10 +60,6 @@ namespace ATL.AudioReaders.BinaryLogic
 		{
 			get { return this.FGetChannelMode(); }
 		}	
-		public int SampleRate // Sample rate (hz)
-		{
-			get { return this.FSampleRate; }
-		}
 		public ushort BitRateNominal // Nominal bit rate
 		{
 			get { return this.FBitRateNominal; }
