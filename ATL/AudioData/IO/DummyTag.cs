@@ -61,18 +61,18 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-        public IList<MetaDataIOFactory.PIC_CODE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
         {
-            get { return new List<MetaDataIOFactory.PIC_CODE>(); }
+            get { return new List<MetaDataIOFactory.PIC_TYPE>(); }
         }
         public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             return true;
         }
 
-        public bool Write(BinaryReader r, TagData tag)
+        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            return true;
+            return 0;
         }
         
 	}

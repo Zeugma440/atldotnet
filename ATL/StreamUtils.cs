@@ -400,24 +400,13 @@ namespace ATL
         ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
         ///  Terminated with $00 00.
         ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+        [Obsolete("use ReadNullTerminatedString(BinaryReader, Encoding)")]
         public static String ReadNullTerminatedString(BinaryReader r, int encoding)
         {
-            /*
-            int nbBytesPerChar = (1 == encoding || 2 == encoding)?2:1;
-            char[] endingChars = (1 == encoding || 2 == encoding) ? new char[] { '\0', '\0' } : new char[]  { '\0' };
-            char[] c = StreamUtils.ReadOneByteChars(r, nbBytesPerChar);
-            String result = "";
-            while (!StreamUtils.ArrEqualsArr(c,endingChars))
-            {
-                result += new String(c);
-                c = StreamUtils.ReadOneByteChars(r, nbBytesPerChar);
-            }
-            // Strip all Unicode null-chars
-            return Utils.StripZeroChars(result);
-             */
             return ReadNullTerminatedString(r, GetEncodingFromID3v2Encoding(encoding));
         }
 
+        [Obsolete("marked for deletion; belongs to ID3v2")]
         public static Encoding GetEncodingFromID3v2Encoding(int encoding)
         {
             if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
@@ -481,9 +470,9 @@ namespace ATL
             return encoding.GetString(readBytesArr);
         }
 
-        // Extracts a "synch-safe" Int32 from a byte array
-        // according to ID3v2 definition (§6.2)
-        public static int ExtractSynchSafeInt32(byte[] bytes)
+        // Extracts a Int32 from a byte array using the "synch-safe" convention
+        // as to ID3v2 definition (§6.2)
+        public static int DecodeSynchSafeInt32(byte[] bytes)
         {
             return                 
                 bytes[0] * 0x200000 +
@@ -491,6 +480,20 @@ namespace ATL
                 bytes[2] * 0x80 +
                 bytes[3];
         }
+
+        // Encodes an Int32 to a byte array using the "synch-safe" convention
+        // as to ID3v2 definition (§6.2)
+        public static byte[] EncodeSynchSafeInt32(int value)
+        {
+            byte[] result = new byte[4];
+            result[0] = (byte)((value & 0xFE00000) >> 21);
+            result[1] = (byte)((value & 0x01FC000) >> 14);
+            result[2] = (byte)((value & 0x0003F80) >> 7);
+            result[3] = (byte)((value & 0x000007F));
+
+            return result;
+        }
+
 
         /// <summary>
         /// Finds a byte sequence within a stream

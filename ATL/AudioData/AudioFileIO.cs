@@ -75,7 +75,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Flag indicating the presence of embedded pictures
         /// </summary>
-        public IList<MetaDataIOFactory.PIC_CODE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
         {
             get { return metaData.Pictures; }
         }
@@ -229,9 +229,9 @@ namespace ATL.AudioData
             return metaData.Read(source, pictureStreamHandler);
         }
 
-        public bool Write(BinaryReader r, TagData tag)
+        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            return metaData.Write(r, tag);
+            return metaData.Write(r, w, tag);
         }
 
         public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)

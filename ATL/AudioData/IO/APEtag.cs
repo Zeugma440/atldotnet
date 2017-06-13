@@ -146,13 +146,13 @@ namespace ATL.AudioData.IO
                 {
                     if (FieldName.Trim().ToUpper().Equals("COVER ART (FRONT)"))
                     {
-                        Pictures.Add(MetaDataIOFactory.PIC_CODE.Front);
+                        Pictures.Add(MetaDataIOFactory.PIC_TYPE.Front);
                         if (FPictureStreamHandler != null)
                         {
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile,0);
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                             StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
-                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_CODE.Front);
+                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front);
                             mem.Close();
                         }
                     }
@@ -195,7 +195,7 @@ namespace ATL.AudioData.IO
 				FArtist = Tag.Field[1];
 				FAlbum = Tag.Field[2];
 				FTrack = TrackUtils.ExtractTrackNumber(Tag.Field[3]);
-				FYear = Tag.Field[4];
+				FReleaseYear = Tag.Field[4];
 				FGenre = Tag.Field[5];
 				FComment = Tag.Field[6];
 				FCopyright = Tag.Field[7];

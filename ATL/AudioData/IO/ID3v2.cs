@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
-using ATL.Logging;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Commons;
+using System.Drawing;
 
 namespace ATL.AudioData.IO
 {
@@ -17,14 +17,13 @@ namespace ATL.AudioData.IO
         public const byte TAG_VERSION_2_3 = 3;             // Code for ID3v2.3.x tag
         public const byte TAG_VERSION_2_4 = 4;             // Code for ID3v2.4.x tag
 
-        private String FTrackString;
-        private String FDiscString;
         private MetaDataIOFactory.PictureStreamHandlerDelegate FPictureStreamHandler;
 
         private String FEncoder;
         private String FLanguage;
         private String FLink;
 
+        private TagInfo FTag;
 
         public String Encoder // Encoder
         {
@@ -45,21 +44,9 @@ namespace ATL.AudioData.IO
         // ID3v2 tag ID
         private const String ID3V2_ID = "ID3";
 
-        // Max. number of supported tag frames
-        private const byte ID3V2_FRAME_COUNT = 18;
-
-        // Names of supported tag frames (ID3v2.3.x & ID3v2.4.x)
-        // TODO convert that to hashtables
-        private static String[] ID3V2_FRAME_NEW = new String[ID3V2_FRAME_COUNT]
-	{
-		"TIT2", "TPE1", "TALB", "TRCK", "TYER", "TCON", "COMM", "TCOM", "TENC",
-		"TCOP", "TLAN", "WXXX", "TDRC", "TOPE", "TIT1", "TOAL", "TPOS", "POPM" };
-
-        // Names of supported tag frames (ID3v2.2.x)
-        private static String[] ID3V2_FRAME_OLD = new String[ID3V2_FRAME_COUNT]
-		{
-			"TT2", "TP1", "TAL", "TRK", "TYE", "TCO", "COM", "TCM", "TEN",
-			"TCR", "TLA", "WXX", "TOR", "TOA", "TT1", "TOT", "TPA", "POP" };
+        // Mapping between ID3v2 field IDs and ATL fields
+        private static IDictionary<string, byte> Frames_v22;
+        private static IDictionary<string, byte> Frames_v23_24;
 
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
@@ -68,7 +55,7 @@ namespace ATL.AudioData.IO
         public const char UNICODE_ID = (char)0x1;
 
         // Frame header (ID3v2.3.x & ID3v2.4.x)
-        private class FrameHeaderNew
+        private class FrameHeader_23_24
         {
             public char[] ID = new char[4];                                // Frame ID
             public int Size;                                  // Size excluding header
@@ -76,7 +63,7 @@ namespace ATL.AudioData.IO
         }
 
         // Frame header (ID3v2.2.x)
-        private class FrameHeaderOld
+        private class FrameHeader_22
         {
             public char[] ID = new char[3];                                // Frame ID
             public byte[] Size = new byte[3];                 // Size excluding header
@@ -99,7 +86,8 @@ namespace ATL.AudioData.IO
             public bool IsExperimental;                 // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
             public bool HasFooter;                      // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
 
-            public String[] Frame = new String[ID3V2_FRAME_COUNT];
+            // Mapping between ATL fields and actual values contained in this file's metadata
+            public IDictionary<byte, String> Frames = new Dictionary<byte, String>();
         }
 
         // Unicode BOM properties
@@ -111,31 +99,44 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        private bool ReadHeader(String FileName, ref TagInfo Tag)
+        static ID3v2()
         {
-            FileStream fs = null;
-            BinaryReader SourceFile = null;
-            bool result = false;
+            // Mapping between standard fields and ID3v2.2 identifiers
+            Frames_v22 = new Dictionary<string, byte>();
 
-            try
-            {
-                // Open file, read first block of data and search for a frame		  
-                fs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
-                SourceFile = new BinaryReader(fs);
+            Frames_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
+            Frames_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
+            Frames_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
+            Frames_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
+            Frames_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
+            Frames_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
+            Frames_v22.Add("TRK", TagData.TAG_FIELD_TRACK_NUMBER);
+            Frames_v22.Add("TYE", TagData.TAG_FIELD_RELEASE_YEAR);
+            Frames_v22.Add("TDA", TagData.TAG_FIELD_RELEASE_DATE);
+            Frames_v22.Add("COM", TagData.TAG_FIELD_COMMENT);
+            Frames_v22.Add("TCM", TagData.TAG_FIELD_COMPOSER);
+            Frames_v22.Add("POP", TagData.TAG_FIELD_RATING);
 
-                return ReadHeader(SourceFile, ref Tag, 0);
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FileName + ")");
-                result = false;
-            }
+            // Mapping between standard fields and ID3v2.3+ identifiers
+            Frames_v23_24 = new Dictionary<string, byte>();
 
-            if (SourceFile != null) SourceFile.Close();
-            if (fs != null) fs.Close();
+            Frames_v23_24.Add("TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
+            Frames_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
+            Frames_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
+            Frames_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
+            Frames_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
+            Frames_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
+            Frames_v23_24.Add("TRCK", TagData.TAG_FIELD_TRACK_NUMBER);
+            Frames_v23_24.Add("TYER", TagData.TAG_FIELD_RELEASE_YEAR);
+            Frames_v23_24.Add("TDAT", TagData.TAG_FIELD_RELEASE_DATE);
+            Frames_v23_24.Add("COMM", TagData.TAG_FIELD_COMMENT);
+            Frames_v23_24.Add("TCOM", TagData.TAG_FIELD_COMPOSER);
+            Frames_v23_24.Add("POPM", TagData.TAG_FIELD_RATING);
+        }
 
-            return result;
+        public ID3v2()
+        {
+            ResetData();
         }
 
         private bool ReadHeader(BinaryReader SourceFile, ref TagInfo Tag, long offset)
@@ -156,8 +157,6 @@ namespace ATL.AudioData.IO
             
             Tag.Size = SourceFile.ReadBytes(4);
 
-            //BlockRead(SourceFile, Tag, 10, Transferred);
-
             Tag.FileSize = SourceFile.BaseStream.Length;
 
             return result;
@@ -168,7 +167,7 @@ namespace ATL.AudioData.IO
         private int GetTagSize(TagInfo Tag)
         {
             // Get total tag size
-            int result = StreamUtils.ExtractSynchSafeInt32(Tag.Size) + 10;
+            int result = StreamUtils.DecodeSynchSafeInt32(Tag.Size) + 10;
 
             if (Tag.HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
             if (result > Tag.FileSize) result = 0;
@@ -180,29 +179,36 @@ namespace ATL.AudioData.IO
 
         private void SetTagItem(String ID, String Data, ref TagInfo Tag)
         {
-            String FrameID;
+            byte supportedMetaId = 255;
 
-            // Set tag item if supported frame found
-            for (int iterator = 0; iterator < ID3V2_FRAME_COUNT; iterator++)
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (Tag.Version > TAG_VERSION_2_2)
             {
-                if (Tag.Version > TAG_VERSION_2_2)
-                    FrameID = ID3V2_FRAME_NEW[iterator];
-                else
-                    FrameID = ID3V2_FRAME_OLD[iterator];
+                if (Frames_v23_24.ContainsKey(ID)) supportedMetaId = Frames_v23_24[ID];
+            } else
+            {
+                if (Frames_v22.ContainsKey(ID)) supportedMetaId = Frames_v22[ID];
+            }
 
-                if (ID == FrameID)
+            // If ID has been mapped with an ATL field, store it in a dedicated Dictionary...
+            if (supportedMetaId < 255)
+            {
+                // Only stores first occurence of a tag
+                if (!Tag.Frames.ContainsKey(supportedMetaId))
                 {
-                    // Only stores first occurence of a tag
-                    if (null == Tag.Frame[iterator]) Tag.Frame[iterator] = Data;
+                    Tag.Frames[supportedMetaId] = Data;
                 }
+            } else // ...else store it in the unsupported fields Dictionary
+            {
+                if (unsupportedTagFields != null) unsupportedTagFields[ID] = Data;
             }
         }
 
         // Get information from frames (ID3v2.3.x & ID3v2.4.x : frame identifier has 4 characters)
-        private void ReadFramesNew(BinaryReader SourceFile, ref TagInfo Tag, long offset)
+        private void ReadFrames_v23_24(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             Stream fs = SourceFile.BaseStream;
-            FrameHeaderNew Frame = new FrameHeaderNew();
+            FrameHeader_23_24 Frame = new FrameHeader_23_24();
             long DataPosition;
             long DataSize;
             String strData;
@@ -221,7 +227,7 @@ namespace ATL.AudioData.IO
                 else if (TAG_VERSION_2_4 == FVersion)
                 {
                     byte[] size = SourceFile.ReadBytes(4);
-                    Frame.Size = StreamUtils.ExtractSynchSafeInt32(size);
+                    Frame.Size = StreamUtils.DecodeSynchSafeInt32(size);
                 }
                 Frame.Flags = StreamUtils.ReverseInt16(SourceFile.ReadUInt16());
 
@@ -236,17 +242,8 @@ namespace ATL.AudioData.IO
                     DataSize = DataSize - 4;
                 }
 
-                // Encoding convention, according to ID3v2.4 specs
-                int encoding = fs.ReadByte();
-                // Default encoding should be "ISO-8859-1"
-                // Warning : due to approximative implementations, some tags seem to be coded
-                // with the default encoding of the OS they have been tagged on
-                Encoding encodingConvention = Encoding.GetEncoding("ISO-8859-1");
-                //Encoding encodingConvention = Encoding.Default;
-
-                if (1 == encoding) encodingConvention = Encoding.Unicode; // UTF-16 with BOM
-                else if (2 == encoding) encodingConvention = Encoding.BigEndianUnicode; // UTF-16 Big Endian without BOM (since ID3v2.4)
-                else if (3 == encoding) encodingConvention = Encoding.UTF8; // UTF-8 (since ID3v2.4)
+                int encodingCode = fs.ReadByte();
+                FEncoding = decodeID3v2CharEncoding((byte)encodingCode);
 
                 // COMM fields contain :
                 //   a 3-byte langage ID
@@ -262,7 +259,7 @@ namespace ATL.AudioData.IO
 
                     // Skip BOM
                     BOMProperties contentDescriptionBOM = new BOMProperties();
-                    if (1 == encoding)
+                    if (1 == encodingCode)
                     {
                         contentDescriptionBOM = readBOM(ref fs);
                     }
@@ -270,7 +267,7 @@ namespace ATL.AudioData.IO
                     if (contentDescriptionBOM.Size <= 3)
                     {
                         // Skip content description
-                        StreamUtils.ReadNullTerminatedString(SourceFile, encoding);
+                        StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
                     }
                     else
                     {
@@ -289,7 +286,7 @@ namespace ATL.AudioData.IO
                 //    2-byte BOM : FE FF (UTF-16 Big Endian)
                 //    2-byte BOM : FF FE (UTF-16 Little Endian)
                 //    Other variants...
-                if ( 1 == encoding )
+                if ( 1 == encodingCode)
                 {
                     long initialPos = fs.Position;
                     BOMProperties bom = readBOM(ref fs);
@@ -302,12 +299,12 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        encodingConvention = bom.Encoding;
+                        FEncoding = bom.Encoding;
                         DataSize = DataSize - bom.Size;
                     }
                 }
                 // If encoding > 3, we might have caught an actual character, which means there is no encoding flag
-                else if (encoding > 3) { fs.Seek(-1, SeekOrigin.Current); DataSize++; }
+                else if (encodingCode > 3) { fs.Seek(-1, SeekOrigin.Current); DataSize++; }
 
                 // Note data position and determine significant data size
                 DataPosition = fs.Position;
@@ -318,7 +315,7 @@ namespace ATL.AudioData.IO
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
                     if (StreamUtils.StringEqualsArr("POPM", Frame.ID))
                     {
-                        strData = extractRatingFromPopularityMeter(SourceFile, 0).ToString();
+                        strData = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString();
                     }
                     else
                     {
@@ -326,7 +323,7 @@ namespace ATL.AudioData.IO
                         // Read frame data and set tag item if frame supported
                         bData = SourceFile.ReadBytes((int)DataSize);
 
-                        strData = encodingConvention.GetString(bData);
+                        strData = FEncoding.GetString(bData);
                     }
 
                     if (32768 != (Frame.Flags & 32768)) SetTagItem(new String(Frame.ID), strData, ref Tag); // Wipe out \0's to avoid string cuts
@@ -337,28 +334,27 @@ namespace ATL.AudioData.IO
                     if (StreamUtils.StringEqualsArr("APIC",Frame.ID))
                     {
                         // mime-type always coded in ASCII
-                        if (1 == encoding) fs.Seek(-1, SeekOrigin.Current);
-                        String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, 0);
-                        MetaDataIOFactory.PIC_CODE picCode = ReadAPICPictureType(SourceFile, 8);
+                        if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
+                        String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
+                        MetaDataIOFactory.PIC_TYPE picCode = DecodeID3v2PictureType(SourceFile.ReadByte());
                         FPictures.Add(picCode);
 
                         // However, description can be coded with another convention
-                        if (1 == encoding)
+                        if (1 == encodingCode)
                         {
                             readBOM(ref fs);
                         }
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, encoding);
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
                         if (FPictureStreamHandler != null)
                         {
                             int picSize = (int)(DataSize - (fs.Position - Position));
                             MemoryStream mem = new MemoryStream(picSize);
                             if (Tag.UsesUnsynchronisation)
                             {
-                                CopyUnsynchronizedStream(mem, SourceFile, picSize);
+                                copyUnsynchronizedStream(mem, SourceFile, picSize);
                             }
                             else
                             {
-                                //StreamUtils.CopyStreamFrom(mem, SourceFile, picSize);
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
                             FPictureStreamHandler(ref mem, picCode);
@@ -376,11 +372,14 @@ namespace ATL.AudioData.IO
         private void ReadFrames_v22(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             Stream fs = SourceFile.BaseStream;
-            FrameHeaderOld Frame = new FrameHeaderOld();
+            FrameHeader_22 Frame = new FrameHeader_22();
             char[] Data = new char[500];
             long DataPosition;
             int FrameSize;
             int DataSize;
+
+            // The vast majority of ID3v2.2 tags use default encoding
+            FEncoding = Encoding.GetEncoding("ISO-8859-1");
 
             fs.Seek(offset+10, SeekOrigin.Begin);
             while ((fs.Position - offset < GetTagSize(Tag)) && (fs.Position < fs.Length))
@@ -405,7 +404,7 @@ namespace ATL.AudioData.IO
                     // Specific to Popularitymeter : Rating data has to be extracted from the POP block
                     if (StreamUtils.StringEqualsArr("POP", Frame.ID))
                     {
-                        Data = extractRatingFromPopularityMeter(SourceFile, 0).ToString().ToCharArray();
+                        Data = readRatingInPopularityMeter(SourceFile, FEncoding).ToString().ToCharArray();
                     }
                     else
                     {
@@ -420,12 +419,40 @@ namespace ATL.AudioData.IO
                     if (StreamUtils.StringEqualsArr("PIC", Frame.ID))
                     {
                         // ID3v2.2 specific layout
-                        byte textEncoding = SourceFile.ReadByte();
+                        Encoding encoding = decodeID3v2CharEncoding(SourceFile.ReadByte());
                         String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3));
-                        MetaDataIOFactory.PIC_CODE picCode = ReadAPICPictureType(SourceFile, 8);
-                        FPictures.Add(picCode);
+                        byte picCode = SourceFile.ReadByte();
+                        MetaDataIOFactory.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, encoding);
 
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, textEncoding);
+                        if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picCode))
+                        {
+                            // If enabled, save it to unsupported pictures
+                            if (unsupportedTagFields != null)
+                            {
+                                if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
+                                int picSize = (int)(DataSize - (fs.Position - Position));
+
+                                using (MemoryStream mem = new MemoryStream(picSize))
+                                {
+                                    if (Tag.UsesUnsynchronisation)
+                                    {
+                                        copyUnsynchronizedStream(mem, SourceFile, picSize);
+                                    }
+                                    else
+                                    {
+                                        StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
+                                    }
+
+                                    unsupportedPictures.Add(picCode, Image.FromStream(mem));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            FPictures.Add(picType);
+                        }
+
                         if (FPictureStreamHandler != null)
                         {
                             int picSize = (int)(DataSize - (fs.Position - Position));
@@ -433,14 +460,14 @@ namespace ATL.AudioData.IO
 
                             if (Tag.UsesUnsynchronisation)
                             {
-                                CopyUnsynchronizedStream(mem, SourceFile, picSize);
+                                copyUnsynchronizedStream(mem, SourceFile, picSize);
                             }
                             else
                             {
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
 
-                            FPictureStreamHandler(ref mem, picCode);
+                            FPictureStreamHandler(ref mem, picType);
                         }
                     }
                     fs.Seek(Position + DataSize, SeekOrigin.Begin);
@@ -448,69 +475,52 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // ---------------------------------------------------------------------------
-
-        private String GetContent(String Content1, String Content2)
-        {
-            String result = Content1;
-            if ((null == result) || (0 == result.Trim().Length)) result = Utils.ProtectValue(Content2).Trim();
-
-            return result;
-        }
-
         // ********************** Public functions & voids **********************
-
-        public ID3v2()
-        {
-            ResetData();
-        }
-
-        // ---------------------------------------------------------------------------
 
         public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
         {
-            return Read(source, pictureStreamHandler, 0);
+            return Read(source, pictureStreamHandler, 0, storeUnsupportedMetaFields);
         }
 
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset)
+        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool storeUnsupportedMetaFields = false)
         {
-            TagInfo Tag = new TagInfo();
+            FTag = new TagInfo();
             this.FPictureStreamHandler = pictureStreamHandler;
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = ReadHeader(source, ref Tag, offset);
+            bool result = ReadHeader(source, ref FTag, offset);
 
             // Process data if loaded and header valid
-            if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, Tag.ID))
+            if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTag.ID))
             {
                 FExists = true;
                 // Fill properties with header data
-                FVersion = Tag.Version;
-                FSize = GetTagSize(Tag);
+                FVersion = FTag.Version;
+                FSize = GetTagSize(FTag);
+
+                if (storeUnsupportedMetaFields)
+                {
+                    unsupportedTagFields = new Dictionary<String, String>();
+                    // They will be read by ReadFrames_vXX below
+                }
+
                 // Get information from frames if version supported
                 if ((TAG_VERSION_2_2 <= FVersion) && (FVersion <= TAG_VERSION_2_4) && (FSize > 0))
                 {
-                    if (FVersion > TAG_VERSION_2_2) ReadFramesNew(source, ref Tag, offset);
-                    else ReadFrames_v22(source, ref Tag, offset);
+                    if (FVersion > TAG_VERSION_2_2) ReadFrames_v23_24(source, ref FTag, offset);
+                    else ReadFrames_v22(source, ref FTag, offset);
 
-                    FTitle = GetContent(Tag.Frame[0], Tag.Frame[14]);
-                    FArtist = GetContent(Tag.Frame[1], Tag.Frame[13]);
-                    FAlbum = GetContent(Tag.Frame[2], Tag.Frame[15]);
-                    FTrack = TrackUtils.ExtractTrackNumber(Tag.Frame[3]);
-                    FTrackString = Utils.ProtectValue(Tag.Frame[3]);
-                    FYear = TrackUtils.ExtractStrYear(Tag.Frame[4]);
-                    if (0 == FYear.Length) FYear = TrackUtils.ExtractStrYear(Tag.Frame[12]);
-                    FGenre = extractGenre(Tag.Frame[5]);
-                    FComment = Utils.ProtectValue(Tag.Frame[6]);
-                    FComposer = Utils.ProtectValue(Tag.Frame[7]);
-                    FEncoder = Utils.ProtectValue(Tag.Frame[8]);
-                    FCopyright = Utils.ProtectValue(Tag.Frame[9]);
-                    FLanguage = Utils.ProtectValue(Tag.Frame[10]);
-                    FLink = Utils.ProtectValue(Tag.Frame[11]);
-                    FDisc = TrackUtils.ExtractTrackNumber(Tag.Frame[16]);
-                    FDiscString = Utils.ProtectValue(Tag.Frame[16]);
-                    if (Utils.ProtectValue(Tag.Frame[17]).Length > 0) FRating = TrackUtils.ExtractIntRating(Byte.Parse(Tag.Frame[17]));
+                    TagData tagData = new TagData();
+                    foreach (byte b in FTag.Frames.Keys)
+                    {
+                        tagData.IntegrateValue(b, FTag.Frames[b]);
+                        if (TagData.TAG_FIELD_GENRE == b)
+                        {
+                            tagData.IntegrateValue(b, extractGenreFromID3v2Code(FTag.Frames[b]));
+                        }
+                    }
+                    this.fromTagData(tagData);
                 }
             }
 
@@ -520,7 +530,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Specific to ID3v2 : extract genre from string
-        private String extractGenre(String iGenre)
+        private static String extractGenreFromID3v2Code(String iGenre)
         {
             if (null == iGenre) return "";
 
@@ -545,10 +555,10 @@ namespace ATL.AudioData.IO
         }
 
         // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data
-        private byte extractRatingFromPopularityMeter(BinaryReader Source, int coding)
+        private static byte readRatingInPopularityMeter(BinaryReader Source, Encoding encoding)
         {
             // Skip the e-mail, which is a null-terminated string
-            StreamUtils.ReadNullTerminatedString(Source, coding);
+            StreamUtils.ReadNullTerminatedString(Source, encoding);
 
             // Returns the rating, contained in the following byte
             return Source.ReadByte();
@@ -589,22 +599,28 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public static MetaDataIOFactory.PIC_CODE ReadAPICPictureType(BinaryReader Source, int coding)
+        // TODO - should be private ?
+        public static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
         {
-            int pictureType = 0;
-            if (8 == coding) pictureType = Source.ReadByte();
-            else if (16 == coding) pictureType = Source.ReadInt16();
-            else if (32 == coding) pictureType = StreamUtils.ReverseInt32(Source.ReadInt32());
-
-            if (3 == pictureType) return MetaDataIOFactory.PIC_CODE.Front;
-            else if (4 == pictureType) return MetaDataIOFactory.PIC_CODE.Back;
-            else if (6 == pictureType) return MetaDataIOFactory.PIC_CODE.CD;
-            else return MetaDataIOFactory.PIC_CODE.Generic;
+            if (0 == picCode) return MetaDataIOFactory.PIC_TYPE.Generic;
+            else if (3 == picCode) return MetaDataIOFactory.PIC_TYPE.Front;
+            else if (4 == picCode) return MetaDataIOFactory.PIC_TYPE.Back;
+            else if (6 == picCode) return MetaDataIOFactory.PIC_TYPE.CD;
+            else return MetaDataIOFactory.PIC_TYPE.Unsupported;
         }
+
+        public static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
+        {
+            if (MetaDataIOFactory.PIC_TYPE.Front.Equals(picCode)) return 3;
+            else if (MetaDataIOFactory.PIC_TYPE.Back.Equals(picCode)) return 4;
+            else if (MetaDataIOFactory.PIC_TYPE.CD.Equals(picCode)) return 6;
+            else return 0;
+        }
+
 
         // Copies the stream while cleaning abnormalities du to unsynchronization
         // => 0xff 0x00 => 0xff
-        protected static void CopyUnsynchronizedStream(Stream mTo, BinaryReader r, long length)
+        protected static void copyUnsynchronizedStream(Stream mTo, BinaryReader r, long length)
         {
             BinaryWriter w = new BinaryWriter(mTo);
 
@@ -629,14 +645,221 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
+        ///
+        /// Default encoding should be "ISO-8859-1"
+        /// 
+        /// Warning : due to approximative implementations, some tags seem to be coded
+        /// with the default encoding of the OS they have been tagged on
+        /// 
+        ///  $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
+        ///  $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
+        ///   strings in the same frame SHALL have the same byteorder.
+        ///  Terminated with $00 00.
+        ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
+        ///  Terminated with $00 00.
+        ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+        private static Encoding decodeID3v2CharEncoding(byte encoding)
+        {
+            if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1");   // aka ISO Latin-1
+            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM
+            else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
+            else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
+            else return Encoding.Default;
+        }
+
+        private static byte encodeID3v2CharEncoding(Encoding encoding)
+        {
+            if (encoding.Equals(Encoding.Unicode)) return 1;
+            else if (encoding.Equals(Encoding.BigEndianUnicode)) return 2;
+            else if (encoding.Equals(Encoding.UTF8)) return 3;
+            else return 0; // Default = ISO-8859-1 / ISO Latin-1
+        }
+
         protected override int getDefaultTagOffset()
         {
             return TO_BOF;
         }
 
+
+        // Writes tag info using ID3v2.4 conventions
+        // TODO : use extended header restrictions when writing fields and storing embedded pictures
+        // TODO : factorize the code below
         public override bool Write(TagData tag, BinaryWriter w)
         {
-            throw new NotImplementedException();
+            bool result = true;
+            long tagSizePos;
+
+            w.Write(ID3V2_ID.ToCharArray());
+
+            // Version 2.4.0
+            w.Write(TAG_VERSION_2_4);
+            w.Write((byte)0);
+
+            // Flags : keep initial flags
+            w.Write(FTag.Flags);
+            // Keep position in mind to calculate final size and come back here to write it
+            tagSizePos = w.BaseStream.Position;
+            w.Write((int)0);
+
+            if (FTag.HasExtendedHeader)
+            {
+                // TODO : handle extended header
+            }
+
+            // TODO : Handle unsynchronization on all written data
+
+            // === ID3v2 FRAMES ===
+            IDictionary<byte, String> map = tag.ToMap();
+            long frameSizePos;
+            long finalFramePos;
+            bool writeFieldValue;
+
+            // Supported textual fields
+            foreach (byte frameType in map.Keys)
+            {
+                foreach(string s in Frames_v23_24.Keys)
+                {
+                    if (frameType == Frames_v23_24[s])
+                    {
+                        writeFieldValue = true;
+                        w.Write(s.ToCharArray());
+                        frameSizePos = w.BaseStream.Position;
+                        w.Write((int)0);
+
+                        // TODO : handle frame flags
+                        w.Write('\0');
+                        w.Write('\0');
+
+                        // COMM frame specifics
+                        if (TagData.TAG_FIELD_COMMENT == frameType)
+                        {
+                            // Encoding
+                            w.Write(encodeID3v2CharEncoding(FEncoding));
+                            // Language ID (ISO-639-2)
+                            w.Write("eng".ToCharArray()); // TODO : handle this field dynamically
+                            // Short content description
+                            w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
+                        }
+
+                        // POPM frame specifics
+                        if (TagData.TAG_FIELD_RATING == frameType)
+                        {
+                            // User e-mail
+                            w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
+                            // ID3v2 rating : scale 0 to 255
+                            w.Write((byte)Math.Max(255, Int32.Parse(map[frameType]) * 51));
+                            // Play count
+                            w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
+
+                            writeFieldValue = false;
+                        }
+
+
+                        if (writeFieldValue) w.Write(map[frameType].ToCharArray());
+
+                        finalFramePos = w.BaseStream.Position;
+                        w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+                        w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 6))); // 6  = frame size (4) + frame flags (2)
+                        w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+                        break;
+                    }
+                }
+            }
+
+            // Unsupported textual fields
+            foreach (String key in unsupportedTagFields.Keys)
+            {
+                w.Write(key.ToCharArray());
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0);
+
+                // TODO : handle frame flags
+                w.Write('\0');
+                w.Write('\0');
+
+                w.Write(unsupportedTagFields[key].ToCharArray());
+
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 6)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+            // Supported pictures
+            foreach(MetaDataIOFactory.PIC_TYPE picCode in tag.Pictures.Keys)
+            {
+                w.Write("APIC".ToCharArray());
+
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0);
+
+                // TODO : handle frame flags
+                w.Write('\0');
+                w.Write('\0');
+
+                // Null-terminated string = mime-type encoded in ISO-8859-1
+                String mimeType = Utils.GetMimeTypeFromImageFormat(tag.Pictures[picCode].RawFormat);
+                w.Write(Encoding.GetEncoding("ISO-8859-1").GetBytes(mimeType.ToCharArray())); // Force ISO-8859-1 format for mime-type
+                w.Write('\0'); // String should be null-terminated
+
+                w.Write(EncodeID3v2PictureType(picCode));
+
+                w.Write(""); // Picture description
+                w.Write('\0'); // Description should be null-terminated
+
+                tag.Pictures[picCode].Save(w.BaseStream, tag.Pictures[picCode].RawFormat);
+
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 4)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+
+            // Unsupported pictures, if any detected
+            if (unsupportedPictures != null)
+            {
+                foreach (byte unsuppPicCode in unsupportedPictures.Keys)
+                {
+                    w.Write("APIC".ToCharArray());
+
+                    frameSizePos = w.BaseStream.Position;
+                    w.Write((int)0);
+
+                    // TODO : handle frame flags
+                    w.Write('\0');
+                    w.Write('\0');
+
+                    // Null-terminated string = mime-type encoded in ISO-8859-1
+                    String mimeType = Utils.GetMimeTypeFromImageFormat(unsupportedPictures[unsuppPicCode].RawFormat);
+                    w.Write(Encoding.GetEncoding("ISO-8859-1").GetBytes(mimeType.ToCharArray())); // Force ISO-8859-1 format for mime-type
+                    w.Write('\0'); // String should be null-terminated
+
+                    w.Write(unsuppPicCode);
+
+                    w.Write(""); // Picture description
+                    w.Write('\0'); // Description should be null-terminated
+
+                    unsupportedPictures[unsuppPicCode].Save(w.BaseStream, unsupportedPictures[unsuppPicCode].RawFormat);
+
+                    finalFramePos = w.BaseStream.Position;
+                    w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+                    w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 4)));
+                    w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+                }
+            }
+
+            // Note : ATL does not write any ID3v2 footer
+
+            // TODO : Handle unsynchronization here (on all the written data)
+
+            long finalTagPos = w.BaseStream.Position;
+            w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalTagPos - tagSizePos - 4)));
+
+            return result;
         }
     }
 }

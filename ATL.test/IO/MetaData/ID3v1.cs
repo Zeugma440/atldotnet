@@ -11,12 +11,15 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v1()
         {
+            // Source : tag-free MP3
             String location = "../../Resources/empty.mp3";
             String testFileLocation = location.Replace("empty", "testID3v1");
 
+            // Create a working copy
             File.Copy(location, testFileLocation, true);
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
+            // Check that it is indeed tag-free
             if (theFile.ReadFromFile())
             {
                 Assert.IsNotNull(theFile.ID3v1);
@@ -27,15 +30,17 @@ namespace ATL.test.IO.MetaData
                 Assert.Fail();
             }
 
+            // Construct a new tag by using TagData
             TagData theTag = new TagData();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
-            theTag.Date = "2008/01/01";
+            theTag.ReleaseYear = "2008/01/01";
             theTag.Genre = "Merengue";
             theTag.TrackNumber = "01/01";
 
+            // Add the new tag and check that it has been indeed added with all the correct information
             if (theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V1))
             {
                 if (theFile.ReadFromFile())
@@ -60,6 +65,7 @@ namespace ATL.test.IO.MetaData
                 Assert.Fail();
             }
 
+            // Remove the tag and check that it has been indeed removed
             if (theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V1))
             {
                 if (theFile.ReadFromFile())
@@ -77,6 +83,7 @@ namespace ATL.test.IO.MetaData
                 Assert.Fail();
             }
 
+            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
@@ -87,6 +94,7 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
+            // Get rid of the working copy
             File.Delete(testFileLocation);
         }
     }

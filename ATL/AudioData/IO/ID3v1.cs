@@ -286,7 +286,7 @@ namespace ATL.AudioData.IO
                 FTitle = tagData.Title;
                 FArtist = tagData.Artist;
                 FAlbum = tagData.Album;
-                FYear = tagData.Year;
+                FReleaseYear = tagData.Year;
 				if (TAG_VERSION_1_0 == FVersion)
 				{
                     FComment = tagData.Comment + Utils.StripZeroChars(FEncoding.GetString(tagData.EndComment,0,2));
@@ -322,7 +322,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.BuildStrictLengthString(tag.Artist, 30, '\0').ToCharArray());
             w.Write(Utils.BuildStrictLengthString(tag.Album, 30, '\0').ToCharArray());
             // ID3v1 standard requires the year
-            w.Write(Utils.BuildStrictLengthString( TrackUtils.ExtractStrYear(tag.Date), 4, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString( TrackUtils.ExtractStrYear(tag.ReleaseYear), 4, '\0').ToCharArray());
             w.Write(Utils.BuildStrictLengthString(tag.Comment, 28, '\0').ToCharArray());
             
             // ID3v1.1 standard

@@ -40,7 +40,7 @@ namespace ATL
         public int Rating;
         [Obsolete]
         public IList<MetaReaderFactory.PIC_CODE> Pictures;
-        public IList<MetaDataIOFactory.PIC_CODE> PictureTokens;
+        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens;
 
         protected Image coverArt = null;
 
@@ -58,10 +58,10 @@ namespace ATL
         // Kept for compatibility issues during parallel development
         protected void readImageData(ref MemoryStream s)
         {
-            readImageData(ref s, MetaDataIOFactory.PIC_CODE.Front);
+            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front);
         }
 
-        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_CODE picCode)
+        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picCode)
         {
             coverArt = Image.FromStream(s);
         }
@@ -149,7 +149,7 @@ namespace ATL
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
-                PictureTokens = new List<MetaDataIOFactory.PIC_CODE>(theReader.Pictures);
+                PictureTokens = new List<MetaDataIOFactory.PIC_TYPE>(theReader.Pictures);
             }
         }
 	}

@@ -375,5 +375,29 @@ namespace Commons
 
             return result;
         }
+
+        public static String GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
+        {
+            String result = "image/";
+
+            if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg))
+            {
+                result += "jpeg";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Gif))
+            {
+                result += "gif";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Png))
+            {
+                result += "png";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Bmp))
+            {
+                result += "bmp";
+            }
+
+            return result;
+        }
     }
 }

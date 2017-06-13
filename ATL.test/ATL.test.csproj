@@ -57,6 +57,7 @@
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="FactoryTest.cs" />
+    <Compile Include="IO\MetaData\ID3v2.cs" />
     <Compile Include="IO\MetaData\ID3v1.cs" />
     <Compile Include="IO\HighLevel.cs" />
     <Compile Include="IO\Perf\Perf.cs" />

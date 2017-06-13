@@ -168,7 +168,7 @@ namespace ATL.AudioReaders.BinaryLogic
         private int GetTagSize(TagInfo Tag)
         {
             // Get total tag size
-            int result = StreamUtils.ExtractSynchSafeInt32(Tag.Size) + 10;
+            int result = StreamUtils.DecodeSynchSafeInt32(Tag.Size) + 10;
 
             if (Tag.HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
             if (result > Tag.FileSize) result = 0;
@@ -221,7 +221,7 @@ namespace ATL.AudioReaders.BinaryLogic
                 else if (TAG_VERSION_2_4 == FVersion)
                 {
                     byte[] size = SourceFile.ReadBytes(4);
-                    Frame.Size = StreamUtils.ExtractSynchSafeInt32(size);
+                    Frame.Size = StreamUtils.DecodeSynchSafeInt32(size);
                 }
                 Frame.Flags = StreamUtils.ReverseInt16(SourceFile.ReadUInt16());
 

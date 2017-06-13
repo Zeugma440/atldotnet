@@ -90,7 +90,7 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
-        IList<MetaDataIOFactory.PIC_CODE> Pictures
+        IList<MetaDataIOFactory.PIC_TYPE> Pictures
         {
             get;
         }
@@ -118,6 +118,6 @@ namespace ATL.AudioData
         bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler);
 
         // TODO Doc
-        bool Write(BinaryReader r, TagData tag);
+        long Write(BinaryReader r, BinaryWriter w, TagData tag);
     }
 }

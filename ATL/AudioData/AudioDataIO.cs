@@ -178,8 +178,17 @@ namespace ATL.AudioData
                     {
                         using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                         using (BinaryReader r = new BinaryReader(fs))
+                        using (BinaryWriter w = new BinaryWriter(fs))
                         {
-                            theMetaIO.Write(r, theTag);
+                            long newTagSize = theMetaIO.Write(r, w, theTag);
+                            if (newTagSize > -1)
+                            {
+                                result = RewriteFileSizeInHeader(w, fs.Length);
+                            }
+                            else
+                            {
+                                result = false;
+                            }
                         }
                     }
                 }
