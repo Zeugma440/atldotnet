@@ -8,10 +8,13 @@ namespace ATL.test
     [TestClass]
     public class AudioDataTest
     {
+
+        // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources"
+
         [TestMethod]
         public void TestFLACAudio()
         {
-            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/mustang_12kHz.flac");
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("./ATL.test/Resources/mustang_12kHz.flac");
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
