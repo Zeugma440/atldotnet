@@ -14,7 +14,8 @@ namespace ATL.test
         [TestMethod]
         public void TestFLACAudio()
         {
-            string theResource = "./ATL.test/Resources/mustang_12kHz.flac";
+            string basePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            string theResource = basePath+"/../../Resources/mustang_12kHz.flac";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
             // Not possible since TFLACFile is not visible from the outside of ATL
