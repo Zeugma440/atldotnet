@@ -1,17 +1,17 @@
 <ASX VERSION = "3.0">
 	<TITLE>Title</TITLE>
 	<ENTRY>
-		<REF HREF = "file:///E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/mustang_12kHz.flac" />
+		<REF HREF = "file:///$PATH/mustang_12kHz.flac" />
 	</ENTRY>
 	<ENTRY>
-		<REF HREF = "file:///E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/mustang_12kHz_tagged.flac" />
+		<REF HREF = "file:///$PATH/mustang_12kHz_tagged.flac" />
 	</ENTRY>
 	<ENTRY>
 		some text
 		some other text
-		<REF HREF = "file:///E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/ROQ.MID" />
+		<REF HREF = "file:///$PATH/ROQ.MID" />
 	</ENTRY>
 	<ENTRY>
-		<REF HREF = "file:///E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/01%20-%20Title%20Screen_pic.mp3" />
+		<REF HREF = "file:///$PATH/01%20-%20Title%20Screen_pic.mp3" />
 	</ENTRY>
 </ASX>
