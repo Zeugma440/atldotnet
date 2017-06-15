@@ -14,13 +14,14 @@ namespace ATL.test
         [TestMethod]
         public void TestFLACAudio()
         {
-            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("./ATL.test/Resources/mustang_12kHz.flac");
+            string theResource = "./ATL.test/Resources/mustang_12kHz.flac";
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
             Assert.IsNotInstanceOfType(theReader,typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            theReader.ReadFromFile("../../Resources/mustang_12kHz.flac");
+            theReader.ReadFromFile(theResource);
 
             Assert.AreEqual(5, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(694, (int)Math.Round(theReader.BitRate));
