@@ -1,2 +1,14 @@
 language: csharp
 solution: ATL.sln
+
+mono: none
+dotnet: 1.0.3
+dist: trusty
+
+install:
+  - nuget restore ATL.sln
+  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+script:
+  - dotnet restore
+  - xbuild /p:Configuration=Release ./ATL.sln
+  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./ATL.test/bin/Release/ATL.test.dll
