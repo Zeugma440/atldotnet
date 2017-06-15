@@ -1,2 +1,6 @@
 language: csharp
 solution: ATL.sln
+
+mono: none
+dotnet: 1.0.3
+dist: trusty
