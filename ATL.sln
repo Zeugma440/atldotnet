@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.test", "ATL.test\ATL.te
 		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.online", "ATL.online\ATL.online.csproj", "{B889418E-ACE0-4623-9232-C8F7333D0613}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{33D07703-7666-4000-9BB1-E1CBE5C84BA0}"
 	ProjectSection(SolutionItems) = preProject
 		.travis.yml = .travis.yml
