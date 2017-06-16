@@ -8,6 +8,7 @@ namespace ATL.test
     [TestClass]
     public class AudioDataTest
     {
+        // Appveyor tests exec path : C:\projects\atldotnet\TestResults\appveyor_APPVYR-WIN 2017-06-16 06_27_49\Out
 
         // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources" c/projects/solutionName
         // TODO industrialize with [DataSource]
@@ -44,7 +45,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            string resourceLocation = "..\\..\\Resources\\Yeah.dsf";
+            string resourceLocation = "../../../ATL.net/Resources/Yeah.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
@@ -66,7 +67,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            string resourceLocation = ".\\ATL.test\\Resources\\adgpp_PLAY_01_05.dsf";
+            string resourceLocation = "..\\..\\..\\ATL.net\\Resources\\adgpp_PLAY_01_05.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation, 1); // Force alternate
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
