@@ -13,20 +13,19 @@ namespace ATL.test
         // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources" c/projects/solutionName
         // TODO industrialize with [DataSource]
 
-//#ifdef appveyor
+#if (appveyor)
+   static string resourcePath = "../../../ATL.test/Resources/";
+#else
+        static string resourcePath = "../../Resources/";
+#endif
 
 
 
         [TestMethod]
         public void TestFLACAudio()
         {
-            string basePath = System.IO.Path.GetFullPath(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            System.Console.WriteLine("@" + basePath + "@");
-
-            string theResource = System.IO.Path.GetFullPath(basePath +"/../../Resources/mustang_12kHz.flac");
+            string theResource = System.IO.Path.GetFullPath(resourcePath+"mustang_12kHz.flac");
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
-
-            System.Console.WriteLine("@"+basePath+"@");
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
@@ -49,7 +48,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            string resourceLocation = "../../../ATL.test/Resources/Yeah.dsf";
+            string resourceLocation = resourcePath+"Yeah.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
@@ -71,7 +70,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            string resourceLocation = "..\\..\\..\\ATL.test\\Resources\\adgpp_PLAY_01_05.dsf";
+            string resourceLocation = resourcePath+"adgpp_PLAY_01_05.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation, 1); // Force alternate
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
