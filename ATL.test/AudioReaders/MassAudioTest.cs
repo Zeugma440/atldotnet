@@ -7,7 +7,7 @@ namespace ATL.test.AudioReaders
     [TestClass]
     public class MassAudioTest
     {
-        [TestMethod]
+        [TestMethod, TestCategory("mass")]
         public void MassTest()
         {
             String folder = "../../Resources";

@@ -26,7 +26,7 @@ namespace ATL.test
         [TestMethod]
         public void TestM3U()
         {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader("../../Resources/playlist.m3u");
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestHelper.getResourceLocationRoot()+"playlist.m3u");
 
             Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(4, theReader.GetFiles().Count);
@@ -40,7 +40,7 @@ namespace ATL.test
         [TestMethod]
         public void TestXSPF()
         {
-            string testFileLocation = copyFileAndReplace("../../Resources/playlist.xspf", "$PATH", Path.GetFullPath("../../Resources"));
+            string testFileLocation = copyFileAndReplace(TestHelper.getResourceLocationRoot() + "playlist.xspf", "$PATH", TestHelper.getResourceLocationRoot());
 
             try
             {
@@ -63,7 +63,7 @@ namespace ATL.test
         [TestMethod]
         public void TestSMIL()
         {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader("../../Resources/playlist.smil");
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestHelper.getResourceLocationRoot() + "playlist.smil");
 
             Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(2, theReader.GetFiles().Count);
@@ -77,7 +77,7 @@ namespace ATL.test
         [TestMethod]
         public void TestASX()
         {
-            string testFileLocation = copyFileAndReplace("../../Resources/playlist.asx", "$PATH", Path.GetFullPath("../../Resources").Replace("\\","/"));
+            string testFileLocation = copyFileAndReplace(TestHelper.getResourceLocationRoot() + "playlist.asx", "$PATH", TestHelper.getResourceLocationRoot().Replace("\\", "/"));
 
             try
             {
@@ -101,7 +101,7 @@ namespace ATL.test
         [TestMethod]
         public void TestB4S()
         {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader("../../Resources/playlist.b4s");
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestHelper.getResourceLocationRoot() + "playlist.b4s");
 
             Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(4, theReader.GetFiles().Count);

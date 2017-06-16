@@ -10,7 +10,7 @@ namespace ATL.test
         [TestMethod]
         public void TestFLACTrack()
         {
-            Track theTrack = new Track("../../Resources/mustang_12kHz_tagged.flac");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"mustang_12kHz_tagged.flac");
 
             Assert.AreEqual(5, theTrack.Duration);
             Assert.AreEqual(694, theTrack.Bitrate);
@@ -32,7 +32,7 @@ namespace ATL.test
         [TestMethod]
         public void TestMP3Track()
         {
-            Track theTrack = new Track("../../Resources/01 - Title Screen_pic.mp3");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"01 - Title Screen_pic.mp3");
 
             Assert.AreEqual(3, theTrack.Duration);
             Assert.AreEqual(129, theTrack.Bitrate);
@@ -59,7 +59,7 @@ namespace ATL.test
         public void TestMIDITrack()
         {
             // Type 1 song; comprehensive tempo map in 1st track
-            Track theTrack = new Track("../../Resources/ROQ.MID");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"ROQ.MID");
 
             Assert.AreEqual(504, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -68,7 +68,7 @@ namespace ATL.test
             Assert.AreEqual("The Music Shoppe - Path to God/base/Midi of the Week/The Music Shoppe/http://cctr.umkc.edu/user/dschmid/midiweek.htm/816 373.1710", theTrack.Comment);
 
             // Type 1 song; duration = duration of longest track
-            theTrack = new Track("../../Resources/ataezou - I (HEART) RUEAMATASU.mid");
+            theTrack = new Track(TestHelper.getResourceLocationRoot()+"ataezou - I (HEART) RUEAMATASU.mid");
 
             Assert.AreEqual(66, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -80,7 +80,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_streamedTrack()
         {
-            Track theTrack = new Track("../../Resources/Yeah.dsf");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"Yeah.dsf");
 
             Assert.AreEqual(4, theTrack.Duration);
             Assert.AreEqual(5953, theTrack.Bitrate);
@@ -104,7 +104,7 @@ namespace ATL.test
         [TestMethod]
         public void TestOpusTrack()
         {
-            Track theTrack = new Track("../../Resources/01_2_32.opus");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"01_2_32.opus");
 
             Assert.AreEqual(31, theTrack.Duration);
             Assert.AreEqual(33, theTrack.Bitrate);
@@ -131,7 +131,7 @@ namespace ATL.test
         [TestMethod]
         public void TestVorbisTrack()
         {
-            Track theTrack = new Track("../../Resources/Rayman_2_music_sample.ogg");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"Rayman_2_music_sample.ogg");
 
             Assert.AreEqual(33, theTrack.Duration);
             Assert.AreEqual(69, theTrack.Bitrate);
@@ -158,7 +158,7 @@ namespace ATL.test
         [TestMethod]
         public void TestTakTrack()
         {
-            Track theTrack = new Track("../../Resources/003 BlackBird.tak");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"003 BlackBird.tak");
 
             Assert.AreEqual(6,theTrack.Duration);
             Assert.AreEqual(634, theTrack.Bitrate);
@@ -185,7 +185,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFTrack()
         {
-            Track theTrack = new Track("../../Resources/adgpp_PLAY_01_05.dsf");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"adgpp_PLAY_01_05.dsf");
 
             Assert.AreEqual(26, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -197,7 +197,7 @@ namespace ATL.test
         [TestMethod]
         public void TestMODTrack()
         {
-            Track theTrack = new Track("../../Resources/4-mat - Thala-Music (Sanxion).mod");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"4-mat - Thala-Music (Sanxion).mod");
 
             Assert.AreEqual(330, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -209,7 +209,7 @@ namespace ATL.test
         [TestMethod]
         public void TestS3MTrack()
         {
-            Track theTrack = new Track("../../Resources/2ND_PM.S3M");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"2ND_PM.S3M");
 
             Assert.AreEqual(405, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -221,7 +221,7 @@ namespace ATL.test
         [TestMethod]
         public void TestXMTrack()
         {
-            Track theTrack = new Track("../../Resources/v_chrtrg.xm");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"v_chrtrg.xm");
 
             Assert.AreEqual(261, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -233,7 +233,7 @@ namespace ATL.test
         [TestMethod]
         public void TestITTrack()
         {
-            Track theTrack = new Track("../../Resources/SuperMario28bits(tssf).it");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"SuperMario28bits(tssf).it");
 
             Assert.AreEqual(42, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -245,7 +245,7 @@ namespace ATL.test
         [TestMethod]
         public void TestM4Track()
         {
-            Track theTrack = new Track("../../Resources/06 I'm All In Love.m4a");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"06 I'm All In Love.m4a");
 
             Assert.AreEqual(54, theTrack.Duration);
             Assert.IsTrue(theTrack.IsVBR);
@@ -271,7 +271,7 @@ namespace ATL.test
         [TestMethod]
         public void TestAIFCTrack()
         {
-            Track theTrack = new Track("../../Resources/M1F1-AlawC-AFsp_tagged.aif");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"M1F1-AlawC-AFsp_tagged.aif");
 
             Assert.AreEqual(3, theTrack.Duration);
             Assert.IsFalse(theTrack.IsVBR);
@@ -306,7 +306,7 @@ namespace ATL.test
             MetaReaderFactory.GetInstance().SetTagPriority(MetaReaderFactory.TAG_ID3V2, 2);  // Should not be read, since behaviour is single tag reading
             /* end set options */
 
-            Track theTrack = new Track("../../Resources/01 - Title Screen.mp3");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(0, theTrack.Year); // Specifically tagged as empty on the ID3v1 tag
@@ -322,7 +322,7 @@ namespace ATL.test
             MetaReaderFactory.GetInstance().SetTagPriority(MetaReaderFactory.TAG_ID3V2, 2);  // Should be used for the Year field (valuated on ID3v2)
             /* end set options */
 
-            Track theTrack = new Track("../../Resources/01 - Title Screen.mp3");
+            Track theTrack = new Track(TestHelper.getResourceLocationRoot()+"01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(1984, theTrack.Year); // Empty on the ID3v1 tag => cross-reading should read it on ID3v2
