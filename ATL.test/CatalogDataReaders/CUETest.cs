@@ -9,7 +9,7 @@ namespace ATL.test
         [TestMethod]
         public void TestReadTracks()
         {
-           ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader("../../Resources/duck hunt.cue");
+           ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(TestHelper.getResourceLocationRoot()+"duck hunt.cue");
 
            System.Console.WriteLine(theReader.Artist);
            System.Console.WriteLine(theReader.Title);
