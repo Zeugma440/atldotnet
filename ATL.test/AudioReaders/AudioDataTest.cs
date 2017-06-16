@@ -13,12 +13,16 @@ namespace ATL.test
         // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources" c/projects/solutionName
         // TODO industrialize with [DataSource]
 
+//#ifdef appveyor
+
+
+
         [TestMethod]
         public void TestFLACAudio()
         {
-            System.Console.WriteLine("B" + System.IO.Path.GetFullPath(".") + "B");
-
             string basePath = System.IO.Path.GetFullPath(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            System.Console.WriteLine("@" + basePath + "@");
+
             string theResource = System.IO.Path.GetFullPath(basePath +"/../../Resources/mustang_12kHz.flac");
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
@@ -45,7 +49,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            string resourceLocation = "../../../ATL.net/Resources/Yeah.dsf";
+            string resourceLocation = "../../../ATL.test/Resources/Yeah.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
@@ -67,7 +71,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            string resourceLocation = "..\\..\\..\\ATL.net\\Resources\\adgpp_PLAY_01_05.dsf";
+            string resourceLocation = "..\\..\\..\\ATL.test\\Resources\\adgpp_PLAY_01_05.dsf";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation, 1); // Force alternate
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
