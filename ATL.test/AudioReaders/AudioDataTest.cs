@@ -18,6 +18,9 @@ namespace ATL.test
             string theResource = basePath+"/../../Resources/mustang_12kHz.flac";
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
+            System.Console.WriteLine(basePath);
+            System.Console.WriteLine(System.IO.Path.GetDirectoryName("."));
+
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
             Assert.IsNotInstanceOfType(theReader,typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
