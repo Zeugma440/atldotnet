@@ -10,16 +10,18 @@ namespace ATL.test
     {
 
         // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources" c/projects/solutionName
+        // TODO industrialize with [DataSource]
 
         [TestMethod]
         public void TestFLACAudio()
         {
+            System.Console.WriteLine("B" + System.IO.Path.GetFullPath(".") + "B");
+
             string basePath = System.IO.Path.GetFullPath(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
             string theResource = System.IO.Path.GetFullPath(basePath +"/../../Resources/mustang_12kHz.flac");
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
             System.Console.WriteLine("@"+basePath+"@");
-            System.Console.WriteLine("B" + System.IO.Path.GetFullPath(".") + "B");
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
@@ -42,11 +44,12 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/Yeah.dsf");
+            string resourceLocation = "..\\..\\Resources\\Yeah.dsf";
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            theReader.ReadFromFile("../../Resources/Yeah.dsf");
+            theReader.ReadFromFile(resourceLocation);
 
             Assert.AreEqual(4, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(5953, (int)Math.Round(theReader.BitRate));
@@ -63,11 +66,12 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader("../../Resources/adgpp_PLAY_01_05.dsf", 1); // Force alternate
+            string resourceLocation = ".\\ATL.test\\Resources\\adgpp_PLAY_01_05.dsf";
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(resourceLocation, 1); // Force alternate
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            theReader.ReadFromFile("../../Resources/adgpp_PLAY_01_05.dsf");
+            theReader.ReadFromFile(resourceLocation);
 
             Assert.AreEqual(26, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
