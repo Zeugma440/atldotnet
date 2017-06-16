@@ -9,17 +9,17 @@ namespace ATL.test
     public class AudioDataTest
     {
 
-        // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources"
+        // TODO : if being tested online, prefix = "./ATL.test/Resources"; if not "../../Resources" c/projects/solutionName
 
         [TestMethod]
         public void TestFLACAudio()
         {
-            string basePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            string theResource = basePath+"/../../Resources/mustang_12kHz.flac";
+            string basePath = System.IO.Path.GetFullPath(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            string theResource = System.IO.Path.GetFullPath(basePath +"/../../Resources/mustang_12kHz.flac");
             IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource);
 
-            System.Console.WriteLine(basePath);
-            System.Console.WriteLine(System.IO.Path.GetDirectoryName("."));
+            System.Console.WriteLine("@"+basePath+"@");
+            System.Console.WriteLine("B" + System.IO.Path.GetFullPath(".") + "B");
 
             // Not possible since TFLACFile is not visible from the outside of ATL
             //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
