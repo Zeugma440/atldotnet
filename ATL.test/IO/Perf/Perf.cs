@@ -12,7 +12,7 @@ namespace ATL.test.IO.Perf
         const FileOptions FILE_FLAG_NOBUFFERING = (FileOptions)0x20000000;
         const string LOCATION = "../../Resources/01 - Title Screen_pic.mp3";
 
-        [TestMethod]
+        [TestMethod, TestCategory("mass")]
         public void Perf_Massread()
         {
             long ticksBefore, ticksNow;

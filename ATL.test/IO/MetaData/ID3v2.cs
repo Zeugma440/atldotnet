@@ -11,6 +11,12 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2()
         {
+            /* TODO
+             * Test readling of unsupported tag field
+             * Test conservation of unsupported tag field
+             * Test conservation of unsupported image type
+             */
+
             // Source : tag-free MP3
             String location = "../../Resources/empty.mp3";
             String testFileLocation = location.Replace("empty", "testID3v2");

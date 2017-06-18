@@ -180,6 +180,7 @@ namespace ATL.AudioData.IO
         private void SetTagItem(String ID, String Data, ref TagInfo Tag)
         {
             byte supportedMetaId = 255;
+            ID = ID.ToUpper();
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (Tag.Version > TAG_VERSION_2_2)
@@ -683,12 +684,23 @@ namespace ATL.AudioData.IO
 
 
         // Writes tag info using ID3v2.4 conventions
+        // TODO much later : support ID3v2.3- conventions
+
         // TODO : use extended header restrictions when writing fields and storing embedded pictures
+            // CRC32 (c)
+            // tag size restrictions (p)
+            // encoding restrictions (q)
+            // text field size restrictions (r)
+            // image encoding restrictions (s)
+            // image size restrictions (t)
+
         // TODO : factorize the code below
         public override bool Write(TagData tag, BinaryWriter w)
         {
             bool result = true;
             long tagSizePos;
+
+            // Extended header flags
 
             w.Write(ID3V2_ID.ToCharArray());
 
@@ -851,7 +863,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            // Note : ATL does not write any ID3v2 footer
+            // TODO : Write ID3v2.4 footer
 
             // TODO : Handle unsynchronization here (on all the written data)
 
