@@ -163,3 +163,5 @@ $RECYCLE.BIN/
 /ATL.test/app.config
 /ATL.test/packages.config
 /git tagging.txt
+/ATL.test/FileFinder_.cs
+/ATL.test/FileFinder.cs

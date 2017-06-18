@@ -1,11 +1,7 @@
-﻿using Commons;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace ATL
 {
@@ -470,19 +466,63 @@ namespace ATL
             return encoding.GetString(readBytesArr);
         }
 
-        // Extracts a Int32 from a byte array using the "synch-safe" convention
+        /// <summary>
+        /// Extracts a Int32 from a byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="bytes">Byte array containing data
+        /// NB : Array size can vary from 1 to 5 bytes, as only 7 bits of each is actually used
+        /// </param>
+        /// <returns></returns>
+        public static int DecodeSynchSafeInt(byte[] bytes)
+        {
+            if (bytes.Length > 5) throw new Exception("Array too long : has to be 1 to 5 bytes");
+            int result = 0;
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                result += bytes[i] * (int)Math.Floor(Math.Pow(2, (7 * (bytes.Length - 1 - i))));
+            }
+            return result;
+        }
+
+        // Extracts a Int32 from a 4-byte array using the "synch-safe" convention
         // as to ID3v2 definition (§6.2)
+        // NB : The actual capacity of the integer thus reaches 28 bits
         public static int DecodeSynchSafeInt32(byte[] bytes)
         {
             return                 
-                bytes[0] * 0x200000 +
-                bytes[1] * 0x4000 +
-                bytes[2] * 0x80 +
+                bytes[0] * 0x200000 +   //2^21
+                bytes[1] * 0x4000 +     //2^14
+                bytes[2] * 0x80 +       //2^7
                 bytes[3];
         }
 
-        // Encodes an Int32 to a byte array using the "synch-safe" convention
+        /// <summary>
+        /// Encodes an Int32 to a 4-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="value">Value to encode</param>
+        /// <param name="nbBytes">Number of bytes to encode to (can be 1 to 5)</param>
+        /// <returns></returns>
+        public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
+        {
+            if ((nbBytes < 1) || (nbBytes > 5)) throw new Exception("nbBytes has to be 1 to 5");
+            byte[] result = new byte[nbBytes];
+            int range;
+
+            for (int i = 0; i < nbBytes; i++)
+            {
+                range = (7 * (nbBytes - 1 - i));
+                result[i] = (byte)( (value & (0x7F << range)) >> range);
+            }
+
+            return result;
+        }
+
+        // Encodes an Int32 to a 4-byte array using the "synch-safe" convention
         // as to ID3v2 definition (§6.2)
+        // NB : The actual capacity of the integer thus reaches 28 bits
         public static byte[] EncodeSynchSafeInt32(int value)
         {
             byte[] result = new byte[4];

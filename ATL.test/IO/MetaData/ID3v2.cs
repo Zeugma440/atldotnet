@@ -15,6 +15,7 @@ namespace ATL.test.IO.MetaData
              * Test readling of unsupported tag field
              * Test conservation of unsupported tag field
              * Test conservation of unsupported image type
+             * Implement an extended header compliance option and test limit cases
              */
 
             // Source : tag-free MP3

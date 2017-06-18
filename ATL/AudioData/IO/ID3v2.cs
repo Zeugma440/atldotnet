@@ -81,10 +81,19 @@ namespace ATL.AudioData.IO
             // Extended data
             public long FileSize;		                          // File size (bytes)
 
+            // Base header flags
             public bool UsesUnsynchronisation;          // Determinated from flags; indicates if tag uses unsynchronisation (ID3v2.2+)
             public bool HasExtendedHeader;              // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
             public bool IsExperimental;                 // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
             public bool HasFooter;                      // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+
+            // Extended header flags
+            public int CRC = -1;
+            public int TagSizeRestriction = -1;
+            public int TextEncodingRestriction = -1;
+            public int TextFieldSizeRestriction = -1;
+            public int ImageEncodingRestriction = -1;
+            public int ImageSizeRestriction = -1;
 
             // Mapping between ATL fields and actual values contained in this file's metadata
             public IDictionary<byte, String> Frames = new Dictionary<byte, String>();
@@ -143,7 +152,7 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
 
-            // Read header and get file size
+            // Reads mandatory (base) header
             SourceFile.BaseStream.Seek(offset, SeekOrigin.Begin);
             Tag.ID = StreamUtils.ReadOneByteChars(SourceFile, 3);
             Tag.Version = SourceFile.ReadByte();
@@ -155,8 +164,40 @@ namespace ATL.AudioData.IO
             Tag.IsExperimental = ((Tag.Flags & 32) > 0);
             Tag.HasFooter = ((Tag.Flags & 0x10) > 0);
             
+            // ID3v2 tag size
             Tag.Size = SourceFile.ReadBytes(4);
 
+            // Reads optional (extended) header
+            if (Tag.HasExtendedHeader)
+            {
+                int extendedFlags;
+
+                SourceFile.BaseStream.Seek(4, SeekOrigin.Current); // Extended header size
+                SourceFile.BaseStream.Seek(1, SeekOrigin.Current); // Number of flag bytes; always 1 according to spec
+
+                extendedFlags = SourceFile.BaseStream.ReadByte();
+
+                if ((extendedFlags & 64) > 0) // Tag is an update
+                {
+                    // This flag is informative and has no corresponding data
+                }
+                if ( (extendedFlags & 32) > 0) // CRC present
+                {
+                    Tag.CRC = StreamUtils.DecodeSynchSafeInt(SourceFile.ReadBytes(5));
+                }
+                if ((extendedFlags & 16) > 0) // Tag has restrictions
+                {
+                    int tagRestrictions = SourceFile.BaseStream.ReadByte();
+
+                    Tag.TagSizeRestriction = (tagRestrictions & 0xC0) >> 6;
+                    Tag.TextEncodingRestriction = (tagRestrictions & 0x20) >> 5;
+                    Tag.TextFieldSizeRestriction = (tagRestrictions & 0x18) >> 3;
+                    Tag.ImageEncodingRestriction = (tagRestrictions & 0x04) >> 2;
+                    Tag.ImageSizeRestriction = (tagRestrictions & 0x03);
+                }
+            }
+
+            // File size
             Tag.FileSize = SourceFile.BaseStream.Length;
 
             return result;
@@ -483,6 +524,14 @@ namespace ATL.AudioData.IO
             return Read(source, pictureStreamHandler, 0, storeUnsupportedMetaFields);
         }
 
+        /// <summary>
+        /// Reads ID3v2 data
+        /// </summary>
+        /// <param name="source">Reader object from where to read ID3v2 data</param>
+        /// <param name="pictureStreamHandler">If not null, handler that will be triggered whenever a supported embedded picture is read</param>
+        /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
+        /// <param name="storeUnsupportedMetaFields">Indicates wether unsupported fields should be read and stored in memory (optional; default = false)</param>
+        /// <returns></returns>
         public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool storeUnsupportedMetaFields = false)
         {
             FTag = new TagInfo();
@@ -600,8 +649,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // TODO - should be private ?
-        public static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
+        private static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
         {
             if (0 == picCode) return MetaDataIOFactory.PIC_TYPE.Generic;
             else if (3 == picCode) return MetaDataIOFactory.PIC_TYPE.Front;
@@ -610,7 +658,7 @@ namespace ATL.AudioData.IO
             else return MetaDataIOFactory.PIC_TYPE.Unsupported;
         }
 
-        public static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
+        private static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
         {
             if (MetaDataIOFactory.PIC_TYPE.Front.Equals(picCode)) return 3;
             else if (MetaDataIOFactory.PIC_TYPE.Back.Equals(picCode)) return 4;

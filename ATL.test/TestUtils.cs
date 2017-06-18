@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace ATL.test
 {
-    class TestUtils
+    public class TestUtils
     {
         public static string GetFileMD5Hash(string filename)
         {
@@ -19,4 +17,5 @@ namespace ATL.test
             }
         }
     }
+
 }
