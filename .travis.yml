@@ -1,5 +1,10 @@
 language: csharp
-solution: ATL.sln
+os:
+  - linux
+  - osx
 
-mono: latest
+matrix:
+  - MONO_VER="2.10.11"
 
+script:
+  - xbuild /p:Configuration=Release ./ATL/ATL.csproj
