@@ -15,9 +15,13 @@ As a showcase, I have used ATL.NET as a cornerstone to build [Ethos Cataloger](h
 ## What is NOT ATL .NET ?
 
 Audio Tools Library .NET is not :
+
 * a standalone application : it is a library aimed at being used by developers to build software
+
 * an audio file tagger : it only _reads_ data
+
 NB : I'm currently playing with experimental classes aimed at securely creating, editing and removing metadata (tags). It might take some time to stabilize, since altering audio files needs thorough testing
+
 * an audio music player : it gives access to various properties and metadata (see below for the comprehensive list), but does not process audio data into an audible signal
 
 
@@ -39,10 +43,15 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 * ATL features **Playlists and Cuesheets readers**
 
 
-
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
-Please refer to the [Code snippets section of the Documentation](Usage-_-Code-snippets)
+The ATL library runs on .NET 3.0+ / Mono 2.0+
+
+ATL unit tests run on .NET 4.5+
+
+The library and its tests have been maintained on Visual Studio Express 2012 and 2015
+
+Please refer to the [Code snippets section of the Documentation](Usage-_-Code-snippets) for quick usage
 
 
 ## What kind of data can ATL actually read ? From which formats ?
