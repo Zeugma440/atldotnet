@@ -1,7 +1,13 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet)
-[![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet)
-
 # Audio Tools Library (ATL) for .NET
+
+## Status
+
+**Mono Build (powered by Travis CI) :** [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet)
+
+**.NET Core Build (powered by AppVeyor) :** [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet)
+
+**Code coverage (powered by AppVeyor and CodeCov) :** [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet)
+
 
 ## What is ATL .NET ?
 
