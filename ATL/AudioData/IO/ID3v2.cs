@@ -79,24 +79,97 @@ namespace ATL.AudioData.IO
             public byte Flags;                                         // Flags of tag
             public byte[] Size = new byte[4];             // Tag size excluding header
             // Extended data
-            public long FileSize;		                          // File size (bytes)
-
-            // Base header flags
-            public bool UsesUnsynchronisation;          // Determinated from flags; indicates if tag uses unsynchronisation (ID3v2.2+)
-            public bool HasExtendedHeader;              // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
-            public bool IsExperimental;                 // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
-            public bool HasFooter;                      // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+            public long FileSize;                                 // File size (bytes)
 
             // Extended header flags
             public int CRC = -1;
-            public int TagSizeRestriction = -1;
-            public int TextEncodingRestriction = -1;
-            public int TextFieldSizeRestriction = -1;
-            public int ImageEncodingRestriction = -1;
-            public int ImageSizeRestriction = -1;
+            public int TagRestrictions;
 
             // Mapping between ATL fields and actual values contained in this file's metadata
             public IDictionary<byte, String> Frames = new Dictionary<byte, String>();
+
+            // **** BASE HEADER PROPERTIES ****
+            public bool UsesUnsynchronisation
+            {
+                get { return ((Flags & 128) > 0); }
+            }
+            public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
+            {
+                get { return (((Flags & 64) > 0) && (Version > TAG_VERSION_2_2)); }
+            }
+            public bool IsExperimental // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
+            {
+                get { return ((Flags & 32) > 0); }
+            }
+            public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+            {
+                get { return ((Flags & 0x10) > 0); }
+            }
+
+            // **** EXTENDED HEADER PROPERTIES ****
+            public int TagFramesRestriction
+            {
+                get
+                {
+                    switch ((TagRestrictions & 0xC0) >> 6)
+                    {
+                        case 0: return 128;
+                        case 1: return 64;
+                        case 2: return 32;
+                        case 3: return 32;
+                        default: return -1;
+                    }
+                }
+            }
+            public int TagSizeRestrictionKB
+            {
+                get {
+                    switch ((TagRestrictions & 0xC0) >> 6)
+                    {
+                        case 0: return 1024;
+                        case 1: return 128;
+                        case 2: return 40;
+                        case 3: return 4;
+                        default: return -1;
+                    }
+                }
+            }
+            public bool HasTextEncodingRestriction
+            {
+                get { return (((TagRestrictions & 0x20) >> 5) > 0); }
+            }
+            public int TextFieldSizeRestriction
+            {
+                get
+                {
+                    switch ((TagRestrictions & 0x18) >> 3)
+                    {
+                        case 0: return -1;
+                        case 1: return 1024;
+                        case 2: return 128;
+                        case 3: return 30;
+                        default: return -1;
+                    }
+                }
+            }
+            public bool HasPictureEncodingRestriction
+            {
+                get { return (((TagRestrictions & 0x04) >> 2) > 0); }
+            }
+            public int ImageSizeRestriction
+            {
+                get
+                {
+                    switch ((TagRestrictions & 0x03))
+                    {
+                        case 0: return -1;  // No restriction
+                        case 1: return 256; // 256x256
+                        case 2: return 64;  // 64x64 or less
+                        case 3: return 64;  // Exactly 64x64
+                        default: return -1;
+                    }
+                }
+            }
         }
 
         // Unicode BOM properties
@@ -155,14 +228,12 @@ namespace ATL.AudioData.IO
             // Reads mandatory (base) header
             SourceFile.BaseStream.Seek(offset, SeekOrigin.Begin);
             Tag.ID = StreamUtils.ReadOneByteChars(SourceFile, 3);
+
+            if (!StreamUtils.StringEqualsArr(ID3V2_ID, FTag.ID)) return false;
+
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
-            
             Tag.Flags = SourceFile.ReadByte();
-            Tag.UsesUnsynchronisation = ((Tag.Flags & 128) > 0);
-            Tag.HasExtendedHeader = (((Tag.Flags & 64) > 0) && (Tag.Version > TAG_VERSION_2_2));
-            Tag.IsExperimental = ((Tag.Flags & 32) > 0);
-            Tag.HasFooter = ((Tag.Flags & 0x10) > 0);
             
             // ID3v2 tag size
             Tag.Size = SourceFile.ReadBytes(4);
@@ -187,13 +258,7 @@ namespace ATL.AudioData.IO
                 }
                 if ((extendedFlags & 16) > 0) // Tag has restrictions
                 {
-                    int tagRestrictions = SourceFile.BaseStream.ReadByte();
-
-                    Tag.TagSizeRestriction = (tagRestrictions & 0xC0) >> 6;
-                    Tag.TextEncodingRestriction = (tagRestrictions & 0x20) >> 5;
-                    Tag.TextFieldSizeRestriction = (tagRestrictions & 0x18) >> 3;
-                    Tag.ImageEncodingRestriction = (tagRestrictions & 0x04) >> 2;
-                    Tag.ImageSizeRestriction = (tagRestrictions & 0x03);
+                    Tag.TagRestrictions = SourceFile.BaseStream.ReadByte();
                 }
             }
 
