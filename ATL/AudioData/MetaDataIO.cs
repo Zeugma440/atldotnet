@@ -1,5 +1,4 @@
-﻿using ATL.Logging;
-using Commons;
+﻿using Commons;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,6 +9,9 @@ namespace ATL.AudioData
 {
     public abstract class MetaDataIO : IOBase, IMetaDataIO
     {
+        // General properties
+        protected static bool useID3v2ExtendedHeaderRestrictions = false;
+
         // Default tag offset
         protected const int TO_EOF = 0; // End Of File
         protected const int TO_BOF = 1; // Beginning Of File
@@ -42,6 +44,8 @@ namespace ATL.AudioData
         protected IDictionary<String, String> unsupportedTagFields;
         protected IDictionary<int, Image> unsupportedPictures;
 
+
+        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
 
         /// <summary>
         /// True if tag has been found in media file
@@ -233,6 +237,7 @@ namespace ATL.AudioData
             // Read all the fields in the existing tag (including unsupported fields)
             Read(r, null, true); // TODO use output wisely
 
+            // TODO make default UTF-8 encoding customizable
             if (!FExists) // If tag not found (e.g. empty file)
             {
                 FEncoding = Encoding.UTF8;
@@ -244,18 +249,19 @@ namespace ATL.AudioData
             using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
             {
                 Write(tag, msw);  // TODO get a better use of the return value
+
                 newTagSize = s.Length;
 
-
+                // -- Adjust tag slot to new size in file --
                 long audioDataOffset;
                 long tagOffset;
 
-                // Adjust tag slot to new size in file
-                if (Exists)
+                if (FExists) // An existing tag has been reprocessed
                 {
                     tagOffset = FOffset;
                     audioDataOffset = FOffset + FSize;
-                } else
+                }
+                else // A brand new tag has been added to the file
                 {
                     switch (getDefaultTagOffset())
                     {
@@ -275,7 +281,7 @@ namespace ATL.AudioData
                     StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
                 }
 
-                // Copy memoryStream contents to the new slot
+                // Copy tag contents to the new slot
                 r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
                 s.Seek(0, SeekOrigin.Begin);
                 StreamUtils.CopyStream(s, w.BaseStream, s.Length);

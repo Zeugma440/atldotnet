@@ -1,7 +1,4 @@
 using System;
-using System.IO;
-using System.Collections;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.AudioData

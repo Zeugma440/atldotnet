@@ -1,16 +1,14 @@
 using System;
 using System.IO;
-using System.Collections;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL
 {
-	/// <summary>
-	/// Abstract factory for data readers, containing shared methods and members
-	/// </summary>
-	public abstract class ReaderFactory
-	{
+    /// <summary>
+    /// Abstract factory for data readers, containing shared methods and members
+    /// </summary>
+    public abstract class ReaderFactory
+    {
         // ID representing the absence of format
         public const int NO_FORMAT = -1;
 
@@ -33,11 +31,11 @@ namespace ATL
                     matchingFormats = new List<ATL.Format>();
                     matchingFormats.Add(f);
                     formatList.Add(ext, matchingFormats);
-                } else {
+                }
+                else
+                {
                     matchingFormats = formatList[ext];
                     matchingFormats.Add(f);
-                    //formatList.Remove(ext);
-                    //formatList.Add(ext, matchingFormats);
                 }
             }
         }
@@ -54,10 +52,13 @@ namespace ATL
 
             if (File.Exists(path))
             {
-                IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
-                if (formats != null && formats.Count > 0)
+                if (formatList.ContainsKey(Path.GetExtension(path).ToUpper()))
                 {
-                    result = formats;
+                    IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
+                    if (formats != null && formats.Count > 0)
+                    {
+                        result = formats;
+                    }
                 }
             }
 
@@ -82,5 +83,5 @@ namespace ATL
             return result.Values;
         }
 
-	}
+    }
 }

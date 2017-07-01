@@ -1,5 +1,3 @@
-using ATL.Logging;
-using System;
 using System.IO;
 
 namespace ATL.AudioData

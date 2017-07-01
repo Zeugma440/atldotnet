@@ -12,7 +12,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2()
         {
             /* TODO
-             * Test readling of unsupported tag field
+             * Test reading of unsupported tag field
              * Test conservation of unsupported tag field
              * Test conservation of unsupported image type
              * Implement an extended header compliance option and test limit cases
