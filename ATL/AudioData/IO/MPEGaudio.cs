@@ -214,10 +214,6 @@ namespace ATL.AudioData.IO
         {
             get { return this.FGetLayer(); }
         }
-        public ushort SampleRate // Sample rate (hz)
-        {
-            get { return this.FGetSampleRate(); }
-        }
         public String ChannelMode // Channel mode name
         {
             get { return this.FGetChannelMode(); }
@@ -834,6 +830,7 @@ namespace ATL.AudioData.IO
             {
                 FBitrate = FGetBitRate();
                 FDuration = FGetDuration();
+                FSampleRate = FGetSampleRate();
             }
 	
 			return result;

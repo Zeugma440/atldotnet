@@ -1,9 +1,7 @@
 ﻿using ATL.AudioData.IO;
 using ATL.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace ATL.AudioData
 {
@@ -12,6 +10,7 @@ namespace ATL.AudioData
         // Audio data
         protected double FBitrate;
         protected double FDuration;
+        protected int FSampleRate;
 
         // File data
         protected long FFileSize;
@@ -31,6 +30,10 @@ namespace ATL.AudioData
         public double Duration // Duration (s)
         {
             get { return FDuration; }
+        }
+        public int SampleRate // Sample Rate (Hz)
+        {
+            get { return FSampleRate; }
         }
 
         // To be overriden by children classes
@@ -75,6 +78,7 @@ namespace ATL.AudioData
 
             FBitrate = 0;
             FDuration = 0;
+            FSampleRate = 0;
 
             FID3v1.ResetData();
             FID3v2.ResetData();
