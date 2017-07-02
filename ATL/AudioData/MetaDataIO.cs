@@ -26,11 +26,14 @@ namespace ATL.AudioData
 
         protected IList<MetaDataIOFactory.PIC_TYPE> FPictureTokens;
 
-        protected IDictionary<String, String> unsupportedTagFields;
+        protected IDictionary<string, string> unsupportedTagFields;
         protected IDictionary<int, Image> unsupportedPictures;
 
 
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
+
+
+        // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
         /// True if tag has been found in media file
@@ -60,6 +63,10 @@ namespace ATL.AudioData
         {
             get { return this.FOffset; }
         }
+
+
+        // ------ TAGDATA FIELDS ACCESSORS -----------------------------------------------------
+
         /// <summary>
         /// Song/piece title
         /// </summary>
@@ -219,6 +226,18 @@ namespace ATL.AudioData
         {
             get { return Utils.ProtectValue(tagData.Publisher); }
             set { tagData.Publisher = value; }
+        }
+
+
+
+        // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
+
+        /// <summary>
+        /// Each positioned flag indicates the presence of an embedded picture
+        /// </summary>
+        public IDictionary<string, string> UnsupportedFields
+        {
+            get { return unsupportedTagFields!=null?unsupportedTagFields:new Dictionary<string,String>(); }
         }
 
         /// <summary>

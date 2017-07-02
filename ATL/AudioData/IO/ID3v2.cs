@@ -478,31 +478,53 @@ namespace ATL.AudioData.IO
                     long Position = fs.Position;
                     if (StreamUtils.StringEqualsArr("APIC",Frame.ID))
                     {
+                        bool storeUnsupportedPicture = false;
                         // mime-type always coded in ASCII
                         if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
                         String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
-                        MetaDataIOFactory.PIC_TYPE picCode = DecodeID3v2PictureType(SourceFile.ReadByte());
-                        FPictureTokens.Add(picCode);
+                        byte picCode = SourceFile.ReadByte();
+                        MetaDataIOFactory.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+
+                        if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picType))
+                        {
+                            // If enabled, save it to unsupported pictures
+                            if (unsupportedTagFields != null)
+                            {
+                                storeUnsupportedPicture = true;
+                                if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
+                            }
+                        }
+                        else
+                        {
+                            FPictureTokens.Add(picType);
+                        }
 
                         // However, description can be coded with another convention
                         if (1 == encodingCode)
                         {
                             readBOM(ref fs);
                         }
+
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
-                        if (FPictureStreamHandler != null)
+
+                        if ((FPictureStreamHandler != null) || storeUnsupportedPicture)
                         {
                             int picSize = (int)(DataSize - (fs.Position - Position));
+
                             MemoryStream mem = new MemoryStream(picSize);
-                            if (Tag.UsesUnsynchronisation)
-                            {
-                                decodeUnsynchronizedStreamTo(mem, SourceFile, picSize);
-                            }
-                            else
-                            {
-                                StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
-                            }
-                            FPictureStreamHandler(ref mem, picCode);
+
+                                if (Tag.UsesUnsynchronisation)
+                                {
+                                    decodeUnsynchronizedStreamTo(mem, SourceFile, picSize);
+                                }
+                                else
+                                {
+                                    StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
+                                }
+
+                            if (FPictureStreamHandler != null) FPictureStreamHandler(ref mem, picType);
+                            if (storeUnsupportedPicture) unsupportedPictures.Add(picCode, Image.FromStream(mem));
+
                             mem.Close();
                         }
                     }
@@ -561,6 +583,7 @@ namespace ATL.AudioData.IO
                     long Position = fs.Position;
                     if (StreamUtils.StringEqualsArr("PIC", Frame.ID))
                     {
+                        bool storeUnsupportedPicture = false;
                         // ID3v2.2 specific layout
                         Encoding encoding = decodeID3v2CharEncoding(SourceFile.ReadByte());
                         String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3));
@@ -568,27 +591,13 @@ namespace ATL.AudioData.IO
                         MetaDataIOFactory.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, encoding);
 
-                        if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picCode))
+                        if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picType))
                         {
                             // If enabled, save it to unsupported pictures
                             if (unsupportedTagFields != null)
                             {
+                                storeUnsupportedPicture = true;
                                 if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
-                                int picSize = (int)(DataSize - (fs.Position - Position));
-
-                                using (MemoryStream mem = new MemoryStream(picSize))
-                                {
-                                    if (Tag.UsesUnsynchronisation)
-                                    {
-                                        decodeUnsynchronizedStreamTo(mem, SourceFile, picSize);
-                                    }
-                                    else
-                                    {
-                                        StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
-                                    }
-
-                                    unsupportedPictures.Add(picCode, Image.FromStream(mem));
-                                }
                             }
                         }
                         else
@@ -596,7 +605,7 @@ namespace ATL.AudioData.IO
                             FPictureTokens.Add(picType);
                         }
 
-                        if (FPictureStreamHandler != null)
+                        if ((FPictureStreamHandler != null) || storeUnsupportedPicture)
                         {
                             int picSize = (int)(DataSize - (fs.Position - Position));
                             MemoryStream mem = new MemoryStream(picSize);
@@ -610,7 +619,10 @@ namespace ATL.AudioData.IO
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
 
-                            FPictureStreamHandler(ref mem, picType);
+                            if (FPictureStreamHandler != null) FPictureStreamHandler(ref mem, picType);
+                            if (storeUnsupportedPicture) unsupportedPictures.Add(picCode, Image.FromStream(mem));
+
+                            mem.Close();
                         }
                     }
                     fs.Seek(Position + DataSize, SeekOrigin.Begin);
@@ -675,184 +687,6 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-        }
-
-        // ---------------------------------------------------------------------------
-        // ID3v2-SPECIFIC FEATURES
-        // ---------------------------------------------------------------------------
-
-        /// <summary>
-        /// Extract genre name from String according to ID3 conventions
-        /// </summary>
-        /// <param name="iGenre">String representation of genre according to various ID3v1/v2 conventions</param>
-        /// <returns>Genre name</returns>
-        private static String extractGenreFromID3v2Code(String iGenre)
-        {
-            if (null == iGenre) return "";
-
-            String result = Utils.StripZeroChars(iGenre.Trim());
-            int genreIndex = -1;
-
-            // Any number between parenthesis
-            Regex regex = new Regex(@"(?<=\()\d+?(?=\))");
-
-            Match match = regex.Match(result);
-            // First match is directly returned
-            if (match.Success)
-            {
-                genreIndex = Int32.Parse(match.Value);
-                // Delete genre index string from the tag value
-                result = result.Remove(0, result.LastIndexOf(')') + 1);
-            }
-
-            if (("" == result) && (genreIndex != -1) && (genreIndex < ID3v1.MusicGenre.Length)) result = ID3v1.MusicGenre[genreIndex];
-
-            return result;
-        }
-
-        // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data
-        private static byte readRatingInPopularityMeter(BinaryReader Source, Encoding encoding)
-        {
-            // Skip the e-mail, which is a null-terminated string
-            StreamUtils.ReadNullTerminatedString(Source, encoding);
-
-            // Returns the rating, contained in the following byte
-            return Source.ReadByte();
-        }
-
-        // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
-        // NB : This implementation only works with UTF-16 BOMs (i.e. UTF-8 and UTF-32 BOMs will not be detected)
-        private BOMProperties readBOM(ref Stream fs)
-        {
-            BOMProperties result = new BOMProperties();
-            result.Size = 1;
-            result.Encoding = Encoding.Unicode;
-
-            int b = fs.ReadByte();
-            bool first = true;
-            bool foundFE = false;
-            bool foundFF = false;
-
-            while (0 == b || 0xFF == b || 0xFE == b)
-            {
-                // All UTF-16 BOMs either start or end with 0xFE or 0xFF
-                // => Having them both read means that the entirety of the UTF-16 BOM has been read
-                foundFE = foundFE || (0xFE == b);
-                foundFF = foundFF || (0xFF == b);
-                if (foundFE & foundFF) break;
-
-                if (first && b != 0)
-                {
-                    // 0xFE first means data is coded in Big Endian
-                    if (0xFE == b) result.Encoding = Encoding.BigEndianUnicode;
-                    first = false;
-                }
-
-                b = fs.ReadByte();
-                result.Size++;
-            }
-
-            return result;
-        }
-
-        private static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
-        {
-            if (0 == picCode) return MetaDataIOFactory.PIC_TYPE.Generic;
-            else if (3 == picCode) return MetaDataIOFactory.PIC_TYPE.Front;
-            else if (4 == picCode) return MetaDataIOFactory.PIC_TYPE.Back;
-            else if (6 == picCode) return MetaDataIOFactory.PIC_TYPE.CD;
-            else return MetaDataIOFactory.PIC_TYPE.Unsupported;
-        }
-
-        private static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
-        {
-            if (MetaDataIOFactory.PIC_TYPE.Front.Equals(picCode)) return 3;
-            else if (MetaDataIOFactory.PIC_TYPE.Back.Equals(picCode)) return 4;
-            else if (MetaDataIOFactory.PIC_TYPE.CD.Equals(picCode)) return 6;
-            else return 0;
-        }
-
-
-        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
-        // => every "0xff 0x00" becomes "0xff"
-        private static void decodeUnsynchronizedStreamTo(Stream mTo, BinaryReader r, long length)
-        {
-            using (BinaryWriter w = new BinaryWriter(mTo))
-            {
-                long effectiveLength;
-                long initialPosition;
-                byte prevB_2 = 0;
-                byte prevB_1 = 0;
-                byte b;
-
-                initialPosition = r.BaseStream.Position;
-                if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
-
-                while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
-                {
-                    b = r.ReadByte();
-                    if ((0xFF == prevB_1) && (0x00 == b)) b = r.ReadByte();
-
-                    w.Write(b);
-                    prevB_2 = prevB_1;
-                    prevB_1 = b;
-                }
-            }
-        }
-
-        // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
-        // => every "0xff" becomes "0xff 0x00"
-        private static void encodeUnsynchronizedStreamTo(Stream mFrom, BinaryWriter w)
-        {
-            // TODO PERF : profile using BinaryReader.ReadByte & BinaryWriter.Write(byte) vs. Stream.ReadByte & Stream.WriteByte
-            using (BinaryReader r = new BinaryReader(mFrom))
-            {
-                long initialPosition;
-                byte b;
-
-                initialPosition = r.BaseStream.Position;
-
-                while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
-                {
-                    b = r.ReadByte();
-                    w.Write(b);
-                    if (0xFF == b)
-                    {
-                        w.Write((byte)0);
-                    }
-                }
-            }
-        }
-
-        /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
-        ///
-        /// Default encoding should be "ISO-8859-1"
-        /// 
-        /// Warning : due to approximative implementations, some tags seem to be coded
-        /// with the default encoding of the OS they have been tagged on
-        /// 
-        ///  $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
-        ///  $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
-        ///   strings in the same frame SHALL have the same byteorder.
-        ///  Terminated with $00 00.
-        ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
-        ///  Terminated with $00 00.
-        ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
-        private static Encoding decodeID3v2CharEncoding(byte encoding)
-        {
-            if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1");   // aka ISO Latin-1
-            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM
-            else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
-            else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
-            else return Encoding.Default;
-        }
-
-        private static byte encodeID3v2CharEncoding(Encoding encoding)
-        {
-            if (encoding.Equals(Encoding.Unicode)) return 1;
-            else if (encoding.Equals(Encoding.BigEndianUnicode)) return 2;
-            else if (encoding.Equals(Encoding.UTF8)) return 3;
-            else return 0; // Default = ISO-8859-1 / ISO Latin-1
         }
 
         protected override int getDefaultTagOffset()
@@ -926,6 +760,8 @@ namespace ATL.AudioData.IO
 
         // TODO : Write ID3v2.4 footer
         // TODO : factorize generic frame writing code for writeTextFrame and writePictureFrame
+
+        // TODO : check date field format (YYYY, DDMM, timestamp)
 
         private bool writeExtHeaderAndFrames(ref TagData tag, BinaryWriter w)
         {
@@ -1143,6 +979,184 @@ namespace ATL.AudioData.IO
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 4)));
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        // ---------------------------------------------------------------------------
+        // ID3v2-SPECIFIC FEATURES
+        // ---------------------------------------------------------------------------
+
+        /// <summary>
+        /// Extract genre name from String according to ID3 conventions
+        /// </summary>
+        /// <param name="iGenre">String representation of genre according to various ID3v1/v2 conventions</param>
+        /// <returns>Genre name</returns>
+        private static String extractGenreFromID3v2Code(String iGenre)
+        {
+            if (null == iGenre) return "";
+
+            String result = Utils.StripZeroChars(iGenre.Trim());
+            int genreIndex = -1;
+
+            // Any number between parenthesis
+            Regex regex = new Regex(@"(?<=\()\d+?(?=\))");
+
+            Match match = regex.Match(result);
+            // First match is directly returned
+            if (match.Success)
+            {
+                genreIndex = Int32.Parse(match.Value);
+                // Delete genre index string from the tag value
+                result = result.Remove(0, result.LastIndexOf(')') + 1);
+            }
+
+            if (("" == result) && (genreIndex != -1) && (genreIndex < ID3v1.MusicGenre.Length)) result = ID3v1.MusicGenre[genreIndex];
+
+            return result;
+        }
+
+        // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data
+        private static byte readRatingInPopularityMeter(BinaryReader Source, Encoding encoding)
+        {
+            // Skip the e-mail, which is a null-terminated string
+            StreamUtils.ReadNullTerminatedString(Source, encoding);
+
+            // Returns the rating, contained in the following byte
+            return Source.ReadByte();
+        }
+
+        // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
+        // NB : This implementation only works with UTF-16 BOMs (i.e. UTF-8 and UTF-32 BOMs will not be detected)
+        private BOMProperties readBOM(ref Stream fs)
+        {
+            BOMProperties result = new BOMProperties();
+            result.Size = 1;
+            result.Encoding = Encoding.Unicode;
+
+            int b = fs.ReadByte();
+            bool first = true;
+            bool foundFE = false;
+            bool foundFF = false;
+
+            while (0 == b || 0xFF == b || 0xFE == b)
+            {
+                // All UTF-16 BOMs either start or end with 0xFE or 0xFF
+                // => Having them both read means that the entirety of the UTF-16 BOM has been read
+                foundFE = foundFE || (0xFE == b);
+                foundFF = foundFF || (0xFF == b);
+                if (foundFE & foundFF) break;
+
+                if (first && b != 0)
+                {
+                    // 0xFE first means data is coded in Big Endian
+                    if (0xFE == b) result.Encoding = Encoding.BigEndianUnicode;
+                    first = false;
+                }
+
+                b = fs.ReadByte();
+                result.Size++;
+            }
+
+            return result;
+        }
+
+        private static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
+        {
+            if (0 == picCode) return MetaDataIOFactory.PIC_TYPE.Generic;
+            else if (3 == picCode) return MetaDataIOFactory.PIC_TYPE.Front;
+            else if (4 == picCode) return MetaDataIOFactory.PIC_TYPE.Back;
+            else if (6 == picCode) return MetaDataIOFactory.PIC_TYPE.CD;
+            else return MetaDataIOFactory.PIC_TYPE.Unsupported;
+        }
+
+        private static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
+        {
+            if (MetaDataIOFactory.PIC_TYPE.Front.Equals(picCode)) return 3;
+            else if (MetaDataIOFactory.PIC_TYPE.Back.Equals(picCode)) return 4;
+            else if (MetaDataIOFactory.PIC_TYPE.CD.Equals(picCode)) return 6;
+            else return 0;
+        }
+
+
+        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
+        // => every "0xff 0x00" becomes "0xff"
+        private static void decodeUnsynchronizedStreamTo(Stream mTo, BinaryReader r, long length)
+        {
+            using (BinaryWriter w = new BinaryWriter(mTo))
+            {
+                long effectiveLength;
+                long initialPosition;
+                byte prevB_2 = 0;
+                byte prevB_1 = 0;
+                byte b;
+
+                initialPosition = r.BaseStream.Position;
+                if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+
+                while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    b = r.ReadByte();
+                    if ((0xFF == prevB_1) && (0x00 == b)) b = r.ReadByte();
+
+                    w.Write(b);
+                    prevB_2 = prevB_1;
+                    prevB_1 = b;
+                }
+            }
+        }
+
+        // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
+        // => every "0xff" becomes "0xff 0x00"
+        private static void encodeUnsynchronizedStreamTo(Stream mFrom, BinaryWriter w)
+        {
+            // TODO PERF : profile using BinaryReader.ReadByte & BinaryWriter.Write(byte) vs. Stream.ReadByte & Stream.WriteByte
+            using (BinaryReader r = new BinaryReader(mFrom))
+            {
+                long initialPosition;
+                byte b;
+
+                initialPosition = r.BaseStream.Position;
+
+                while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    b = r.ReadByte();
+                    w.Write(b);
+                    if (0xFF == b)
+                    {
+                        w.Write((byte)0);
+                    }
+                }
+            }
+        }
+
+        /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
+        ///
+        /// Default encoding should be "ISO-8859-1"
+        /// 
+        /// Warning : due to approximative implementations, some tags seem to be coded
+        /// with the default encoding of the OS they have been tagged on
+        /// 
+        ///  $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
+        ///  $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
+        ///   strings in the same frame SHALL have the same byteorder.
+        ///  Terminated with $00 00.
+        ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
+        ///  Terminated with $00 00.
+        ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+        private static Encoding decodeID3v2CharEncoding(byte encoding)
+        {
+            if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1");   // aka ISO Latin-1
+            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM
+            else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
+            else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
+            else return Encoding.Default;
+        }
+
+        private static byte encodeID3v2CharEncoding(Encoding encoding)
+        {
+            if (encoding.Equals(Encoding.Unicode)) return 1;
+            else if (encoding.Equals(Encoding.BigEndianUnicode)) return 2;
+            else if (encoding.Equals(Encoding.UTF8)) return 3;
+            else return 0; // Default = ISO-8859-1 / ISO Latin-1
         }
     }
 }

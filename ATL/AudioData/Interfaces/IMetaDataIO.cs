@@ -19,35 +19,35 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Title of the track
 		/// </summary>
-		String Title
+		string Title
 		{
 			get;
 		}
 		/// <summary>
 		/// Artist
 		/// </summary>
-		String Artist
+		string Artist
 		{
 			get;
 		}
         /// <summary>
         /// Composer
         /// </summary>
-        String Composer
+        string Composer
         {
             get;
         }
 		/// <summary>
 		/// Comments
 		/// </summary>
-		String Comment
+		string Comment
 		{
 			get;
 		}
 		/// <summary>
 		/// Genre
 		/// </summary>
-		String Genre
+		string Genre
 		{
 			get;
 		}
@@ -65,28 +65,64 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-
 		/// <summary>
 		/// Year
 		/// </summary>
-		String Year
+		string Year
 		{
 			get;
 		}
 		/// <summary>
 		/// Title of the album
 		/// </summary>
-		String Album
+		string Album
 		{
 			get;
 		}
         /// <summary>
-        /// Rating of the track
+        /// Rating of the track, from 1 to 5
         /// </summary>
         ushort Rating
         {
             get;
         }
+/*  TO BE COMMENTED OUT WHEN THE REST OF THE IO BRANCH IS STABLE
+        /// <summary>
+        /// Copyright
+        /// </summary>
+        string Copyright
+        {
+            get;
+        }
+        /// <summary>
+        /// Original artist
+        /// </summary>
+        string OriginalArtist
+        {
+            get;
+        }
+        /// <summary>
+        /// Original album
+        /// </summary>
+        string OriginalAlbum
+        {
+            get;
+        }
+        /// <summary>
+        /// General description
+        /// </summary>
+        string GeneralDescription
+        {
+            get;
+        }
+        /// <summary>
+        /// Publisher
+        /// </summary>
+        string Publisher
+        {
+            get;
+        }
+*/
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
