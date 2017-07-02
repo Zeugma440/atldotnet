@@ -195,7 +195,7 @@ namespace ATL.AudioData.IO
 
         static ID3v2()
         {
-            // Note on date fields identifiers
+            // Note on date field identifiers
             //
             // Original release date
             //   ID3v2.0 : TOR (year only)
@@ -208,8 +208,8 @@ namespace ATL.AudioData.IO
             //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
             //
             // Recording date <== de facto standard behind the "date" field on most taggers
-            //   ID3v2.0 : TYE (year), TDA (month & day DDMM)
-            //   ID3v2.3 : TYER (year), TDAT (month & day DDMM)
+            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM)
+            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM)
             //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
 
             // Mapping between standard fields and ID3v2.2 identifiers
