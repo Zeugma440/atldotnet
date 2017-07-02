@@ -282,21 +282,21 @@ namespace ATL.AudioData.IO
                 FSize = ID3V1_TAG_SIZE;
 				FVersion = GetTagVersion(tagData);
 				// Fill properties with tag data
-                FTitle = tagData.Title;
-                FArtist = tagData.Artist;
-                FAlbum = tagData.Album;
-                FReleaseYear = tagData.Year;
+                Title = tagData.Title;
+                Artist = tagData.Artist;
+                Album = tagData.Album;
+                Year = tagData.Year;
 				if (TAG_VERSION_1_0 == FVersion)
 				{
-                    FComment = tagData.Comment + Utils.StripZeroChars(FEncoding.GetString(tagData.EndComment,0,2));
+                    Comment = tagData.Comment + Utils.StripZeroChars(FEncoding.GetString(tagData.EndComment,0,2));
 				}
 				else
 				{
-                    FComment = tagData.Comment;
-					FTrack = tagData.EndComment[1];
+                    Comment = tagData.Comment;
+					Track = tagData.EndComment[1];
 				}
 				FGenreID = tagData.Genre;
-                FGenre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";
+                Genre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";
 
                 if (storeUnsupportedMetaFields)
                 {

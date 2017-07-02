@@ -149,7 +149,7 @@ namespace ATL
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
-                PictureTokens = new List<MetaDataIOFactory.PIC_TYPE>(theReader.Pictures);
+                PictureTokens = new List<MetaDataIOFactory.PIC_TYPE>(theReader.PictureTokens);
             }
         }
 	}

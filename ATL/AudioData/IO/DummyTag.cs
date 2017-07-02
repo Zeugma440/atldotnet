@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
         {
             get { return new List<MetaDataIOFactory.PIC_TYPE>(); }
         }

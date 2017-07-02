@@ -51,6 +51,7 @@ namespace ATL.AudioData
         public const byte TAG_FIELD_ORIGINAL_ARTIST        = 14;
         public const byte TAG_FIELD_ORIGINAL_ALBUM         = 15;
         public const byte TAG_FIELD_COPYRIGHT              = 16;
+        public const byte TAG_FIELD_ALBUM_ARTIST           = 17;
 
 
         public String GeneralDescription = "";
@@ -68,6 +69,7 @@ namespace ATL.AudioData
         public String DiscNumber = "";
         public String Rating = "";
         public String Copyright = "";
+        public String AlbumArtist = "";
         public IDictionary<MetaDataIOFactory.PIC_TYPE, Image> Pictures;
 
         protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picCode)
@@ -99,6 +101,23 @@ namespace ATL.AudioData
                 case TAG_FIELD_ORIGINAL_ARTIST:         OriginalArtist = value; break;
                 case TAG_FIELD_ORIGINAL_ALBUM:          OriginalAlbum = value; break;
                 case TAG_FIELD_COPYRIGHT:               Copyright = value; break;
+                case TAG_FIELD_ALBUM_ARTIST:            AlbumArtist = value; break;
+            }
+        }
+
+        public void IntegrateValues(TagData data)
+        {
+            // String values
+            IDictionary<byte, String> newData = data.ToMap();
+            foreach (byte key in newData.Keys)
+            {
+                IntegrateValue(key, newData[key]);
+            }
+
+            // Pictures
+            foreach (MetaDataIOFactory.PIC_TYPE picType in data.Pictures.Keys)
+            {
+                Pictures[picType] = data.Pictures[picType];
             }
         }
 
@@ -121,6 +140,7 @@ namespace ATL.AudioData
             addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, ref result);
             addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, ref result);
             addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, ref result);
+            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, ref result);
 
             return result;
         }
@@ -129,6 +149,5 @@ namespace ATL.AudioData
         {
             if ((data != null) && (data.Length > 0)) map[id] = data;
         }
-
     }
 }

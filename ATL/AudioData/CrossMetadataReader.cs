@@ -208,14 +208,14 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
-        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
         {
             get
             {
                 IList<MetaDataIOFactory.PIC_TYPE> pictures = new List<MetaDataIOFactory.PIC_TYPE>();
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    pictures = reader.Pictures;
+                    pictures = reader.PictureTokens;
                     if (pictures.Count > 0) break;
                 }
                 return pictures;

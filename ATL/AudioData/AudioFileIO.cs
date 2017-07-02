@@ -75,9 +75,9 @@ namespace ATL.AudioData
         /// <summary>
         /// Flag indicating the presence of embedded pictures
         /// </summary>
-        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
         {
-            get { return metaData.Pictures; }
+            get { return metaData.PictureTokens; }
         }
         /// <summary>
         /// Genre

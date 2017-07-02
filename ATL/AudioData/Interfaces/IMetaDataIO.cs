@@ -90,7 +90,7 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
-        IList<MetaDataIOFactory.PIC_TYPE> Pictures
+        IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
         {
             get;
         }
@@ -117,7 +117,15 @@ namespace ATL.AudioData
         /// <returns></returns>
         bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler);
 
-        // TODO Doc
+        /// <summary>
+        /// Add the specified information to current tag information :
+        ///   - Any existing field is overwritten
+        ///   - Any non-specified field is kept as is
+        /// </summary>
+        /// <param name="r">Reader to the resource to edit</param>
+        /// <param name="w">Writer to the resource to edit</param>
+        /// <param name="tag">Tag information to be added</param>
+        /// <returns></returns>
         long Write(BinaryReader r, BinaryWriter w, TagData tag);
     }
 }

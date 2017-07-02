@@ -146,7 +146,7 @@ namespace ATL.AudioData.IO
                 {
                     if (FieldName.Trim().ToUpper().Equals("COVER ART (FRONT)"))
                     {
-                        Pictures.Add(MetaDataIOFactory.PIC_TYPE.Front);
+                        PictureTokens.Add(MetaDataIOFactory.PIC_TYPE.Front);
                         if (FPictureStreamHandler != null)
                         {
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile,0);
@@ -191,21 +191,21 @@ namespace ATL.AudioData.IO
 				FSize = Tag.Size;
 				// Get information from fields
                 ReadFields(source, ref Tag);
-				FTitle = Tag.Field[0];
-				FArtist = Tag.Field[1];
-				FAlbum = Tag.Field[2];
-				FTrack = TrackUtils.ExtractTrackNumber(Tag.Field[3]);
-				FReleaseYear = Tag.Field[4];
-				FGenre = Tag.Field[5];
-				FComment = Tag.Field[6];
-				FCopyright = Tag.Field[7];
-                FComposer = Tag.Field[8];
-                FDisc = TrackUtils.ExtractTrackNumber(Tag.Field[12]);
+				Title = Tag.Field[0];
+				Artist = Tag.Field[1];
+				Album = Tag.Field[2];
+				Track = TrackUtils.ExtractTrackNumber(Tag.Field[3]);
+				Year = Tag.Field[4];
+				Genre = Tag.Field[5];
+				Comment = Tag.Field[6];
+				Copyright = Tag.Field[7];
+                Composer = Tag.Field[8];
+                Disc = TrackUtils.ExtractTrackNumber(Tag.Field[12]);
 
                 // Rating can be containted in two fields
-                FRatingStr = Utils.ProtectValue(Tag.Field[10]);
-                if (0 == FRatingStr.Trim().Length) Utils.ProtectValue(Tag.Field[11]);
-                FRating = TrackUtils.ExtractIntRating(FRatingStr);
+                string RatingStr = Utils.ProtectValue(Tag.Field[10]);
+                if (0 == RatingStr.Trim().Length) Utils.ProtectValue(Tag.Field[11]);
+                Rating = TrackUtils.ExtractIntRating(RatingStr);
 			}
 
 			return result;

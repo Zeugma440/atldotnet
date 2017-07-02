@@ -22,24 +22,9 @@ namespace ATL.AudioData
         protected long FOffset;
         protected int FSize;
 
-        // TODO ultimately replace all these fields by TagData ?
-        protected String FGeneralDesc;
-        protected String FTitle;
-        protected String FArtist;
-        protected String FOriginalArtist;
-        protected String FComposer;
-        protected String FAlbum;
-        protected String FOriginalAlbum;
-        protected ushort FTrack;
-        protected ushort FDisc;
-        protected ushort FRating;
-        protected String FRatingStr;
-        protected String FReleaseYear;
-        protected DateTime FReleaseDate;
-        protected String FGenre;
-        protected String FComment;
-        protected String FCopyright;
-        protected IList<MetaDataIOFactory.PIC_TYPE> FPictures;
+        protected TagData tagData;
+
+        protected IList<MetaDataIOFactory.PIC_TYPE> FPictureTokens;
 
         protected IDictionary<String, String> unsupportedTagFields;
         protected IDictionary<int, Image> unsupportedPictures;
@@ -80,96 +65,169 @@ namespace ATL.AudioData
         /// </summary>
         public String Title
         {
-            get { return this.FTitle; }
-            set { FTitle = value; }
+            get { return Utils.ProtectValue(tagData.Title); }
+            set { tagData.Title = value; }
         }
         /// <summary>
         /// Artist (Performer)
         /// </summary>
         public String Artist
         {
-            get { return this.FArtist; }
-            set { FArtist = value; }
+            get
+            {
+                string result = Utils.ProtectValue(tagData.Artist);
+                if (0 == result.Length) result = AlbumArtist;
+                return result;
+            }
+            set { tagData.Artist = value; }
+        }
+        /// <summary>
+        /// Album Artist
+        /// </summary>
+        public String AlbumArtist
+        {
+            get { return Utils.ProtectValue(tagData.AlbumArtist); }
+            set { tagData.AlbumArtist = value; }
         }
         /// <summary>
         /// Composer
         /// </summary>
         public String Composer
         {
-            get { return this.FComposer; }
-            set { FComposer = value; }
+            get { return Utils.ProtectValue(tagData.Composer); }
+            set { tagData.Composer = value; }
         }
         /// <summary>
         /// Album title
         /// </summary>
         public String Album
         {
-            get { return this.FAlbum; }
-            set { FAlbum = value; }
+            get { return Utils.ProtectValue(tagData.Album); }
+            set { tagData.Album = value; }
         }
         /// <summary>
         /// Track number
         /// </summary>
         public ushort Track
         {
-            get { return this.FTrack; }
-            set { FTrack = value; }
+            get { return TrackUtils.ExtractTrackNumber(tagData.TrackNumber); }
+            set { tagData.TrackNumber = value.ToString(); }
         }
         /// <summary>
         /// Disc number
         /// </summary>
         public ushort Disc
         {
-            get { return (ushort)this.FDisc; }
-            set { FDisc = ((byte)value); }
+            get { return TrackUtils.ExtractTrackNumber(tagData.DiscNumber); }
+            set { tagData.DiscNumber = value.ToString(); }
         }
         /// <summary>
         /// Rating, from 0 to 5
         /// </summary>
         public ushort Rating
         {
-            get { return this.FRating; }
-            set { FRating = value; }
+            get { return TrackUtils.ExtractIntRating(tagData.Rating); }
+            set { tagData.Rating = value.ToString(); }
         }
         /// <summary>
         /// Release year
         /// </summary>
         public String Year
         {
-            get { return this.FReleaseYear; }
-            set { FReleaseYear = value; }
+            get
+            {
+                String result;
+                result = TrackUtils.ExtractStrYear(tagData.ReleaseYear);
+                if (0 == result.Length) result = Date.Year.ToString();
+                return result;
+            }
+            set { tagData.ReleaseYear = value; }
+        }
+        /// <summary>
+        /// Release date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime Date
+        {
+            get
+            {
+                DateTime result;
+                DateTime.TryParse(tagData.ReleaseDate, out result); // TODO - TEST EXTENSIVELY
+                return result;
+            }
+            set { tagData.ReleaseDate = value.ToShortDateString(); }
         }
         /// <summary>
         /// Genre name
         /// </summary>
         public String Genre
         {
-            get { return this.FGenre; }
-            set { FGenre = value; }
+            get { return Utils.ProtectValue(tagData.Genre); }
+            set { tagData.Genre = value; }
         }
         /// <summary>
         /// Commment
         /// </summary>
         public String Comment
         {
-            get { return this.FComment; }
-            set { FComment = value; }
+            get { return Utils.ProtectValue(tagData.Comment); }
+            set { tagData.Comment = value; }
         }
         /// <summary>
         /// Copyright
         /// </summary>
         public String Copyright
         {
-            get { return this.FCopyright; }
-            set { FCopyright = value; }
+            get { return Utils.ProtectValue(tagData.Copyright); }
+            set { tagData.Copyright = value; }
         }
+        /// <summary>
+        /// Original artist
+        /// </summary>
+        public String OriginalArtist
+        {
+            get { return Utils.ProtectValue(tagData.OriginalArtist); }
+            set { tagData.OriginalArtist = value; }
+        }
+        /// <summary>
+        /// Original album
+        /// </summary>
+        public String OriginalAlbum
+        {
+            get { return Utils.ProtectValue(tagData.OriginalAlbum); }
+            set { tagData.OriginalAlbum = value; }
+        }
+        /// <summary>
+        /// General Description
+        /// </summary>
+        public String GeneralDescription
+        {
+            get { return Utils.ProtectValue(tagData.GeneralDescription); }
+            set { tagData.GeneralDescription = value; }
+        }
+
         /// <summary>
         /// Each positioned flag indicates the presence of an embedded picture
         /// </summary>
-        public IList<MetaDataIOFactory.PIC_TYPE> Pictures
+        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
         {
-            get { return this.FPictures; }
+            get { return this.FPictureTokens; }
         }
+
+/*
+        public IList<IDictionary<MetaDataIOFactory.PIC_TYPE,Image>> EmbeddedPictures
+        {
+            get
+            {
+                Read()
+            }
+        }
+*/
+
+        // TODO 
+        //   getPictures
+        //   access to unsupported pictures
+        //   access to unsupported fields
+        //   review storage of unsupported data
 
         public virtual void ResetData()
         {
@@ -178,45 +236,8 @@ namespace ATL.AudioData
             FSize = 0;
             FOffset = 0;
 
-            FGeneralDesc = "";
-            FTitle = "";
-            FArtist = "";
-            FOriginalArtist = "";
-            FComposer = "";
-            FAlbum = "";
-            FOriginalAlbum = "";
-            FTrack = 0;
-            FDisc = 0;
-            FRating = 0;
-            FReleaseYear = "";
-            FReleaseDate = new DateTime();
-            FGenre = "";
-            FComment = "";
-            FCopyright = "";
-            FPictures = new List<MetaDataIOFactory.PIC_TYPE>();
-        }
-
-        protected void fromTagData(TagData info)
-        {
-            FAlbum = Utils.ProtectValue(info.Album);
-            FOriginalAlbum = Utils.ProtectValue(info.OriginalAlbum);
-            if (0 == FAlbum.Length) FAlbum = FOriginalAlbum;
-            FArtist = Utils.ProtectValue(info.Artist);
-            FOriginalArtist = Utils.ProtectValue(info.OriginalArtist);
-            if (0 == FArtist.Length) FArtist = FOriginalArtist;
-            FComment = info.Comment;
-            FComposer = info.Composer;
-            FReleaseYear = TrackUtils.ExtractStrYear(info.ReleaseYear);
-            DateTime.TryParse(info.ReleaseDate, out FReleaseDate); // TODO - TEST EXTENSIVELY
-            if (0 == FReleaseYear.Length) FReleaseYear = TrackUtils.ExtractStrYear(info.ReleaseDate);
-            FDisc = TrackUtils.ExtractTrackNumber(info.DiscNumber);
-            FTrack = TrackUtils.ExtractTrackNumber(info.TrackNumber);
-            FGenre = info.Genre;
-            FRating = TrackUtils.ExtractIntRating(info.Rating);
-            FTitle = Utils.ProtectValue(info.Title);
-            FGeneralDesc = Utils.ProtectValue(info.GeneralDescription);
-            FCopyright = Utils.ProtectValue(info.Copyright);
-            if (0 == FTitle.Length) FTitle = FGeneralDesc;
+            tagData = new TagData();
+            FPictureTokens = new List<MetaDataIOFactory.PIC_TYPE>();
         }
 
         abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields);
@@ -235,59 +256,67 @@ namespace ATL.AudioData
             long newTagSize = -1;
 
             // Read all the fields in the existing tag (including unsupported fields)
-            Read(r, null, true); // TODO use output wisely
+            Read(r, null, true);
 
-            // TODO make default UTF-8 encoding customizable
+            TagData dataToWrite;
             if (!FExists) // If tag not found (e.g. empty file)
             {
-                FEncoding = Encoding.UTF8;
+                FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
                 unsupportedTagFields = new Dictionary<string, string>();
+                dataToWrite = tag; // Write new tag information
+            }
+            else
+            {
+                dataToWrite = tagData;
+                dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
             }
 
             // Write new tag to a MemoryStream
             using (MemoryStream s = new MemoryStream(Size))
             using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
             {
-                Write(tag, msw);  // TODO get a better use of the return value
-
-                newTagSize = s.Length;
-
-                // -- Adjust tag slot to new size in file --
-                long audioDataOffset;
-                long tagOffset;
-
-                if (FExists) // An existing tag has been reprocessed
+                if (Write(dataToWrite, msw))
                 {
-                    tagOffset = FOffset;
-                    audioDataOffset = FOffset + FSize;
-                }
-                else // A brand new tag has been added to the file
-                {
-                    switch (getDefaultTagOffset())
+                    newTagSize = s.Length;
+
+                    // -- Adjust tag slot to new size in file --
+                    long audioDataOffset;
+                    long tagOffset;
+
+                    if (FExists) // An existing tag has been reprocessed
                     {
-                        case TO_EOF: tagOffset = r.BaseStream.Length; break;
-                        case TO_BOF: tagOffset = 0; break;
-                        default: tagOffset = -1; break;
+                        tagOffset = FOffset;
+                        audioDataOffset = FOffset + FSize;
                     }
-                    audioDataOffset = tagOffset;
-                }
+                    else // A brand new tag has been added to the file
+                    {
+                        switch (getDefaultTagOffset())
+                        {
+                            case TO_EOF: tagOffset = r.BaseStream.Length; break;
+                            case TO_BOF: tagOffset = 0; break;
+                            default: tagOffset = -1; break;
+                        }
+                        audioDataOffset = tagOffset;
+                    }
 
-                // Need to build a larger file
-                if (newTagSize > FSize)
-                {
-                    StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - FSize));
-                } else if (newTagSize < FSize) // Need to reduce file size
-                {
-                    StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
-                }
+                    // Need to build a larger file
+                    if (newTagSize > FSize)
+                    {
+                        StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - FSize));
+                    }
+                    else if (newTagSize < FSize) // Need to reduce file size
+                    {
+                        StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
+                    }
 
-                // Copy tag contents to the new slot
-                r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
-                s.Seek(0, SeekOrigin.Begin);
-                StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+                    // Copy tag contents to the new slot
+                    r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
+                    s.Seek(0, SeekOrigin.Begin);
+                    StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+
+                    tagData = dataToWrite;
+                }
             }
-
-            fromTagData(tag);
 
             return newTagSize;
         }

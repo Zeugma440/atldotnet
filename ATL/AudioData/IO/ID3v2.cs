@@ -201,6 +201,7 @@ namespace ATL.AudioData.IO
             Frames_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
             Frames_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
             Frames_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
+            Frames_v22.Add("TP2", TagData.TAG_FIELD_ALBUM_ARTIST);  // De facto standard, regardless of spec
             Frames_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
             Frames_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
             Frames_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
@@ -218,6 +219,7 @@ namespace ATL.AudioData.IO
             Frames_v23_24.Add("TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
             Frames_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
             Frames_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
+            Frames_v23_24.Add("TPE2", TagData.TAG_FIELD_ALBUM_ARTIST); // De facto standard, regardless of spec
             Frames_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
             Frames_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
             Frames_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
@@ -456,7 +458,7 @@ namespace ATL.AudioData.IO
                         if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
                         String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
                         MetaDataIOFactory.PIC_TYPE picCode = DecodeID3v2PictureType(SourceFile.ReadByte());
-                        FPictures.Add(picCode);
+                        FPictureTokens.Add(picCode);
 
                         // However, description can be coded with another convention
                         if (1 == encodingCode)
@@ -569,7 +571,7 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            FPictures.Add(picType);
+                            FPictureTokens.Add(picType);
                         }
 
                         if (FPictureStreamHandler != null)
@@ -638,7 +640,7 @@ namespace ATL.AudioData.IO
                     if (FVersion > TAG_VERSION_2_2) ReadFrames_v23_24(source, ref FTagHeader, offset);
                     else ReadFrames_v22(source, ref FTagHeader, offset);
 
-                    TagData tagData = new TagData();
+                    tagData = new TagData();
                     foreach (byte b in FTagHeader.Frames.Keys)
                     {
                         tagData.IntegrateValue(b, FTagHeader.Frames[b]);
@@ -647,7 +649,6 @@ namespace ATL.AudioData.IO
                             tagData.IntegrateValue(b, extractGenreFromID3v2Code(FTagHeader.Frames[b]));
                         }
                     }
-                    this.fromTagData(tagData);
                 }
             }
 
@@ -840,6 +841,7 @@ namespace ATL.AudioData.IO
 
         // Writes tag info using ID3v2.4 conventions
         // TODO much later : support ID3v2.3- conventions
+        // TODO clarify calling convention as of unsupported tag information fields (kept as is ?)
 
         /// <summary>
         /// Writes the given tag into the given Writer using ID3v2.4 conventions
