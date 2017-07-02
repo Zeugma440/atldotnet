@@ -35,7 +35,7 @@ namespace ATL.test.IO.MetaData
             theTag.Album = "Album";
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
-            theTag.ReleaseYear = "2008/01/01";
+            theTag.RecordingYear = "2008/01/01";
             theTag.Genre = "Merengue";
             theTag.TrackNumber = "01/01";
 

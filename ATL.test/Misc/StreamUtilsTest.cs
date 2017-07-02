@@ -9,7 +9,7 @@ namespace ATL.test
     public class StreamUtilsTest
     {
         [TestMethod]
-        public void TestShortenStream()
+        public void StreamUtils_ShortenStream()
         {
             IList<byte> list = new List<byte>();
             for (byte i = 0; i < 13; i++) list.Add(i);
@@ -27,7 +27,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestLengthenStream()
+        public void StreamUtils_LengthenStream()
         {
             IList<byte> list = new List<byte>();
             for (byte i = 0; i < 13; i++) list.Add(i);
@@ -45,7 +45,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestEncodeDecodeSafeSynchInt()
+        public void StreamUtils_EncodeDecodeSafeSynchInt()
         {
             Random rnd = new Random(DateTime.Now.Millisecond);
             int ticks = rnd.Next(0, (int)(Math.Floor(Math.Pow(2, 28)/2)-1));

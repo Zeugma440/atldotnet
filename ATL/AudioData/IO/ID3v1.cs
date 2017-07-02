@@ -321,7 +321,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.BuildStrictLengthString(tag.Artist, 30, '\0').ToCharArray());
             w.Write(Utils.BuildStrictLengthString(tag.Album, 30, '\0').ToCharArray());
             // ID3v1 standard requires the year
-            w.Write(Utils.BuildStrictLengthString( TrackUtils.ExtractStrYear(tag.ReleaseYear), 4, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString( TrackUtils.ExtractStrYear(tag.RecordingYear), 4, '\0').ToCharArray());
             w.Write(Utils.BuildStrictLengthString(tag.Comment, 28, '\0').ToCharArray());
             
             // ID3v1.1 standard

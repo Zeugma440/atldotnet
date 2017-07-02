@@ -161,6 +161,11 @@ namespace Commons
             return Regex.Replace(iStr, @"\0", "");
         }
 
+        public static String StripEndingZeroChars(String iStr)
+        {
+            return Regex.Replace(iStr, @"\0+\Z", "");
+        }
+
         public static bool IsOccidentalChar(char c)
         {
             return (

@@ -195,6 +195,23 @@ namespace ATL.AudioData.IO
 
         static ID3v2()
         {
+            // Note on date fields identifiers
+            //
+            // Original release date
+            //   ID3v2.0 : TOR (year only)
+            //   ID3v2.3 : TORY (year only)
+            //   ID3v2.4 : TDOR (timestamp according to spec; actual content may vary)
+            //
+            // Release date
+            //   ID3v2.0 : no standard
+            //   ID3v2.3 : no standard
+            //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
+            //
+            // Recording date <== de facto standard behind the "date" field on most taggers
+            //   ID3v2.0 : TYE (year), TDA (month & day DDMM)
+            //   ID3v2.3 : TYER (year), TDAT (month & day DDMM)
+            //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
+
             // Mapping between standard fields and ID3v2.2 identifiers
             Frames_v22 = new Dictionary<string, byte>();
 
@@ -206,12 +223,15 @@ namespace ATL.AudioData.IO
             Frames_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
             Frames_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
             Frames_v22.Add("TRK", TagData.TAG_FIELD_TRACK_NUMBER);
-            Frames_v22.Add("TYE", TagData.TAG_FIELD_RELEASE_YEAR);
-            Frames_v22.Add("TDA", TagData.TAG_FIELD_RELEASE_DATE);
+            Frames_v22.Add("TPA", TagData.TAG_FIELD_DISC_NUMBER);
+            Frames_v22.Add("TYE", TagData.TAG_FIELD_RECORDING_YEAR);
+            Frames_v22.Add("TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH);
             Frames_v22.Add("COM", TagData.TAG_FIELD_COMMENT);
             Frames_v22.Add("TCM", TagData.TAG_FIELD_COMPOSER);
             Frames_v22.Add("POP", TagData.TAG_FIELD_RATING);
             Frames_v22.Add("TCO", TagData.TAG_FIELD_GENRE);
+            Frames_v22.Add("TCR", TagData.TAG_FIELD_COPYRIGHT);
+            Frames_v22.Add("TPB", TagData.TAG_FIELD_PUBLISHER);
 
             // Mapping between standard fields and ID3v2.3+ identifiers
             Frames_v23_24 = new Dictionary<string, byte>();
@@ -224,12 +244,16 @@ namespace ATL.AudioData.IO
             Frames_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
             Frames_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
             Frames_v23_24.Add("TRCK", TagData.TAG_FIELD_TRACK_NUMBER);
-            Frames_v23_24.Add("TYER", TagData.TAG_FIELD_RELEASE_YEAR);
-            Frames_v23_24.Add("TDAT", TagData.TAG_FIELD_RELEASE_DATE);
+            Frames_v23_24.Add("TPOS", TagData.TAG_FIELD_DISC_NUMBER);
+            Frames_v23_24.Add("TDRC", TagData.TAG_FIELD_RECORDING_DATE);
+            Frames_v23_24.Add("TYER", TagData.TAG_FIELD_RECORDING_YEAR);
+            Frames_v23_24.Add("TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH);
             Frames_v23_24.Add("COMM", TagData.TAG_FIELD_COMMENT);
             Frames_v23_24.Add("TCOM", TagData.TAG_FIELD_COMPOSER);
             Frames_v23_24.Add("POPM", TagData.TAG_FIELD_RATING);
             Frames_v23_24.Add("TCON", TagData.TAG_FIELD_GENRE);
+            Frames_v23_24.Add("TCOP", TagData.TAG_FIELD_COPYRIGHT);
+            Frames_v23_24.Add("TPUB", TagData.TAG_FIELD_PUBLISHER);
         }
 
         public ID3v2()
@@ -444,7 +468,7 @@ namespace ATL.AudioData.IO
                         // Read frame data and set tag item if frame supported
                         bData = SourceFile.ReadBytes((int)DataSize);
 
-                        strData = FEncoding.GetString(bData);
+                        strData = Utils.StripEndingZeroChars( FEncoding.GetString(bData) );
                     }
 
                     if (32768 != (Frame.Flags & 32768)) SetTagItem(new String(Frame.ID), strData, ref Tag); // Wipe out \0's to avoid string cuts
@@ -494,7 +518,7 @@ namespace ATL.AudioData.IO
         {
             Stream fs = SourceFile.BaseStream;
             FrameHeader_22 Frame = new FrameHeader_22();
-            char[] Data = new char[500];
+            string data;
             long DataPosition;
             int FrameSize;
             int DataSize;
@@ -505,8 +529,6 @@ namespace ATL.AudioData.IO
             fs.Seek(offset+10, SeekOrigin.Begin);
             while ((fs.Position - offset < GetTagSize(Tag)) && (fs.Position < fs.Length))
             {
-                Array.Clear(Data, 0, Data.Length);
-
                 // Read frame header and check frame ID
                 // ID3v2.2 : 3 characters
                 Frame.ID = SourceFile.ReadChars(3);
@@ -525,13 +547,13 @@ namespace ATL.AudioData.IO
                     // Specific to Popularitymeter : Rating data has to be extracted from the POP block
                     if (StreamUtils.StringEqualsArr("POP", Frame.ID))
                     {
-                        Data = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString().ToCharArray(); // According to ID3v2.0 spec (see §3.2)
+                        data = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString(); // According to ID3v2.0 spec (see §3.2)
                     }
                     else
                     {
-                        Data = SourceFile.ReadChars(DataSize);
+                        data = Utils.StripEndingZeroChars( SourceFile.ReadChars(DataSize).ToString() );
                     }
-                    SetTagItem(new String(Frame.ID), new String(Data), ref Tag);
+                    SetTagItem(new String(Frame.ID), data, ref Tag);
                     fs.Seek(DataPosition + FrameSize, SeekOrigin.Begin);
                 }
                 else if (DataSize > 0) // Size > 500 => Probably an embedded picture
@@ -991,6 +1013,7 @@ namespace ATL.AudioData.IO
             long frameSizePos;
             long finalFramePos;
             bool writeFieldValue = true;
+            bool writeFieldEncoding = true;
 
             if (useID3v2ExtendedHeaderRestrictions)
             {
@@ -1019,6 +1042,8 @@ namespace ATL.AudioData.IO
                 w.Write("eng".ToCharArray()); // TODO : handle this field dynamically
                                               // Short content description
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
+
+                writeFieldEncoding = false;
             }
 
             // Rating frame specifics
@@ -1034,7 +1059,11 @@ namespace ATL.AudioData.IO
                 writeFieldValue = false;
             }
 
-            if (writeFieldValue)  w.Write(text.ToCharArray());
+            if (writeFieldValue)
+            {
+                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(FEncoding)); // Encoding according to ID3v2 specs
+                w.Write(text.ToCharArray());
+            }
 
             // Go back to frame size location to write its actual size 
             finalFramePos = w.BaseStream.Position;

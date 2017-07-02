@@ -33,25 +33,23 @@ namespace ATL.test.IO.MetaData
             File.Copy(location, testFileLocation, true);
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
+
             // Check that it is indeed tag-free
-            if (theFile.ReadFromFile())
-            {
-                Assert.IsNotNull(theFile.ID3v2);
-                Assert.IsFalse(theFile.ID3v2.Exists);
-            }
-            else
-            {
-                Assert.Fail();
-            }
+            Assert.IsTrue(theFile.ReadFromFile());
+            
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
 
             // Construct a new tag
             TagData theTag = new TagData();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
             theTag.Artist = "Artist";
+            theTag.AlbumArtist = "Mike";
             theTag.Comment = "This is a test";
-            theTag.ReleaseYear = "2008";
-            theTag.ReleaseDate = "2008/01/01";
+            theTag.RecordingYear = "2008";
+            theTag.RecordingDate = "2008/01/01";
             theTag.Genre = "Merengue";
             theTag.TrackNumber = "01/01";
             theTag.DiscNumber = "2";
@@ -59,54 +57,43 @@ namespace ATL.test.IO.MetaData
             theTag.Copyright = "父";
             theTag.OriginalArtist = "Bob";
             theTag.OriginalAlbum = "Hey Hey";
+            theTag.GeneralDescription = "That's right";
+            theTag.Publisher = "Test Media Inc.";
+
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            if (theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2))
-            {
-                if (theFile.ReadFromFile())
-                {
-                    Assert.IsNotNull(theFile.ID3v2);
-                    Assert.IsTrue(theFile.ID3v2.Exists);
-                    Assert.AreEqual("Test !!", theFile.ID3v2.Title);
-                    Assert.AreEqual("Album", theFile.ID3v2.Album);
-                    Assert.AreEqual("Artist", theFile.ID3v2.Artist);
-                    Assert.AreEqual("This is a test", theFile.ID3v2.Comment);
-                    Assert.AreEqual("2008", theFile.ID3v2.Year);
-                    Assert.AreEqual("Merengue", theFile.ID3v2.Genre);
-                    Assert.AreEqual(1, theFile.ID3v2.Track);
-                    Assert.AreEqual(2, theFile.ID3v2.Disc);
-                    Assert.AreEqual("Me", theFile.ID3v2.Composer);
-                    Assert.AreEqual("父", theFile.ID3v2.Copyright);
-                    Assert.AreEqual("Bob", theFile.ID3v2.OriginalArtist);
-                    Assert.AreEqual("Hey Hey", theFile.ID3v2.OriginalAlbum);
-                }
-                else
-                {
-                    Assert.Fail();
-                }
-            }
-            else
-            {
-                Assert.Fail();
-            }
+            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+       
+            Assert.IsTrue(theFile.ReadFromFile());
+               
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual("Test !!", theFile.ID3v2.Title);
+            Assert.AreEqual("Album", theFile.ID3v2.Album);
+            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
+            Assert.AreEqual("Mike", theFile.ID3v2.AlbumArtist);
+            Assert.AreEqual("This is a test", theFile.ID3v2.Comment);
+            Assert.AreEqual("2008", theFile.ID3v2.Year);
+            Assert.AreEqual("Merengue", theFile.ID3v2.Genre);
+            Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual("Me", theFile.ID3v2.Composer);
+            Assert.AreEqual("父", theFile.ID3v2.Copyright);
+            Assert.AreEqual("Bob", theFile.ID3v2.OriginalArtist);
+            Assert.AreEqual("Hey Hey", theFile.ID3v2.OriginalAlbum);
+            Assert.AreEqual("That's right", theFile.ID3v2.GeneralDescription);
+            Assert.AreEqual("Test Media Inc.", theFile.ID3v2.Publisher);
+
 
             // Remove the tag and check that it has been indeed removed
-            if (theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V2))
-            {
-                if (theFile.ReadFromFile())
-                {
-                    Assert.IsNotNull(theFile.ID3v2);
-                    Assert.IsFalse(theFile.ID3v2.Exists);
-                }
-                else
-                {
-                    Assert.Fail();
-                }
-            }
-            else
-            {
-                Assert.Fail();
-            }
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+                
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);
@@ -124,7 +111,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        private void TagIO_RW_ID3v2_Existing()
+        public void TagIO_RW_ID3v2_Existing()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = "../../Resources/id3v2.3_UTF16.mp3";
@@ -135,24 +122,20 @@ namespace ATL.test.IO.MetaData
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
             // Construct a new tag
-            if (theFile.ReadFromFile())
-            {
-                Assert.IsNotNull(theFile.ID3v2);
-                Assert.IsTrue(theFile.ID3v2.Exists);
-                Assert.AreEqual("Title", theFile.ID3v2.Title);
-                Assert.AreEqual("父", theFile.ID3v2.Album);
-                Assert.AreEqual("Artist", theFile.ID3v2.Artist);
-                Assert.AreEqual("Test!", theFile.ID3v2.Comment);
-                Assert.AreEqual("2017", theFile.ID3v2.Year);
-                Assert.AreEqual("Test", theFile.ID3v2.Genre);
-                Assert.AreEqual(22, theFile.ID3v2.Track);
-                Assert.AreEqual("Me", theFile.ID3v2.Composer);
-                Assert.AreEqual(2, theFile.ID3v2.Disc);
-            }
-            else
-            {
-                Assert.Fail();
-            }
+            Assert.IsTrue(theFile.ReadFromFile());
+            
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+            Assert.AreEqual("Title", theFile.ID3v2.Title);
+            Assert.AreEqual("父", theFile.ID3v2.Album);
+            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
+            Assert.AreEqual("Test!", theFile.ID3v2.Comment);
+            Assert.AreEqual("2017", theFile.ID3v2.Year);
+            Assert.AreEqual("Test", theFile.ID3v2.Genre);
+            Assert.AreEqual(22, theFile.ID3v2.Track);
+            Assert.AreEqual("Me", theFile.ID3v2.Composer);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);
@@ -170,7 +153,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        private void TagIO_R_ID3v23_UTF16()
+        public void TagIO_R_ID3v23_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = "../../Resources/id3v2.3_UTF16.mp3";
@@ -192,7 +175,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
-            // Unsupported fields
+            // Unsupported field (MOOD)
 
 
             // Supported picture
@@ -203,7 +186,44 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(picture.Height, 150);
             Assert.AreEqual(picture.Width, 150);
 */
-            // Unsupported picture
+            // Unsupported picture (Conductor)
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v24_UTF8()
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String location = "../../Resources/id3v2.4_UTF8.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Supported fields
+            Assert.AreEqual("Title", theFile.ID3v2.Title);
+            Assert.AreEqual("父", theFile.ID3v2.Album);
+            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
+            Assert.AreEqual("Test!", theFile.ID3v2.Comment);
+            Assert.AreEqual("2017", theFile.ID3v2.Year);
+            Assert.AreEqual("Test", theFile.ID3v2.Genre);
+            Assert.AreEqual(22, theFile.ID3v2.Track);
+            Assert.AreEqual("Me", theFile.ID3v2.Composer);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+
+            // Unsupported field (MOOD)
+
+
+            // Supported picture
+            /*
+                        Image picture = theFile.ID3v2.
+                        Assert.IsNotNull(picture);
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 150);
+                        Assert.AreEqual(picture.Width, 150);
+            */
+            // Unsupported picture (Conductor)
         }
 
     }
