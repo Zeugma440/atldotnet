@@ -10,8 +10,13 @@ namespace ATL.test.IO.MetaData
     public class ID3v2
     {
         /* TODO
+         * 
+         * conservation of unmodified tag items
+         * tag removal
+         * 
          * Test reading of unsupported tag field
          * Test conservation of unsupported tag field
+         * 
          * Test conservation of unsupported image type
          * Test conservation of unedited field
          * Implement an extended header compliance option and test limit cases

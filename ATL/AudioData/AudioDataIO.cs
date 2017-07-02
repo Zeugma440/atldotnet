@@ -121,6 +121,7 @@ namespace ATL.AudioData
                 {
                     FFileSize = fs.Length;
 
+                    LogDelegator.GetLocateDelegate()(FFileName);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1");
