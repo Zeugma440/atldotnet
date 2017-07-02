@@ -894,7 +894,6 @@ namespace ATL.AudioData.IO
             {
                 if (tagSize/1024 > FTagHeader.TagSizeRestrictionKB)
                 {
-                    // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize/1024 + "KB) according to ID3v2 restrictions (" + FTagHeader.TagSizeRestrictionKB + ") !");
                 }
             }
@@ -980,7 +979,6 @@ namespace ATL.AudioData.IO
             {
                 if (nbFrames > FTagHeader.TagFramesRestriction)
                 {
-                    // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames ("+ nbFrames +") according to ID3v2 restrictions ("+ FTagHeader.TagFramesRestriction +") !");
                 }
             }
@@ -998,7 +996,6 @@ namespace ATL.AudioData.IO
             {
                 if (text.Length > FTagHeader.TextFieldSizeRestriction)
                 {
-                    // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + FTagHeader.TextFieldSizeRestriction + " characters");
 
                     text = text.Substring(0, FTagHeader.TextFieldSizeRestriction);
@@ -1070,7 +1067,6 @@ namespace ATL.AudioData.IO
                 {
                     if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
                     {
-                        // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions; switching to JPEG");
 
                         mimeType = "image/jpeg";
@@ -1083,21 +1079,18 @@ namespace ATL.AudioData.IO
                 {
                     if ( (256 == FTagHeader.PictureSizeRestriction) && ((picture.Height > 256) || (picture.Width > 256))) // 256x256 or less
                     {
-                        // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ picture.Width + "x" + picture.Height +") does not respect ID3v2 restrictions (256x256 or less); resizing");
 
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
                     }
                     else if ((64 == FTagHeader.PictureSizeRestriction) && ((picture.Height > 64) || (picture.Width > 64))) // 64x64 or less
                     {
-                        // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (64x64 or less); resizing");
 
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
                     }
                     else if ((63 == FTagHeader.PictureSizeRestriction) && ((picture.Height != 64) && (picture.Width != 64))) // exactly 64x64
                     {
-                        // TODO : Tweak LogDelegator so that restitution can display name of current file (unreachable from here)
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (exactly 64x64); resizing");
 
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), false);

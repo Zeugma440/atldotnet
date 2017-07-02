@@ -111,6 +111,8 @@ namespace ATL.AudioData
         public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
             bool result = false;
+            LogDelegator.GetLocateDelegate()(FFileName);
+
             resetData();
 
             try
@@ -121,7 +123,6 @@ namespace ATL.AudioData
                 {
                     FFileSize = fs.Length;
 
-                    LogDelegator.GetLocateDelegate()(FFileName);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1");
@@ -151,6 +152,7 @@ namespace ATL.AudioData
         {
             bool result = true;
             IMetaDataIO theMetaIO = null;
+            LogDelegator.GetLocateDelegate()(FFileName);
 
             if (IsMetaSupported(tagType))
             {
@@ -211,6 +213,7 @@ namespace ATL.AudioData
         public bool RemoveTagFromFile(int tagType)
         {
             bool result = false;
+            LogDelegator.GetLocateDelegate()(FFileName);
 
             try
             {
