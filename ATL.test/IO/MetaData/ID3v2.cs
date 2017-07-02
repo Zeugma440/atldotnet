@@ -22,7 +22,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free MP3
             String location = "../../Resources/empty.mp3";
-            String testFileLocation = location.Replace("empty", "testID3v2"+ System.DateTime.Now.ToShortTimeString().Replace(":", "."));
+            String testFileLocation = location.Replace("empty", "tmp/testID3v2"+ System.DateTime.Now.ToShortTimeString().Replace(":", "."));
 
             // Create a working copy
             File.Copy(location, testFileLocation, true);
@@ -123,7 +123,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = "../../Resources/id3v2.3_UTF16.mp3";
-            String testFileLocation = location.Replace("id3v2.3_UTF16", "testID3v2" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
+            String testFileLocation = location.Replace("id3v2.3_UTF16", "tmp/testID3v2" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
 
             // Create a working copy
             File.Copy(location, testFileLocation, true);

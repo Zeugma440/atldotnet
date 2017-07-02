@@ -13,7 +13,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free MP3
             String location = "../../Resources/empty.mp3";
-            String testFileLocation = location.Replace("empty", "testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
+            String testFileLocation = location.Replace("empty", "tmp/testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
 
             // Create a working copy
             File.Copy(location, testFileLocation, true);
@@ -83,7 +83,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag
             String location = "../../Resources/id3v1.mp3";
-            String testFileLocation = location.Replace("id3v1", "testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":","."));
+            String testFileLocation = location.Replace("id3v1", "tmp/testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":","."));
 
             // Create a working copy
             File.Copy(location, testFileLocation, true);
@@ -95,29 +95,19 @@ namespace ATL.test.IO.MetaData
             theTag.TrackNumber = "002/04";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            if (theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V1))
-            {
-                if (theFile.ReadFromFile())
-                {
-                    Assert.IsNotNull(theFile.ID3v1);
-                    Assert.IsTrue(theFile.ID3v1.Exists);
-                    Assert.AreEqual("Title", theFile.ID3v1.Title);
-                    Assert.AreEqual("?", theFile.ID3v1.Album);
-                    Assert.AreEqual("Artist", theFile.ID3v1.Artist);
-                    Assert.AreEqual("Test!", theFile.ID3v1.Comment);
-                    Assert.AreEqual("2017", theFile.ID3v1.Year);
-                    Assert.AreEqual("Merengue", theFile.ID3v1.Genre);
-                    Assert.AreEqual(2, theFile.ID3v1.Track);
-                }
-                else
-                {
-                    Assert.Fail();
-                }
-            }
-            else
-            {
-                Assert.Fail();
-            }
+            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V1));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.ID3v1);
+            Assert.IsTrue(theFile.ID3v1.Exists);
+            Assert.AreEqual("Title", theFile.ID3v1.Title);
+            Assert.AreEqual("?", theFile.ID3v1.Album);
+            Assert.AreEqual("Artist", theFile.ID3v1.Artist);
+            Assert.AreEqual("Test!", theFile.ID3v1.Comment);
+            Assert.AreEqual("2017", theFile.ID3v1.Year);
+            Assert.AreEqual("Merengue", theFile.ID3v1.Genre);
+            Assert.AreEqual(2, theFile.ID3v1.Track);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
