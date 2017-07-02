@@ -436,7 +436,7 @@ namespace ATL.AudioData.IO
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
                     if (StreamUtils.StringEqualsArr("POPM", Frame.ID))
                     {
-                        strData = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString();
+                        strData = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString(); // NB : spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                     }
                     else
                     {
@@ -525,7 +525,7 @@ namespace ATL.AudioData.IO
                     // Specific to Popularitymeter : Rating data has to be extracted from the POP block
                     if (StreamUtils.StringEqualsArr("POP", Frame.ID))
                     {
-                        Data = readRatingInPopularityMeter(SourceFile, FEncoding).ToString().ToCharArray();
+                        Data = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString().ToCharArray(); // According to ID3v2.0 spec (see §3.2)
                     }
                     else
                     {

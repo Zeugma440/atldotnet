@@ -133,9 +133,9 @@ namespace ATL.AudioData.IO
 			{
 				ValueSize = SourceFile.ReadInt32();
 				FieldFlags = SourceFile.ReadInt32();
-                FieldName = StreamUtils.ReadNullTerminatedString(SourceFile,0);
-					
-				ValuePosition = fs.Position;
+                FieldName = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
+
+                ValuePosition = fs.Position;
 
                 if (ValueSize <= 500)
                 {
@@ -149,7 +149,7 @@ namespace ATL.AudioData.IO
                         PictureTokens.Add(MetaDataIOFactory.PIC_TYPE.Front);
                         if (FPictureStreamHandler != null)
                         {
-                            String description = StreamUtils.ReadNullTerminatedString(SourceFile,0);
+                            String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                             StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
                             FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front);
