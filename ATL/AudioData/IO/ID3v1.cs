@@ -297,13 +297,6 @@ namespace ATL.AudioData.IO
 				}
 				FGenreID = tagData.Genre;
                 Genre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";
-
-                if (storeUnsupportedMetaFields)
-                {
-                    unsupportedTagFields = new Dictionary<String, String>();
-                    
-                    // N/A since ID3v1 fields are all implemented by TagData
-                }
 			}
 			return result;
 		}

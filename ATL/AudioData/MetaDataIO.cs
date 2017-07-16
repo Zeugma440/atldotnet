@@ -26,7 +26,7 @@ namespace ATL.AudioData
 
         protected IList<MetaDataIOFactory.PIC_TYPE> FPictureTokens;
 
-        protected IDictionary<string, string> unsupportedTagFields;
+        protected IDictionary<string, string> otherTagFields;
         protected IDictionary<int, Image> unsupportedPictures;
 
 
@@ -233,11 +233,11 @@ namespace ATL.AudioData
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
-        /// Each positioned flag indicates the presence of an embedded picture
+        /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter; e.g. custom fields such as "MOOD")
         /// </summary>
-        public IDictionary<string, string> UnsupportedFields
+        public IDictionary<string, string> OtherFields
         {
-            get { return unsupportedTagFields!=null?unsupportedTagFields:new Dictionary<string,String>(); }
+            get { return otherTagFields!=null? otherTagFields : new Dictionary<string,String>(); }
         }
 
         /// <summary>
@@ -273,9 +273,11 @@ namespace ATL.AudioData
 
             tagData = new TagData();
             FPictureTokens = new List<MetaDataIOFactory.PIC_TYPE>();
+            otherTagFields = new Dictionary<string, string>();
+            unsupportedPictures = new Dictionary<int, Image>();
         }
 
-        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields);
+        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeOtherMetaFields);
 
         public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
         {
@@ -297,7 +299,6 @@ namespace ATL.AudioData
             if (!FExists) // If tag not found (e.g. empty file)
             {
                 FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
-                unsupportedTagFields = new Dictionary<string, string>();
                 dataToWrite = tag; // Write new tag information
             }
             else

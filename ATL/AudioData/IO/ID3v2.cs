@@ -345,7 +345,7 @@ namespace ATL.AudioData.IO
                 }
             } else // ...else store it in the unsupported fields Dictionary
             {
-                if (unsupportedTagFields != null) unsupportedTagFields[ID] = Data;
+                if (otherTagFields != null) otherTagFields[ID] = Data;
             }
         }
 
@@ -462,6 +462,18 @@ namespace ATL.AudioData.IO
                     {
                         strData = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString(); // NB : spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                     }
+                    else if (StreamUtils.StringEqualsArr("TXXX", Frame.ID))
+                    {
+                        byte[] bData = new byte[DataSize];
+                        // Read frame data and set tag item if frame supported
+                        bData = SourceFile.ReadBytes((int)DataSize);
+
+                        strData = Utils.StripEndingZeroChars(FEncoding.GetString(bData));
+
+                        string[] tabS = strData.Split('\0');
+                        Frame.ID = tabS[0].ToCharArray();
+                        strData = tabS[1];
+                    }
                     else
                     {
                         byte[] bData = new byte[DataSize];
@@ -488,7 +500,7 @@ namespace ATL.AudioData.IO
                         if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picType))
                         {
                             // If enabled, save it to unsupported pictures
-                            if (unsupportedTagFields != null)
+                            if (otherTagFields != null)
                             {
                                 storeUnsupportedPicture = true;
                                 if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
@@ -522,8 +534,8 @@ namespace ATL.AudioData.IO
                                     StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                                 }
 
-                            if (FPictureStreamHandler != null) FPictureStreamHandler(ref mem, picType);
-                            if (storeUnsupportedPicture) unsupportedPictures.Add(picCode, Image.FromStream(mem));
+                                if (FPictureStreamHandler != null) FPictureStreamHandler(ref mem, picType);
+                                if (storeUnsupportedPicture) unsupportedPictures.Add(picCode, Image.FromStream(mem));
 
                             mem.Close();
                         }
@@ -571,6 +583,13 @@ namespace ATL.AudioData.IO
                     {
                         data = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString(); // According to ID3v2.0 spec (see §3.2)
                     }
+                    else if (StreamUtils.StringEqualsArr("TXXX", Frame.ID))
+                    {
+                        data = Utils.StripEndingZeroChars(SourceFile.ReadChars(DataSize).ToString());
+                        string[] tabS = data.Split('\0');
+                        Frame.ID = tabS[0].ToCharArray();
+                        data = tabS[1];
+                    }
                     else
                     {
                         data = Utils.StripEndingZeroChars( SourceFile.ReadChars(DataSize).ToString() );
@@ -594,7 +613,7 @@ namespace ATL.AudioData.IO
                         if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picType))
                         {
                             // If enabled, save it to unsupported pictures
-                            if (unsupportedTagFields != null)
+                            if (otherTagFields != null)
                             {
                                 storeUnsupportedPicture = true;
                                 if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
@@ -661,12 +680,6 @@ namespace ATL.AudioData.IO
                 // Fill properties with header data
                 FVersion = FTagHeader.Version;
                 FSize = GetTagSize(FTagHeader);
-
-                if (storeUnsupportedMetaFields)
-                {
-                    unsupportedTagFields = new Dictionary<String, String>();
-                    // They will be read by ReadFrames_vXX below
-                }
 
                 // Get information from frames if version supported
                 if ((TAG_VERSION_2_2 <= FVersion) && (FVersion <= TAG_VERSION_2_4) && (FSize > 0))
@@ -809,10 +822,10 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            // Unsupported textual fields
-            foreach (String key in unsupportedTagFields.Keys)
+            // Other textual fields
+            foreach (String key in otherTagFields.Keys)
             {
-                writeTextFrame(ref w, key, unsupportedTagFields[key]);
+                writeTextFrame(ref w, key, otherTagFields[key]);
                 nbFrames++;
             }
 
@@ -1081,26 +1094,25 @@ namespace ATL.AudioData.IO
         // => every "0xff 0x00" becomes "0xff"
         private static void decodeUnsynchronizedStreamTo(Stream mTo, BinaryReader r, long length)
         {
-            using (BinaryWriter w = new BinaryWriter(mTo))
+            BinaryWriter w = new BinaryWriter(mTo); // This reader shouldn't be closed at the end of the function, else the stream closes as well and becomes inaccessible
+            
+            long effectiveLength;
+            long initialPosition;
+            byte prevB_2 = 0;
+            byte prevB_1 = 0;
+            byte b;
+
+            initialPosition = r.BaseStream.Position;
+            if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+
+            while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
             {
-                long effectiveLength;
-                long initialPosition;
-                byte prevB_2 = 0;
-                byte prevB_1 = 0;
-                byte b;
+                b = r.ReadByte();
+                if ((0xFF == prevB_1) && (0x00 == b)) b = r.ReadByte();
 
-                initialPosition = r.BaseStream.Position;
-                if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
-
-                while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
-                {
-                    b = r.ReadByte();
-                    if ((0xFF == prevB_1) && (0x00 == b)) b = r.ReadByte();
-
-                    w.Write(b);
-                    prevB_2 = prevB_1;
-                    prevB_1 = b;
-                }
+                w.Write(b);
+                prevB_2 = prevB_1;
+                prevB_1 = b;
             }
         }
 

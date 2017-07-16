@@ -12,10 +12,11 @@ namespace ATL.test.IO.MetaData
         /* TODO
          * 
          * conservation of unmodified tag items
-         * tag removal
+         * individual field removal
+         x whole tag removal
          * 
          * Test reading of unsupported tag field
-         * Test conservation of unsupported tag field
+         * Test conservation of unsupported tag field while rewriting tag
          * 
          * Test conservation of unsupported image type
          * Test conservation of unedited field
@@ -59,7 +60,6 @@ namespace ATL.test.IO.MetaData
             theTag.OriginalAlbum = "Hey Hey";
             theTag.GeneralDescription = "That's right";
             theTag.Publisher = "Test Media Inc.";
-
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
@@ -111,7 +111,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_Existing()
+        public void TagIO_RW_ID3v2_Existing() // TODO DO ACTUAL STUFF !
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = "../../Resources/id3v2.3_UTF16.mp3";
@@ -176,17 +176,19 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
             // Unsupported field (MOOD)
+            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx",theFile.ID3v2.OtherFields["MOOD"]);
 
 
             // Supported picture
-/*
-            Image picture = theFile.ID3v2.
-            Assert.IsNotNull(picture);
-            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-            Assert.AreEqual(picture.Height, 150);
-            Assert.AreEqual(picture.Width, 150);
-*/
-            // Unsupported picture (Conductor)
+            /*
+                        Image picture = theFile.ID3v2.
+                        Assert.IsNotNull(picture);
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 150);
+                        Assert.AreEqual(picture.Width, 150);
+            */
+            // Unsupported picture (Conductor - 0x09)
         }
 
         [TestMethod]
@@ -213,6 +215,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
             // Unsupported field (MOOD)
+            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", theFile.ID3v2.OtherFields["MOOD"]);
 
 
             // Supported picture
@@ -223,7 +227,7 @@ namespace ATL.test.IO.MetaData
                         Assert.AreEqual(picture.Height, 150);
                         Assert.AreEqual(picture.Width, 150);
             */
-            // Unsupported picture (Conductor)
+            // Unsupported picture (Conductor - 0x09)
         }
 
     }
