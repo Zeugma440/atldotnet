@@ -260,7 +260,7 @@ namespace ATL.AudioData
         {
             get
             {
-                Read()
+                Read
             }
         }
 */
@@ -285,16 +285,11 @@ namespace ATL.AudioData
             unsupportedPictures = new Dictionary<int, Image>();
         }
 
-        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeOtherMetaFields);
+        abstract protected int getDefaultTagOffset();
 
-        public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
-        {
-            return Read(Source, pictureStreamHandler, false);
-        }
+        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
 
         abstract public bool Write(TagData tag, BinaryWriter w);
-
-        abstract protected int getDefaultTagOffset();
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {

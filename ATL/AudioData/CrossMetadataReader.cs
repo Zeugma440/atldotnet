@@ -238,7 +238,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
+        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {
             throw new NotImplementedException();
         }

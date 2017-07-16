@@ -15,7 +15,7 @@ namespace ATL.AudioData
     {
         private IAudioDataIO audioData;                     // Audio data reader used for this file
         private IMetaDataIO metaData;                       // Metadata reader used for this file
-        private string thePath;                                 // Path of this file
+        private string thePath;                             // Path of this file
 
         // ------------------------------------------------------------------------------------------
 
@@ -224,9 +224,9 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
+        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {
-            return metaData.Read(source, pictureStreamHandler);
+            return metaData.Read(source, pictureStreamHandler, readAllMetaFrames);
         }
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
@@ -234,7 +234,7 @@ namespace ATL.AudioData
             return metaData.Write(r, w, tag);
         }
 
-        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)
+        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             throw new NotImplementedException();
         }

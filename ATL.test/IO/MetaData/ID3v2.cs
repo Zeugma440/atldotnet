@@ -11,15 +11,19 @@ namespace ATL.test.IO.MetaData
     {
         /* TODO
          * 
+         * add a standard unsupported field => standard field
+         * add a non-standard unsuported field => TXXX field
+         * 
          * conservation of unmodified tag items
          * individual field removal
          x whole tag removal
          * 
-         * Test reading of unsupported tag field
+         x Test reading of unsupported tag field
          * Test conservation of unsupported tag field while rewriting tag
          * 
          * Test conservation of unsupported image type
          * Test conservation of unedited field
+         * 
          * Implement an extended header compliance option and test limit cases
          */
 
@@ -161,7 +165,7 @@ namespace ATL.test.IO.MetaData
             String location = "../../Resources/id3v2.3_UTF16.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
-            Assert.IsTrue(theFile.ReadFromFile());
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
@@ -200,7 +204,7 @@ namespace ATL.test.IO.MetaData
             String location = "../../Resources/id3v2.4_UTF8.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
-            Assert.IsTrue(theFile.ReadFromFile());
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);

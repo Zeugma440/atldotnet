@@ -112,7 +112,7 @@ namespace ATL.AudioData
             } else return false;
         }
 
-        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)
+        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(FFileName);
@@ -130,9 +130,9 @@ namespace ATL.AudioData
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1");
-                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V2)) FID3v2.Read(source, pictureStreamHandler);
+                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V2)) FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2");
-                    if (IsMetaSupported(MetaDataIOFactory.TAG_APE)) FAPEtag.Read(source, pictureStreamHandler);
+                    if (IsMetaSupported(MetaDataIOFactory.TAG_APE)) FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames);
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape");
 
                     result = Read(source, pictureStreamHandler);
