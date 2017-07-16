@@ -54,9 +54,14 @@ namespace ATL.AudioData.IO
         // ID3v2 tag ID
         private const String ID3V2_ID = "ID3";
 
+        // List of standard fields
+        private static ICollection<string> standardFrames_v22;
+        private static ICollection<string> standardFrames_v23;
+        private static ICollection<string> standardFrames_v24;
+
         // Mapping between ID3v2 field IDs and ATL fields
-        private static IDictionary<string, byte> Frames_v22;
-        private static IDictionary<string, byte> Frames_v23_24;
+        private static IDictionary<string, byte> frameMapping_v22;
+        private static IDictionary<string, byte> frameMapping_v23_24;
 
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
@@ -195,6 +200,10 @@ namespace ATL.AudioData.IO
 
         static ID3v2()
         {
+            standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
+            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4","TPOS","TPUB","TRCK","TRDA","TRSN","TRSO","TSIZ","TSRC","TSSE","TYER","TXXX","UFID","USER","USLT","WCOM","WCOP","WOAF","WOAR","WOAS","WORS","WPAY","WPUB","WXXX" };
+            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX" };
+
             // Note on date field identifiers
             //
             // Original release date
@@ -213,49 +222,49 @@ namespace ATL.AudioData.IO
             //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
 
             // Mapping between standard fields and ID3v2.2 identifiers
-            Frames_v22 = new Dictionary<string, byte>();
+            frameMapping_v22 = new Dictionary<string, byte>();
 
-            Frames_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
-            Frames_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
-            Frames_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
-            Frames_v22.Add("TP2", TagData.TAG_FIELD_ALBUM_ARTIST);  // De facto standard, regardless of spec
-            Frames_v22.Add("TP3", TagData.TAG_FIELD_CONDUCTOR);
-            Frames_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
-            Frames_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
-            Frames_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
-            Frames_v22.Add("TRK", TagData.TAG_FIELD_TRACK_NUMBER);
-            Frames_v22.Add("TPA", TagData.TAG_FIELD_DISC_NUMBER);
-            Frames_v22.Add("TYE", TagData.TAG_FIELD_RECORDING_YEAR);
-            Frames_v22.Add("TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH);
-            Frames_v22.Add("COM", TagData.TAG_FIELD_COMMENT);
-            Frames_v22.Add("TCM", TagData.TAG_FIELD_COMPOSER);
-            Frames_v22.Add("POP", TagData.TAG_FIELD_RATING);
-            Frames_v22.Add("TCO", TagData.TAG_FIELD_GENRE);
-            Frames_v22.Add("TCR", TagData.TAG_FIELD_COPYRIGHT);
-            Frames_v22.Add("TPB", TagData.TAG_FIELD_PUBLISHER);
+            frameMapping_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
+            frameMapping_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
+            frameMapping_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
+            frameMapping_v22.Add("TP2", TagData.TAG_FIELD_ALBUM_ARTIST);  // De facto standard, regardless of spec
+            frameMapping_v22.Add("TP3", TagData.TAG_FIELD_CONDUCTOR);
+            frameMapping_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
+            frameMapping_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
+            frameMapping_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
+            frameMapping_v22.Add("TRK", TagData.TAG_FIELD_TRACK_NUMBER);
+            frameMapping_v22.Add("TPA", TagData.TAG_FIELD_DISC_NUMBER);
+            frameMapping_v22.Add("TYE", TagData.TAG_FIELD_RECORDING_YEAR);
+            frameMapping_v22.Add("TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH);
+            frameMapping_v22.Add("COM", TagData.TAG_FIELD_COMMENT);
+            frameMapping_v22.Add("TCM", TagData.TAG_FIELD_COMPOSER);
+            frameMapping_v22.Add("POP", TagData.TAG_FIELD_RATING);
+            frameMapping_v22.Add("TCO", TagData.TAG_FIELD_GENRE);
+            frameMapping_v22.Add("TCR", TagData.TAG_FIELD_COPYRIGHT);
+            frameMapping_v22.Add("TPB", TagData.TAG_FIELD_PUBLISHER);
 
             // Mapping between standard fields and ID3v2.3+ identifiers
-            Frames_v23_24 = new Dictionary<string, byte>();
+            frameMapping_v23_24 = new Dictionary<string, byte>();
 
-            Frames_v23_24.Add("TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
-            Frames_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
-            Frames_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
-            Frames_v23_24.Add("TPE2", TagData.TAG_FIELD_ALBUM_ARTIST); // De facto standard, regardless of spec
-            Frames_v23_24.Add("TPE3", TagData.TAG_FIELD_CONDUCTOR);
-            Frames_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
-            Frames_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
-            Frames_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
-            Frames_v23_24.Add("TRCK", TagData.TAG_FIELD_TRACK_NUMBER);
-            Frames_v23_24.Add("TPOS", TagData.TAG_FIELD_DISC_NUMBER);
-            Frames_v23_24.Add("TDRC", TagData.TAG_FIELD_RECORDING_DATE);
-            Frames_v23_24.Add("TYER", TagData.TAG_FIELD_RECORDING_YEAR);
-            Frames_v23_24.Add("TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH);
-            Frames_v23_24.Add("COMM", TagData.TAG_FIELD_COMMENT);
-            Frames_v23_24.Add("TCOM", TagData.TAG_FIELD_COMPOSER);
-            Frames_v23_24.Add("POPM", TagData.TAG_FIELD_RATING);
-            Frames_v23_24.Add("TCON", TagData.TAG_FIELD_GENRE);
-            Frames_v23_24.Add("TCOP", TagData.TAG_FIELD_COPYRIGHT);
-            Frames_v23_24.Add("TPUB", TagData.TAG_FIELD_PUBLISHER);
+            frameMapping_v23_24.Add("TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
+            frameMapping_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
+            frameMapping_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
+            frameMapping_v23_24.Add("TPE2", TagData.TAG_FIELD_ALBUM_ARTIST); // De facto standard, regardless of spec
+            frameMapping_v23_24.Add("TPE3", TagData.TAG_FIELD_CONDUCTOR);
+            frameMapping_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
+            frameMapping_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
+            frameMapping_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
+            frameMapping_v23_24.Add("TRCK", TagData.TAG_FIELD_TRACK_NUMBER);
+            frameMapping_v23_24.Add("TPOS", TagData.TAG_FIELD_DISC_NUMBER);
+            frameMapping_v23_24.Add("TDRC", TagData.TAG_FIELD_RECORDING_DATE);
+            frameMapping_v23_24.Add("TYER", TagData.TAG_FIELD_RECORDING_YEAR);
+            frameMapping_v23_24.Add("TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH);
+            frameMapping_v23_24.Add("COMM", TagData.TAG_FIELD_COMMENT);
+            frameMapping_v23_24.Add("TCOM", TagData.TAG_FIELD_COMPOSER);
+            frameMapping_v23_24.Add("POPM", TagData.TAG_FIELD_RATING);
+            frameMapping_v23_24.Add("TCON", TagData.TAG_FIELD_GENRE);
+            frameMapping_v23_24.Add("TCOP", TagData.TAG_FIELD_COPYRIGHT);
+            frameMapping_v23_24.Add("TPUB", TagData.TAG_FIELD_PUBLISHER);
         }
 
         public ID3v2()
@@ -331,10 +340,10 @@ namespace ATL.AudioData.IO
             // Finds the ATL field identifier according to the ID3v2 version
             if (Tag.Version > TAG_VERSION_2_2)
             {
-                if (Frames_v23_24.ContainsKey(ID)) supportedMetaId = Frames_v23_24[ID];
+                if (frameMapping_v23_24.ContainsKey(ID)) supportedMetaId = frameMapping_v23_24[ID];
             } else
             {
-                if (Frames_v22.ContainsKey(ID)) supportedMetaId = Frames_v22[ID];
+                if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID];
             }
 
             // If ID has been mapped with an ATL field, store it in a dedicated Dictionary...
@@ -813,9 +822,9 @@ namespace ATL.AudioData.IO
             // Supported textual fields
             foreach (byte frameType in map.Keys)
             {
-                foreach(string s in Frames_v23_24.Keys)
+                foreach(string s in frameMapping_v23_24.Keys)
                 {
-                    if (frameType == Frames_v23_24[s])
+                    if (frameType == frameMapping_v23_24[s])
                     {
                         writeTextFrame(ref w, s, map[frameType]);
                         nbFrames++;
@@ -861,6 +870,7 @@ namespace ATL.AudioData.IO
 
         private void writeTextFrame(ref BinaryWriter w, String frameCode, String text)
         {
+            string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
             long finalFramePos;
             bool writeFieldValue = true;
@@ -876,6 +886,15 @@ namespace ATL.AudioData.IO
                 }
             }
 
+            frameCode = frameCode.ToUpper();
+            actualFrameCode = frameCode;
+
+            // If frame is not standard, it has to be added through TXXX frame ("user-defined text information frame")
+            if (!standardFrames_v24.Contains(frameCode))
+            {
+                frameCode = "TXXX";
+            }
+
             w.Write(frameCode.ToCharArray());
             frameSizePos = w.BaseStream.Position;
             w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
@@ -885,7 +904,7 @@ namespace ATL.AudioData.IO
             w.Write('\0');
 
             // Comments frame specifics
-            if (frameCode.ToUpper().Substring(0, 3).Equals("COM"))
+            if (frameCode.Substring(0, 3).Equals("COM"))
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(FEncoding));
@@ -896,9 +915,7 @@ namespace ATL.AudioData.IO
 
                 writeFieldEncoding = false;
             }
-
-            // Rating frame specifics
-            if (frameCode.ToUpper().Substring(0,3).Equals("POP"))
+            else if (frameCode.Substring(0,3).Equals("POP")) // Rating frame specifics
             {
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
@@ -908,6 +925,14 @@ namespace ATL.AudioData.IO
                 w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
 
                 writeFieldValue = false;
+            }
+            else if (frameCode.Substring(0, 3).Equals("TXX")) // User-defined text frame specifics
+            {
+                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(FEncoding)); // Encoding according to ID3v2 specs
+                w.Write(actualFrameCode.ToCharArray());
+                w.Write('\0');
+
+                writeFieldEncoding = false;
             }
 
             if (writeFieldValue)
