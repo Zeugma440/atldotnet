@@ -54,6 +54,7 @@ namespace ATL.AudioData
         public const byte TAG_FIELD_COPYRIGHT               = 16;
         public const byte TAG_FIELD_ALBUM_ARTIST            = 17;
         public const byte TAG_FIELD_PUBLISHER               = 18;
+        public const byte TAG_FIELD_CONDUCTOR               = 19;
 
 
         public String GeneralDescription = "";
@@ -74,6 +75,7 @@ namespace ATL.AudioData
         public String Copyright = "";
         public String AlbumArtist = "";
         public String Publisher = "";
+        public String Conductor = "";
         public IDictionary<MetaDataIOFactory.PIC_TYPE, Image> Pictures;
 
         protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picCode)
@@ -108,6 +110,7 @@ namespace ATL.AudioData
                 case TAG_FIELD_COPYRIGHT:               Copyright = value; break;
                 case TAG_FIELD_ALBUM_ARTIST:            AlbumArtist = value; break;
                 case TAG_FIELD_PUBLISHER:               Publisher = value; break;
+                case TAG_FIELD_CONDUCTOR:               Conductor = value; break;
             }
         }
 
@@ -149,6 +152,7 @@ namespace ATL.AudioData
             addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, ref result);
             addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, ref result);
             addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, ref result);
+            addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, ref result);
 
             return result;
         }

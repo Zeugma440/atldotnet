@@ -219,6 +219,7 @@ namespace ATL.AudioData.IO
             Frames_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
             Frames_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
             Frames_v22.Add("TP2", TagData.TAG_FIELD_ALBUM_ARTIST);  // De facto standard, regardless of spec
+            Frames_v22.Add("TP3", TagData.TAG_FIELD_CONDUCTOR);
             Frames_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
             Frames_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
             Frames_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
@@ -240,6 +241,7 @@ namespace ATL.AudioData.IO
             Frames_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
             Frames_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
             Frames_v23_24.Add("TPE2", TagData.TAG_FIELD_ALBUM_ARTIST); // De facto standard, regardless of spec
+            Frames_v23_24.Add("TPE3", TagData.TAG_FIELD_CONDUCTOR);
             Frames_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
             Frames_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
             Frames_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);

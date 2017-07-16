@@ -227,13 +227,20 @@ namespace ATL.AudioData
             get { return Utils.ProtectValue(tagData.Publisher); }
             set { tagData.Publisher = value; }
         }
-
+        /// <summary>
+        /// Conductor
+        /// </summary>
+        public String Conductor
+        {
+            get { return Utils.ProtectValue(tagData.Conductor); }
+            set { tagData.Conductor = value; }
+        }
 
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
-        /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter; e.g. custom fields such as "MOOD")
+        /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
         /// </summary>
         public IDictionary<string, string> OtherFields
         {
@@ -261,8 +268,9 @@ namespace ATL.AudioData
         // TODO 
         //   getPictures
         //   access to unsupported pictures
-        //   access to unsupported fields
-        //   review storage of unsupported data
+        
+            // write unsupported fields
+            // write unsupported pictures
 
         public virtual void ResetData()
         {
