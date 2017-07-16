@@ -302,7 +302,7 @@ namespace ATL.AudioData.IO
 		}
 
 
-        public override bool Write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w)
         {
             bool result = true;
 

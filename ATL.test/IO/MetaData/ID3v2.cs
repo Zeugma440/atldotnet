@@ -3,29 +3,48 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
+using System.Collections.Generic;
+using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
     [TestClass]
     public class ID3v2
     {
-        /* TODO
+        /* TO TEST
          * 
          * add a standard unsupported field => standard field
          * add a non-standard unsuported field => TXXX field
          * 
-         * conservation of unmodified tag items
-         * individual field removal
+         x conservation of unmodified tag items
+         x individual field removal
          x whole tag removal
          * 
-         x Test reading of unsupported tag field
-         * Test conservation of unsupported tag field while rewriting tag
-         * 
-         * Test conservation of unsupported image type
-         * Test conservation of unedited field
+         x Reading of unsupported tag field
+         x Reading of unsupported picture
+         x Test conservation of unsupported tag field while rewriting tag
+         *         
+         * Test conservation of supported pictures while rewriting tag
+         * Test conservation of unsupported pictures while rewriting tag
          * 
          * Implement an extended header compliance option and test limit cases
          */
+
+        protected class PictureInfo
+        {
+            public Image Picture;
+            public byte NativeCode;
+
+            public PictureInfo(Image picture, byte code) { Picture = picture; NativeCode = code; }
+        }
+
+        private IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo>>();
+
+        protected void readPictureData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat)
+        {
+            pictures.Add(new KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo>(picType,new PictureInfo(Image.FromStream(s), picCode)));
+        }
+
 
         [TestMethod]
         public void TagIO_RW_ID3v2_Empty()
@@ -64,6 +83,7 @@ namespace ATL.test.IO.MetaData
             theTag.OriginalAlbum = "Hey Hey";
             theTag.GeneralDescription = "That's right";
             theTag.Publisher = "Test Media Inc.";
+            theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
@@ -88,6 +108,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Hey Hey", theFile.ID3v2.OriginalAlbum);
             Assert.AreEqual("That's right", theFile.ID3v2.GeneralDescription);
             Assert.AreEqual("Test Media Inc.", theFile.ID3v2.Publisher);
+            Assert.AreEqual("John Johnson Jr.", theFile.ID3v2.Conductor);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -115,22 +136,31 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_Existing() // TODO DO ACTUAL STUFF !
+        public void TagIO_RW_ID3v2_Existing()
         {
-/*
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = "../../Resources/id3v2.3_UTF16.mp3";
             String testFileLocation = location.Replace("id3v2.3_UTF16", "tmp/testID3v2" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
+
+            ConsoleLogger log = new ConsoleLogger();
 
             // Create a working copy
             File.Copy(location, testFileLocation, true);
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
-            // Construct a new tag
+            // Add a new supported field
             Assert.IsTrue(theFile.ReadFromFile());
-            
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            TagData theTag = new TagData();
+            theTag.Conductor = "John Jackman";
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            // Initial supported fields
             Assert.AreEqual("Title", theFile.ID3v2.Title);
             Assert.AreEqual("父", theFile.ID3v2.Album);
             Assert.AreEqual("Artist", theFile.ID3v2.Artist);
@@ -140,6 +170,91 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(22, theFile.ID3v2.Track);
             Assert.AreEqual("Me", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.Disc);
+
+            // Initial unsupported field (MOOD)
+            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", theFile.ID3v2.OtherFields["MOOD"]);
+
+            // Additional supported field
+            Assert.AreEqual("John Jackman", theFile.ID3v2.Conductor);
+
+            // Initial supported pictures
+            Assert.AreEqual(2, pictures.Count);
+
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Front)) // Supported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 150);
+                    Assert.AreEqual(picture.Width, 150);
+                }
+                else if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported))  // Unsupported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Height, 168);
+                    Assert.AreEqual(picture.Width, 175);
+                }
+            }
+
+
+            // Remove the additional supported field
+            theTag = new TagData();
+            theTag.Conductor = "";
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            // Initial supported fields
+            Assert.AreEqual("Title", theFile.ID3v2.Title);
+            Assert.AreEqual("父", theFile.ID3v2.Album);
+            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
+            Assert.AreEqual("Test!", theFile.ID3v2.Comment);
+            Assert.AreEqual("2017", theFile.ID3v2.Year);
+            Assert.AreEqual("Test", theFile.ID3v2.Genre);
+            Assert.AreEqual(22, theFile.ID3v2.Track);
+            Assert.AreEqual("Me", theFile.ID3v2.Composer);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+
+            // Initial unsupported field (MOOD)
+            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", theFile.ID3v2.OtherFields["MOOD"]);
+
+            // Additional removed field
+            Assert.AreEqual("", theFile.ID3v2.Conductor);
+
+            // Initial supported pictures
+            Assert.AreEqual(2, pictures.Count);
+
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Front)) // Supported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 150);
+                    Assert.AreEqual(picture.Width, 150);
+                }
+                else if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported))  // Unsupported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Height, 168);
+                    Assert.AreEqual(picture.Width, 175);
+                }
+            }
+
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -155,7 +270,6 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
-*/
         }
 
         [TestMethod]
@@ -165,7 +279,8 @@ namespace ATL.test.IO.MetaData
             String location = "../../Resources/id3v2.3_UTF16.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
@@ -186,15 +301,29 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("xxx",theFile.ID3v2.OtherFields["MOOD"]);
 
 
-            // Supported picture
-            /*
-                        Image picture = theFile.ID3v2.
-                        Assert.IsNotNull(picture);
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 150);
-                        Assert.AreEqual(picture.Width, 150);
-            */
-            // Unsupported picture (Conductor - 0x09)
+            // Pictures
+            Assert.AreEqual(2, pictures.Count);
+
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Front)) // Supported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 150);
+                    Assert.AreEqual(picture.Width, 150);
+                }
+                else if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported))  // Unsupported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Height, 168);
+                    Assert.AreEqual(picture.Width, 175);
+                }
+            }
         }
 
         [TestMethod]
@@ -204,7 +333,8 @@ namespace ATL.test.IO.MetaData
             String location = "../../Resources/id3v2.4_UTF8.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
@@ -225,15 +355,29 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("xxx", theFile.ID3v2.OtherFields["MOOD"]);
 
 
-            // Supported picture
-            /*
-                        Image picture = theFile.ID3v2.
-                        Assert.IsNotNull(picture);
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 150);
-                        Assert.AreEqual(picture.Width, 150);
-            */
-            // Unsupported picture (Conductor - 0x09)
+            // Pictures
+            Assert.AreEqual(2, pictures.Count);
+
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Front)) // Supported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 150);
+                    Assert.AreEqual(picture.Width, 150);
+                }
+                else if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported))  // Unsupported picture
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Height, 168);
+                    Assert.AreEqual(picture.Width, 175);
+                }
+            }
         }
 
     }

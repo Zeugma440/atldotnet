@@ -129,14 +129,14 @@ namespace ATL.AudioData
 
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1");
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1 end");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V2)) FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2");
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2 end");
                     if (IsMetaSupported(MetaDataIOFactory.TAG_APE)) FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape");
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape end");
 
                     result = Read(source, pictureStreamHandler);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read");
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
 
                     if (result && IsMetaSupported(MetaDataIOFactory.TAG_NATIVE)) FNativeTag = (IMetaDataIO)this; // TODO : This is dirty as ****; there must be a better way !
                 }

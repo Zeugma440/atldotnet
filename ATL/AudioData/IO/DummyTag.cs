@@ -61,9 +61,9 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
+        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
         {
-            get { return new List<MetaDataIOFactory.PIC_TYPE>(); }
+            get { return new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>(); }
         }
         public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {

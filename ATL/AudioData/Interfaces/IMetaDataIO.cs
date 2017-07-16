@@ -86,47 +86,49 @@ namespace ATL.AudioData
         {
             get;
         }
-/*  TO BE COMMENTED OUT WHEN THE REST OF THE IO BRANCH IS STABLE
-        /// <summary>
-        /// Copyright
-        /// </summary>
-        string Copyright
-        {
-            get;
-        }
-        /// <summary>
-        /// Original artist
-        /// </summary>
-        string OriginalArtist
-        {
-            get;
-        }
-        /// <summary>
-        /// Original album
-        /// </summary>
-        string OriginalAlbum
-        {
-            get;
-        }
-        /// <summary>
-        /// General description
-        /// </summary>
-        string GeneralDescription
-        {
-            get;
-        }
-        /// <summary>
-        /// Publisher
-        /// </summary>
-        string Publisher
-        {
-            get;
-        }
-*/
+        /*  TO BE COMMENTED OUT WHEN THE REST OF THE IO BRANCH IS STABLE
+                /// <summary>
+                /// Copyright
+                /// </summary>
+                string Copyright
+                {
+                    get;
+                }
+                /// <summary>
+                /// Original artist
+                /// </summary>
+                string OriginalArtist
+                {
+                    get;
+                }
+                /// <summary>
+                /// Original album
+                /// </summary>
+                string OriginalAlbum
+                {
+                    get;
+                }
+                /// <summary>
+                /// General description
+                /// </summary>
+                string GeneralDescription
+                {
+                    get;
+                }
+                /// <summary>
+                /// Publisher
+                /// </summary>
+                string Publisher
+                {
+                    get;
+                }
+        */
         /// <summary>
         /// List of picture IDs stored in the tag
+        ///     MetaDataIOFactory.PIC_TYPE : internal, normalized picture type
+        ///     byte : native picture code (useful when exploiting the UNSUPPORTED picture type)
         /// </summary>
-        IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
+        IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
         {
             get;
         }

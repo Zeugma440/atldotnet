@@ -146,13 +146,14 @@ namespace ATL.AudioData.IO
                 {
                     if (FieldName.Trim().ToUpper().Equals("COVER ART (FRONT)"))
                     {
-                        PictureTokens.Add(MetaDataIOFactory.PIC_TYPE.Front);
+                        addPictureToken(MetaDataIOFactory.PIC_TYPE.Front, 0);
                         if (FPictureStreamHandler != null)
                         {
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                             StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
-                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front);
+                            // TODO
+                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front, 0, System.Drawing.Imaging.ImageFormat.Jpeg); // TODO write actual image format !
                             mem.Close();
                         }
                     }
@@ -216,7 +217,7 @@ namespace ATL.AudioData.IO
             return TO_EOF;
         }
 
-        public override bool Write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w)
         {
             throw new NotImplementedException();
         }

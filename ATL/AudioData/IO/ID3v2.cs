@@ -263,7 +263,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        private bool ReadHeader(BinaryReader SourceFile, ref TagInfo Tag, long offset)
+        private bool readHeader(BinaryReader SourceFile, ref TagInfo Tag, long offset)
         {
             bool result = true;
 
@@ -417,6 +417,10 @@ namespace ATL.AudioData.IO
                     if ((Frame.Flags & 1) > 0)
                     {
                         fs.Seek(4, SeekOrigin.Current);
+/*
+                        byte[] size = SourceFile.ReadBytes(4);
+                        int daSize = StreamUtils.DecodeSynchSafeInt32(size);
+*/
                         dataSize = dataSize - 4;
                     }
 
@@ -526,49 +530,40 @@ namespace ATL.AudioData.IO
                     long position = fs.Position;
                     if ("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))
                     {
-                        bool storeUnsupportedPicture = false;
-
+                        ImageFormat imgFormat;
                         if (TAG_VERSION_2_2 == FVersion)
                         {
                             // ID3v2.2 specific layout "image format"
                             Encoding encoding = decodeID3v2CharEncoding(SourceFile.ReadByte());
-                            
-                            // Image format (unused)
-                            //String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3));
-                            fs.Seek(3, SeekOrigin.Current);
+
+                            // Image format
+                            String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3)).ToUpper();
+
+                            if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
+                            else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
+                            else if ("GIF".Equals(imageFormat)) imgFormat = ImageFormat.Gif;
+                            else imgFormat = ImageFormat.Jpeg;
                         }
                         else
                         {
                             // mime-type always coded in ASCII
                             if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
-                            // Mime-type (unused)
-                            //String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
-                            StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
+                            // Mime-type
+                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
+                            imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
                         }
 
                         byte picCode = SourceFile.ReadByte();
                         MetaDataIOFactory.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
-                        if (MetaDataIOFactory.PIC_TYPE.Unsupported.Equals(picType))
-                        {
-                            // If enabled, save it to unsupported pictures
-                            if (readAllMetaFrames)
-                            {
-                                storeUnsupportedPicture = true;
-                                if (null == unsupportedPictures) unsupportedPictures = new Dictionary<int, Image>();
-                            }
-                        }
-                        else
-                        {
-                            FPictureTokens.Add(picType);
-                        }
+                        addPictureToken(picType, picCode);
 
                         // Image description (unused)
                         // Description can be coded with another convention
                         if (1 == encodingCode) readBOM(ref fs);
                         StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
 
-                        if ((pictureStreamHandler != null) || storeUnsupportedPicture)
+                        if (pictureStreamHandler != null)
                         {
                             int picSize = (int)(dataSize - (fs.Position - position));
                             MemoryStream mem = new MemoryStream(picSize);
@@ -582,8 +577,7 @@ namespace ATL.AudioData.IO
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
 
-                            if (pictureStreamHandler != null) pictureStreamHandler(ref mem, picType);
-                            if (storeUnsupportedPicture) unsupportedPictures.Add(picCode, Image.FromStream(mem));
+                            pictureStreamHandler(ref mem, picType, picCode, imgFormat);
 
                             mem.Close();
                         }
@@ -614,7 +608,7 @@ namespace ATL.AudioData.IO
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = ReadHeader(source, ref FTagHeader, offset);
+            bool result = readHeader(source, ref FTagHeader, offset);
 
             // Process data if loaded and header valid
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
@@ -627,9 +621,9 @@ namespace ATL.AudioData.IO
                 // Get information from frames if version supported
                 if ((TAG_VERSION_2_2 <= FVersion) && (FVersion <= TAG_VERSION_2_4) && (FSize > 0))
                 {
+                    tagData = new TagData();
                     readFrames(source, ref FTagHeader, pictureStreamHandler, offset, readAllMetaFrames);
 
-                    tagData = new TagData();
                     foreach (byte b in FTagHeader.Frames.Keys)
                     {
                         tagData.IntegrateValue(b, FTagHeader.Frames[b]);
@@ -665,7 +659,7 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        public override bool Write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w)
         {
             bool result;
             long tagSizePos;
@@ -683,7 +677,11 @@ namespace ATL.AudioData.IO
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
 
+
+
+
             // TODO : handle unsynchronization on frame level (<> tag-wide) as specified in ID3v2.4 spec §4.1.2
+/*
             if (FTagHeader.UsesUnsynchronisation)
             {
                 using (MemoryStream s = new MemoryStream(Size))
@@ -698,6 +696,10 @@ namespace ATL.AudioData.IO
             {
                 result = writeExtHeaderAndFrames(ref tag, w);
             }
+*/
+            result = writeExtHeaderAndFrames(ref tag, w);
+
+
 
             // Record final(*) size of tag into "tag size" field of header
             // (*) : Spec clearly states that the tag final size is tag size after unsynchronization
@@ -719,8 +721,6 @@ namespace ATL.AudioData.IO
 
 
         // TODO : Write ID3v2.4 footer
-        // TODO : factorize generic frame writing code for writeTextFrame and writePictureFrame
-
         // TODO : check date field format (YYYY, DDMM, timestamp)
 
         private bool writeExtHeaderAndFrames(ref TagData tag, BinaryWriter w)
@@ -776,21 +776,10 @@ namespace ATL.AudioData.IO
                 nbFrames++;
             }
 
-            // Supported pictures
-            foreach(MetaDataIOFactory.PIC_TYPE picCode in tag.Pictures.Keys)
+            foreach (TagData.PictureInfo picInfo in tag.Pictures.Keys)
             {
-                writePictureFrame(ref w, tag.Pictures[picCode], Utils.GetMimeTypeFromImageFormat(tag.Pictures[picCode].RawFormat), EncodeID3v2PictureType(picCode), "");
+                writePictureFrame(ref w, tag.Pictures[picInfo], picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode:EncodeID3v2PictureType(picInfo.PicType), "");
                 nbFrames++;
-            }
-
-            // Unsupported pictures, if any detected
-            if (unsupportedPictures != null)
-            {
-                foreach (byte unsuppPicCode in unsupportedPictures.Keys)
-                {
-                    writePictureFrame(ref w, unsupportedPictures[unsuppPicCode], Utils.GetMimeTypeFromImageFormat(unsupportedPictures[unsuppPicCode].RawFormat), unsuppPicCode, "");
-                    nbFrames++;
-                }
             }
 
             if (useID3v2ExtendedHeaderRestrictions)
@@ -804,13 +793,28 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTextFrame(ref BinaryWriter w, String frameCode, String text)
+        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
             long finalFramePos;
+            long frameOffset;
             bool writeFieldValue = true;
             bool writeFieldEncoding = true;
+            bool writeNullTermination = false;
+
+            BinaryWriter w;
+            MemoryStream s = null;
+
+            if (FTagHeader.UsesUnsynchronisation)
+            {
+                s = new MemoryStream(Size);
+                w = new BinaryWriter(s, FEncoding);
+                frameOffset = writer.BaseStream.Position;
+            } else {
+                w = writer;
+                frameOffset = 0;
+            }
 
             if (useID3v2ExtendedHeaderRestrictions)
             {
@@ -836,8 +840,12 @@ namespace ATL.AudioData.IO
             w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-            w.Write('\0');
-            w.Write('\0');
+            UInt16 flags = 0;
+            if (FTagHeader.UsesUnsynchronisation)
+            {
+                flags = 2;
+            }
+            w.Write(StreamUtils.ReverseInt16(flags));
 
             // Comments frame specifics
             if (frameCode.Substring(0, 3).Equals("COM"))
@@ -869,35 +877,81 @@ namespace ATL.AudioData.IO
                 w.Write('\0');
 
                 writeFieldEncoding = false;
+                writeNullTermination = true;
             }
 
             if (writeFieldValue)
             {
                 if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(FEncoding)); // Encoding according to ID3v2 specs
                 w.Write(text.ToCharArray());
+                if (writeNullTermination) w.Write('\0');
+            }
+
+
+            if (FTagHeader.UsesUnsynchronisation)
+            {
+                s.Seek(0, SeekOrigin.Begin);
+                encodeUnsynchronizedStreamTo(s, writer);
+                w.Close();
             }
 
             // Go back to frame size location to write its actual size 
-            finalFramePos = w.BaseStream.Position;
-            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 6)));
-            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            finalFramePos = writer.BaseStream.Position;
+            writer.BaseStream.Seek(frameOffset+frameSizePos, SeekOrigin.Begin);
+            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - 6)));
+            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter w, Image picture, string mimeType, byte pictureTypeCode, String picDescription)
+        private void writePictureFrame(ref BinaryWriter writer, Image picture, ImageFormat picFormat, string mimeType, byte pictureTypeCode, String picDescription)
         {
+            long frameOffset;
             long frameSizePos;
+            long frameSizePos2;
             long finalFramePos;
-            ImageFormat picFormat = picture.RawFormat;
+            long finalFramePosRaw;
+
+            int dataSizeModifier = 0;
+
+            BinaryWriter w;
+            MemoryStream s = null;
+
+
+            if (FTagHeader.UsesUnsynchronisation)
+            {
+                s = new MemoryStream(Size);
+                w = new BinaryWriter(s, FEncoding);
+                frameOffset = writer.BaseStream.Position;
+            }
+            else
+            {
+                w = writer;
+                frameOffset = 0;
+            }
 
             w.Write("APIC".ToCharArray());
 
             frameSizePos = w.BaseStream.Position;
             w.Write((int)0); // Temp frame size placeholder; will be rewritten at the end of the routine
+//            dataSizeModifier += 4;
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
+            // Data size is the "natural" size of the picture (i.e. without unsynchronization) + the size of the headerless APIC frame (i.e. starting from the "text encoding" byte)
+            /*
             w.Write('\0');
             w.Write('\0');
+            */
+            UInt16 flags = 1;
+            if (FTagHeader.UsesUnsynchronisation) flags = 3;
+            w.Write(StreamUtils.ReverseInt16(flags));
+            dataSizeModifier += 2;
+
+            frameSizePos2 = w.BaseStream.Position;
+            w.Write((int)0);
+            dataSizeModifier += 4;
+
+            // Beginning of APIC frame data
+
+            w.Write(encodeID3v2CharEncoding(FEncoding));
 
             // Application of ID3v2 extended header restrictions
             if (useID3v2ExtendedHeaderRestrictions)
@@ -945,16 +999,31 @@ namespace ATL.AudioData.IO
 
             w.Write(pictureTypeCode);
 
-            w.Write(picDescription); // Picture description
+            if (picDescription.Length > 0) w.Write(picDescription); // Picture description
             w.Write('\0'); // Description should be null-terminated
 
             picture.Save(w.BaseStream, picFormat);
+            //StreamUtils.SaveImageToLivingStream(picture, picFormat, w.BaseStream);
+
+            finalFramePosRaw = w.BaseStream.Position;
+
+            if (FTagHeader.UsesUnsynchronisation)
+            {
+                s.Seek(0, SeekOrigin.Begin);
+                encodeUnsynchronizedStreamTo(s, writer);
+                w.Close();
+            }
 
             // Go back to frame size location to write its actual size
-            finalFramePos = w.BaseStream.Position;
-            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - 4)));
-            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            finalFramePos = writer.BaseStream.Position;
+
+            writer.BaseStream.Seek(frameSizePos + frameOffset, SeekOrigin.Begin);
+            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - dataSizeModifier)));
+
+            writer.BaseStream.Seek(frameSizePos2 + frameOffset, SeekOrigin.Begin);
+            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePosRaw - frameSizePos2 - dataSizeModifier)));
+
+            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
         // ---------------------------------------------------------------------------
@@ -1084,21 +1153,21 @@ namespace ATL.AudioData.IO
         private static void encodeUnsynchronizedStreamTo(Stream mFrom, BinaryWriter w)
         {
             // TODO PERF : profile using BinaryReader.ReadByte & BinaryWriter.Write(byte) vs. Stream.ReadByte & Stream.WriteByte
-            using (BinaryReader r = new BinaryReader(mFrom))
+
+            BinaryReader r = new BinaryReader(mFrom); // This reader shouldn't be closed at the end of the function, else the stream closes as well and becomes inaccessible
+            
+            long initialPosition;
+            byte b;
+
+            initialPosition = r.BaseStream.Position;
+
+            while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
             {
-                long initialPosition;
-                byte b;
-
-                initialPosition = r.BaseStream.Position;
-
-                while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
+                b = r.ReadByte();
+                w.Write(b);
+                if (0xFF == b)
                 {
-                    b = r.ReadByte();
-                    w.Write(b);
-                    if (0xFF == b)
-                    {
-                        w.Write((byte)0);
-                    }
+                    w.Write((byte)0);
                 }
             }
         }

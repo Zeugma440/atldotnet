@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace ATL.AudioData
@@ -12,9 +13,28 @@ namespace ATL.AudioData
 	/// </summary>
 	public class TagData
 	{
+        public class PictureInfo
+        {
+            public MetaDataIOFactory.PIC_TYPE PicType;
+            public byte NativePicCode;
+            public ImageFormat NativeFormat;
+
+            public PictureInfo(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat nativeFormat) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; }
+
+            public override int GetHashCode() // Useful for using as key in Lists and Dictionaries
+            {
+                return 10000*NativePicCode + PicType.GetHashCode(); // This is not 100% stable, as PicType.GetHashCode actual value is unpredictable
+            }
+
+            public override bool Equals(object obj)
+            {
+                return ((obj is PictureInfo) && (((PictureInfo)obj).PicType.Equals(PicType)) && (((PictureInfo)obj).NativePicCode.Equals(NativePicCode)));
+            }
+        }
+
 		public TagData()
         {
-            Pictures = new Dictionary<MetaDataIOFactory.PIC_TYPE, Image>();
+            Pictures = new Dictionary<PictureInfo, Image>();
         }
 
         /* Not useful so far
@@ -57,34 +77,36 @@ namespace ATL.AudioData
         public const byte TAG_FIELD_CONDUCTOR               = 19;
 
 
-        public String GeneralDescription = "";
-        public String Title = "";
-		public String Artist = "";
-        public String OriginalArtist = "";
-        public String Composer = "";
-		public String Comment = "";
-        public String Genre = "";
-        public String Album = "";
-        public String OriginalAlbum = "";
-        public String RecordingYear = "";
-        public String RecordingDayMonth = "";
-        public String RecordingDate = "";
-        public String TrackNumber = "";
-        public String DiscNumber = "";
-        public String Rating = "";
-        public String Copyright = "";
-        public String AlbumArtist = "";
-        public String Publisher = "";
-        public String Conductor = "";
-        public IDictionary<MetaDataIOFactory.PIC_TYPE, Image> Pictures;
+        public string GeneralDescription = null;
+        public string Title = null;
+		public string Artist = null;
+        public string OriginalArtist = null;
+        public string Composer = null;
+		public string Comment = null;
+        public string Genre = null;
+        public string Album = null;
+        public string OriginalAlbum = null;
+        public string RecordingYear = null;
+        public string RecordingDayMonth = null;
+        public string RecordingDate = null;
+        public string TrackNumber = null;
+        public string DiscNumber = null;
+        public string Rating = null;
+        public string Copyright = null;
+        public string AlbumArtist = null;
+        public string Publisher = null;
+        public string Conductor = null;
+        public IDictionary<PictureInfo, Image> Pictures;
 
-        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picCode)
+        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat imgFmt)
         {
-            if (Pictures.ContainsKey(picCode))
+            // TODO test if a new key containing existing elements is recognized as an existing key
+            PictureInfo picInfo = new PictureInfo(picType, nativePicCode, imgFmt);
+            if (Pictures.ContainsKey(picInfo))
             {
-                Pictures.Remove(picCode);
+                Pictures.Remove(picInfo);
             }
-            Pictures.Add(picCode, Image.FromStream(s));
+            Pictures.Add(picInfo, Image.FromStream(s));
         }
 
         public void IntegrateValue(byte key, String value)
@@ -124,9 +146,9 @@ namespace ATL.AudioData
             }
 
             // Pictures
-            foreach (MetaDataIOFactory.PIC_TYPE picType in data.Pictures.Keys)
+            foreach (PictureInfo picInfo in data.Pictures.Keys)
             {
-                Pictures[picType] = data.Pictures[picType];
+                Pictures[picInfo] = data.Pictures[picInfo];
             }
         }
 
@@ -159,7 +181,7 @@ namespace ATL.AudioData
 
         private void addIfConsistent(String data, byte id, ref IDictionary<byte,String> map)
         {
-            if ((data != null) && (data.Length > 0)) map[id] = data;
+            if (data != null) map[id] = data;
         }
     }
 }

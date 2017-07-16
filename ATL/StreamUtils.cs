@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
@@ -574,6 +576,20 @@ namespace ATL
             if (!found) r.BaseStream.Position = initialPos;
 
             return found;
+        }
+
+        public static void SaveImageToLivingStream(Image image, ImageFormat format, Stream stream)
+        {
+            MemoryStream pictureStream = new MemoryStream();
+            long picSize = 0;
+
+            image.Save(pictureStream, format);
+            picSize = pictureStream.Position;
+            pictureStream.Seek(0, SeekOrigin.Begin);
+
+            CopyStream(pictureStream, stream, picSize);
+
+            pictureStream.Close();
         }
     }
 }

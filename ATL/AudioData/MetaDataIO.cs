@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
@@ -24,10 +25,9 @@ namespace ATL.AudioData
 
         protected TagData tagData;
 
-        protected IList<MetaDataIOFactory.PIC_TYPE> FPictureTokens;
+        protected IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE, byte>> FPictureTokens;
 
         protected IDictionary<string, string> otherTagFields;
-        protected IDictionary<int, Image> unsupportedPictures;
 
 
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
@@ -250,27 +250,19 @@ namespace ATL.AudioData
         /// <summary>
         /// Each positioned flag indicates the presence of an embedded picture
         /// </summary>
-        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens
+        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
         {
             get { return this.FPictureTokens; }
         }
 
-/*
-        public IList<IDictionary<MetaDataIOFactory.PIC_TYPE,Image>> EmbeddedPictures
-        {
-            get
-            {
-                Read
-            }
-        }
-*/
+        // TODO         
+        // write unsupported fields
+        // write unsupported pictures
 
-        // TODO 
-        //   getPictures
-        //   access to unsupported pictures
-        
-            // write unsupported fields
-            // write unsupported pictures
+        protected void addPictureToken(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode)
+        {
+            FPictureTokens.Add(new KeyValuePair<MetaDataIOFactory.PIC_TYPE, byte>(picType, nativePicCode));
+        }
 
         public virtual void ResetData()
         {
@@ -280,28 +272,30 @@ namespace ATL.AudioData
             FOffset = 0;
 
             tagData = new TagData();
-            FPictureTokens = new List<MetaDataIOFactory.PIC_TYPE>();
+            FPictureTokens = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>();
             otherTagFields = new Dictionary<string, string>();
-            unsupportedPictures = new Dictionary<int, Image>();
         }
 
         abstract protected int getDefaultTagOffset();
 
         abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
 
-        abstract public bool Write(TagData tag, BinaryWriter w);
+
+        abstract protected bool write(TagData tag, BinaryWriter w);
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             long newTagSize = -1;
+            tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            Read(r, null, true);
+            this.Read(r, new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true);
 
             TagData dataToWrite;
+            FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
+
             if (!FExists) // If tag not found (e.g. empty file)
             {
-                FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
                 dataToWrite = tag; // Write new tag information
             }
             else
@@ -314,7 +308,7 @@ namespace ATL.AudioData
             using (MemoryStream s = new MemoryStream(Size))
             using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
             {
-                if (Write(dataToWrite, msw))
+                if (write(dataToWrite, msw))
                 {
                     newTagSize = s.Length;
 
@@ -359,5 +353,11 @@ namespace ATL.AudioData
 
             return newTagSize;
         }
+
+        private void readPictureData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat)
+        {
+            this.tagData.Pictures.Add(new TagData.PictureInfo(picType, picCode, imgFormat), new Bitmap( Image.FromStream(s) ) );
+        }
+
     }
 }

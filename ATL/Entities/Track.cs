@@ -3,6 +3,7 @@ using ATL.AudioReaders;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace ATL
@@ -40,7 +41,7 @@ namespace ATL
         public int Rating;
         [Obsolete]
         public IList<MetaReaderFactory.PIC_CODE> Pictures;
-        public IList<MetaDataIOFactory.PIC_TYPE> PictureTokens;
+        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens;
 
         protected Image coverArt = null;
 
@@ -58,10 +59,10 @@ namespace ATL
         // Kept for compatibility issues during parallel development
         protected void readImageData(ref MemoryStream s)
         {
-            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front);
+            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front, 0, ImageFormat.Jpeg);
         }
 
-        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picCode)
+        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat)
         {
             coverArt = Image.FromStream(s);
         }
@@ -149,7 +150,7 @@ namespace ATL
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
-                PictureTokens = new List<MetaDataIOFactory.PIC_TYPE>(theReader.PictureTokens);
+                PictureTokens = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>(theReader.PictureTokens);
             }
         }
 	}

@@ -6,6 +6,7 @@ using System.Security;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace Commons
 {
@@ -401,6 +402,26 @@ namespace Commons
             else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Bmp))
             {
                 result += "bmp";
+            }
+
+            return result;
+        }
+
+        public static ImageFormat GetImageFormatFromMimeType(string mimeType)
+        {
+            ImageFormat result = ImageFormat.Jpeg;
+
+            if (mimeType.Contains("gif"))
+            {
+                result = ImageFormat.Gif;
+            }
+            else if (mimeType.Contains("png"))
+            {
+                result = ImageFormat.Png;
+            }
+            else if (mimeType.Contains("bmp"))
+            {
+                result = ImageFormat.Bmp;
             }
 
             return result;

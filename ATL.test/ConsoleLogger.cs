@@ -5,7 +5,7 @@ namespace ATL.test
     public class ConsoleLogger : ILogDevice
     {
         Log theLog = new Log();
-        long previousTimestamp = 0;
+        long previousTimestamp = System.DateTime.Now.Ticks;
 
         public ConsoleLogger()
         {
