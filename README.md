@@ -113,7 +113,7 @@ Windows Media Audio|.WMA| | | |yes|
 
 ## What is the roadmap of ATL.NET ?
 
-* Being able to create, edit and remove metadata (tags)
+* Being able to create, edit and remove metadata (tags) <== WIP on a soon-to-be published dedicated branch
 * Support for **more video game-specific music formats** (.GYM, .VGM)
 * Connectors to **other library file formats** (iTunes)
 
