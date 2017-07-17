@@ -187,6 +187,7 @@ namespace ATL
             }
         }
 
+        // TODO DOC
         public static byte[] ReadBinaryStream(Stream from, long length = 0)
         {
             byte[] buffer = new byte[BUFFERSIZE];
@@ -201,7 +202,6 @@ namespace ATL
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i);
                 from.Read(buffer, 0, bufSize);
-                //to.Write(data, 0, bufSize);
                 Array.Copy(buffer, 0, result, i, bufSize);
                 i += bufSize;
             }

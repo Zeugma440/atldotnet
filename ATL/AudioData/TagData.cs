@@ -1,4 +1,5 @@
 using ATL.AudioReaders;
+using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
@@ -89,13 +90,9 @@ namespace ATL.AudioData
         public string AlbumArtist = null;
         public string Publisher = null;
         public string Conductor = null;
+
         public IList<PictureInfo> Pictures;
 
-        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat imgFmt, int originalTag)
-        {
-            PictureInfo picInfo = new PictureInfo(picType, nativePicCode, imgFmt, originalTag);
-            picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
-        }
 
         public void IntegrateValue(byte key, String value)
         {
@@ -171,5 +168,6 @@ namespace ATL.AudioData
         {
             if (data != null) map[id] = data;
         }
+
     }
 }

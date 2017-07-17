@@ -169,23 +169,45 @@ namespace ATL.test.IO.MetaData
             File.Copy(location, testFileLocation, true);
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
-            // Add a new supported field
+            // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(MetaDataIOFactory.PIC_TYPE.Back, 0, ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2);
+            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic1.jpg");
+            theTag.Pictures.Add(picInfo);
+
+
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
-            readExistingTagsOnFile(ref theFile);
+            readExistingTagsOnFile(ref theFile, 3);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.ID3v2.Conductor);
 
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Back))
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x04);
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 600);
+                    Assert.AreEqual(picture.Width, 900);
+                    break;
+                }
+            }
+
+
             // Remove the additional supported field
             theTag = new TagData();
             theTag.Conductor = "";
+
+            // TODO remove additional picture
+
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
@@ -253,7 +275,15 @@ namespace ATL.test.IO.MetaData
 
 
             // Add a new unsupported field
-            theFile.ID3v2.OtherFields.Add("TEST", "This is a test 父");
+            TagData theTag = new TagData();
+//            theFile.ID3v2.OtherFields.Add("TEST", "This is a test 父");
+
+            // Add a new unsupported picture
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(MetaDataIOFactory.PIC_TYPE.Unsupported, 0x0A, ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2);
+            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic1.jpg");
+            theTag.Pictures.Add(picInfo);
+             
+
             theFile.AddTagToFile(MetaDataIOFactory.TAG_ID3V2);
 
             Assert.IsTrue(theFile.ReadFromFile());
@@ -261,35 +291,27 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("TEST"));
-            Assert.AreEqual("This is a test 父", theFile.ID3v2.OtherFields["TEST"]);
+            //            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("TEST"));
+            //            Assert.AreEqual("This is a test 父", theFile.ID3v2.OtherFields["TEST"]);
 
-
-            // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V2));
-
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
-
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
-
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
+            foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported))
+                {
+                    Assert.AreEqual(pic.Value.NativeCode, 0x0A);
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 600);
+                    Assert.AreEqual(picture.Width, 900);
+                    break;
+                }
+            }
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(ref IAudioDataIO theFile)
+        private void readExistingTagsOnFile(ref IAudioDataIO theFile, int nbPictures = 2)
         {
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true));
@@ -314,7 +336,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Pictures
-            Assert.AreEqual(2, pictures.Count);
+            Assert.AreEqual(nbPictures, pictures.Count);
 
             foreach (KeyValuePair<MetaDataIOFactory.PIC_TYPE, PictureInfo> pic in pictures)
             {

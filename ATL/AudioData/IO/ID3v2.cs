@@ -729,6 +729,7 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
             int nbFrames = 0;
+            bool doWritePicture;
 
             // Rewrites extended header as is
             if (FTagHeader.HasExtendedHeader)
@@ -780,8 +781,15 @@ namespace ATL.AudioData.IO
 
             foreach (TagData.PictureInfo picInfo in tag.Pictures)
             {
-                writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode:EncodeID3v2PictureType(picInfo.PicType), "");
-                nbFrames++;
+                // Picture has either to be supported, or to come from the right tag standard
+                doWritePicture = !picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture =  (MetaDataIOFactory.TAG_ID3V2 == picInfo.OriginalTag);
+
+                if (doWritePicture)
+                {
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
+                    nbFrames++;
+                }
             }
 
             if (useID3v2ExtendedHeaderRestrictions)
