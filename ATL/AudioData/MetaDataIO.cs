@@ -354,9 +354,12 @@ namespace ATL.AudioData
             return newTagSize;
         }
 
-        private void readPictureData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat)
+        private void readPictureData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat, int originalTag)
         {
-            this.tagData.Pictures.Add(new TagData.PictureInfo(picType, picCode, imgFormat), new Bitmap( Image.FromStream(s) ) );
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(picType, picCode, imgFormat, originalTag);
+            picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
+
+            tagData.Pictures.Add(picInfo);
         }
 
     }

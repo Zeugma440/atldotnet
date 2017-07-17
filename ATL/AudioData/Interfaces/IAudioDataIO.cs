@@ -82,6 +82,7 @@ namespace ATL.AudioData
 
         bool RemoveTagFromFile(int tagType);
 
+        bool AddTagToFile(int tagType);
         bool AddTagToFile(TagData theTag, int tagType);
 
         /// <summary>

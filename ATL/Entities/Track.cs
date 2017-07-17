@@ -22,6 +22,8 @@ namespace ATL
             if (useOldImplementation) UpdateOld(); else Update();
         }
 
+        // TODO align on TagData properties
+
 		public String Path;		
 		public String Title;
 		public String Artist;
@@ -59,10 +61,10 @@ namespace ATL
         // Kept for compatibility issues during parallel development
         protected void readImageData(ref MemoryStream s)
         {
-            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front, 0, ImageFormat.Jpeg);
+            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front, 0, ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE);
         }
 
-        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat)
+        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat, int originalTag)
         {
             coverArt = Image.FromStream(s);
         }
@@ -121,7 +123,7 @@ namespace ATL
                 LastModified = theFileInfo.LastWriteTime.Ticks;
             }
 
-            //TODO when tag is not available, customize by naming options // tracks (...)
+            // TODO when tag is not available, customize by naming options // tracks (...)
             AudioFileIO theReader = new AudioFileIO(Path, pictureStreamHandler);
 
             // Per convention, the presence of a pictureStreamHandler

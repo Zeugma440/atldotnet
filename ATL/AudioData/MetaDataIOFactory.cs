@@ -10,7 +10,7 @@ namespace ATL.AudioData
 	{
         public enum PIC_TYPE { Unsupported, Generic, Front, Back, CD };
 
-        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, byte nativePicCode, ImageFormat imgFormat);
+        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, byte nativePicCode, ImageFormat imgFormat, int originalTag);
 
 
         // Defines the types of supported "cross-format" metadata

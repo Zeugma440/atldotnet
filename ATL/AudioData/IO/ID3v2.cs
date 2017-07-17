@@ -577,7 +577,9 @@ namespace ATL.AudioData.IO
                                 StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
                             }
 
-                            pictureStreamHandler(ref mem, picType, picCode, imgFormat);
+                            mem.Seek(0, SeekOrigin.Begin);
+
+                            pictureStreamHandler(ref mem, picType, picCode, imgFormat, MetaDataIOFactory.TAG_ID3V2);
 
                             mem.Close();
                         }
@@ -776,9 +778,9 @@ namespace ATL.AudioData.IO
                 nbFrames++;
             }
 
-            foreach (TagData.PictureInfo picInfo in tag.Pictures.Keys)
+            foreach (TagData.PictureInfo picInfo in tag.Pictures)
             {
-                writePictureFrame(ref w, tag.Pictures[picInfo], picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode:EncodeID3v2PictureType(picInfo.PicType), "");
+                writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode:EncodeID3v2PictureType(picInfo.PicType), "");
                 nbFrames++;
             }
 
@@ -902,16 +904,20 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, Image picture, ImageFormat picFormat, string mimeType, byte pictureTypeCode, String picDescription)
+        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, String picDescription)
         {
+            // Binary tag writing management
             long frameOffset;
             long frameSizePos;
             long frameSizePos2;
             long finalFramePos;
             long finalFramePosRaw;
-
             int dataSizeModifier = 0;
 
+            // Picture operations management
+            Image picture = null;
+
+            // Unsynchronization management
             BinaryWriter w;
             MemoryStream s = null;
 
@@ -932,7 +938,6 @@ namespace ATL.AudioData.IO
 
             frameSizePos = w.BaseStream.Position;
             w.Write((int)0); // Temp frame size placeholder; will be rewritten at the end of the routine
-//            dataSizeModifier += 4;
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
             // Data size is the "natural" size of the picture (i.e. without unsynchronization) + the size of the headerless APIC frame (i.e. starting from the "text encoding" byte)
@@ -964,6 +969,8 @@ namespace ATL.AudioData.IO
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions; switching to JPEG");
 
+                        picture = Image.FromStream(new MemoryStream(pictureData));
+
                         mimeType = "image/jpeg";
                         picFormat = ImageFormat.Jpeg;
                     }
@@ -976,18 +983,21 @@ namespace ATL.AudioData.IO
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ picture.Width + "x" + picture.Height +") does not respect ID3v2 restrictions (256x256 or less); resizing");
 
+                        picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
                     }
                     else if ((64 == FTagHeader.PictureSizeRestriction) && ((picture.Height > 64) || (picture.Width > 64))) // 64x64 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (64x64 or less); resizing");
 
+                        picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
                     }
                     else if ((63 == FTagHeader.PictureSizeRestriction) && ((picture.Height != 64) && (picture.Width != 64))) // exactly 64x64
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (exactly 64x64); resizing");
 
+                        picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), false);
                     }
                 }
@@ -1002,8 +1012,13 @@ namespace ATL.AudioData.IO
             if (picDescription.Length > 0) w.Write(picDescription); // Picture description
             w.Write('\0'); // Description should be null-terminated
 
-            picture.Save(w.BaseStream, picFormat);
-            //StreamUtils.SaveImageToLivingStream(picture, picFormat, w.BaseStream);
+            if (picture != null) // Picture has been somehow modified when checking against extended header restrictions
+            {
+                picture.Save(w.BaseStream, picFormat);
+            } else
+            {
+                w.Write(pictureData);
+            }
 
             finalFramePosRaw = w.BaseStream.Position;
 

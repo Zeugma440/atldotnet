@@ -187,6 +187,28 @@ namespace ATL
             }
         }
 
+        public static byte[] ReadBinaryStream(Stream from, long length = 0)
+        {
+            byte[] buffer = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
+
+            if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
+            byte[] result = new byte[bytesToRead];
+
+            while (i < bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i);
+                from.Read(buffer, 0, bufSize);
+                //to.Write(data, 0, bufSize);
+                Array.Copy(buffer, 0, result, i, bufSize);
+                i += bufSize;
+            }
+
+            return result;
+        }
+
         // TODO DOC
         public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
         {
@@ -416,12 +438,12 @@ namespace ATL
 
         public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
-            return ReadNullTerminatedString(r, encoding, 0, false);
+            return readNullTerminatedString(r, encoding, 0, false);
         }
 
         public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
         {
-            return ReadNullTerminatedString(r, encoding, limit, true);
+            return readNullTerminatedString(r, encoding, limit, true);
         }
 
         /// <summary>
@@ -432,7 +454,7 @@ namespace ATL
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
         /// <returns>The string read, without the zeroes at its end</returns>
-        private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
+        private static String readNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
             IList<byte> readBytes = new List<byte>(limit>0?limit:40);
@@ -578,6 +600,7 @@ namespace ATL
             return found;
         }
 
+        // TODO remove if unused after IO branch completion
         public static void SaveImageToLivingStream(Image image, ImageFormat format, Stream stream)
         {
             MemoryStream pictureStream = new MemoryStream();

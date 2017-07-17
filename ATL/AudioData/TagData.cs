@@ -15,26 +15,19 @@ namespace ATL.AudioData
 	{
         public class PictureInfo
         {
-            public MetaDataIOFactory.PIC_TYPE PicType;
-            public byte NativePicCode;
-            public ImageFormat NativeFormat;
+            public MetaDataIOFactory.PIC_TYPE PicType;      // Normalized picture type
+            public int OriginalTag;                         // Tag where the picture originates from
+            public byte NativePicCode;                      // Native picture code in OriginalTag convention
+            public ImageFormat NativeFormat;                // Native image format
 
-            public PictureInfo(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat nativeFormat) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; }
+            public byte[] PictureData;                      // Binary picture data
 
-            public override int GetHashCode() // Useful for using as key in Lists and Dictionaries
-            {
-                return 10000*NativePicCode + PicType.GetHashCode(); // This is not 100% stable, as PicType.GetHashCode actual value is unpredictable
-            }
-
-            public override bool Equals(object obj)
-            {
-                return ((obj is PictureInfo) && (((PictureInfo)obj).PicType.Equals(PicType)) && (((PictureInfo)obj).NativePicCode.Equals(NativePicCode)));
-            }
+            public PictureInfo(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat nativeFormat, int originalTag) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; OriginalTag = originalTag; }
         }
 
 		public TagData()
         {
-            Pictures = new Dictionary<PictureInfo, Image>();
+            Pictures = new List<PictureInfo>();
         }
 
         /* Not useful so far
@@ -96,17 +89,12 @@ namespace ATL.AudioData
         public string AlbumArtist = null;
         public string Publisher = null;
         public string Conductor = null;
-        public IDictionary<PictureInfo, Image> Pictures;
+        public IList<PictureInfo> Pictures;
 
-        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat imgFmt)
+        protected void readImageData(ref Stream s, MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat imgFmt, int originalTag)
         {
-            // TODO test if a new key containing existing elements is recognized as an existing key
-            PictureInfo picInfo = new PictureInfo(picType, nativePicCode, imgFmt);
-            if (Pictures.ContainsKey(picInfo))
-            {
-                Pictures.Remove(picInfo);
-            }
-            Pictures.Add(picInfo, Image.FromStream(s));
+            PictureInfo picInfo = new PictureInfo(picType, nativePicCode, imgFmt, originalTag);
+            picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
         }
 
         public void IntegrateValue(byte key, String value)
@@ -146,9 +134,9 @@ namespace ATL.AudioData
             }
 
             // Pictures
-            foreach (PictureInfo picInfo in data.Pictures.Keys)
+            foreach (PictureInfo picInfo in data.Pictures)
             {
-                Pictures[picInfo] = data.Pictures[picInfo];
+                Pictures.Add(picInfo);
             }
         }
 

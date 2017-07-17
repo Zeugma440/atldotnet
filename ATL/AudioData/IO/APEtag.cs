@@ -153,7 +153,7 @@ namespace ATL.AudioData.IO
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                             StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
                             // TODO
-                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front, 0, System.Drawing.Imaging.ImageFormat.Jpeg); // TODO write actual image format !
+                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front, 0, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE); // TODO write actual image format !
                             mem.Close();
                         }
                     }

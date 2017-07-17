@@ -152,6 +152,11 @@ namespace ATL.AudioData
             return result;
         }
 
+        public bool AddTagToFile(int tagType) // Variant used for operations directly using IMetaDataIO (e.g. unsupported fields I/O)
+        {
+            return AddTagToFile(new TagData(), tagType);
+        }
+
         public bool AddTagToFile(TagData theTag, int tagType)
         {
             bool result = true;
