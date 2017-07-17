@@ -18,6 +18,8 @@ namespace ATL.test.IO.MetaData
      *  Whole tag removal
      *  
      *  Add a supported field
+     *  Add a supported picture
+     *  Add an unsupported picture
      *  
      *  Conservation of unmodified tag items after tag editing
      *  Conservation of unsupported tag field after tag editing
@@ -32,12 +34,11 @@ namespace ATL.test.IO.MetaData
      * FUNCTIONAL
      * 
      * Add an unsupported field
-     * Add an unsupported picture
-     * Add a supported picture
      * 
-     * Remove a picture
+     * Individual picture removal
      * 
      * Extended header compliance cases incl. limit cases
+     * 
      * 
      * TECHNICAL
      * 
