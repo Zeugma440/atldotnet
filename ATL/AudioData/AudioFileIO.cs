@@ -23,7 +23,7 @@ namespace ATL.AudioData
         /// Constructor
         /// </summary>
         /// <param name="path">Path of the file to be parsed</param>
-        public AudioFileIO(string path, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
+        public AudioFileIO(string path, TagData.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             byte alternate = 0;
             thePath = path;
@@ -75,7 +75,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Flag indicating the presence of embedded pictures
         /// </summary>
-        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
+        public IList<TagData.PictureInfo> PictureTokens
         {
             get { return metaData.PictureTokens; }
         }
@@ -224,7 +224,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {
             return metaData.Read(source, pictureStreamHandler, readAllMetaFrames);
         }
@@ -234,7 +234,7 @@ namespace ATL.AudioData
             return metaData.Write(r, w, tag);
         }
 
-        public bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
+        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             throw new NotImplementedException();
         }

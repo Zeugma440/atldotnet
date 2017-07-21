@@ -373,12 +373,16 @@ namespace Commons
             }
         }
 
-        public static String BuildStrictLengthString(String value, int length, char paddingChar)
+        public static String BuildStrictLengthString(String value, int length, char paddingChar, bool padRight = true)
         {
             String result = (null == value) ? "" : value;
 
             if (result.Length > length) result = result.Substring(0, length);
-            if (result.Length < length) result = result.PadRight(length, paddingChar);
+            if (result.Length < length)
+            {
+                if (padRight) result = result.PadRight(length, paddingChar);
+                else result = result.PadLeft(length, paddingChar);
+            }
 
             return result;
         }

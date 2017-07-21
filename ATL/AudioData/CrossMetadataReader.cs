@@ -208,11 +208,11 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
-        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
+        public IList<TagData.PictureInfo> PictureTokens
         {
             get
             {
-                IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> pictures = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>();
+                IList<TagData.PictureInfo> pictures = new List<TagData.PictureInfo>();
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     pictures = reader.PictureTokens;
@@ -238,7 +238,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {
             throw new NotImplementedException();
         }

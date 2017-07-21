@@ -14,41 +14,76 @@ namespace ATL.AudioData
 	/// </summary>
 	public class TagData
 	{
+        public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
+
+        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte nativePicCode, int position);
+
+
         public class PictureInfo
         {
-            public MetaDataIOFactory.PIC_TYPE PicType;      // Normalized picture type
-            public int OriginalTag;                         // Tag where the picture originates from
-            public byte NativePicCode;                      // Native picture code in OriginalTag convention
+            public PIC_TYPE PicType;                        // Normalized picture type
             public ImageFormat NativeFormat;                // Native image format
+            public int Position;                           // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
+
+            public int TagType;                             // Tag type where the picture originates from
+            public byte NativePicCode;                      // Native picture code according to TagType convention (byte : e.g. ID3v2)
+            public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
 
             public byte[] PictureData;                      // Binary picture data
 
-            public PictureInfo(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode, ImageFormat nativeFormat, int originalTag) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; OriginalTag = originalTag; }
+            public bool MarkedForDeletion = false;          // Marked for deletion flag
+
+
+            public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, byte nativePicCode, int position = 1) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int position = 1) { PicType = picType; NativeFormat = nativeFormat; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+
+            public override string ToString()
+            {
+                string result = Utils.BuildStrictLengthString(Position.ToString(), 2, '0', false) + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false);
+
+                if (PicType.Equals(PIC_TYPE.Unsupported))
+                {
+                    if (NativePicCode > 0)
+                        result = result + ((100 * TagType) + NativePicCode).ToString();
+                    else if ((NativePicCodeStr != null) && (NativePicCodeStr.Length > 0))
+                        result = result + (100 * TagType).ToString() + NativePicCodeStr;
+                    else
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Non-supported picture detected, but no native picture code found");
+                }
+
+                return result;
+            }
+
+            public override int GetHashCode()
+            {
+                return int.Parse(ToString());
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+
+                // Actually check the type, should not throw exception from Equals override
+                if (obj.GetType() != this.GetType()) return false;
+
+                // Call the implementation from IEquatable
+                return this.ToString().Equals(obj.ToString());
+            }
         }
 
-		public TagData()
+        public class MetaFieldInfo
         {
-            Pictures = new List<PictureInfo>();
+            public int TagType;                             // Tag type where the picture originates from
+            public string NativeFieldCode;                  // Native field code according to TagType convention
+
+            public string Value;                            // Field value
+
+            public MetaFieldInfo(int tagType, string nativeFieldCode, string value) { TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; }
         }
 
-        /* Not useful so far
-        public TagData(IMetaDataIO meta)
-        {
-            Title = meta.Title;
-            Artist = meta.Artist;
-            Composer = meta.Composer;
-            Genre = meta.Genre;
-            Album = meta.Album;
-            Date = meta.Year;
-            TrackNumber = meta.Track.ToString();
-            DiscNumber = meta.Disc.ToString();
-            Rating = meta.Rating.ToString();
-
-            Pictures = new Dictionary<MetaDataIOFactory.PIC_CODE, Image>();
-
-//            AudioFileIO theReader = new AudioFileIO(Path, new StreamUtils.StreamHandlerDelegate(this.readImageData));
-        }
-        */
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;
@@ -94,6 +129,11 @@ namespace ATL.AudioData
         public IList<PictureInfo> Pictures;
 
 
+        public TagData()
+        {
+            Pictures = new List<PictureInfo>();
+        }
+
         public void IntegrateValue(byte key, String value)
         {
             switch (key)
@@ -123,6 +163,8 @@ namespace ATL.AudioData
 
         public void IntegrateValues(TagData data)
         {
+            IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
+
             // String values
             IDictionary<byte, String> newData = data.ToMap();
             foreach (byte key in newData.Keys)
@@ -131,9 +173,29 @@ namespace ATL.AudioData
             }
 
             // Pictures
-            foreach (PictureInfo picInfo in data.Pictures)
+            foreach (PictureInfo newPicInfo in data.Pictures)
             {
-                Pictures.Add(picInfo);
+                if (picturePositions.ContainsKey(newPicInfo))
+                {
+                    if (newPicInfo.MarkedForDeletion)
+                    {
+                        foreach (PictureInfo picInfo in Pictures)
+                        {
+                            if (picInfo.ToString().Equals(newPicInfo.ToString()))
+                            {
+                                picInfo.MarkedForDeletion = true;
+                            }
+                        }
+                    } else
+                    {
+                        newPicInfo.Position = picturePositions[newPicInfo] + 1;
+                        Pictures.Add(newPicInfo);
+                    }
+                }
+                else
+                {
+                    Pictures.Add(newPicInfo);
+                }
             }
         }
 
@@ -169,5 +231,17 @@ namespace ATL.AudioData
             if (data != null) map[id] = data;
         }
 
+        private IDictionary<PictureInfo,int> generatePicturePositions()
+        {
+            IDictionary<PictureInfo, int> result = new Dictionary<PictureInfo, int>();
+
+            foreach (PictureInfo picInfo in Pictures)
+            {
+                if (result.ContainsKey(picInfo)) result[picInfo] = Math.Max(result[picInfo],picInfo.Position);
+                else result.Add(picInfo, picInfo.Position);
+            }
+
+            return result;
+        }
     }
 }

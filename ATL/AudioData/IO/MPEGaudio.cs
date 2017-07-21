@@ -792,7 +792,7 @@ namespace ATL.AudioData.IO
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
         }
 
-        protected override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler)
+        protected override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             Stream fs = source.BaseStream;
 			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];  

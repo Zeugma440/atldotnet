@@ -78,7 +78,7 @@ namespace ATL.AudioData
         /// <param name="pictureStreamHandler">Delegate for reading picture data stream</param>
         /// <param name="readAllMetaFrames">Indicates if all metadata frames (even unmapped ones) have to be stored in memory</param>
         /// <returns>True if the parsing is successful; false if not</returns>
-        bool ReadFromFile(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false);
+        bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false);
 
         bool RemoveTagFromFile(int tagType);
 

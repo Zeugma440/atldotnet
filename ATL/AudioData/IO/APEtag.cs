@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	public class APEtag : MetaDataIO
     {
-        private MetaDataIOFactory.PictureStreamHandlerDelegate FPictureStreamHandler;
+        private TagData.PictureStreamHandlerDelegate FPictureStreamHandler;
 
 		// Tag ID
 		public const String APE_ID = "APETAGEX";							// APE
@@ -146,14 +146,15 @@ namespace ATL.AudioData.IO
                 {
                     if (FieldName.Trim().ToUpper().Equals("COVER ART (FRONT)"))
                     {
-                        addPictureToken(MetaDataIOFactory.PIC_TYPE.Front, 0);
+                        addPictureToken(TagData.PIC_TYPE.Front);
                         if (FPictureStreamHandler != null)
                         {
+                            int position = takePicturePosition(TagData.PIC_TYPE.Front);
                             String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
                             MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                             StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
                             // TODO
-                            FPictureStreamHandler(ref mem, MetaDataIOFactory.PIC_TYPE.Front, 0, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE); // TODO write actual image format !
+                            FPictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0, position); // TODO write actual image format !
                             mem.Close();
                         }
                     }
@@ -172,7 +173,7 @@ namespace ATL.AudioData.IO
 
 		// ---------------------------------------------------------------------------
 
-        public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
+        public override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
         {
 			TagInfo Tag = new TagInfo();
             FPictureStreamHandler = pictureStreamHandler;

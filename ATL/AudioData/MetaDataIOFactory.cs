@@ -8,11 +8,6 @@ namespace ATL.AudioData
 	/// </summary>
 	public class MetaDataIOFactory
 	{
-        public enum PIC_TYPE { Unsupported, Generic, Front, Back, CD };
-
-        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, byte nativePicCode, ImageFormat imgFormat, int originalTag);
-
-
         // Defines the types of supported "cross-format" metadata
         public const int TAG_ID3V1 = 0;
 		public const int TAG_ID3V2 = 1;

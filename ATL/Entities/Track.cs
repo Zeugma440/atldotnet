@@ -43,7 +43,7 @@ namespace ATL
         public int Rating;
         [Obsolete]
         public IList<MetaReaderFactory.PIC_CODE> Pictures;
-        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens;
+        public IList<TagData.PictureInfo> PictureTokens;
 
         protected Image coverArt = null;
 
@@ -52,7 +52,7 @@ namespace ATL
         {
             if (null == coverArt)
             {
-                Update(new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readImageData));
+                Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
             }
             
             return coverArt;
@@ -61,10 +61,10 @@ namespace ATL
         // Kept for compatibility issues during parallel development
         protected void readImageData(ref MemoryStream s)
         {
-            readImageData(ref s, MetaDataIOFactory.PIC_TYPE.Front, 0, ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE);
+            readImageData(ref s, TagData.PIC_TYPE.Front, ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0, 1);
         }
 
-        protected void readImageData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat, int originalTag)
+        protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte picCode, int position)
         {
             coverArt = Image.FromStream(s);
         }
@@ -113,7 +113,7 @@ namespace ATL
             }
         }
 
-        protected void Update(MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler = null)
+        protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
             FileInfo theFileInfo = new FileInfo(Path);
 
@@ -152,7 +152,7 @@ namespace ATL
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
-                PictureTokens = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>(theReader.PictureTokens);
+                PictureTokens = new List<TagData.PictureInfo>(theReader.PictureTokens);
             }
         }
 	}

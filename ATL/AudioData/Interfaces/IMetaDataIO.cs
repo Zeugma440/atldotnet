@@ -125,10 +125,10 @@ namespace ATL.AudioData
         */
         /// <summary>
         /// List of picture IDs stored in the tag
-        ///     MetaDataIOFactory.PIC_TYPE : internal, normalized picture type
+        ///     TagData.PIC_TYPE : internal, normalized picture type
         ///     byte : native picture code (useful when exploiting the UNSUPPORTED picture type)
         /// </summary>
-        IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
+        IList<TagData.PictureInfo> PictureTokens
         {
             get;
         }
@@ -154,7 +154,7 @@ namespace ATL.AudioData
         /// <param name="pictureStreamHandler">Delegate to use when reading picture data</param>
         /// <param name="readAllMetaFrames">Indicates if all metadata frames (even unmapped ones) have to be stored in memory</param>
         /// <returns></returns>
-        bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
+        bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
 
         /// <summary>
         /// Add the specified information to current tag information :

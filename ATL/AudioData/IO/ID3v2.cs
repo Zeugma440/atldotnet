@@ -353,7 +353,7 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
+        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, TagData.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
         {
             Stream fs = SourceFile.BaseStream;
             FrameHeader Frame = new FrameHeader();
@@ -554,9 +554,20 @@ namespace ATL.AudioData.IO
                         }
 
                         byte picCode = SourceFile.ReadByte();
-                        MetaDataIOFactory.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                        TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
-                        addPictureToken(picType, picCode);
+                        int picturePosition;
+                        if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                        {
+                            addPictureToken(MetaDataIOFactory.TAG_ID3V2,picCode);
+                            picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
+                        }
+                        else
+                        {
+                            addPictureToken(picType);
+                            picturePosition = takePicturePosition(picType);
+                        }
 
                         // Image description (unused)
                         // Description can be coded with another convention
@@ -579,7 +590,7 @@ namespace ATL.AudioData.IO
 
                             mem.Seek(0, SeekOrigin.Begin);
 
-                            pictureStreamHandler(ref mem, picType, picCode, imgFormat, MetaDataIOFactory.TAG_ID3V2);
+                            pictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
 
                             mem.Close();
                         }
@@ -591,7 +602,7 @@ namespace ATL.AudioData.IO
 
         // ********************** Public functions & voids **********************
 
-        public override bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
+        public override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
         {
             return Read(source, pictureStreamHandler, 0, readAllMetaFrames);
         }
@@ -604,7 +615,7 @@ namespace ATL.AudioData.IO
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
         /// <param name="storeUnsupportedMetaFields">Indicates wether unsupported fields should be read and stored in memory (optional; default = false)</param>
         /// <returns></returns>
-        public bool Read(BinaryReader source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
+        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
         {
             FTagHeader = new TagInfo();
 
@@ -782,12 +793,14 @@ namespace ATL.AudioData.IO
             foreach (TagData.PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture =  (MetaDataIOFactory.TAG_ID3V2 == picInfo.OriginalTag);
+                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture =  (MetaDataIOFactory.TAG_ID3V2 == picInfo.TagType);
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(MetaDataIOFactory.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -1127,20 +1140,20 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static MetaDataIOFactory.PIC_TYPE DecodeID3v2PictureType(int picCode)
+        private static TagData.PIC_TYPE DecodeID3v2PictureType(int picCode)
         {
-            if (0 == picCode) return MetaDataIOFactory.PIC_TYPE.Generic;
-            else if (3 == picCode) return MetaDataIOFactory.PIC_TYPE.Front;
-            else if (4 == picCode) return MetaDataIOFactory.PIC_TYPE.Back;
-            else if (6 == picCode) return MetaDataIOFactory.PIC_TYPE.CD;
-            else return MetaDataIOFactory.PIC_TYPE.Unsupported;
+            if (0 == picCode) return TagData.PIC_TYPE.Generic;
+            else if (3 == picCode) return TagData.PIC_TYPE.Front;
+            else if (4 == picCode) return TagData.PIC_TYPE.Back;
+            else if (6 == picCode) return TagData.PIC_TYPE.CD;
+            else return TagData.PIC_TYPE.Unsupported;
         }
 
-        private static byte EncodeID3v2PictureType(MetaDataIOFactory.PIC_TYPE picCode)
+        private static byte EncodeID3v2PictureType(TagData.PIC_TYPE picCode)
         {
-            if (MetaDataIOFactory.PIC_TYPE.Front.Equals(picCode)) return 3;
-            else if (MetaDataIOFactory.PIC_TYPE.Back.Equals(picCode)) return 4;
-            else if (MetaDataIOFactory.PIC_TYPE.CD.Equals(picCode)) return 6;
+            if (TagData.PIC_TYPE.Front.Equals(picCode)) return 3;
+            else if (TagData.PIC_TYPE.Back.Equals(picCode)) return 4;
+            else if (TagData.PIC_TYPE.CD.Equals(picCode)) return 6;
             else return 0;
         }
 

@@ -25,7 +25,9 @@ namespace ATL.AudioData
 
         protected TagData tagData;
 
-        protected IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE, byte>> FPictureTokens;
+        protected IDictionary<TagData.PictureInfo, int> picturePositions;
+
+        protected IList<TagData.PictureInfo> pictureTokens;
 
         protected IDictionary<string, string> otherTagFields;
 
@@ -250,18 +252,46 @@ namespace ATL.AudioData
         /// <summary>
         /// Each positioned flag indicates the presence of an embedded picture
         /// </summary>
-        public IList<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>> PictureTokens
+        public IList<TagData.PictureInfo> PictureTokens
         {
-            get { return this.FPictureTokens; }
+            get { return this.pictureTokens; }
         }
 
         // TODO         
         // write unsupported fields
         // write unsupported pictures
 
-        protected void addPictureToken(MetaDataIOFactory.PIC_TYPE picType, byte nativePicCode)
+        protected void addPictureToken(TagData.PIC_TYPE picType)
         {
-            FPictureTokens.Add(new KeyValuePair<MetaDataIOFactory.PIC_TYPE, byte>(picType, nativePicCode));
+            pictureTokens.Add( new TagData.PictureInfo(null, picType) );
+        }
+
+        protected void addPictureToken(int tagType, byte nativePicCode)
+        {
+            pictureTokens.Add(new TagData.PictureInfo(null, tagType, nativePicCode) );
+        }
+
+        protected int takePicturePosition(TagData.PIC_TYPE picType)
+        {
+            return takePicturePosition(new TagData.PictureInfo(null, picType));
+        }
+
+        protected int takePicturePosition(int tagType, byte nativePicCode)
+        {
+            return takePicturePosition(new TagData.PictureInfo(null, tagType, nativePicCode));
+        }
+
+        protected int takePicturePosition(TagData.PictureInfo picInfo)
+        {
+            if (picturePositions.ContainsKey(picInfo))
+            {
+                picturePositions[picInfo] = picturePositions[picInfo] + 1;
+            }
+            else
+            {
+                picturePositions.Add(picInfo, 1);
+            }
+            return picturePositions[picInfo]; ;
         }
 
         public virtual void ResetData()
@@ -272,13 +302,14 @@ namespace ATL.AudioData
             FOffset = 0;
 
             tagData = new TagData();
-            FPictureTokens = new List<KeyValuePair<MetaDataIOFactory.PIC_TYPE,byte>>();
+            pictureTokens = new List<TagData.PictureInfo>();
             otherTagFields = new Dictionary<string, string>();
+            picturePositions = new Dictionary<TagData.PictureInfo, int>();
         }
 
         abstract protected int getDefaultTagOffset();
 
-        abstract public bool Read(BinaryReader Source, MetaDataIOFactory.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
+        abstract public bool Read(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
 
 
         abstract protected bool write(TagData tag, BinaryWriter w);
@@ -289,7 +320,7 @@ namespace ATL.AudioData
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            this.Read(r, new MetaDataIOFactory.PictureStreamHandlerDelegate(this.readPictureData), true);
+            this.Read(r, new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
 
             TagData dataToWrite;
             FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
@@ -354,9 +385,9 @@ namespace ATL.AudioData
             return newTagSize;
         }
 
-        private void readPictureData(ref MemoryStream s, MetaDataIOFactory.PIC_TYPE picType, byte picCode, ImageFormat imgFormat, int originalTag)
+        private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte picCode, int position)
         {
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(picType, picCode, imgFormat, originalTag);
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
 
             tagData.Pictures.Add(picInfo);
