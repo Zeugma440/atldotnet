@@ -1182,7 +1182,7 @@ namespace ATL.AudioData.IO
         }
 
         // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
-        // => every "0xff" becomes "0xff 0x00"
+        // => every "0xff 0xex" becomes "0xff 0x00 0xex"; every "0xff 0x00" becomes "0xff 0x00 0x00"
         private static void encodeUnsynchronizedStreamTo(Stream mFrom, BinaryWriter w)
         {
             // TODO PERF : profile using BinaryReader.ReadByte & BinaryWriter.Write(byte) vs. Stream.ReadByte & Stream.WriteByte
@@ -1190,19 +1190,22 @@ namespace ATL.AudioData.IO
             BinaryReader r = new BinaryReader(mFrom); // This reader shouldn't be closed at the end of the function, else the stream closes as well and becomes inaccessible
             
             long initialPosition;
-            byte b;
+            byte b1,b2;
 
             initialPosition = r.BaseStream.Position;
 
+            b1 = r.ReadByte();
             while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
             {
-                b = r.ReadByte();
-                w.Write(b);
-                if (0xFF == b)
+                b2 = r.ReadByte();
+                w.Write(b1);
+                if (0xFF == b1 && ( (0x00 == b2) || (0xE0 == (b2 & 0xE0))))
                 {
                     w.Write((byte)0);
                 }
+                b1 = b2;
             }
+            w.Write(b1);
         }
 
         /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
