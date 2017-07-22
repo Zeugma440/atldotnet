@@ -14,11 +14,9 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v1_Empty()
         {
             // Source : tag-free MP3
-            String location = "../../Resources/empty.mp3";
-            String testFileLocation = location.Replace("empty", "tmp/testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":", "."));
-
-            // Create a working copy
-            File.Copy(location, testFileLocation, true);
+            string resourceName = "empty.mp3";
+            string location = TestUtils.GetResourceLocationRoot() + resourceName;
+            string testFileLocation = TestUtils.GetTempTestFile(resourceName);
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
 
@@ -84,11 +82,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v1_Existing()
         {
             // Source : MP3 with existing tag
-            String location = "../../Resources/id3v1.mp3";
-            String testFileLocation = location.Replace("id3v1", "tmp/testID3v1" + System.DateTime.Now.ToShortTimeString().Replace(":","."));
-
-            // Create a working copy
-            File.Copy(location, testFileLocation, true);
+            String testFileLocation = TestUtils.GetTempTestFile("id3v1.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
             // Construct a new tag; only rewrite Genre and track number
@@ -119,7 +113,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v1()
         {
             // Source : MP3 with existing tag
-            String location = "../../Resources/id3v1.mp3";
+            String location = TestUtils.GetResourceLocationRoot()+"id3v1.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
             Assert.IsTrue(theFile.ReadFromFile());

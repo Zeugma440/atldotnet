@@ -50,6 +50,9 @@ namespace ATL.test.IO.MetaData
      * Add a non-standard unsupported field => persisted as TXXX field
      * Exact picture data conservation after tag editing
      * 
+     * Encode unsynchronized data
+     * Decode unsynchronized data
+     * 
     */
 
 
@@ -76,11 +79,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Empty()
         {
             // Source : tag-free MP3
-            String location = "../../Resources/empty.mp3";
-            String testFileLocation = location.Replace("empty", "tmp/testID3v2--" + System.DateTime.Now.ToLongTimeString().Replace(":", "."));
-
-            // Create a working copy
-            File.Copy(location, testFileLocation, true);
+            string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
+            string testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
 
@@ -164,14 +164,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_Existing()
         {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = "../../Resources/id3v2.3_UTF16.mp3";
-            String testFileLocation = location.Replace("id3v2.3_UTF16", "tmp/testID3v2--" + System.DateTime.Now.ToLongTimeString().Replace(":", "."));
-
             ConsoleLogger log = new ConsoleLogger();
 
-            // Create a working copy
-            File.Copy(location, testFileLocation, true);
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String testFileLocation = TestUtils.GetTempTestFile("id3v2.3_UTF16.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
             // Add a new supported field and a new supported picture
@@ -246,7 +242,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v23_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = "../../Resources/id3v2.3_UTF16.mp3";
+            String location = TestUtils.GetResourceLocationRoot()+"id3v2.3_UTF16.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
             readExistingTagsOnFile(ref theFile);
@@ -256,7 +252,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v24_UTF8()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = "../../Resources/id3v2.4_UTF8.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + "id3v2.4_UTF8.mp3";
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
 
             readExistingTagsOnFile(ref theFile);
@@ -266,11 +262,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Unsupported_Empty()
         {
             // Source : tag-free MP3
-            String location = "../../Resources/empty.mp3";
-            String testFileLocation = location.Replace("empty", "tmp/testID3v2--" + System.DateTime.Now.ToLongTimeString().Replace(":", "."));
-
-            // Create a working copy
-            File.Copy(location, testFileLocation, true);
+            String testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
 
