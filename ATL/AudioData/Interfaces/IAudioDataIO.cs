@@ -82,7 +82,7 @@ namespace ATL.AudioData
 
         bool RemoveTagFromFile(int tagType);
 
-        bool AddTagToFile(TagData theTag, int tagType);
+        bool UpdateTagInFile(TagData theTag, int tagType);
 
         /// <summary>
         /// Indicates if file format has a native metadata tagging system (e.g. not ID3v1, ID3v2 nor APEtag)

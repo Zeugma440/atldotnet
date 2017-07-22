@@ -152,7 +152,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool AddTagToFile(TagData theTag, int tagType)
+        public bool UpdateTagInFile(TagData theTag, int tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO = null;

@@ -112,7 +112,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -182,7 +182,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
             readExistingTagsOnFile(ref theFile, 3);
 
@@ -213,7 +213,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
             readExistingTagsOnFile(ref theFile);
 
@@ -223,7 +223,7 @@ namespace ATL.test.IO.MetaData
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
 
-/* NOT POSSIBLE YET mainly due to unnecessary unsynchronization and tag order
+/* NOT POSSIBLE YET mainly due to tag order and padding differences
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
@@ -287,7 +287,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2);
 
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
@@ -339,7 +339,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));

@@ -249,7 +249,7 @@ namespace ATL.AudioData
             throw new NotImplementedException();
         }
 
-        public bool AddTagToFile(TagData theTag, int tagType)
+        public bool UpdateTagInFile(TagData theTag, int tagType)
         {
             throw new NotImplementedException();
         }

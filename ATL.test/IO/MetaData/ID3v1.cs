@@ -39,7 +39,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V1));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V1));
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.ID3v1);
@@ -91,7 +91,7 @@ namespace ATL.test.IO.MetaData
             theTag.TrackNumber = "002/04";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V1));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V1));
 
             Assert.IsTrue(theFile.ReadFromFile());
 

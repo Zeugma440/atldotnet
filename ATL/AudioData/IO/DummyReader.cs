@@ -63,7 +63,7 @@ namespace ATL.AudioData.IO
         {
             return true;
         }
-        public bool AddTagToFile(TagData theTag, int tagType)
+        public bool UpdateTagInFile(TagData theTag, int tagType)
         {
             return true;
         }
