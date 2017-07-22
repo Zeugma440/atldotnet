@@ -93,8 +93,12 @@ namespace ATL.AudioData.IO
             public int CRC = -1;
             public int TagRestrictions = -1;
 
+            // TODO : eventually remplace these local containers by appropriate containers in super.tagData
+
             // Mapping between ATL fields and actual values contained in this file's metadata
-            public IDictionary<byte, String> Frames = new Dictionary<byte, String>();
+            public IDictionary<byte, string> Frames = new Dictionary<byte, string>();
+            // Storage for "unsupported" fields (i.e. fields that have no getter/setter defined in IMetaDataIO)
+            public IDictionary<string, string> AdditionalFrames = new Dictionary<string, string>();
 
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation
@@ -345,10 +349,9 @@ namespace ATL.AudioData.IO
                 {
                     Tag.Frames[supportedMetaId] = Data;
                 }
-            } else if (readAllMetaFrames) // ...else store it in the other fields Dictionary
+            } else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                if (null == otherTagFields) otherTagFields = new Dictionary<string, string>();
-                otherTagFields[ID] = Data;
+                Tag.AdditionalFrames.Add(ID, Data);
             }
         }
 
@@ -645,6 +648,20 @@ namespace ATL.AudioData.IO
                             tagData.IntegrateValue(b, extractGenreFromID3v2Code(FTagHeader.Frames[b]));
                         }
                     }
+
+                    TagData.MetaFieldInfo fieldInfo;
+                    foreach (string s in FTagHeader.AdditionalFrames.Keys)
+                    {
+                        fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, s, FTagHeader.AdditionalFrames[s]);
+                        if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
+                        {
+                            tagData.AdditionalFields.Remove(fieldInfo);
+                        }
+                        else
+                        {
+                            tagData.AdditionalFields.Add(fieldInfo);
+                        }
+                    }
                 }
                 else
                 {
@@ -664,7 +681,6 @@ namespace ATL.AudioData.IO
 
         // Writes tag info using ID3v2.4 conventions
         // TODO much later : support ID3v2.3- conventions
-        // TODO clarify calling convention as of unsupported tag information fields (kept as is ?)
 
         /// <summary>
         /// Writes the given tag into the given Writer using ID3v2.4 conventions
@@ -690,29 +706,7 @@ namespace ATL.AudioData.IO
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
 
-
-
-
-            // TODO : handle unsynchronization on frame level (<> tag-wide) as specified in ID3v2.4 spec §4.1.2
-/*
-            if (FTagHeader.UsesUnsynchronisation)
-            {
-                using (MemoryStream s = new MemoryStream(Size))
-                using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
-                {
-                    result = writeExtHeaderAndFrames(ref tag, msw);
-                    s.Seek(0, SeekOrigin.Begin);
-                    if (result) encodeUnsynchronizedStreamTo(s, w);
-                }
-            }
-            else
-            {
-                result = writeExtHeaderAndFrames(ref tag, w);
-            }
-*/
             result = writeExtHeaderAndFrames(ref tag, w);
-
-
 
             // Record final(*) size of tag into "tag size" field of header
             // (*) : Spec clearly states that the tag final size is tag size after unsynchronization
@@ -784,10 +778,13 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (String key in otherTagFields.Keys)
+            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                writeTextFrame(ref w, key, otherTagFields[key]);
-                nbFrames++;
+                if (fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ID3V2) && !fieldInfo.MarkedForDeletion)
+                {
+                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    nbFrames++;
+                }
             }
 
             foreach (TagData.PictureInfo picInfo in tag.Pictures)

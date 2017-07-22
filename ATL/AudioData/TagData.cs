@@ -11,6 +11,8 @@ namespace ATL.AudioData
 {
 	/// <summary>
 	/// Basic metadata fields container
+    /// 
+    /// TODO Document each member
 	/// </summary>
 	public class TagData
 	{
@@ -58,7 +60,7 @@ namespace ATL.AudioData
 
             public override int GetHashCode()
             {
-                return int.Parse(ToString());
+                return Utils.GetInt32MD5Hash(ToString());
             }
 
             public override bool Equals(object obj)
@@ -80,8 +82,31 @@ namespace ATL.AudioData
             public string NativeFieldCode;                  // Native field code according to TagType convention
 
             public string Value;                            // Field value
+            public bool MarkedForDeletion = false;          // Marked for deletion flag
 
-            public MetaFieldInfo(int tagType, string nativeFieldCode, string value) { TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; }
+            public MetaFieldInfo(int tagType, string nativeFieldCode, string value = "") { TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; }
+
+            public override string ToString()
+            {
+                return (100 + TagType).ToString() + NativeFieldCode;
+            }
+
+            public override int GetHashCode()
+            {
+                return Utils.GetInt32MD5Hash(ToString());
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+
+                // Actually check the type, should not throw exception from Equals override
+                if (obj.GetType() != this.GetType()) return false;
+
+                // Call the implementation from IEquatable
+                return this.ToString().Equals(obj.ToString());
+            }
         }
 
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
@@ -127,14 +152,16 @@ namespace ATL.AudioData
         public string Conductor = null;
 
         public IList<PictureInfo> Pictures;
+        public IList<MetaFieldInfo> AdditionalFields;
 
 
         public TagData()
         {
             Pictures = new List<PictureInfo>();
+            AdditionalFields = new List<MetaFieldInfo>();
         }
 
-        public void IntegrateValue(byte key, String value)
+        public void IntegrateValue(byte key, string value)
         {
             switch (key)
             {
@@ -175,8 +202,10 @@ namespace ATL.AudioData
             // Pictures
             foreach (PictureInfo newPicInfo in data.Pictures)
             {
+                // New PictureInfo picture type already exists in current TagData
                 if (picturePositions.ContainsKey(newPicInfo))
                 {
+                    // New PictureInfo is a demand for deletion
                     if (newPicInfo.MarkedForDeletion)
                     {
                         foreach (PictureInfo picInfo in Pictures)
@@ -186,15 +215,44 @@ namespace ATL.AudioData
                                 picInfo.MarkedForDeletion = true;
                             }
                         }
-                    } else
+                    }
+                    else // New PictureInfo is a X-th picture of the same type
                     {
                         newPicInfo.Position = picturePositions[newPicInfo] + 1;
                         Pictures.Add(newPicInfo);
                     }
                 }
-                else
+                else // New PictureInfo picture type does not exist in current TagData
                 {
                     Pictures.Add(newPicInfo);
+                }
+            }
+
+            // Additional textual fields
+            foreach (MetaFieldInfo newMetaInfo in data.AdditionalFields)
+            {
+                // New MetaFieldInfo field type already exists in current TagData
+                if (AdditionalFields.Contains(newMetaInfo))
+                {
+                    // New MetaFieldInfo is a demand for deletion
+                    if (newMetaInfo.MarkedForDeletion)
+                    {
+                        foreach (MetaFieldInfo metaInfo in AdditionalFields)
+                        {
+                            if (metaInfo.ToString().Equals(newMetaInfo.ToString()))
+                            {
+                                metaInfo.MarkedForDeletion = true;
+                            }
+                        }
+                    }
+                    else // New MetaFieldInfo is a X-th field of the same type : unsupported
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field type "+newMetaInfo.NativeFieldCode+" already exists for tag type "+newMetaInfo.TagType+ " on current TagData");
+                    }
+                }
+                else // New MetaFieldInfo type does not exist in current TagData
+                {
+                    AdditionalFields.Add(newMetaInfo);
                 }
             }
         }
@@ -203,6 +261,7 @@ namespace ATL.AudioData
         {
             IDictionary<byte, String> result = new Dictionary<byte, String>();
 
+            // Supported fields
             addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, ref result);
             addIfConsistent(Title, TAG_FIELD_TITLE, ref result);
             addIfConsistent(Artist, TAG_FIELD_ARTIST, ref result);

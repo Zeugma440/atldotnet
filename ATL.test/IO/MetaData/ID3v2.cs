@@ -11,20 +11,26 @@ namespace ATL.test.IO.MetaData
     /*
      * IMPLEMENTED USE CASES
      *  
-     *  Reading of unsupported tag field
-     *  Reading of unsupported picture
+     *  1. Single metadata fields
+     *                                Read  | Add   | Remove
+     *  Supported textual field     |   x   |  x    | x
+     *  Unsupported textual field   |   x   |  x    | x
+     *  Supported picture           |   x   |  x    | x
+     *  Unsupported picture         |   x   |  x    | x
      *  
-     *  Individual field removal
-     *  Whole tag removal
+     *  2. General behaviour
      *  
-     *  Add a supported field
-     *  Add a supported picture
-     *  Add an unsupported picture
+     *  Whole ID3v2 tag removal
      *  
      *  Conservation of unmodified tag items after tag editing
      *  Conservation of unsupported tag field after tag editing
      *  Conservation of supported pictures after tag editing
      *  Conservation of unsupported pictures after tag editing
+     *  
+     *  3. Specific behaviour
+     *  
+     *  Remove single supported picture (from normalized type and index)
+     *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
      *
      */
 
@@ -33,9 +39,7 @@ namespace ATL.test.IO.MetaData
      * 
      * FUNCTIONAL
      * 
-     * Add an unsupported field
-     * 
-     * Individual picture removal (from normalized type and index OR native code and index)
+     * Individual picture removal (from index > 1)
      * 
      * Extended header compliance cases incl. limit cases
      * 
@@ -277,38 +281,104 @@ namespace ATL.test.IO.MetaData
             Assert.IsFalse(theFile.ID3v2.Exists);
 
 
-            // TODO Add a new unsupported field
+            // Add new unsupported fields
             TagData theTag = new TagData();
-//            theFile.ID3v2.OtherFields.Add("TEST", "This is a test 父");
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST2", "This is another test 父"));
 
-            // Add a new unsupported picture
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ID3V2, 0x0A);
+            // Add new unsupported pictures
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
             picInfo.PictureData = File.ReadAllBytes("../../Resources/pic1.jpg");
             theTag.Pictures.Add(picInfo);
-             
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0B);
+            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic2.jpg");
+            theTag.Pictures.Add(picInfo);
 
-            theFile.AddTagToFile(MetaDataIOFactory.TAG_ID3V2);
 
-            Assert.IsTrue(theFile.ReadFromFile());
+            theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2);
+
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            //            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("TEST"));
-            //            Assert.AreEqual("This is a test 父", theFile.ID3v2.OtherFields["TEST"]);
+            Assert.AreEqual(2, theFile.ID3v2.AdditionalFields.Count);
+
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST"));
+            Assert.AreEqual("This is a test 父", theFile.ID3v2.AdditionalFields["TEST"]);
+
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+
+            Assert.AreEqual(2, pictures.Count);
+            byte found = 0;
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0A))
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x0A);
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
                     Assert.AreEqual(picture.Width, 900);
-                    break;
+                    found++;
+                }
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                {
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 290);
+                    Assert.AreEqual(picture.Width, 900);
+                    found++;
                 }
             }
+
+            Assert.AreEqual(2, found);
+
+            // Remove the additional unsupported field
+            theTag = new TagData();
+            TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST");
+            fieldInfo.MarkedForDeletion = true;
+            theTag.AdditionalFields.Add(fieldInfo);
+
+            // Remove additional picture
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
+            picInfo.MarkedForDeletion = true;
+            theTag.Pictures.Add(picInfo);
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.AddTagToFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Additional removed field
+            Assert.AreEqual(1, theFile.ID3v2.AdditionalFields.Count);
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+
+            // Pictures
+            Assert.AreEqual(1, pictures.Count);
+
+            found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                {
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 290);
+                    Assert.AreEqual(picture.Width, 900);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(1, found);
+
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
@@ -334,8 +404,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
             // Unsupported field (MOOD)
-            Assert.IsTrue(theFile.ID3v2.OtherFields.Keys.Contains("MOOD"));
-            Assert.AreEqual("xxx", theFile.ID3v2.OtherFields["MOOD"]);
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", theFile.ID3v2.AdditionalFields["MOOD"]);
 
 
             // Pictures

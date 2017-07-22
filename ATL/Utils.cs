@@ -7,6 +7,7 @@ using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Security.Cryptography;
 
 namespace Commons
 {
@@ -16,8 +17,6 @@ namespace Commons
     public class Utils
     {
         public delegate void voidDelegate();
-
-        public Utils() { }
 
 
         public static String ProtectValue(String value)
@@ -457,6 +456,24 @@ namespace Commons
                 graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
             }
             return newImage;
+        }
+
+        public static int GetInt32MD5Hash(string value)
+        {
+            return BitConverter.ToInt32(GetMD5Hash(value),0);
+        }
+
+        public static string GetStrMD5Hash(string value)
+        {
+            return Encoding.Default.GetString(GetMD5Hash(value));
+        }
+
+        private static byte[] GetMD5Hash(string value)
+        {
+            using (var md5 = MD5.Create())
+            {
+                return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
+            }
         }
     }
 }

@@ -25,11 +25,9 @@ namespace ATL.AudioData
 
         protected TagData tagData;
 
-        protected IDictionary<TagData.PictureInfo, int> picturePositions;
+        private IDictionary<TagData.PictureInfo, int> picturePositions;
 
         protected IList<TagData.PictureInfo> pictureTokens;
-
-        protected IDictionary<string, string> otherTagFields;
 
 
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
@@ -244,9 +242,18 @@ namespace ATL.AudioData
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
         /// </summary>
-        public IDictionary<string, string> OtherFields
+        public IDictionary<string, string> AdditionalFields
         {
-            get { return otherTagFields!=null? otherTagFields : new Dictionary<string,String>(); }
+            get {
+                IDictionary<string, string> result = new Dictionary<string, string>();
+
+                foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
+                {
+                    if (fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ID3V2)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
+                }
+
+                return result;
+            }
         }
 
         /// <summary>
@@ -256,10 +263,6 @@ namespace ATL.AudioData
         {
             get { return this.pictureTokens; }
         }
-
-        // TODO         
-        // write unsupported fields
-        // write unsupported pictures
 
         protected void addPictureToken(TagData.PIC_TYPE picType)
         {
@@ -303,7 +306,6 @@ namespace ATL.AudioData
 
             tagData = new TagData();
             pictureTokens = new List<TagData.PictureInfo>();
-            otherTagFields = new Dictionary<string, string>();
             picturePositions = new Dictionary<TagData.PictureInfo, int>();
         }
 

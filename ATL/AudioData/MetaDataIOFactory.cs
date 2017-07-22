@@ -12,9 +12,10 @@ namespace ATL.AudioData
         public const int TAG_ID3V1 = 0;
 		public const int TAG_ID3V2 = 1;
 		public const int TAG_APE = 2;
-        public const int TAG_NATIVE = 3; // Native tag format associated with the audio container (ex : MP4 built-in tagging format)
+        public const int TAG_NATIVE = 3;    // Native tag format associated with the audio container (ex : MP4 built-in tagging format)
+        public const int TAG_UNKNOWN = 99;  // Whenever tag types have to be used out of context
 
-        // Count of the types defined above
+        // Count of the types defined above, excluding unknown type
         public const int TAG_TYPE_COUNT = 4;
 
 		// Defines the default reading priority of the metadata
