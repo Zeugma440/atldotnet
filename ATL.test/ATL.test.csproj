@@ -98,6 +98,7 @@
     <None Include="Resources\Yeah.dsf" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\06 I%27m All In Love.m4a" />
     <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
     <Content Include="Resources\empty.mp3" />
     <Content Include="Resources\01 - Title Screen.mp3" />
@@ -107,6 +108,8 @@
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\id3v2.4_UTF8.mp3" />
+    <Content Include="Resources\pic1.jpg" />
+    <Content Include="Resources\pic2.jpg" />
     <Content Include="Resources\playlist.asx" />
     <Content Include="Resources\playlist.m3u" />
     <Content Include="Resources\ROQ.MID" />

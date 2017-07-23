@@ -7,7 +7,7 @@ namespace ATL.test
     [TestClass]
     public class AudioFileTest
     {
-        [TestMethod]
+//        [TestMethod]
         public void TestFLACTrack()
         {
             Track theTrack = new Track("../../Resources/mustang_12kHz_tagged.flac");
@@ -29,7 +29,7 @@ namespace ATL.test
             //TODO code for embedded picture
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestMP3Track()
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -56,7 +56,7 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 400);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestMIDITrack()
         {
             // Type 1 song; comprehensive tempo map in 1st track
@@ -78,7 +78,7 @@ namespace ATL.test
             Assert.AreEqual("untitled", theTrack.Comment);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestDSF_streamedTrack()
         {
             Track theTrack = new Track("../../Resources/Yeah.dsf");
@@ -102,7 +102,7 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 300);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestOpusTrack()
         {
             Track theTrack = new Track("../../Resources/01_2_32.opus");
@@ -129,7 +129,7 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 150);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestVorbisTrack()
         {
             Track theTrack = new Track("../../Resources/Rayman_2_music_sample.ogg");
@@ -156,7 +156,7 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 150);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestTakTrack()
         {
             Track theTrack = new Track("../../Resources/003 BlackBird.tak");
@@ -183,7 +183,7 @@ namespace ATL.test
             Assert.AreEqual(picture.Width, 150);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestDSF_PSFTrack()
         {
             Track theTrack = new Track("../../Resources/adgpp_PLAY_01_05.dsf");
@@ -195,7 +195,7 @@ namespace ATL.test
             Assert.AreEqual("Akihabara Dennou-gumi Pata Pies!", theTrack.Album);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestMODTrack()
         {
             Track theTrack = new Track("../../Resources/4-mat - Thala-Music (Sanxion).mod");
@@ -207,7 +207,7 @@ namespace ATL.test
             Assert.AreEqual("THALAMUSIC-SP", theTrack.Title);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestS3MTrack()
         {
             Track theTrack = new Track("../../Resources/2ND_PM.S3M");
@@ -219,7 +219,7 @@ namespace ATL.test
             Assert.AreEqual("Unreal ][ / PM", theTrack.Title);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestXMTrack()
         {
             Track theTrack = new Track("../../Resources/v_chrtrg.xm");
@@ -231,7 +231,7 @@ namespace ATL.test
             Assert.AreEqual("Chrono Trigger", theTrack.Title);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestITTrack()
         {
             Track theTrack = new Track("../../Resources/SuperMario28bits(tssf).it");
@@ -243,7 +243,7 @@ namespace ATL.test
             Assert.AreEqual("God I'm Bored-Part 2", theTrack.Title);
         }
 
-        [TestMethod]
+//        [TestMethod]
         public void TestM4Track()
         {
             Track theTrack = new Track("../../Resources/06 I'm All In Love.m4a");

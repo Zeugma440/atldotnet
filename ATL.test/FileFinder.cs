@@ -7,7 +7,7 @@ namespace ATL.test
     [TestClass]
     public class FileFinder
     {
-        [TestMethod]
+        [TestMethod, TestCategory("mass")]
         public void FF_RecursiveExplore()
         {
             //String dirName = "E:/Music/XXX";
@@ -23,7 +23,7 @@ namespace ATL.test
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("mass")]
         public void FF_ReadOneFile()
         {
             Track t = new Track("E:/temp/id3v2/XXX");
