@@ -177,7 +177,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.Back);
-            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic1.jpg");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+"pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
 
@@ -280,10 +280,10 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported pictures
             TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
-            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic1.jpg");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
             theTag.Pictures.Add(picInfo);
             picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0B);
-            picInfo.PictureData = File.ReadAllBytes("../../Resources/pic2.jpg");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic2.jpg");
             theTag.Pictures.Add(picInfo);
 
 
