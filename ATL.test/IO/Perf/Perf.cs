@@ -10,7 +10,7 @@ namespace ATL.test.IO.Perf
     {
         const int NB_COPIES = 2000;
         const FileOptions FILE_FLAG_NOBUFFERING = (FileOptions)0x20000000;
-        const string LOCATION = "../../Resources/01 - Title Screen_pic.mp3";
+        string LOCATION = TestUtils.GetResourceLocationRoot()+"01 - Title Screen_pic.mp3";
 
         [TestMethod, TestCategory("mass")]
         public void Perf_Massread()
@@ -18,7 +18,7 @@ namespace ATL.test.IO.Perf
             long ticksBefore, ticksNow;
 
             // Duplicate resource
-            for (int i = 0; i < NB_COPIES; i++) File.Copy(LOCATION, LOCATION.Replace("01", i.ToString()));
+            for (int i = 0; i < NB_COPIES; i++) File.Copy(LOCATION, LOCATION.Replace("01", "tmp/"+i.ToString()));
 
             try
             {
