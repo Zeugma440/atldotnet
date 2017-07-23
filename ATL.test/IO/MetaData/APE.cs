@@ -20,7 +20,7 @@ namespace ATL.test.IO.MetaData
      *  
      *  2. General behaviour
      *  
-     *  Whole ID3v2 tag removal
+     *  Whole tag removal
      *  
      *  Conservation of unmodified tag items after tag editing
      *  Conservation of unsupported tag field after tag editing
@@ -41,17 +41,10 @@ namespace ATL.test.IO.MetaData
      * 
      * Individual picture removal (from index > 1)
      * 
-     * Extended header compliance cases incl. limit cases
-     * 
      * 
      * TECHNICAL
      * 
-     * Add a standard unsupported field => persisted as standard field in tag
-     * Add a non-standard unsupported field => persisted as TXXX field
      * Exact picture data conservation after tag editing
-     * 
-     * Encode unsynchronized data
-     * Decode unsynchronized data
      * 
     */
 
@@ -107,7 +100,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsFalse(theFile.APEtag.Exists);
 
 
-            // Construct a new tag
+            // Construct a new tag with the most basic options (no un supported fields, no pictures)
             TagData theTag = new TagData();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
@@ -169,13 +162,13 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_APE_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile("id3v2.3_UTF16.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile("APE.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
             // Add a new supported field and a new supported picture
@@ -201,7 +194,6 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.Key.Equals(TagData.PIC_TYPE.Back))
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x04);
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
@@ -231,7 +223,7 @@ namespace ATL.test.IO.MetaData
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
 
-/* NOT POSSIBLE YET mainly due to tag order and padding differences
+/* NOT POSSIBLE YET mainly due to tag order and tag name (e.g. "Disc" vs. "Discnumber") differences
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
@@ -246,7 +238,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_APE_Unsupported_Empty()
         {
             // Source : tag-free MP3
@@ -267,10 +259,10 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0A);
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, "Hey");
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
             theTag.Pictures.Add(picInfo);
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0B);
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, "Ho");
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic2.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -295,7 +287,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0A))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Hey"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -303,7 +295,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -322,7 +314,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0A);
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, "Hey");
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -347,7 +339,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);

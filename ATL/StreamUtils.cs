@@ -195,6 +195,8 @@ namespace ATL
             int bufSize;
             long i = 0;
 
+            if (from.Position == from.Length) from.Seek(0, SeekOrigin.Begin);
+
             if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
             byte[] result = new byte[bytesToRead];
 

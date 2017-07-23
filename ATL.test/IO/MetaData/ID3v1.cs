@@ -8,8 +8,6 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class ID3v1
     {
-        // TODO test tag removal
-
         [TestMethod]
         public void TagIO_RW_ID3v1_Empty()
         {

@@ -83,10 +83,10 @@ namespace ATL.AudioData.IO
             frameMapping.Add("COMPOSER", TagData.TAG_FIELD_COMPOSER);
             frameMapping.Add("RATING", TagData.TAG_FIELD_RATING);
             frameMapping.Add("PREFERENCE", TagData.TAG_FIELD_RATING);
-            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER);
-            frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
+            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
+            frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
             frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
         }
 
@@ -202,8 +202,12 @@ namespace ATL.AudioData.IO
                     addPictureToken(picType);
                     if (pictureStreamHandler != null)
                     {
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // Description seems to be a null-terminated ANSI string documenting picture mime-type
-                        ImageFormat imgFormat = Utils.GetImageFormatFromMimeType(description);
+                        // Description seems to be a null-terminated ANSI string containing 
+                        //    * The frame name
+                        //    * A byte (0x2E)
+                        //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); 
+                        ImageFormat imgFormat = Utils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
 
                         MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, frameDataSize - description.Length - 1);
@@ -359,32 +363,7 @@ namespace ATL.AudioData.IO
             bool doWritePicture;
             nbFrames = 0;
 
-            IDictionary<byte, String> map = tag.ToMap();
-
-            // Supported textual fields
-            foreach (byte frameType in map.Keys)
-            {
-                foreach (string s in frameMapping.Keys)
-                {
-                    if (frameType == frameMapping[s])
-                    {
-                        writeTextFrame(ref w, s, map[frameType]);
-                        nbFrames++;
-                        break;
-                    }
-                }
-            }
-
-            // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
-            {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
-                {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
-                    nbFrames++;
-                }
-            }
-
+            // Picture fields (first before textual fields, since APE tag is located on the footer)
             foreach (TagData.PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
@@ -396,6 +375,35 @@ namespace ATL.AudioData.IO
                 if (doWritePicture)
                 {
                     writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
+                    nbFrames++;
+                }
+            }
+
+            IDictionary<byte, String> map = tag.ToMap();
+
+            // Supported textual fields
+            foreach (byte frameType in map.Keys)
+            {
+                foreach (string s in frameMapping.Keys)
+                {
+                    if (frameType == frameMapping[s])
+                    {
+                        if (map[frameType].Length > 0) // No frame with empty value
+                        {
+                            writeTextFrame(ref w, s, map[frameType]);
+                            nbFrames++;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Other textual fields
+            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            {
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
+                {
+                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;
                 }
             }
@@ -434,7 +442,7 @@ namespace ATL.AudioData.IO
             long frameSizePos;
             long finalFramePos;
 
-            int frameFlags = 0x0000;
+            int frameFlags = 0x00000002; // This frame contains binary information (essential for pictures)
 
             frameSizePos = writer.BaseStream.Position;
             writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
@@ -444,12 +452,15 @@ namespace ATL.AudioData.IO
             writer.Write(Encoding.ASCII.GetBytes(pictureTypeCode));
             writer.Write('\0'); // String has to be null-terminated
 
-            // Null-terminated string = image type encoded in ISO-8859-1 (derived from mime-type without the first half)
+            long dataPos = writer.BaseStream.Position;
+            // Description = picture code + 0x2E byte -?- + image type encoded in ISO-8859-1 (derived from mime-type without the first half)
+            writer.Write(Encoding.ASCII.GetBytes(pictureTypeCode));
+            writer.Write((byte)0x2E);
             string imageType;
             string[] tmp = mimeType.Split('/');
             imageType = (tmp.Length > 1) ? tmp[1] : tmp[0];
             if ("jpeg".Equals(imageType)) imageType = "jpg";
-            
+
             writer.Write(Encoding.GetEncoding("ISO-8859-1").GetBytes(imageType)); // Force ISO-8859-1 format for mime-type
             writer.Write('\0'); // String should be null-terminated
 
@@ -458,7 +469,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write(pictureData.Length);
+            writer.Write((int)(finalFramePos-dataPos));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
     }

@@ -20,7 +20,7 @@ namespace ATL.test.IO.MetaData
      *  
      *  2. General behaviour
      *  
-     *  Whole ID3v2 tag removal
+     *  Whole tag removal
      *  
      *  Conservation of unmodified tag items after tag editing
      *  Conservation of unsupported tag field after tag editing
