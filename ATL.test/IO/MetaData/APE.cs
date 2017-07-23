@@ -89,9 +89,11 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_APE_Empty()
         {
+            ConsoleLogger log = new ConsoleLogger();
+
             // Source : tag-free MP3
             string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
             string testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
@@ -119,14 +121,10 @@ namespace ATL.test.IO.MetaData
             theTag.DiscNumber = "2";
             theTag.Composer = "Me";
             theTag.Copyright = "父";
-            theTag.OriginalArtist = "Bob";
-            theTag.OriginalAlbum = "Hey Hey";
-            theTag.GeneralDescription = "That's right";
-            theTag.Publisher = "Test Media Inc.";
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -144,15 +142,11 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.APEtag.Disc);
             Assert.AreEqual("Me", theFile.APEtag.Composer);
             Assert.AreEqual("父", theFile.APEtag.Copyright);
-            Assert.AreEqual("Bob", theFile.APEtag.OriginalArtist);
-            Assert.AreEqual("Hey Hey", theFile.APEtag.OriginalAlbum);
-            Assert.AreEqual("That's right", theFile.APEtag.GeneralDescription);
-            Assert.AreEqual("Test Media Inc.", theFile.APEtag.Publisher);
             Assert.AreEqual("John Johnson Jr.", theFile.APEtag.Conductor);
 
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_APE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -196,7 +190,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE));
 
             readExistingTagsOnFile(ref theFile, 3);
 
@@ -227,7 +221,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE));
 
             readExistingTagsOnFile(ref theFile);
 
@@ -269,19 +263,19 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0A);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
             theTag.Pictures.Add(picInfo);
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0B);
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0B);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic2.jpg");
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE);
 
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
@@ -323,17 +317,17 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST");
+            TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0x0A);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE));
 
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));

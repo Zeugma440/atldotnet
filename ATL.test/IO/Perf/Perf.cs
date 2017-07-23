@@ -5,7 +5,7 @@ using System.IO;
 
 namespace ATL.test.IO.Perf
 {
-    [TestClass]
+//    [TestClass]
     public class Perf
     {
         const int NB_COPIES = 2000;

@@ -350,7 +350,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, ID, Data);
+                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -637,6 +637,7 @@ namespace ATL.AudioData.IO
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
             {
                 FExists = true;
+                FOffset = offset;
                 // Fill properties with header data
                 FVersion = FTagHeader.Version;
                 FSize = getTagSize(FTagHeader);
@@ -769,7 +770,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ID3V2) && !fieldInfo.MarkedForDeletion)
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
                     writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;
@@ -780,7 +781,7 @@ namespace ATL.AudioData.IO
             {
                 // Picture has either to be supported, or to come from the right tag standard
                 doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture =  (MetaDataIOFactory.TAG_ID3V2 == picInfo.TagType);
+                if (!doWritePicture) doWritePicture =  (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
@@ -808,6 +809,8 @@ namespace ATL.AudioData.IO
             long frameSizePos;
             long finalFramePos;
             long frameOffset;
+            int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+
             bool writeFieldValue = true;
             bool writeFieldEncoding = true;
             bool writeNullTermination = false;
@@ -907,7 +910,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameOffset+frameSizePos, SeekOrigin.Begin);
-            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - 6)));
+            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
