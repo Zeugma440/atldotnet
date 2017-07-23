@@ -10,12 +10,7 @@ namespace ATL.test
         [TestMethod]
         public void FF_RecursiveExplore()
         {
-            //String dirName = "E:/Music/Classique";
-            //String dirName = "E:/Music/Films & TV";
-            //String dirName = "E:/Music/René";
-            //String dirName = "E:/Music/Divers";
-            //String dirName = "E:/Music/Anime";
-            //String dirName = "E:/Music/VGM";
+            //String dirName = "E:/Music/XXX";
             String dirName = "E:/temp/id3v2";
             String filter = "*.mp3";
 
@@ -31,7 +26,7 @@ namespace ATL.test
         [TestMethod]
         public void FF_ReadOneFile()
         {
-            Track t = new Track("E:/temp/id3v2/01 - Opening_unsynch.mp3");
+            Track t = new Track("E:/temp/id3v2/XXX");
         }
 
     }
