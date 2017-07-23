@@ -1,11 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio Express 14 for Windows Desktop
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL", "ATL\ATL.csproj", "{27C03311-C017-4E99-8B35-0005102B2DAC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.test", "ATL.test\ATL.test.csproj", "{E3927F5A-FA4C-459C-B13D-C53805AA10D0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DE0396E1-29F4-4C21-9F1E-22190DEBF1FE}"
+	ProjectSection(SolutionItems) = preProject
+		.appveyor.yml = .appveyor.yml
 	EndProjectSection
 EndProject
 Global
@@ -22,10 +29,6 @@ Global
 		{E3927F5A-FA4C-459C-B13D-C53805AA10D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3927F5A-FA4C-459C-B13D-C53805AA10D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3927F5A-FA4C-459C-B13D-C53805AA10D0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B889418E-ACE0-4623-9232-C8F7333D0613}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B889418E-ACE0-4623-9232-C8F7333D0613}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B889418E-ACE0-4623-9232-C8F7333D0613}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B889418E-ACE0-4623-9232-C8F7333D0613}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
