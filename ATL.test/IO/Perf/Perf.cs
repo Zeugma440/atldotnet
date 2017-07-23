@@ -10,7 +10,13 @@ namespace ATL.test.IO.Perf
     {
         const int NB_COPIES = 2000;
         const FileOptions FILE_FLAG_NOBUFFERING = (FileOptions)0x20000000;
-        string LOCATION = TestUtils.GetResourceLocationRoot()+"01 - Title Screen_pic.mp3";
+
+        static string LOCATION = TestUtils.GetResourceLocationRoot()+"01 - Title Screen_pic.mp3";
+
+        private static string getNewLocation(int index)
+        {
+            return LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + index.ToString());
+        }
 
         [TestMethod, TestCategory("mass")]
         public void Perf_Massread()
@@ -20,7 +26,7 @@ namespace ATL.test.IO.Perf
             // Duplicate resource
             for (int i = 0; i < NB_COPIES; i++)
             {
-                string newLocation = LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + i.ToString());
+                string newLocation = getNewLocation(i);
                 File.Copy(LOCATION, newLocation, true);
 
                 FileInfo fileInfo = new FileInfo(newLocation);
@@ -63,7 +69,10 @@ namespace ATL.test.IO.Perf
             } finally
             {
                 // Mass delete resulting files
-                for (int i = 0; i < NB_COPIES; i++) File.Delete(LOCATION.Replace("01", i.ToString()));
+                for (int i = 0; i < NB_COPIES; i++)
+                {
+                    File.Delete(getNewLocation(i));
+                }
             }
         }
 
@@ -104,8 +113,8 @@ namespace ATL.test.IO.Perf
             // Mass-read resulting files
             for (int i = 0; i < NB_COPIES; i++)
             {
-                //Track theTrack = new Track(LOCATION.Replace("01", i.ToString())); // Old call still leads to old code
-                AudioDataIOFactory.GetInstance().GetDataReader(LOCATION.Replace("01", i.ToString())).ReadFromFile();
+                //Track theTrack = new Track(getNewLocation(i)); // Old call still leads to old code
+                AudioDataIOFactory.GetInstance().GetDataReader(getNewLocation(i)).ReadFromFile();
             }
         }
     }
