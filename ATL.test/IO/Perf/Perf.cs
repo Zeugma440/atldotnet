@@ -18,7 +18,7 @@ namespace ATL.test.IO.Perf
             long ticksBefore, ticksNow;
 
             // Duplicate resource
-            for (int i = 0; i < NB_COPIES; i++) File.Copy(LOCATION, LOCATION.Replace("01", "tmp/"+i.ToString()));
+            for (int i = 0; i < NB_COPIES; i++) File.Copy(LOCATION, LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + i.ToString()), true);
 
             try
             {
