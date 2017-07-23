@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
 	public class ID3v1 : MetaDataIO
 	{
 		public const int MAX_MUSIC_GENRES = 148;        // Max. number of music genres
-		public const int DEFAULT_GENRE = 255;               // Index for default genre
+        public const int DEFAULT_GENRE = 255;               // Index for default genre
 
         public const int ID3V1_TAG_SIZE = 128;
         public const String ID3V1_ID = "TAG";
@@ -175,8 +175,6 @@ namespace ATL.AudioData.IO
 			"Synthpop"
 		};
 		#endregion
-	
-		private byte FGenreID;
 			
 		// Real structure of ID3v1 tag
 		private class TagRecord
@@ -188,7 +186,7 @@ namespace ATL.AudioData.IO
             public String Year = "";
             public String Comment = "";
             public byte[] EndComment = new byte[2];
-			public byte Genre;                                                 // Genre data
+			public byte Genre;
 
 			public void Reset()
 			{
@@ -198,7 +196,7 @@ namespace ATL.AudioData.IO
                 Artist = "";
                 Year = "";
                 Comment = "";
-				Genre = 0;
+				Genre = DEFAULT_GENRE;
 			}
 		}
 
@@ -261,7 +259,6 @@ namespace ATL.AudioData.IO
 		{
             base.ResetData();
 			FVersion = TAG_VERSION_1_0;
-			FGenreID = DEFAULT_GENRE;
             FEncoding = Encoding.GetEncoding("ISO-8859-1");
         }
 
@@ -281,7 +278,8 @@ namespace ATL.AudioData.IO
 				FExists = true;
                 FSize = ID3V1_TAG_SIZE;
 				FVersion = GetTagVersion(tagData);
-				// Fill properties with tag data
+
+				// Fill properties using tag data
                 Title = tagData.Title;
                 Artist = tagData.Artist;
                 Album = tagData.Album;
@@ -295,13 +293,18 @@ namespace ATL.AudioData.IO
                     Comment = tagData.Comment;
 					Track = tagData.EndComment[1];
 				}
-				FGenreID = tagData.Genre;
-                Genre = (FGenreID < MAX_MUSIC_GENRES) ? MusicGenre[FGenreID] : "";
+                Genre = (tagData.Genre < MAX_MUSIC_GENRES) ? MusicGenre[tagData.Genre] : "";
 			}
 			return result;
 		}
 
-
+        /// <summary>
+        /// Writes the given metadata into the given stream using the ID3v1.1 standard
+        /// NB : Metadata fields that are not supported by ID3v1.1 standard (e.g. Composer) won't be written into the stream, even though their value are set
+        /// </summary>
+        /// <param name="tag">Metadata to be written</param>
+        /// <param name="w">Stream to be used</param>
+        /// <returns>True if operation completed successfuly; else false</returns>
         protected override bool write(TagData tag, BinaryWriter w)
         {
             bool result = true;
