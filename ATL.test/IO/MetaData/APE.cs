@@ -57,17 +57,17 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class ID3v2
+    public class APE
     {
         protected class PictureInfo
         {
             public Image Picture;
-            public byte NativeCode;
+            public string NativeCode;
 
             public PictureInfo(Image picture, object code)
             {
                 Picture = picture;
-                if (code is byte) NativeCode = (byte)code;
+                if (code is string) NativeCode = (string)code;
             }
         }
 
@@ -80,7 +80,17 @@ namespace ATL.test.IO.MetaData
 
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_Empty()
+        public void TagIO_R_APE() // My deepest apologies for this dubious method name
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
+            String location = TestUtils.GetResourceLocationRoot() + "APE.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            readExistingTagsOnFile(ref theFile);
+        }
+
+//        [TestMethod]
+        public void TagIO_RW_APE_Empty()
         {
             // Source : tag-free MP3
             string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
@@ -91,8 +101,8 @@ namespace ATL.test.IO.MetaData
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsFalse(theFile.APEtag.Exists);
 
 
             // Construct a new tag
@@ -120,25 +130,25 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.ReadFromFile());
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsTrue(theFile.APEtag.Exists);
 
-            Assert.AreEqual("Test !!", theFile.ID3v2.Title);
-            Assert.AreEqual("Album", theFile.ID3v2.Album);
-            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
-            Assert.AreEqual("Mike", theFile.ID3v2.AlbumArtist);
-            Assert.AreEqual("This is a test", theFile.ID3v2.Comment);
-            Assert.AreEqual("2008", theFile.ID3v2.Year);
-            Assert.AreEqual("Merengue", theFile.ID3v2.Genre);
-            Assert.AreEqual(1, theFile.ID3v2.Track);
-            Assert.AreEqual(2, theFile.ID3v2.Disc);
-            Assert.AreEqual("Me", theFile.ID3v2.Composer);
-            Assert.AreEqual("父", theFile.ID3v2.Copyright);
-            Assert.AreEqual("Bob", theFile.ID3v2.OriginalArtist);
-            Assert.AreEqual("Hey Hey", theFile.ID3v2.OriginalAlbum);
-            Assert.AreEqual("That's right", theFile.ID3v2.GeneralDescription);
-            Assert.AreEqual("Test Media Inc.", theFile.ID3v2.Publisher);
-            Assert.AreEqual("John Johnson Jr.", theFile.ID3v2.Conductor);
+            Assert.AreEqual("Test !!", theFile.APEtag.Title);
+            Assert.AreEqual("Album", theFile.APEtag.Album);
+            Assert.AreEqual("Artist", theFile.APEtag.Artist);
+            Assert.AreEqual("Mike", theFile.APEtag.AlbumArtist);
+            Assert.AreEqual("This is a test", theFile.APEtag.Comment);
+            Assert.AreEqual("2008", theFile.APEtag.Year);
+            Assert.AreEqual("Merengue", theFile.APEtag.Genre);
+            Assert.AreEqual(1, theFile.APEtag.Track);
+            Assert.AreEqual(2, theFile.APEtag.Disc);
+            Assert.AreEqual("Me", theFile.APEtag.Composer);
+            Assert.AreEqual("父", theFile.APEtag.Copyright);
+            Assert.AreEqual("Bob", theFile.APEtag.OriginalArtist);
+            Assert.AreEqual("Hey Hey", theFile.APEtag.OriginalAlbum);
+            Assert.AreEqual("That's right", theFile.APEtag.GeneralDescription);
+            Assert.AreEqual("Test Media Inc.", theFile.APEtag.Publisher);
+            Assert.AreEqual("John Johnson Jr.", theFile.APEtag.Conductor);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -146,8 +156,8 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.ReadFromFile());
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsFalse(theFile.APEtag.Exists);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -165,12 +175,12 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void TagIO_RW_ID3v2_Existing()
+//        [TestMethod]
+        public void TagIO_RW_APE_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.GetTempTestFile("id3v2.3_UTF16.mp3");
             IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation);
 
@@ -191,7 +201,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile, 3);
 
             // Additional supported field
-            Assert.AreEqual("John Jackman", theFile.ID3v2.Conductor);
+            Assert.AreEqual("John Jackman", theFile.APEtag.Conductor);
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
@@ -222,7 +232,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile);
 
             // Additional removed field
-            Assert.AreEqual("", theFile.ID3v2.Conductor);
+            Assert.AreEqual("", theFile.APEtag.Conductor);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -242,28 +252,8 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void TagIO_R_ID3v23_UTF16()
-        {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot()+"id3v2.3_UTF16.mp3";
-            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
-
-            readExistingTagsOnFile(ref theFile);
-        }
-
-        [TestMethod]
-        public void TagIO_R_ID3v24_UTF8()
-        {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "id3v2.4_UTF8.mp3";
-            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
-
-            readExistingTagsOnFile(ref theFile);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_ID3v2_Unsupported_Empty()
+//        [TestMethod]
+        public void TagIO_RW_APE_Unsupported_Empty()
         {
             // Source : tag-free MP3
             String testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
@@ -273,8 +263,8 @@ namespace ATL.test.IO.MetaData
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsFalse(theFile.APEtag.Exists);
 
 
             // Add new unsupported fields
@@ -295,16 +285,16 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsTrue(theFile.APEtag.Exists);
 
-            Assert.AreEqual(2, theFile.ID3v2.AdditionalFields.Count);
+            Assert.AreEqual(2, theFile.APEtag.AdditionalFields.Count);
 
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST"));
-            Assert.AreEqual("This is a test 父", theFile.ID3v2.AdditionalFields["TEST"]);
+            Assert.IsTrue(theFile.APEtag.AdditionalFields.Keys.Contains("TEST"));
+            Assert.AreEqual("This is a test 父", theFile.APEtag.AdditionalFields["TEST"]);
 
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+            Assert.IsTrue(theFile.APEtag.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", theFile.APEtag.AdditionalFields["TEST2"]);
 
             Assert.AreEqual(2, pictures.Count);
             byte found = 0;
@@ -348,13 +338,13 @@ namespace ATL.test.IO.MetaData
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsTrue(theFile.APEtag.Exists);
 
             // Additional removed field
-            Assert.AreEqual(1, theFile.ID3v2.AdditionalFields.Count);
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+            Assert.AreEqual(1, theFile.APEtag.AdditionalFields.Count);
+            Assert.IsTrue(theFile.APEtag.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", theFile.APEtag.AdditionalFields["TEST2"]);
 
             // Pictures
             Assert.AreEqual(1, pictures.Count);
@@ -385,23 +375,23 @@ namespace ATL.test.IO.MetaData
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+            Assert.IsNotNull(theFile.APEtag);
+            Assert.IsTrue(theFile.APEtag.Exists);
 
             // Supported fields
-            Assert.AreEqual("Title", theFile.ID3v2.Title);
-            Assert.AreEqual("父", theFile.ID3v2.Album);
-            Assert.AreEqual("Artist", theFile.ID3v2.Artist);
-            Assert.AreEqual("Test!", theFile.ID3v2.Comment);
-            Assert.AreEqual("2017", theFile.ID3v2.Year);
-            Assert.AreEqual("Test", theFile.ID3v2.Genre);
-            Assert.AreEqual(22, theFile.ID3v2.Track);
-            Assert.AreEqual("Me", theFile.ID3v2.Composer);
-            Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual("Title", theFile.APEtag.Title);
+            Assert.AreEqual("父", theFile.APEtag.Album);
+            Assert.AreEqual("Artist", theFile.APEtag.Artist);
+            Assert.AreEqual("Test!", theFile.APEtag.Comment);
+            Assert.AreEqual("2017", theFile.APEtag.Year);
+            Assert.AreEqual("Test", theFile.APEtag.Genre);
+            Assert.AreEqual(22, theFile.APEtag.Track);
+            Assert.AreEqual("Me", theFile.APEtag.Composer);
+            Assert.AreEqual(2, theFile.APEtag.Disc);
 
             // Unsupported field (MOOD)
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("MOOD"));
-            Assert.AreEqual("xxx", theFile.ID3v2.AdditionalFields["MOOD"]);
+            Assert.IsTrue(theFile.APEtag.AdditionalFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", theFile.APEtag.AdditionalFields["MOOD"]);
 
 
             // Pictures
@@ -412,7 +402,7 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    Assert.AreEqual(pic.Value.NativeCode, "Cover Art (Front)");
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 150);
@@ -420,7 +410,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    Assert.AreEqual(pic.Value.NativeCode, "Cover Art (Fronk)");
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);

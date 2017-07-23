@@ -64,7 +64,7 @@ namespace ATL
             readImageData(ref s, TagData.PIC_TYPE.Front, ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0, 1);
         }
 
-        protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte picCode, int position)
+        protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             coverArt = Image.FromStream(s);
         }

@@ -249,7 +249,7 @@ namespace ATL.AudioData
 
                 foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
                 {
-                    if (fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ID3V2)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    if (fieldInfo.TagType.Equals(getImplementedTagType())) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
                 }
 
                 return result;
@@ -315,6 +315,8 @@ namespace ATL.AudioData
         }
 
         abstract protected int getDefaultTagOffset();
+
+        abstract protected int getImplementedTagType();
 
         abstract public bool Read(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
 
@@ -392,7 +394,7 @@ namespace ATL.AudioData
             return newTagSize;
         }
 
-        private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte picCode, int position)
+        private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);

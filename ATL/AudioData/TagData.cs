@@ -18,7 +18,7 @@ namespace ATL.AudioData
 	{
         public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
 
-        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, byte nativePicCode, int position);
+        public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
 
         public class PictureInfo
@@ -36,8 +36,37 @@ namespace ATL.AudioData
             public bool MarkedForDeletion = false;          // Marked for deletion flag
 
 
-            public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, byte nativePicCode, int position = 1) { PicType = picType; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+            {
+                PicType = picType; NativeFormat = nativeFormat; TagType = tagType; Position = position;
+                if (nativePicCode is string)
+                {
+                    NativePicCodeStr = (string)nativePicCode;
+                } else if (nativePicCode is byte)
+                {
+                    NativePicCode = (byte)nativePicCode;
+                } else
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte or string; found "+nativePicCode.GetType().Name);
+                }
+            }
             public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int position = 1) { PicType = picType; NativeFormat = nativeFormat; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, int tagType, object nativePicCode, int position = 1)
+            {
+                PicType = PIC_TYPE.Unsupported; NativeFormat = nativeFormat; TagType = tagType; Position = position;
+                if (nativePicCode is string)
+                {
+                    NativePicCodeStr = (string)nativePicCode;
+                }
+                else if (nativePicCode is byte)
+                {
+                    NativePicCode = (byte)nativePicCode;
+                }
+                else
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte or string; found " + nativePicCode.GetType().Name);
+                }
+            }
             public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
             public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
 

@@ -662,6 +662,11 @@ namespace ATL.AudioData.IO
             return TO_BOF;
         }
 
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_ID3V2;
+        }
+
 
         // Writes tag info using ID3v2.4 conventions
         // TODO much later : support ID3v2.3- conventions
@@ -1222,5 +1227,6 @@ namespace ATL.AudioData.IO
             else if (encoding.Equals(Encoding.UTF8)) return 3;
             else return 0; // Default = ISO-8859-1 / ISO Latin-1
         }
+
     }
 }

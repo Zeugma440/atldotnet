@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
 
         static APEtag()
         {
-            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber","Album Artist","Conductor","Disc" };
+            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber","Album Artist","Conductor","Disc","Albumartist" };
 
             // Mapping between standard ATL fields and APE identifiers
             /*
@@ -69,6 +69,7 @@ namespace ATL.AudioData.IO
              * => Some fields can be found in multiple frame code variants
              *      - Rating : "rating", "preference" frames
              *      - Disc number : "disc", "discnumber" frames
+             *      - Album Artist : "albumartist", "album artist" frames
              */
             frameMapping = new Dictionary<string, byte>();
 
@@ -86,6 +87,7 @@ namespace ATL.AudioData.IO
             frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
+            frameMapping.Add("ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
             frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
         }
 
@@ -127,7 +129,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-		private void setMetaField(String FieldName, String FieldValue, ref TagInfo Tag, bool readAllMetaFrames)
+		private void setMetaField(string FieldName, string FieldValue, ref TagInfo Tag, bool readAllMetaFrames)
 		{
             byte supportedMetaId = 255;
             FieldName = FieldName.Replace("\0", "").ToUpper();
@@ -172,7 +174,7 @@ namespace ATL.AudioData.IO
 			{
 				ValueSize = SourceFile.ReadInt32();
 				FieldFlags = SourceFile.ReadInt32();
-                FieldName = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
+                FieldName = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
                 ValuePosition = fs.Position;
 
@@ -205,9 +207,7 @@ namespace ATL.AudioData.IO
 
                         MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
-                        // TODO
-                        // nativePicCode as byte ?
-                        pictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, imgFormat, MetaDataIOFactory.TAG_APE, 0, picturePosition);
+                        pictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_APE, FieldName, picturePosition);
                         mem.Close();
                     }
                 }
@@ -271,6 +271,11 @@ namespace ATL.AudioData.IO
         protected override int getDefaultTagOffset()
         {
             return TO_EOF;
+        }
+
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_APE;
         }
 
         protected override bool write(TagData tag, BinaryWriter w)

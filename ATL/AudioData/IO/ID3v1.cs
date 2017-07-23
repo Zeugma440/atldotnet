@@ -343,5 +343,9 @@ namespace ATL.AudioData.IO
             return TO_EOF;
         }
 
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_ID3V1;
+        }
     }
 }
