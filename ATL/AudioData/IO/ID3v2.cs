@@ -93,12 +93,6 @@ namespace ATL.AudioData.IO
             public int CRC = -1;
             public int TagRestrictions = -1;
 
-            // TODO : eventually remplace these local containers by appropriate containers in super.tagData
-
-            // Mapping between ATL fields and actual values contained in this file's metadata
-            public IDictionary<byte, string> Frames = new Dictionary<byte, string>();
-            // Storage for "unsupported" fields (i.e. fields that have no getter/setter defined in IMetaDataIO)
-            public IDictionary<string, string> AdditionalFrames = new Dictionary<string, string>();
 
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation
@@ -327,7 +321,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void setTagItem(String ID, String Data, ref TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(String ID, String Data, ref TagInfo Tag, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
             ID = ID.ToUpper();
@@ -341,17 +335,30 @@ namespace ATL.AudioData.IO
                 if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID];
             }
 
-            // If ID has been mapped with an ATL field, store it in the dedicated Dictionary...
+            TagData.MetaFieldInfo fieldInfo;
+            // If ID has been mapped with an ATL field, store it in the dedicated place...
             if (supportedMetaId < 255)
             {
-                // Only stores first occurence of a tag
-                if (!Tag.Frames.ContainsKey(supportedMetaId))
+                if (TagData.TAG_FIELD_GENRE == supportedMetaId)
                 {
-                    Tag.Frames[supportedMetaId] = Data;
+                    tagData.IntegrateValue(supportedMetaId, extractGenreFromID3v2Code(Data));
                 }
-            } else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
+                else
+                {
+                    tagData.IntegrateValue(supportedMetaId, Data);
+                }
+            }
+            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                Tag.AdditionalFrames.Add(ID, Data);
+                fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, ID, Data);
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
+                {
+                    tagData.AdditionalFields.Remove(fieldInfo);
+                }
+                else
+                {
+                    tagData.AdditionalFields.Add(fieldInfo);
+                }
             }
         }
 
@@ -524,7 +531,7 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(FEncoding.GetString(bData));
                     }
 
-                    setTagItem(Frame.ID, strData, ref Tag, readAllMetaFrames);
+                    setMetaField(Frame.ID, strData, ref Tag, readAllMetaFrames);
 
                     if (TAG_VERSION_2_2 == FVersion) fs.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
@@ -639,29 +646,6 @@ namespace ATL.AudioData.IO
                 {
                     tagData = new TagData();
                     readFrames(source, ref FTagHeader, pictureStreamHandler, offset, readAllMetaFrames);
-
-                    foreach (byte b in FTagHeader.Frames.Keys)
-                    {
-                        tagData.IntegrateValue(b, FTagHeader.Frames[b]);
-                        if (TagData.TAG_FIELD_GENRE == b)
-                        {
-                            tagData.IntegrateValue(b, extractGenreFromID3v2Code(FTagHeader.Frames[b]));
-                        }
-                    }
-
-                    TagData.MetaFieldInfo fieldInfo;
-                    foreach (string s in FTagHeader.AdditionalFrames.Keys)
-                    {
-                        fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, s, FTagHeader.AdditionalFrames[s]);
-                        if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
-                        {
-                            tagData.AdditionalFields.Remove(fieldInfo);
-                        }
-                        else
-                        {
-                            tagData.AdditionalFields.Add(fieldInfo);
-                        }
-                    }
                 }
                 else
                 {
