@@ -2,6 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
@@ -60,13 +61,14 @@ namespace ATL.AudioData.IO
 
         static APEtag()
         {
-            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber","Album Artist","Conductor" };
+            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber","Album Artist","Conductor","Disc" };
 
             // Mapping between standard ATL fields and APE identifiers
             /*
              * Note : APE tag standard being a little loose, field codes vary according to the various implementations that have been made
              * => Some fields can be found in multiple frame code variants
              *      - Rating : "rating", "preference" frames
+             *      - Disc number : "disc", "discnumber" frames
              */
             frameMapping = new Dictionary<string, byte>();
 
@@ -81,6 +83,7 @@ namespace ATL.AudioData.IO
             frameMapping.Add("COMPOSER", TagData.TAG_FIELD_COMPOSER);
             frameMapping.Add("RATING", TagData.TAG_FIELD_RATING);           
             frameMapping.Add("PREFERENCE", TagData.TAG_FIELD_RATING);
+            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER);
             frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
             frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
@@ -197,14 +200,14 @@ namespace ATL.AudioData.IO
                     addPictureToken(picType);
                     if (pictureStreamHandler != null)
                     {
-                        // TODO - Description is actually mime type ?
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // Description seems to be a null-terminated ANSI string documenting picture mime-type
+                        ImageFormat imgFormat = Utils.GetImageFormatFromMimeType(description);
+
                         MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
                         // TODO
-                        // JPEG ?
                         // nativePicCode as byte ?
-                        pictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0, picturePosition); // TODO write actual image format !
+                        pictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, imgFormat, MetaDataIOFactory.TAG_APE, 0, picturePosition);
                         mem.Close();
                     }
                 }
