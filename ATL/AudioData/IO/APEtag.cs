@@ -12,8 +12,6 @@ namespace ATL.AudioData.IO
     /// </summary>
 	public class APEtag : MetaDataIO
     {
-        private TagData.PictureStreamHandlerDelegate FPictureStreamHandler;
-
 		// Tag ID
 		public const String APE_ID = "APETAGEX";							// APE
 
@@ -24,15 +22,12 @@ namespace ATL.AudioData.IO
 		// First version of APE tag
 		public const int APE_VERSION_1_0 = 1000;
 
-		// Max. number of supported tag fields
-		public const byte APE_FIELD_COUNT = 13;
+        // List of standard fields
+        private static ICollection<string> standardFrames;
 
-		// Names of supported tag fields
-        // NB : "preference" is a synonym to "rating" used by certain softwares
-		public static String[] APE_FIELD = new String[APE_FIELD_COUNT]
-		{
-			"Title", "Artist", "Album", "Track", "Year", "Genre",
-			"Comment", "Copyright", "Composer", "Cover Art (front)", "rating", "preference","Discnumber" };
+        // Mapping between ID3v2 field IDs and ATL fields
+        private static IDictionary<string, byte> frameMapping;
+
 
 		// APE tag data - for internal use
 		private class TagInfo
@@ -47,7 +42,7 @@ namespace ATL.AudioData.IO
 			// Extended data
 			public byte DataShift;		                           // Used if ID3v1 tag found
 			public int FileSize;		                                 // File size (bytes)
-			public String[] Field = new String[APE_FIELD_COUNT];   // Information from fields
+//			public String[] Field = new String[APE_FIELD_COUNT];   // Information from fields
 
             public void Reset()
             {
@@ -59,13 +54,42 @@ namespace ATL.AudioData.IO
 			    Array.Clear(Reserved,0,Reserved.Length);
 			    DataShift = 0;
 			    FileSize = 0;
-			    for (int i=0; i<Field.Length; i++) Field[i] = "";
+//			    for (int i=0; i<Field.Length; i++) Field[i] = "";
             }
 		}
 
-		// ********************* Auxiliary functions & voids ********************
+        static APEtag()
+        {
+            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber","Album Artist","Conductor" };
 
-        bool ReadFooter(BinaryReader SourceFile, ref TagInfo Tag)
+            // Mapping between standard ATL fields and APE identifiers
+            /*
+             * Note : APE tag standard being a little loose, field codes vary according to the various implementations that have been made
+             * => Some fields can be found in multiple frame code variants
+             *      - Rating : "rating", "preference" frames
+             */
+            frameMapping = new Dictionary<string, byte>();
+
+            frameMapping.Add("TITLE", TagData.TAG_FIELD_TITLE);
+            frameMapping.Add("ARTIST", TagData.TAG_FIELD_ARTIST);
+            frameMapping.Add("ALBUM", TagData.TAG_FIELD_ALBUM);
+            frameMapping.Add("TRACK", TagData.TAG_FIELD_TRACK_NUMBER);
+            frameMapping.Add("YEAR", TagData.TAG_FIELD_RECORDING_YEAR);
+            frameMapping.Add("GENRE", TagData.TAG_FIELD_GENRE);
+            frameMapping.Add("COMMENT", TagData.TAG_FIELD_COMMENT);
+            frameMapping.Add("COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT);
+            frameMapping.Add("COMPOSER", TagData.TAG_FIELD_COMPOSER);
+            frameMapping.Add("RATING", TagData.TAG_FIELD_RATING);           
+            frameMapping.Add("PREFERENCE", TagData.TAG_FIELD_RATING);
+            frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER);
+            frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
+            frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
+        }
+
+
+        // ********************* Auxiliary functions & voids ********************
+
+        private bool ReadFooter(BinaryReader SourceFile, ref TagInfo Tag)
         {	
 			char[] tagID = new char[3];
 			//int Transferred;
@@ -97,28 +121,40 @@ namespace ATL.AudioData.IO
                 result = false;
             }
 
-			//Source.ReadChars(BlockRead(SourceFile, Tag, APE_TAG_FOOTER_SIZE, Transferred);
-		
-			// if transfer is not complete
-			//if (Transferred < APE_TAG_FOOTER_SIZE) result = false;
-
 			return result;
 		}
 
-		void SetTagItem(String FieldName, String FieldValue, ref TagInfo Tag)
-		{		
-			// Set tag item if supported field found
-			for (int Iterator=0; Iterator < APE_FIELD_COUNT; Iterator++)		
-				if ( FieldName.Replace("\0","").ToUpper() == APE_FIELD[Iterator].ToUpper() ) 
-					if (Tag.Version > APE_VERSION_1_0)
-						Tag.Field[Iterator] = FieldValue;
-					else
-						Tag.Field[Iterator] = FieldValue;		
+		private void setMetaField(String FieldName, String FieldValue, ref TagInfo Tag, bool readAllMetaFrames)
+		{
+            byte supportedMetaId = 255;
+            FieldName = FieldName.Replace("\0", "").ToUpper();
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping.ContainsKey(FieldName)) supportedMetaId = frameMapping[FieldName];
+
+            TagData.MetaFieldInfo fieldInfo;
+            // If ID has been mapped with an ATL field, store it in the dedicated place...
+            if (supportedMetaId < 255)
+            {
+                tagData.IntegrateValue(supportedMetaId, FieldValue);
+            }
+            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
+            {
+                fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, FieldName, FieldValue);
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
+                {
+                    tagData.AdditionalFields.Remove(fieldInfo);
+                }
+                else
+                {
+                    tagData.AdditionalFields.Add(fieldInfo);
+                }
+            }
 		}
 
 		// ---------------------------------------------------------------------------
 
-		void ReadFields(BinaryReader SourceFile, ref TagInfo Tag)
+		private void ReadFields(BinaryReader SourceFile, ref TagInfo Tag, ref TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
 		{		
 			String FieldName;
             String strValue;
@@ -137,35 +173,66 @@ namespace ATL.AudioData.IO
 
                 ValuePosition = fs.Position;
 
-                if (ValueSize <= 500)
+                if ((ValueSize > 0) && (ValueSize <= 500))
                 {
                     strValue = Encoding.UTF8.GetString(SourceFile.ReadBytes(ValueSize));
-                    SetTagItem(FieldName.Trim(), strValue.Trim(), ref Tag);
+                    setMetaField(FieldName.Trim(), strValue.Trim(), ref Tag, readAllMetaFrames);
                 }
-                else
+                else if (ValueSize > 0) // Size > 500 => Probably an embedded picture
                 {
-                    if (FieldName.Trim().ToUpper().Equals("COVER ART (FRONT)"))
+                    TagData.PictureInfo picInfo;
+                    int picturePosition;
+                    TagData.PIC_TYPE picType = decodeAPEPictureType(FieldName);
+
+                    if (picType.Equals(TagData.PIC_TYPE.Unsupported))
                     {
-                        addPictureToken(TagData.PIC_TYPE.Front);
-                        if (FPictureStreamHandler != null)
-                        {
-                            int position = takePicturePosition(TagData.PIC_TYPE.Front);
-                            String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
-                            MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
-                            StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
-                            // TODO
-                            FPictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0, position); // TODO write actual image format !
-                            mem.Close();
-                        }
+                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_APE, FieldName);
+                        picInfo = new TagData.PictureInfo(null, MetaDataIOFactory.TAG_APE, FieldName, picturePosition);
+                    } else
+                    {
+                        picturePosition = takePicturePosition(picType);
+                        picInfo = new TagData.PictureInfo(null, picType, picturePosition);
+                    }
+
+                    addPictureToken(picType);
+                    if (pictureStreamHandler != null)
+                    {
+                        // TODO - Description is actually mime type ?
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // TODO document why forced encoding
+                        MemoryStream mem = new MemoryStream(ValueSize-description.Length-1);
+                        StreamUtils.CopyStream(SourceFile.BaseStream, mem, ValueSize-description.Length-1);
+                        // TODO
+                        // JPEG ?
+                        // nativePicCode as byte ?
+                        pictureStreamHandler(ref mem, TagData.PIC_TYPE.Front, System.Drawing.Imaging.ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, 0, picturePosition); // TODO write actual image format !
+                        mem.Close();
                     }
                 }
                 fs.Seek(ValuePosition + ValueSize, SeekOrigin.Begin);
 			}			
 		}
-        
-		// ********************** Public functions & voids **********************
 
-		public APEtag()
+        private static TagData.PIC_TYPE decodeAPEPictureType(string picCode)
+        {
+            picCode = picCode.Trim().ToUpper();
+            if ("COVER ART (FRONT)".Equals(picCode)) return TagData.PIC_TYPE.Front;
+            else if ("COVER ART (BACK)".Equals(picCode)) return TagData.PIC_TYPE.Back;
+            else if ("COVER ART (MEDIA)".Equals(picCode)) return TagData.PIC_TYPE.CD;
+            else return TagData.PIC_TYPE.Unsupported;
+        }
+
+        private static string encodeAPEPictureType(TagData.PIC_TYPE picCode)
+        {
+            if (TagData.PIC_TYPE.Front.Equals(picCode)) return "Cover Art (Front)";
+            else if (TagData.PIC_TYPE.Back.Equals(picCode)) return "Cover Art (Back)";
+            else if (TagData.PIC_TYPE.CD.Equals(picCode)) return "Cover Art (Media)";
+            else return "Cover Art (Other)";
+        }
+
+
+        // ********************** Public functions & voids **********************
+
+        public APEtag()
 		{
 			// Create object		
 			ResetData();
@@ -176,7 +243,6 @@ namespace ATL.AudioData.IO
         public override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
         {
 			TagInfo Tag = new TagInfo();
-            FPictureStreamHandler = pictureStreamHandler;
 
 			// Reset data and load footer from file to variable
 			ResetData();
@@ -191,23 +257,9 @@ namespace ATL.AudioData.IO
 				// Fill properties with footer data
 				FVersion = Tag.Version;
 				FSize = Tag.Size;
-				// Get information from fields
-                ReadFields(source, ref Tag);
-				Title = Tag.Field[0];
-				Artist = Tag.Field[1];
-				Album = Tag.Field[2];
-				Track = TrackUtils.ExtractTrackNumber(Tag.Field[3]);
-				Year = Tag.Field[4];
-				Genre = Tag.Field[5];
-				Comment = Tag.Field[6];
-				Copyright = Tag.Field[7];
-                Composer = Tag.Field[8];
-                Disc = TrackUtils.ExtractTrackNumber(Tag.Field[12]);
-
-                // Rating can be containted in two fields
-                string RatingStr = Utils.ProtectValue(Tag.Field[10]);
-                if (0 == RatingStr.Trim().Length) Utils.ProtectValue(Tag.Field[11]);
-                Rating = TrackUtils.ExtractIntRating(RatingStr);
+			
+                // Get information from fields
+                ReadFields(source, ref Tag, ref pictureStreamHandler, storeUnsupportedMetaFields);
 			}
 
 			return result;

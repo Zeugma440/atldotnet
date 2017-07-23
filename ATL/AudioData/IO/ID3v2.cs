@@ -210,7 +210,7 @@ namespace ATL.AudioData.IO
             //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM)
             //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
 
-            // Mapping between standard fields and ID3v2.2 identifiers
+            // Mapping between standard ATL fields and ID3v2.2 identifiers
             frameMapping_v22 = new Dictionary<string, byte>();
 
             frameMapping_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
@@ -565,7 +565,7 @@ namespace ATL.AudioData.IO
 
                         byte picCode = SourceFile.ReadByte();
                         // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                        TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+                        TagData.PIC_TYPE picType = decodeID3v2PictureType(picCode);
 
                         int picturePosition;
                         if (picType.Equals(TagData.PIC_TYPE.Unsupported))
@@ -781,7 +781,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : encodeID3v2PictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -1121,7 +1121,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static TagData.PIC_TYPE DecodeID3v2PictureType(int picCode)
+        private static TagData.PIC_TYPE decodeID3v2PictureType(int picCode)
         {
             if (0 == picCode) return TagData.PIC_TYPE.Generic;
             else if (3 == picCode) return TagData.PIC_TYPE.Front;
@@ -1130,7 +1130,7 @@ namespace ATL.AudioData.IO
             else return TagData.PIC_TYPE.Unsupported;
         }
 
-        private static byte EncodeID3v2PictureType(TagData.PIC_TYPE picCode)
+        private static byte encodeID3v2PictureType(TagData.PIC_TYPE picCode)
         {
             if (TagData.PIC_TYPE.Front.Equals(picCode)) return 3;
             else if (TagData.PIC_TYPE.Back.Equals(picCode)) return 4;

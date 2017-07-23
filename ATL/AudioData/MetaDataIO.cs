@@ -284,6 +284,11 @@ namespace ATL.AudioData
             return takePicturePosition(new TagData.PictureInfo(null, tagType, nativePicCode));
         }
 
+        protected int takePicturePosition(int tagType, string nativePicCode)
+        {
+            return takePicturePosition(new TagData.PictureInfo(null, tagType, nativePicCode));
+        }
+
         protected int takePicturePosition(TagData.PictureInfo picInfo)
         {
             if (picturePositions.ContainsKey(picInfo))
