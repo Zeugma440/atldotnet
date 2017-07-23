@@ -80,6 +80,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Resources\003 BlackBird.tak" />
     <None Include="Resources\01_2_32.opus" />
     <None Include="Resources\2ND_PM.S3M" />
