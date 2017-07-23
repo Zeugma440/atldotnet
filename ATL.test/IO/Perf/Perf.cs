@@ -18,7 +18,14 @@ namespace ATL.test.IO.Perf
             long ticksBefore, ticksNow;
 
             // Duplicate resource
-            for (int i = 0; i < NB_COPIES; i++) File.Copy(LOCATION, LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + i.ToString()), true);
+            for (int i = 0; i < NB_COPIES; i++)
+            {
+                string newLocation = LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + i.ToString());
+                File.Copy(LOCATION, newLocation, true);
+
+                FileInfo fileInfo = new FileInfo(newLocation);
+                fileInfo.IsReadOnly = false;
+            }
 
             try
             {
