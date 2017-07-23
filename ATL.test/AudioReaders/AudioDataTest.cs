@@ -1,4 +1,5 @@
-﻿using ATL.AudioReaders;
+﻿using ATL;
+using ATL.AudioReaders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
@@ -7,239 +8,108 @@ namespace ATL.test
     [TestClass]
     public class AudioDataTest
     {
-        [TestMethod]
-        public void TestFLACAudio()
+
+        private void testGenericAudio(string resource, int duration, int bitrate, int samplerate, bool isVbr, int codecFamily, int alternate = 0)
         {
-            string resource = "mustang_12kHz.flac";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+resource);
+            string theResource = TestUtils.GetResourceLocationRoot() + resource;
 
-            // Not possible since TFLACFile is not visible from the outside of ATL
-            //Assert.IsInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.TFLACFile));
-            Assert.IsNotInstanceOfType(theReader,typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
+            IAudioDataReader theReader = AudioReaderFactory.GetInstance().GetDataReader(theResource, alternate);
 
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+ resource);
+            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
 
-            Assert.AreEqual(5, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(694, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
+            theReader.ReadFromFile(theResource);
+
+            Assert.AreEqual(duration, (int)Math.Round(theReader.Duration));
+            Assert.AreEqual(bitrate, (int)Math.Round(theReader.BitRate));
+//            Assert.AreEqual(samplerate, (int)Math.Round(theReader.SampleRate));
+            Assert.AreEqual(theReader.IsVBR, isVbr);
+            Assert.AreEqual(codecFamily, theReader.CodecFamily);
 
             System.Console.WriteLine(theReader.Duration);
             System.Console.WriteLine(theReader.BitRate);
+//            System.Console.WriteLine(theReader.SampleRate);
             System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSLESS == theReader.CodecFamily);
+            System.Console.WriteLine(codecFamily == theReader.CodecFamily);
+        }
+
+        [TestMethod]
+        public void TestFLACAudio()
+        {
+            testGenericAudio("mustang_12kHz.flac", 5, 694, 44100, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            string resource = "Yeah.dsf";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+ resource);
-
-            Assert.AreEqual(4, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(5953, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSLESS == theReader.CodecFamily);
+            testGenericAudio("Yeah.dsf", 4, 5953, 2822400, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
         public void TestDSF_PSFAudio()
         {
-            string resource = "adgpp_PLAY_01_05.dsf";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+resource, 1); // Force alternate
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.AreEqual(26, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+            testGenericAudio("adgpp_PLAY_01_05.dsf", 26, 0, 0, false, AudioReaderFactory.CF_SEQ_WAV, 1);
         }
 
         [TestMethod]
         public void TestOpusAudio()
         {
-            string resource = "01_2_32.opus";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.AreEqual(31, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(33, (int)Math.Round(theReader.BitRate));
-            Assert.IsTrue(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+            testGenericAudio("01_2_32.opus", 31, 33, 48000, true, AudioReaderFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void TestVorbisAudio()
         {
-            string resource = "01_2_32.opus";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+"Rayman_2_music_sample.ogg");
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+"Rayman_2_music_sample.ogg");
-
-            Assert.AreEqual(33, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(69, (int)Math.Round(theReader.BitRate));
-            Assert.IsTrue(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+            testGenericAudio("Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioReaderFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void TestTakAudio()
         {
-            string resource = "01_2_32.opus";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+"003 BlackBird.tak");
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+"003 BlackBird.tak");
-
-            Assert.AreEqual(6, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(634, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSLESS, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSLESS == theReader.CodecFamily);
+            testGenericAudio("003 BlackBird.tak", 6, 634, 44100, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
         public void TestModAudio()
         {
-            string resource = "4-mat - Thala-Music (Sanxion).mod";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(TestUtils.GetResourceLocationRoot()+resource);
-
-            Assert.AreEqual(330, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(0, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+            testGenericAudio("4-mat - Thala-Music (Sanxion).mod", 330, 0, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
         public void TestS3MAudio()
         {
-            String location = TestUtils.GetResourceLocationRoot()+"2ND_PM.S3M";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(location);
-
-            Assert.AreEqual(405, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+            testGenericAudio("2ND_PM.S3M", 405, 2, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
         public void TestXMAudio()
         {
-            String location = TestUtils.GetResourceLocationRoot()+"v_chrtrg.xm";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(location);
-
-            Assert.AreEqual(261, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(2, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+            testGenericAudio("v_chrtrg.xm", 261, 2, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
         public void TestITAudio()
         {
-            String location = TestUtils.GetResourceLocationRoot()+"sommix.it";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(location);
-
-            Assert.AreEqual(476, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(1, (int)Math.Round(theReader.BitRate));
-            Assert.IsFalse(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_SEQ_WAV, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_SEQ_WAV == theReader.CodecFamily);
+            testGenericAudio("sommix.it", 476, 1, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
         public void TestM4AAudio()
         {
-            String location = TestUtils.GetResourceLocationRoot()+"06 I'm All In Love.m4a";
-            IAudioDataReader theReader = AudioReaders.AudioReaderFactory.GetInstance().GetDataReader(location);
-
-            Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioReaders.BinaryLogic.DummyReader));
-
-            theReader.ReadFromFile(location);
-
-            Assert.AreEqual(54, (int)Math.Round(theReader.Duration));
-            Assert.AreEqual(260, (int)Math.Round(theReader.BitRate));
-            Assert.IsTrue(theReader.IsVBR);
-            Assert.AreEqual(AudioReaderFactory.CF_LOSSY, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(AudioReaderFactory.CF_LOSSY == theReader.CodecFamily);
+            testGenericAudio("06 I'm All In Love.m4a", 54, 260, 44100, true, AudioReaderFactory.CF_LOSSY);
         }
-        
 
+/*
+        [TestMethod]
+        public void TestAIFFAudio()
+        {
+            testGenericAudio("M1F1-int32-AFsp.aif", 3, 512, 8000, false, AudioReaderFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void TestAIFCAudio()
+        {
+            testGenericAudio("M1F1-AlawC-AFsp_tagged.aif", 3, 128, 8000, false, AudioReaderFactory.CF_LOSSY);
+        }
+*/
     }
 }
