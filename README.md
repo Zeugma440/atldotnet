@@ -68,38 +68,42 @@ NB1 : Empty cells mean "not applicable for this audio format"
 
 NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, which means any "foreign" character (japanese, chinese, cyrillic...) **will** be recognized and displayed properly
 
+R= Read
+
+W= Write (work in progress in the IO branch; ATL only writes using the latest standard available - e.g. ID3v1.1, ID3v2.4, APEv2)
+
 
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
-Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | yes | yes | yes | yes
-Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | yes |  | yes
+Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R | R | R | R
+Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R |  | R
 Digital Theatre System | .DTS |  |  |  | 
-Direct Stream Digital | .DSD, .DSF |  | yes |  | 
-Dolby Digital | .AC3 |  |  | yes | 
-Extended Module | .XM |  |  |  | yes (2)
-Free Lossless Audio Codec | .FLAC |  | yes |  | yes
-Impulse Tracker | .IT |  |  |  | yes (2)
-Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | yes (1)
-Monkey's Audio | .APE | yes | yes | yes | 
-MPEG Audio Layer | .MP1, .MP2, .MP3 | yes | yes | yes | |
-MusePack / MPEGplus|.MPC, .MP+|yes|yes|yes| |
-Noisetracker/Soundtracker/Protracker|.MOD| | | |yes (2)|
-OGG : Vorbis, Opus|.OGG, .OPUS| | | |yes|
-OptimFROG|.OFR, .OFS|yes|yes|yes| |
-Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |yes|
-ScreamTracker|.S3M| | | |yes (2)|
-SPC700 (Super Nintendo Sound files)|.SPC| | | |yes|
-Toms' losslesss Audio Kompressor|.TAK| | |yes| |
-True Audio|.TTA|yes|yes|yes| |
-TwinVQ|.VQF| | | |yes|
-PCM (uncompressed audio)|.WAV|yes| | | |
-WavPack|.WV| | |yes| |
-Windows Media Audio|.WMA| | | |yes|
+Direct Stream Digital | .DSD, .DSF |  | R |  | 
+Dolby Digital | .AC3 |  |  | R | 
+Extended Module | .XM |  |  |  | R (2)
+Free Lossless Audio Codec | .FLAC |  | R |  | R
+Impulse Tracker | .IT |  |  |  | R (2)
+Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R (1)
+Monkey's Audio | .APE | R | R | R | 
+MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
+MusePack / MPEGplus|.MPC, .MP+|R|R|R| |
+Noisetracker/Soundtracker/Protracker|.MOD| | | |R (2)|
+OGG : Vorbis, Opus|.OGG, .OPUS| | | |R|
+OptimFROG|.OFR, .OFS|R|R|R| |
+Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |R|
+ScreamTracker|.S3M| | | |R (2)|
+SPC700 (Super Nintendo Sound files)|.SPC| | | |R|
+Toms' losslesss Audio Kompressor|.TAK| | |R| |
+True Audio|.TTA|R|R|R| |
+TwinVQ|.VQF| | | |R|
+PCM (uncompressed audio)|.WAV|R| | | |
+WavPack|.WV| | |R| |
+Windows Media Audio|.WMA| | | |R|
 
 
-(1) : MIDI meta events are all written to the track's Comment field
+(1) : MIDI meta events appear on the track's Comment field
 
-(2) : sample names are all written to the track's Comment field
+(2) : all sample names appear on the track's Comment field
 
 
 * Detected fields
