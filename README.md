@@ -1,6 +1,6 @@
 # Audio Tools Library (ATL) for .NET
 
-## Status
+## Status / master branch
 
 **Linux and OSX Mono Build :** [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet) (powered by Travis CI)
 
