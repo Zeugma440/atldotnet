@@ -78,6 +78,148 @@ namespace ATL.test.IO.MetaData
             pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
         }
 
+        [TestMethod]
+        public void TagIO_R_ID3v22_simple()
+        {
+            string location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 ANSI charset only.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Supported fields
+            Assert.AreEqual("noTagnoTag", theFile.ID3v2.Title);
+            Assert.AreEqual("ALBUM!", theFile.ID3v2.Album);
+            Assert.AreEqual("ARTIST", theFile.ID3v2.Artist);
+            Assert.AreEqual("ALBUMARTIST", theFile.ID3v2.AlbumArtist);
+            Assert.AreEqual("I have no IDE and i must code", theFile.ID3v2.Comment);
+            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual("House", theFile.ID3v2.Genre);
+            Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+
+            // Pictures
+            Assert.AreEqual(1, pictures.Count);
+            byte found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                {
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 656);
+                    Assert.AreEqual(picture.Width, 552);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(1, found);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v22_UTF16()
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 UTF16.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Supported fields
+            Assert.AreEqual("﻿bébé", theFile.ID3v2.Title);
+            Assert.AreEqual("ALBUM!", theFile.ID3v2.Album);
+            Assert.AreEqual("﻿父", theFile.ID3v2.Artist);
+            Assert.AreEqual("ALBUMARTIST", theFile.ID3v2.AlbumArtist);
+            Assert.AreEqual("﻿I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
+            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual("House", theFile.ID3v2.Genre);
+            Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
+            Assert.AreEqual(2, theFile.ID3v2.Disc);
+
+            // Pictures
+            Assert.AreEqual(1, pictures.Count);
+            byte found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                {
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 656);
+                    Assert.AreEqual(picture.Width, 552);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(1, found);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v22_3pictures()
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 3 pictures.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+
+            // Pictures
+            Assert.AreEqual(3, pictures.Count);
+            byte found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                {
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Height, 256);
+                    Assert.AreEqual(picture.Width, 256);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(3, found);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v23_UTF16()
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String location = TestUtils.GetResourceLocationRoot() + "id3v2.3_UTF16.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            readExistingTagsOnFile(ref theFile);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v24_UTF8()
+        {
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            String location = TestUtils.GetResourceLocationRoot() + "id3v2.4_UTF8.mp3";
+            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
+
+            readExistingTagsOnFile(ref theFile);
+        }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_Empty()
@@ -240,26 +382,6 @@ namespace ATL.test.IO.MetaData
 */
             // Get rid of the working copy
             File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_R_ID3v23_UTF16()
-        {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot()+"id3v2.3_UTF16.mp3";
-            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
-
-            readExistingTagsOnFile(ref theFile);
-        }
-
-        [TestMethod]
-        public void TagIO_R_ID3v24_UTF8()
-        {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "id3v2.4_UTF8.mp3";
-            IAudioDataIO theFile = AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location);
-
-            readExistingTagsOnFile(ref theFile);
         }
 
         [TestMethod]

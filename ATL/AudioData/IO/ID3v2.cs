@@ -372,7 +372,7 @@ namespace ATL.AudioData.IO
             long dataPosition;
             string strData;
 
-            // The vast majority of ID3v2.2 tags use default encoding
+            // ID3v2.2 tags use ISO-8859-1 encoding by default, unless frame header says the contrary
             if (TAG_VERSION_2_2 == FVersion) FEncoding = Encoding.GetEncoding("ISO-8859-1");
 
             fs.Seek(offset + 10, SeekOrigin.Begin);
@@ -409,94 +409,88 @@ namespace ATL.AudioData.IO
                 if (TAG_VERSION_2_2 == FVersion)
                 {
                     Frame.Flags = 0;
-                    dataSize = Frame.Size;
                 }
                 else
                 {
                     Frame.Flags = StreamUtils.ReverseInt16(SourceFile.ReadUInt16());
-                    dataSize = Frame.Size - 1; // Minus encoding byte
+                }
+                dataSize = Frame.Size - 1; // Minus encoding byte
+
+                // Skips data size indicator if signaled by the flag
+                if ((Frame.Flags & 1) > 0)
+                {
+                    fs.Seek(4, SeekOrigin.Current);
+                    dataSize = dataSize - 4;
                 }
 
-                if (TAG_VERSION_2_2 == FVersion)
+                encodingCode = fs.ReadByte();
+                FEncoding = decodeID3v2CharEncoding((byte)encodingCode);
+
+                // COMM fields contain :
+                //   a 3-byte langage ID
+                //   a "short content description", as an encoded null-terminated string
+                //   the actual comment, as an encoded, null-terminated string
+                // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
+                if ("COM".Equals(Frame.ID.Substring(0, 3)))
                 {
-                    encodingCode = 0;
+                    long initialPos = fs.Position;
+
+                    // Skip langage ID
+                    fs.Seek(3, SeekOrigin.Current);
+
+                    BOMProperties contentDescriptionBOM = new BOMProperties();
+                    // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
+                    if ( FVersion > TAG_VERSION_2_2 && (1 == encodingCode) )
+                    {
+                        contentDescriptionBOM = readBOM(ref fs);
+                    }
+
+                    if (contentDescriptionBOM.Size <= 3)
+                    {
+                        // Skip content description
+                        StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
+                    }
+                    else
+                    {
+                        // If content description BOM > 3 bytes, there might not be any BOM
+                        // for content description, and the algorithm might have bumped into
+                        // the comment BOM => backtrack just after langage tag
+                        fs.Seek(initialPos + 3, SeekOrigin.Begin);
+                    }
+
+                    dataSize = dataSize - (fs.Position - initialPos);
                 }
-                else
+
+                // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
+                // http://en.wikipedia.org/wiki/Byte_order_mark
+                //    3-byte BOM : FF 00 FE
+                //    2-byte BOM : FE FF (UTF-16 Big Endian)
+                //    2-byte BOM : FF FE (UTF-16 Little Endian)
+                //    Other variants...
+                if (FVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                 {
-                    // Skips data size indicator if signaled by the flag
-                    if ((Frame.Flags & 1) > 0)
+                    long initialPos = fs.Position;
+                    BOMProperties bom = readBOM(ref fs);
+
+                    // A BOM has been read, but it lies outside the current frame
+                    // => Backtrack and directly read data without BOM
+                    if (bom.Size > dataSize)
                     {
-                        fs.Seek(4, SeekOrigin.Current);
-/*
-                        byte[] size = SourceFile.ReadBytes(4);
-                        int daSize = StreamUtils.DecodeSynchSafeInt32(size);
-*/
-                        dataSize = dataSize - 4;
+                        fs.Seek(initialPos, SeekOrigin.Begin);
                     }
-
-                    encodingCode = fs.ReadByte();
-                    FEncoding = decodeID3v2CharEncoding((byte)encodingCode);
-
-                    // COMM fields contain :
-                    //   a 3-byte langage ID
-                    //   a "short content description", as an encoded null-terminated string
-                    //   the actual comment, as an encoded, null-terminated string
-                    // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
-                    if ("COM".Equals(Frame.ID.Substring(0, 3)))
+                    else
                     {
-                        long initialPos = fs.Position;
-
-                        // Skip langage ID
-                        fs.Seek(3, SeekOrigin.Current);
-
-                        // Skip BOM
-                        BOMProperties contentDescriptionBOM = new BOMProperties();
-                        if (1 == encodingCode)
-                        {
-                            contentDescriptionBOM = readBOM(ref fs);
-                        }
-
-                        if (contentDescriptionBOM.Size <= 3)
-                        {
-                            // Skip content description
-                            StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
-                        }
-                        else
-                        {
-                            // If content description BOM > 3 bytes, there might not be any BOM
-                            // for content description, and the algorithm might have bumped into
-                            // the comment BOM => backtrack just after langage tag
-                            fs.Seek(initialPos + 3, SeekOrigin.Begin);
-                        }
-
-                        dataSize = dataSize - (fs.Position - initialPos);
+                        FEncoding = bom.Encoding;
+                        dataSize = dataSize - bom.Size;
                     }
-
-                    // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark)
-                    // http://en.wikipedia.org/wiki/Byte_order_mark
-                    //    3-byte BOM : FF 00 FE
-                    //    2-byte BOM : FE FF (UTF-16 Big Endian)
-                    //    2-byte BOM : FF FE (UTF-16 Little Endian)
-                    //    Other variants...
-                    if (1 == encodingCode)
-                    {
-                        long initialPos = fs.Position;
-                        BOMProperties bom = readBOM(ref fs);
-
-                        // A BOM has been read, but it lies outside the current frame
-                        // => Backtrack and directly read data without BOM
-                        if (bom.Size > dataSize)
-                        {
-                            fs.Seek(initialPos, SeekOrigin.Begin);
-                        }
-                        else
-                        {
-                            FEncoding = bom.Encoding;
-                            dataSize = dataSize - bom.Size;
-                        }
-                    }
-                    // If encoding > 3, we might have caught an actual character, which means there is no encoding flag
-                    else if (encodingCode > 3) { fs.Seek(-1, SeekOrigin.Current); dataSize++; }
+                }
+                
+                // If encoding > 3, we might have caught an actual character, which means there is no encoding flag
+                if (encodingCode > 3)
+                {
+                    FEncoding = decodeID3v2CharEncoding(0);
+                    fs.Seek(-1, SeekOrigin.Current);
+                    dataSize++;
                 }
 
 
@@ -543,9 +537,6 @@ namespace ATL.AudioData.IO
                         ImageFormat imgFormat;
                         if (TAG_VERSION_2_2 == FVersion)
                         {
-                            // ID3v2.2 specific layout "image format"
-                            Encoding encoding = decodeID3v2CharEncoding(SourceFile.ReadByte());
-
                             // Image format
                             String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3)).ToUpper();
 
@@ -581,7 +572,7 @@ namespace ATL.AudioData.IO
 
                         // Image description (unused)
                         // Description can be coded with another convention
-                        if (1 == encodingCode) readBOM(ref fs);
+                        if (FVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(ref fs);
                         StreamUtils.ReadNullTerminatedString(SourceFile, FEncoding);
 
                         if (pictureStreamHandler != null)
@@ -1131,7 +1122,7 @@ namespace ATL.AudioData.IO
 
         private static TagData.PIC_TYPE decodeID3v2PictureType(int picCode)
         {
-            if (0 == picCode) return TagData.PIC_TYPE.Generic;
+            if (0 == picCode) return TagData.PIC_TYPE.Generic;      // Spec calls it "Other"
             else if (3 == picCode) return TagData.PIC_TYPE.Front;
             else if (4 == picCode) return TagData.PIC_TYPE.Back;
             else if (6 == picCode) return TagData.PIC_TYPE.CD;
@@ -1207,17 +1198,17 @@ namespace ATL.AudioData.IO
         /// Warning : due to approximative implementations, some tags seem to be coded
         /// with the default encoding of the OS they have been tagged on
         /// 
-        ///  $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
-        ///  $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
-        ///   strings in the same frame SHALL have the same byteorder.
-        ///  Terminated with $00 00.
-        ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
-        ///  Terminated with $00 00.
-        ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+        ///  $00    ISO-8859-1 [ISO-8859-1]. Terminated with $00.
+        ///  $01    UTF-16 [UTF-16] encoded Unicode [UNICODE], with BOM if version > 2.2
+        ///         All strings in the same frame SHALL have the same byteorder.
+        ///         Terminated with $00 00.
+        ///  $02    UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
+        ///         Terminated with $00 00.
+        ///  $03    UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
         private static Encoding decodeID3v2CharEncoding(byte encoding)
         {
             if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1");   // aka ISO Latin-1
-            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM
+            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM if version > 2.2
             else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
             else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
             else return Encoding.Default;

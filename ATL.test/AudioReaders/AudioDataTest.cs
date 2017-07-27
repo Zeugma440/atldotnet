@@ -95,7 +95,7 @@ namespace ATL.test
         [TestMethod]
         public void TestM4AAudio()
         {
-            testGenericAudio("06 I'm All In Love.m4a", 54, 260, 44100, true, AudioReaderFactory.CF_LOSSY);
+            testGenericAudio("mp4.m4a", 14, 75, 48000, true, AudioReaderFactory.CF_LOSSY);
         }
 
 /*
