@@ -292,12 +292,27 @@ namespace ATL
             return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
         }
 
-		/// <summary>
-		/// Switches the format of an Int32 between big endian and little endian
-		/// </summary>
-		/// <param name="n">value to convert</param>
-		/// <returns>converted value</returns>
-		public static Int32 ReverseInt32(Int32 n)
+        /// <summary>
+        /// Switches the format of an Int32 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
+        public static uint ReverseUInt32(uint n)
+        {
+            byte b0;
+            byte b1;
+            byte b2;
+            byte b3;
+
+            b0 = (byte)((n & 0x000000FF) >> 0);
+            b1 = (byte)((n & 0x0000FF00) >> 8);
+            b2 = (byte)((n & 0x00FF0000) >> 16);
+            b3 = (byte)((n & 0xFF000000) >> 24);
+
+            return (uint)((b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0));
+        }
+
+        public static Int32 ReverseInt32(Int32 n)
 		{
 			byte b0;
 			byte b1;
@@ -310,13 +325,24 @@ namespace ATL
 			b3 = (byte)((n & 0xFF000000) >> 24); 
 			
 			return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
-		}
+        }
 
         /// <summary>
         /// Switches the format of an Int16 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
+        public static ushort ReverseUInt16(ushort n)
+        {
+            byte b0;
+        byte b1;
+
+        b0 = (byte)((n & 0x00FF) >> 0);
+            b1 = (byte)((n & 0xFF00) >> 8);
+
+            return (ushort)((b0 << 8) | (b1 << 0));
+        }
+
         public static ushort ReverseInt16(ushort n)
         {
             byte b0;

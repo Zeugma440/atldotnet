@@ -12,6 +12,7 @@ namespace ATL.AudioReaders
         // Audio data
         protected double FBitrate;
         protected double FDuration;
+        protected double FSampleRate;
 
         // File data
         protected long FFileSize;
@@ -72,6 +73,7 @@ namespace ATL.AudioReaders
 
             FBitrate = 0;
             FDuration = 0;
+            FSampleRate = 0;
 
             if (FID3v1 != null) FID3v1.ResetData();
             if (FID3v2 != null) FID3v2.ResetData();
