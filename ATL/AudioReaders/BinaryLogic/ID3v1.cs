@@ -25,7 +25,7 @@ namespace ATL.AudioReaders.BinaryLogic
         private static Encoding ID3v1Encoding = Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
 
 		#region music genres
-		public static String[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
+		public static string[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
 		{	// Standard genres
 			"Blues",
 			"Classic Rock",

@@ -71,6 +71,8 @@ namespace ATL
         /// Reads a given number of one-byte chars from the provided source
         /// (this method is there because the default behaviour of .NET's binary char reading
         /// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
+        /// 
+        /// TODO : Progressively replace this with Encoding.ASCII.GetString
         /// </summary>
         /// <param name="r">Source to read from</param>
         /// <param name="length">Number of one-byte chars to read</param>

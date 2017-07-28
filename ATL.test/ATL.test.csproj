@@ -111,6 +111,7 @@
     <Content Include="Resources\duck hunt.wav" />
     <Content Include="Resources\M1F1-AlawC-AFsp_tagged.aif" />
     <Content Include="Resources\M1F1-int32-AFsp.aif" />
+    <Content Include="Resources\mp4.m4a" />
     <Content Include="Resources\playlist.asx" />
     <Content Include="Resources\playlist.m3u" />
     <Content Include="Resources\ROQ.MID" />

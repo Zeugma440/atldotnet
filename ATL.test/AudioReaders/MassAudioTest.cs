@@ -19,7 +19,7 @@ namespace ATL.test.AudioReaders
             {
                 t = new Track(file);
 
-                System.Console.WriteLine(t.Path + "......."+ t.Duration + " ("+t.Bitrate+" kpbs)");
+                Console.WriteLine(t.Path + "......."+ Commons.Utils.FormatTime(t.Duration) + " | " +t.SampleRate + " ("+t.Bitrate+" kpbs)");
             }
         }
     }

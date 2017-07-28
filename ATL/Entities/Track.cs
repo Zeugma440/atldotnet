@@ -29,7 +29,8 @@ namespace ATL
 		public String Album;
 		public int Year;
 		public int Bitrate;
-		public bool IsVBR;
+        public double SampleRate;
+        public bool IsVBR;
 		public int CodecFamily;
 		public long Size;
 		public long LastModified;
@@ -94,6 +95,7 @@ namespace ATL
                 TrackNumber = theReader.Track;
                 DiscNumber = theReader.Disc;
                 Bitrate = theReader.IntBitRate;
+                SampleRate = theReader.SampleRate;
                 CodecFamily = theReader.CodecFamily;
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
