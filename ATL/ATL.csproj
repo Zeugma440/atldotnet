@@ -51,6 +51,7 @@
     <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
     <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
     <Compile Include="AudioData\IOBase.cs" />
+    <Compile Include="AudioData\IO\AAC.cs" />
     <Compile Include="AudioData\IO\APEtag.cs" />
     <Compile Include="AudioData\IO\DummyReader.cs" />
     <Compile Include="AudioData\IO\DummyTag.cs" />

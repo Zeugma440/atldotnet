@@ -208,7 +208,7 @@ namespace ATL.AudioData.IO
 
             // Read tag
             source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
-            FOffset = source.BaseStream.Position;
+            tagOffset = source.BaseStream.Position;
 
 #if DEBUG
 //            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
@@ -216,14 +216,14 @@ namespace ATL.AudioData.IO
 
 			// ID3v1 tags are C-String(null-terminated)-based tags
 			// they are not unicode-encoded, hence the use of ReadOneByteChars
-            TagData.Header = FEncoding.GetString(source.ReadBytes(3), 0, 3);
+            TagData.Header = tagEncoding.GetString(source.ReadBytes(3), 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
-                TagData.Title = Utils.StripZeroChars(FEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Artist = Utils.StripZeroChars(FEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Album = Utils.StripZeroChars(FEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Year = Utils.StripZeroChars(FEncoding.GetString(source.ReadBytes(4), 0, 4));
-                TagData.Comment = Utils.StripZeroChars(FEncoding.GetString(source.ReadBytes(28), 0, 28));
+                TagData.Title = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Artist = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Album = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Year = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(4), 0, 4));
+                TagData.Comment = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(28), 0, 28));
                 TagData.EndComment = source.ReadBytes(2);
                 TagData.Genre = source.ReadByte();
                 result = true;
@@ -258,8 +258,8 @@ namespace ATL.AudioData.IO
 		public override void ResetData()
 		{
             base.ResetData();
-			FVersion = TAG_VERSION_1_0;
-            FEncoding = Encoding.GetEncoding("ISO-8859-1");
+			tagVersion = TAG_VERSION_1_0;
+            tagEncoding = Encoding.GetEncoding("ISO-8859-1");
         }
 
 		// ---------------------------------------------------------------------------
@@ -275,18 +275,18 @@ namespace ATL.AudioData.IO
 			// Process data if loaded successfuly
 			if (result)
 			{
-				FExists = true;
-                FSize = ID3V1_TAG_SIZE;
-				FVersion = GetTagVersion(tagData);
+				tagExists = true;
+                tagSize = ID3V1_TAG_SIZE;
+				tagVersion = GetTagVersion(tagData);
 
 				// Fill properties using tag data
                 Title = tagData.Title;
                 Artist = tagData.Artist;
                 Album = tagData.Album;
                 Year = tagData.Year;
-				if (TAG_VERSION_1_0 == FVersion)
+				if (TAG_VERSION_1_0 == tagVersion)
 				{
-                    Comment = tagData.Comment + Utils.StripZeroChars(FEncoding.GetString(tagData.EndComment,0,2));
+                    Comment = tagData.Comment + Utils.StripZeroChars(tagEncoding.GetString(tagData.EndComment,0,2));
 				}
 				else
 				{

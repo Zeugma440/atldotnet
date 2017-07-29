@@ -260,13 +260,13 @@ namespace ATL.AudioData.IO
             // Process data if loaded and footer valid
             if (result)
             {
-                FExists = true;
+                tagExists = true;
                 // Fill properties with footer data
-                FVersion = Tag.Version;
-                FSize = Tag.Size;
-                if (FVersion > APE_VERSION_1_0) FSize += 32; // Even though APE standard prevents from counting header in its size descriptor, ATL needs it
-                FOffset = Tag.FileSize - Tag.DataShift - Tag.Size;
-                if (FVersion > APE_VERSION_1_0) FOffset -= 32; // Tag size does not include header size in APEv2
+                tagVersion = Tag.Version;
+                tagSize = Tag.Size;
+                if (tagVersion > APE_VERSION_1_0) tagSize += 32; // Even though APE standard prevents from counting header in its size descriptor, ATL needs it
+                tagOffset = Tag.FileSize - Tag.DataShift - Tag.Size;
+                if (tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
 
                 // Get information from fields
                 readFrames(source, ref Tag, ref pictureStreamHandler, storeUnsupportedMetaFields);
@@ -426,7 +426,7 @@ namespace ATL.AudioData.IO
             writer.Write(Encoding.ASCII.GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
-            byte[] binaryValue = FEncoding.GetBytes(text);
+            byte[] binaryValue = tagEncoding.GetBytes(text);
             writer.Write(binaryValue);
 
             // Go back to frame size location to write its actual size 

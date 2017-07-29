@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace ATL.AudioData
 {
@@ -7,10 +8,14 @@ namespace ATL.AudioData
 	/// </summary>
 	public interface IAudioDataIO
 	{
-		/// <summary>
-		/// Bitrate of the file
-		/// </summary>
-		double BitRate
+        string FileName
+        {
+            get;
+        }
+        /// <summary>
+        /// Bitrate of the file
+        /// </summary>
+        double BitRate
 		{
 			get;
 		}
@@ -21,10 +26,17 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-		/// <summary>
-		/// Returns true if the bitrate is variable; false if not
+        /// <summary>
+		/// Sample rate of the file (Hz)
 		/// </summary>
-		bool IsVBR
+		int SampleRate
+        {
+            get;
+        }
+        /// <summary>
+        /// Returns true if the bitrate is variable; false if not
+        /// </summary>
+        bool IsVBR
 		{
 			get;
 		}
@@ -42,52 +54,18 @@ namespace ATL.AudioData
         {
             get;
         }
-        /// <summary>
-        /// Gets the ID3v1 metadata contained in this file
-        /// </summary>
-        IO.ID3v1 ID3v1
-		{
-			get;
-		}
-        /// <summary>
-        /// Gets the ID3v2 metadata contained in this file
-        /// </summary>
-        IO.ID3v2 ID3v2
-		{
-			get; 
-		}
-        /// <summary>
-        /// Gets the APEtag metadata contained in this file
-        /// </summary>
-        IO.APEtag APEtag
-        {
-            get;
-        }
-        /// <summary>
-        /// Gets the native metadata contained in this file
-        /// </summary>
-        IMetaDataIO NativeTag
-        {
-            get;
-        }
 
-        /// <summary>
-        /// Parses the file's binary contents
-        /// </summary>
-        /// <param name="fileName">Path of the file</param>
-        /// <param name="pictureStreamHandler">Delegate for reading picture data stream</param>
-        /// <param name="readAllMetaFrames">Indicates if all metadata frames (even unmapped ones) have to be stored in memory</param>
-        /// <returns>True if the parsing is successful; false if not</returns>
-        bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false);
-
-        bool RemoveTagFromFile(int tagType);
-
-        bool UpdateTagInFile(TagData theTag, int tagType);
+        // TODO DOC
+        bool IsMetaSupported(int metaDataType);
 
         /// <summary>
         /// Indicates if file format has a native metadata tagging system (e.g. not ID3v1, ID3v2 nor APEtag)
         /// </summary>
         bool HasNativeMeta();
 
+        // TODO DOC
+        bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo);
+
+        bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
     }
 }

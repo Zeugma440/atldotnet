@@ -114,7 +114,7 @@ namespace ATL.test.IO.Perf
             for (int i = 0; i < NB_COPIES; i++)
             {
                 //Track theTrack = new Track(getNewLocation(i)); // Old call still leads to old code
-                AudioDataIOFactory.GetInstance().GetDataReader(getNewLocation(i)).ReadFromFile();
+                new AudioDataIO( AudioDataIOFactory.GetInstance().GetDataReader(getNewLocation(i))).ReadFromFile();
             }
         }
     }

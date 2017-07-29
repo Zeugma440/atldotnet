@@ -1,13 +1,14 @@
 using ATL.Logging;
 using System;
 using System.IO;
+using static ATL.AudioData.AudioDataIO;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for MPEG Audio Layer files manipulation (extensions : .MP1, .MP2, .MP3)
     /// </summary>
-	class MPEGaudio : AudioDataIO
+	class MPEGaudio : IAudioDataIO
 	{
 
 		// Table for bit rates (KBit/s)
@@ -197,6 +198,8 @@ namespace ATL.AudioData.IO
 		private String FVendorID;
 		private VBRData FVBR = new VBRData();
 		private FrameData HeaderFrame = new FrameData();
+        private AudioDataIO.SizeInfo sizeInfo;
+        private String fileName;
     
 		public VBRData VBR // VBR header data
 		{
@@ -239,21 +242,37 @@ namespace ATL.AudioData.IO
             get { return this.FGetValid(); }
         }
 
-        public override bool IsVBR
+        public bool IsVBR
 		{
 			get { return this.FVBR.Found; }
 		}
-        public override int CodecFamily
+        public int CodecFamily
 		{
 			get { return AudioDataIOFactory.CF_LOSSY; }
 		}
-        public override bool AllowsParsableMetadata
+        public bool AllowsParsableMetadata
         {
             get { return true; }
         }
-  
-		// Limitation constants
-		public const int MAX_MPEG_FRAME_LENGTH = 1729;      // Max. MPEG frame length
+        public double BitRate
+        {
+            get { return FGetBitRate(); }
+        }
+        public double Duration
+        {
+            get { return FGetDuration(); }
+        }
+        public int SampleRate
+        {
+            get { return FGetSampleRate(); }
+        }
+        public string FileName
+        {
+            get { return fileName; }
+        }
+
+        // Limitation constants
+        public const int MAX_MPEG_FRAME_LENGTH = 1729;      // Max. MPEG frame length
 		public const int MIN_MPEG_BIT_RATE = 8;                // Min. bit rate value (KBit/s)
         public const int MAX_MPEG_BIT_RATE = 448;              // Max. bit rate value (KBit/s)
 		public const double MIN_ALLOWED_DURATION = 0.1;   // Min. song duration value
@@ -572,7 +591,7 @@ namespace ATL.AudioData.IO
 
 		// ********************** Private functions & voids *********************
 
-		protected override void resetSpecificData()
+		protected void resetData()
 		{
 			// Reset all variables
 			FVendorID = "";
@@ -637,13 +656,11 @@ namespace ATL.AudioData.IO
 
 		private long FGetFrames()
 		{
-			long MPEGSize;
-
-			// Get total number of frames, calculate if VBR header not found
+ 			// Get total number of frames, calculate if VBR header not found
 			if (FVBR.Found) return FVBR.Frames;
 			else
 			{
-				MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
+                long MPEGSize = sizeInfo.FileSize - sizeInfo.ID3v2Size - sizeInfo.ID3v1Size - sizeInfo.APESize;
     
 				return (long)Math.Floor(1.0*(MPEGSize - HeaderFrame.Position) / GetFrameLength(HeaderFrame));
 			}
@@ -659,8 +676,8 @@ namespace ATL.AudioData.IO
 					return FVBR.Frames * GetCoefficient(HeaderFrame) * 8 / GetSampleRate(HeaderFrame);
 				else
 				{
-                    long MPEGSize = FFileSize - FID3v2.Size - FID3v1.Size - FAPEtag.Size;
-					return (MPEGSize - HeaderFrame.Position) / GetBitRate(HeaderFrame) / 1000 * 8;
+                    long MPEGSize = sizeInfo.FileSize - sizeInfo.ID3v2Size - sizeInfo.ID3v1Size - sizeInfo.APESize;
+                    return (MPEGSize - HeaderFrame.Position) / GetBitRate(HeaderFrame) / 1000 * 8;
 				}
 			else
 				return 0;
@@ -775,9 +792,9 @@ namespace ATL.AudioData.IO
 
 		// ********************** Public functions & voids **********************
 
-        public MPEGaudio(string theFile)
+        public MPEGaudio(string fileName)
         {
-            FFileName = theFile;
+            this.fileName = fileName;
             resetData();
         }
 
@@ -787,59 +804,54 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public override bool IsMetaSupported(int metaType)
+        public bool IsMetaSupported(int metaType)
         {
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
         }
 
-        protected override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler)
+        public bool Read(BinaryReader source, SizeInfo sizeInfo)
         {
             Stream fs = source.BaseStream;
-			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];  
+			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];
+            this.sizeInfo = sizeInfo;
 
 			bool result = false;
 
             // ...then search for a MPEG frame and VBR data
-            fs.Seek(FID3v2.Size, SeekOrigin.Begin);
+            fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             fs.Read(Data, 0, Data.Length);
 			HeaderFrame = FindFrame(Data, ref FVBR);
 
             // Try to search in the middle if no frame found at the beginning
             if ( ! HeaderFrame.Found ) 
 			{
-				fs.Seek((long)Math.Floor((FFileSize - FID3v2.Size) / 2.0),SeekOrigin.Begin);
+				fs.Seek((long)Math.Floor((sizeInfo.FileSize- sizeInfo.ID3v2Size) / 2.0),SeekOrigin.Begin);
                 fs.Read(Data, 0, Data.Length);
                 HeaderFrame = FindFrame(Data, ref FVBR);
 			}
 			// Search for vendor ID at the end if CBR encoded
 			if ( (HeaderFrame.Found) && (! FVBR.Found) )
 			{
-                fs.Seek(FFileSize - Data.Length - FID3v1.Size - FAPEtag.Size, SeekOrigin.Begin);
+                fs.Seek(sizeInfo.FileSize - Data.Length - sizeInfo.ID3v1Size - sizeInfo.APESize, SeekOrigin.Begin);
                 fs.Read(Data, 0, Data.Length);
                 FVendorID = FindVendorID(Data, HeaderFrame.Size * 5);
 			}
-			result = true;
+			result = HeaderFrame.Found;
 
-            FValid = HeaderFrame.Found;
-
-            if (!FValid)
-            {
-                resetData();
-            }
-            else
-            {
-                FBitrate = FGetBitRate();
-                FDuration = FGetDuration();
-                FSampleRate = FGetSampleRate();
-            }
+            if (!result) resetData();
 	
 			return result;
 		}
 
-        protected override bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
+        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
         {
             // No file size in MPEGAudio header
             return true;
+        }
+
+        public bool HasNativeMeta()
+        {
+            return false;
         }
     }
 }

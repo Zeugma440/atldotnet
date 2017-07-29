@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace ATL.AudioData.IO
 {
@@ -7,11 +8,13 @@ namespace ATL.AudioData.IO
 	/// </summary>
 	public class DummyReader : IAudioDataIO
 	{
-		public DummyReader()
-		{
-		}
+		public DummyReader() { }
 
-		public double BitRate
+        public string FileName
+        {
+            get { return ""; }
+        }
+        public double BitRate
 		{
 			get { return 0; }
 		}		
@@ -19,7 +22,11 @@ namespace ATL.AudioData.IO
 		{
 			get { return 0; }
 		}
-		public bool IsVBR
+        public int SampleRate
+        {
+            get { return 0; }
+        }
+        public bool IsVBR
 		{
 			get { return false; }
 		}
@@ -64,6 +71,18 @@ namespace ATL.AudioData.IO
             return true;
         }
         public bool UpdateTagInFile(TagData theTag, int tagType)
+        {
+            return true;
+        }
+        public bool IsMetaSupported(int metaDataType)
+        {
+            return true;
+        }
+        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo)
+        {
+            return true;
+        }
+        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
         {
             return true;
         }

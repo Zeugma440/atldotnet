@@ -17,11 +17,11 @@ namespace ATL.AudioData
         protected const int TO_EOF = 0; // End Of File
         protected const int TO_BOF = 1; // Beginning Of File
 
-        protected bool FExists;
-        protected Encoding FEncoding; // TODO check if needs to be there after all...
-        protected int FVersion;
-        protected long FOffset;
-        protected int FSize;
+        protected bool tagExists;
+        protected Encoding tagEncoding; // TODO check if needs to be there after all...
+        protected int tagVersion;
+        protected long tagOffset;
+        protected int tagSize;
 
         protected TagData tagData;
 
@@ -40,28 +40,28 @@ namespace ATL.AudioData
         /// </summary>
         public bool Exists
         {
-            get { return this.FExists; }
+            get { return this.tagExists; }
         }
         /// <summary>
         /// Tag version
         /// </summary>
         public int Version
         {
-            get { return this.FVersion; }
+            get { return this.tagVersion; }
         }
         /// <summary>
         /// Total size of tag (in bytes)
         /// </summary>
         public int Size
         {
-            get { return this.FSize; }
+            get { return this.tagSize; }
         }
         /// <summary>
         /// Tag offset in media file
         /// </summary>
         public long Offset
         {
-            get { return this.FOffset; }
+            get { return this.tagOffset; }
         }
 
 
@@ -304,10 +304,10 @@ namespace ATL.AudioData
 
         public virtual void ResetData()
         {
-            FExists = false;
-            FVersion = 0;
-            FSize = 0;
-            FOffset = 0;
+            tagExists = false;
+            tagVersion = 0;
+            tagSize = 0;
+            tagOffset = 0;
 
             tagData = new TagData();
             pictureTokens = new List<TagData.PictureInfo>();
@@ -332,9 +332,9 @@ namespace ATL.AudioData
             this.Read(r, new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
 
             TagData dataToWrite;
-            FEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
+            tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
 
-            if (!FExists) // If tag not found (e.g. empty file)
+            if (!tagExists) // If tag not found (e.g. empty file)
             {
                 dataToWrite = tag; // Write new tag information
             }
@@ -346,7 +346,7 @@ namespace ATL.AudioData
 
             // Write new tag to a MemoryStream
             using (MemoryStream s = new MemoryStream(Size))
-            using (BinaryWriter msw = new BinaryWriter(s, FEncoding))
+            using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
             {
                 if (write(dataToWrite, msw))
                 {
@@ -356,10 +356,10 @@ namespace ATL.AudioData
                     long audioDataOffset;
                     long tagOffset;
 
-                    if (FExists) // An existing tag has been reprocessed
+                    if (tagExists) // An existing tag has been reprocessed
                     {
-                        tagOffset = FOffset;
-                        audioDataOffset = FOffset + FSize;
+                        tagOffset = this.tagOffset;
+                        audioDataOffset = this.tagOffset + tagSize;
                     }
                     else // A brand new tag has been added to the file
                     {
@@ -373,13 +373,13 @@ namespace ATL.AudioData
                     }
 
                     // Need to build a larger file
-                    if (newTagSize > FSize)
+                    if (newTagSize > tagSize)
                     {
-                        StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - FSize));
+                        StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - tagSize));
                     }
-                    else if (newTagSize < FSize) // Need to reduce file size
+                    else if (newTagSize < tagSize) // Need to reduce file size
                     {
-                        StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(FSize - newTagSize));
+                        StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(tagSize - newTagSize));
                     }
 
                     // Copy tag contents to the new slot

@@ -16,8 +16,10 @@ namespace ATL.AudioData
 
 		public const int NB_CODEC_FAMILIES = 4;
 
-		// The instance of this factory
-		private static AudioDataIOFactory theFactory = null;
+        public const int MAX_ALTERNATES = 10;   // Max number of alternate formats having the same file extension
+
+        // The instance of this factory
+        private static AudioDataIOFactory theFactory = null;
 	
 		// Codec IDs
 		public const int CID_MP3		= 0;

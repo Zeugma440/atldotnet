@@ -73,44 +73,44 @@ namespace ATL.AudioData
         /// <summary>
         /// Gets the appropriate metadata reader for a given file / physical data reader
         /// </summary>
-        /// <param name="theDataReader">AudioDataReader produced for this file</param>
+        /// <param name="theDataIO">AudioDataReader produced for this file</param>
         /// <param name="forceTagType">Forces a certain tag type to be read regardless of the current "cross reading" settings</param>
         /// <returns>Metadata reader able to give metadata info for this file (or the dummy reader if the format is unknown)</returns>
-        public IMetaDataIO GetMetaReader(ref IAudioDataIO theDataReader, int forceTagType = -1)
+        public IMetaDataIO GetMetaReader(ref AudioDataIO theDataIO, int forceTagType = -1)
 		{
             IMetaDataIO theMetaReader = null;
             
             int tagCount = 0;
-            if (theDataReader.HasNativeMeta()) tagCount++;
-            if (theDataReader.ID3v1.Exists) tagCount++;
-            if (theDataReader.ID3v2.Exists) tagCount++;
-            if (theDataReader.APEtag.Exists) tagCount++;
+            if (theDataIO.HasNativeMeta()) tagCount++;
+            if (theDataIO.ID3v1.Exists) tagCount++;
+            if (theDataIO.ID3v2.Exists) tagCount++;
+            if (theDataIO.APEtag.Exists) tagCount++;
 			
 			// Step 1 : The physical reader may have already parsed the metadata if it belongs
 			// to cross-format tagging systems
 			if (m_enableCrossReading && (tagCount > 1) && (-1 == forceTagType) )
 			{
-				theMetaReader = new CrossMetadataReader(ref theDataReader, tagPriority);
+				theMetaReader = new CrossMetadataReader(ref theDataIO, tagPriority);
 			}
             else
 			{
 				for (int i=0; i<TAG_TYPE_COUNT; i++)
 				{
-                    if ( ((TAG_NATIVE == tagPriority[i] && -1 == forceTagType) || (TAG_NATIVE == forceTagType) ) && (theDataReader.HasNativeMeta()))
+                    if ( ((TAG_NATIVE == tagPriority[i] && -1 == forceTagType) || (TAG_NATIVE == forceTagType) ) && (theDataIO.HasNativeMeta()))
                     {
-                        theMetaReader = theDataReader.NativeTag; break;
+                        theMetaReader = theDataIO.NativeTag; break;
                     }
-                    if (((TAG_ID3V1 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V1 == forceTagType)) && (theDataReader.ID3v1.Exists) )
+                    if (((TAG_ID3V1 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V1 == forceTagType)) && (theDataIO.ID3v1.Exists) )
 					{
-                        theMetaReader = theDataReader.ID3v1; break;
+                        theMetaReader = theDataIO.ID3v1; break;
 					}
-					if (((TAG_ID3V2 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V2 == forceTagType)) && (theDataReader.ID3v2.Exists) )
+					if (((TAG_ID3V2 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V2 == forceTagType)) && (theDataIO.ID3v2.Exists) )
 					{
-                        theMetaReader = theDataReader.ID3v2; break;
+                        theMetaReader = theDataIO.ID3v2; break;
 					}
-					if (((TAG_APE == tagPriority[i] && -1 == forceTagType) || (TAG_APE == forceTagType)) && (theDataReader.APEtag.Exists) )
+					if (((TAG_APE == tagPriority[i] && -1 == forceTagType) || (TAG_APE == forceTagType)) && (theDataIO.APEtag.Exists) )
 					{
-                        theMetaReader = theDataReader.APEtag; break;
+                        theMetaReader = theDataIO.APEtag; break;
 					}
 				}
 			}
@@ -120,9 +120,9 @@ namespace ATL.AudioData
             // => Need to consider specific tagging information within the CrossMetadataReader code, above
 			if (null == theMetaReader)
 			{
-				if (theDataReader is IMetaDataIO)
+				if (theDataIO is IMetaDataIO)
 				{
-					theMetaReader = (IMetaDataIO)theDataReader;
+					theMetaReader = (IMetaDataIO)theDataIO;
 				}
 			}
 

@@ -26,24 +26,33 @@ namespace ATL.AudioData
         public AudioFileIO(string path, TagData.PictureStreamHandlerDelegate pictureStreamHandler)
         {
             byte alternate = 0;
+            bool found = false;
             thePath = path;
 
-            audioData = AudioDataIOFactory.GetInstance().GetDataReader(path);
+            audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
+            AudioDataIO dataIO = new AudioDataIO(audioData);
+            found = dataIO.ReadFromFile(pictureStreamHandler);
 
-            while (!audioData.ReadFromFile(pictureStreamHandler))
+            while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
+                dataIO = new AudioDataIO(audioData);
+                found = dataIO.ReadFromFile(pictureStreamHandler);
             }
 
-            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(ref audioData);
+            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(ref dataIO);
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
         }
 
-
-
-
+        /// <summary>
+        /// Audio file name
+        /// </summary>
+        public string FileName
+        {
+            get { return audioData.FileName; }
+        }
         /// <summary>
         /// Title of the track
         /// </summary>
@@ -178,6 +187,13 @@ namespace ATL.AudioData
             get { return audioData.BitRate; }
         }
         /// <summary>
+        /// Sample rate (Hz)
+        /// </summary>
+        public int SampleRate
+        {
+            get { return audioData.SampleRate; }
+        }
+        /// <summary>
         /// Track duration (seconds)
         /// </summary>
         public double Duration
@@ -187,6 +203,27 @@ namespace ATL.AudioData
 
         // AudioFileReader aims at simplifying standard interfaces
         // => the below methods are not implemented
+        public int Size
+        {
+            get { return metaData.Size; }
+        }
+
+        public long Offset
+        {
+            get { return metaData.Offset; }
+        }
+
+        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        {
+            return metaData.Read(source, pictureStreamHandler, readAllMetaFrames);
+        }
+
+        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
+        {
+            return metaData.Write(r, w, tag);
+        }
+
+        // TODO - make interfaces more modular to clean the mess below
         public ID3v1 ID3v1
         {
             get { throw new NotImplementedException(); }
@@ -200,38 +237,10 @@ namespace ATL.AudioData
             get { throw new NotImplementedException(); }
         }
 
-        public int Size
-        {
-            get
-            {
-                return metaData.Size;
-            }
-        }
-
-        public long Offset
-        {
-            get
-            {
-                return metaData.Offset;
-            }
-        }
 
         public IMetaDataIO NativeTag
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
-        {
-            return metaData.Read(source, pictureStreamHandler, readAllMetaFrames);
-        }
-
-        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
-        {
-            return metaData.Write(r, w, tag);
+            get { throw new NotImplementedException(); }
         }
 
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
@@ -255,6 +264,21 @@ namespace ATL.AudioData
         }
 
         public bool HasNativeMeta()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsMetaSupported(int metaDataType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
         {
             throw new NotImplementedException();
         }

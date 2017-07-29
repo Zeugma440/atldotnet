@@ -1,55 +1,54 @@
 ﻿using ATL.AudioData.IO;
 using ATL.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace ATL.AudioData
 {
-    public abstract class AudioDataIO : IOBase, IAudioDataIO
+    public class AudioDataIO : IOBase
     {
-        // Audio data
-        protected double FBitrate;
-        protected double FDuration;
-        protected int FSampleRate;
+        public class SizeInfo
+        {
+            public long FileSize = 0;
+            public IDictionary<int, long> TagSizes = new Dictionary<int, long>();
 
-        // File data
-        protected long FFileSize;
-        protected String FFileName;
-        protected bool FValid;
+            public void ResetData() { FileSize = 0; TagSizes.Clear(); }
+
+            public long ID3v1Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_ID3V1) ? TagSizes[MetaDataIOFactory.TAG_ID3V1] : 0; } }
+            public long ID3v2Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_ID3V2) ? TagSizes[MetaDataIOFactory.TAG_ID3V2] : 0; } }
+            public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_APE) ? TagSizes[MetaDataIOFactory.TAG_APE] : 0; } }
+            public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
+        }
 
         protected ID3v1 FID3v1 = new ID3v1();
         protected ID3v2 FID3v2 = new ID3v2();
         protected APEtag FAPEtag = new APEtag();
         protected IMetaDataIO FNativeTag;
 
+        protected readonly IAudioDataIO audioDataReader;
 
+        protected SizeInfo sizeInfo = new SizeInfo();
+
+        /*
         public double BitRate // Bitrate (KBit/s)
         {
-            get { return Math.Round(FBitrate/1000.00); }
+            get { return Math.Round(audioDataReader.BitRate/ 1000.00); }
         }
         public double Duration // Duration (s)
         {
-            get { return FDuration; }
+            get { return audioDataReader.Duration; }
         }
         public int SampleRate // Sample Rate (Hz)
         {
-            get { return FSampleRate; }
+            get { return audioDataReader.SampleRate; }
         }
+        */
 
-        // To be overriden by children classes
-        public abstract bool IsVBR
+        protected string fileName
         {
-            get;
+            get { return audioDataReader.FileName; }
         }
-        public abstract int CodecFamily
-        {
-            get;
-        }
-        public abstract bool AllowsParsableMetadata
-        {
-            get;
-        }
-
         public ID3v1 ID3v1 // ID3v1 tag data
         {
             get { return this.FID3v1; }
@@ -68,32 +67,24 @@ namespace ATL.AudioData
         }
 
         // ====================== METHODS =========================
-
-        abstract protected void resetSpecificData();
+        public AudioDataIO(IAudioDataIO audioDataReader)
+        {
+            this.audioDataReader = audioDataReader;
+        }
 
         protected void resetData()
         {
-            FFileSize = 0;
-            FValid = false;
-
-            FBitrate = 0;
-            FDuration = 0;
-            FSampleRate = 0;
-
+//            isValid = false;
+/*
+            bitrate = 0;
+            duration = 0;
+            sampleRate = 0;
+*/
             FID3v1.ResetData();
             FID3v2.ResetData();
             FAPEtag.ResetData();
-
-            resetSpecificData();
+            sizeInfo.ResetData();
         }
-
-
-        abstract public bool IsMetaSupported(int metaType);
-
-        abstract protected bool Read(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler);
-
-        abstract protected bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
-
 
         public bool hasMeta(int tagType)
         {
@@ -115,37 +106,24 @@ namespace ATL.AudioData
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             bool result = false;
-            LogDelegator.GetLocateDelegate()(FFileName);
+            LogDelegator.GetLocateDelegate()(fileName);
 
             resetData();
 
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
+                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader source = new BinaryReader(fs))
                 {
-                    FFileSize = fs.Length;
-
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
-                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V1)) FID3v1.Read(source);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1 end");
-                    if (IsMetaSupported(MetaDataIOFactory.TAG_ID3V2)) FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2 end");
-                    if (IsMetaSupported(MetaDataIOFactory.TAG_APE)) FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape end");
-
-                    result = Read(source, pictureStreamHandler);
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
-
-                    if (result && IsMetaSupported(MetaDataIOFactory.TAG_NATIVE)) FNativeTag = (IMetaDataIO)this; // TODO : This is dirty as ****; there must be a better way !
+                    result = read(source, pictureStreamHandler, readAllMetaFrames);
                 }
             }
             catch (Exception e)
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
                 result = false;
             }
 
@@ -156,9 +134,9 @@ namespace ATL.AudioData
         {
             bool result = true;
             IMetaDataIO theMetaIO = null;
-            LogDelegator.GetLocateDelegate()(FFileName);
+            LogDelegator.GetLocateDelegate()(fileName);
 
-            if (IsMetaSupported(tagType))
+            if (audioDataReader.IsMetaSupported(tagType))
             {
                 try
                 {
@@ -183,14 +161,14 @@ namespace ATL.AudioData
 
                     if (theMetaIO != null)
                     {
-                        using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
+                        using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                         using (BinaryReader r = new BinaryReader(fs))
                         using (BinaryWriter w = new BinaryWriter(fs))
                         {
                             long newTagSize = theMetaIO.Write(r, w, theTag);
                             if (newTagSize > -1)
                             {
-                                result = RewriteFileSizeInHeader(w, fs.Length);
+                                result = audioDataReader.RewriteFileSizeInHeader(w, fs.Length);
                             }
                             else
                             {
@@ -203,12 +181,12 @@ namespace ATL.AudioData
                 {
                     System.Console.WriteLine(e.Message);
                     System.Console.WriteLine(e.StackTrace);
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
                     result = false;
                 }
             } else
             {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported in " + FFileName);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported in " + fileName);
             }
 
             return result;
@@ -217,14 +195,14 @@ namespace ATL.AudioData
         public bool RemoveTagFromFile(int tagType)
         {
             bool result = false;
-            LogDelegator.GetLocateDelegate()(FFileName);
+            LogDelegator.GetLocateDelegate()(fileName);
 
             try
             {
-                using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
+                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader reader = new BinaryReader(fs))
                 {
-                    result = Read(reader, null);
+                    result = read(reader);
 
                     long tagOffset = -1;
                     int tagSize = 0;
@@ -256,7 +234,7 @@ namespace ATL.AudioData
                         StreamUtils.ShortenStream(fs, tagOffset+tagSize, (uint)tagSize);
                         using (BinaryWriter writer = new BinaryWriter(fs))
                         {
-                            result = RewriteFileSizeInHeader(writer, fs.Length);
+                            result = audioDataReader.RewriteFileSizeInHeader(writer, fs.Length);
                         }
                     }
                 }
@@ -265,8 +243,45 @@ namespace ATL.AudioData
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
                 result = false;
+            }
+
+            return result;
+        }
+
+        private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
+        {
+            bool result = false;
+            sizeInfo.ResetData();
+
+            sizeInfo.FileSize = source.BaseStream.Length;
+
+            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
+            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
+            {
+                if (FID3v1.Read(source)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, FID3v1.Size);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1 end");
+            }
+            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
+            {
+                if (FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, FID3v2.Size);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2 end");
+            }
+            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_APE))
+            {
+                if (FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, FAPEtag.Size);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape end");
+            }
+
+            result = audioDataReader.Read(source, sizeInfo);
+            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
+
+            if (result && audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataReader is IMetaDataIO)
+            {
+                IMetaDataIO nativeTag = (IMetaDataIO)audioDataReader; // TODO : This is dirty as ****; there must be a better way !
+                FNativeTag = nativeTag;
+                sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
             }
 
             return result;
@@ -274,7 +289,7 @@ namespace ATL.AudioData
 
         public bool HasNativeMeta()
         {
-            return IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
+            return audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
         }
     }
 }
