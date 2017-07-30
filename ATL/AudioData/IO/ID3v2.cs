@@ -363,7 +363,7 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, TagData.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
+        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, long offset, ReadTagParams readTagParams)
         {
             Stream fs = SourceFile.BaseStream;
             FrameHeader Frame = new FrameHeader();
@@ -525,7 +525,7 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(tagEncoding.GetString(bData));
                     }
 
-                    setMetaField(Frame.ID, strData, ref Tag, readAllMetaFrames);
+                    setMetaField(Frame.ID, strData, ref Tag, readTagParams.ReadAllMetaFrames);
 
                     if (TAG_VERSION_2_2 == tagVersion) fs.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
@@ -550,7 +550,7 @@ namespace ATL.AudioData.IO
                             // mime-type always coded in ASCII
                             if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
                             // Mime-type
-                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1"));
+                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.GetLatin1Encoding());
                             imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
                         }
 
@@ -575,7 +575,7 @@ namespace ATL.AudioData.IO
                         if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(ref fs);
                         StreamUtils.ReadNullTerminatedString(SourceFile, tagEncoding);
 
-                        if (pictureStreamHandler != null)
+                        if (readTagParams.PictureStreamHandler != null)
                         {
                             int picSize = (int)(dataSize - (fs.Position - position));
                             MemoryStream mem = new MemoryStream(picSize);
@@ -591,7 +591,7 @@ namespace ATL.AudioData.IO
 
                             mem.Seek(0, SeekOrigin.Begin);
 
-                            pictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
+                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
 
                             mem.Close();
                         }
@@ -603,9 +603,9 @@ namespace ATL.AudioData.IO
 
         // ********************** Public functions & voids **********************
 
-        public override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
+        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
-            return Read(source, pictureStreamHandler, 0, readAllMetaFrames);
+            return Read(source, 0, readTagParams);
         }
 
         /// <summary>
@@ -616,7 +616,7 @@ namespace ATL.AudioData.IO
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
         /// <param name="storeUnsupportedMetaFields">Indicates wether unsupported fields should be read and stored in memory (optional; default = false)</param>
         /// <returns></returns>
-        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, long offset, bool readAllMetaFrames = false)
+        public bool Read(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
             FTagHeader = new TagInfo();
 
@@ -637,7 +637,7 @@ namespace ATL.AudioData.IO
                 if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (tagSize > 0))
                 {
                     tagData = new TagData();
-                    readFrames(source, ref FTagHeader, pictureStreamHandler, offset, readAllMetaFrames);
+                    readFrames(source, ref FTagHeader, offset, readTagParams);
                 }
                 else
                 {

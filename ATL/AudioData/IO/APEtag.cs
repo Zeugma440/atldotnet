@@ -158,7 +158,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, ref TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
             string strValue;
@@ -180,7 +180,7 @@ namespace ATL.AudioData.IO
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
                     strValue = Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize));
-                    setMetaField(frameName.Trim(), strValue.Trim(), ref Tag, readAllMetaFrames);
+                    setMetaField(frameName.Trim(), strValue.Trim(), ref Tag, readTagParams.ReadAllMetaFrames);
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
                     }
 
                     addPictureToken(picType);
-                    if (pictureStreamHandler != null)
+                    if (readTagParams.PictureStreamHandler != null)
                     {
                         // Description seems to be a null-terminated ANSI string containing 
                         //    * The frame name
@@ -211,7 +211,7 @@ namespace ATL.AudioData.IO
 
                         MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, frameDataSize - description.Length - 1);
-                        pictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_APE, frameName, picturePosition);
+                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_APE, frameName, picturePosition);
                         mem.Close();
                     }
                 }
@@ -247,7 +247,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public override bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool storeUnsupportedMetaFields = false)
+        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             TagInfo Tag = new TagInfo();
 
@@ -269,7 +269,7 @@ namespace ATL.AudioData.IO
                 if (tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
 
                 // Get information from fields
-                readFrames(source, ref Tag, ref pictureStreamHandler, storeUnsupportedMetaFields);
+                readFrames(source, ref Tag, readTagParams);
             }
 
             return result;
@@ -423,7 +423,7 @@ namespace ATL.AudioData.IO
 
             writer.Write(frameFlags);
 
-            writer.Write(Encoding.ASCII.GetBytes(frameCode));
+            writer.Write(Utils.GetLatin1Encoding().GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
             byte[] binaryValue = tagEncoding.GetBytes(text);
@@ -449,19 +449,19 @@ namespace ATL.AudioData.IO
 
             writer.Write(frameFlags);
 
-            writer.Write(Encoding.ASCII.GetBytes(pictureTypeCode));
+            writer.Write(Utils.GetLatin1Encoding().GetBytes(pictureTypeCode));
             writer.Write('\0'); // String has to be null-terminated
 
             long dataPos = writer.BaseStream.Position;
             // Description = picture code + 0x2E byte -?- + image type encoded in ISO-8859-1 (derived from mime-type without the first half)
-            writer.Write(Encoding.ASCII.GetBytes(pictureTypeCode));
+            writer.Write(Utils.GetLatin1Encoding().GetBytes(pictureTypeCode));
             writer.Write((byte)0x2E);
             string imageType;
             string[] tmp = mimeType.Split('/');
             imageType = (tmp.Length > 1) ? tmp[1] : tmp[0];
             if ("jpeg".Equals(imageType)) imageType = "jpg";
 
-            writer.Write(Encoding.GetEncoding("ISO-8859-1").GetBytes(imageType)); // Force ISO-8859-1 format for mime-type
+            writer.Write(Utils.GetLatin1Encoding().GetBytes(imageType)); // Force ISO-8859-1 format for mime-type
             writer.Write('\0'); // String should be null-terminated
 
             writer.Write(pictureData);

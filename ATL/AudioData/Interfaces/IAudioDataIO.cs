@@ -64,7 +64,7 @@ namespace ATL.AudioData
         bool HasNativeMeta();
 
         // TODO DOC
-        bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo);
+        bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
 
         bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
     }

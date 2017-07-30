@@ -1,4 +1,5 @@
 using ATL.Logging;
+using Commons;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataIO;
@@ -325,12 +326,6 @@ namespace ATL.AudioData.IO
 		{
 			byte[] HeaderData = new byte[4];
 
-/*
-			HeaderData[0] = Data[Index];
-			HeaderData[1] = Data[Index + 1];
-			HeaderData[2] = Data[Index + 2];
-			HeaderData[3] = Data[Index + 3];
-*/
             Array.ConstrainedCopy(Data, Index, HeaderData, 0, 4);
 
             // Check for frame at given position
@@ -430,20 +425,9 @@ namespace ATL.AudioData.IO
 			result.Scale = Data[Index + 119];
 			
             // Vendor ID may not be present
-            result.VendorID = System.Text.Encoding.ASCII.GetString(Data, Index+120, 8);
-/*
-			char[] tempArray = new char[8] {
-											   (char)(Data[Index + 120]),
-											   (char)(Data[Index + 121]),
-											   (char)(Data[Index + 122]),
-											   (char)(Data[Index + 123]),
-											   (char)(Data[Index + 124]),
-											   (char)(Data[Index + 125]),
-											   (char)(Data[Index + 126]),
-											   (char)(Data[Index + 127]) };
- */		
-	
-			return result;
+            result.VendorID = Utils.GetLatin1Encoding().GetString(Data, Index+120, 8);
+
+            return result;
 		}
 
 		// ---------------------------------------------------------------------------
@@ -478,9 +462,7 @@ namespace ATL.AudioData.IO
 			VBRData result;
 
             // Check for VBR header at given position  
-            String vbrId = System.Text.Encoding.ASCII.GetString(Data, Index, 4);
-			
-            //char[] tempArray = new char[4] { (char)Data[Index], (char)Data[Index + 1], (char)Data[Index + 2], (char)Data[Index + 3] };
+            String vbrId = Utils.GetLatin1Encoding().GetString(Data, Index, 4);
 
 			if ( VBR_ID_XING == vbrId ) result = GetXingInfo(Index, Data);
             else if (VBR_ID_FHG == vbrId) result = GetFhGInfo(Index, Data);
@@ -539,12 +521,6 @@ namespace ATL.AudioData.IO
 				}
 				// Prepare next data block
                 Array.ConstrainedCopy(Data, i + 1, HeaderData, 0, 4);
-/*
-				HeaderData[0] = HeaderData[1];
-				HeaderData[1] = HeaderData[2];
-				HeaderData[2] = HeaderData[3];
-				HeaderData[3] = Data[i + 4];
- */
 			}
 			return result;
 		}
@@ -555,29 +531,15 @@ namespace ATL.AudioData.IO
 		{
 			String VendorID;
 			String result = "";
-//			char[] tempArray = new char[4];
 
 			// Search for vendor ID
 			if ( (Data.Length - Size - 8) < 0 ) Size = Data.Length - 8;
 			for (int i=0; i <= Size; i++)
 			{
-                VendorID = System.Text.Encoding.ASCII.GetString(Data, Data.Length - i - 8, 4);
-/*
-				tempArray[0] = (char)Data[Data.Length - i - 8];
-				tempArray[1] = (char)Data[Data.Length - i - 7];
-				tempArray[2] = (char)Data[Data.Length - i - 6];
-				tempArray[3] = (char)Data[Data.Length - i - 5];
-				VendorID = new String(tempArray);
- */
+                VendorID = Utils.GetLatin1Encoding().GetString(Data, Data.Length - i - 8, 4);
 				if (VENDOR_ID_LAME == VendorID)
 				{
-/*
-					tempArray[0] = (char)Data[Data.Length - i - 4];
-					tempArray[1] = (char)Data[Data.Length - i - 3];
-					tempArray[2] = (char)Data[Data.Length - i - 2];
-					tempArray[3] = (char)Data[Data.Length - i - 1];
- */
-                    result = VendorID + System.Text.Encoding.ASCII.GetString(Data, Data.Length - i - 4, 4);
+                    result = VendorID + Utils.GetLatin1Encoding().GetString(Data, Data.Length - i - 4, 4);
 					break;
 				}
 				else if (VENDOR_ID_GOGO_NEW == VendorID)
@@ -809,7 +771,7 @@ namespace ATL.AudioData.IO
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo)
+        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
 			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];

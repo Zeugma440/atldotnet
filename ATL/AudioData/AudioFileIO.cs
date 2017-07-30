@@ -271,9 +271,9 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            return metaData.Read(source, pictureStreamHandler, readAllMetaFrames);
+            return metaData.Read(source, readTagParams);
         }
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
@@ -331,12 +331,12 @@ namespace ATL.AudioData
             throw new NotImplementedException();
         }
 
-        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo)
+        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
         {
             throw new NotImplementedException();
         }
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
+        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }

@@ -105,16 +105,14 @@ namespace ATL.AudioData.IO
         {
             get { return new Dictionary<string, string>();  }
         }
-
-        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
-        {
-            return true;
-        }
-
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return 0;
         }
-        
-	}
+
+        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

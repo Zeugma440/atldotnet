@@ -171,10 +171,9 @@ namespace ATL.AudioData
         /// Parses the binary data read from the given reader
         /// </summary>
         /// <param name="source">Reader to parse data from</param>
-        /// <param name="pictureStreamHandler">Delegate to use when reading picture data</param>
-        /// <param name="readAllMetaFrames">Indicates if all metadata frames (even unmapped ones) have to be stored in memory</param>
+        /// <param name="readTagParams">Tag reading parameters</param>
         /// <returns></returns>
-        bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
+        bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams);
 
         /// <summary>
         /// Add the specified information to current tag information :

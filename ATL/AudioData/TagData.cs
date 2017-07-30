@@ -20,7 +20,6 @@ namespace ATL.AudioData
 
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
-
         public class PictureInfo
         {
             public PIC_TYPE PicType;                        // Normalized picture type

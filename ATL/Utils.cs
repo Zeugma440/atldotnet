@@ -18,6 +18,8 @@ namespace Commons
     {
         public delegate void voidDelegate();
 
+        private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+
 
         public static String ProtectValue(String value)
         {
@@ -474,6 +476,11 @@ namespace Commons
             {
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
             }
+        }
+
+        public static Encoding GetLatin1Encoding()
+        {
+            return latin1Encoding;
         }
     }
 }

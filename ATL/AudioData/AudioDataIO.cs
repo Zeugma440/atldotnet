@@ -30,20 +30,6 @@ namespace ATL.AudioData
 
         protected SizeInfo sizeInfo = new SizeInfo();
 
-        /*
-        public double BitRate // Bitrate (KBit/s)
-        {
-            get { return Math.Round(audioDataReader.BitRate/ 1000.00); }
-        }
-        public double Duration // Duration (s)
-        {
-            get { return audioDataReader.Duration; }
-        }
-        public int SampleRate // Sample Rate (Hz)
-        {
-            get { return audioDataReader.SampleRate; }
-        }
-        */
 
         protected string fileName
         {
@@ -74,12 +60,6 @@ namespace ATL.AudioData
 
         protected void resetData()
         {
-//            isValid = false;
-/*
-            bitrate = 0;
-            duration = 0;
-            sampleRate = 0;
-*/
             FID3v1.ResetData();
             FID3v2.ResetData();
             FAPEtag.ResetData();
@@ -256,33 +236,38 @@ namespace ATL.AudioData
             sizeInfo.ResetData();
 
             sizeInfo.FileSize = source.BaseStream.Length;
+            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
 
             LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read begin");
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {
-                if (FID3v1.Read(source)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, FID3v1.Size);
+                if (FID3v1.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, FID3v1.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v1 end");
             }
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
-                if (FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, FID3v2.Size);
+                if (FID3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, FID3v2.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v2 end");
             }
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_APE))
             {
-                if (FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, FAPEtag.Size);
+                if (FAPEtag.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, FAPEtag.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read ape end");
             }
 
-            result = audioDataReader.Read(source, sizeInfo);
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
-
-            if (result && audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataReader is IMetaDataIO)
+            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataReader is IMetaDataIO)
             {
                 IMetaDataIO nativeTag = (IMetaDataIO)audioDataReader; // TODO : This is dirty as ****; there must be a better way !
                 FNativeTag = nativeTag;
-                sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
+                result = audioDataReader.Read(source, sizeInfo, readTagParams);
+
+                if (result) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
+            } else
+            {
+                readTagParams.ReadTag = false;
+                result = audioDataReader.Read(source, sizeInfo, readTagParams);
             }
+            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
 
             return result;
         }

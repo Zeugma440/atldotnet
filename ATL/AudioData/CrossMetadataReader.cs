@@ -376,7 +376,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }

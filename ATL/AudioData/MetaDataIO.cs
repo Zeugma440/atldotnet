@@ -33,6 +33,19 @@ namespace ATL.AudioData
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
 
 
+        public class ReadTagParams
+        {
+            public bool ReadTag = true;
+            public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
+            public bool ReadAllMetaFrames = false;
+
+            public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+            {
+                PictureStreamHandler = pictureStreamHandler; ReadAllMetaFrames = readAllMetaFrames;
+            }
+        }
+
+
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
@@ -318,7 +331,7 @@ namespace ATL.AudioData
 
         abstract protected int getImplementedTagType();
 
-        abstract public bool Read(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames);
+        abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
 
 
         abstract protected bool write(TagData tag, BinaryWriter w);
@@ -329,7 +342,7 @@ namespace ATL.AudioData
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            this.Read(r, new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
+            this.Read(r, new ReadTagParams(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true)); 
 
             TagData dataToWrite;
             tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable

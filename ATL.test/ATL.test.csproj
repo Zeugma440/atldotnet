@@ -56,6 +56,7 @@
     <Compile Include="AudioReaders\AudioDataTest.cs" />
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
+    <Compile Include="IO\MetaData\MP4.cs" />
     <Compile Include="IO\MetaData\APE.cs" />
     <Compile Include="Misc\FactoryTest.cs" />
     <Compile Include="IO\MetaData\ID3v2.cs" />
@@ -95,16 +96,15 @@
     <None Include="Resources\Rayman_2_music_sample.ogg" />
     <None Include="Resources\sommix.it" />
     <None Include="Resources\SuperMario28bits%28tssf%29.it" />
-    <None Include="Resources\tutte.b4s" />
     <None Include="Resources\v_chrtrg.xm" />
     <None Include="Resources\Yeah.dsf" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\06 I%27m All In Love.m4a" />
     <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
     <Content Include="Resources\adif.aac" />
     <Content Include="Resources\adts.aac" />
     <Content Include="Resources\APE.mp3" />
+    <Content Include="Resources\empty.m4a" />
     <Content Include="Resources\empty.mp3" />
     <Content Include="Resources\01 - Title Screen.mp3" />
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
@@ -113,7 +113,6 @@
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\ID3v2.2 ANSI charset only.mp3" />
-    <Content Include="Resources\ID3v2.2 exotic charset.mp3" />
     <Content Include="Resources\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\mp4.m4a" />

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
-using ATL.Logging; 
+using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
 using System.Drawing.Imaging;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -62,10 +63,7 @@ namespace ATL.AudioData.IO
         private byte FMPEGVersionID;
         private byte FProfileID;
         private byte FChannels;
-        private long FSampleSize;
         private byte FBitrateTypeID;
-
-        private bool FExists;
         private byte FVersionID;
 
         private double bitrate;
@@ -181,7 +179,6 @@ namespace ATL.AudioData.IO
             duration = 0;
             sampleRate = 0;
 
-            FExists = false;
             FVersionID = 0;
         }
 
@@ -371,7 +368,7 @@ namespace ATL.AudioData.IO
         // http://atomicparsley.sourceforge.net/mpeg-4files.html
         // - Metadata is located in the moov/udta/meta/ilst atom
         // - Physical information are located in the moov/trak atom (to be confirmed ?)
-        private void readMP4(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        private void readMP4(BinaryReader Source, MetaDataIO.ReadTagParams readTagParams)
         {
             long iListSize = 0;
             long iListPosition = 0;
@@ -421,7 +418,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < nbDescriptions; i++)
             {
                 int32Data = StreamUtils.ReverseUInt32(Source.ReadUInt32()); // 4-byte description length
-                string descFormat = Encoding.ASCII.GetString(Source.ReadBytes(4));
+                string descFormat = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4));
 
                 if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
                 {
@@ -477,124 +474,95 @@ namespace ATL.AudioData.IO
             lookForMP4Atom(Source, "meta");
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
-            iListSize = lookForMP4Atom(Source, "ilst") - 8; // === Metadata list
-
-            FExists = true;
-            tagSize = (int)iListSize; // tagSize here...
-
-            // Browse all metadata
-            while (iListPosition < iListSize)
+            if (readTagParams.ReadTag)
             {
-                atomSize = StreamUtils.ReverseInt32(Source.ReadInt32());
-                atomHeader = Encoding.ASCII.GetString(Source.ReadBytes(4));
-                metadataSize = lookForMP4Atom(Source, "data");
+                iListSize = lookForMP4Atom(Source, "ilst") - 8; // === Metadata list
 
-                // We're only looking for the last byte of the flag
-                Source.BaseStream.Seek(3, SeekOrigin.Current);
-                dataClass = Source.ReadByte();
+                tagExists = true;
+                tagSize = (int)iListSize; // tagSize here...
 
-                // 4-byte NULL space
-                Source.BaseStream.Seek(4, SeekOrigin.Current);
-
-                if (1 == dataClass) // UTF-8 Text
+                // Browse all metadata
+                while (iListPosition < iListSize)
                 {
-                    strData = Encoding.UTF8.GetString(Source.ReadBytes(metadataSize - 16));
-                    setMetaField(atomHeader, strData, readAllMetaFrames);
-                }
-                else if (21 == dataClass) // uint8
-                {
-                    int16Data = Source.ReadByte();
-                    Source.BaseStream.Seek(metadataSize - 17, SeekOrigin.Current); // Potential remaining padding bytes
-                    setMetaField(atomHeader, int16Data.ToString(), readAllMetaFrames);
-                }
-                else if (13 == dataClass || 14 == dataClass) // JPEG/PNG picture
-                {
-                    TagData.PIC_TYPE picType = TagData.PIC_TYPE.Generic;
+                    atomSize = StreamUtils.ReverseInt32(Source.ReadInt32());
+                    atomHeader = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4));
+                    metadataSize = lookForMP4Atom(Source, "data");
 
-                    int picturePosition;
-                    addPictureToken(picType);
-                    picturePosition = takePicturePosition(picType);
+                    // We're only looking for the last byte of the flag
+                    Source.BaseStream.Seek(3, SeekOrigin.Current);
+                    dataClass = Source.ReadByte();
 
-                    if (pictureStreamHandler != null)
+                    // 4-byte NULL space
+                    Source.BaseStream.Seek(4, SeekOrigin.Current);
+
+                    if (1 == dataClass) // UTF-8 Text
                     {
-                        ImageFormat imgFormat = ImageFormat.Png; // PNG or JPEG according to specs
-                        
-                        // Peek the next 3 bytes to know the picture type
-                        byte[] data = Source.ReadBytes(3);
-                        Source.BaseStream.Seek(-3, SeekOrigin.Current);
-                        if (0xFF == data[0] && 0xD8 == data[1] && 0xFF == data[2]) imgFormat = ImageFormat.Jpeg; // JPEG signature
-
-                        MemoryStream mem = new MemoryStream(metadataSize - 16);
-                        StreamUtils.CopyStream(Source.BaseStream, mem, metadataSize - 16);
-                        pictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_NATIVE, dataClass, picturePosition); // TODO !
-                        mem.Close();
+                        strData = Encoding.UTF8.GetString(Source.ReadBytes(metadataSize - 16));
+                        setMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                     }
-                    else
+                    else if (21 == dataClass) // uint8
                     {
-                        Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                    }
-                }
-                else if (0 == dataClass) // Special cases : gnre, trkn, disk
-                {
-                    if ("trkn".Equals(atomHeader) || "disk".Equals(atomHeader))
-                    {
-                        Source.BaseStream.Seek(3, SeekOrigin.Current);
                         int16Data = Source.ReadByte();
-                        Source.BaseStream.Seek(metadataSize - 20, SeekOrigin.Current); // Potential remaining padding bytes
-                        setMetaField(atomHeader, int16Data.ToString(), readAllMetaFrames);
+                        Source.BaseStream.Seek(metadataSize - 17, SeekOrigin.Current); // Potential remaining padding bytes
+                        setMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
                     }
-                    else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
+                    else if (13 == dataClass || 14 == dataClass) // JPEG/PNG picture
                     {
-                        int16Data = StreamUtils.ReverseUInt16(Source.ReadUInt16());
+                        TagData.PIC_TYPE picType = TagData.PIC_TYPE.Generic;
 
-                        strData = "";
-                        if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data-1];
+                        int picturePosition;
+                        addPictureToken(picType);
+                        picturePosition = takePicturePosition(picType);
 
-                        setMetaField(atomHeader, strData, readAllMetaFrames);
+                        if (readTagParams.PictureStreamHandler != null)
+                        {
+                            ImageFormat imgFormat = ImageFormat.Png; // PNG or JPEG according to specs
+
+                            // Peek the next 3 bytes to know the picture type
+                            byte[] data = Source.ReadBytes(3);
+                            Source.BaseStream.Seek(-3, SeekOrigin.Current);
+                            if (0xFF == data[0] && 0xD8 == data[1] && 0xFF == data[2]) imgFormat = ImageFormat.Jpeg; // JPEG signature
+
+                            MemoryStream mem = new MemoryStream(metadataSize - 16);
+                            StreamUtils.CopyStream(Source.BaseStream, mem, metadataSize - 16);
+                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_NATIVE, dataClass, picturePosition); // TODO !
+                            mem.Close();
+                        }
+                        else
+                        {
+                            Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
+                        }
                     }
-                    else
-                    { // Other unhandled cases
+                    else if (0 == dataClass) // Special cases : gnre, trkn, disk
+                    {
+                        if ("trkn".Equals(atomHeader) || "disk".Equals(atomHeader))
+                        {
+                            Source.BaseStream.Seek(3, SeekOrigin.Current);
+                            int16Data = Source.ReadByte();
+                            Source.BaseStream.Seek(metadataSize - 20, SeekOrigin.Current); // Potential remaining padding bytes
+                            setMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                        }
+                        else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
+                        {
+                            int16Data = StreamUtils.ReverseUInt16(Source.ReadUInt16());
+
+                            strData = "";
+                            if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
+
+                            setMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                        }
+                        else
+                        { // Other unhandled cases
+                            Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
+                        }
+                    }
+                    else // Other unhandled cases
+                    {
                         Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
                     }
-                }
-                else // Other unhandled cases
-                {
-                    Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                }
 
-/*
-                if (StreamUtils.StringEqualsArr("©alb", atomHeader)) FAlbum = strData;
-                if (StreamUtils.StringEqualsArr("©art", atomHeader) || StreamUtils.StringEqualsArr("©ART", atomHeader)) FArtist = strData;
-                if (StreamUtils.StringEqualsArr("©day", atomHeader)) FYear = TrackUtils.ExtractStrYear(strData);
-                if (StreamUtils.StringEqualsArr("©cmt", atomHeader)) FComment = strData;
-                if (StreamUtils.StringEqualsArr("©nam", atomHeader)) FTitle = strData;
-                if (StreamUtils.StringEqualsArr("©gen", atomHeader) || StreamUtils.StringEqualsArr("gnre", atomHeader))
-                {
-                    if (1 == dataClass) FGenre = strData;
-                    else
-                    if (0 == dataClass && int16Data < ID3v1.MAX_MUSIC_GENRES)
-                    {
-                        if (StreamUtils.StringEqualsArr("©gen", atomHeader)) FGenre = ID3v1.MusicGenre[int16Data];
-                        else if (StreamUtils.StringEqualsArr("gnre", atomHeader)) FGenre = ID3v1.MusicGenre[int16Data - 1];
-                    }
+                    iListPosition += atomSize;
                 }
-                if (StreamUtils.StringEqualsArr("trkn", atomHeader))
-                {
-                    FTrack = int16Data;
-                    FTrackString = FTrack.ToString();
-                }
-                if (StreamUtils.StringEqualsArr("disk", atomHeader))
-                {
-                    FDisc = int16Data;
-                    FDiscString = FDisc.ToString();
-                }
-                if (StreamUtils.StringEqualsArr("rtng", atomHeader))
-                {
-                    FRating = int16Data;
-                }
-                if (StreamUtils.StringEqualsArr("©wrt", atomHeader)) FComposer = strData;
-*/
-                iListPosition += atomSize;
             }
 
             // Seek audio data segment to calculate mean bitrate 
@@ -604,7 +572,7 @@ namespace ATL.AudioData.IO
             bitrate = (int)Math.Round(mdatSize * 8 / duration, 0);
         }
 
-        private void setMetaField(String ID, String Data, bool readAllMetaFrames)
+        private void setMetaField(string ID, string Data, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
             ID = ID.ToLower();
@@ -635,7 +603,7 @@ namespace ATL.AudioData.IO
         // Looks for the atom segment starting with the given key, at the current atom level
         // Returns with Source positioned right after the atom header, on the 1st byte of data
         // Returned value is the raw size of the atom (including the already-read 8-byte header)
-        private int lookForMP4Atom(BinaryReader Source, String atomKey)
+        private int lookForMP4Atom(BinaryReader Source, string atomKey)
         {
             int atomSize = 0;
             char[] atomHeader;
@@ -668,13 +636,13 @@ namespace ATL.AudioData.IO
         {
             frameMapping_mp4 = new Dictionary<string, byte>();
 
-            frameMapping_mp4.Add("@nam", TagData.TAG_FIELD_TITLE);
+            frameMapping_mp4.Add("©nam", TagData.TAG_FIELD_TITLE);
             frameMapping_mp4.Add("titl", TagData.TAG_FIELD_TITLE);
             frameMapping_mp4.Add("©alb", TagData.TAG_FIELD_ALBUM);
             frameMapping_mp4.Add("©art", TagData.TAG_FIELD_ARTIST);
-            frameMapping_mp4.Add("@cmt", TagData.TAG_FIELD_COMMENT);
-            frameMapping_mp4.Add("@day", TagData.TAG_FIELD_RECORDING_YEAR);
-            frameMapping_mp4.Add("@gen", TagData.TAG_FIELD_GENRE);
+            frameMapping_mp4.Add("©cmt", TagData.TAG_FIELD_COMMENT);
+            frameMapping_mp4.Add("©day", TagData.TAG_FIELD_RECORDING_YEAR);
+            frameMapping_mp4.Add("©gen", TagData.TAG_FIELD_GENRE);
             frameMapping_mp4.Add("gnre", TagData.TAG_FIELD_GENRE);
             frameMapping_mp4.Add("trkn", TagData.TAG_FIELD_TRACK_NUMBER);
             frameMapping_mp4.Add("disk", TagData.TAG_FIELD_DISC_NUMBER);
@@ -692,19 +660,19 @@ namespace ATL.AudioData.IO
         // --------------------------------------------------------------------------- 
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo)
+        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
-            return read(source);
+            return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader Source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
+        public override bool Read(BinaryReader Source, MetaDataIO.ReadTagParams readTagParams)
         {
-            return read(Source, pictureStreamHandler, readAllMetaFrames);
+            return read(Source, readTagParams);
         }
 
-        private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
+        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -713,7 +681,7 @@ namespace ATL.AudioData.IO
             // Read header data
             if (AAC_HEADER_TYPE_ADIF == FHeaderTypeID) readADIF(source);
             else if (AAC_HEADER_TYPE_ADTS == FHeaderTypeID) readADTS(source);
-            else if (AAC_HEADER_TYPE_MP4 == FHeaderTypeID) readMP4(source,pictureStreamHandler,readAllMetaFrames);
+            else if (AAC_HEADER_TYPE_MP4 == FHeaderTypeID) readMP4(source,readTagParams);
 
             result = true;
 
@@ -722,7 +690,7 @@ namespace ATL.AudioData.IO
 
         public bool IsMetaSupported(int metaType)
         {
-            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
+            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
         }
 
         public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
