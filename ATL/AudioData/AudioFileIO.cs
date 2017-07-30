@@ -75,6 +75,56 @@ namespace ATL.AudioData
             get { return metaData.Composer.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
         }
         /// <summary>
+        /// Publisher
+        /// </summary>
+        public string Publisher
+        {
+            get { return metaData.Publisher.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// Conductor
+        /// </summary>
+        public string Conductor
+        {
+            get { return metaData.Conductor.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// Album Artist
+        /// </summary>
+        public string AlbumArtist
+        {
+            get { return metaData.AlbumArtist.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// General description
+        /// </summary>
+        public string GeneralDescription
+        {
+            get { return metaData.GeneralDescription.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// Copyright
+        /// </summary>
+        public string Copyright
+        {
+            get { return metaData.Copyright.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// Original artist
+        /// </summary>
+        public string OriginalArtist
+        {
+            get { return metaData.OriginalArtist.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+        /// <summary>
+        /// Original album
+        /// </summary>
+        public string OriginalAlbum
+        {
+            get { return metaData.OriginalAlbum.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+        }
+
+        /// <summary>
         /// Comments
         /// </summary>
         public string Comment
@@ -211,6 +261,14 @@ namespace ATL.AudioData
         public long Offset
         {
             get { return metaData.Offset; }
+        }
+
+        public IDictionary<string, string> AdditionalFields
+        {
+            get
+            {
+                return metaData.AdditionalFields;
+            }
         }
 
         public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)

@@ -7,6 +7,9 @@ namespace ATL.AudioData
 {
 	/// <summary>
 	/// Wrapper for reading multiple tags according to a priority
+    /// 
+    /// Rule : The first non-empty field of the most prioritized tag becomes the "cross-detected" field
+    /// There is no "field blending" across collections (pictures, additional fields) : the first non-empty collection is kept
 	/// </summary>
 	public class CrossMetadataReader : IMetaDataIO 
 	{
@@ -190,6 +193,118 @@ namespace ATL.AudioData
 			}
 		}
         /// <summary>
+		/// Copyright
+		/// </summary>
+		public String Copyright
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Copyright;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+		/// Album Arist
+		/// </summary>
+		public String AlbumArtist
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.AlbumArtist;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+        /// Conductor
+        /// </summary>
+        public String Conductor
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Conductor;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+        /// Publisher
+        /// </summary>
+        public String Publisher
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Publisher;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+        /// General description
+        /// </summary>
+        public String GeneralDescription
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.GeneralDescription;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+        /// Original artist
+        /// </summary>
+        public String OriginalArtist
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.OriginalArtist;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
+        /// Original album
+        /// </summary>
+        public String OriginalAlbum
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.OriginalAlbum;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <summary>
         /// Rating
         /// </summary>
         public ushort Rating
@@ -215,10 +330,33 @@ namespace ATL.AudioData
                 IList<TagData.PictureInfo> pictures = new List<TagData.PictureInfo>();
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    pictures = reader.PictureTokens;
-                    if (pictures.Count > 0) break;
+                    if (reader.PictureTokens.Count > 0)
+                    {
+                        pictures = reader.PictureTokens;
+                        break;
+                    }
                 }
                 return pictures;
+            }
+        }
+
+        /// <summary>
+        /// Any other metadata field that is not represented among above getters
+        /// </summary>
+        public IDictionary<string,string> AdditionalFields
+        {
+            get
+            {
+                IDictionary<string,string> result = new Dictionary<string, string>();
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.AdditionalFields.Count > 0)
+                    {
+                        result = reader.AdditionalFields;
+                        break;
+                    }
+                }
+                return result;
             }
         }
 

@@ -65,6 +65,47 @@ namespace ATL.AudioData.IO
         {
             get { return new List<TagData.PictureInfo>(); }
         }
+
+        public string Copyright
+        {
+            get { return ""; }
+        }
+
+        public string OriginalArtist
+        {
+            get { return ""; }
+        }
+
+        public string OriginalAlbum
+        {
+            get { return ""; }
+        }
+
+        public string GeneralDescription
+        {
+            get { return ""; }
+        }
+
+        public string Publisher
+        {
+            get { return ""; }
+        }
+
+        public string AlbumArtist
+        {
+            get { return ""; }
+        }
+
+        public string Conductor
+        {
+            get { return ""; }
+        }
+
+        public IDictionary<string, string> AdditionalFields
+        {
+            get { return new Dictionary<string, string>();  }
+        }
+
         public bool Read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
         {
             return true;

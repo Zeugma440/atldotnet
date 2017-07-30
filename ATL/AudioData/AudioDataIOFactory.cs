@@ -222,84 +222,84 @@ namespace ATL.AudioData
 				case CID_MP3 :		
 					theDataReader = new IO.MPEGaudio(path);
 					break;
-                    /*
-				case CID_OGG :		
-					theDataReader = new IO.TOgg();
-					break;
-
-				case CID_MPC :		
-					theDataReader = new IO.TMPEGplus();
-					break;
-
-				case CID_FLAC :		
-					theDataReader = new IO.TFLAC();
-					break;
-
-				case CID_APE :		
-					theDataReader = new IO.TMonkey();
-					break;
-
-				case CID_WMA :		
-					theDataReader = new IO.TWMA();
-					break;
-
-				case CID_MIDI :		
-					theDataReader = new IO.TMidi();
-					break;
-
-				case CID_AAC :		
-					theDataReader = new IO.TAAC();
-					break;
-
-				case CID_AC3 :		
-					theDataReader = new IO.TAC3();
-					break;
-
-				case CID_OFR :		
-					theDataReader = new IO.TOptimFrog();
-					break;
-
-				case CID_WAVPACK :		
-					theDataReader = new IO.TWAVPack();
-					break;
-
-				case CID_WAV :		
-					theDataReader = new IO.TWAV();
-					break;
-
-				case CID_PSF :		
-					theDataReader = new IO.TPSF();
-					break;
-
-				case CID_SPC :		
-					theDataReader = new IO.TSPC();
-					break;
-
-                case CID_DSF :
-                    theDataReader = new IO.TDSF();
+                case CID_AAC:
+                    theDataReader = new IO.AAC(path);
                     break;
 
-                case CID_TAK:
-                    theDataReader = new IO.TTAK();
-                    break;
+                /*
+            case CID_OGG :		
+                theDataReader = new IO.TOgg();
+                break;
 
-                case CID_MOD:
-                    theDataReader = new IO.TMOD();
-                    break;
+            case CID_MPC :		
+                theDataReader = new IO.TMPEGplus();
+                break;
 
-                case CID_S3M:
-                    theDataReader = new IO.TS3M();
-                    break;
+            case CID_FLAC :		
+                theDataReader = new IO.TFLAC();
+                break;
 
-                case CID_XM:
-                    theDataReader = new IO.TXM();
-                    break;
+            case CID_APE :		
+                theDataReader = new IO.TMonkey();
+                break;
 
-                case CID_IT:
-                    theDataReader = new IO.TIT();
-                    break;
-                    */
-				default:
+            case CID_WMA :		
+                theDataReader = new IO.TWMA();
+                break;
+
+            case CID_MIDI :		
+                theDataReader = new IO.TMidi();
+                break;
+
+            case CID_AC3 :		
+                theDataReader = new IO.TAC3();
+                break;
+
+            case CID_OFR :		
+                theDataReader = new IO.TOptimFrog();
+                break;
+
+            case CID_WAVPACK :		
+                theDataReader = new IO.TWAVPack();
+                break;
+
+            case CID_WAV :		
+                theDataReader = new IO.TWAV();
+                break;
+
+            case CID_PSF :		
+                theDataReader = new IO.TPSF();
+                break;
+
+            case CID_SPC :		
+                theDataReader = new IO.TSPC();
+                break;
+
+            case CID_DSF :
+                theDataReader = new IO.TDSF();
+                break;
+
+            case CID_TAK:
+                theDataReader = new IO.TTAK();
+                break;
+
+            case CID_MOD:
+                theDataReader = new IO.TMOD();
+                break;
+
+            case CID_S3M:
+                theDataReader = new IO.TS3M();
+                break;
+
+            case CID_XM:
+                theDataReader = new IO.TXM();
+                break;
+
+            case CID_IT:
+                theDataReader = new IO.TIT();
+                break;
+                */
+                default:
 					theDataReader = new IO.DummyReader();
 					break;
 			}

@@ -86,43 +86,56 @@ namespace ATL.AudioData
         {
             get;
         }
-        /*  TO BE COMMENTED OUT WHEN THE REST OF THE IO BRANCH IS STABLE
-                /// <summary>
-                /// Copyright
-                /// </summary>
-                string Copyright
-                {
-                    get;
-                }
-                /// <summary>
-                /// Original artist
-                /// </summary>
-                string OriginalArtist
-                {
-                    get;
-                }
-                /// <summary>
-                /// Original album
-                /// </summary>
-                string OriginalAlbum
-                {
-                    get;
-                }
-                /// <summary>
-                /// General description
-                /// </summary>
-                string GeneralDescription
-                {
-                    get;
-                }
-                /// <summary>
-                /// Publisher
-                /// </summary>
-                string Publisher
-                {
-                    get;
-                }
-        */
+        /// <summary>
+        /// Copyright
+        /// </summary>
+        string Copyright
+        {
+            get;
+        }
+        /// <summary>
+        /// Original artist
+        /// </summary>
+        string OriginalArtist
+        {
+            get;
+        }
+        /// <summary>
+        /// Original album
+        /// </summary>
+        string OriginalAlbum
+        {
+            get;
+        }
+        /// <summary>
+        /// General description
+        /// </summary>
+        string GeneralDescription
+        {
+            get;
+        }
+        /// <summary>
+        /// Publisher
+        /// </summary>
+        string Publisher
+        {
+            get;
+        }
+        /// <summary>
+        /// Album Artist
+        /// </summary>
+        string AlbumArtist
+        {
+            get;
+        }
+        /// <summary>
+        /// Conductor
+        /// </summary>
+        string Conductor
+        {
+            get;
+        }
+
         /// <summary>
         /// List of picture IDs stored in the tag
         ///     TagData.PIC_TYPE : internal, normalized picture type
@@ -143,6 +156,13 @@ namespace ATL.AudioData
         /// Physical offset of the tag on its host file (bytes)
         /// </summary>
         long Offset
+        {
+            get;
+        }
+        /// <summary>
+        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// </summary>
+        IDictionary<string, string> AdditionalFields
         {
             get;
         }

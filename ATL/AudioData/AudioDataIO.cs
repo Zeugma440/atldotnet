@@ -257,21 +257,21 @@ namespace ATL.AudioData
 
             sizeInfo.FileSize = source.BaseStream.Length;
 
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin");
+            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read begin");
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {
                 if (FID3v1.Read(source)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, FID3v1.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v1 end");
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v1 end");
             }
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
                 if (FID3v2.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, FID3v2.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "id3v2 end");
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v2 end");
             }
             if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_APE))
             {
                 if (FAPEtag.Read(source, pictureStreamHandler, readAllMetaFrames)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, FAPEtag.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "ape end");
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read ape end");
             }
 
             result = audioDataReader.Read(source, sizeInfo);
