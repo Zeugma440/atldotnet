@@ -70,9 +70,8 @@ namespace Commons
         {
             int h;
             long m;
-            String mStr;
+            String hStr, mStr, sStr;
             long s;
-            String sStr;
             int d;
 
             h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
@@ -81,6 +80,8 @@ namespace Commons
             d = Convert.ToInt32(Math.Floor(h / 24.00));
             if (d > 0) h = h - (24 * d);
 
+            hStr = h.ToString();
+            if (1 == hStr.Length) hStr = "0" + hStr;
             mStr = m.ToString();
             if (1 == mStr.Length) mStr = "0" + mStr;
             sStr = s.ToString();
@@ -88,13 +89,13 @@ namespace Commons
 
             if (d > 0)
             {
-                return d + "d " + h + ":" + mStr + ":" + sStr;
+                return d + "d " + hStr + ":" + mStr + ":" + sStr;
             }
             else
             {
                 if (h > 0)
                 {
-                    return h + ":" + mStr + ":" + sStr;
+                    return hStr + ":" + mStr + ":" + sStr;
                 }
                 else
                 {
