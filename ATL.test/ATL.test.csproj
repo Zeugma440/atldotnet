@@ -82,7 +82,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Resources\003 BlackBird.tak" />
     <None Include="Resources\01_2_32.opus" />
     <None Include="Resources\2ND_PM.S3M" />
@@ -113,6 +112,7 @@
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\ID3v2.2 ANSI charset only.mp3" />
+    <Content Include="Resources\ID3v2.2 UTF16.mp3" />
     <Content Include="Resources\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\mp4.m4a" />

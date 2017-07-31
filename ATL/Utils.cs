@@ -390,12 +390,12 @@ namespace Commons
             }
         }
 
-        public static String BuildStrictLengthString(String value, int length, char paddingChar, bool padRight = true)
+        public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
-            String result = (null == value) ? "" : value;
+            string result = (null == value) ? "" : value;
 
             if (result.Length > length) result = result.Substring(0, length);
-            if (result.Length < length)
+            else if (result.Length < length)
             {
                 if (padRight) result = result.PadRight(length, paddingChar);
                 else result = result.PadLeft(length, paddingChar);
@@ -404,9 +404,9 @@ namespace Commons
             return result;
         }
 
-        public static String GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
+        public static string GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
         {
-            String result = "image/";
+            string result = "image/";
 
             if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg))
             {

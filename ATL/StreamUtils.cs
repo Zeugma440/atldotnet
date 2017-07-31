@@ -72,6 +72,8 @@ namespace ATL
         /// <param name="r">Source to read from</param>
         /// <param name="length">Number of one-byte chars to read</param>
         /// <returns>Array of chars read from the source</returns>
+        
+        // TODO : limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.GetLatin1Encoding().GetString(r.ReadBytes)
         public static char[] ReadOneByteChars(BinaryReader r, int length)
         {
             return ReadOneByteChars(r.BaseStream, length);
