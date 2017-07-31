@@ -16,21 +16,54 @@ namespace Commons
 	/// </summary>
     public class Utils
     {
+        /// <summary>
+        /// Defines a delegate that does not carry any argument (useful for "pinging")
+        /// </summary>
         public delegate void voidDelegate();
 
 
+        /// <summary>
+        /// Transforms the given string so that is becomes non-null
+        /// </summary>
+        /// <param name="value">String to protect</param>
+        /// <returns>Given string if non-null; else empty string</returns>
         public static String ProtectValue(String value)
         {
             return (null == value) ? "" : value;
         }
 
+        /// <summary>
+        /// Format the given duration using the following format
+        ///     DDdHH:MM:SS.UUUU
+        ///     
+        ///  Where
+        ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
+        ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
+        ///     MM is the number of minutes
+        ///     SS is the number of seconds
+        ///     UUUU is the number of milliseconds
+        /// </summary>
+        /// <param name="milliseconds">Duration to format (in milliseconds)</param>
+        /// <returns>Formatted duration according to the abovementioned convention</returns>
         public static String FormatTime_ms(long milliseconds)
         {
-            long seconds = (long)Math.Floor(milliseconds / 1000.00);
+            long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
 
             return FormatTime(seconds) + "." + (milliseconds - seconds * 1000);
         }
 
+        /// <summary>
+        /// Format the given duration using the following format
+        ///     DDdHH:MM:SS
+        ///     
+        ///  Where
+        ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
+        ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
+        ///     MM is the number of minutes
+        ///     SS is the number of seconds
+        /// </summary>
+        /// <param name="seconds">Duration to format (in seconds)</param>
+        /// <returns>Formatted duration according to the abovementioned convention</returns>
         public static String FormatTime(long seconds)
         {
             int h;
@@ -41,7 +74,7 @@ namespace Commons
             int d;
 
             h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
-            m = Convert.ToInt32(Math.Floor((seconds - 3600.00 * h) / 60));
+            m = Convert.ToInt64(Math.Floor((seconds - 3600.00 * h) / 60));
             s = seconds - (60 * m) - (3600 * h);
             d = Convert.ToInt32(Math.Floor(h / 24.00));
             if (d > 0) h = h - (24 * d);
@@ -68,32 +101,14 @@ namespace Commons
             }
         }
 
+        /// <summary>
+        /// Formats a .NET Color to its six-digit "hex triplet" RGB representation (#RRGGBB)
+        /// </summary>
+        /// <param name="col">Color to be formatted</param>
+        /// <returns>Formatted color</returns>
         public static String GetColorCodeFromColor(Color col)
         {
-            String res = "#";
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.R / 16)));
-            res += NumToHex(Convert.ToInt32(col.R % 16));
-
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.G / 16)));
-            res += NumToHex(Convert.ToInt32(col.G % 16));
-
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.B / 16)));
-            res += NumToHex(Convert.ToInt32(col.B % 16));
-
-            return res;
-        }
-
-        // Because nothing simple seems to be available on the .NET framework :/
-        private static Char NumToHex(int num)
-        {
-            if (num < 10) return num.ToString()[0];
-            if (10 == num) return 'A';
-            if (11 == num) return 'B';
-            if (12 == num) return 'C';
-            if (13 == num) return 'D';
-            if (14 == num) return 'E';
-            if (15 == num) return 'F';
-            return ' ';
+            return "#"+col.ToArgb().ToString("X6").Remove(0,2);
         }
 
 

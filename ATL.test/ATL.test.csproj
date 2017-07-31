@@ -81,7 +81,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Resources\003 BlackBird.tak" />
     <None Include="Resources\01_2_32.opus" />
     <None Include="Resources\2ND_PM.S3M" />
@@ -95,12 +94,10 @@
     <None Include="Resources\Rayman_2_music_sample.ogg" />
     <None Include="Resources\sommix.it" />
     <None Include="Resources\SuperMario28bits%28tssf%29.it" />
-    <None Include="Resources\tutte.b4s" />
     <None Include="Resources\v_chrtrg.xm" />
     <None Include="Resources\Yeah.dsf" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\06 I%27m All In Love.m4a" />
     <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
     <Content Include="Resources\adif.aac" />
     <Content Include="Resources\adts.aac" />
@@ -113,7 +110,7 @@
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\ID3v2.2 ANSI charset only.mp3" />
-    <Content Include="Resources\ID3v2.2 exotic charset.mp3" />
+    <Content Include="Resources\ID3v2.2 UTF16.mp3" />
     <Content Include="Resources\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\mp4.m4a" />
