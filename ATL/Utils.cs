@@ -111,64 +111,9 @@ namespace Commons
             return "#"+col.ToArgb().ToString("X6").Remove(0,2);
         }
 
-
-        // ====================================
-        // === Font & Color import / export ===
-        // ====================================
-
-        public static void SaveFontToStream(Font fnt, BinaryWriter w)
-        {
-            w.Write(fnt.Name);			// string
-            w.Write(fnt.SizeInPoints);	// float = single
-            w.Write(fnt.Italic);		// bool
-            w.Write(fnt.Bold);			// bool
-            w.Write(fnt.Underline);		// bool
-            w.Write(fnt.Strikeout);		// bool
-        }
-
-        public static void SaveColorToStream(Color col, BinaryWriter w)
-        {
-            w.Write(col.R);
-            w.Write(col.G);
-            w.Write(col.B);
-        }
-
-        public static Font LoadFontFromStream(BinaryReader r)
-        {
-            String theName = r.ReadString();
-            float theSizePt = r.ReadSingle();
-            bool isIta = r.ReadBoolean();
-            bool isBold = r.ReadBoolean();
-            bool isUnderL = r.ReadBoolean();
-            bool isStrike = r.ReadBoolean();
-
-            FontStyle fs = new FontStyle();
-            if (isIta) { fs = fs | FontStyle.Italic; }
-            if (isBold) { fs = fs | FontStyle.Bold; }
-            if (isUnderL) { fs = fs | FontStyle.Underline; }
-            if (isStrike) { fs = fs | FontStyle.Strikeout; }
-
-            Font fnt = new Font(theName, theSizePt, fs);
-            return fnt;
-        }
-
-        public static Color LoadColorFromStream(BinaryReader r)
-        {
-            return Color.FromArgb(r.ReadByte(), r.ReadByte(), r.ReadByte());
-        }
-
-        // ====================================
-        // ====================================
-
-
         public static String SanitizeFileName(String str)
         {
             return str.Trim().Trim(Path.GetInvalidFileNameChars());
-        }
-
-        public static String GetNETRegexpFromDOSRegexp(String dosRegexp)
-        {
-            return dosRegexp.Replace("*", ".*").Replace("?", ".?");
         }
 
         public static String StripZeroChars(String iStr)
@@ -179,106 +124,6 @@ namespace Commons
         public static String StripEndingZeroChars(String iStr)
         {
             return Regex.Replace(iStr, @"\0+\Z", "");
-        }
-
-        public static bool IsOccidentalChar(char c)
-        {
-            return (
-                ((64 < c) && (c < 91)) ||
-            ('à' == c) ||
-            ('â' == c) ||
-            ('ä' == c) ||
-            ('Â' == c) ||
-            ('Â' == c) ||
-            ('À' == c) ||
-            ('Ä' == c) ||
-            ('ç' == c) ||
-            ('Ç' == c) ||
-            ('é' == c) ||
-            ('è' == c) ||
-            ('ë' == c) ||
-            ('ê' == c) ||
-            ('É' == c) ||
-            ('È' == c) ||
-            ('Ë' == c) ||
-            ('Ê' == c) ||
-            ('î' == c) ||
-            ('ï' == c) ||
-            ('Î' == c) ||
-            ('Ï' == c) ||
-            ('ñ' == c) ||
-            ('Ñ' == c) ||
-            ('ô' == c) ||
-            ('ö' == c) ||
-            ('ò' == c) ||
-            ('Ô' == c) ||
-            ('Ö' == c) ||
-            ('Ò' == c) ||
-            ('ù' == c) ||
-            ('û' == c) ||
-            ('ü' == c) ||
-            ('Ù' == c) ||
-            ('Û' == c) ||
-            ('Ü' == c) ||
-            ('ÿ' == c) ||
-            ('Ý' == c) ||
-            ('Æ' == c) ||
-            ('æ' == c)
-                );
-        }
-
-        /// <summary>
-        /// Make the given char displayable in "plain" HTML
-        /// </summary>
-        /// <param name="c">Char to simplify</param>
-        /// <returns>Simplified char</returns>
-        public static char HTMLizeChar(char c)
-        {
-            // http://en.wikipedia.org/wiki/Windows-1252
-            if (!IsOccidentalChar(c))
-            {
-                return c;
-            }
-            if ('à' == c) return 'a';
-            if ('â' == c) return 'a';
-            if ('ä' == c) return 'a';
-            if ('Â' == c) return 'A';
-            if ('Â' == c) return 'A';
-            if ('À' == c) return 'A';
-            if ('Ä' == c) return 'A';
-            if ('ç' == c) return 'c';
-            if ('Ç' == c) return 'C';
-            if ('é' == c) return 'e';
-            if ('è' == c) return 'e';
-            if ('ë' == c) return 'e';
-            if ('ê' == c) return 'e';
-            if ('É' == c) return 'E';
-            if ('È' == c) return 'E';
-            if ('Ë' == c) return 'E';
-            if ('Ê' == c) return 'E';
-            if ('î' == c) return 'i';
-            if ('ï' == c) return 'i';
-            if ('Î' == c) return 'I';
-            if ('Ï' == c) return 'I';
-            if ('ñ' == c) return 'n';
-            if ('Ñ' == c) return 'N';
-            if ('ô' == c) return 'o';
-            if ('ö' == c) return 'o';
-            if ('ò' == c) return 'o';
-            if ('Ô' == c) return 'O';
-            if ('Ö' == c) return 'O';
-            if ('Ò' == c) return 'O';
-            if ('ù' == c) return 'u';
-            if ('û' == c) return 'u';
-            if ('ü' == c) return 'u';
-            if ('Ù' == c) return 'U';
-            if ('Û' == c) return 'U';
-            if ('Ü' == c) return 'U';
-            if ('ÿ' == c) return 'y';
-            if ('Ý' == c) return 'Y';
-            if ('Æ' == c) return 'A';
-            if ('æ' == c) return 'a';
-            return c;
         }
 
         public static bool IsFileReadable(String iFile)
@@ -329,28 +174,6 @@ namespace Commons
             {
                 return false;
             }
-        }
-
-        // Tries to guess public folder path based on "My folder" path
-        // Returns null if algorithm fails
-        public static String GuessPublicFolderPath(String myFolderPath)
-        {
-            // Public folder path is obtained by replacing folder name with "Public"
-            // in the user's special folder paths
-            int accountPosEnd = 0;
-            int accountPosStart = myFolderPath.Length;
-
-            while (accountPosStart > -1)
-            {
-                accountPosEnd = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosStart - 1);
-                accountPosStart = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosEnd - 1);
-                myFolderPath = myFolderPath.Substring(0, accountPosStart + 1) + "Public" + myFolderPath.Substring(accountPosEnd, myFolderPath.Length - accountPosEnd);
-                if (Directory.Exists(myFolderPath))
-                {
-                    return myFolderPath;
-                }
-            }
-            return null;
         }
 
         // Returns true if the app is running under Mono
