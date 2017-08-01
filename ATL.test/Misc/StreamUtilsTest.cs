@@ -64,7 +64,21 @@ namespace ATL.test
 
             Assert.AreEqual(ticks, decoded);
 
-            // TODO test an exact value
+            int test = 0x0000FFFF;
+            encoded = StreamUtils.EncodeSynchSafeInt(test, 4);
+            Assert.AreEqual(0x7F, encoded[3]);
+            Assert.AreEqual(0x7F, encoded[2]);
+            Assert.AreEqual(0x03, encoded[1]);
+            Assert.AreEqual(0x00, encoded[0]);
+            Assert.AreEqual(test, StreamUtils.DecodeSynchSafeInt(encoded));
+
+            test = 0x04ADD3AC;
+            encoded = StreamUtils.EncodeSynchSafeInt32(test);
+            Assert.AreEqual(0x2C, encoded[3]);
+            Assert.AreEqual(0x27, encoded[2]);
+            Assert.AreEqual(0x37, encoded[1]);
+            Assert.AreEqual(0x25, encoded[0]);
+            Assert.AreEqual(test, StreamUtils.DecodeSynchSafeInt32(encoded));
         }
     }
 }
