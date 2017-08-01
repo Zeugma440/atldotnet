@@ -21,7 +21,7 @@ namespace ATL.test
                 list.RemoveAt(4);
                 list.RemoveAt(4);
                 stream.Seek(0, SeekOrigin.Begin);
-                for (int i = 0; i < 11; i++) Assert.IsTrue(list[i] == (byte)stream.ReadByte());
+                for (int i = 0; i < 11; i++) Assert.AreEqual(list[i],stream.ReadByte());
             }
             
         }
@@ -39,7 +39,7 @@ namespace ATL.test
                 list.Insert(6, 0);
                 list.Insert(6, 0);
                 stream.Seek(0, SeekOrigin.Begin);
-                for (int i = 0; i < 15; i++) Assert.IsTrue(list[i] == (byte)stream.ReadByte());
+                for (int i = 0; i < 15; i++) Assert.AreEqual(list[i],stream.ReadByte());
             }
 
         }
