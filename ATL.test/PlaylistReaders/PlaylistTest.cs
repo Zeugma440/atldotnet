@@ -7,7 +7,7 @@ namespace ATL.test
     [TestClass]
     public class PlaylistTest
     {
-        private string copyFileAndReplace(string location, string placeholder, string replacement)
+        private static string copyFileAndReplace(string location, string placeholder, string replacement)
         {
             string testFileLocation = location.Substring(0, location.LastIndexOf('.')) + "_test" + location.Substring(location.LastIndexOf('.'), location.Length - location.LastIndexOf('.'));
 
@@ -26,7 +26,7 @@ namespace ATL.test
         [TestMethod]
         public void PL_TestM3U()
         {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "playlist.m3u");
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "playlist_simple.m3u");
 
             Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(4, theReader.GetFiles().Count);
@@ -34,6 +34,24 @@ namespace ATL.test
             {
                 System.Console.WriteLine(s);
                 Assert.IsTrue(System.IO.File.Exists(s));
+            }
+
+            string testFileLocation = copyFileAndReplace(TestUtils.GetResourceLocationRoot() + "playlist_fullPath.m3u", "$PATH", TestUtils.GetResourceLocationRoot());
+            try
+            {
+                theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+
+                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+                Assert.AreEqual(3, theReader.GetFiles().Count);
+                foreach (string s in theReader.GetFiles())
+                {
+                    System.Console.WriteLine(s);
+                    Assert.IsTrue(System.IO.File.Exists(s));
+                }
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
             }
         }
 
@@ -109,6 +127,52 @@ namespace ATL.test
             {
                 System.Console.WriteLine(s);
                 Assert.IsTrue(System.IO.File.Exists(s));
+            }
+        }
+
+        [TestMethod]
+        public void PL_TestPLS()
+        {
+            string testFileLocation = copyFileAndReplace(TestUtils.GetResourceLocationRoot() + "playlist.pls", "$PATH", TestUtils.GetResourceLocationRoot());
+
+            try
+            {
+                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+
+                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+                Assert.AreEqual(4, theReader.GetFiles().Count);
+                foreach (string s in theReader.GetFiles())
+                {
+                    System.Console.WriteLine(s);
+                    Assert.IsTrue(System.IO.File.Exists(s));
+                }
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
+            }
+        }
+
+        [TestMethod]
+        public void PL_TestFPL()
+        {
+            string testFileLocation = copyFileAndReplace(TestUtils.GetResourceLocationRoot() + "playlist.fpl", "$PATH", TestUtils.GetResourceLocationRoot());
+
+            try
+            {
+                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+
+                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+                Assert.AreEqual(4, theReader.GetFiles().Count);
+                foreach (string s in theReader.GetFiles())
+                {
+                    System.Console.WriteLine(s);
+                    Assert.IsTrue(System.IO.File.Exists(s));
+                }
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
             }
         }
     }

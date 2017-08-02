@@ -90,6 +90,7 @@
     <None Include="Resources\mustang_12kHz_tagged.flac" />
     <None Include="Resources\duck hunt.cue" />
     <None Include="Resources\playlist.b4s" />
+    <None Include="Resources\playlist.fpl" />
     <None Include="Resources\playlist.smil" />
     <None Include="Resources\playlist.xspf" />
     <None Include="Resources\Rayman_2_music_sample.ogg" />
@@ -119,7 +120,9 @@
     <Content Include="Resources\pic1.jpg" />
     <Content Include="Resources\pic2.jpg" />
     <Content Include="Resources\playlist.asx" />
-    <Content Include="Resources\playlist.m3u" />
+    <Content Include="Resources\playlist.pls" />
+    <Content Include="Resources\playlist_fullPath.m3u" />
+    <Content Include="Resources\playlist_simple.m3u" />
     <Content Include="Resources\ROQ.MID" />
     <Content Include="Resources\TRANSIT1.MID" />
   </ItemGroup>
