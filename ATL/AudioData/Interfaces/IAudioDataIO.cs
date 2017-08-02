@@ -66,6 +66,6 @@ namespace ATL.AudioData
         // TODO DOC
         bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
 
-        bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize);
+        bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize);
     }
 }

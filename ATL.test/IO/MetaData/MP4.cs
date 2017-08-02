@@ -40,6 +40,7 @@ namespace ATL.test.IO.MetaData
      * FUNCTIONAL
      * 
      * Individual picture removal (from index > 1)
+     * Remove ID3 tag in MP4 file (=> no impact on MP4 internals)
      * 
      * 
      * TECHNICAL

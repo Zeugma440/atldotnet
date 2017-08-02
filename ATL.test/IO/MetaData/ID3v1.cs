@@ -11,6 +11,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v1_Empty()
         {
+            ConsoleLogger log = new ConsoleLogger();
+
             // Source : tag-free MP3
             string resourceName = "empty.mp3";
             string location = TestUtils.GetResourceLocationRoot() + resourceName;
@@ -79,6 +81,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v1_Existing()
         {
+            ConsoleLogger log = new ConsoleLogger();
+
             // Source : MP3 with existing tag
             String testFileLocation = TestUtils.GetTempTestFile("id3v1.mp3");
             AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );

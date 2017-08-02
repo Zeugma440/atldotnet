@@ -145,10 +145,13 @@ namespace ATL.AudioData
                         using (BinaryReader r = new BinaryReader(fs))
                         using (BinaryWriter w = new BinaryWriter(fs))
                         {
-                            long newTagSize = theMetaIO.Write(r, w, theTag);
-                            if (newTagSize > -1)
+                            long deltaTagSize = theMetaIO.Write(r, w, theTag);
+                            if (deltaTagSize < long.MaxValue)
                             {
-                                result = audioDataReader.RewriteFileSizeInHeader(w, fs.Length);
+                                if (deltaTagSize != 0)
+                                {
+                                    result = audioDataReader.RewriteFileSizeInHeader(w, (int)deltaTagSize);
+                                }
                             }
                             else
                             {
@@ -214,7 +217,7 @@ namespace ATL.AudioData
                         StreamUtils.ShortenStream(fs, tagOffset+tagSize, (uint)tagSize);
                         using (BinaryWriter writer = new BinaryWriter(fs))
                         {
-                            result = audioDataReader.RewriteFileSizeInHeader(writer, fs.Length);
+                            result = audioDataReader.RewriteFileSizeInHeader(writer, -tagSize);
                         }
                     }
                 }

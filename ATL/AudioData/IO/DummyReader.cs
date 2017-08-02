@@ -82,7 +82,7 @@ namespace ATL.AudioData.IO
         {
             return true;
         }
-        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
+        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
         {
             return true;
         }

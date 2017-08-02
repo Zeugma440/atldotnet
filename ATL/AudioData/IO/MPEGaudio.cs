@@ -805,7 +805,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, long newFileSize)
+        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
         {
             // No file size in MPEGAudio header
             return true;

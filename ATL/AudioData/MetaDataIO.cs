@@ -14,8 +14,9 @@ namespace ATL.AudioData
         protected static bool useID3v2ExtendedHeaderRestrictions = false;
 
         // Default tag offset
-        protected const int TO_EOF = 0; // End Of File
-        protected const int TO_BOF = 1; // Beginning Of File
+        protected const int TO_EOF = 0;     // End Of File
+        protected const int TO_BOF = 1;     // Beginning Of File
+        protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
 
         protected bool tagExists;
         protected Encoding tagEncoding; // TODO check if needs to be there after all...
@@ -35,9 +36,11 @@ namespace ATL.AudioData
 
         public class ReadTagParams
         {
-            public bool ReadTag = true;
             public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
             public bool ReadAllMetaFrames = false;
+
+            public bool ReadTag = true;
+            public bool PrepareForWriting = false;
 
             public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
             {
@@ -338,11 +341,17 @@ namespace ATL.AudioData
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            long newTagSize = -1;
+            long oldTagSize;
+            long newTagSize;
+            long delta = long.MaxValue;
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            this.Read(r, new ReadTagParams(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true)); 
+            ReadTagParams readTagParams = new ReadTagParams(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
+            readTagParams.PrepareForWriting = true;
+            this.Read(r, readTagParams);
+
+            oldTagSize = this.tagSize;
 
             TagData dataToWrite;
             tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
@@ -366,45 +375,47 @@ namespace ATL.AudioData
                     newTagSize = s.Length;
 
                     // -- Adjust tag slot to new size in file --
-                    long audioDataOffset;
-                    long tagOffset;
+                    long tagEndOffset;
+                    long tagBeginOffset;
 
                     if (tagExists) // An existing tag has been reprocessed
                     {
-                        tagOffset = this.tagOffset;
-                        audioDataOffset = this.tagOffset + tagSize;
+                        tagBeginOffset = tagOffset;
+                        tagEndOffset = tagOffset + tagSize;
                     }
                     else // A brand new tag has been added to the file
                     {
                         switch (getDefaultTagOffset())
                         {
-                            case TO_EOF: tagOffset = r.BaseStream.Length; break;
-                            case TO_BOF: tagOffset = 0; break;
-                            default: tagOffset = -1; break;
+                            case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
+                            case TO_BOF: tagBeginOffset = 0; break;
+                            case TO_BUILTIN: tagBeginOffset = this.tagOffset; break;
+                            default: tagBeginOffset = -1; break;
                         }
-                        audioDataOffset = tagOffset;
+                        tagEndOffset = tagBeginOffset + tagSize;
                     }
 
                     // Need to build a larger file
                     if (newTagSize > tagSize)
                     {
-                        StreamUtils.LengthenStream(w.BaseStream, audioDataOffset, (uint)(newTagSize - tagSize));
+                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - tagSize));
                     }
                     else if (newTagSize < tagSize) // Need to reduce file size
                     {
-                        StreamUtils.ShortenStream(w.BaseStream, audioDataOffset, (uint)(tagSize - newTagSize));
+                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(tagSize - newTagSize));
                     }
 
                     // Copy tag contents to the new slot
-                    r.BaseStream.Seek(tagOffset, SeekOrigin.Begin);
+                    r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
                     s.Seek(0, SeekOrigin.Begin);
                     StreamUtils.CopyStream(s, w.BaseStream, s.Length);
 
                     tagData = dataToWrite;
+                    delta = newTagSize - oldTagSize;
                 }
             }
 
-            return newTagSize;
+            return delta;
         }
 
         private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
