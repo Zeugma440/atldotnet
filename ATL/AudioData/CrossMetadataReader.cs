@@ -368,12 +368,24 @@ namespace ATL.AudioData
             }
         }
 
-        public long Offset => throw new NotImplementedException();
+        public long Offset
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-        public byte[] CoreSignature => throw new NotImplementedException();
+        public byte[] CoreSignature
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) => throw new NotImplementedException();
+        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
-        public long Write(BinaryReader r, BinaryWriter w, TagData tag) => throw new NotImplementedException();
+        public long Write(BinaryReader r, BinaryWriter w, TagData tag) { throw new NotImplementedException(); }
     }
 }
