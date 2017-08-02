@@ -114,181 +114,64 @@ namespace Commons
             return "#"+col.ToArgb().ToString("X6").Remove(0,2);
         }
 
-
-        // ====================================
-        // === Font & Color import / export ===
-        // ====================================
-
-        public static void SaveFontToStream(Font fnt, BinaryWriter w)
-        {
-            w.Write(fnt.Name);			// string
-            w.Write(fnt.SizeInPoints);	// float = single
-            w.Write(fnt.Italic);		// bool
-            w.Write(fnt.Bold);			// bool
-            w.Write(fnt.Underline);		// bool
-            w.Write(fnt.Strikeout);		// bool
-        }
-
-        public static void SaveColorToStream(Color col, BinaryWriter w)
-        {
-            w.Write(col.R);
-            w.Write(col.G);
-            w.Write(col.B);
-        }
-
-        public static Font LoadFontFromStream(BinaryReader r)
-        {
-            String theName = r.ReadString();
-            float theSizePt = r.ReadSingle();
-            bool isIta = r.ReadBoolean();
-            bool isBold = r.ReadBoolean();
-            bool isUnderL = r.ReadBoolean();
-            bool isStrike = r.ReadBoolean();
-
-            FontStyle fs = new FontStyle();
-            if (isIta) { fs = fs | FontStyle.Italic; }
-            if (isBold) { fs = fs | FontStyle.Bold; }
-            if (isUnderL) { fs = fs | FontStyle.Underline; }
-            if (isStrike) { fs = fs | FontStyle.Strikeout; }
-
-            Font fnt = new Font(theName, theSizePt, fs);
-            return fnt;
-        }
-
-        public static Color LoadColorFromStream(BinaryReader r)
-        {
-            return Color.FromArgb(r.ReadByte(), r.ReadByte(), r.ReadByte());
-        }
-
-        // ====================================
-        // ====================================
-
-
-        public static String SanitizeFileName(String str)
+        /// <summary>
+        /// Strips the given string from all invalid characters that could prevent it from being a proper file name
+        /// </summary>
+        /// <param name="str">String to sanitize</param>
+        /// <returns>Given string stripped of all characters that are not valid in a file name</returns>
+        public static string SanitizeFileName(string str)
         {
             return str.Trim().Trim(Path.GetInvalidFileNameChars());
         }
 
-        public static String GetNETRegexpFromDOSRegexp(String dosRegexp)
-        {
-            return dosRegexp.Replace("*", ".*").Replace("?", ".?");
-        }
-
-        public static String StripZeroChars(String iStr)
+        /// <summary>
+        /// Strips the given string from all null '\0' characters (anywhere in the string)
+        /// </summary>
+        /// <param name="iStr">String to process</param>
+        /// <returns>Given string, without any null character</returns>
+        public static string StripZeroChars(string iStr)
         {
             return Regex.Replace(iStr, @"\0", "");
         }
 
-        public static String StripEndingZeroChars(String iStr)
+        /// <summary>
+        /// Strips the given string from all ending null '\0' characters
+        /// </summary>
+        /// <param name="iStr">String to process</param>
+        /// <returns>Given string, without any ending null character</returns>
+        public static string StripEndingZeroChars(string iStr)
         {
             return Regex.Replace(iStr, @"\0+\Z", "");
         }
 
-        public static bool IsOccidentalChar(char c)
+        /// <summary>
+        /// Indicates if the current user has the credentials to read the given file
+        /// </summary>
+        /// <param name="iFile">Access path to the file to test</param>
+        /// <returns>True if the file can be read; false if not</returns>
+        public static bool IsFileReadable(string iFile)
         {
-            return (
-                ((64 < c) && (c < 91)) ||
-            ('à' == c) ||
-            ('â' == c) ||
-            ('ä' == c) ||
-            ('Â' == c) ||
-            ('Â' == c) ||
-            ('À' == c) ||
-            ('Ä' == c) ||
-            ('ç' == c) ||
-            ('Ç' == c) ||
-            ('é' == c) ||
-            ('è' == c) ||
-            ('ë' == c) ||
-            ('ê' == c) ||
-            ('É' == c) ||
-            ('È' == c) ||
-            ('Ë' == c) ||
-            ('Ê' == c) ||
-            ('î' == c) ||
-            ('ï' == c) ||
-            ('Î' == c) ||
-            ('Ï' == c) ||
-            ('ñ' == c) ||
-            ('Ñ' == c) ||
-            ('ô' == c) ||
-            ('ö' == c) ||
-            ('ò' == c) ||
-            ('Ô' == c) ||
-            ('Ö' == c) ||
-            ('Ò' == c) ||
-            ('ù' == c) ||
-            ('û' == c) ||
-            ('ü' == c) ||
-            ('Ù' == c) ||
-            ('Û' == c) ||
-            ('Ü' == c) ||
-            ('ÿ' == c) ||
-            ('Ý' == c) ||
-            ('Æ' == c) ||
-            ('æ' == c)
-                );
+            FileIOPermission filePermission = new FileIOPermission(FileIOPermissionAccess.Read, @iFile);
+            try
+            {
+                filePermission.Demand();
+                return true;
+            }
+            catch (SecurityException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
-        /// Make the given char displayable in "plain" HTML
+        /// Indicates if the current user can list the contents of the given folder
+        /// e.g. a visible network folder whose access is retricted may be visible, but not "listable"
         /// </summary>
-        /// <param name="c">Char to simplify</param>
-        /// <returns>Simplified char</returns>
-        public static char HTMLizeChar(char c)
+        /// <param name="iFile">Access path to the folder to test</param>
+        /// <returns>True if the folder can be listed; false if not</returns>
+        public static bool IsFolderListable(string iPath)
         {
-            // http://en.wikipedia.org/wiki/Windows-1252
-            if (!IsOccidentalChar(c))
-            {
-                return c;
-            }
-            if ('à' == c) return 'a';
-            if ('â' == c) return 'a';
-            if ('ä' == c) return 'a';
-            if ('Â' == c) return 'A';
-            if ('Â' == c) return 'A';
-            if ('À' == c) return 'A';
-            if ('Ä' == c) return 'A';
-            if ('ç' == c) return 'c';
-            if ('Ç' == c) return 'C';
-            if ('é' == c) return 'e';
-            if ('è' == c) return 'e';
-            if ('ë' == c) return 'e';
-            if ('ê' == c) return 'e';
-            if ('É' == c) return 'E';
-            if ('È' == c) return 'E';
-            if ('Ë' == c) return 'E';
-            if ('Ê' == c) return 'E';
-            if ('î' == c) return 'i';
-            if ('ï' == c) return 'i';
-            if ('Î' == c) return 'I';
-            if ('Ï' == c) return 'I';
-            if ('ñ' == c) return 'n';
-            if ('Ñ' == c) return 'N';
-            if ('ô' == c) return 'o';
-            if ('ö' == c) return 'o';
-            if ('ò' == c) return 'o';
-            if ('Ô' == c) return 'O';
-            if ('Ö' == c) return 'O';
-            if ('Ò' == c) return 'O';
-            if ('ù' == c) return 'u';
-            if ('û' == c) return 'u';
-            if ('ü' == c) return 'u';
-            if ('Ù' == c) return 'U';
-            if ('Û' == c) return 'U';
-            if ('Ü' == c) return 'U';
-            if ('ÿ' == c) return 'y';
-            if ('Ý' == c) return 'Y';
-            if ('Æ' == c) return 'A';
-            if ('æ' == c) return 'a';
-            return c;
-        }
-
-        public static bool IsFileReadable(String iFile)
-        {
-            FileIOPermission filePermission = new
-                FileIOPermission(FileIOPermissionAccess.Read,
-                @iFile);
+            FileIOPermission filePermission = new FileIOPermission(FileIOPermissionAccess.PathDiscovery, @iPath);
             try
             {
                 filePermission.Demand();
@@ -300,30 +183,21 @@ namespace Commons
             }
         }
 
-        // WARNING : Doesn't work yet...
-        public static bool IsFolderListable(String iPath)
-        {
-            FileIOPermission filePermission = new
-                    FileIOPermission(FileIOPermissionAccess.PathDiscovery,
-                                     @iPath);
-            try
-            {
-                filePermission.Demand();
-                return true;
-            }
-            catch (SecurityException)
-            {
-                return false;
-            }
-        }
-
-        // Check if the given file can be accessed by Creation mode
-        // NB : The use of fileStream is intentional to test the scenario where file access is
-        // granted to the user while the resource is locked by another application
-        public static bool IsFileModifiable(String iPath)
+        /// <summary>
+        /// Indicates if the given file can actually be modified.
+        /// 
+        /// NB : Will be seen as non-modifiable :
+        ///   - resources accessible in read-only mode
+        ///   - resources accessible in write mode, and locked by another application
+        /// </summary>
+        /// <param name="iPath">Access path to the folder to test</param>
+        /// <returns>True if the file can be modified; false if not</returns>
+        public static bool IsFileModifiable(string iPath)
         {
             try
             {
+                // NB: The use of fileStream is intentional to test the scenario where file access
+                // is granted to the user while the resource is locked by another application
                 FileStream fs = new FileStream(iPath, FileMode.Create);
                 fs.Close();
                 return true;
@@ -334,35 +208,20 @@ namespace Commons
             }
         }
 
-        // Tries to guess public folder path based on "My folder" path
-        // Returns null if algorithm fails
-        public static String GuessPublicFolderPath(String myFolderPath)
-        {
-            // Public folder path is obtained by replacing folder name with "Public"
-            // in the user's special folder paths
-            int accountPosEnd = 0;
-            int accountPosStart = myFolderPath.Length;
-
-            while (accountPosStart > -1)
-            {
-                accountPosEnd = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosStart - 1);
-                accountPosStart = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosEnd - 1);
-                myFolderPath = myFolderPath.Substring(0, accountPosStart + 1) + "Public" + myFolderPath.Substring(accountPosEnd, myFolderPath.Length - accountPosEnd);
-                if (Directory.Exists(myFolderPath))
-                {
-                    return myFolderPath;
-                }
-            }
-            return null;
-        }
-
-        // Returns true if the app is running under Mono
+        /// <summary>
+        /// Indicates if the current environment is running under Mono
+        /// </summary>
+        /// <returns>True if the current environment is running under Mono; false if not</returns>
         public static bool IsRunningMono()
         {
             Type t = Type.GetType("Mono.Runtime");
             return (t != null);
         }
 
+        /// <summary>
+        /// Indicates if the current OS is Windows
+        /// </summary>
+        /// <returns>True if the current OS is Windows; false if not</returns>
         public static bool IsRunningWindows()
         {
             PlatformID pid = Environment.OSVersion.Platform;
@@ -378,6 +237,10 @@ namespace Commons
             }
         }
 
+        /// <summary>
+        /// Indicates if the current OS is Linux/Unix
+        /// </summary>
+        /// <returns>True if the current OS is Linux/Unix; false if not</returns>
         public static bool IsRunningUnix()
         {
             PlatformID pid = Environment.OSVersion.Platform;
@@ -390,6 +253,17 @@ namespace Commons
             }
         }
 
+        /// <summary>
+        /// Transforms the given string to format with a given length
+        ///  - If the given length is shorter than the actual length of the string, it will be truncated
+        ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given character
+        /// </summary>
+        /// <param name="value">String to transform</param>
+        /// <param name="length">Target length of the final string</param>
+        /// <param name="paddingChar">Character to use if padding is needed</param>
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// false if the padding has to be done on the left-side (optional; default value = true)</param>
+        /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
             string result = (null == value) ? "" : value;
@@ -404,6 +278,12 @@ namespace Commons
             return result;
         }
 
+        /// <summary>
+        /// Returns the mime-type of the given .NET image format
+        /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// </summary>
+        /// <param name="imageFormat">Image format whose mime-type to obtain</param>
+        /// <returns>mime-type of the given image format</returns>
         public static string GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
         {
             string result = "image/";
@@ -428,6 +308,13 @@ namespace Commons
             return result;
         }
 
+        /// <summary>
+        /// Returns the .NET image format of the given mime-type
+        /// NB1 : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// NB2 : This function does not verify the syntax of the mime-type (e.g. "image/XXX"), and only focuses on the presence of specific substrings (e.g. "gif")
+        /// </summary>
+        /// <param name="mimeType">Mime-type whose ImageFormat to obtain</param>
+        /// <returns>ImageFormat of the given mime-type (default : JPEG)</returns>
         public static ImageFormat GetImageFormatFromMimeType(string mimeType)
         {
             ImageFormat result = ImageFormat.Jpeg;
@@ -448,6 +335,13 @@ namespace Commons
             return result;
         }
 
+        /// <summary>
+        /// Resizes the given image to the given dimensions
+        /// </summary>
+        /// <param name="image">Image to resize</param>
+        /// <param name="size">Target dimensions</param>
+        /// <param name="preserveAspectRatio">True if the resized image has to keep the same aspect ratio as the given image; false if not (optional; default value = true)</param>
+        /// <returns>Resized image</returns>
         public static Image ResizeImage(Image image, Size size, bool preserveAspectRatio = true)
         {
             int newWidth;
@@ -456,11 +350,11 @@ namespace Commons
             {
                 int originalWidth = image.Width;
                 int originalHeight = image.Height;
-                float percentWidth = (float)size.Width / (float)originalWidth;
-                float percentHeight = (float)size.Height / (float)originalHeight;
+                float percentWidth = (float)size.Width / originalWidth;
+                float percentHeight = (float)size.Height / originalHeight;
                 float percent = percentHeight < percentWidth ? percentHeight : percentWidth;
-                newWidth = (int)(originalWidth * percent);
-                newHeight = (int)(originalHeight * percent);
+                newWidth = Convert.ToInt32( Math.Round(originalWidth * percent, 0) );
+                newHeight = Convert.ToInt32( Math.Round(originalHeight * percent, 0) );
             }
             else
             {
@@ -476,16 +370,40 @@ namespace Commons
             return newImage;
         }
 
+        /// <summary>
+        /// Get the MD5 hash of the given string, interpreted as UTF-8
+        /// Returned value is an Int32 computed from the first 4 bytes of the actual MD5 according to the byte order ("endianness") in which data is stored in the current computer architecture.
+        /// 
+        /// Warning : Given the nature of MD5 hashes which are coded on 32 bytes, this function actually truncates information !
+        /// USE IT AT YOUR OWN RISK
+        /// </summary>
+        /// <param name="value">String to get the MD5 hash from</param>
+        /// <returns>MD5 hash converted to Int32 according to the rules documented in the method description</returns>
         public static int GetInt32MD5Hash(string value)
         {
             return BitConverter.ToInt32(GetMD5Hash(value),0);
         }
 
+        /// <summary>
+        /// Get the MD5 hash of the given string, interpreted as UTF-8
+        /// Returned value is a string representing the MD5 in hex values
+        /// </summary>
+        /// <param name="value">Strinsg to get the MD5 hash from</param>
+        /// <returns>MD5 hash converted to string according to the rules documented in the method description</returns>
         public static string GetStrMD5Hash(string value)
         {
-            return Encoding.Default.GetString(GetMD5Hash(value));
+            StringBuilder sb = new StringBuilder();
+
+            foreach (byte b in GetMD5Hash(value)) { sb.Append(b.ToString("x2")); }
+
+            return sb.ToString();
         }
 
+        /// <summary>
+        /// Get the MD5 hash of the given string, interpreted as UTF-8
+        /// </summary>
+        /// <param name="value">String to get the MD5 hash from</param>
+        /// <returns>MD5 hash of the given string</returns>
         private static byte[] GetMD5Hash(string value)
         {
             using (var md5 = MD5.Create())

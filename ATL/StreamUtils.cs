@@ -12,9 +12,12 @@ namespace ATL
 	/// </summary>
 	public class StreamUtils
 	{	
-		// Size of the buffer used by memory stream copies methods
+		// Size of the buffer used by memory stream copy methods
 		private const int BUFFERSIZE = 4096;
 
+        /// <summary>
+        /// Handler signature to be used when needing to process a MemoryStream
+        /// </summary>
         public delegate void StreamHandlerDelegate(ref MemoryStream stream);
 
 
@@ -171,6 +174,13 @@ namespace ATL
 				w.Write(r.ReadBytes(BUFFERSIZE));
 		}
 
+        /// <summary>
+        /// Copies a given number of bytes from a given stream to another, starting at current stream positions
+        /// i.e. first byte will be read at from.Position and written at to.Position
+        /// </summary>
+        /// <param name="from">Stream to start copy from</param>
+        /// <param name="to">Stream to copy to</param>
+        /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the stream)</param>
         public static void CopyStream(Stream from, Stream to, long length = 0)
         {
             byte[] data = new byte[BUFFERSIZE];
@@ -182,14 +192,20 @@ namespace ATL
 
             while (i< bytesToRead)
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i);
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
                 from.Read(data, 0, bufSize);
                 to.Write(data, 0, bufSize);
                 i += bufSize;
             }
         }
 
-        // TODO DOC
+        /// <summary>
+        /// Read a given number of bytes from a given stream, starting at current stream position
+        /// i.e. first byte will be read at from.Position, EXCEPT if the stream has already reached its end, in which case reading restarts at its beginning
+        /// </summary>
+        /// <param name="from">Stream to read data from</param>
+        /// <param name="length">Number of bytes to read</param>
+        /// <returns>Bytes read from the stream</returns>
         public static byte[] ReadBinaryStream(Stream from, long length = 0)
         {
             byte[] buffer = new byte[BUFFERSIZE];
@@ -204,7 +220,7 @@ namespace ATL
 
             while (i < bytesToRead)
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i);
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
                 from.Read(buffer, 0, bufSize);
                 Array.Copy(buffer, 0, result, i, bufSize);
                 i += bufSize;
@@ -213,15 +229,20 @@ namespace ATL
             return result;
         }
 
-        // TODO DOC
-        public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
+        /// <summary>
+        /// Remove a portion of bytes within the given stream
+        /// </summary>
+        /// <param name="s">Stream to process; must be accessible for reading and writing</param>
+        /// <param name="oldIndex">End offset of the portion of bytes to remove</param>
+        /// <param name="delta">Number of bytes to remove</param>
+        public static void ShortenStream(Stream s, long oldIndex, uint delta) 
         {
             byte[] data = new byte[BUFFERSIZE];
             long newIndex = oldIndex - delta;
             long i = 0;
             int bufSize;
 
-            while (i < s.Length - oldIndex)
+            while (i < s.Length - oldIndex) // Forward loop
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, s.Length - oldIndex - i);
                 s.Seek(oldIndex + i, SeekOrigin.Begin);
@@ -234,10 +255,14 @@ namespace ATL
             s.SetLength(s.Length - delta);
         }
 
-
-
-        // TODO DOC
-        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false) // Backward loop
+        /// <summary>
+        /// Add bytes within the given stream
+        /// </summary>
+        /// <param name="s">Stream to process; must be accessible for reading and writing</param>
+        /// <param name="oldIndex">Offset where to add new bytes</param>
+        /// <param name="delta">Number of bytes to add</param>
+        /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
+        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false)
         {
             byte[] data = new byte[BUFFERSIZE];
             long newIndex = oldIndex + delta;
@@ -248,10 +273,10 @@ namespace ATL
             long i = 0;
             int bufSize;
 
-            while (newLength - i > newIndex)
+            while (newLength - i > newIndex) // Backward loop
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
-                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
+                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract delta
                 s.Read(data, 0, bufSize);
                 s.Seek(-i - bufSize, SeekOrigin.End);
                 s.Write(data, 0, bufSize);
@@ -295,7 +320,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an Int32 between big endian and little endian
+        /// Switches the format of an unsigned Int32 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
@@ -314,6 +339,11 @@ namespace ATL
             return (uint)((b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0));
         }
 
+        /// <summary>
+        /// Switches the format of a signed Int32 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
         public static Int32 ReverseInt32(Int32 n)
 		{
 			byte b0;
@@ -330,7 +360,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an Int16 between big endian and little endian
+        /// Switches the format of an unsigned Int16 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
@@ -345,6 +375,11 @@ namespace ATL
             return (ushort)((b0 << 8) | (b1 << 0));
         }
 
+        /// <summary>
+        /// Switches the format of a signed Int16 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
         public static ushort ReverseInt16(ushort n)
         {
             byte b0;
@@ -356,9 +391,13 @@ namespace ATL
             return (ushort)((b0 << 8) | (b1 << 0));
         }
 
-        // Guesses the encoding from the file Byte Order Mark (BOM)
-        // NB : This obviously only works for files that actually start with a BOM
-        // http://en.wikipedia.org/wiki/Byte_order_mark
+        /// <summary>
+        /// Guesses the encoding from the file Byte Order Mark (BOM)
+        /// http://en.wikipedia.org/wiki/Byte_order_mark 
+        /// NB : This obviously only works for files that actually start with a BOM
+        /// </summary>
+        /// <param name="file">FileStream to read from</param>
+        /// <returns>Detected encoding; system Default if detection failed</returns>
         public static Encoding GetEncodingFromFileBOM(ref FileStream file)
         {
             Encoding result;
@@ -389,30 +428,6 @@ namespace ATL
 
             // Now reposition the file cursor back to the start of the file
             file.Seek(0, System.IO.SeekOrigin.Begin);
-            return result;
-        }
-
-        // Converts a list of chars into a Long (big-endian evaluated)
-        public static long GetLongFromChars(char[] chars)
-        {
-            if (chars.Length > 8) throw new Exception("Long cannot be read from a record larger than 8 bytes");
-            long result = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                result = (result << 8) + chars[i];
-            }
-            return result;
-        }
-
-        // Converts a list of chars into an Int (big-endian evaluated)
-        public static int GetIntFromChars(char[] chars)
-        {
-            if (chars.Length > 4) throw new Exception("Long cannot be read from a record larger than 4 bytes");
-            int result = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                result = (result << 8) + chars[i];
-            }
             return result;
         }
 
@@ -466,20 +481,35 @@ namespace ATL
             else return Encoding.Default;
         }
 
+        /// <summary>
+        /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding
+        /// Returns with the BinaryReader positioned after the last null-character(s)
+        /// </summary>
+        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
+        /// <param name="encoding">Encoding to use for reading the stream</param>
+        /// <returns>Read value</returns>
         public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
             return readNullTerminatedString(r, encoding, 0, false);
         }
 
+        /// <summary>
+        /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding, within a given limit of bytes
+        /// Returns with the BinaryReader positioned at (start+limit)
+        /// </summary>
+        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
+        /// <param name="encoding">Encoding to use for reading the stream</param>
+        /// <param name="limit">Maximum number of bytes to read</param>
+        /// <returns>Read value</returns>
         public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
         {
             return readNullTerminatedString(r, encoding, limit, true);
         }
 
         /// <summary>
-        /// Reads a null-terminated string using the giver StreamReader
+        /// Reads a null-terminated string using the giver BinaryReader
         /// </summary>
-        /// <param name="r">Stream reader to be used to read the string</param>
+        /// <param name="r">Stream reader to read the string from</param>
         /// <param name="encoding">Encoding to use to parse the read bytes into the resulting String</param>
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
@@ -487,7 +517,7 @@ namespace ATL
         private static String readNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
-            IList<byte> readBytes = new List<byte>(limit>0?limit:40);
+            IList<byte> readBytes = new List<byte>(limit>0?limit:40); // TODO optimize by using a plain array
             byte justRead = 0;
             long distance = 0;
 
@@ -527,10 +557,10 @@ namespace ATL
         /// <param name="bytes">Byte array containing data
         /// NB : Array size can vary from 1 to 5 bytes, as only 7 bits of each is actually used
         /// </param>
-        /// <returns></returns>
+        /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt(byte[] bytes)
         {
-            if (bytes.Length > 5) throw new Exception("Array too long : has to be 1 to 5 bytes");
+            if (bytes.Length > 5) throw new Exception("Array too long : has to be 1 to 5 bytes; found : " + bytes.Length + " bytes");
             int result = 0;
 
             for (int i = 0; i < bytes.Length; i++)
@@ -540,11 +570,17 @@ namespace ATL
             return result;
         }
 
-        // Extracts a Int32 from a 4-byte array using the "synch-safe" convention
-        // as to ID3v2 definition (§6.2)
-        // NB : The actual capacity of the integer thus reaches 28 bits
+        /// <summary>
+        /// Decodes a Int32 from a 4-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// NB : The actual capacity of the integer thus reaches 28 bits
+        /// </summary>
+        /// <param name="bytes">4-byte array containing to convert</param>
+        /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt32(byte[] bytes)
         {
+            if (bytes.Length != 4) throw new Exception("Array length has to be 4 bytes; found : "+bytes.Length+" bytes");
+
             return                 
                 bytes[0] * 0x200000 +   //2^21
                 bytes[1] * 0x4000 +     //2^14
@@ -558,10 +594,10 @@ namespace ATL
         /// </summary>
         /// <param name="value">Value to encode</param>
         /// <param name="nbBytes">Number of bytes to encode to (can be 1 to 5)</param>
-        /// <returns></returns>
+        /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
         {
-            if ((nbBytes < 1) || (nbBytes > 5)) throw new Exception("nbBytes has to be 1 to 5");
+            if ((nbBytes < 1) || (nbBytes > 5)) throw new Exception("nbBytes has to be 1 to 5; found : " + nbBytes);
             byte[] result = new byte[nbBytes];
             int range;
 
@@ -574,9 +610,12 @@ namespace ATL
             return result;
         }
 
-        // Encodes an Int32 to a 4-byte array using the "synch-safe" convention
-        // as to ID3v2 definition (§6.2)
-        // NB : The actual capacity of the integer thus reaches 28 bits
+        /// <summary>
+        /// Encodes a Int32 to a 4-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="value">Integer to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeSynchSafeInt32(int value)
         {
             byte[] result = new byte[4];
