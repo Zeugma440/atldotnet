@@ -76,7 +76,7 @@ namespace ATL.AudioData
         /// <param name="theDataIO">AudioDataReader produced for this file</param>
         /// <param name="forceTagType">Forces a certain tag type to be read regardless of the current "cross reading" settings</param>
         /// <returns>Metadata reader able to give metadata info for this file (or the dummy reader if the format is unknown)</returns>
-        public IMetaDataIO GetMetaReader(ref AudioDataIO theDataIO, int forceTagType = -1)
+        public IMetaDataIO GetMetaReader(ref AudioDataManager theDataIO, int forceTagType = -1)
 		{
             IMetaDataIO theMetaReader = null;
             

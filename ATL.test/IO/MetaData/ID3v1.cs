@@ -17,7 +17,7 @@ namespace ATL.test.IO.MetaData
             string resourceName = "empty.mp3";
             string location = TestUtils.GetResourceLocationRoot() + resourceName;
             string testFileLocation = TestUtils.GetTempTestFile(resourceName);
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
             // Check that it is indeed tag-free
@@ -85,7 +85,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag
             String testFileLocation = TestUtils.GetTempTestFile("id3v1.mp3");
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
             // Construct a new tag; only rewrite Genre and track number
             TagData theTag = new TagData();
@@ -116,7 +116,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag
             String location = TestUtils.GetResourceLocationRoot()+"id3v1.mp3";
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             Assert.IsTrue(theFile.ReadFromFile());
 

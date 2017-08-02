@@ -2,7 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.IO;
-using static ATL.AudioData.AudioDataIO;
+using static ATL.AudioData.AudioDataManager;
 
 namespace ATL.AudioData.IO
 {
@@ -199,7 +199,7 @@ namespace ATL.AudioData.IO
 		private String FVendorID;
 		private VBRData FVBR = new VBRData();
 		private FrameData HeaderFrame = new FrameData();
-        private AudioDataIO.SizeInfo sizeInfo;
+        private AudioDataManager.SizeInfo sizeInfo;
         private String fileName;
     
 		public VBRData VBR // VBR header data

@@ -81,7 +81,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + "mp4.m4a";
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             readExistingTagsOnFile(ref theFile,1);
         }
@@ -94,7 +94,7 @@ namespace ATL.test.IO.MetaData
             // Source : tag-free MP3
             string location = TestUtils.GetResourceLocationRoot() + "empty.m4a";
             string testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
             // Check that it is indeed tag-free
@@ -173,7 +173,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.GetTempTestFile("mp4.m4a");
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -247,7 +247,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free MP3
             String testFileLocation = TestUtils.GetTempTestFile("mp4.m4a");
-            AudioDataIO theFile = new AudioDataIO( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
             // Check that it is indeed tag-free
@@ -360,7 +360,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(ref AudioDataIO theFile, int nbPictures = 2)
+        private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
         {
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));

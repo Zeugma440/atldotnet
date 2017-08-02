@@ -78,7 +78,7 @@ namespace ATL.AudioData.IO
         {
             return true;
         }
-        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return true;
         }

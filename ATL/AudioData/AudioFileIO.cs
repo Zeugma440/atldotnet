@@ -30,14 +30,14 @@ namespace ATL.AudioData
             thePath = path;
 
             audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
-            AudioDataIO dataIO = new AudioDataIO(audioData);
+            AudioDataManager dataIO = new AudioDataManager(audioData);
             found = dataIO.ReadFromFile(pictureStreamHandler);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
-                dataIO = new AudioDataIO(audioData);
+                dataIO = new AudioDataManager(audioData);
                 found = dataIO.ReadFromFile(pictureStreamHandler);
             }
 
@@ -338,7 +338,7 @@ namespace ATL.AudioData
             throw new NotImplementedException();
         }
 
-        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }

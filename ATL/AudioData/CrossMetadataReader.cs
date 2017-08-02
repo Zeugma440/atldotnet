@@ -16,7 +16,7 @@ namespace ATL.AudioData
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
 		private IList<IMetaDataIO> metaReaders = null;
 
-		public CrossMetadataReader(ref AudioDataIO baseReader, int[] tagPriority)
+		public CrossMetadataReader(ref AudioDataManager baseReader, int[] tagPriority)
 		{
             metaReaders = new List<IMetaDataIO>();
 

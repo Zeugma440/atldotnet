@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
         private int sampleRate;
-        private AudioDataIO.SizeInfo sizeInfo;
+        private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
 
         // List of all atoms whose size to rewrite after editing metadata
@@ -771,7 +771,7 @@ namespace ATL.AudioData.IO
 
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataIO.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 

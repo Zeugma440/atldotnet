@@ -44,7 +44,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioData\AudioDataIO.cs" />
+    <Compile Include="AudioData\AudioDataManager.cs" />
     <Compile Include="AudioData\AudioDataIOFactory.cs" />
     <Compile Include="AudioData\AudioFileIO.cs" />
     <Compile Include="AudioData\CrossMetadataReader.cs" />

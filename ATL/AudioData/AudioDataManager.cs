@@ -6,7 +6,7 @@ using System.IO;
 
 namespace ATL.AudioData
 {
-    public class AudioDataIO : IOBase
+    public class AudioDataManager : IOBase
     {
         public class SizeInfo
         {
@@ -53,7 +53,7 @@ namespace ATL.AudioData
         }
 
         // ====================== METHODS =========================
-        public AudioDataIO(IAudioDataIO audioDataReader)
+        public AudioDataManager(IAudioDataIO audioDataReader)
         {
             this.audioDataIO = audioDataReader;
         }
