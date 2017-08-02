@@ -211,49 +211,51 @@ namespace ATL.AudioData.IO
             //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
 
             // Mapping between standard ATL fields and ID3v2.2 identifiers
-            frameMapping_v22 = new Dictionary<string, byte>();
-
-            frameMapping_v22.Add("TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
-            frameMapping_v22.Add("TT2", TagData.TAG_FIELD_TITLE);
-            frameMapping_v22.Add("TP1", TagData.TAG_FIELD_ARTIST);
-            frameMapping_v22.Add("TP2", TagData.TAG_FIELD_ALBUM_ARTIST);  // De facto standard, regardless of spec
-            frameMapping_v22.Add("TP3", TagData.TAG_FIELD_CONDUCTOR);
-            frameMapping_v22.Add("TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST);
-            frameMapping_v22.Add("TAL", TagData.TAG_FIELD_ALBUM);
-            frameMapping_v22.Add("TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM);
-            frameMapping_v22.Add("TRK", TagData.TAG_FIELD_TRACK_NUMBER);
-            frameMapping_v22.Add("TPA", TagData.TAG_FIELD_DISC_NUMBER);
-            frameMapping_v22.Add("TYE", TagData.TAG_FIELD_RECORDING_YEAR);
-            frameMapping_v22.Add("TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH);
-            frameMapping_v22.Add("COM", TagData.TAG_FIELD_COMMENT);
-            frameMapping_v22.Add("TCM", TagData.TAG_FIELD_COMPOSER);
-            frameMapping_v22.Add("POP", TagData.TAG_FIELD_RATING);
-            frameMapping_v22.Add("TCO", TagData.TAG_FIELD_GENRE);
-            frameMapping_v22.Add("TCR", TagData.TAG_FIELD_COPYRIGHT);
-            frameMapping_v22.Add("TPB", TagData.TAG_FIELD_PUBLISHER);
+            frameMapping_v22 = new Dictionary<string, byte>
+            {
+                { "TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TT2", TagData.TAG_FIELD_TITLE },
+                { "TP1", TagData.TAG_FIELD_ARTIST },
+                { "TP2", TagData.TAG_FIELD_ALBUM_ARTIST },  // De facto standard, regardless of spec
+                { "TP3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TAL", TagData.TAG_FIELD_ALBUM },
+                { "TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRK", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "TPA", TagData.TAG_FIELD_DISC_NUMBER },
+                { "TYE", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "COM", TagData.TAG_FIELD_COMMENT },
+                { "TCM", TagData.TAG_FIELD_COMPOSER },
+                { "POP", TagData.TAG_FIELD_RATING },
+                { "TCO", TagData.TAG_FIELD_GENRE },
+                { "TCR", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPB", TagData.TAG_FIELD_PUBLISHER }
+            };
 
             // Mapping between standard fields and ID3v2.3+ identifiers
-            frameMapping_v23_24 = new Dictionary<string, byte>();
-
-            frameMapping_v23_24.Add("TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
-            frameMapping_v23_24.Add("TIT2", TagData.TAG_FIELD_TITLE);
-            frameMapping_v23_24.Add("TPE1", TagData.TAG_FIELD_ARTIST);
-            frameMapping_v23_24.Add("TPE2", TagData.TAG_FIELD_ALBUM_ARTIST); // De facto standard, regardless of spec
-            frameMapping_v23_24.Add("TPE3", TagData.TAG_FIELD_CONDUCTOR);
-            frameMapping_v23_24.Add("TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST);
-            frameMapping_v23_24.Add("TALB", TagData.TAG_FIELD_ALBUM);
-            frameMapping_v23_24.Add("TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM);
-            frameMapping_v23_24.Add("TRCK", TagData.TAG_FIELD_TRACK_NUMBER);
-            frameMapping_v23_24.Add("TPOS", TagData.TAG_FIELD_DISC_NUMBER);
-            frameMapping_v23_24.Add("TDRC", TagData.TAG_FIELD_RECORDING_DATE);
-            frameMapping_v23_24.Add("TYER", TagData.TAG_FIELD_RECORDING_YEAR);
-            frameMapping_v23_24.Add("TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH);
-            frameMapping_v23_24.Add("COMM", TagData.TAG_FIELD_COMMENT);
-            frameMapping_v23_24.Add("TCOM", TagData.TAG_FIELD_COMPOSER);
-            frameMapping_v23_24.Add("POPM", TagData.TAG_FIELD_RATING);
-            frameMapping_v23_24.Add("TCON", TagData.TAG_FIELD_GENRE);
-            frameMapping_v23_24.Add("TCOP", TagData.TAG_FIELD_COPYRIGHT);
-            frameMapping_v23_24.Add("TPUB", TagData.TAG_FIELD_PUBLISHER);
+            frameMapping_v23_24 = new Dictionary<string, byte>
+            {
+                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TIT2", TagData.TAG_FIELD_TITLE },
+                { "TPE1", TagData.TAG_FIELD_ARTIST },
+                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TALB", TagData.TAG_FIELD_ALBUM },
+                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER },
+                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE },
+                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "COMM", TagData.TAG_FIELD_COMMENT },
+                { "TCOM", TagData.TAG_FIELD_COMPOSER },
+                { "POPM", TagData.TAG_FIELD_RATING },
+                { "TCON", TagData.TAG_FIELD_GENRE },
+                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER }
+            };
         }
 
         public ID3v2()
@@ -550,7 +552,7 @@ namespace ATL.AudioData.IO
                             // mime-type always coded in ASCII
                             if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
                             // Mime-type
-                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.GetLatin1Encoding());
+                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding);
                             imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
                         }
 

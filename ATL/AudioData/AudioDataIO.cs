@@ -21,29 +21,29 @@ namespace ATL.AudioData
             public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
         }
 
-        protected ID3v1 FID3v1 = new ID3v1();
-        protected ID3v2 FID3v2 = new ID3v2();
-        protected APEtag FAPEtag = new APEtag();
-        protected IMetaDataIO FNativeTag;
+        private IMetaDataIO FID3v1 = new ID3v1();
+        private IMetaDataIO FID3v2 = new ID3v2();
+        private IMetaDataIO FAPEtag = new APEtag();
+        private IMetaDataIO FNativeTag;
 
-        protected readonly IAudioDataIO audioDataReader;
+        private readonly IAudioDataIO audioDataIO;
 
-        protected SizeInfo sizeInfo = new SizeInfo();
+        private SizeInfo sizeInfo = new SizeInfo();
 
 
-        protected string fileName
+        private string fileName
         {
-            get { return audioDataReader.FileName; }
+            get { return audioDataIO.FileName; }
         }
-        public ID3v1 ID3v1 // ID3v1 tag data
+        public IMetaDataIO ID3v1 // ID3v1 tag data
         {
             get { return this.FID3v1; }
         }
-        public ID3v2 ID3v2 // ID3v2 tag data
+        public IMetaDataIO ID3v2 // ID3v2 tag data
         {
             get { return this.FID3v2; }
         }
-        public APEtag APEtag // APE tag data
+        public IMetaDataIO APEtag // APE tag data
         {
             get { return this.FAPEtag; }
         }
@@ -55,14 +55,11 @@ namespace ATL.AudioData
         // ====================== METHODS =========================
         public AudioDataIO(IAudioDataIO audioDataReader)
         {
-            this.audioDataReader = audioDataReader;
+            this.audioDataIO = audioDataReader;
         }
 
-        protected void resetData()
+        private void resetData()
         {
-            FID3v1.ResetData();
-            FID3v2.ResetData();
-            FAPEtag.ResetData();
             sizeInfo.ResetData();
         }
 
@@ -116,7 +113,7 @@ namespace ATL.AudioData
             IMetaDataIO theMetaIO = null;
             LogDelegator.GetLocateDelegate()(fileName);
 
-            if (audioDataReader.IsMetaSupported(tagType))
+            if (audioDataIO.IsMetaSupported(tagType))
             {
                 try
                 {
@@ -150,7 +147,7 @@ namespace ATL.AudioData
                             {
                                 if (deltaTagSize != 0)
                                 {
-                                    result = audioDataReader.RewriteFileSizeInHeader(w, (int)deltaTagSize);
+                                    result = audioDataIO.RewriteFileSizeInHeader(w, (int)deltaTagSize);
                                 }
                             }
                             else
@@ -189,35 +186,45 @@ namespace ATL.AudioData
 
                     long tagOffset = -1;
                     int tagSize = 0;
+                    byte[] coreSignature = new byte[0];
 
                     if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1) && (hasMeta(MetaDataIOFactory.TAG_ID3V1)))
                     {
                         tagOffset = ID3v1.Offset;
                         tagSize = ID3v1.Size;
+                        coreSignature = ID3v1.CoreSignature;
                     }
                     else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2) && (hasMeta(MetaDataIOFactory.TAG_ID3V2)))
                     {
                         tagOffset = ID3v2.Offset;
                         tagSize = ID3v2.Size;
+                        coreSignature = ID3v2.CoreSignature;
                     }
                     else if (tagType.Equals(MetaDataIOFactory.TAG_APE) && (hasMeta(MetaDataIOFactory.TAG_APE)))
                     {
                         tagOffset = APEtag.Offset;
                         tagSize = APEtag.Size;
+                        coreSignature = APEtag.CoreSignature;
                     }
                     else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE) && (hasMeta(MetaDataIOFactory.TAG_NATIVE)))
                     {
                         // TODO : handle native tags scattered amond various, not necessarily contiguous chunks (e.g. AIFF)
                         tagOffset = NativeTag.Offset;
                         tagSize = NativeTag.Size;
+                        coreSignature = NativeTag.CoreSignature;
                     }
 
                     if ((tagOffset > -1) && (tagSize > 0))
                     {
-                        StreamUtils.ShortenStream(fs, tagOffset+tagSize, (uint)tagSize);
+                        StreamUtils.ShortenStream(fs, tagOffset+tagSize, (uint)(tagSize-coreSignature.Length));
                         using (BinaryWriter writer = new BinaryWriter(fs))
                         {
-                            result = audioDataReader.RewriteFileSizeInHeader(writer, -tagSize);
+                            if (coreSignature.Length > 0)
+                            {
+                                fs.Position = tagOffset;
+                                writer.Write(coreSignature);
+                            }
+                            result = audioDataIO.RewriteFileSizeInHeader(writer, -tagSize+coreSignature.Length);
                         }
                     }
                 }
@@ -242,33 +249,33 @@ namespace ATL.AudioData
             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
 
             LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read begin");
-            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {
                 if (FID3v1.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, FID3v1.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v1 end");
             }
-            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
                 if (FID3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, FID3v2.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v2 end");
             }
-            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_APE))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_APE))
             {
                 if (FAPEtag.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, FAPEtag.Size);
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read ape end");
             }
 
-            if (audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataReader is IMetaDataIO)
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
             {
-                IMetaDataIO nativeTag = (IMetaDataIO)audioDataReader; // TODO : This is dirty as ****; there must be a better way !
+                IMetaDataIO nativeTag = (IMetaDataIO)audioDataIO; // TODO : This is dirty as ****; there must be a better way !
                 FNativeTag = nativeTag;
-                result = audioDataReader.Read(source, sizeInfo, readTagParams);
+                result = audioDataIO.Read(source, sizeInfo, readTagParams);
 
                 if (result) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
             } else
             {
                 readTagParams.ReadTag = false;
-                result = audioDataReader.Read(source, sizeInfo, readTagParams);
+                result = audioDataIO.Read(source, sizeInfo, readTagParams);
             }
             LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
 
@@ -277,7 +284,7 @@ namespace ATL.AudioData
 
         public bool HasNativeMeta()
         {
-            return audioDataReader.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
+            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
         }
     }
 }

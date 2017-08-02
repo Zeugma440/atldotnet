@@ -460,8 +460,8 @@ namespace ATL.AudioReaders.BinaryLogic
             if (1 == version) Source.BaseStream.Seek(16, SeekOrigin.Current); else Source.BaseStream.Seek(8, SeekOrigin.Current);
 
             int timeScale = StreamUtils.ReverseInt32(Source.ReadInt32());
-            long timeLengthPerSec;
-            if (1 == version) timeLengthPerSec = StreamUtils.ReverseInt64(Source.ReadUInt64()); else timeLengthPerSec = StreamUtils.ReverseInt32(Source.ReadInt32());
+            ulong timeLengthPerSec;
+            if (1 == version) timeLengthPerSec = StreamUtils.ReverseUInt64(Source.ReadUInt64()); else timeLengthPerSec = StreamUtils.ReverseUInt32(Source.ReadUInt32());
             FDuration = timeLengthPerSec * 1.0 / timeScale;
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);

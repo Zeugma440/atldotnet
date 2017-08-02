@@ -301,6 +301,8 @@ namespace ATL.AudioData
             get { throw new NotImplementedException(); }
         }
 
+        public byte[] CoreSignature => metaData.CoreSignature;
+
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             throw new NotImplementedException();

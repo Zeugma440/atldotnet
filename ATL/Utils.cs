@@ -11,9 +11,9 @@ using System.Security.Cryptography;
 
 namespace Commons
 {
-	/// <summary>
-	/// General utility class
-	/// </summary>
+    /// <summary>
+    /// General utility class
+    /// </summary>
     public class Utils
     {
         /// <summary>
@@ -22,6 +22,8 @@ namespace Commons
         public delegate void voidDelegate();
 
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+
+        public static Encoding Latin1Encoding { get { return latin1Encoding; } }
 
 
         /// <summary>
@@ -410,11 +412,6 @@ namespace Commons
             {
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
             }
-        }
-
-        public static Encoding GetLatin1Encoding()
-        {
-            return latin1Encoding;
         }
     }
 }

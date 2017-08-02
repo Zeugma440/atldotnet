@@ -5,7 +5,7 @@ using System.IO;
 
 namespace ATL.test.IO.Perf
 {
-//    [TestClass]
+    //[TestClass]
     public class Perf
     {
         const int NB_COPIES = 2000;
@@ -16,6 +16,37 @@ namespace ATL.test.IO.Perf
         private static string getNewLocation(int index)
         {
             return LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + index.ToString());
+        }
+
+        [TestMethod, TestCategory("mass")]
+        public void Perf_Method()
+        {
+            ulong test = 32974337984693648;
+            long test2 = 32974337984693648;
+
+            long max = 100000000;
+            long ticksBefore, ticksNow;
+
+            ticksBefore = System.DateTime.Now.Ticks;
+
+            for (long i = 0; i< max; i++)
+            {
+                StreamUtils.ReverseUInt64(test);
+            }
+            ticksNow = System.DateTime.Now.Ticks;
+
+            System.Console.WriteLine("ReverseUInt64 : " + (ticksNow - ticksBefore) / 10000 + " ms");
+
+
+            ticksBefore = System.DateTime.Now.Ticks;
+
+            for (long i = 0; i < max; i++)
+            {
+                StreamUtils.ReverseInt64(test2);
+            }
+            ticksNow = System.DateTime.Now.Ticks;
+
+            System.Console.WriteLine("ReverseInt64 : " + (ticksNow - ticksBefore) / 10000 + " ms");
         }
 
         [TestMethod, TestCategory("mass")]

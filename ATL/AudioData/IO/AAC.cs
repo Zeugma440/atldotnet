@@ -72,8 +72,20 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private AudioDataIO.SizeInfo sizeInfo;
         private string fileName;
+
         // List of all atoms whose size to rewrite after editing metadata
-        private IDictionary<long, uint> upperAtoms;
+        private class ValueInfo
+        {
+            public ulong Position;
+            public ulong Value;
+            public byte NbBytes;
+
+            public ValueInfo(ulong position, ulong value, byte nbBytes = 4)
+            {
+                Position = position; Value = value; NbBytes = nbBytes;
+            }
+        }
+        private IList<ValueInfo> upperAtoms;
 
 
         public byte VersionID // Version code
@@ -161,46 +173,50 @@ namespace ATL.AudioData.IO
 
         static AAC()
         {
-            frameMapping_mp4 = new Dictionary<string, byte>();
+            frameMapping_mp4 = new Dictionary<string, byte>
+            {
+                { "©nam", TagData.TAG_FIELD_TITLE },
+                { "titl", TagData.TAG_FIELD_TITLE },
+                { "©alb", TagData.TAG_FIELD_ALBUM },
+                { "©art", TagData.TAG_FIELD_ARTIST },
+                { "©ART", TagData.TAG_FIELD_ARTIST },
+                { "©cmt", TagData.TAG_FIELD_COMMENT },
+                { "©day", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "©gen", TagData.TAG_FIELD_GENRE },
+                { "gnre", TagData.TAG_FIELD_GENRE },
+                { "trkn", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "disk", TagData.TAG_FIELD_DISC_NUMBER },
+                { "rtng", TagData.TAG_FIELD_RATING },
+                { "©wrt", TagData.TAG_FIELD_COMPOSER },
+                { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "cprt", TagData.TAG_FIELD_COPYRIGHT },
+                { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
+                { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
+            };
 
-            frameMapping_mp4.Add("©nam", TagData.TAG_FIELD_TITLE);
-            frameMapping_mp4.Add("titl", TagData.TAG_FIELD_TITLE);
-            frameMapping_mp4.Add("©alb", TagData.TAG_FIELD_ALBUM);
-            frameMapping_mp4.Add("©art", TagData.TAG_FIELD_ARTIST);
-            frameMapping_mp4.Add("©cmt", TagData.TAG_FIELD_COMMENT);
-            frameMapping_mp4.Add("©day", TagData.TAG_FIELD_RECORDING_YEAR);
-            frameMapping_mp4.Add("©gen", TagData.TAG_FIELD_GENRE);
-            frameMapping_mp4.Add("gnre", TagData.TAG_FIELD_GENRE);
-            frameMapping_mp4.Add("trkn", TagData.TAG_FIELD_TRACK_NUMBER);
-            frameMapping_mp4.Add("disk", TagData.TAG_FIELD_DISC_NUMBER);
-            frameMapping_mp4.Add("rtng", TagData.TAG_FIELD_RATING);
-            frameMapping_mp4.Add("©wrt", TagData.TAG_FIELD_COMPOSER);
-            frameMapping_mp4.Add("desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION);
-            frameMapping_mp4.Add("cprt", TagData.TAG_FIELD_COPYRIGHT);
-            frameMapping_mp4.Add("aart", TagData.TAG_FIELD_ALBUM_ARTIST); // aART
-
-
-            frameClasses_mp4 = new Dictionary<string, byte>();
-
-            frameClasses_mp4.Add("gnre", 0);
-            frameClasses_mp4.Add("trkn", 0);
-            frameClasses_mp4.Add("disk", 0);
-            frameClasses_mp4.Add("rtng", 21);
-            frameClasses_mp4.Add("tmpo", 21);
-            frameClasses_mp4.Add("cpil", 21);
-            frameClasses_mp4.Add("stik", 21);
-            frameClasses_mp4.Add("pcst", 21);
-            frameClasses_mp4.Add("purl", 0);
-            frameClasses_mp4.Add("egid", 0);
-            frameClasses_mp4.Add("tvsn", 21);
-            frameClasses_mp4.Add("tves", 21);
-            frameClasses_mp4.Add("pgap", 21);
+            frameClasses_mp4 = new Dictionary<string, byte>
+            {
+                { "gnre", 0 },
+                { "trkn", 0 },
+                { "disk", 0 },
+                { "rtng", 21 },
+                { "tmpo", 21 },
+                { "cpil", 21 },
+                { "stik", 21 },
+                { "pcst", 21 },
+                { "purl", 0 },
+                { "egid", 0 },
+                { "tvsn", 21 },
+                { "tves", 21 },
+                { "pgap", 21 }
+            };
         }
 
 
         // ********************* Auxiliary functions & procedures ********************
 
-        private uint ReadBits(BinaryReader Source, int Position, int Count)
+        [Obsolete("use BinaryReader ReadXXX methods")]
+        private uint readBits(BinaryReader Source, int Position, int Count)
         {
             byte[] buffer = new byte[4];
 
@@ -216,7 +232,7 @@ namespace ATL.AudioData.IO
         // ********************** Private functions & procedures *********************
 
         // Reset all variables
-        protected void resetData()
+        private void resetData()
         {
             ResetData();
             FHeaderTypeID = AAC_HEADER_TYPE_UNKNOWN;
@@ -298,24 +314,26 @@ namespace ATL.AudioData.IO
         byte FRecognizeHeaderType(BinaryReader Source)
         {
             byte result;
-            char[] Header = new char[4];
+            byte[] header;
+            string headerStr;
 
             result = AAC_HEADER_TYPE_UNKNOWN;
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            Header = StreamUtils.ReadOneByteChars(Source, 4);
+            header = Source.ReadBytes(4);
+            headerStr = Utils.Latin1Encoding.GetString(header);
 
-            if (StreamUtils.StringEqualsArr("ADIF", Header))
+            if ("ADIF".Equals(headerStr))
             {
                 result = AAC_HEADER_TYPE_ADIF;
             }
-            else if ((0xFF == (byte)Header[0]) && (0xF0 == (((byte)Header[0]) & 0xF0)))
+            else if ((0xFF == header[0]) && (0xF0 == ((header[0]) & 0xF0)))
             {
                 result = AAC_HEADER_TYPE_ADTS;
             }
             else
             {
-                Header = StreamUtils.ReadOneByteChars(Source, 4); // bytes 4 to 8
-                if (StreamUtils.StringEqualsArr("ftyp", Header))
+                headerStr = Utils.Latin1Encoding.GetString(Source.ReadBytes(4)); // bytes 4 to 8
+                if ("ftyp".Equals(headerStr))
                 {
                     result = AAC_HEADER_TYPE_MP4;
                 }
@@ -332,31 +350,31 @@ namespace ATL.AudioData.IO
 //            isValid = true;
 
             Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
-            if (0 == ReadBits(Source, Position, 1)) Position += 3;
+            if (0 == readBits(Source, Position, 1)) Position += 3;
             else Position += 75;
-            if (0 == ReadBits(Source, Position, 1)) FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            if (0 == readBits(Source, Position, 1)) FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
             else FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
 
             Position++;
 
-            bitrate = (int)ReadBits(Source, Position, 23);
+            bitrate = (int)readBits(Source, Position, 23);
 
             if (AAC_BITRATE_TYPE_CBR == FBitrateTypeID) Position += 51;
             else Position += 31;
 
             FMPEGVersionID = AAC_MPEG_VERSION_4;
-            FProfileID = (byte)(ReadBits(Source, Position, 2) + 1);
+            FProfileID = (byte)(readBits(Source, Position, 2) + 1);
             Position += 2;
 
-            sampleRate = SAMPLE_RATE[ReadBits(Source, Position, 4)];
+            sampleRate = SAMPLE_RATE[readBits(Source, Position, 4)];
             Position += 4;
-            FChannels += (byte)ReadBits(Source, Position, 4);
+            FChannels += (byte)readBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)ReadBits(Source, Position, 4);
+            FChannels += (byte)readBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)ReadBits(Source, Position, 4);
+            FChannels += (byte)readBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)ReadBits(Source, Position, 2);
+            FChannels += (byte)readBits(Source, Position, 2);
         }
 
         // ---------------------------------------------------------------------------
@@ -374,33 +392,33 @@ namespace ATL.AudioData.IO
                 Frames++;
                 Position = (int)(sizeInfo.ID3v2Size + TotalSize) * 8;
 
-                if (ReadBits(Source, Position, 12) != 0xFFF) break;
+                if (readBits(Source, Position, 12) != 0xFFF) break;
 
                 Position += 12;
 
-                if (0 == ReadBits(Source, Position, 1))
+                if (0 == readBits(Source, Position, 1))
                     FMPEGVersionID = AAC_MPEG_VERSION_4;
                 else
                     FMPEGVersionID = AAC_MPEG_VERSION_2;
 
                 Position += 4;
-                FProfileID = (byte)(ReadBits(Source, Position, 2) + 1);
+                FProfileID = (byte)(readBits(Source, Position, 2) + 1);
                 Position += 2;
 
-                sampleRate = SAMPLE_RATE[ReadBits(Source, Position, 4)];
+                sampleRate = SAMPLE_RATE[readBits(Source, Position, 4)];
                 Position += 5;
 
-                FChannels = (byte)ReadBits(Source, Position, 3);
+                FChannels = (byte)readBits(Source, Position, 3);
 
                 if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
                     Position += 9;
                 else
                     Position += 7;
 
-                TotalSize += (int)ReadBits(Source, Position, 13);
+                TotalSize += (int)readBits(Source, Position, 13);
                 Position += 13;
 
-                if (0x7FF == ReadBits(Source, Position, 11))
+                if (0x7FF == readBits(Source, Position, 11))
                     FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
                 else
                     FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
@@ -419,6 +437,8 @@ namespace ATL.AudioData.IO
         // http://atomicparsley.sourceforge.net/mpeg-4files.html
         // - Metadata is located in the moov/udta/meta/ilst atom
         // - Physical information are located in the moov/trak atom (to be confirmed ?)
+        // - Binary physical data are located in the mdat atom
+        //
         private void readMP4(BinaryReader Source, MetaDataIO.ReadTagParams readTagParams)
         {
             long iListSize = 0;
@@ -434,7 +454,7 @@ namespace ATL.AudioData.IO
             long atomPosition;
             string atomHeader;
 
-            if (readTagParams.PrepareForWriting) upperAtoms = new Dictionary<long,uint>();
+            if (readTagParams.PrepareForWriting) upperAtoms = new List<ValueInfo>();
 
             Source.BaseStream.Seek(0, SeekOrigin.Begin);
 
@@ -445,7 +465,7 @@ namespace ATL.AudioData.IO
             // MOOV atom
             atomSize = lookForMP4Atom(Source, "moov"); // === Physical data
             long moovPosition = Source.BaseStream.Position;
-            if (readTagParams.PrepareForWriting) upperAtoms.Add(Source.BaseStream.Position - 8, atomSize);
+            if (readTagParams.PrepareForWriting) upperAtoms.Add( new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize) );
 
             lookForMP4Atom(Source, "mvhd"); // === Physical data
             byte version = Source.ReadByte();
@@ -453,8 +473,8 @@ namespace ATL.AudioData.IO
             if (1 == version) Source.BaseStream.Seek(16, SeekOrigin.Current); else Source.BaseStream.Seek(8, SeekOrigin.Current);
 
             int timeScale = StreamUtils.ReverseInt32(Source.ReadInt32());
-            long timeLengthPerSec;
-            if (1 == version) timeLengthPerSec = StreamUtils.ReverseInt64(Source.ReadUInt64()); else timeLengthPerSec = StreamUtils.ReverseInt32(Source.ReadInt32());
+            ulong timeLengthPerSec;
+            if (1 == version) timeLengthPerSec = StreamUtils.ReverseUInt64(Source.ReadUInt64()); else timeLengthPerSec = StreamUtils.ReverseUInt32(Source.ReadUInt32());
             duration = timeLengthPerSec * 1.0 / timeScale;
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
@@ -473,7 +493,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < nbDescriptions; i++)
             {
                 int32Data = StreamUtils.ReverseUInt32(Source.ReadUInt32()); // 4-byte description length
-                string descFormat = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4));
+                string descFormat = Utils.Latin1Encoding.GetString(Source.ReadBytes(4));
 
                 if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
                 {
@@ -524,11 +544,38 @@ namespace ATL.AudioData.IO
                 FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
             }
 
+            // "Physical" audio chunks are referenced by position (offset) in  moov.trak.mdia.minf.stbl.stco / co64
+            // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
+            if (readTagParams.PrepareForWriting)
+            {
+                atomPosition = Source.BaseStream.Position;
+                byte nbBytes = 0;
+                uint nbChunkOffsets = 0;
+                ulong value;
+                try
+                {
+                    lookForMP4Atom(Source, "stco"); // Chunk offsets
+                    nbBytes = 4;
+                } catch (Exception)
+                {
+                    Source.BaseStream.Seek(atomPosition, SeekOrigin.Begin);
+                    lookForMP4Atom(Source, "co64");
+                    nbBytes = 8;
+                }
+                Source.BaseStream.Seek(4, SeekOrigin.Current); // Flags
+                nbChunkOffsets = StreamUtils.ReverseUInt32( Source.ReadUInt32() );
+                for (int i = 0; i < nbChunkOffsets; i++)
+                {
+                    if (4 == nbBytes) value = StreamUtils.ReverseUInt32( Source.ReadUInt32() ); else value = StreamUtils.ReverseUInt64( Source.ReadUInt64() );
+                    upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position-nbBytes),value,nbBytes));
+                }
+            }
+
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(Source, "udta");
-            if (readTagParams.PrepareForWriting) upperAtoms.Add(Source.BaseStream.Position - 8, atomSize);
+            if (readTagParams.PrepareForWriting) upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize));
             atomSize = lookForMP4Atom(Source, "meta");
-            if (readTagParams.PrepareForWriting) upperAtoms.Add(Source.BaseStream.Position - 8, atomSize);
+            if (readTagParams.PrepareForWriting) upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize));
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
             if (readTagParams.ReadTag)
@@ -538,7 +585,7 @@ namespace ATL.AudioData.IO
                 long hdlrPosition = Source.BaseStream.Position - 8;
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
-                strData = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4)); // Meta data type
+                strData = Utils.Latin1Encoding.GetString(Source.ReadBytes(4)); // Meta data type
 
                 if (!strData.Equals("mdir"))
                 {
@@ -551,24 +598,36 @@ namespace ATL.AudioData.IO
                 }
                 Source.BaseStream.Seek(atomSize+ hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
 
-                iListSize = lookForMP4Atom(Source, "ilst") - 8; // === Metadata list
+                iListSize = lookForMP4Atom(Source, "ilst"); // === Metadata list
                 tagOffset = Source.BaseStream.Position - 8;
 
-                tagSize = (int)iListSize; // tagSize here...
-                if (0 == tagSize)
+                tagSize = (int)iListSize;
+                if (8 == tagSize) // Core minimal size
                 {
                     tagExists = false;
-                    tagSize = 8;
+                    return;
                 } else
                 {
                     tagExists = true;
                 }
 
                 // Browse all metadata
-                while (iListPosition < iListSize)
+                while (iListPosition < iListSize - 8)
                 {
                     atomSize = StreamUtils.ReverseUInt32(Source.ReadUInt32());
-                    atomHeader = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4));
+                    atomHeader = Utils.Latin1Encoding.GetString(Source.ReadBytes(4));
+
+                    if ("----".Equals(atomHeader)) // Custom text metadata
+                    {
+                        metadataSize = lookForMP4Atom(Source, "mean"); // "issuer" of the field
+                        Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                        atomHeader += ":" + Utils.Latin1Encoding.GetString(Source.ReadBytes((int)metadataSize - 8 - 4));
+
+                        metadataSize = lookForMP4Atom(Source, "name"); // field type
+                        Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                        atomHeader += ":" + Utils.Latin1Encoding.GetString(Source.ReadBytes((int)metadataSize - 8 - 4));
+                    }
+
                     metadataSize = lookForMP4Atom(Source, "data");
                     atomPosition = Source.BaseStream.Position-8;
 
@@ -660,7 +719,6 @@ namespace ATL.AudioData.IO
         private void setMetaField(string ID, string Data, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
-            ID = ID.ToLower();
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (frameMapping_mp4.ContainsKey(ID)) supportedMetaId = frameMapping_mp4[ID];
@@ -688,6 +746,8 @@ namespace ATL.AudioData.IO
         // Looks for the atom segment starting with the given key, at the current atom level
         // Returns with Source positioned right after the atom header, on the 1st byte of data
         // Returned value is the raw size of the atom (including the already-read 8-byte header)
+        //
+        // Warning : stream must be positioned at the end of a previous atom before being called
         private uint lookForMP4Atom(BinaryReader Source, string atomKey)
         {
             uint atomSize = 0;
@@ -699,10 +759,12 @@ namespace ATL.AudioData.IO
             {
                 if (!first) Source.BaseStream.Seek(atomSize - 8, SeekOrigin.Current);
                 atomSize = StreamUtils.ReverseUInt32(Source.ReadUInt32());
-                atomHeader = Utils.GetLatin1Encoding().GetString(Source.ReadBytes(4));
+                atomHeader = Utils.Latin1Encoding.GetString(Source.ReadBytes(4));
                 if (first) first = false;
                 if (++iterations > 100) throw new Exception(atomKey + " atom could not be found");
-            } while (!atomKey.Equals(atomHeader) && Source.BaseStream.Position + (atomSize - 8) < Source.BaseStream.Length);
+            } while (!atomKey.Equals(atomHeader) && Source.BaseStream.Position + atomSize - 16 < Source.BaseStream.Length);
+
+            if (Source.BaseStream.Position + atomSize - 16 > Source.BaseStream.Length) throw new Exception(atomKey + " atom could not be found");
 
             return atomSize;
         }
@@ -757,6 +819,11 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
+        protected override byte[] getCoreSignature()
+        {
+            return new byte[] { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
+        }
+
         protected override bool write(TagData tag, BinaryWriter w)
         {
             bool result;
@@ -780,7 +847,7 @@ namespace ATL.AudioData.IO
             // Record final size of tag into "tag size" field of header
             long finalTagPos = w.BaseStream.Position;
             w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
-            tagSize = Convert.ToUInt32(finalTagPos - dataPos) + 8; // 8 being the size of the header
+            tagSize = Convert.ToUInt32(finalTagPos - tagSizePos);
             w.Write( StreamUtils.ReverseUInt32(tagSize));
             w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
 
@@ -850,7 +917,27 @@ namespace ATL.AudioData.IO
             // == METADATA HEADER ==
             frameSizePos1 = writer.BaseStream.Position;
             writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
-            writer.Write(Utils.GetLatin1Encoding().GetBytes(frameCode));
+            if (frameCode.StartsWith("----")) // Specific metadata
+            { 
+                string[] frameCodeComponents = frameCode.Split(':');
+                if (3 == frameCodeComponents.Length)
+                {
+                    writer.Write(Utils.Latin1Encoding.GetBytes("----"));
+
+                    writer.Write(StreamUtils.ReverseInt32(frameCodeComponents[1].Length + 4 + 4 + 4));
+                    writer.Write(Utils.Latin1Encoding.GetBytes("mean"));
+                    writer.Write(frameFlags);
+                    writer.Write(Utils.Latin1Encoding.GetBytes(frameCodeComponents[1]));
+
+                    writer.Write(StreamUtils.ReverseInt32(frameCodeComponents[2].Length + 4 + 4 + 4));
+                    writer.Write(Utils.Latin1Encoding.GetBytes("name"));
+                    writer.Write(frameFlags);
+                    writer.Write(Utils.Latin1Encoding.GetBytes(frameCodeComponents[2]));
+                }
+            } else
+            {
+                writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+            }
 
             // == METADATA VALUE ==
             frameSizePos2 = writer.BaseStream.Position;
@@ -912,7 +999,7 @@ namespace ATL.AudioData.IO
             {
                 frameSizePos1 = writer.BaseStream.Position;
                 writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
-                writer.Write(Utils.GetLatin1Encoding().GetBytes("covr"));
+                writer.Write(Utils.Latin1Encoding.GetBytes("covr"));
             }
 
             // == METADATA VALUE ==
@@ -945,12 +1032,20 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
 
-            foreach (long l in upperAtoms.Keys)
+            for (int i=0;i<upperAtoms.Count;i++)
             {
-                w.BaseStream.Seek(l, SeekOrigin.Begin);
-                w.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(upperAtoms[l]+deltaSize)));
+                upperAtoms[i] = new ValueInfo(upperAtoms[i].Position, (ulong)((long)upperAtoms[i].Value + deltaSize), upperAtoms[i].NbBytes);
+                w.BaseStream.Seek((long)upperAtoms[i].Position, SeekOrigin.Begin);
+                if (4 == upperAtoms[i].NbBytes)
+                {
+                    w.Write(StreamUtils.ReverseUInt32((uint)upperAtoms[i].Value));
+                }
+                else
+                {
+                    w.Write(StreamUtils.ReverseUInt64(upperAtoms[i].Value));
+                }
             }
-
+            
             return result;
         }
 

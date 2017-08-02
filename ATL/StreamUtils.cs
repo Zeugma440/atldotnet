@@ -76,7 +76,7 @@ namespace ATL
         /// <param name="length">Number of one-byte chars to read</param>
         /// <returns>Array of chars read from the source</returns>
         
-        // TODO : limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.GetLatin1Encoding().GetString(r.ReadBytes)
+        // TODO : limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.Latin1Encoding.GetString(r.ReadBytes)
         public static char[] ReadOneByteChars(BinaryReader r, int length)
         {
             return ReadOneByteChars(r.BaseStream, length);
@@ -233,19 +233,19 @@ namespace ATL
         /// Remove a portion of bytes within the given stream
         /// </summary>
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
-        /// <param name="oldIndex">End offset of the portion of bytes to remove</param>
+        /// <param name="endOffset">End offset of the portion of bytes to remove</param>
         /// <param name="delta">Number of bytes to remove</param>
-        public static void ShortenStream(Stream s, long oldIndex, uint delta) 
+        public static void ShortenStream(Stream s, long endOffset, uint delta) 
         {
             byte[] data = new byte[BUFFERSIZE];
-            long newIndex = oldIndex - delta;
+            long newIndex = endOffset - delta;
             long i = 0;
             int bufSize;
 
-            while (i < s.Length - oldIndex) // Forward loop
+            while (i < s.Length - endOffset) // Forward loop
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, s.Length - oldIndex - i);
-                s.Seek(oldIndex + i, SeekOrigin.Begin);
+                bufSize = (int)Math.Min(BUFFERSIZE, s.Length - endOffset - i);
+                s.Seek(endOffset + i, SeekOrigin.Begin);
                 s.Read(data, 0, bufSize);
                 s.Seek(newIndex + i, SeekOrigin.Begin);
                 s.Write(data, 0, bufSize);
@@ -296,8 +296,32 @@ namespace ATL
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
-        public static Int64 ReverseInt64(UInt64 n)
+        public static ulong ReverseUInt64(ulong n)
         {
+            byte b0;
+            byte b1;
+            byte b2;
+            byte b3;
+            byte b4;
+            byte b5;
+            byte b6;
+            byte b7;
+
+            b0 = (byte) ((n & 0x00000000000000FF) >> 0);
+            b1 = (byte) ((n & 0x000000000000FF00) >> 8);
+            b2 = (byte) ((n & 0x0000000000FF0000) >> 16);
+            b3 = (byte) ((n & 0x00000000FF000000) >> 24);
+            b4 = (byte) ((n & 0x000000FF00000000) >> 32);
+            b5 = (byte) ((n & 0x0000FF0000000000) >> 40);
+            b6 = (byte) ((n & 0x00FF000000000000) >> 48);
+            b7 = (byte) ((n & 0xFF00000000000000) >> 56);
+
+            return (ulong)((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0));
+        }
+
+        public static long ReverseInt64(long n)
+        {
+            /*
             byte b0;
             byte b1;
             byte b2;
@@ -314,9 +338,16 @@ namespace ATL
             b4 = (byte)((n & 0x000000FF00000000) >> 32);
             b5 = (byte)((n & 0x0000FF0000000000) >> 40);
             b6 = (byte)((n & 0x00FF000000000000) >> 48);
-            b7 = (byte)((n & 0xFF00000000000000) >> 56);
+            b7 = (byte)((n & 0xFF00000000000000) >> 56); // <-- type incompatibility issue there
 
             return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
+            */
+
+            // Above code does not work due to 0xFF00000000000000 not being an unsigned long
+            // Below code does work but is 3 times slower
+            byte[] binary = BitConverter.GetBytes(n);
+            Array.Reverse(binary);
+            return BitConverter.ToInt64(binary, 0);
         }
 
         /// <summary>

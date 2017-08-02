@@ -166,6 +166,13 @@ namespace ATL.AudioData
         {
             get;
         }
+        /// <summary>
+        /// Minimal signature that needs to be on the file even if no field is present
+        /// </summary>
+        byte[] CoreSignature
+        {
+            get;
+        }
 
         /// <summary>
         /// Parses the binary data read from the given reader

@@ -425,7 +425,7 @@ namespace ATL.AudioData.IO
 			result.Scale = Data[Index + 119];
 			
             // Vendor ID may not be present
-            result.VendorID = Utils.GetLatin1Encoding().GetString(Data, Index+120, 8);
+            result.VendorID = Utils.Latin1Encoding.GetString(Data, Index+120, 8);
 
             return result;
 		}
@@ -462,7 +462,7 @@ namespace ATL.AudioData.IO
 			VBRData result;
 
             // Check for VBR header at given position  
-            String vbrId = Utils.GetLatin1Encoding().GetString(Data, Index, 4);
+            String vbrId = Utils.Latin1Encoding.GetString(Data, Index, 4);
 
 			if ( VBR_ID_XING == vbrId ) result = GetXingInfo(Index, Data);
             else if (VBR_ID_FHG == vbrId) result = GetFhGInfo(Index, Data);
@@ -536,10 +536,10 @@ namespace ATL.AudioData.IO
 			if ( (Data.Length - Size - 8) < 0 ) Size = Data.Length - 8;
 			for (int i=0; i <= Size; i++)
 			{
-                VendorID = Utils.GetLatin1Encoding().GetString(Data, Data.Length - i - 8, 4);
+                VendorID = Utils.Latin1Encoding.GetString(Data, Data.Length - i - 8, 4);
 				if (VENDOR_ID_LAME == VendorID)
 				{
-                    result = VendorID + Utils.GetLatin1Encoding().GetString(Data, Data.Length - i - 4, 4);
+                    result = VendorID + Utils.Latin1Encoding.GetString(Data, Data.Length - i - 4, 4);
 					break;
 				}
 				else if (VENDOR_ID_GOGO_NEW == VendorID)

@@ -423,7 +423,7 @@ namespace ATL.AudioData.IO
 
             writer.Write(frameFlags);
 
-            writer.Write(Utils.GetLatin1Encoding().GetBytes(frameCode));
+            writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
             byte[] binaryValue = tagEncoding.GetBytes(text);
@@ -449,19 +449,19 @@ namespace ATL.AudioData.IO
 
             writer.Write(frameFlags);
 
-            writer.Write(Utils.GetLatin1Encoding().GetBytes(pictureTypeCode));
+            writer.Write(Utils.Latin1Encoding.GetBytes(pictureTypeCode));
             writer.Write('\0'); // String has to be null-terminated
 
             long dataPos = writer.BaseStream.Position;
             // Description = picture code + 0x2E byte -?- + image type encoded in ISO-8859-1 (derived from mime-type without the first half)
-            writer.Write(Utils.GetLatin1Encoding().GetBytes(pictureTypeCode));
+            writer.Write(Utils.Latin1Encoding.GetBytes(pictureTypeCode));
             writer.Write((byte)0x2E);
             string imageType;
             string[] tmp = mimeType.Split('/');
             imageType = (tmp.Length > 1) ? tmp[1] : tmp[0];
             if ("jpeg".Equals(imageType)) imageType = "jpg";
 
-            writer.Write(Utils.GetLatin1Encoding().GetBytes(imageType)); // Force ISO-8859-1 format for mime-type
+            writer.Write(Utils.Latin1Encoding.GetBytes(imageType)); // Force ISO-8859-1 format for mime-type
             writer.Write('\0'); // String should be null-terminated
 
             writer.Write(pictureData);

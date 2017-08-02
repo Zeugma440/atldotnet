@@ -46,6 +46,7 @@ namespace ATL.test.IO.MetaData
      * TECHNICAL
      * 
      * Exact picture data conservation after tag editing
+     * Files with mdat located before moov
      * 
     */
 
@@ -85,7 +86,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile,1);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_MP4_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();

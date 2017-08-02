@@ -251,7 +251,7 @@ namespace ATL.AudioData
             get { return Utils.ProtectValue(tagData.Conductor); }
             set { tagData.Conductor = value; }
         }
-
+        
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
@@ -279,6 +279,12 @@ namespace ATL.AudioData
         {
             get { return this.pictureTokens; }
         }
+
+        public byte[] CoreSignature
+        {
+            get { return getCoreSignature(); }
+        }
+
 
         protected void addPictureToken(TagData.PIC_TYPE picType)
         {
@@ -424,6 +430,11 @@ namespace ATL.AudioData
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
 
             tagData.Pictures.Add(picInfo);
+        }
+
+        protected virtual byte[] getCoreSignature()
+        {
+            return new byte[0];
         }
 
     }

@@ -105,6 +105,12 @@ namespace ATL.AudioData.IO
         {
             get { return new Dictionary<string, string>();  }
         }
+
+        public byte[] CoreSignature
+        {
+            get { return new byte[0];  }
+        }
+
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return 0;
