@@ -20,7 +20,9 @@ namespace ATL.AudioData.IO
     ///     
     ///     2. LATM and LOAS/LATM support is missing
     ///     
-    ///     3. Files with their 'mdat' atom located before their 'moov' atom have not been tested
+    ///     3. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
+    ///     
+    ///     4. MP4 files with multiple 'trak' are not supported yet. Hence, when the audio track is not located first, it is not detected properly.
     /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
