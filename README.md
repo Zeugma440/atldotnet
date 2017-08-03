@@ -75,7 +75,7 @@ W= Write (work in progress in the IO branch; ATL only writes using the latest st
 
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
-Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R | R | R | R
+Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R |  | R
 Digital Theatre System | .DTS |  |  |  | 
 Direct Stream Digital | .DSD, .DSF |  | R |  | 
