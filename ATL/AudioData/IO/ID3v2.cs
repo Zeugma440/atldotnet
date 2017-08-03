@@ -508,7 +508,7 @@ namespace ATL.AudioData.IO
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
                          * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
-                        strData = readRatingInPopularityMeter(SourceFile, Encoding.GetEncoding("ISO-8859-1")).ToString();
+                        strData = readRatingInPopularityMeter(SourceFile, Utils.Latin1Encoding).ToString();
                     }
                     else if ("TXX".Equals(Frame.ID.Substring(0,3)))
                     {

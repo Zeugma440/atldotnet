@@ -173,7 +173,7 @@ namespace ATL.AudioData.IO
             {
                 frameDataSize = SourceFile.ReadInt32();
                 frameFlags = SourceFile.ReadInt32();
-                frameName = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
+                frameName = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
                 valuePosition = fs.Position;
 
@@ -206,7 +206,7 @@ namespace ATL.AudioData.IO
                         //    * The frame name
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Encoding.GetEncoding("ISO-8859-1")); 
+                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); 
                         ImageFormat imgFormat = Utils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
 
                         MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
