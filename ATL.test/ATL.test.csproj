@@ -100,8 +100,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
-    <Content Include="Resources\adif.aac" />
-    <Content Include="Resources\adts.aac" />
+    <Content Include="Resources\adif_CBR88_8s.aac" />
+    <Content Include="Resources\adts_CBR88_8s.aac" />
     <Content Include="Resources\APE.mp3" />
     <Content Include="Resources\empty.m4a" />
     <Content Include="Resources\empty.mp3" />
@@ -115,6 +115,10 @@
     <Content Include="Resources\ID3v2.2 UTF16.mp3" />
     <Content Include="Resources\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\id3v2.4_UTF8.mp3" />
+    <Content Include="Resources\latmMcp0_CBR88_8s.aac" />
+    <Content Include="Resources\latmMcp1_CBR88_8s.aac" />
+    <Content Include="Resources\loasLatm_CBR88_8s.aac" />
+    <Content Include="Resources\mdat_before_moov.m4a" />
     <Content Include="Resources\mp4.m4a" />
     <Content Include="Resources\pic1.jpg" />
     <Content Include="Resources\pic2.jpg" />

@@ -17,6 +17,10 @@ namespace ATL.AudioData.IO
     /// 
     ///     Current implementation doesn't use the extra space allocated by 'free' padding frames, and pulls/pushes the 'mdat' frame regardless of the size of the edited data.
     ///     A faster, more optimized way of doing things would be to use padding space as far as edited data size fits into it, thus preventing the entire file to be rewritten.
+    ///     
+    ///     2. LATM and LOAS/LATM support is missing
+    ///     
+    ///     3. Files with their 'mdat' atom located before their 'moov' atom have not been tested
     /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
