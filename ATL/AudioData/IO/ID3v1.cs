@@ -325,12 +325,15 @@ namespace ATL.AudioData.IO
             w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber),Byte.MaxValue));
 
             byte genre = 0;
-            for (byte i = 0; i < MAX_MUSIC_GENRES; i++)
+            if (tag.Genre != null)
             {
-                if (tag.Genre.ToUpper().Equals(MusicGenre[i].ToUpper()))
+                for (byte i = 0; i < MAX_MUSIC_GENRES; i++)
                 {
-                    genre = i;
-                    break;
+                    if (tag.Genre.ToUpper().Equals(MusicGenre[i].ToUpper()))
+                    {
+                        genre = i;
+                        break;
+                    }
                 }
             }
             w.Write(genre);
