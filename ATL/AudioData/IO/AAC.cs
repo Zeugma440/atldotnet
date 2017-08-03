@@ -10,6 +10,14 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Advanced Audio Coding files manipulation (extensions : .AAC, .MP4, .M4A)
+    /// 
+    /// Implementation notes
+    /// 
+    ///     1. Tag edition optimization through the use of padding frames
+    /// 
+    ///     Current implementation doesn't use the extra space allocated by 'free' padding frames, and pulls/pushes the 'mdat' frame regardless of the size of the edited data.
+    ///     A faster, more optimized way of doing things would be to use padding space as far as edited data size fits into it, thus preventing the entire file to be rewritten.
+    /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
     {

@@ -13,12 +13,12 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for ID3v2.2-2.4 tags manipulation
     /// 
-    /// Implementation noted
+    /// Implementation notes
     /// 
-    /// 1. Extended header tags
+    ///     1. Extended header tags
     /// 
-    /// Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
-    /// implementation of decoding extended header data is still theoretical
+    ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
+    ///     implementation of decoding extended header data is still theoretical
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
