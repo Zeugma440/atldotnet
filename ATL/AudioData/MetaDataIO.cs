@@ -27,7 +27,6 @@ namespace ATL.AudioData
         protected TagData tagData;
 
         private IDictionary<TagData.PictureInfo, int> picturePositions;
-
         protected IList<TagData.PictureInfo> pictureTokens;
 
 
@@ -285,6 +284,11 @@ namespace ATL.AudioData
             get { return getCoreSignature(); }
         }
 
+        public byte FieldCodeLengthLimit
+        {
+            get { return getFieldCodeLengthLimit(); }
+        }
+
 
         protected void addPictureToken(TagData.PIC_TYPE picType)
         {
@@ -350,6 +354,30 @@ namespace ATL.AudioData
             long oldTagSize;
             long newTagSize;
             long delta = long.MaxValue;
+
+            // Contraint-check on non-supported values
+            foreach(TagData.PictureInfo picInfo in tag.Pictures)
+            {
+                if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
+                {
+                    if (Utils.ProtectValue(picInfo.NativePicCodeStr).Length > FieldCodeLengthLimit)
+                    {
+                        throw new NotSupportedException("Field code length limit is " + FieldCodeLengthLimit + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                    }
+                }
+            }
+            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            {
+                if (fieldInfo.TagType.Equals(getImplementedTagType()))
+                {
+                    if (Utils.ProtectValue(fieldInfo.NativeFieldCode).Length > FieldCodeLengthLimit)
+                    {
+                        throw new NotSupportedException("Field code length limit is " + FieldCodeLengthLimit + "; detected field '" + Utils.ProtectValue(fieldInfo.NativeFieldCode) + "' is " + Utils.ProtectValue(fieldInfo.NativeFieldCode).Length + " characters long and cannot be written");
+                    }
+                }
+            }
+
+
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
@@ -435,6 +463,11 @@ namespace ATL.AudioData
         protected virtual byte[] getCoreSignature()
         {
             return new byte[0];
+        }
+
+        protected virtual byte getFieldCodeLengthLimit()
+        {
+            return byte.MaxValue;
         }
 
     }

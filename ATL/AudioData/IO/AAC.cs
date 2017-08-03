@@ -622,8 +622,16 @@ namespace ATL.AudioData.IO
                         atomHeader += ":" + Utils.Latin1Encoding.GetString(Source.ReadBytes((int)metadataSize - 8 - 4));
                     }
 
-                    metadataSize = lookForMP4Atom(Source, "data");
-                    atomPosition = Source.BaseStream.Position-8;
+                    // Having a 'data' header here means we're still on the same field, with a 2nd value
+                    // (e.g. multiple embedded pictures)
+                    if (!"data".Equals(atomHeader))
+                    {
+                        metadataSize = lookForMP4Atom(Source, "data");
+                        atomPosition = Source.BaseStream.Position - 8;
+                    } else
+                    {
+                        metadataSize = atomSize;
+                    }
 
                     // We're only looking for the last byte of the flag
                     Source.BaseStream.Seek(3, SeekOrigin.Current);
@@ -662,7 +670,7 @@ namespace ATL.AudioData.IO
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);
                             StreamUtils.CopyStream(Source.BaseStream, mem, metadataSize - 16);
-                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_NATIVE, dataClass, picturePosition); // TODO !
+                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_NATIVE, dataClass, picturePosition);
                             mem.Close();
                         }
                         else
@@ -816,6 +824,11 @@ namespace ATL.AudioData.IO
         protected override byte[] getCoreSignature()
         {
             return new byte[] { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
+        }
+
+        protected override byte getFieldCodeLengthLimit()
+        {
+            return 4;
         }
 
         protected override bool write(TagData tag, BinaryWriter w)

@@ -223,7 +223,7 @@ namespace ATL.test.IO.MetaData
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
 
-/* NOT POSSIBLE YET mainly due to tag order and tag name (e.g. "Disc" vs. "Discnumber") differences
+/* NOT POSSIBLE YET mainly due to tag order and tag name (e.g. "DISC" becoming "DISCNUMBER") differences
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 

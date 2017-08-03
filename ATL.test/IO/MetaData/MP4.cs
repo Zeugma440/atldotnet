@@ -166,7 +166,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_MP4_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -189,23 +189,25 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile, 3);
+            readExistingTagsOnFile(ref theFile, 2);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
+            byte nbFound = 0;
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Back))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic) && (1 == nbFound))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
                     Assert.AreEqual(picture.Width, 900);
-                    break;
                 }
+                nbFound++;
             }
 
+            Assert.AreEqual(2, nbFound);
 
             // Remove the additional supported field
             theTag = new TagData();
@@ -227,26 +229,26 @@ namespace ATL.test.IO.MetaData
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
 
-/* NOT POSSIBLE YET mainly due to tag order and tag name (e.g. "Disc" vs. "Discnumber") differences
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
+            /* NOT POSSIBLE YET mainly due to tag order and tag naming (e.g. "gnre" becoming "©gen") differences
+                        FileInfo originalFileInfo = new FileInfo(location);
+                        FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
+                        Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
 
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+                        string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                        string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-*/
+                        Assert.IsTrue(originalMD5.Equals(testMD5));
+            */
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_MP4_Unsupported_Empty()
         {
             // Source : tag-free MP3
-            String testFileLocation = TestUtils.GetTempTestFile("mp4.m4a");
+            String testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
@@ -260,10 +262,10 @@ namespace ATL.test.IO.MetaData
             // Add new unsupported fields
             TagData theTag = new TagData();
             theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TES2", "This is another test 父"));
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_APE, "Hey");
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, "Hey");
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
             theTag.Pictures.Add(picInfo);
             picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, "Ho");
@@ -271,7 +273,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
 
@@ -283,15 +285,15 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST"));
             Assert.AreEqual("This is a test 父", theFile.NativeTag.AdditionalFields["TEST"]);
 
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TES2"));
+            Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TES2"]);
 
             Assert.AreEqual(2, pictures.Count);
             byte found = 0;
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Hey"))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -299,7 +301,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Generic) && (1==found))  // No custom nor categorized picture type in MP4
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -318,7 +320,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, "Hey");
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.Generic, 1);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -333,8 +335,8 @@ namespace ATL.test.IO.MetaData
 
             // Additional removed field
             Assert.AreEqual(1, theFile.NativeTag.AdditionalFields.Count);
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TES2"));
+            Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TES2"]);
 
             // Pictures
             Assert.AreEqual(1, pictures.Count);
@@ -343,7 +345,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic) && (0==found))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -386,7 +388,7 @@ namespace ATL.test.IO.MetaData
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
                 Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                if (pic.Key.Equals(TagData.PIC_TYPE.Generic) && (0 == nbFound)) // Supported picture = first picture
                 {
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
