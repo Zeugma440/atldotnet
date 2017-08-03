@@ -279,14 +279,14 @@ namespace ATL.AudioData
             get { return this.pictureTokens; }
         }
 
-        public byte[] CoreSignature
+        public virtual byte[] CoreSignature
         {
-            get { return getCoreSignature(); }
+            get { return new byte[0]; }
         }
 
-        public byte FieldCodeLengthLimit
+        public virtual byte FieldCodeFixedLength
         {
-            get { return getFieldCodeLengthLimit(); }
+            get { return 0; }
         }
 
 
@@ -356,23 +356,26 @@ namespace ATL.AudioData
             long delta = long.MaxValue;
 
             // Contraint-check on non-supported values
-            foreach(TagData.PictureInfo picInfo in tag.Pictures)
+            if (FieldCodeFixedLength > 0)
             {
-                if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
+                foreach (TagData.PictureInfo picInfo in tag.Pictures)
                 {
-                    if (Utils.ProtectValue(picInfo.NativePicCodeStr).Length > FieldCodeLengthLimit)
+                    if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
                     {
-                        throw new NotSupportedException("Field code length limit is " + FieldCodeLengthLimit + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                        if (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength)
+                        {
+                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                        }
                     }
                 }
-            }
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
-            {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()))
+                foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
-                    if (Utils.ProtectValue(fieldInfo.NativeFieldCode).Length > FieldCodeLengthLimit)
+                    if (fieldInfo.TagType.Equals(getImplementedTagType()))
                     {
-                        throw new NotSupportedException("Field code length limit is " + FieldCodeLengthLimit + "; detected field '" + Utils.ProtectValue(fieldInfo.NativeFieldCode) + "' is " + Utils.ProtectValue(fieldInfo.NativeFieldCode).Length + " characters long and cannot be written");
+                        if (Utils.ProtectValue(fieldInfo.NativeFieldCode).Length != FieldCodeFixedLength)
+                        {
+                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(fieldInfo.NativeFieldCode) + "' is " + Utils.ProtectValue(fieldInfo.NativeFieldCode).Length + " characters long and cannot be written");
+                        }
                     }
                 }
             }
@@ -459,16 +462,5 @@ namespace ATL.AudioData
 
             tagData.Pictures.Add(picInfo);
         }
-
-        protected virtual byte[] getCoreSignature()
-        {
-            return new byte[0];
-        }
-
-        protected virtual byte getFieldCodeLengthLimit()
-        {
-            return byte.MaxValue;
-        }
-
     }
 }

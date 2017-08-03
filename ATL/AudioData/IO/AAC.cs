@@ -112,7 +112,7 @@ namespace ATL.AudioData.IO
         }
         public String HeaderType // Header type name
         {
-            get { return this.FGetHeaderType(); }
+            get { return this.getHeaderType(); }
         }
         public byte MPEGVersionID // MPEG version code
         {
@@ -120,7 +120,7 @@ namespace ATL.AudioData.IO
         }
         public String MPEGVersion // MPEG version name
         {
-            get { return this.FGetMPEGVersion(); }
+            get { return this.getMPEGVersion(); }
         }
         public byte ProfileID // Profile code
         {
@@ -128,7 +128,7 @@ namespace ATL.AudioData.IO
         }
         public String Profile // Profile name
         {
-            get { return this.FGetProfile(); }
+            get { return this.getProfile(); }
         }
         public byte Channels // Number of channels
         {
@@ -140,11 +140,11 @@ namespace ATL.AudioData.IO
         }
         public String BitRateType // Bit rate type name
         {
-            get { return this.FGetBitRateType(); }
+            get { return this.getBitRateType(); }
         }
         public bool Valid // true if data valid
         {
-            get { return this.FIsValid(); }
+            get { return this.isValid(); }
         }
 
         public bool IsVBR
@@ -165,7 +165,7 @@ namespace ATL.AudioData.IO
         }
         public double Duration
         {
-            get { return FGetDuration(); }
+            get { return getDuration(); }
         }
         public int SampleRate
         {
@@ -174,6 +174,22 @@ namespace ATL.AudioData.IO
         public string FileName
         {
             get { return fileName; }
+        }
+
+        public override byte[] CoreSignature
+        {
+            get
+            {
+                return new byte[] { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
+            }
+        }
+
+        public override byte FieldCodeFixedLength
+        {
+            get
+            {
+                return 4;
+            }
         }
 
 
@@ -250,7 +266,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Get header type name
-        String FGetHeaderType()
+        private string getHeaderType()
         {
             return AAC_HEADER_TYPE[FHeaderTypeID];
         }
@@ -258,7 +274,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Get MPEG version name
-        String FGetMPEGVersion()
+        private string getMPEGVersion()
         {
             return AAC_MPEG_VERSION[FMPEGVersionID];
         }
@@ -266,7 +282,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Get profile name
-        String FGetProfile()
+        private string getProfile()
         {
             return AAC_PROFILE[FProfileID];
         }
@@ -274,7 +290,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Get bit rate type name
-        String FGetBitRateType()
+        private string getBitRateType()
         {
             return AAC_BITRATE_TYPE[FBitrateTypeID];
         }
@@ -282,7 +298,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Calculate duration time
-        double FGetDuration()
+        private double getDuration()
         {
             if (FHeaderTypeID == AAC_HEADER_TYPE_MP4)
             {
@@ -300,7 +316,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Check for file correctness
-        bool FIsValid()
+        private bool isValid()
         {
             return ((FHeaderTypeID != AAC_HEADER_TYPE_UNKNOWN) &&
                 (FChannels > 0) && (sampleRate > 0) && (bitrate > 0));
@@ -309,7 +325,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Get header type of the file
-        byte FRecognizeHeaderType(BinaryReader Source)
+        private byte recognizeHeaderType(BinaryReader Source)
         {
             byte result;
             byte[] header;
@@ -450,7 +466,7 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.PrepareForWriting) upperAtoms = new List<ValueInfo>();
 
-            Source.BaseStream.Seek(0, SeekOrigin.Begin);
+            Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
             atomSize = StreamUtils.ReverseUInt32(Source.ReadUInt32());
@@ -790,7 +806,7 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             ResetData();
-            FHeaderTypeID = FRecognizeHeaderType(source);
+            FHeaderTypeID = recognizeHeaderType(source);
             // Read header data
             if (AAC_HEADER_TYPE_ADIF == FHeaderTypeID) readADIF(source);
             else if (AAC_HEADER_TYPE_ADTS == FHeaderTypeID) readADTS(source);
@@ -819,16 +835,6 @@ namespace ATL.AudioData.IO
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_NATIVE;
-        }
-
-        protected override byte[] getCoreSignature()
-        {
-            return new byte[] { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
-        }
-
-        protected override byte getFieldCodeLengthLimit()
-        {
-            return 4;
         }
 
         protected override bool write(TagData tag, BinaryWriter w)
@@ -1039,17 +1045,20 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
 
-            for (int i=0;i<upperAtoms.Count;i++)
+            if (upperAtoms != null)
             {
-                upperAtoms[i] = new ValueInfo(upperAtoms[i].Position, (ulong)((long)upperAtoms[i].Value + deltaSize), upperAtoms[i].NbBytes);
-                w.BaseStream.Seek((long)upperAtoms[i].Position, SeekOrigin.Begin);
-                if (4 == upperAtoms[i].NbBytes)
+                for (int i = 0; i < upperAtoms.Count; i++)
                 {
-                    w.Write(StreamUtils.ReverseUInt32((uint)upperAtoms[i].Value));
-                }
-                else
-                {
-                    w.Write(StreamUtils.ReverseUInt64(upperAtoms[i].Value));
+                    upperAtoms[i] = new ValueInfo(upperAtoms[i].Position, (ulong)((long)upperAtoms[i].Value + deltaSize), upperAtoms[i].NbBytes);
+                    w.BaseStream.Seek((long)upperAtoms[i].Position, SeekOrigin.Begin);
+                    if (4 == upperAtoms[i].NbBytes)
+                    {
+                        w.Write(StreamUtils.ReverseUInt32((uint)upperAtoms[i].Value));
+                    }
+                    else
+                    {
+                        w.Write(StreamUtils.ReverseUInt64(upperAtoms[i].Value));
+                    }
                 }
             }
             
