@@ -56,6 +56,7 @@
     <Compile Include="AudioReaders\AudioDataTest.cs" />
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
+    <Compile Include="IO\AudioData\AudioDataTest.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />
     <Compile Include="IO\MetaData\APE.cs" />
     <Compile Include="Misc\FactoryTest.cs" />
@@ -72,9 +73,7 @@
     <Compile Include="FileFinder.cs" />
     <Compile Include="Misc\StreamUtilsTest.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="IO\AudioData\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ATL\ATL.csproj">
       <Project>{27c03311-c017-4e99-8b35-0005102b2dac}</Project>

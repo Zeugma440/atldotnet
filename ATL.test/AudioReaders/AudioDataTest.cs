@@ -32,80 +32,86 @@ namespace ATL.test
             System.Console.WriteLine(codecFamily == theReader.CodecFamily);
         }
 
-        [TestMethod]
+//        [TestMethod]
+        public void TestMP3Audio()
+        {
+            testGenericAudio("01 - Title Screen.mp3", 4, 128, 44100, true, AudioReaderFactory.CF_LOSSY);
+        }
+
+        //[TestMethod]
         public void TestFLACAudio()
         {
             testGenericAudio("mustang_12kHz.flac", 5, 694, 44100, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestDSF_DSDAudio()
         {
             testGenericAudio("Yeah.dsf", 4, 5953, 2822400, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestDSF_PSFAudio()
         {
             testGenericAudio("adgpp_PLAY_01_05.dsf", 26, 0, 0, false, AudioReaderFactory.CF_SEQ_WAV, 1);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestOpusAudio()
         {
             testGenericAudio("01_2_32.opus", 31, 33, 48000, true, AudioReaderFactory.CF_LOSSY);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestVorbisAudio()
         {
             testGenericAudio("Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioReaderFactory.CF_LOSSY);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestTakAudio()
         {
             testGenericAudio("003 BlackBird.tak", 6, 634, 44100, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestModAudio()
         {
             testGenericAudio("4-mat - Thala-Music (Sanxion).mod", 330, 0, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestS3MAudio()
         {
             testGenericAudio("2ND_PM.S3M", 405, 2, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestXMAudio()
         {
             testGenericAudio("v_chrtrg.xm", 261, 2, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestITAudio()
         {
             testGenericAudio("sommix.it", 476, 1, 0, false, AudioReaderFactory.CF_SEQ_WAV);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestM4AAudio()
         {
             testGenericAudio("mp4.m4a", 14, 75, 48000, true, AudioReaderFactory.CF_LOSSY);
         }
 
 /*
-        [TestMethod]
+        //[TestMethod]
         public void TestAIFFAudio()
         {
             testGenericAudio("M1F1-int32-AFsp.aif", 3, 512, 8000, false, AudioReaderFactory.CF_LOSSLESS);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestAIFCAudio()
         {
             testGenericAudio("M1F1-AlawC-AFsp_tagged.aif", 3, 128, 8000, false, AudioReaderFactory.CF_LOSSY);

@@ -699,5 +699,29 @@ namespace ATL
 
             return found;
         }
+
+        /// <summary>
+        /// Reads the given number of bits from the given position and converts it to an unsigned int32
+        /// according to big-endian convention
+        /// 
+        /// NB : reader position _always_ progresses by 4, no matter how many bits are needed
+        /// </summary>
+        /// <param name="source">BinaryReader to read the data from</param>
+        /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning) </param>
+        /// <param name="bitCount">Number of bits to read</param>
+        /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
+        public static uint ReadBits(BinaryReader source, int bitPosition, int bitCount)
+        {
+            if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
+            byte[] buffer = new byte[4];
+
+            // Read a number of bits from file at the given position
+            source.BaseStream.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
+            buffer = source.ReadBytes(4);
+            uint result = (uint)((buffer[0] << 24) + (buffer[1] << 16) + (buffer[2] << 8) + buffer[3]);
+            result = (result << (bitPosition % 8)) >> (32 - bitCount);
+
+            return result;
+        }
     }
 }
