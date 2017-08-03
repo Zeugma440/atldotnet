@@ -257,7 +257,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return FGetBitRate(); }
+            get { return FGetBitRate() / 1000.0; }
         }
         public double Duration
         {
@@ -585,7 +585,7 @@ namespace ATL.AudioData.IO
 			// Get bit rate, calculate average bit rate if VBR header found
 			if ((FVBR.Found) && (FVBR.Frames > 0))
 				return Math.Round(((double)FVBR.Bytes / FVBR.Frames - GetPadding(HeaderFrame)) *
-					GetSampleRate(HeaderFrame) / GetCoefficient(HeaderFrame));
+					(double)GetSampleRate(HeaderFrame) / GetCoefficient(HeaderFrame));
 			else
 				return GetBitRate(HeaderFrame) * 1000;
 		}
@@ -635,11 +635,11 @@ namespace ATL.AudioData.IO
 			// Calculate song duration
 			if (HeaderFrame.Found)
 				if ((FVBR.Found) && (FVBR.Frames > 0))
-					return FVBR.Frames * GetCoefficient(HeaderFrame) * 8 / GetSampleRate(HeaderFrame);
+					return FVBR.Frames * GetCoefficient(HeaderFrame) * 8.0 / GetSampleRate(HeaderFrame);
 				else
 				{
                     long MPEGSize = sizeInfo.FileSize - sizeInfo.ID3v2Size - sizeInfo.ID3v1Size - sizeInfo.APESize;
-                    return (MPEGSize - HeaderFrame.Position) / GetBitRate(HeaderFrame) / 1000 * 8;
+                    return (MPEGSize - HeaderFrame.Position) / GetBitRate(HeaderFrame) / 1000.0 * 8;
 				}
 			else
 				return 0;
