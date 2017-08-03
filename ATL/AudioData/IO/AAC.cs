@@ -155,7 +155,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate; }
+            get { return bitrate/1000.0; }
         }
         public double Duration
         {
@@ -303,7 +303,7 @@ namespace ATL.AudioData.IO
                 if (0 == bitrate)
                     return 0;
                 else
-                    return 8 * (sizeInfo.FileSize - sizeInfo.ID3v2Size) / bitrate;
+                    return 8.0 * (sizeInfo.FileSize - sizeInfo.ID3v2Size) / bitrate;
             }
         }
 
