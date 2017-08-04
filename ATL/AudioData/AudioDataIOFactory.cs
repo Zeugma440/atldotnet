@@ -225,6 +225,9 @@ namespace ATL.AudioData
                 case CID_AAC:
                     theDataReader = new IO.AAC(path);
                     break;
+                case CID_WMA:
+                    theDataReader = new IO.WMA(path);
+                    break;
 
                 /*
             case CID_OGG :		
@@ -241,10 +244,6 @@ namespace ATL.AudioData
 
             case CID_APE :		
                 theDataReader = new IO.TMonkey();
-                break;
-
-            case CID_WMA :		
-                theDataReader = new IO.TWMA();
                 break;
 
             case CID_MIDI :		

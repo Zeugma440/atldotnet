@@ -558,7 +558,7 @@ namespace ATL.AudioData.IO
 
                         byte picCode = SourceFile.ReadByte();
                         // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                        TagData.PIC_TYPE picType = decodeID3v2PictureType(picCode);
+                        TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
                         int picturePosition;
                         if (picType.Equals(TagData.PIC_TYPE.Unsupported))
@@ -780,7 +780,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : encodeID3v2PictureType(picInfo.PicType), "");
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -1122,7 +1122,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static TagData.PIC_TYPE decodeID3v2PictureType(int picCode)
+        public static TagData.PIC_TYPE DecodeID3v2PictureType(int picCode)
         {
             if (0 == picCode) return TagData.PIC_TYPE.Generic;      // Spec calls it "Other"
             else if (3 == picCode) return TagData.PIC_TYPE.Front;
@@ -1131,7 +1131,7 @@ namespace ATL.AudioData.IO
             else return TagData.PIC_TYPE.Unsupported;
         }
 
-        private static byte encodeID3v2PictureType(TagData.PIC_TYPE picCode)
+        public static byte EncodeID3v2PictureType(TagData.PIC_TYPE picCode)
         {
             if (TagData.PIC_TYPE.Front.Equals(picCode)) return 3;
             else if (TagData.PIC_TYPE.Back.Equals(picCode)) return 4;

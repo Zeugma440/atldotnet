@@ -84,6 +84,7 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
         private int sampleRate;
+
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
 
@@ -738,7 +739,7 @@ namespace ATL.AudioData.IO
         {
             byte supportedMetaId = 255;
 
-            // Finds the ATL field identifier according to the ID3v2 version
+            // Finds the ATL field identifier
             if (frameMapping_mp4.ContainsKey(ID)) supportedMetaId = frameMapping_mp4[ID];
 
             TagData.MetaFieldInfo fieldInfo;
@@ -750,7 +751,7 @@ namespace ATL.AudioData.IO
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
                 fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
                 }
