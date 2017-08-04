@@ -57,6 +57,7 @@
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\MetaData\WMA.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />
     <Compile Include="IO\MetaData\APE.cs" />
     <Compile Include="Misc\FactoryTest.cs" />
@@ -109,6 +110,7 @@
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\duck hunt.wav" />
+    <Content Include="Resources\empty.wma" />
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\ID3v2.2 ANSI charset only.mp3" />
@@ -128,6 +130,7 @@
     <Content Include="Resources\playlist_simple.m3u" />
     <Content Include="Resources\ROQ.MID" />
     <Content Include="Resources\TRANSIT1.MID" />
+    <Content Include="Resources\wma.wma" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
