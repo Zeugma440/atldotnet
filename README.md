@@ -25,7 +25,7 @@ It is currently being tested extensively, and will be merged with the main branc
 
 * Tagging standards covered : ID3v1, ID3v2, APE
 
-* Audio formats covered : MP3
+* Audio formats covered : MP3, MP4/AAC/M4A
 
 
 **Will it require changes to change the way my program invoke ATL ?**
