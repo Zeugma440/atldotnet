@@ -729,7 +729,7 @@ namespace ATL.AudioData.IO
 
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
-            Source.BaseStream.Seek(0, SeekOrigin.Begin);
+            Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             uint mdatSize = lookForMP4Atom(Source, "mdat"); // === Audio binary data
             bitrate = (int)Math.Round(mdatSize * 8 / duration, 0);
         }

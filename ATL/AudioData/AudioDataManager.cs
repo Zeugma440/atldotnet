@@ -166,7 +166,7 @@ namespace ATL.AudioData
                             long deltaTagSize = theMetaIO.Write(r, w, theTag);
                             if (deltaTagSize < long.MaxValue)
                             {
-                                if (deltaTagSize != 0)
+                                if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
                                 {
                                     result = audioDataIO.RewriteFileSizeInHeader(w, (int)deltaTagSize);
                                 }
@@ -203,7 +203,7 @@ namespace ATL.AudioData
                 using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader reader = new BinaryReader(fs))
                 {
-                    result = read(reader);
+                    result = read(reader,null,false,true);
 
                     long tagOffset = -1;
                     int tagSize = 0;
@@ -245,7 +245,7 @@ namespace ATL.AudioData
                                 fs.Position = tagOffset;
                                 writer.Write(coreSignature);
                             }
-                            result = audioDataIO.RewriteFileSizeInHeader(writer, -tagSize+coreSignature.Length);
+                            if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteFileSizeInHeader(writer, -tagSize + coreSignature.Length);
                         }
                     }
                 }
@@ -261,13 +261,14 @@ namespace ATL.AudioData
             return result;
         }
 
-        private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
+        private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false, bool prepareForWriting = false)
         {
             bool result = false;
             sizeInfo.ResetData();
 
             sizeInfo.FileSize = source.BaseStream.Length;
             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
+            readTagParams.PrepareForWriting = prepareForWriting;
 
             LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read begin");
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))

@@ -32,6 +32,9 @@ namespace ATL.test.IO.MetaData
      *  Remove single supported picture (from normalized type and index)
      *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
      *
+     *  4. Technical
+     *  
+     *  Cohabitation with ID3v1 and APE
      */
 
     /*
@@ -57,25 +60,12 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class ID3v2
+    public class ID3v2 : MetaIOTest
     {
-        protected class PictureInfo
+        public ID3v2()
         {
-            public Image Picture;
-            public byte NativeCode;
-
-            public PictureInfo(Image picture, object code)
-            {
-                Picture = picture;
-                if (code is byte) NativeCode = (byte)code;
-            }
-        }
-
-        private IList<KeyValuePair<TagData.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<TagData.PIC_TYPE, PictureInfo>>();
-
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
+            emptyFile = "empty.mp3";
+            notEmptyFile = "ID3v2.2 UTF16.mp3";
         }
 
         [TestMethod]
@@ -339,7 +329,7 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.Key.Equals(TagData.PIC_TYPE.Back))
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x04);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x04);
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
@@ -433,7 +423,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0A))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0A))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -441,7 +431,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -485,7 +475,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -500,6 +490,18 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_ID3v1()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_ID3V1);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_APE()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_APE);
         }
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
@@ -534,7 +536,7 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x03);
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 150);
@@ -542,7 +544,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x09);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x09);
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);

@@ -31,6 +31,9 @@ namespace ATL.test.IO.MetaData
      *  
      *  Remove single supported picture (from normalized type and index)
      *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
+     *  
+     *  4. Technical
+     *  
      *  Cohabitation with ID3v1/ID3v2/APE (=> no impact on MP4 internals)
      *
      */
@@ -52,25 +55,12 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class MP4
+    public class MP4 : MetaIOTest
     {
-        protected class PictureInfo
+        public MP4()
         {
-            public Image Picture;
-            public string NativeCode;
-
-            public PictureInfo(Image picture, object code)
-            {
-                Picture = picture;
-                if (code is string) NativeCode = (string)code;
-            }
-        }
-
-        private IList<KeyValuePair<TagData.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<TagData.PIC_TYPE, PictureInfo>>();
-
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
+            emptyFile = "empty.m4a";
+            notEmptyFile = "mp4.m4a";
         }
 
 
@@ -363,172 +353,21 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_ID3v2()
+        public void TagIO_RW_MP4_ID3v1()
         {
-            ConsoleLogger log = new ConsoleLogger();
-
-            // Source : tag-free M4A
-            string location = TestUtils.GetResourceLocationRoot() + "empty.m4a";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
-
-            // Check that it is indeed tag-free
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
-
-            // Construct a new tag with the most basic options (no un supported fields, no pictures)
-            TagData theTag = new TagData();
-            theTag.Title = "Test !!";
-            theTag.Album = "Album";
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
-
-            // This also tests if physical data can still be read (i.e. MP4 structure has not been scrambled by the apparition of the non-native tag)
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
-
-            Assert.AreEqual("Test !!", theFile.ID3v2.Title);
-            Assert.AreEqual("Album", theFile.ID3v2.Album);
-
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V2));
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsFalse(theFile.ID3v2.Exists);
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
-
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_ID3v1()
+        public void TagIO_RW_MP4_ID3v2()
         {
-            ConsoleLogger log = new ConsoleLogger();
-
-            // Source : tag-free M4A
-            string location = TestUtils.GetResourceLocationRoot() + "empty.m4a";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
-
-            // Check that it is indeed tag-free
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v1);
-            Assert.IsFalse(theFile.ID3v1.Exists);
-
-
-            // Construct a new tag with the most basic options (no un supported fields, no pictures)
-            TagData theTag = new TagData();
-            theTag.Title = "Test !!";
-            theTag.Album = "Album";
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V1));
-
-            // This also tests if physical data can still be read (i.e. MP4 structure has not been scrambled by the apparition of the non-native tag)
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v1);
-            Assert.IsTrue(theFile.ID3v1.Exists);
-
-            Assert.AreEqual("Test !!", theFile.ID3v1.Title);
-            Assert.AreEqual("Album", theFile.ID3v1.Album);
-
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_ID3V1));
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.ID3v1);
-            Assert.IsFalse(theFile.ID3v1.Exists);
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
-
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-
-
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
         }
 
         [TestMethod]
         public void TagIO_RW_MP4_APE()
         {
-            ConsoleLogger log = new ConsoleLogger();
-
-            // Source : tag-free M4A
-            string location = TestUtils.GetResourceLocationRoot() + "empty.m4a";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
-
-            // Check that it is indeed tag-free
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.APEtag);
-            Assert.IsFalse(theFile.APEtag.Exists);
-
-
-            // Construct a new tag with the most basic options (no un supported fields, no pictures)
-            TagData theTag = new TagData();
-            theTag.Title = "Test !!";
-            theTag.Album = "Album";
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_APE));
-
-            // This also tests if physical data can still be read (i.e. MP4 structure has not been scrambled by the apparition of the non-native tag)
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.APEtag);
-            Assert.IsTrue(theFile.APEtag.Exists);
-
-            Assert.AreEqual("Test !!", theFile.APEtag.Title);
-            Assert.AreEqual("Album", theFile.APEtag.Album);
-
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_APE));
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.APEtag);
-            Assert.IsFalse(theFile.APEtag.Exists);
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
-
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-
-
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
         }
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)

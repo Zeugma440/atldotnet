@@ -31,6 +31,10 @@ namespace ATL.test.IO.MetaData
      *  
      *  Remove single supported picture (from normalized type and index)
      *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
+     *  
+     *  4. Technical
+     *  
+     *  Cohabitation with ID3v2 and ID3v1
      *
      */
 
@@ -50,25 +54,12 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class APE
+    public class APE : MetaIOTest
     {
-        protected class PictureInfo
+        public APE()
         {
-            public Image Picture;
-            public string NativeCode;
-
-            public PictureInfo(Image picture, object code)
-            {
-                Picture = picture;
-                if (code is string) NativeCode = (string)code;
-            }
-        }
-
-        private IList<KeyValuePair<TagData.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<TagData.PIC_TYPE, PictureInfo>>();
-
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
+            emptyFile = "empty.mp3";
+            notEmptyFile = "APE.mp3";
         }
 
 
@@ -76,7 +67,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_APE() // My deepest apologies for this dubious method name
         {
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "APE.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             readExistingTagsOnFile(ref theFile);
@@ -88,8 +79,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : tag-free MP3
-            string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
+            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
@@ -168,7 +159,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile("APE.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
             // Add a new supported field and a new supported picture
@@ -242,7 +233,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_APE_Unsupported_Empty()
         {
             // Source : tag-free MP3
-            String testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
@@ -287,7 +278,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Hey"))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeStr.Equals("Hey"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -295,7 +286,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeStr.Equals("Ho"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -339,7 +330,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals("Ho"))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeStr.Equals("Ho"))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -355,6 +346,19 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
+
+        [TestMethod]
+        public void TagIO_RW_APE_ID3v1()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_APE, MetaDataIOFactory.TAG_ID3V1);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_APE_ID3v2()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_APE, MetaDataIOFactory.TAG_ID3V2);
+        }
+
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
         {
@@ -388,7 +392,7 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, "Cover Art (Front)");
+                    Assert.AreEqual(pic.Value.NativeCodeStr, "Cover Art (Front)");
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 150);
@@ -396,7 +400,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, "Cover Art (Fronk)");
+                    Assert.AreEqual(pic.Value.NativeCodeStr, "Cover Art (Fronk)");
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);
