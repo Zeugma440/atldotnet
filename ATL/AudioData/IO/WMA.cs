@@ -154,9 +154,6 @@ namespace ATL.AudioData.IO
             ushort[] fieldSize = new ushort[5];
 			string fieldValue;
 
-            // Skip Content Description block size, unused
-            source.BaseStream.Seek(4, SeekOrigin.Current);
-
 			// Read standard field sizes
 			for (int i=0;i<5;i++) fieldSize[i] = source.ReadUInt16();
 
@@ -188,11 +185,10 @@ namespace ATL.AudioData.IO
             long headerExtensionObjectSize, position;
             ulong limit;
 
-            ulong headerExtendedSize = source.ReadUInt64()-46; // Size of actual data
-
             source.BaseStream.Seek(16, SeekOrigin.Current); // Reserved field 1
             source.BaseStream.Seek(2, SeekOrigin.Current); // Reserved field 2
-            source.BaseStream.Seek(4, SeekOrigin.Current); // Data size, repeated
+
+            uint headerExtendedSize = source.ReadUInt32(); // Size of actual data
 
             // Looping through header extension objects
             position = source.BaseStream.Position;
@@ -423,7 +419,7 @@ namespace ATL.AudioData.IO
 			if ( StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID,ID) )
 			{
                 // Read file properties
-                Source.BaseStream.Seek(44, SeekOrigin.Current);
+                Source.BaseStream.Seek(40, SeekOrigin.Current);
                 duration = Source.ReadUInt64() / 10000000.0;    // Play duration (100-nanoseconds)
                 Source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
                 duration -= Source.ReadUInt64() / 1000.0;       // Preroll duration (ms)
@@ -431,7 +427,7 @@ namespace ATL.AudioData.IO
 			else if ( StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID,ID) )
 			{
 				// Read stream properties
-				Source.BaseStream.Seek(58, SeekOrigin.Current);
+				Source.BaseStream.Seek(54, SeekOrigin.Current);
 				Data.FormatTag = Source.ReadUInt16();
 				Data.Channels = Source.ReadUInt16();
 				Data.SampleRate = Source.ReadInt32();
@@ -446,13 +442,11 @@ namespace ATL.AudioData.IO
 			{
                 // Read extended tag data
                 tagExists = true;
-                Source.BaseStream.Seek(4, SeekOrigin.Current);
 				readTagExtended(Source, readTagParams);
 			}
             else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
             {
                 // Read extended header (where additional metadata might be stored)
-                Source.BaseStream.Seek(-4, SeekOrigin.Current);
                 readHeaderExtended(Source, readTagParams);
             }
 		}
@@ -464,8 +458,8 @@ namespace ATL.AudioData.IO
             Stream fs = source.BaseStream;
 
             byte[] ID;
-			int objectCount, objectSize;
-			long initialPos, position;
+			int objectCount;
+			long objectSize, initialPos, position;
             bool result = false;
 
             fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -486,7 +480,7 @@ namespace ATL.AudioData.IO
 				{
 					position = fs.Position;
                     ID = source.ReadBytes(16);
-                    objectSize = source.ReadInt32(); // Int32 ??? to be corrected; it should be UInt64
+                    objectSize = source.ReadInt64();
                     readObject(ID, source, ref Data, readTagParams);
 					fs.Seek(position + objectSize, SeekOrigin.Begin);				
 				}
