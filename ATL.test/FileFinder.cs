@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.test
 {
@@ -57,18 +58,19 @@ namespace ATL.test
         [TestMethod, TestCategory("mass")]
         public void FF_FilterAndDisplayAudioFiles()
         {
-            //string folder = TestUtils.GetResourceLocationRoot();
-            string folder = @"E:\temp\wma";
+            string folder = TestUtils.GetResourceLocationRoot();
+            //string folder = @"E:\temp\wma";
             string[] files = Directory.GetFiles(folder);
 
             Track t;
-            
+
             foreach (string file in files)
             {
                 if (isFormatSupported(file))
                 {
                     t = new Track(file);
-                    Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs)");
+                    Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR?" VBR)":")") );
+                    Console.WriteLine(Utils.BuildStrictLengthString("",t.Path.Length,'.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + (t.PictureTokens.Count>0?" ("+ t.PictureTokens.Count+" picture(s))":""));
                 }
             }
         }
