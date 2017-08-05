@@ -207,12 +207,96 @@ namespace ATL.AudioData.IO
                 headerExtensionObjectSize = (long)source.ReadUInt64();
 
                 // Additional metadata
-                if (StreamUtils.ArrEqualsArr(WMA_METADATA_OBJECT_ID, headerExtensionObjectId))
+                if (StreamUtils.ArrEqualsArr(WMA_METADATA_OBJECT_ID, headerExtensionObjectId) || StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId))
                 {
-                    break;
-                } else if (StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId))
-                {
-                    break;
+                    ushort nbObjects = source.ReadUInt16();
+                    ushort nameSize;            // Length (in bytes) of Name field
+                    ushort fieldDataType;       // Type of data stored in current field
+                    int fieldDataSize;          // Size of data stored in current field
+                    string fieldName;           // Name of current field
+                    string fieldValue = "";     // Value of current field
+
+                    for (int i = 0; i < nbObjects; i++)
+                    {
+                        source.BaseStream.Seek(2, SeekOrigin.Current);  // Metadata object : Reserved / Metadata library object : Language list index; unused for now
+                        source.BaseStream.Seek(2, SeekOrigin.Current);  // Corresponding stream number; unused for now
+                        nameSize = source.ReadUInt16();
+                        fieldDataType = source.ReadUInt16();
+                        fieldDataSize = source.ReadInt32();
+                        fieldName = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+
+                        if (0 == fieldDataType) // Unicode string
+                        {
+                            fieldValue = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+                        }
+                        else if (1 == fieldDataType) // Byte array
+                        {
+                            if (fieldName.ToUpper().Equals("WM/PICTURE"))
+                            {
+                                byte picCode = source.ReadByte();
+                                // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                                TagData.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
+
+                                int picturePosition;
+                                if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                                {
+                                    addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
+                                    picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
+                                }
+                                else
+                                {
+                                    addPictureToken(picType);
+                                    picturePosition = takePicturePosition(picType);
+                                }
+
+                                // Next 3 bytes usage is unknown
+                                source.BaseStream.Seek(3, SeekOrigin.Current);
+
+                                if (readTagParams.PictureStreamHandler != null)
+                                {
+                                    string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.BigEndianUnicode);
+
+                                    // Next 3 bytes usage is unknown
+                                    source.BaseStream.Seek(3, SeekOrigin.Current);
+
+                                    MemoryStream mem = new MemoryStream(fieldDataSize - 3 - (2 * (mimeType.Length + 1)) - 3);
+                                    StreamUtils.CopyStream(source.BaseStream, mem, mem.Length);
+                                    readTagParams.PictureStreamHandler(ref mem, picType, Utils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
+                                    mem.Close();
+                                }
+                            }
+                            else
+                            {
+                                source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+                            }
+                        }
+                        else if (2 == fieldDataType) // 16-bit Boolean
+                        {
+                            fieldValue = source.ReadUInt16().ToString();
+                        }
+                        else if (3 == fieldDataType) // 32-bit unsigned integer
+                        {
+                            fieldValue = source.ReadUInt32().ToString();
+                        }
+                        else if (4 == fieldDataType) // 64-bit unsigned integer
+                        {
+                            fieldValue = source.ReadUInt64().ToString();
+                        }
+                        else if (5 == fieldDataType) // 16-bit unsigned integer
+                        {
+                            fieldValue = source.ReadUInt16().ToString();
+                        }
+                        else if (6 == fieldDataType) // 128-bit GUID; unused for now
+                        {
+                            source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+                        }
+                        else
+                        {
+                            fieldValue = "";
+                        }
+
+                        setMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames);
+                    }
                 }
 
                 source.BaseStream.Seek(position + headerExtensionObjectSize, SeekOrigin.Begin);
@@ -240,13 +324,12 @@ namespace ATL.AudioData.IO
                 DataType = source.ReadUInt16();
 				DataSize = source.ReadUInt16();
 				
-				// Read field value only if string (<-> DataType=0)
-				// NB : DataType = 1
+				// Read field value
 				if (0 == DataType) // Unicode string
 				{
 					FieldValue = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
                 }
-				if (1 == DataType) // Byte array
+				else if (1 == DataType) // Byte array
 				{
                     if (FieldName.ToUpper().Equals("WM/PICTURE"))
                     {
@@ -287,19 +370,19 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Seek(DataSize, SeekOrigin.Current);
                     }
 				}
-				if (2 == DataType) // 32-bit Boolean; not useful here
+				else if (2 == DataType) // 32-bit Boolean
+                {
+                    FieldValue = source.ReadUInt32().ToString();
+                }
+				else if (3 == DataType) // 32-bit unsigned integer
 				{
-					source.BaseStream.Seek(DataSize, SeekOrigin.Current);
+					FieldValue = (source.ReadUInt32()+1).ToString(); // TODO - Why the +1 ?? If related to ID3v1 genre index, conversion should be done while getting field name into account
 				}
-				if (3 == DataType) // 32-bit unsigned integer
-				{
-					FieldValue = (source.ReadUInt32()+1).ToString();
-				}
-				if (4 == DataType) // 64-bit unsigned integer
+				else if (4 == DataType) // 64-bit unsigned integer
 				{
 					FieldValue = source.ReadUInt64().ToString();
 				}
-				if (4 == DataType) // 16-bit unsigned integer
+				else if (5 == DataType) // 16-bit unsigned integer
 				{
 					FieldValue = source.ReadUInt16().ToString();
 				}
@@ -371,7 +454,7 @@ namespace ATL.AudioData.IO
 			}
             else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
             {
-                // Read extended header (where additional embedded pictures lie)
+                // Read extended header (where additional metadata might be stored)
                 Source.BaseStream.Seek(-4, SeekOrigin.Current);
                 readHeaderExtended(Source, readTagParams);
             }
@@ -476,8 +559,6 @@ namespace ATL.AudioData.IO
 			// Process data if loaded and valid
 			if ( result && isValid(Data) )
 			{
-//				FValid = true;
-				// Fill properties with loaded data
 				channelModeID = (byte)Data.Channels;
 				sampleRate = Data.SampleRate;
                 bitrate = Data.ByteRate * 8;

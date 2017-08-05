@@ -55,36 +55,20 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class WMA
+    public class WMA : MetaIOTest
     {
-        protected class PictureInfo
+        public WMA()
         {
-            public Image Picture;
-            public byte NativeCode;
-
-            public PictureInfo(Image picture, object code)
-            {
-                Picture = picture;
-                if (code is byte) NativeCode = (byte)code;
-            }
+            emptyFile = "empty.wma";
+            notEmptyFile = "wma.wma";
         }
 
-        private IList<KeyValuePair<TagData.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<TagData.PIC_TYPE, PictureInfo>>();
-
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
-        }
-
-        public string empty = "empty.wma";
-        public string notEmpty = "wma.wma";
-
-        //[TestMethod]
+        [TestMethod]
         public void TagIO_R_WMA_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            string location = TestUtils.GetResourceLocationRoot() + notEmpty;
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             readExistingTagsOnFile(ref theFile);
@@ -96,8 +80,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : tag-free MP3
-            string location = TestUtils.GetResourceLocationRoot() + empty;
-            string testFileLocation = TestUtils.GetTempTestFile(empty);
+            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
 
@@ -184,7 +168,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile(notEmpty);
+            String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -210,7 +194,7 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.Key.Equals(TagData.PIC_TYPE.Back))
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x04);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x04);
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
@@ -259,7 +243,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
             // Source : tag-free MP3
-            String testFileLocation = TestUtils.GetTempTestFile(empty);
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
@@ -304,7 +288,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0A))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0A))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -312,7 +296,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -356,7 +340,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCode.Equals(0x0B))
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.NativeCodeInt.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -405,7 +389,7 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x03);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x03);
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 150);
@@ -413,7 +397,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                 {
-                    Assert.AreEqual(pic.Value.NativeCode, 0x00);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x02);
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);

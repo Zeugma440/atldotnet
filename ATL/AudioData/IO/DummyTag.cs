@@ -9,6 +9,11 @@ namespace ATL.AudioData.IO
 	/// </summary>
 	public class DummyTag : IMetaDataIO
 	{
+        public DummyTag()
+        {
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Meta Data Reader");
+        }
+
 		public bool Exists
 		{
 			get { return true; }

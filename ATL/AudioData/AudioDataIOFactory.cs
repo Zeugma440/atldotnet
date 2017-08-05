@@ -299,7 +299,7 @@ namespace ATL.AudioData
                 break;
                 */
                 default:
-					theDataReader = new IO.DummyReader();
+					theDataReader = new IO.DummyReader(path);
 					break;
 			}
 

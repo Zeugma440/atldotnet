@@ -10,26 +10,26 @@ namespace ATL
 	public class Format : IEnumerable
 	{
 		// Name of the format
-		protected String fName;
+		protected string fName;
 		// ID of the format
 		protected int fID;
 		// List of file extensions proper to this format
-		protected IDictionary<String,int> extList;
+		protected IDictionary<string,int> extList;
 		// true if the format is readable by ATL
 		protected bool fReadable;
 
         public Format() { }
 
-		public Format(String iName)
+		public Format(string iName)
 		{
             init(iName);
 		}
 
-        protected void init(String iName)
+        protected void init(string iName)
         {
             fName = iName;
 			fReadable = true;
-			extList = new Dictionary<String,int>();
+			extList = new Dictionary<string,int>();
         }
 
         protected void copyFrom(Format iFormat)
@@ -37,7 +37,7 @@ namespace ATL
             this.fName = iFormat.fName;
             this.fID = iFormat.fID;
             this.fReadable = iFormat.fReadable;
-            this.extList = new Dictionary<String,int>(iFormat.extList);
+            this.extList = new Dictionary<string,int>(iFormat.extList);
         }
 
 		public String Name
@@ -70,14 +70,14 @@ namespace ATL
 		#endregion
 
 		// Adds the extension ext to the extensions list of this Format
-		public void AddExtension(String ext)
+		public void AddExtension(string ext)
 		{
 			if ( !extList.ContainsKey(ext.ToUpper()) )
 				extList.Add(ext.ToUpper(),0);
 		}
 
 		// Tests if the extension ext is a valid extension of the current Format
-		public bool IsValidExtension(String ext)
+		public bool IsValidExtension(string ext)
 		{
 			return extList.ContainsKey(ext.ToUpper());
 		}

@@ -35,6 +35,7 @@ namespace ATL
 		public int Bitrate;
 		public bool IsVBR;
 		public int CodecFamily;
+        public int SampleRate;
 		public long Size;
 		public long LastModified;
 		public int Duration;		
@@ -106,6 +107,7 @@ namespace ATL
                 DiscNumber = theReader.Disc;
                 Bitrate = theReader.IntBitRate;
                 CodecFamily = theReader.CodecFamily;
+                SampleRate = 0;
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
@@ -152,6 +154,7 @@ namespace ATL
                 Duration = theReader.IntDuration;
                 Rating = theReader.Rating;
                 IsVBR = theReader.IsVBR;
+                SampleRate = theReader.SampleRate;
                 PictureTokens = new List<TagData.PictureInfo>(theReader.PictureTokens);
             }
         }
