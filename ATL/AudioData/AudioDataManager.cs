@@ -19,6 +19,7 @@ namespace ATL.AudioData
             public long ID3v2Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_ID3V2) ? TagSizes[MetaDataIOFactory.TAG_ID3V2] : 0; } }
             public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_APE) ? TagSizes[MetaDataIOFactory.TAG_APE] : 0; } }
             public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
+            public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
         }
 
         private IMetaDataIO iD3v1 = new ID3v1();

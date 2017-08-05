@@ -56,6 +56,11 @@ namespace ATL.test
             testGenericAudio("adif_CBR88_8s.aac", 8, 88, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
+        [TestMethod]
+        public void Audio_WMA()
+        {
+            testGenericAudio("wma.wma", 14, 9, 8000, false, AudioDataIOFactory.CF_LOSSY);
+        }
 
         /*
                 [TestMethod]

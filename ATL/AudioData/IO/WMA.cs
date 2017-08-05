@@ -101,10 +101,8 @@ namespace ATL.AudioData.IO
 		{
             public long HeaderSize;
             public int FormatTag;										// Format ID tag
-			public int MaxBitRate;                                // Max. bit rate (bps)
 			public ushort Channels;                                // Number of channels
 			public int SampleRate;                                   // Sample rate (hz)
-			public int ByteRate;                                            // Byte rate
 
 
             public FileData() { Reset(); }
@@ -113,10 +111,8 @@ namespace ATL.AudioData.IO
 			{
                 HeaderSize = 0;
 				FormatTag = 0;
-				MaxBitRate = 0;
 				Channels = 0;
 				SampleRate = 0;
-				ByteRate = 0;
 			}
 		}
 
@@ -426,10 +422,12 @@ namespace ATL.AudioData.IO
 			// Read data from header object if supported
 			if ( StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID,ID) )
 			{
-				// Read file properties
-				Source.BaseStream.Seek(80, SeekOrigin.Current);
-				Data.MaxBitRate = Source.ReadInt32();
-			}
+                // Read file properties
+                Source.BaseStream.Seek(44, SeekOrigin.Current);
+                duration = Source.ReadUInt64() / 10000000.0;    // Play duration (100-nanoseconds)
+                Source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
+                duration -= Source.ReadUInt64() / 1000.0;       // Preroll duration (ms)
+            }
 			else if ( StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID,ID) )
 			{
 				// Read stream properties
@@ -437,7 +435,6 @@ namespace ATL.AudioData.IO
 				Data.FormatTag = Source.ReadUInt16();
 				Data.Channels = Source.ReadUInt16();
 				Data.SampleRate = Source.ReadInt32();
-				Data.ByteRate = Source.ReadInt32();    
 			}
 			else if ( StreamUtils.ArrEqualsArr(WMA_CONTENT_DESCRIPTION_ID,ID) && readTagParams.ReadTag )
 			{
@@ -467,13 +464,13 @@ namespace ATL.AudioData.IO
             Stream fs = source.BaseStream;
 
             byte[] ID;
-			int objectCount;
-			int objectSize;
-			long position;
-            long initialPos = fs.Position;
-
+			int objectCount, objectSize;
+			long initialPos, position;
             bool result = false;
+
             fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            initialPos = fs.Position;
 
             // Check for existing header
             ID = source.ReadBytes(16);
@@ -507,10 +504,9 @@ namespace ATL.AudioData.IO
 		{
 			// Check for data validity
 			return (
-				(Data.MaxBitRate > 0) && (Data.MaxBitRate < 320000) &&
-				((Data.Channels == WMA_CM_MONO) || (Data.Channels == WMA_CM_STEREO)) &&
-				(Data.SampleRate >= 8000) && (Data.SampleRate <= 96000) &&
-				(Data.ByteRate > 0) && (Data.ByteRate < 40000) );
+				((Data.Channels == WMA_CM_MONO) || (Data.Channels == WMA_CM_STEREO))
+				&& (Data.SampleRate >= 8000) && (Data.SampleRate <= 96000)
+                );
 		}
         
 		// ********************** Private functions & voids *********************
@@ -561,8 +557,7 @@ namespace ATL.AudioData.IO
 			{
 				channelModeID = (byte)Data.Channels;
 				sampleRate = Data.SampleRate;
-                bitrate = Data.ByteRate * 8;
-                duration = (sizeInfo.FileSize - Data.HeaderSize) * 8.0 / Data.MaxBitRate;
+                bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - Data.HeaderSize) * 8.0 / 1000.0 / duration;
                 isVBR = (WMA_GSM_VBR_ID == Data.FormatTag);
                 isLossless = (WMA_LOSSLESS_ID == Data.FormatTag);
             }

@@ -55,9 +55,10 @@ namespace ATL.test
         }
 
         [TestMethod, TestCategory("mass")]
-        public void USR_FilterAndDisplayAudioFiles()
+        public void FF_FilterAndDisplayAudioFiles()
         {
-            string folder = TestUtils.GetResourceLocationRoot();
+            //string folder = TestUtils.GetResourceLocationRoot();
+            string folder = @"E:\temp\wma";
             string[] files = Directory.GetFiles(folder);
 
             Track t;
