@@ -414,7 +414,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    Frame.Flags = StreamUtils.ReverseInt16(SourceFile.ReadUInt16());
+                    Frame.Flags = StreamUtils.ReverseUInt16(SourceFile.ReadUInt16());
                 }
                 dataSize = Frame.Size - 1; // Minus encoding byte
 
@@ -850,7 +850,7 @@ namespace ATL.AudioData.IO
             {
                 flags = 2;
             }
-            w.Write(StreamUtils.ReverseInt16(flags));
+            w.Write(StreamUtils.ReverseUInt16(flags));
 
             // Comments frame specifics
             if (frameCode.Substring(0, 3).Equals("COM"))
@@ -950,7 +950,7 @@ namespace ATL.AudioData.IO
             */
             UInt16 flags = 1;
             if (FTagHeader.UsesUnsynchronisation) flags = 3;
-            w.Write(StreamUtils.ReverseInt16(flags));
+            w.Write(StreamUtils.ReverseUInt16(flags));
             dataSizeModifier += 2;
 
             frameSizePos2 = w.BaseStream.Position;

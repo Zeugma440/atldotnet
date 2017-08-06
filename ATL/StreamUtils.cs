@@ -375,7 +375,7 @@ namespace ATL
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
-        public static Int32 ReverseInt32(Int32 n)
+        public static int ReverseInt32(int n)
 		{
 			byte b0;
 			byte b1;
@@ -398,9 +398,9 @@ namespace ATL
         public static ushort ReverseUInt16(ushort n)
         {
             byte b0;
-        byte b1;
+            byte b1;
 
-        b0 = (byte)((n & 0x00FF) >> 0);
+            b0 = (byte)((n & 0x00FF) >> 0);
             b1 = (byte)((n & 0xFF00) >> 8);
 
             return (ushort)((b0 << 8) | (b1 << 0));
@@ -411,7 +411,7 @@ namespace ATL
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
-        public static ushort ReverseInt16(ushort n)
+        public static short ReverseInt16(short n)
         {
             byte b0;
             byte b1;
@@ -419,7 +419,18 @@ namespace ATL
             b0 = (byte)((n & 0x00FF) >> 0);
             b1 = (byte)((n & 0xFF00) >> 8);
 
-            return (ushort)((b0 << 8) | (b1 << 0));
+            return (short)((b0 << 8) | (b1 << 0));
+        }
+
+        public static object ReverseInt(object n)
+        {
+            if (n is short) return ReverseInt16((short)n);
+            else if (n is ushort) return ReverseUInt16((ushort)n);
+            else if (n is int) return ReverseInt32((int)n);
+            else if (n is uint) return ReverseUInt32((uint)n);
+            else if (n is long) return ReverseInt64((long)n);
+            else if (n is ulong) return ReverseUInt64((ulong)n);
+            else return n; // byte and other unimplemented classes
         }
 
         /// <summary>

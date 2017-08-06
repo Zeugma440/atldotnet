@@ -223,7 +223,7 @@ namespace ATL.AudioReaders.BinaryLogic
                     byte[] size = SourceFile.ReadBytes(4);
                     Frame.Size = StreamUtils.DecodeSynchSafeInt32(size);
                 }
-                Frame.Flags = StreamUtils.ReverseInt16(SourceFile.ReadUInt16());
+                Frame.Flags = StreamUtils.ReverseUInt16(SourceFile.ReadUInt16());
 
                 if (!(Char.IsLetter(Frame.ID[0]) && Char.IsUpper(Frame.ID[0]))) break;
 

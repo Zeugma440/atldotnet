@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing.Imaging;
 using Commons;
+using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
@@ -88,19 +89,7 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
 
-        // List of all atoms whose size to rewrite after editing metadata
-        private class ValueInfo
-        {
-            public ulong Position;
-            public ulong Value;
-            public byte NbBytes;
-
-            public ValueInfo(ulong position, ulong value, byte nbBytes = 4)
-            {
-                Position = position; Value = value; NbBytes = nbBytes;
-            }
-        }
-        private IList<ValueInfo> upperAtoms;
+        private FileStructureHelper structureHelper;
 
 
         public byte VersionID // Version code
@@ -465,7 +454,11 @@ namespace ATL.AudioData.IO
             long atomPosition;
             string atomHeader;
 
-            if (readTagParams.PrepareForWriting) upperAtoms = new List<ValueInfo>();
+            if (readTagParams.PrepareForWriting)
+            {
+                if (null == structureHelper) structureHelper = new FileStructureHelper(false);
+                else structureHelper.Clear();
+            }
 
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -476,7 +469,7 @@ namespace ATL.AudioData.IO
             // MOOV atom
             atomSize = lookForMP4Atom(Source, "moov"); // === Physical data
             long moovPosition = Source.BaseStream.Position;
-            if (readTagParams.PrepareForWriting) upperAtoms.Add( new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize) );
+            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
 
             lookForMP4Atom(Source, "mvhd"); // === Physical data
             byte version = Source.ReadByte();
@@ -562,7 +555,7 @@ namespace ATL.AudioData.IO
                 atomPosition = Source.BaseStream.Position;
                 byte nbBytes = 0;
                 uint nbChunkOffsets = 0;
-                ulong value;
+                object value;
                 try
                 {
                     lookForMP4Atom(Source, "stco"); // Chunk offsets
@@ -578,15 +571,15 @@ namespace ATL.AudioData.IO
                 for (int i = 0; i < nbChunkOffsets; i++)
                 {
                     if (4 == nbBytes) value = StreamUtils.ReverseUInt32( Source.ReadUInt32() ); else value = StreamUtils.ReverseUInt64( Source.ReadUInt64() );
-                    upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position-nbBytes),value,nbBytes));
+                    structureHelper.AddSize(Source.BaseStream.Position - nbBytes, value);
                 }
             }
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(Source, "udta");
-            if (readTagParams.PrepareForWriting) upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize));
+            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
             atomSize = lookForMP4Atom(Source, "meta");
-            if (readTagParams.PrepareForWriting) upperAtoms.Add(new ValueInfo((ulong)(Source.BaseStream.Position - 8), atomSize));
+            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
             if (readTagParams.ReadTag)
@@ -668,7 +661,7 @@ namespace ATL.AudioData.IO
 //                        Source.BaseStream.Seek(atomPosition+metadataSize, SeekOrigin.Begin); // The rest are padding bytes
                         setMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
                     }
-                    else if (13 == dataClass || 14 == dataClass) // JPEG/PNG picture -- TODO what if a BMP or GIF picture was embedded ?
+                    else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader)) ) // Picture
                     {
                         TagData.PIC_TYPE picType = TagData.PIC_TYPE.Generic;
 
@@ -678,12 +671,14 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PictureStreamHandler != null)
                         {
-                            ImageFormat imgFormat = ImageFormat.Png; // PNG or JPEG according to specs
+                            ImageFormat imgFormat = ImageFormat.Png;
 
                             // Peek the next 3 bytes to know the picture type
                             byte[] data = Source.ReadBytes(3);
                             Source.BaseStream.Seek(-3, SeekOrigin.Current);
                             if (0xFF == data[0] && 0xD8 == data[1] && 0xFF == data[2]) imgFormat = ImageFormat.Jpeg; // JPEG signature
+                            if (0x42 == data[0] && 0x4D == data[1] && 0x96 == data[2]) imgFormat = ImageFormat.Bmp;  // BMP signature
+                            if (0x47 == data[0] && 0x49 == data[1] && 0x46 == data[2]) imgFormat = ImageFormat.Gif;  // GIF signature
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);
                             StreamUtils.CopyStream(Source.BaseStream, mem, metadataSize - 16);
@@ -1021,9 +1016,10 @@ namespace ATL.AudioData.IO
             writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
 
-            // TODO what if a BMP or GIF picture was embedded ?
-            int frameClass = 13; // JPEG
-            if (picFormat.Equals(ImageFormat.Png)) frameClass = 14;
+            int frameClass;
+            if (picFormat.Equals(ImageFormat.Jpeg)) frameClass = 13;
+            else if (picFormat.Equals(ImageFormat.Png)) frameClass = 14;
+            else frameClass = 0;
 
             writer.Write(StreamUtils.ReverseInt32(frameClass));
             writer.Write(frameFlags);
@@ -1044,26 +1040,7 @@ namespace ATL.AudioData.IO
 
         public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
-            bool result = true;
-
-            if (upperAtoms != null)
-            {
-                for (int i = 0; i < upperAtoms.Count; i++)
-                {
-                    upperAtoms[i] = new ValueInfo(upperAtoms[i].Position, (ulong)((long)upperAtoms[i].Value + deltaSize), upperAtoms[i].NbBytes);
-                    w.BaseStream.Seek((long)upperAtoms[i].Position, SeekOrigin.Begin);
-                    if (4 == upperAtoms[i].NbBytes)
-                    {
-                        w.Write(StreamUtils.ReverseUInt32((uint)upperAtoms[i].Value));
-                    }
-                    else
-                    {
-                        w.Write(StreamUtils.ReverseUInt64(upperAtoms[i].Value));
-                    }
-                }
-            }
-            
-            return result;
+            return structureHelper.RewriteMarkers(ref w, deltaSize);
         }
 
     }
