@@ -1,3 +1,4 @@
+using System;
 using System.Drawing.Imaging;
 using System.IO;
 
@@ -50,7 +51,9 @@ namespace ATL.AudioData
 		/// <returns>Instance of the MetaReaderFactory of the application</returns>
 		public static MetaDataIOFactory GetInstance()
 		{
-			if (null == theFactory)
+            if (!BitConverter.IsLittleEndian) throw new PlatformNotSupportedException("Big-endian based platforms are not supported by ATL");
+
+            if (null == theFactory)
 			{
 				theFactory = new MetaDataIOFactory();
 			}

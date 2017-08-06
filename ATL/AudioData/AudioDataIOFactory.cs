@@ -56,6 +56,8 @@ namespace ATL.AudioData
 		/// <returns>Instance of the AudioReaderFactory of the application</returns>
 		public static AudioDataIOFactory GetInstance()
 		{
+            if (!BitConverter.IsLittleEndian) throw new PlatformNotSupportedException("Big-endian based platforms are not supported by ATL");
+
 			if (null == theFactory)
 			{
 				theFactory = new AudioDataIOFactory();
