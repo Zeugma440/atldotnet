@@ -1,13 +1,11 @@
-using ATL.AudioReaders;
 using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace ATL.AudioData
+namespace ATL
 {
 	/// <summary>
 	/// Basic metadata fields container

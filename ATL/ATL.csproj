@@ -60,7 +60,8 @@
     <Compile Include="AudioData\IO\WMA.cs" />
     <Compile Include="AudioData\MetaDataIO.cs" />
     <Compile Include="AudioData\MetaDataIOFactory.cs" />
-    <Compile Include="AudioData\TrackUtils.cs" />
+    <Compile Include="AudioData\Utils\FileStructureHelper.cs" />
+    <Compile Include="AudioData\Utils\TrackUtils.cs" />
     <Compile Include="AudioReaders\AudioDataReader.cs" />
     <Compile Include="AudioReaders\BinaryLogic\IT.cs" />
     <Compile Include="AudioReaders\BinaryLogic\XM.cs" />
@@ -104,7 +105,7 @@
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\Format.cs" />
-    <Compile Include="AudioData\TagData.cs" />
+    <Compile Include="Entities\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
@@ -131,9 +132,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="AudioData\NewFolder1\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
