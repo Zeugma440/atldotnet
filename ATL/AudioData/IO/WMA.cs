@@ -579,7 +579,7 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
+        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
             return true;
         }

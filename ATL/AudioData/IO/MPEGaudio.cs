@@ -283,9 +283,17 @@ namespace ATL.AudioData.IO
 		public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
 		public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
-		// ********************* Auxiliary functions & voids ********************
 
-		private static bool IsFrameHeader(byte[] HeaderData)
+
+        public MPEGaudio(string fileName)
+        {
+            this.fileName = fileName;
+            resetData();
+        }
+
+        // ********************* Auxiliary functions & voids ********************
+
+        private static bool IsFrameHeader(byte[] HeaderData)
 		{
 			// Check for valid frame header
             return !(
@@ -752,18 +760,6 @@ namespace ATL.AudioData.IO
 				(FGetDuration() >= MIN_ALLOWED_DURATION));
 		}
 
-		// ********************** Public functions & voids **********************
-
-        public MPEGaudio(string fileName)
-        {
-            this.fileName = fileName;
-            resetData();
-        }
-
-        // ---------------------------------------------------------------------------
-
-        //No explicit destructors in C#
-
         // ---------------------------------------------------------------------------
 
         public bool IsMetaSupported(int metaType)
@@ -805,9 +801,9 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
+        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
-            // No file size in MPEGAudio header
+            // No file size nor native tag in MPEGAudio format
             return true;
         }
 

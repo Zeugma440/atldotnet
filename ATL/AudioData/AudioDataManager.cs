@@ -6,8 +6,22 @@ using System.IO;
 
 namespace ATL.AudioData
 {
-    public class AudioDataManager : IOBase
+    public class AudioDataManager
     {
+        // Optimal settings according to performance test
+        public static int bufferSize = 2048;
+        public static FileOptions fileOptions = FileOptions.RandomAccess;
+
+        public static void ChangeFileOptions(FileOptions options)
+        {
+            fileOptions = options;
+        }
+
+        public static void ChangeBufferSize(int bufSize)
+        {
+            bufferSize = bufSize;
+        }
+
         public class SizeInfo
         {
             public long FileSize = 0;
@@ -169,7 +183,7 @@ namespace ATL.AudioData
                             {
                                 if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
                                 {
-                                    result = audioDataIO.RewriteFileSizeInHeader(w, (int)deltaTagSize);
+                                    result = audioDataIO.RewriteSizeMarkers(w, (int)deltaTagSize);
                                 }
                             }
                             else
@@ -246,7 +260,7 @@ namespace ATL.AudioData
                                 fs.Position = tagOffset;
                                 writer.Write(coreSignature);
                             }
-                            if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteFileSizeInHeader(writer, -tagSize + coreSignature.Length);
+                            if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteSizeMarkers(writer, -tagSize + coreSignature.Length);
                         }
                     }
                 }

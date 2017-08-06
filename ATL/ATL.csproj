@@ -50,7 +50,6 @@
     <Compile Include="AudioData\CrossMetadataReader.cs" />
     <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
     <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
-    <Compile Include="AudioData\IOBase.cs" />
     <Compile Include="AudioData\IO\AAC.cs" />
     <Compile Include="AudioData\IO\APEtag.cs" />
     <Compile Include="AudioData\IO\DummyReader.cs" />
@@ -131,6 +130,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AudioData\NewFolder1\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

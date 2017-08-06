@@ -333,7 +333,7 @@ namespace ATL.AudioData
             throw new NotImplementedException();
         }
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
+        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
             throw new NotImplementedException();
         }

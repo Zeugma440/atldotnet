@@ -1042,7 +1042,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        public bool RewriteFileSizeInHeader(BinaryWriter w, int deltaSize)
+        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
             bool result = true;
 

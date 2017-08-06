@@ -109,32 +109,32 @@ namespace ATL.test.IO.Perf
 
         public void Perf_Massread_noFileOptions()
         {
-            IOBase.ChangeFileOptions(FileOptions.None);
-            IOBase.ChangeBufferSize(4096);
+            AudioDataManager.ChangeFileOptions(FileOptions.None);
+            AudioDataManager.ChangeBufferSize(4096);
 
             performMassRead();
         }
 
         public void Perf_Massread_randomAccess()
         {
-            IOBase.ChangeFileOptions(FileOptions.RandomAccess);
-            IOBase.ChangeBufferSize(4096);
+            AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
+            AudioDataManager.ChangeBufferSize(4096);
 
             performMassRead();
         }
 
         public void Perf_Massread_RA_buf8192()
         {
-            IOBase.ChangeFileOptions(FileOptions.RandomAccess);
-            IOBase.ChangeBufferSize(8192);
+            AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
+            AudioDataManager.ChangeBufferSize(8192);
 
             performMassRead();
         }
 
         public void Perf_Massread_RA_buf2048()
         {
-            IOBase.ChangeFileOptions(FileOptions.RandomAccess);
-            IOBase.ChangeBufferSize(2048);
+            AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
+            AudioDataManager.ChangeBufferSize(2048);
 
             performMassRead();
         }

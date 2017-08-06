@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ATL.AudioData
 {
-    public abstract class MetaDataIO : IOBase, IMetaDataIO
+    public abstract class MetaDataIO : IMetaDataIO
     {
         // General properties
         protected static bool useID3v2ExtendedHeaderRestrictions = false;
