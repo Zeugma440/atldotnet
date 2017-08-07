@@ -208,7 +208,6 @@ namespace ATL.AudioData.IO
 
             // Read tag
             source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
-            tagOffset = source.BaseStream.Position;
 
 #if DEBUG
 //            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
@@ -218,6 +217,8 @@ namespace ATL.AudioData.IO
             TagData.Header = tagEncoding.GetString(source.ReadBytes(3), 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
+                structureHelper.AddFrame(source.BaseStream.Position, ID3V1_TAG_SIZE);
+
                 TagData.Title = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
                 TagData.Artist = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
                 TagData.Album = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
@@ -275,7 +276,6 @@ namespace ATL.AudioData.IO
 			if (result)
 			{
 				tagExists = true;
-                tagSize = ID3V1_TAG_SIZE;
 				tagVersion = GetTagVersion(tagData);
 
 				// Fill properties using tag data
@@ -294,6 +294,11 @@ namespace ATL.AudioData.IO
 				}
                 Genre = (tagData.Genre < MAX_MUSIC_GENRES) ? MusicGenre[tagData.Genre] : "";
 			}
+            else
+            {
+                ResetData();
+            }
+
 			return result;
 		}
 

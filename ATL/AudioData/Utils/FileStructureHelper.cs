@@ -5,11 +5,13 @@ using System.Text;
 
 namespace ATL.AudioData
 {
-    class FileStructureHelper
+    public class FileStructureHelper
     {
+        public const string DEFAULT_ZONE = "default";
+
         // Description of a chunk/frame within a structured file 
         // Useful to rewrite after editing the chunk (e.g. adding/removing metadata)
-        public class StructInfo
+        public class FrameHeader
         {
             public const byte TYPE_COUNTER = 0;
             public const byte TYPE_SIZE = 1;
@@ -19,20 +21,51 @@ namespace ATL.AudioData
             public object Value;
             public bool IsLittleEndian;
 
-            public StructInfo(byte type, long position, object value, bool isLittleEndian = true)
+            public FrameHeader(byte type, long position, object value, bool isLittleEndian = true)
             {
                 Type = type;  Position = position; Value = value; IsLittleEndian = isLittleEndian;
             }
         }
 
-        private IDictionary<string, IList<StructInfo>> frames;
+        public class Frame
+        {
+            public string Zone;
+            public long Offset;
+            public int Size;
+            public byte[] CoreSignature;
+            public IList<FrameHeader> Headers;
+
+            public Frame(string zone, long offset, int size, byte[] coreSignature)
+            {
+                Zone = zone; Offset = offset; Size = size; CoreSignature = coreSignature;
+                Headers = new List<FrameHeader>();
+            }
+
+            public void Clear()
+            {
+                if (Headers != null) Headers.Clear();
+            }
+        }
+
+        private IDictionary<string, Frame> frames;
         private bool isLittleEndian;
+
+
+        public ICollection<string> Zones
+        {
+            get { return frames.Keys;  }
+        }
+
+        public ICollection<Frame> Frames
+        {
+            get { return frames.Values; }
+        }
 
 
         public FileStructureHelper(bool isLittleEndian = true)
         {
             this.isLittleEndian = isLittleEndian;
-            frames = new Dictionary<string, IList<StructInfo>>();
+            frames = new Dictionary<string, Frame>();
         }
 
         public void Clear()
@@ -47,30 +80,57 @@ namespace ATL.AudioData
             }
         }
 
-        public void AddCounter(long position, object value, string zone = "main")
+        public Frame GetFrame(string zone)
         {
-            addElement(zone, StructInfo.TYPE_COUNTER, position, value, isLittleEndian);
+            if (frames.ContainsKey(zone)) return frames[zone]; else return null;
         }
 
-        public void AddSize(long position, object value, string zone = "main")
+        public void AddFrame(long offset, int size, string zone = DEFAULT_ZONE)
         {
-            addElement(zone, StructInfo.TYPE_SIZE, position, value, isLittleEndian);
+            AddFrame(offset, size, new byte[0], zone);
         }
 
-        private void addElement(string zone, byte type, long position, object value, bool isLittleEndian)
+        public void AddFrame(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE)
         {
-            if (!frames.ContainsKey(zone)) frames.Add(zone, new List<StructInfo>());
-            frames[zone].Add(new StructInfo(type, position, value, isLittleEndian));
+            Frame frame = new Frame(zone, offset, size, coreSignature);
+            if (!frames.ContainsKey(zone))
+            {
+                frames.Add(zone, frame);
+            }
+            else // Recorded frame might already contain headers
+            {
+                frame.Headers = frames[zone].Headers;
+                frames[zone] = frame;
+            }
         }
 
-        public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, string zone = "main")
+        public void AddCounter(long position, object value, string zone = DEFAULT_ZONE)
+        {
+            addFrameHeader(zone, FrameHeader.TYPE_COUNTER, position, value, isLittleEndian);
+        }
+
+        public void AddSize(long position, object value, string zone = DEFAULT_ZONE)
+        {
+            addFrameHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
+        }
+
+        private void addFrameHeader(string zone, byte type, long position, object value, bool isLittleEndian)
+        {
+            if (!frames.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
+            {
+                AddFrame(0, 0, zone);
+            }
+            frames[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
+        }
+
+        public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, string zone = DEFAULT_ZONE)
         {
             bool result = true;
             byte[] value;
 
             if (frames != null && frames.ContainsKey(zone) && deltaSize != 0)
             {
-                foreach (StructInfo info in frames[zone])
+                foreach (FrameHeader info in frames[zone].Headers)
                 {
                     w.BaseStream.Seek(info.Position, SeekOrigin.Begin);
 

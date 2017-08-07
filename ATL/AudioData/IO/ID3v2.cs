@@ -630,13 +630,12 @@ namespace ATL.AudioData.IO
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
             {
                 tagExists = true;
-                base.tagOffset = offset;
+                structureHelper.AddFrame(offset, getTagSize(FTagHeader));
                 // Fill properties with header data
                 tagVersion = FTagHeader.Version;
-                tagSize = getTagSize(FTagHeader);
 
                 // Get information from frames if version supported
-                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (tagSize > 0))
+                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (Size > 0))
                 {
                     tagData = new TagData();
                     readFrames(source, ref FTagHeader, offset, readTagParams);
@@ -644,7 +643,7 @@ namespace ATL.AudioData.IO
                 else
                 {
                     if ( (tagVersion < TAG_VERSION_2_2) ||  (tagVersion > TAG_VERSION_2_4) ) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + tagVersion  + "; parsing interrupted");
-                    if (0 ==  tagSize) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 size is zero; parsing interrupted");
+                    if (0 == Size) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 size is zero; parsing interrupted");
                 }
             }
 

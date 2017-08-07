@@ -37,7 +37,7 @@ namespace ATL.AudioData.IO
         public const byte AAC_HEADER_TYPE_MP4 = 3;                          // MP4
 
         // Header type names
-        public static string[] AAC_HEADER_TYPE = { "Unknown", "ADIF", "ADTS" };
+        public static readonly string[] AAC_HEADER_TYPE = { "Unknown", "ADIF", "ADTS" };
 
         // MPEG version codes
         public const byte AAC_MPEG_VERSION_UNKNOWN = 0;                      // Unknown
@@ -45,7 +45,7 @@ namespace ATL.AudioData.IO
         public const byte AAC_MPEG_VERSION_4 = 2;                            // MPEG-4
 
         // MPEG version names
-        public static string[] AAC_MPEG_VERSION = { "Unknown", "MPEG-2", "MPEG-4" };
+        public static readonly string[] AAC_MPEG_VERSION = { "Unknown", "MPEG-2", "MPEG-4" };
 
         // Profile codes
         public const byte AAC_PROFILE_UNKNOWN = 0;                           // Unknown
@@ -55,8 +55,7 @@ namespace ATL.AudioData.IO
         public const byte AAC_PROFILE_LTP = 4;                               // LTP
 
         // Profile names
-        public static string[] AAC_PROFILE =
-        { "Unknown", "AAC Main", "AAC LC", "AAC SSR", "AAC LTP" };
+        public static readonly string[] AAC_PROFILE = { "Unknown", "AAC Main", "AAC LC", "AAC SSR", "AAC LTP" };
 
         // Bit rate type codes
         public const byte AAC_BITRATE_TYPE_UNKNOWN = 0;                      // Unknown
@@ -64,12 +63,15 @@ namespace ATL.AudioData.IO
         public const byte AAC_BITRATE_TYPE_VBR = 2;                          // VBR
 
         // Bit rate type names
-        public static string[] AAC_BITRATE_TYPE = { "Unknown", "CBR", "VBR" };
+        public static readonly string[] AAC_BITRATE_TYPE = { "Unknown", "CBR", "VBR" };
 
         // Sample rate values
-        private static int[] SAMPLE_RATE = {    96000, 88200, 64000, 48000, 44100, 32000,
+        private static readonly int[] SAMPLE_RATE = {    96000, 88200, 64000, 48000, 44100, 32000,
                                                 24000, 22050, 16000, 12000, 11025, 8000,
                                                 0, 0, 0, 0 };
+
+        private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code}
+
 
         private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameClasses_mp4; // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
@@ -88,8 +90,6 @@ namespace ATL.AudioData.IO
 
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
-
-        private FileStructureHelper structureHelper;
 
 
         public byte VersionID // Version code
@@ -166,19 +166,19 @@ namespace ATL.AudioData.IO
             get { return fileName; }
         }
 
-        public override byte[] CoreSignature
-        {
-            get
-            {
-                return new byte[] { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
-            }
-        }
-
         public override byte FieldCodeFixedLength
         {
             get
             {
                 return 4;
+            }
+        }
+
+        protected override bool IsLittleEndian
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -454,11 +454,7 @@ namespace ATL.AudioData.IO
             long atomPosition;
             string atomHeader;
 
-            if (readTagParams.PrepareForWriting)
-            {
-                if (null == structureHelper) structureHelper = new FileStructureHelper(false);
-                else structureHelper.Clear();
-            }
+            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // Should be handled in calling classes, especially for RemoveTag
 
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -603,10 +599,9 @@ namespace ATL.AudioData.IO
                 Source.BaseStream.Seek(atomSize+ hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
 
                 iListSize = lookForMP4Atom(Source, "ilst"); // === Metadata list
-                tagOffset = Source.BaseStream.Position - 8;
+                structureHelper.AddFrame(Source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
 
-                tagSize = (int)iListSize;
-                if (8 == tagSize) // Core minimal size
+                if (8 == Size) // Core minimal size
                 {
                     tagExists = false;
                     return;

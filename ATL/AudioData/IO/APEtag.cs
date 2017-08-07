@@ -90,6 +90,12 @@ namespace ATL.AudioData.IO
             frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
         }
 
+        public APEtag()
+        {
+            // Create object		
+            ResetData();
+        }
+
 
         // ********************* Auxiliary functions & voids ********************
 
@@ -236,15 +242,6 @@ namespace ATL.AudioData.IO
             else return "Cover Art (Other)";
         }
 
-
-        // ********************** Public functions & voids **********************
-
-        public APEtag()
-        {
-            // Create object		
-            ResetData();
-        }
-
         // ---------------------------------------------------------------------------
 
         public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
@@ -260,13 +257,19 @@ namespace ATL.AudioData.IO
             // Process data if loaded and footer valid
             if (result)
             {
+                int tagSize;
+                long tagOffset;
+
                 tagExists = true;
                 // Fill properties with footer data
                 tagVersion = Tag.Version;
+
                 tagSize = Tag.Size;
                 if (tagVersion > APE_VERSION_1_0) tagSize += 32; // Even though APE standard prevents from counting header in its size descriptor, ATL needs it
                 tagOffset = Tag.FileSize - Tag.DataShift - Tag.Size;
                 if (tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
+
+                structureHelper.AddFrame(tagOffset, tagSize);
 
                 // Get information from fields
                 readFrames(source, ref Tag, readTagParams);

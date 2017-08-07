@@ -17,21 +17,6 @@ namespace ATL.AudioData
         protected const int TO_BOF = 1;     // Beginning Of File
         protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
 
-        protected bool tagExists;
-        protected Encoding tagEncoding; // TODO check if needs to be there + check if a tag-wide encoding does have any sense 
-        protected int tagVersion;
-
-        protected long tagOffset;
-        protected int tagSize;
-
-        protected TagData tagData;
-
-        private IDictionary<TagData.PictureInfo, int> picturePositions;
-        protected IList<TagData.PictureInfo> pictureTokens;
-
-
-        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
-
 
         public class ReadTagParams
         {
@@ -47,6 +32,20 @@ namespace ATL.AudioData
             }
         }
 
+
+        protected bool tagExists;
+        protected Encoding tagEncoding; // TODO check if needs to be there + check if a tag-wide encoding does have any sense 
+        protected int tagVersion;
+
+        protected TagData tagData;
+
+        private IDictionary<TagData.PictureInfo, int> picturePositions;
+        protected IList<TagData.PictureInfo> pictureTokens;
+
+        protected FileStructureHelper structureHelper;
+
+
+        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
@@ -69,14 +68,26 @@ namespace ATL.AudioData
         /// </summary>
         public int Size
         {
-            get { return this.tagSize; }
+            get {
+                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? 0 : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).Size;
+            }
         }
         /// <summary>
         /// Tag offset in media file
         /// </summary>
         public long Offset
         {
-            get { return this.tagOffset; }
+            get {
+                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? -1 : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).Offset;
+            }
+        }
+
+        public byte[] CoreSignature
+        {
+            get
+            {
+                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? new byte[0] : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).CoreSignature;
+            }
         }
 
 
@@ -279,16 +290,18 @@ namespace ATL.AudioData
             get { return this.pictureTokens; }
         }
 
-        public virtual byte[] CoreSignature
-        {
-            get { return new byte[0]; }
-        }
-
         public virtual byte FieldCodeFixedLength
         {
             get { return 0; }
         }
 
+        protected virtual bool IsLittleEndian
+        {
+            get { return true; }
+        }
+
+
+        // ------ PICTURE HELPER METHODS -----------------------------------------------------
 
         protected void addPictureToken(TagData.PIC_TYPE picType)
         {
@@ -328,17 +341,7 @@ namespace ATL.AudioData
             return picturePositions[picInfo]; ;
         }
 
-        public virtual void ResetData()
-        {
-            tagExists = false;
-            tagVersion = 0;
-            tagSize = 0;
-            tagOffset = 0;
-
-            tagData = new TagData();
-            pictureTokens = new List<TagData.PictureInfo>();
-            picturePositions = new Dictionary<TagData.PictureInfo, int>();
-        }
+        // ------ ABSTRACT METHODS -----------------------------------------------------
 
         abstract protected int getDefaultTagOffset();
 
@@ -346,8 +349,20 @@ namespace ATL.AudioData
 
         abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
 
-
         abstract protected bool write(TagData tag, BinaryWriter w);
+
+        // ------ COMMON METHODS -----------------------------------------------------
+
+        public virtual void ResetData()
+        {
+            tagExists = false;
+            tagVersion = 0;
+
+            tagData = new TagData();
+            pictureTokens = new List<TagData.PictureInfo>();
+            picturePositions = new Dictionary<TagData.PictureInfo, int>();
+            structureHelper = new FileStructureHelper(IsLittleEndian);
+        }
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
@@ -380,7 +395,7 @@ namespace ATL.AudioData
                 }
             }
 
-
+            structureHelper.Clear();
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
@@ -388,7 +403,7 @@ namespace ATL.AudioData
             readTagParams.PrepareForWriting = true;
             this.Read(r, readTagParams);
 
-            oldTagSize = this.tagSize;
+            oldTagSize = Size;
 
             TagData dataToWrite;
             tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
@@ -417,8 +432,8 @@ namespace ATL.AudioData
 
                     if (tagExists) // An existing tag has been reprocessed
                     {
-                        tagBeginOffset = tagOffset;
-                        tagEndOffset = tagOffset + tagSize;
+                        tagBeginOffset = Offset;
+                        tagEndOffset = Offset + Size;
                     }
                     else // A brand new tag has been added to the file
                     {
@@ -426,20 +441,20 @@ namespace ATL.AudioData
                         {
                             case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
                             case TO_BOF: tagBeginOffset = 0; break;
-                            case TO_BUILTIN: tagBeginOffset = this.tagOffset; break;
+                            case TO_BUILTIN: tagBeginOffset = Offset; break;
                             default: tagBeginOffset = -1; break;
                         }
-                        tagEndOffset = tagBeginOffset + tagSize;
+                        tagEndOffset = tagBeginOffset + Size;
                     }
 
                     // Need to build a larger file
-                    if (newTagSize > tagSize)
+                    if (newTagSize > Size)
                     {
-                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - tagSize));
+                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - Size));
                     }
-                    else if (newTagSize < tagSize) // Need to reduce file size
+                    else if (newTagSize < Size) // Need to reduce file size
                     {
-                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(tagSize - newTagSize));
+                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(Size - newTagSize));
                     }
 
                     // Copy tag contents to the new slot
