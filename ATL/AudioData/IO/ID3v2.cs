@@ -603,6 +603,11 @@ namespace ATL.AudioData.IO
             } // End frames loop
         }
 
+        protected override void resetSpecificData()
+        {
+            // No specific behaviour here
+        }
+
         // ********************** Public functions & voids **********************
 
         public override bool Read(BinaryReader source, ReadTagParams readTagParams)

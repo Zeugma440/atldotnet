@@ -351,9 +351,11 @@ namespace ATL.AudioData
 
         abstract protected bool write(TagData tag, BinaryWriter w);
 
+        abstract protected void resetSpecificData();
+
         // ------ COMMON METHODS -----------------------------------------------------
 
-        public virtual void ResetData()
+        public void ResetData()
         {
             tagExists = false;
             tagVersion = 0;
@@ -362,6 +364,8 @@ namespace ATL.AudioData
             pictureTokens = new List<TagData.PictureInfo>();
             picturePositions = new Dictionary<TagData.PictureInfo, int>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
+
+            resetSpecificData();
         }
 
         public long Write(BinaryReader r, BinaryWriter w, TagData tag)

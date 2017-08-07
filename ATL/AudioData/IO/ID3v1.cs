@@ -253,11 +253,10 @@ namespace ATL.AudioData.IO
 			ResetData();
 		}
 
-		// ---------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------
 
-		public override void ResetData()
+        protected override void resetSpecificData()
 		{
-            base.ResetData();
 			tagVersion = TAG_VERSION_1_0;
             tagEncoding = Utils.Latin1Encoding;
         }

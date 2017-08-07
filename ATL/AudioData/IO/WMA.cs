@@ -144,7 +144,7 @@ namespace ATL.AudioData.IO
         public WMA(string fileName)
         {
             this.fileName = fileName;
-            resetData();
+            ResetData();
         }
 
        // ---------------------------------------------------------------------------
@@ -502,14 +502,11 @@ namespace ATL.AudioData.IO
 				&& (Data.SampleRate >= 8000) && (Data.SampleRate <= 96000)
                 );
 		}
-        
-		// ********************** Private functions & voids *********************
 
-		private void resetData()
-		{
-            ResetData();
+        // ********************** Private functions & voids *********************
 
-            // Reset variables
+        protected override void resetSpecificData()
+        {
             channelModeID = WMA_CM_UNKNOWN;
 			sampleRate = 0;
 			isVBR = false;

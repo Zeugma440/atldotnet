@@ -188,7 +188,7 @@ namespace ATL.AudioData.IO
         public AAC(string fileName)
         {
             this.fileName = fileName;
-            resetData();
+            ResetData();
         }
 
         static AAC()
@@ -236,9 +236,8 @@ namespace ATL.AudioData.IO
         // ********************** Private functions & procedures *********************
 
         // Reset all variables
-        private void resetData()
+        protected override void resetSpecificData()
         {
-            ResetData();
             FHeaderTypeID = AAC_HEADER_TYPE_UNKNOWN;
             FMPEGVersionID = AAC_MPEG_VERSION_UNKNOWN;
             FProfileID = AAC_PROFILE_UNKNOWN;

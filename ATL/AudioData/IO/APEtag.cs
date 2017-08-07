@@ -288,6 +288,11 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_APE;
         }
 
+        protected override void resetSpecificData()
+        {
+            // No specific behaviour here
+        }
+
         /// <summary>
         /// Writes the given tag into the given Writer using APEv2 conventions
         /// </summary>
