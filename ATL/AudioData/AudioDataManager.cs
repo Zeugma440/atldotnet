@@ -146,50 +146,30 @@ namespace ATL.AudioData
         public bool UpdateTagInFile(TagData theTag, int tagType)
         {
             bool result = true;
-            IMetaDataIO theMetaIO = null;
+            IMetaDataIO theMetaIO;
             LogDelegator.GetLocateDelegate()(fileName);
 
             if (audioDataIO.IsMetaSupported(tagType))
             {
                 try
                 {
-                    switch (tagType)
-                    {
-                        case MetaDataIOFactory.TAG_ID3V1:
-                            theMetaIO = ID3v1;
-                            break;
-                        case MetaDataIOFactory.TAG_ID3V2:
-                            theMetaIO = ID3v2;
-                            break;
-                        case MetaDataIOFactory.TAG_APE:
-                            theMetaIO = APEtag;
-                            break;
-                        case MetaDataIOFactory.TAG_NATIVE:
-                            theMetaIO = NativeTag;
-                            break;
-                        default:
-                            theMetaIO = null;
-                            break;
-                    }
+                    theMetaIO = getMeta(tagType);
 
-                    if (theMetaIO != null)
+                    using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
+                    using (BinaryReader r = new BinaryReader(fs))
+                    using (BinaryWriter w = new BinaryWriter(fs))
                     {
-                        using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
-                        using (BinaryReader r = new BinaryReader(fs))
-                        using (BinaryWriter w = new BinaryWriter(fs))
+                        long deltaTagSize = theMetaIO.Write(r, w, theTag);
+                        if (deltaTagSize < long.MaxValue)
                         {
-                            long deltaTagSize = theMetaIO.Write(r, w, theTag);
-                            if (deltaTagSize < long.MaxValue)
+                            if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
                             {
-                                if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
-                                {
-                                    result = audioDataIO.RewriteSizeMarkers(w, (int)deltaTagSize);
-                                }
+                                result = audioDataIO.RewriteSizeMarkers(w, (int)deltaTagSize);
                             }
-                            else
-                            {
-                                result = false;
-                            }
+                        }
+                        else
+                        {
+                            result = false;
                         }
                     }
                 }
@@ -224,30 +204,12 @@ namespace ATL.AudioData
                     int tagSize = 0;
                     byte[] coreSignature = new byte[0];
 
-                    if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1) && (hasMeta(MetaDataIOFactory.TAG_ID3V1)))
+                    if (hasMeta(tagType))
                     {
-                        tagOffset = ID3v1.Offset;
-                        tagSize = ID3v1.Size;
-                        coreSignature = ID3v1.CoreSignature;
-                    }
-                    else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2) && (hasMeta(MetaDataIOFactory.TAG_ID3V2)))
-                    {
-                        tagOffset = ID3v2.Offset;
-                        tagSize = ID3v2.Size;
-                        coreSignature = ID3v2.CoreSignature;
-                    }
-                    else if (tagType.Equals(MetaDataIOFactory.TAG_APE) && (hasMeta(MetaDataIOFactory.TAG_APE)))
-                    {
-                        tagOffset = APEtag.Offset;
-                        tagSize = APEtag.Size;
-                        coreSignature = APEtag.CoreSignature;
-                    }
-                    else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE) && (hasMeta(MetaDataIOFactory.TAG_NATIVE)))
-                    {
-                        // TODO : handle native tags scattered amond various, not necessarily contiguous chunks (e.g. AIFF)
-                        tagOffset = NativeTag.Offset;
-                        tagSize = NativeTag.Size;
-                        coreSignature = NativeTag.CoreSignature;
+                        IMetaDataIO metaIO = getMeta(tagType);
+                        tagOffset = metaIO.Offset;
+                        tagSize = metaIO.Size;
+                        coreSignature = metaIO.CoreSignature;
                     }
 
                     if ((tagOffset > -1) && (tagSize > 0))

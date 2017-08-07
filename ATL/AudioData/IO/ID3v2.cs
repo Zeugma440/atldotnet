@@ -375,7 +375,7 @@ namespace ATL.AudioData.IO
             string strData;
 
             // ID3v2.2 tags use ISO-8859-1 encoding by default, unless frame header says the contrary
-            if (TAG_VERSION_2_2 == tagVersion) tagEncoding = Encoding.GetEncoding("ISO-8859-1");
+            if (TAG_VERSION_2_2 == tagVersion) tagEncoding = Utils.Latin1Encoding;
 
             fs.Seek(offset + 10, SeekOrigin.Begin);
 

@@ -18,8 +18,9 @@ namespace ATL.AudioData
         protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
 
         protected bool tagExists;
-        protected Encoding tagEncoding; // TODO check if needs to be there after all...
+        protected Encoding tagEncoding; // TODO check if needs to be there + check if a tag-wide encoding does have any sense 
         protected int tagVersion;
+
         protected long tagOffset;
         protected int tagSize;
 

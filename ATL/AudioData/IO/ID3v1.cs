@@ -214,8 +214,7 @@ namespace ATL.AudioData.IO
 //            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
 #endif
 
-			// ID3v1 tags are C-String(null-terminated)-based tags
-			// they are not unicode-encoded, hence the use of ReadOneByteChars
+			// ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
             TagData.Header = tagEncoding.GetString(source.ReadBytes(3), 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
@@ -259,7 +258,7 @@ namespace ATL.AudioData.IO
 		{
             base.ResetData();
 			tagVersion = TAG_VERSION_1_0;
-            tagEncoding = Encoding.GetEncoding("ISO-8859-1");
+            tagEncoding = Utils.Latin1Encoding;
         }
 
 		// ---------------------------------------------------------------------------
