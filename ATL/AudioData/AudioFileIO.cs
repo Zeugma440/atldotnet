@@ -296,14 +296,6 @@ namespace ATL.AudioData
             get { throw new NotImplementedException(); }
         }
 
-        public ICollection<FileStructureHelper.Frame> Frames
-        {
-            get
-            {
-                return metaData.Frames;
-            }
-        }
-
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {
             throw new NotImplementedException();
@@ -340,6 +332,11 @@ namespace ATL.AudioData
         }
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(BinaryWriter w)
         {
             throw new NotImplementedException();
         }

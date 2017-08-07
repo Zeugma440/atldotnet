@@ -161,19 +161,6 @@ namespace ATL.AudioData
                     using (BinaryWriter w = new BinaryWriter(fs))
                     {
                         result = theMetaIO.Write(r, w, theTag);
-/*
-                        if (deltaTagSize < long.MaxValue)
-                        {
-                            if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
-                            {
-                                result = audioDataIO.RewriteSizeMarkers(w, (int)deltaTagSize);
-                            }
-                        }
-                        else
-                        {
-                            result = false;
-                        }
-*/
                     }
                 }
                 catch (Exception e)
@@ -191,7 +178,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool RemoveTagFromFile(int tagType) // TODO - INTERNALIZE SOME IN METADATAIO
+        public bool RemoveTagFromFile(int tagType)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -206,21 +193,9 @@ namespace ATL.AudioData
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
                     {
-                        foreach (Frame frame in metaIO.Frames)
+                        using (BinaryWriter writer = new BinaryWriter(fs))
                         {
-                            if (frame.Offset > -1 && frame.Size > 0)
-                            {
-                                StreamUtils.ShortenStream(fs, frame.Offset + frame.Size, (uint)(frame.Size - frame.CoreSignature.Length));
-                                using (BinaryWriter writer = new BinaryWriter(fs))
-                                {
-                                    if (frame.CoreSignature.Length > 0)
-                                    {
-                                        fs.Position = frame.Offset;
-                                        writer.Write(frame.CoreSignature);
-                                    }
-                                    if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteSizeMarkers(writer, -frame.Size + frame.CoreSignature.Length);
-                                }
-                            }
+                            metaIO.Remove(writer);
                         }
                     }
                 }

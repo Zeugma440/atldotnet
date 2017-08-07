@@ -107,20 +107,17 @@ namespace ATL.AudioData.IO
             get { return new Dictionary<string, string>();  }
         }
 
-        public ICollection<FileStructureHelper.Frame> Frames
-        {
-            get
-            {
-                return new LinkedList<FileStructureHelper.Frame>();
-            }
-        }
-
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return true;
         }
 
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(BinaryWriter w)
         {
             throw new NotImplementedException();
         }

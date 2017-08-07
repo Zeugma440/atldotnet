@@ -151,24 +151,10 @@ namespace ATL.AudioData
         {
             get;
         }
-/*
-        /// <summary>
-        /// Physical offset of the tag on its host file (bytes)
-        /// </summary>
-        long Offset
-        {
-            get;
-        }
-*/
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
         IDictionary<string, string> AdditionalFields
-        {
-            get;
-        }
-
-        ICollection<FileStructureHelper.Frame> Frames
         {
             get;
         }
@@ -178,7 +164,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="source">Reader to parse data from</param>
         /// <param name="readTagParams">Tag reading parameters</param>
-        /// <returns></returns>
+        /// <returns>true if the operation suceeded; false if not</returns>
         bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams);
 
         /// <summary>
@@ -189,7 +175,14 @@ namespace ATL.AudioData
         /// <param name="r">Reader to the resource to edit</param>
         /// <param name="w">Writer to the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
-        /// <returns></returns>
+        /// <returns>true if the operation suceeded; false if not</returns>
         bool Write(BinaryReader r, BinaryWriter w, TagData tag);
+
+        /// <summary>
+        /// Remove current tag
+        /// </summary>
+        /// <param name="w">Writer to the resource to edit</param>
+        /// <returns>true if the operation suceeded; false if not</returns>
+        bool Remove(BinaryWriter w);
     }
 }

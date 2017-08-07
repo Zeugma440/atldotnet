@@ -77,25 +77,6 @@ namespace ATL.AudioData
                 return result;
             }
         }
-/*
-        /// <summary>
-        /// Tag offset in media file
-        /// </summary>
-        public long Offset
-        {
-            get {
-                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? -1 : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).Offset;
-            }
-        }
-
-        public byte[] CoreSignature
-        {
-            get
-            {
-                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? new byte[0] : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).CoreSignature;
-            }
-        }
-*/
         public ICollection<Frame> Frames
         {
             get
@@ -495,8 +476,33 @@ namespace ATL.AudioData
                         {
                             result = structureHelper.RewriteMarkers(ref w, delta, frame.Zone);
                         }
-
                     }
+                    else
+                    {
+                        result = false;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public bool Remove(BinaryWriter w)
+        {
+            bool result = true;
+
+            foreach (Frame frame in Frames)
+            {
+                if (frame.Offset > -1 && frame.Size > 0)
+                {
+                    StreamUtils.ShortenStream(w.BaseStream, frame.Offset + frame.Size, (uint)(frame.Size - frame.CoreSignature.Length));
+
+                    if (frame.CoreSignature.Length > 0)
+                    {
+                        w.BaseStream.Position = frame.Offset;
+                        w.Write(frame.CoreSignature);
+                    }
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(ref w, -frame.Size + frame.CoreSignature.Length);
                 }
             }
 

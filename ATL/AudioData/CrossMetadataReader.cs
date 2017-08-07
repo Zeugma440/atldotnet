@@ -368,16 +368,11 @@ namespace ATL.AudioData
             }
         }
 
-        public ICollection<FileStructureHelper.Frame> Frames
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag) { throw new NotImplementedException(); }
+
+        public bool Remove(BinaryWriter w) { throw new NotImplementedException(); }
+
     }
 }
