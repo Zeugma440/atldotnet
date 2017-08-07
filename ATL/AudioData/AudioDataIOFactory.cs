@@ -85,6 +85,7 @@ namespace ATL.AudioData
 
                 tempFmt = new Format("Windows Media Audio");
                 tempFmt.ID = ATL.AudioReaders.AudioReaderFactory.CID_WMA;
+                tempFmt.AddExtension(".asf");
                 tempFmt.AddExtension(".wma");
                 theFactory.addFormat(tempFmt);
 
