@@ -3,6 +3,7 @@ using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData
 {
@@ -159,7 +160,8 @@ namespace ATL.AudioData
                     using (BinaryReader r = new BinaryReader(fs))
                     using (BinaryWriter w = new BinaryWriter(fs))
                     {
-                        long deltaTagSize = theMetaIO.Write(r, w, theTag);
+                        result = theMetaIO.Write(r, w, theTag);
+/*
                         if (deltaTagSize < long.MaxValue)
                         {
                             if (deltaTagSize != 0 && MetaDataIOFactory.TAG_NATIVE == tagType)
@@ -171,6 +173,7 @@ namespace ATL.AudioData
                         {
                             result = false;
                         }
+*/
                     }
                 }
                 catch (Exception e)
@@ -188,7 +191,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool RemoveTagFromFile(int tagType)
+        public bool RemoveTagFromFile(int tagType) // TODO - INTERNALIZE SOME IN METADATAIO
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -200,29 +203,24 @@ namespace ATL.AudioData
                 {
                     result = read(reader,null,false,true);
 
-                    long tagOffset = -1;
-                    int tagSize = 0;
-                    byte[] coreSignature = new byte[0];
-
-                    if (hasMeta(tagType))
+                    IMetaDataIO metaIO = getMeta(tagType);
+                    if (metaIO.Exists)
                     {
-                        IMetaDataIO metaIO = getMeta(tagType);
-                        tagOffset = metaIO.Offset;
-                        tagSize = metaIO.Size;
-                        coreSignature = metaIO.CoreSignature;
-                    }
-
-                    if ((tagOffset > -1) && (tagSize > 0))
-                    {
-                        StreamUtils.ShortenStream(fs, tagOffset+tagSize, (uint)(tagSize-coreSignature.Length));
-                        using (BinaryWriter writer = new BinaryWriter(fs))
+                        foreach (Frame frame in metaIO.Frames)
                         {
-                            if (coreSignature.Length > 0)
+                            if (frame.Offset > -1 && frame.Size > 0)
                             {
-                                fs.Position = tagOffset;
-                                writer.Write(coreSignature);
+                                StreamUtils.ShortenStream(fs, frame.Offset + frame.Size, (uint)(frame.Size - frame.CoreSignature.Length));
+                                using (BinaryWriter writer = new BinaryWriter(fs))
+                                {
+                                    if (frame.CoreSignature.Length > 0)
+                                    {
+                                        fs.Position = frame.Offset;
+                                        writer.Write(frame.CoreSignature);
+                                    }
+                                    if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteSizeMarkers(writer, -frame.Size + frame.CoreSignature.Length);
+                                }
                             }
-                            if (MetaDataIOFactory.TAG_NATIVE == tagType) result = result && audioDataIO.RewriteSizeMarkers(writer, -tagSize + coreSignature.Length);
                         }
                     }
                 }

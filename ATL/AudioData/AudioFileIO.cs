@@ -258,11 +258,6 @@ namespace ATL.AudioData
             get { return metaData.Size; }
         }
 
-        public long Offset
-        {
-            get { return metaData.Offset; }
-        }
-
         public IDictionary<string, string> AdditionalFields
         {
             get
@@ -276,7 +271,7 @@ namespace ATL.AudioData
             return metaData.Read(source, readTagParams);
         }
 
-        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return metaData.Write(r, w, tag);
         }
@@ -301,7 +296,13 @@ namespace ATL.AudioData
             get { throw new NotImplementedException(); }
         }
 
-        public byte[] CoreSignature => metaData.CoreSignature;
+        public ICollection<FileStructureHelper.Frame> Frames
+        {
+            get
+            {
+                return metaData.Frames;
+            }
+        }
 
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
         {

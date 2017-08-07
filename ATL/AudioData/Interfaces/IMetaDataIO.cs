@@ -151,6 +151,7 @@ namespace ATL.AudioData
         {
             get;
         }
+/*
         /// <summary>
         /// Physical offset of the tag on its host file (bytes)
         /// </summary>
@@ -158,6 +159,7 @@ namespace ATL.AudioData
         {
             get;
         }
+*/
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
@@ -165,10 +167,8 @@ namespace ATL.AudioData
         {
             get;
         }
-        /// <summary>
-        /// Minimal signature that needs to be on the file even if no field is present
-        /// </summary>
-        byte[] CoreSignature
+
+        ICollection<FileStructureHelper.Frame> Frames
         {
             get;
         }
@@ -190,6 +190,6 @@ namespace ATL.AudioData
         /// <param name="w">Writer to the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
         /// <returns></returns>
-        long Write(BinaryReader r, BinaryWriter w, TagData tag);
+        bool Write(BinaryReader r, BinaryWriter w, TagData tag);
     }
 }

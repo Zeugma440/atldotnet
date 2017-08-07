@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData
 {
@@ -69,9 +70,14 @@ namespace ATL.AudioData
         public int Size
         {
             get {
-                return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? 0 : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).Size;
+                int result = 0;
+
+                foreach (Frame frame in Frames) result += frame.Size;
+
+                return result;
             }
         }
+/*
         /// <summary>
         /// Tag offset in media file
         /// </summary>
@@ -87,6 +93,14 @@ namespace ATL.AudioData
             get
             {
                 return (null == structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE)) ? new byte[0] : structureHelper.GetFrame(FileStructureHelper.DEFAULT_ZONE).CoreSignature;
+            }
+        }
+*/
+        public ICollection<Frame> Frames
+        {
+            get
+            {
+                return structureHelper.Frames;
             }
         }
 
@@ -368,11 +382,11 @@ namespace ATL.AudioData
             resetSpecificData();
         }
 
-        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             long oldTagSize;
             long newTagSize;
-            long delta = long.MaxValue;
+            bool result = true;
 
             // Contraint-check on non-supported values
             if (FieldCodeFixedLength > 0)
@@ -407,71 +421,86 @@ namespace ATL.AudioData
             readTagParams.PrepareForWriting = true;
             this.Read(r, readTagParams);
 
-            oldTagSize = Size;
-
-            TagData dataToWrite;
-            tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
-
-            if (!tagExists) // If tag not found (e.g. empty file)
+            if (!tagExists && 0 == Frames.Count)
             {
-                dataToWrite = tag; // Write new tag information
-            }
-            else
-            {
-                dataToWrite = tagData;
-                dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+                structureHelper.AddFrame(0, 0); // TODO - test if this applies to complex situations where there is no core signature (empty WMA ?)
             }
 
-            // Write new tag to a MemoryStream
-            using (MemoryStream s = new MemoryStream(Size))
-            using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
+            foreach (Frame frame in Frames)
             {
-                if (write(dataToWrite, msw))
+                oldTagSize = frame.Size;
+
+                TagData dataToWrite;
+                tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
+
+                if (!tagExists) // If tag not found (e.g. empty file)
                 {
-                    newTagSize = s.Length;
+                    dataToWrite = tag; // Write new tag information
+                }
+                else
+                {
+                    dataToWrite = tagData;
+                    dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+                }
 
-                    // -- Adjust tag slot to new size in file --
-                    long tagEndOffset;
-                    long tagBeginOffset;
+                // Write new tag to a MemoryStream
+                using (MemoryStream s = new MemoryStream(frame.Size))
+                using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
+                {
+                    if (write(dataToWrite, msw))
+                    {
+                        newTagSize = s.Length;
 
-                    if (tagExists) // An existing tag has been reprocessed
-                    {
-                        tagBeginOffset = Offset;
-                        tagEndOffset = Offset + Size;
-                    }
-                    else // A brand new tag has been added to the file
-                    {
-                        switch (getDefaultTagOffset())
+                        // -- Adjust tag slot to new size in file --
+                        long tagEndOffset;
+                        long tagBeginOffset;
+
+                        if (tagExists) // An existing tag has been reprocessed
                         {
-                            case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
-                            case TO_BOF: tagBeginOffset = 0; break;
-                            case TO_BUILTIN: tagBeginOffset = Offset; break;
-                            default: tagBeginOffset = -1; break;
+                            tagBeginOffset = frame.Offset;
+                            tagEndOffset = frame.Offset + frame.Size;
                         }
-                        tagEndOffset = tagBeginOffset + Size;
-                    }
+                        else // A brand new tag has been added to the file
+                        {
+                            switch (getDefaultTagOffset())
+                            {
+                                case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
+                                case TO_BOF: tagBeginOffset = 0; break;
+                                case TO_BUILTIN: tagBeginOffset = frame.Offset; break;
+                                default: tagBeginOffset = -1; break;
+                            }
+                            tagEndOffset = tagBeginOffset + frame.Size;
+                        }
 
-                    // Need to build a larger file
-                    if (newTagSize > Size)
-                    {
-                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - Size));
-                    }
-                    else if (newTagSize < Size) // Need to reduce file size
-                    {
-                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(Size - newTagSize));
-                    }
+                        // Need to build a larger file
+                        if (newTagSize > frame.Size)
+                        {
+                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - frame.Size));
+                        }
+                        else if (newTagSize < frame.Size) // Need to reduce file size
+                        {
+                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(frame.Size - newTagSize));
+                        }
 
-                    // Copy tag contents to the new slot
-                    r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                    s.Seek(0, SeekOrigin.Begin);
-                    StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+                        // Copy tag contents to the new slot
+                        r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                        s.Seek(0, SeekOrigin.Begin);
+                        StreamUtils.CopyStream(s, w.BaseStream, s.Length);
 
-                    tagData = dataToWrite;
-                    delta = newTagSize - oldTagSize;
+                        tagData = dataToWrite;
+
+                        int delta = (int)(newTagSize - oldTagSize);
+
+                        if (delta != 0 && MetaDataIOFactory.TAG_NATIVE == getImplementedTagType())
+                        {
+                            result = structureHelper.RewriteMarkers(ref w, delta, frame.Zone);
+                        }
+
+                    }
                 }
             }
 
-            return delta;
+            return result;
         }
 
         private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)

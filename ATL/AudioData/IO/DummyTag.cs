@@ -62,10 +62,6 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-        public long Offset
-        {
-            get { return 0; }
-        }
         public IList<TagData.PictureInfo> PictureTokens
         {
             get { return new List<TagData.PictureInfo>(); }
@@ -111,14 +107,17 @@ namespace ATL.AudioData.IO
             get { return new Dictionary<string, string>();  }
         }
 
-        public byte[] CoreSignature
+        public ICollection<FileStructureHelper.Frame> Frames
         {
-            get { return new byte[0];  }
+            get
+            {
+                return new LinkedList<FileStructureHelper.Frame>();
+            }
         }
 
-        public long Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            return 0;
+            return true;
         }
 
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
