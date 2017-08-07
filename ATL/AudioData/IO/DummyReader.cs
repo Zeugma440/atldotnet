@@ -88,9 +88,5 @@ namespace ATL.AudioData.IO
         {
             return true;
         }
-        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
-        {
-            return true;
-        }
     }
 }

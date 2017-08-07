@@ -1031,11 +1031,5 @@ namespace ATL.AudioData.IO
             writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
-
-        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
-        {
-            return structureHelper.RewriteMarkers(ref w, deltaSize);
-        }
-
     }
 }

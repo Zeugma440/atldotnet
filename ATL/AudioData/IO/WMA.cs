@@ -576,11 +576,6 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
-        {
-            return true;
-        }
-
         protected override bool write(TagData tag, BinaryWriter w)
         {
             throw new NotImplementedException();

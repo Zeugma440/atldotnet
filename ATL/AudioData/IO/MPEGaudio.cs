@@ -801,12 +801,6 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
-        {
-            // No file size nor native tag in MPEGAudio format
-            return true;
-        }
-
         public bool HasNativeMeta()
         {
             return false;
