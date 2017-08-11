@@ -389,6 +389,7 @@ namespace ATL.AudioData
         {
             long oldTagSize;
             long newTagSize;
+            long cumulativeDelta = 0;
             bool result = true;
 
             // Contraint-check on non-supported values
@@ -436,7 +437,7 @@ namespace ATL.AudioData
                 TagData dataToWrite;
                 tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
 
-                if (!tagExists) // If tag not found (e.g. empty file)
+                if (!tagExists || zone.CoreSignature.Length == zone.Size) // If tag not found (e.g. empty file)
                 {
                     dataToWrite = tag; // Write new tag information
                 }
@@ -458,10 +459,10 @@ namespace ATL.AudioData
                         long tagEndOffset;
                         long tagBeginOffset;
 
-                        if (tagExists) // An existing tag has been reprocessed
+                        if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
                         {
                             tagBeginOffset = zone.Offset;
-                            tagEndOffset = zone.Offset + zone.Size;
+                            tagEndOffset = tagBeginOffset + zone.Size;
                         }
                         else // A brand new tag has been added to the file
                         {
@@ -469,7 +470,7 @@ namespace ATL.AudioData
                             {
                                 case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
                                 case TO_BOF: tagBeginOffset = 0; break;
-                                case TO_BUILTIN: tagBeginOffset = zone.Offset; break;
+                                case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
                                 default: tagBeginOffset = -1; break;
                             }
                             tagEndOffset = tagBeginOffset + zone.Size;
@@ -493,6 +494,8 @@ namespace ATL.AudioData
                         tagData = dataToWrite;
 
                         int delta = (int)(newTagSize - oldTagSize);
+                        cumulativeDelta += delta;
+
                         int action = (oldTagSize == zone.CoreSignature.Length && delta > 0) ? FileStructureHelper.ACTION_ADD : FileStructureHelper.ACTION_EDIT;
 
                         // Edit wrapping size markers and frame counters if needed
@@ -500,10 +503,6 @@ namespace ATL.AudioData
                         {
                             result = structureHelper.RewriteMarkers(ref w, delta, action, zone.Name);
                         }
-                    }
-                    else
-                    {
-                        result = false;
                     }
                 }
             }
@@ -517,7 +516,7 @@ namespace ATL.AudioData
 
             foreach (Zone zone in Zones)
             {
-                if (zone.Offset > -1 && zone.Size > 0)
+                if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
                 {
                     StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size, (uint)(zone.Size - zone.CoreSignature.Length));
 

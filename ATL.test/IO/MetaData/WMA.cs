@@ -74,7 +74,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile);
         }
         
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_WMA_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -105,10 +105,6 @@ namespace ATL.test.IO.MetaData
             theTag.DiscNumber = "2";
             theTag.Composer = "Me";
             theTag.Copyright = "父";
-            theTag.OriginalArtist = "Bob";
-            theTag.OriginalAlbum = "Hey Hey";
-            theTag.GeneralDescription = "That's right";
-            theTag.Publisher = "Test Media Inc.";
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -130,10 +126,6 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.NativeTag.Disc);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
-            Assert.AreEqual("Bob", theFile.NativeTag.OriginalArtist);
-            Assert.AreEqual("Hey Hey", theFile.NativeTag.OriginalAlbum);
-            Assert.AreEqual("That's right", theFile.NativeTag.GeneralDescription);
-            Assert.AreEqual("Test Media Inc.", theFile.NativeTag.Publisher);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
 
 

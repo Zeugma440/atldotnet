@@ -68,6 +68,7 @@
     <Compile Include="IO\Perf\Perf.cs" />
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Logging\LoggingTest.cs" />
+    <Compile Include="Misc\FileStructureHelperTest.cs" />
     <Compile Include="Misc\UtilsTest.cs" />
     <Compile Include="PlaylistReaders\PlaylistTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

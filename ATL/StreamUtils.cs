@@ -422,17 +422,6 @@ namespace ATL
             return (short)((b0 << 8) | (b1 << 0));
         }
 
-        public static object ReverseInt(object n)
-        {
-            if (n is short) return ReverseInt16((short)n);
-            else if (n is ushort) return ReverseUInt16((ushort)n);
-            else if (n is int) return ReverseInt32((int)n);
-            else if (n is uint) return ReverseUInt32((uint)n);
-            else if (n is long) return ReverseInt64((long)n);
-            else if (n is ulong) return ReverseUInt64((ulong)n);
-            else return n; // byte and other unimplemented classes
-        }
-
         /// <summary>
         /// Guesses the encoding from the file Byte Order Mark (BOM)
         /// http://en.wikipedia.org/wiki/Byte_order_mark 

@@ -143,11 +143,63 @@ namespace ATL.AudioData
             }
         }
 
+        private static byte[] addToValue(object value, int delta, out object updatedValue)
+        {
+            if (value is byte)
+            {
+                updatedValue = (byte)((byte)value + delta);
+                return new byte[1] { (byte)updatedValue };
+            }
+            else if (value is short)
+            {
+                updatedValue = (short)((short)value + delta);
+                return BitConverter.GetBytes((short)updatedValue);
+            }
+            else if (value is ushort)
+            {
+                updatedValue = (ushort)((ushort)value + delta);
+                return BitConverter.GetBytes((ushort)updatedValue);
+            }
+            else if (value is int)
+            {
+                updatedValue = (int)((int)value + delta);
+                return BitConverter.GetBytes((int)updatedValue);
+            }
+            else if (value is uint)
+            {
+                updatedValue = (uint)((uint)value + delta);
+                return BitConverter.GetBytes((uint)updatedValue);
+            }
+            else if (value is long)
+            {
+                updatedValue = (long)((long)value + delta);
+                return BitConverter.GetBytes((long)updatedValue);
+            }
+            else if (value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
+            {
+                if (delta > 0)
+                {
+                    updatedValue = (ulong)value + (ulong)delta;
+                }
+                else
+                {
+                    updatedValue = (ulong)value - (ulong)(-delta);
+                }
+                return BitConverter.GetBytes((ulong)updatedValue);
+            }
+            else
+            {
+                updatedValue = value;
+                return null;
+            }
+        }
+
         public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
         {
             bool result = true;
             int delta;
             byte[] value;
+            object updatedValue;
 
             if (zones != null && zones.ContainsKey(zone))
             {
@@ -170,24 +222,12 @@ namespace ATL.AudioData
                     {
                         w.BaseStream.Seek(header.Position, SeekOrigin.Begin);
 
-                        if (header.Value is byte) value = BitConverter.GetBytes((byte)((byte)header.Value + delta));
-                        else if (header.Value is short) value = BitConverter.GetBytes((short)((short)header.Value + delta));
-                        else if (header.Value is ushort) value = BitConverter.GetBytes((ushort)((ushort)header.Value + delta));
-                        else if (header.Value is int) value = BitConverter.GetBytes((int)header.Value + delta);
-                        else if (header.Value is uint) value = BitConverter.GetBytes((uint)((uint)header.Value + delta));
-                        else if (header.Value is long) value = BitConverter.GetBytes((long)header.Value + delta);
-                        else if (header.Value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
-                        {
-                            if (deltaSize > 0) value = BitConverter.GetBytes((ulong)header.Value + (ulong)delta);
-                            else value = BitConverter.GetBytes((ulong)header.Value - (ulong)(-delta));
-                        }
-                        else
-                        {
-                            throw new NotSupportedException("Value type not detected");
-                        }
+                        value = addToValue(header.Value, delta, out updatedValue);
+
+                        if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
                         // The very same frame header is referenced from another frame and must be updated to its new value
-                        updateAcrossEntireCollection(header.Position, value);
+                        updateAcrossEntireCollection(header.Position, updatedValue);
 
                         if (!header.IsLittleEndian) Array.Reverse(value);
 

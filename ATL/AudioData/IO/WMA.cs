@@ -33,6 +33,8 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
 
+        private long languageFrameOffset = -1;
+
         private static IDictionary<string, byte> frameMapping; // Mapping between WMA frame codes and ATL frame codes
         private static IList<string> embeddedFields; // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static IDictionary<string, ushort> frameClasses; // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
@@ -180,9 +182,25 @@ namespace ATL.AudioData.IO
             if (!frameClasses.ContainsKey(frameCode)) frameClasses.Add(frameCode, frameClass);
         }
 
-        private string getLanguage(ushort languageIndex)
+        private string getLanguage(BinaryReader source, ushort languageIndex)
         {
-            // TODO read corresponding frame here, not in readData
+            if (null == languages && languageFrameOffset > -1)
+            {
+                long position = source.BaseStream.Position;
+                ushort nbLanguages = source.ReadUInt16();
+                byte strLen;
+
+                if (nbLanguages > 0) languages = new List<string>();
+                for (int j = 0; j < nbLanguages; j++)
+                {
+                    strLen = source.ReadByte();
+                    long position2 = source.BaseStream.Position;
+                    if (strLen > 2) languages.Add(Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(strLen))));
+                    source.BaseStream.Seek(position2 + strLen, SeekOrigin.Begin);
+                }
+                source.BaseStream.Seek(position, SeekOrigin.Begin);
+            }
+
             if (languages != null && languages.Count > 0)
             {
                 if (languageIndex < languages.Count)
@@ -230,18 +248,18 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readHeaderExtended(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readHeaderExtended(ref BinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] headerExtensionObjectId;
-            ulong headerExtensionObjectSize;
-            long position, framePosition, sizePosition, dataPosition;
+            ulong headerExtensionObjectSize = 0;
+            long position, framePosition, sizePosition3, dataPosition;
             ulong limit;
             ushort streamNumber, languageIndex;
 
             source.BaseStream.Seek(16, SeekOrigin.Current); // Reserved field 1
             source.BaseStream.Seek(2, SeekOrigin.Current); // Reserved field 2
 
-            sizePosition = source.BaseStream.Position;
+            sizePosition3 = source.BaseStream.Position;
             uint headerExtendedSize = source.ReadUInt32(); // Size of actual data
 
             // Looping through header extension objects
@@ -269,7 +287,9 @@ namespace ATL.AudioData.IO
                     // Store frame information for future editing, since current frame is optional
                     if (readTagParams.PrepareForWriting)
                     {
-                        structureHelper.AddSize(sizePosition, headerExtendedSize, zoneCode);
+                        structureHelper.AddSize(sizePosition1, size1, zoneCode);
+                        structureHelper.AddSize(sizePosition2, size2, zoneCode);
+                        structureHelper.AddSize(sizePosition3, headerExtendedSize, zoneCode);
                     }
 
                     for (int i = 0; i < nbObjects; i++)
@@ -292,6 +312,24 @@ namespace ATL.AudioData.IO
                 position = source.BaseStream.Position;
             }
 
+            // Add absent zone definitions for further editing
+            if (readTagParams.PrepareForWriting)
+            {
+                if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_HEADER_METADATA))
+                {
+                    structureHelper.AddZone(source.BaseStream.Position, 0, ZONE_EXTENDED_HEADER_METADATA);
+                    structureHelper.AddSize(sizePosition1, size1, ZONE_EXTENDED_HEADER_METADATA);
+                    structureHelper.AddSize(sizePosition2, size2, ZONE_EXTENDED_HEADER_METADATA);
+                    structureHelper.AddSize(sizePosition3, headerExtendedSize, ZONE_EXTENDED_HEADER_METADATA);
+                }
+                if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_HEADER_METADATA_LIBRARY))
+                {
+                    structureHelper.AddZone(source.BaseStream.Position, 0, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
+                    structureHelper.AddSize(sizePosition1, size1, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
+                    structureHelper.AddSize(sizePosition2, size2, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
+                    structureHelper.AddSize(sizePosition3, headerExtendedSize, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
+                }
+            }
         }
 
         private void readTagExtended(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
@@ -391,10 +429,10 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
             }
 
-            setMetaField(zoneCode, fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, streamNumber, languageIndex);
+            setMetaField(zoneCode, fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, streamNumber, getLanguage(source,languageIndex));
         }
 
-        private void setMetaField(string zone, string ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, ushort languageIndex = 0)
+        private void setMetaField(string zone, string ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, string language = "")
         {
             byte supportedMetaId = 255;
 
@@ -409,7 +447,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, getLanguage(languageIndex), zone);
+                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -430,7 +468,7 @@ namespace ATL.AudioData.IO
             byte[] ID;
 			uint objectCount;
             ulong headerSize, objectSize;
-			long initialPos, position, position2;
+			long initialPos, position;
             long countPosition, sizePosition1, sizePosition2;
             bool result = false;
 
@@ -478,19 +516,9 @@ namespace ATL.AudioData.IO
                         Data.SampleRate = source.ReadInt32();
                     }
                     // Language index (optional; one only -- useful to map language codes to extended header tag information)
-                    // TODO don't read there; only when language code needed (getLanguage method)
                     else if (StreamUtils.ArrEqualsArr(WMA_LANGUAGE_LIST_OBJECT_ID, ID))
                     {
-                        ushort nbLanguages = source.ReadUInt16();
-                        byte strLen;
-                        if (nbLanguages > 0 && null == languages) languages = new List<string>();
-                        for (int j=0; j<nbLanguages; j++)
-                        {
-                            strLen = source.ReadByte();
-                            position2 = source.BaseStream.Position;
-                            if (strLen > 2) languages.Add(Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(strLen))));
-                            source.BaseStream.Seek(position2 + strLen, SeekOrigin.Begin);
-                        }
+                        languageFrameOffset = fs.Position;
                     }
                     // Content description (optional; one only)
                     // -> standard, pre-defined metadata
@@ -501,7 +529,7 @@ namespace ATL.AudioData.IO
                         // Store frame information for future editing, since current frame is optional
                         if (readTagParams.PrepareForWriting)
                         {
-                            structureHelper.AddSize(sizePosition1, objectSize, ZONE_CONTENT_DESCRIPTION);
+                            structureHelper.AddSize(sizePosition1, headerSize, ZONE_CONTENT_DESCRIPTION);
                             structureHelper.AddSize(sizePosition2, objectSize, ZONE_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
                         }
@@ -516,7 +544,7 @@ namespace ATL.AudioData.IO
                         // Store frame information for future editing, since current frame is optional
                         if (readTagParams.PrepareForWriting)
                         {
-                            structureHelper.AddSize(sizePosition1, objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                            structureHelper.AddSize(sizePosition1, headerSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                             structureHelper.AddSize(sizePosition2, objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         }
@@ -526,11 +554,29 @@ namespace ATL.AudioData.IO
                     // -> extended, dynamic additional metadata such as additional embedded pictures (any picture after the 1st one stored in extended content)
                     else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
                     {
-                        readHeaderExtended(ref source, readTagParams);
+                        readHeaderExtended(ref source, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
                     }
 
                     fs.Seek(position + (long)objectSize, SeekOrigin.Begin);				
 				}
+
+                // Add absent zone definitions for further editing
+                if (readTagParams.PrepareForWriting)
+                {
+                    if (!structureHelper.ZoneNames.Contains(ZONE_CONTENT_DESCRIPTION))
+                    {
+                        structureHelper.AddZone(fs.Position, 0, ZONE_CONTENT_DESCRIPTION);
+                        structureHelper.AddSize(sizePosition1, headerSize, ZONE_CONTENT_DESCRIPTION);
+                        structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
+                    }
+                    if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_CONTENT_DESCRIPTION))
+                    {
+                        structureHelper.AddZone(fs.Position, 0, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                        structureHelper.AddSize(sizePosition1, headerSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                        structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                    }
+                }
+
                 result = true;
 			}
 
@@ -616,7 +662,7 @@ namespace ATL.AudioData.IO
 
         protected override int getDefaultTagOffset()
         {
-            return TO_BOF;
+            return TO_BUILTIN;
         }
 
         protected override int getImplementedTagType()
@@ -626,23 +672,18 @@ namespace ATL.AudioData.IO
 
         protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result = false;
-
-                // TODO - add new zone when starting from an empty file (e.g. content description, extended content description, extended header metadata, extended header metadata library)
-
-            if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) result = writeContentDescription(tag, ref w);
-            else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) result = writeExtendedContentDescription(tag, ref w);
-            else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) result = writeExtendedHeaderMeta(tag, ref w);
-            else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) result = writeExtendedHeaderMetaLibrary(tag, ref w);
-
-            return result;
+            if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) return writeContentDescription(tag, ref w);
+            else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) return writeExtendedContentDescription(tag, ref w);
+            else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) return writeExtendedHeaderMeta(tag, ref w);
+            else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) return writeExtendedHeaderMetaLibrary(tag, ref w);
+            else return false;
         }
 
         private bool writeContentDescription(TagData tag, ref BinaryWriter w)
         {
-            bool result = true;
-            long frameSizePos, finalFramePos;
+            long beginPos, frameSizePos, finalFramePos;
 
+            beginPos = w.BaseStream.Position;
             w.Write(WMA_CONTENT_DESCRIPTION_ID);
             frameSizePos = w.BaseStream.Position;
             w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
@@ -684,19 +725,19 @@ namespace ATL.AudioData.IO
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.Write(Convert.ToUInt64(finalFramePos - beginPos));
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return result;
+            return (title.Length > 0) || (author.Length > 0) || (copyright.Length > 0) || (comment.Length > 0) || (rating.Length > 0);
         }
 
         private bool writeExtendedContentDescription(TagData tag, ref BinaryWriter w)
         {
-            bool result = true;
-            long frameSizePos, counterPos, finalFramePos;
+            long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter = 0;
             bool doWritePicture;
 
+            beginPos = w.BaseStream.Position;
             w.Write(WMA_EXTENDED_CONTENT_DESCRIPTION_ID);
             frameSizePos = w.BaseStream.Position;
             w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
@@ -745,6 +786,7 @@ namespace ATL.AudioData.IO
                 if (doWritePicture && firstPic)
                 {
                     writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    counter++;
                     firstPic = false;
                 }
             }
@@ -753,69 +795,68 @@ namespace ATL.AudioData.IO
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.Write(Convert.ToUInt64(finalFramePos - beginPos));
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return result;
+            return (counter > 0);
         }
 
         private bool writeExtendedHeaderMeta(TagData tag, ref BinaryWriter w)
         {
-            bool result = true;
-            long frameSizePos, counterPos, finalFramePos;
-            ushort counter = 0;
+            long beginPos, frameSizePos, counterPos, finalFramePos;
+            ushort counter;
 
+            beginPos = w.BaseStream.Position;
             w.Write(WMA_METADATA_OBJECT_ID);
             frameSizePos = w.BaseStream.Position;
             w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            result = writeExtendedMeta(tag, ref w, out counter);
+            counter = writeExtendedMeta(tag, ref w);
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.Write(Convert.ToUInt64(finalFramePos - beginPos));
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return result;
+            return (counter > 0);
         }
 
         private bool writeExtendedHeaderMetaLibrary(TagData tag, ref BinaryWriter w)
         {
-            bool result = true;
-            long frameSizePos, counterPos, finalFramePos;
-            ushort counter = 0;
+            long beginPos, frameSizePos, counterPos, finalFramePos;
+            ushort counter;
 
+            beginPos = w.BaseStream.Position;
             w.Write(WMA_METADATA_LIBRARY_OBJECT_ID);
             frameSizePos = w.BaseStream.Position;
             w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            result = writeExtendedMeta(tag, ref w, out counter, true);
+            counter = writeExtendedMeta(tag, ref w, true);
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.Write(Convert.ToUInt64(finalFramePos - beginPos));
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return result;
+            return (counter > 0);
         }
 
-        private bool writeExtendedMeta(TagData tag, ref BinaryWriter w, out ushort counter, bool isExtendedMetaLibrary=false)
+        private ushort writeExtendedMeta(TagData tag, ref BinaryWriter w, bool isExtendedMetaLibrary=false)
         {
-            bool result = true;
             bool doWritePicture;
-            counter = 0;
+            ushort counter = 0;
 
             IDictionary<byte, String> map = tag.ToMap();
 
@@ -824,10 +865,13 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && ( ZONE_EXTENDED_HEADER_METADATA.Equals(fieldInfo.Zone) || ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(fieldInfo.Zone)) )
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, true);
-                    counter++;
+                    if ( (ZONE_EXTENDED_HEADER_METADATA.Equals(fieldInfo.Zone) && !isExtendedMetaLibrary) || (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(fieldInfo.Zone) && isExtendedMetaLibrary) )
+                    {
+                        writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, true);
+                        counter++;
+                    }
                 }
             }
 
@@ -848,6 +892,7 @@ namespace ATL.AudioData.IO
                         if (!firstPic)
                         {
                             writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                            counter++;
                         }
                         else
                         {
@@ -857,7 +902,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return result;
+            return counter;
         }
 
         private void writeTextFrame(ref BinaryWriter writer, string frameCode, string text, bool isExtendedHeader=false)
