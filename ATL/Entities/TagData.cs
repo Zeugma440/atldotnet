@@ -32,6 +32,7 @@ namespace ATL
 
             public bool MarkedForDeletion = false;          // Marked for deletion flag
 
+            // ---------------- CONSTRUCTORS
 
             public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
             {
@@ -66,6 +67,8 @@ namespace ATL
             }
             public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
             public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+
+            // ---------------- OVERRIDES FOR DICTIONARY STORING
 
             public override string ToString()
             {
@@ -106,15 +109,26 @@ namespace ATL
         {
             public int TagType;                             // Tag type where the picture originates from
             public string NativeFieldCode;                  // Native field code according to TagType convention
+            public ushort StreamNumber;                     // Index of the stream the field is attached to
+            public string Language;                         // Language the value is written in
 
             public string Value;                            // Field value
+            public string Zone;                             // File zone where the value is supposed to appear (ASF format I'm looking at you...)
+
             public bool MarkedForDeletion = false;          // Marked for deletion flag
 
-            public MetaFieldInfo(int tagType, string nativeFieldCode, string value = "") { TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; }
+            // ---------------- CONSTRUCTORS
+
+            public MetaFieldInfo(int tagType, string nativeFieldCode, string value = "", ushort streamNumber = 0, string language = "", string zone = "")
+            {
+                TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; StreamNumber = streamNumber; Language = language; Zone = zone;
+            }
+
+            // ---------------- OVERRIDES FOR DICTIONARY STORING
 
             public override string ToString()
             {
-                return (100 + TagType).ToString() + NativeFieldCode;
+                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0') + Language;
             }
 
             public override int GetHashCode()

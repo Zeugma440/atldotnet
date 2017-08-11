@@ -52,14 +52,14 @@ namespace ATL.test
         [TestMethod, TestCategory("mass")]
         public void FF_ReadOneFile()
         {
-            Track t = new Track("E:/temp/id3v2/XXX");
+            Track t = new Track(@"E:\temp\wma\a.wma");
         }
 
         [TestMethod, TestCategory("mass")]
         public void FF_FilterAndDisplayAudioFiles()
         {
-            string folder = TestUtils.GetResourceLocationRoot();
-            //string folder = @"E:\temp\wma";
+            //string folder = TestUtils.GetResourceLocationRoot();
+            string folder = @"E:\temp\wma";
             string[] files = Directory.GetFiles(folder);
 
             Track t;

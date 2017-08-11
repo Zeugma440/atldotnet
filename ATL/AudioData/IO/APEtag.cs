@@ -269,7 +269,7 @@ namespace ATL.AudioData.IO
                 tagOffset = Tag.FileSize - Tag.DataShift - Tag.Size;
                 if (tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
 
-                structureHelper.AddFrame(tagOffset, tagSize);
+                structureHelper.AddZone(tagOffset, tagSize);
 
                 // Get information from fields
                 readFrames(source, ref Tag, readTagParams);
@@ -299,7 +299,7 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        protected override bool write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
             bool result;
             long tagSizePos;

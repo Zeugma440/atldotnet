@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing.Imaging;
 using Commons;
-using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
@@ -252,6 +251,11 @@ namespace ATL.AudioData.IO
             FVersionID = 0;
         }
 
+        private static void addFrameClass(string frameCode, byte frameClass)
+        {
+            if (!frameClasses_mp4.ContainsKey(frameCode)) frameClasses_mp4.Add(frameCode, frameClass);
+        }
+
         // ---------------------------------------------------------------------------
 
         // Get header type name
@@ -453,7 +457,7 @@ namespace ATL.AudioData.IO
             long atomPosition;
             string atomHeader;
 
-            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // Should be handled in calling classes, especially for RemoveTag
+            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // TODO - Clearing should be handled in calling classes, especially for RemoveTag
 
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -598,7 +602,7 @@ namespace ATL.AudioData.IO
                 Source.BaseStream.Seek(atomSize+ hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
 
                 iListSize = lookForMP4Atom(Source, "ilst"); // === Metadata list
-                structureHelper.AddFrame(Source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
+                structureHelper.AddZone(Source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
 
                 if (8 == Size) // Core minimal size
                 {
@@ -644,6 +648,8 @@ namespace ATL.AudioData.IO
                     // 4-byte NULL space
                     Source.BaseStream.Seek(4, SeekOrigin.Current);
 
+                    addFrameClass(atomHeader, dataClass);
+
                     if (1 == dataClass) // UTF-8 Text
                     {
                         strData = Encoding.UTF8.GetString(Source.ReadBytes((int)metadataSize - 16));
@@ -671,7 +677,7 @@ namespace ATL.AudioData.IO
                             byte[] data = Source.ReadBytes(3);
                             Source.BaseStream.Seek(-3, SeekOrigin.Current);
                             if (0xFF == data[0] && 0xD8 == data[1] && 0xFF == data[2]) imgFormat = ImageFormat.Jpeg; // JPEG signature
-                            if (0x42 == data[0] && 0x4D == data[1] && 0x96 == data[2]) imgFormat = ImageFormat.Bmp;  // BMP signature
+                            if (0x42 == data[0] && 0x4D == data[1]) imgFormat = ImageFormat.Bmp;  // BMP signature
                             if (0x47 == data[0] && 0x49 == data[1] && 0x46 == data[2]) imgFormat = ImageFormat.Gif;  // GIF signature
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);
@@ -827,7 +833,7 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        protected override bool write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
             bool result;
             long tagSizePos;
@@ -838,8 +844,7 @@ namespace ATL.AudioData.IO
             // ============
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
-            w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
-            w.Write("ilst".ToCharArray());
+            w.Write(CORE_SIGNATURE);
 
             // ============
             // == FRAMES ==

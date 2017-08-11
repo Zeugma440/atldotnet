@@ -413,5 +413,31 @@ namespace Commons
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
             }
         }
+
+        // TODO DOC
+        public static bool ToBoolean(string value)
+        {
+            if (value != null)
+            {
+                value = value.Trim();
+
+                if (value.Length > 0)
+                {
+                    // Numeric convert
+                    float f;
+                    if (float.TryParse(value, out f))
+                    {
+                        return (f != 0);
+                    }
+                    else
+                    {
+                        value = value.ToLower();
+                        return ("true".Equals(value));
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }

@@ -7,7 +7,11 @@ namespace ATL.AudioData
 {
     public class FileStructureHelper
     {
-        public const string DEFAULT_ZONE = "default";
+        public const string DEFAULT_ZONE_NAME = "default";
+
+        public const int ACTION_EDIT    = 0;
+        public const int ACTION_ADD     = 1;
+        public const int ACTION_DELETE  = 2;
 
         // Description of a chunk/frame within a structured file 
         // Useful to rewrite after editing the chunk (e.g. adding/removing metadata)
@@ -27,17 +31,17 @@ namespace ATL.AudioData
             }
         }
 
-        public class Frame
+        public class Zone
         {
-            public string Zone;
+            public string Name;
             public long Offset;
             public int Size;
             public byte[] CoreSignature;
             public IList<FrameHeader> Headers;
 
-            public Frame(string zone, long offset, int size, byte[] coreSignature)
+            public Zone(string name, long offset, int size, byte[] coreSignature)
             {
-                Zone = zone; Offset = offset; Size = size; CoreSignature = coreSignature;
+                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature;
                 Headers = new List<FrameHeader>();
             }
 
@@ -47,114 +51,148 @@ namespace ATL.AudioData
             }
         }
 
-        private IDictionary<string, Frame> frames;
+        private IDictionary<string, Zone> zones;
         private bool isLittleEndian;
 
 
-        public ICollection<string> Zones
+        public ICollection<string> ZoneNames
         {
-            get { return frames.Keys;  }
+            get { return zones.Keys;  }
         }
 
-        public ICollection<Frame> Frames
+        public ICollection<Zone> Zones
         {
-            get { return frames.Values; }
+            get { return zones.Values; }
         }
 
 
         public FileStructureHelper(bool isLittleEndian = true)
         {
             this.isLittleEndian = isLittleEndian;
-            frames = new Dictionary<string, Frame>();
+            zones = new Dictionary<string, Zone>();
         }
 
         public void Clear()
         {
-            if (null != frames)
+            if (null != zones)
             {
-                foreach(string s in frames.Keys)
+                foreach(string s in zones.Keys)
                 {
-                    frames[s].Clear();
+                    zones[s].Clear();
                 }
-                frames.Clear();
+                zones.Clear();
             }
         }
 
-        public Frame GetFrame(string zone)
+        public Zone GetZone(string name)
         {
-            if (frames.ContainsKey(zone)) return frames[zone]; else return null;
+            if (zones.ContainsKey(name)) return zones[name]; else return null;
         }
 
-        public void AddFrame(long offset, int size, string zone = DEFAULT_ZONE)
+        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME)
         {
-            AddFrame(offset, size, new byte[0], zone);
+            AddZone(offset, size, new byte[0], name);
         }
 
-        public void AddFrame(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE)
+        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME)
         {
-            Frame frame = new Frame(zone, offset, size, coreSignature);
-            if (!frames.ContainsKey(zone))
+            if (!zones.ContainsKey(zone))
             {
-                frames.Add(zone, frame);
+                zones.Add(zone, new Zone(zone, offset, size, coreSignature));
             }
-            else // Recorded frame might already contain headers
+            else // Existing zone might already contain headers
             {
-                frame.Headers = frames[zone].Headers;
-                frames[zone] = frame;
+                zones[zone].Name = zone;
+                zones[zone].Offset = offset;
+                zones[zone].Size = size;
+                zones[zone].CoreSignature = coreSignature;
             }
         }
 
-        public void AddCounter(long position, object value, string zone = DEFAULT_ZONE)
+        public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
-            addFrameHeader(zone, FrameHeader.TYPE_COUNTER, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE_COUNTER, position, value, isLittleEndian);
         }
 
-        public void AddSize(long position, object value, string zone = DEFAULT_ZONE)
+        public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
-            addFrameHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
         }
 
-        private void addFrameHeader(string zone, byte type, long position, object value, bool isLittleEndian)
+        private void addZoneHeader(string zone, byte type, long position, object value, bool isLittleEndian)
         {
-            if (!frames.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
+            if (!zones.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
             {
-                AddFrame(0, 0, zone);
+                AddZone(0, 0, zone);
             }
-            frames[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
+            zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
         }
 
-        public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, string zone = DEFAULT_ZONE)
+        // NB : this method should perform quite badly -- evolve to using position-based dictionary if any performance issue arise
+        private void updateAcrossEntireCollection(long position, object newValue)
+        {
+            foreach (Zone frame in zones.Values)
+            {
+                foreach (FrameHeader header in frame.Headers)
+                {
+                    if (position == header.Position)
+                    {
+                        header.Value = newValue;
+                    }
+                }
+            }
+        }
+
+        public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
         {
             bool result = true;
+            int delta;
             byte[] value;
 
-            if (frames != null && frames.ContainsKey(zone) && deltaSize != 0)
+            if (zones != null && zones.ContainsKey(zone))
             {
-                foreach (FrameHeader info in frames[zone].Headers)
+                foreach (FrameHeader header in zones[zone].Headers)
                 {
-                    w.BaseStream.Seek(info.Position, SeekOrigin.Begin);
-
-                    // TODO make the difference between TYPE_SIZE and TYPE_COUNTER
-
-                    if (info.Value is byte) value = BitConverter.GetBytes((byte)((byte)info.Value + deltaSize));
-                    else if (info.Value is short) value = BitConverter.GetBytes((short)((short)info.Value + deltaSize));
-                    else if (info.Value is ushort) value = BitConverter.GetBytes((ushort)((ushort)info.Value + deltaSize));
-                    else if (info.Value is int) value = BitConverter.GetBytes((int)info.Value + deltaSize);
-                    else if (info.Value is uint) value = BitConverter.GetBytes((uint)((uint)info.Value + deltaSize));
-                    else if (info.Value is long) value = BitConverter.GetBytes((long)info.Value + deltaSize);
-                    else if (info.Value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
+                    if (FrameHeader.TYPE_COUNTER == header.Type)
                     {
-                        if (deltaSize > 0) value = BitConverter.GetBytes((ulong)info.Value + (ulong)deltaSize);
-                        else value = BitConverter.GetBytes((ulong)info.Value - (ulong)(-deltaSize));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Value type not detected");
+                        switch (action)
+                        {
+                            case ACTION_ADD: delta = 1; break;
+                            case ACTION_DELETE: delta = -1; break;
+                            default: delta = 0; break;
+                        }
+
+                    } else {
+                        delta = deltaSize;
                     }
 
-                    if (!info.IsLittleEndian) Array.Reverse(value);
+                    if (delta != 0)
+                    {
+                        w.BaseStream.Seek(header.Position, SeekOrigin.Begin);
 
-                    w.Write(value);
+                        if (header.Value is byte) value = BitConverter.GetBytes((byte)((byte)header.Value + delta));
+                        else if (header.Value is short) value = BitConverter.GetBytes((short)((short)header.Value + delta));
+                        else if (header.Value is ushort) value = BitConverter.GetBytes((ushort)((ushort)header.Value + delta));
+                        else if (header.Value is int) value = BitConverter.GetBytes((int)header.Value + delta);
+                        else if (header.Value is uint) value = BitConverter.GetBytes((uint)((uint)header.Value + delta));
+                        else if (header.Value is long) value = BitConverter.GetBytes((long)header.Value + delta);
+                        else if (header.Value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
+                        {
+                            if (deltaSize > 0) value = BitConverter.GetBytes((ulong)header.Value + (ulong)delta);
+                            else value = BitConverter.GetBytes((ulong)header.Value - (ulong)(-delta));
+                        }
+                        else
+                        {
+                            throw new NotSupportedException("Value type not detected");
+                        }
+
+                        // The very same frame header is referenced from another frame and must be updated to its new value
+                        updateAcrossEntireCollection(header.Position, value);
+
+                        if (!header.IsLittleEndian) Array.Reverse(value);
+
+                        w.Write(value);
+                    }
                 }
             }
 

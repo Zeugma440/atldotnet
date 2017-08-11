@@ -72,16 +72,16 @@ namespace ATL.AudioData
             get {
                 int result = 0;
 
-                foreach (Frame frame in Frames) result += frame.Size;
+                foreach (Zone zone in Zones) result += zone.Size;
 
                 return result;
             }
         }
-        public ICollection<Frame> Frames
+        public ICollection<Zone> Zones
         {
             get
             {
-                return structureHelper.Frames;
+                return structureHelper.Zones;
             }
         }
 
@@ -256,21 +256,24 @@ namespace ATL.AudioData
             get { return Utils.ProtectValue(tagData.Conductor); }
             set { tagData.Conductor = value; }
         }
-        
+
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
+        /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available
+        /// For detailed, stream-by-stream and language-by-language properties, use GetAdditionalFields
         /// </summary>
         public IDictionary<string, string> AdditionalFields
         {
             get {
                 IDictionary<string, string> result = new Dictionary<string, string>();
 
-                foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
+                IList<TagData.MetaFieldInfo> additionalFields = GetAdditionalFields(0);
+                foreach (TagData.MetaFieldInfo fieldInfo in additionalFields)
                 {
-                    if (fieldInfo.TagType.Equals(getImplementedTagType())) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    if (!result.ContainsKey(fieldInfo.NativeFieldCode)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
                 }
 
                 return result;
@@ -344,7 +347,7 @@ namespace ATL.AudioData
 
         abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
 
-        abstract protected bool write(TagData tag, BinaryWriter w);
+        abstract protected bool write(TagData tag, BinaryWriter w, string zone);
 
         abstract protected void resetSpecificData();
 
@@ -361,6 +364,25 @@ namespace ATL.AudioData
             structureHelper = new FileStructureHelper(IsLittleEndian);
 
             resetSpecificData();
+        }
+
+        public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
+        {
+            IList<TagData.MetaFieldInfo> result = new List<TagData.MetaFieldInfo>();
+
+            foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
+            {
+                if (
+                    getImplementedTagType().Equals(fieldInfo.TagType)
+                    && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
+                    && ("".Equals(language) || language.Equals(fieldInfo.Language))
+                    )
+                {
+                    result.Add(fieldInfo);
+                }
+            }
+
+            return result;
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
@@ -402,14 +424,14 @@ namespace ATL.AudioData
             readTagParams.PrepareForWriting = true;
             this.Read(r, readTagParams);
 
-            if (!tagExists && 0 == Frames.Count)
+            if (!tagExists && 0 == Zones.Count)
             {
-                structureHelper.AddFrame(0, 0); // TODO - test if this applies to complex situations where there is no core signature (empty WMA ?)
+                structureHelper.AddZone(0, 0); // TODO - test if this applies to complex situations where there is no core signature (empty WMA ?)
             }
 
-            foreach (Frame frame in Frames)
+            foreach (Zone zone in Zones)
             {
-                oldTagSize = frame.Size;
+                oldTagSize = zone.Size;
 
                 TagData dataToWrite;
                 tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
@@ -425,10 +447,10 @@ namespace ATL.AudioData
                 }
 
                 // Write new tag to a MemoryStream
-                using (MemoryStream s = new MemoryStream(frame.Size))
+                using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
                 {
-                    if (write(dataToWrite, msw))
+                    if (write(dataToWrite, msw, zone.Name))
                     {
                         newTagSize = s.Length;
 
@@ -438,8 +460,8 @@ namespace ATL.AudioData
 
                         if (tagExists) // An existing tag has been reprocessed
                         {
-                            tagBeginOffset = frame.Offset;
-                            tagEndOffset = frame.Offset + frame.Size;
+                            tagBeginOffset = zone.Offset;
+                            tagEndOffset = zone.Offset + zone.Size;
                         }
                         else // A brand new tag has been added to the file
                         {
@@ -447,20 +469,20 @@ namespace ATL.AudioData
                             {
                                 case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
                                 case TO_BOF: tagBeginOffset = 0; break;
-                                case TO_BUILTIN: tagBeginOffset = frame.Offset; break;
+                                case TO_BUILTIN: tagBeginOffset = zone.Offset; break;
                                 default: tagBeginOffset = -1; break;
                             }
-                            tagEndOffset = tagBeginOffset + frame.Size;
+                            tagEndOffset = tagBeginOffset + zone.Size;
                         }
 
                         // Need to build a larger file
-                        if (newTagSize > frame.Size)
+                        if (newTagSize > zone.Size)
                         {
-                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - frame.Size));
+                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
                         }
-                        else if (newTagSize < frame.Size) // Need to reduce file size
+                        else if (newTagSize < zone.Size) // Need to reduce file size
                         {
-                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(frame.Size - newTagSize));
+                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
                         }
 
                         // Copy tag contents to the new slot
@@ -471,10 +493,12 @@ namespace ATL.AudioData
                         tagData = dataToWrite;
 
                         int delta = (int)(newTagSize - oldTagSize);
+                        int action = (oldTagSize == zone.CoreSignature.Length && delta > 0) ? FileStructureHelper.ACTION_ADD : FileStructureHelper.ACTION_EDIT;
 
+                        // Edit wrapping size markers and frame counters if needed
                         if (delta != 0 && MetaDataIOFactory.TAG_NATIVE == getImplementedTagType())
                         {
-                            result = structureHelper.RewriteMarkers(ref w, delta, frame.Zone);
+                            result = structureHelper.RewriteMarkers(ref w, delta, action, zone.Name);
                         }
                     }
                     else
@@ -491,18 +515,18 @@ namespace ATL.AudioData
         {
             bool result = true;
 
-            foreach (Frame frame in Frames)
+            foreach (Zone zone in Zones)
             {
-                if (frame.Offset > -1 && frame.Size > 0)
+                if (zone.Offset > -1 && zone.Size > 0)
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, frame.Offset + frame.Size, (uint)(frame.Size - frame.CoreSignature.Length));
+                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size, (uint)(zone.Size - zone.CoreSignature.Length));
 
-                    if (frame.CoreSignature.Length > 0)
+                    if (zone.CoreSignature.Length > 0)
                     {
-                        w.BaseStream.Position = frame.Offset;
-                        w.Write(frame.CoreSignature);
+                        w.BaseStream.Position = zone.Offset;
+                        w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(ref w, -frame.Size + frame.CoreSignature.Length);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(ref w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
                 }
             }
 

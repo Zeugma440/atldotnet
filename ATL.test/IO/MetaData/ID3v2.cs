@@ -217,7 +217,7 @@ namespace ATL.test.IO.MetaData
             // Source : tag-free MP3
             string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
             string testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
 
             // Check that it is indeed tag-free

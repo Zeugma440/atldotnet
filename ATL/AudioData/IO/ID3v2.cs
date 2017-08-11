@@ -635,7 +635,7 @@ namespace ATL.AudioData.IO
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
             {
                 tagExists = true;
-                structureHelper.AddFrame(offset, getTagSize(FTagHeader));
+                structureHelper.AddZone(offset, getTagSize(FTagHeader));
                 // Fill properties with header data
                 tagVersion = FTagHeader.Version;
 
@@ -675,7 +675,7 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        protected override bool write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
             bool result;
             long tagSizePos;
@@ -1011,7 +1011,7 @@ namespace ATL.AudioData.IO
             }
 
             // Null-terminated string = mime-type encoded in ISO-8859-1
-            w.Write(Encoding.GetEncoding("ISO-8859-1").GetBytes(mimeType.ToCharArray())); // Force ISO-8859-1 format for mime-type
+            w.Write(Utils.Latin1Encoding.GetBytes(mimeType.ToCharArray())); // Force ISO-8859-1 format for mime-type
             w.Write('\0'); // String should be null-terminated
 
             w.Write(pictureTypeCode);

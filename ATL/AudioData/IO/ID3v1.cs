@@ -217,7 +217,7 @@ namespace ATL.AudioData.IO
             TagData.Header = tagEncoding.GetString(source.ReadBytes(3), 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
-                structureHelper.AddFrame(source.BaseStream.Position, ID3V1_TAG_SIZE);
+                structureHelper.AddZone(source.BaseStream.Position, ID3V1_TAG_SIZE);
 
                 TagData.Title = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
                 TagData.Artist = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
@@ -308,7 +308,7 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Metadata to be written</param>
         /// <param name="w">Stream to be used</param>
         /// <returns>True if operation completed successfuly; else false</returns>
-        protected override bool write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
             bool result = true;
 

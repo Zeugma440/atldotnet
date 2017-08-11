@@ -4,6 +4,7 @@ using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
 using Commons;
+using System.Drawing.Imaging;
 
 namespace ATL.AudioData.IO
 {
@@ -17,8 +18,13 @@ namespace ATL.AudioData.IO
 		public const byte WMA_CM_MONO = 1;                                                     // Mono
 		public const byte WMA_CM_STEREO = 2;                                                 // Stereo
 
-		// Channel mode names
-		public static String[] WMA_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
+        private const string ZONE_CONTENT_DESCRIPTION = "contentDescription";
+        private const string ZONE_EXTENDED_CONTENT_DESCRIPTION = "extContentDescription";
+        private const string ZONE_EXTENDED_HEADER_METADATA = "extHeaderMeta";
+        private const string ZONE_EXTENDED_HEADER_METADATA_LIBRARY = "extHeaderMetaLibrary";
+
+        // Channel mode names
+        public static String[] WMA_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
 
 		private byte channelModeID;
 		private int sampleRate;
@@ -27,7 +33,11 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
 
-        private static Dictionary<string, byte> frameMapping; // Mapping between WMA frame codes and ATL frame codes
+        private static IDictionary<string, byte> frameMapping; // Mapping between WMA frame codes and ATL frame codes
+        private static IList<string> embeddedFields; // Field that are embedded in standard ASF description, and do not need to be written in any other frame
+        private static IDictionary<string, ushort> frameClasses; // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
+
+        private IList<string> languages; // Optional language index described in the WMA header
 
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
@@ -86,8 +96,11 @@ namespace ATL.AudioData.IO
         private static byte[] WMA_CONTENT_DESCRIPTION_ID = new byte[16] { 51, 38, 178, 117, 142, 102, 207, 17, 166, 217, 0, 170, 0, 98, 206, 108 };
         private static byte[] WMA_EXTENDED_CONTENT_DESCRIPTION_ID = new byte[16] { 64, 164, 208, 210, 7, 227, 210, 17, 151, 240, 0, 160, 201, 94, 168, 80 };
 
-		// Format IDs
-		private const int WMA_ID				= 0x161;
+        private static byte[] WMA_LANGUAGE_LIST_OBJECT_ID = new byte[16] { 0xA9, 0x46, 0x43, 0x7C, 0xE0, 0xEF, 0xFC, 0x4B, 0xB2, 0x29, 0x39, 0x3E, 0xDE, 0x41, 0x5C, 0x85 };
+
+
+        // Format IDs
+        private const int WMA_ID				= 0x161;
 		private const int WMA_PRO_ID			= 0x162;
 		private const int WMA_LOSSLESS_ID		= 0x163;
 		private const int WMA_GSM_CBR_ID		= 0x7A21;
@@ -118,7 +131,7 @@ namespace ATL.AudioData.IO
 
         static WMA()
         {
-            // NB : WM/TITLE, WM/AUTHOR, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
+            // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
             // their ID will not appear as is in the WMA header. 
             // Their info is contained in the standard Content Description block at the very beginning of the file
             frameMapping = new Dictionary<string, byte>
@@ -126,6 +139,7 @@ namespace ATL.AudioData.IO
                 { "WM/TITLE", TagData.TAG_FIELD_TITLE },
                 { "WM/AlbumTitle", TagData.TAG_FIELD_ALBUM },
                 { "WM/AUTHOR", TagData.TAG_FIELD_ARTIST },
+                { "WM/COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
                 { "WM/DESCRIPTION", TagData.TAG_FIELD_COMMENT },
                 { "WM/Comments", TagData.TAG_FIELD_COMMENT },
                 { "WM/Year", TagData.TAG_FIELD_RECORDING_YEAR },
@@ -139,6 +153,18 @@ namespace ATL.AudioData.IO
                 { "WM/AlbumArtist", TagData.TAG_FIELD_ALBUM_ARTIST },
                 { "WM/Conductor", TagData.TAG_FIELD_CONDUCTOR }
             };
+
+            embeddedFields = new List<string>
+            {
+                { "WM/TITLE" },
+                { "WM/AUTHOR" },
+                { "WM/COPYRIGHT" },
+                { "WM/DESCRIPTION" },
+                { "WM/RATING" }
+            };
+
+
+            frameClasses = new Dictionary<string, ushort>(); // To be populated while reading; all fields above are class 0
         }
 
         public WMA(string fileName)
@@ -147,9 +173,33 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-       // ---------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------
 
-		private void readTagStandard(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private static void addFrameClass(string frameCode, ushort frameClass)
+        {
+            if (!frameClasses.ContainsKey(frameCode)) frameClasses.Add(frameCode, frameClass);
+        }
+
+        private string getLanguage(ushort languageIndex)
+        {
+            // TODO read corresponding frame here, not in readData
+            if (languages != null && languages.Count > 0)
+            {
+                if (languageIndex < languages.Count)
+                {
+                    return languages[languageIndex];
+                }
+                else
+                {
+                    return languages[0]; // Index out of bounds
+                }
+            } else
+            {
+                return "";
+            }
+        }
+
+		private void readTagStandard(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
 		{
             ushort[] fieldSize = new ushort[5];
 			string fieldValue;
@@ -168,10 +218,11 @@ namespace ATL.AudioData.IO
                     // Set corresponding tag field if supported
                     switch (i)
                     {
-                        case 0: setMetaField("WM/TITLE", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 1: setMetaField("WM/AUTHOR", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 3: setMetaField("WM/DESCRIPTION", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 4: setMetaField("WM/RATING", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 0: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/TITLE", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 1: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/AUTHOR", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 2: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/COPYRIGHT", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 3: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/DESCRIPTION", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 4: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/RATING", fieldValue, readTagParams.ReadAllMetaFrames); break;
                     }
                 }
             }
@@ -179,15 +230,18 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readHeaderExtended(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readHeaderExtended(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] headerExtensionObjectId;
-            long headerExtensionObjectSize, position;
+            ulong headerExtensionObjectSize;
+            long position, framePosition, sizePosition, dataPosition;
             ulong limit;
+            ushort streamNumber, languageIndex;
 
             source.BaseStream.Seek(16, SeekOrigin.Current); // Reserved field 1
             source.BaseStream.Seek(2, SeekOrigin.Current); // Reserved field 2
 
+            sizePosition = source.BaseStream.Position;
             uint headerExtendedSize = source.ReadUInt32(); // Size of actual data
 
             // Looping through header extension objects
@@ -195,195 +249,152 @@ namespace ATL.AudioData.IO
             limit = (ulong)position + headerExtendedSize;
             while ((ulong)position < limit)
             {
+                framePosition = source.BaseStream.Position;
                 headerExtensionObjectId = source.ReadBytes(16);
-                headerExtensionObjectSize = (long)source.ReadUInt64();
+                headerExtensionObjectSize = source.ReadUInt64();
 
-                // Additional metadata
+                // Additional metadata (Optional frames)
                 if (StreamUtils.ArrEqualsArr(WMA_METADATA_OBJECT_ID, headerExtensionObjectId) || StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId))
                 {
-                    ushort nbObjects = source.ReadUInt16();
                     ushort nameSize;            // Length (in bytes) of Name field
                     ushort fieldDataType;       // Type of data stored in current field
                     int fieldDataSize;          // Size of data stored in current field
                     string fieldName;           // Name of current field
-                    string fieldValue = "";     // Value of current field
+                    ushort nbObjects = source.ReadUInt16();
+                    bool isLibraryObject = StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId);
+
+                    string zoneCode = isLibraryObject ? ZONE_EXTENDED_HEADER_METADATA_LIBRARY : ZONE_EXTENDED_HEADER_METADATA;
+
+                    structureHelper.AddZone(framePosition, (int)headerExtensionObjectSize, zoneCode);
+                    // Store frame information for future editing, since current frame is optional
+                    if (readTagParams.PrepareForWriting)
+                    {
+                        structureHelper.AddSize(sizePosition, headerExtendedSize, zoneCode);
+                    }
 
                     for (int i = 0; i < nbObjects; i++)
                     {
-                        source.BaseStream.Seek(2, SeekOrigin.Current);  // Metadata object : Reserved / Metadata library object : Language list index; unused for now
-                        source.BaseStream.Seek(2, SeekOrigin.Current);  // Corresponding stream number; unused for now
+                        languageIndex = source.ReadUInt16();
+                        streamNumber = source.ReadUInt16();
                         nameSize = source.ReadUInt16();
                         fieldDataType = source.ReadUInt16();
                         fieldDataSize = source.ReadInt32();
-                        fieldName = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+                        fieldName = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(nameSize)));
 
-                        if (0 == fieldDataType) // Unicode string
-                        {
-                            fieldValue = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
-                        }
-                        else if (1 == fieldDataType) // Byte array
-                        {
-                            if (fieldName.ToUpper().Equals("WM/PICTURE"))
-                            {
-                                byte picCode = source.ReadByte();
-                                // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                                TagData.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
+                        dataPosition = source.BaseStream.Position;
+                        readTagField(ref source, zoneCode, fieldName, fieldDataType, fieldDataSize, readTagParams, true, languageIndex, streamNumber);
 
-                                int picturePosition;
-                                if (picType.Equals(TagData.PIC_TYPE.Unsupported))
-                                {
-                                    addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
-                                    picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
-                                }
-                                else
-                                {
-                                    addPictureToken(picType);
-                                    picturePosition = takePicturePosition(picType);
-                                }
-
-                                // Next 3 bytes usage is unknown
-                                source.BaseStream.Seek(3, SeekOrigin.Current);
-
-                                if (readTagParams.PictureStreamHandler != null)
-                                {
-                                    string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.BigEndianUnicode);
-
-                                    // Next 3 bytes usage is unknown
-                                    source.BaseStream.Seek(3, SeekOrigin.Current);
-
-                                    MemoryStream mem = new MemoryStream(fieldDataSize - 3 - (2 * (mimeType.Length + 1)) - 3);
-                                    StreamUtils.CopyStream(source.BaseStream, mem, mem.Length);
-                                    readTagParams.PictureStreamHandler(ref mem, picType, Utils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
-                                    mem.Close();
-                                }
-                            }
-                            else
-                            {
-                                source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
-                            }
-                        }
-                        else if (2 == fieldDataType) // 16-bit Boolean
-                        {
-                            fieldValue = source.ReadUInt16().ToString();
-                        }
-                        else if (3 == fieldDataType) // 32-bit unsigned integer
-                        {
-                            fieldValue = source.ReadUInt32().ToString();
-                        }
-                        else if (4 == fieldDataType) // 64-bit unsigned integer
-                        {
-                            fieldValue = source.ReadUInt64().ToString();
-                        }
-                        else if (5 == fieldDataType) // 16-bit unsigned integer
-                        {
-                            fieldValue = source.ReadUInt16().ToString();
-                        }
-                        else if (6 == fieldDataType) // 128-bit GUID; unused for now
-                        {
-                            source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
-                        }
-                        else
-                        {
-                            fieldValue = "";
-                        }
-
-                        setMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames);
+                        source.BaseStream.Seek(dataPosition + fieldDataSize, SeekOrigin.Begin);
                     }
                 }
 
-                source.BaseStream.Seek(position + headerExtensionObjectSize, SeekOrigin.Begin);
+                source.BaseStream.Seek(position + (long)headerExtensionObjectSize, SeekOrigin.Begin);
                 position = source.BaseStream.Position;
             }
 
         }
 
-        private void readTagExtended(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readTagExtended(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-			ushort FieldCount;
-			ushort DataSize;
-			ushort DataType;
-			string FieldName;
-			string FieldValue = "";
+            long dataPosition;
+			ushort fieldCount;
+			ushort dataSize;
+			ushort dataType;
+			string fieldName;
 
 			// Read extended tag data
-			FieldCount = source.ReadUInt16();
-			for (int iterator1=0; iterator1 < FieldCount; iterator1++)
+			fieldCount = source.ReadUInt16();
+			for (int iterator1=0; iterator1 < fieldCount; iterator1++)
 			{
 				// Read field name
-				DataSize = source.ReadUInt16();
-				FieldName = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+				dataSize = source.ReadUInt16();
+				fieldName = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(dataSize)));
                 // Read value data type
-                DataType = source.ReadUInt16();
-				DataSize = source.ReadUInt16();
-				
-				// Read field value
-				if (0 == DataType) // Unicode string
-				{
-					FieldValue = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
-                }
-				else if (1 == DataType) // Byte array
-				{
-                    if (FieldName.ToUpper().Equals("WM/PICTURE"))
-                    {
-                        byte picCode = source.ReadByte();
-                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                        TagData.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
+                dataType = source.ReadUInt16();
+				dataSize = source.ReadUInt16();
 
-                        int picturePosition;
-                        if (picType.Equals(TagData.PIC_TYPE.Unsupported))
-                        {
-                            addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
-                            picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
-                        }
-                        else
-                        {
-                            addPictureToken(picType);
-                            picturePosition = takePicturePosition(picType);
-                        }
+                dataPosition = source.BaseStream.Position;
+                readTagField(ref source, ZONE_EXTENDED_CONTENT_DESCRIPTION, fieldName, dataType, dataSize, readTagParams);
 
-                        // Next 3 bytes usage is unknown
-                        source.BaseStream.Seek(3, SeekOrigin.Current);
-
-                        if (readTagParams.PictureStreamHandler != null)
-                        {
-                            string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.BigEndianUnicode);
-
-                            // Next 3 bytes usage is unknown
-                            source.BaseStream.Seek(3, SeekOrigin.Current);
-
-                            MemoryStream mem = new MemoryStream(DataSize - 3 - (2 * (mimeType.Length+1)) - 3);
-                            StreamUtils.CopyStream(source.BaseStream, mem, mem.Length);
-                            readTagParams.PictureStreamHandler(ref mem, picType, Utils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
-                            mem.Close();
-                        }
-                    }
-                    else 
-                    {
-                        source.BaseStream.Seek(DataSize, SeekOrigin.Current);
-                    }
-				}
-				else if (2 == DataType) // 32-bit Boolean
-                {
-                    FieldValue = source.ReadUInt32().ToString();
-                }
-				else if (3 == DataType) // 32-bit unsigned integer
-				{
-					FieldValue = (source.ReadUInt32()+1).ToString(); // TODO - Why the +1 ?? If related to ID3v1 genre index, conversion should be done while getting field name into account
-				}
-				else if (4 == DataType) // 64-bit unsigned integer
-				{
-					FieldValue = source.ReadUInt64().ToString();
-				}
-				else if (5 == DataType) // 16-bit unsigned integer
-				{
-					FieldValue = source.ReadUInt16().ToString();
-				}
-
-                setMetaField(FieldName.Trim(), FieldValue, readTagParams.ReadAllMetaFrames);
-			}
+                source.BaseStream.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+            }
 		}
 
-        private void setMetaField(string ID, string data, bool readAllMetaFrames)
+        public void readTagField(ref BinaryReader source, string zoneCode, string fieldName, ushort fieldDataType, int fieldDataSize, ReadTagParams readTagParams, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        {
+            string fieldValue = "";
+
+            addFrameClass(fieldName, fieldDataType);
+
+            if (0 == fieldDataType) // Unicode string
+            {
+                //fieldValue = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+                fieldValue = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(fieldDataSize)));
+            }
+            else if (1 == fieldDataType) // Byte array
+            {
+                if (fieldName.ToUpper().Equals("WM/PICTURE"))
+                {
+                    byte picCode = source.ReadByte();
+                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                    TagData.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
+
+                    int picturePosition;
+                    if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                    {
+                        addPictureToken(MetaDataIOFactory.TAG_NATIVE, picCode);
+                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_NATIVE, picCode);
+                    }
+                    else
+                    {
+                        addPictureToken(picType);
+                        picturePosition = takePicturePosition(picType);
+                    }
+
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // Picture size
+
+                    if (readTagParams.PictureStreamHandler != null)
+                    {
+                        string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+                        string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+
+                        MemoryStream mem = new MemoryStream(fieldDataSize - 3 - (2 * (mimeType.Length + 1)) - 3);
+                        StreamUtils.CopyStream(source.BaseStream, mem, mem.Length);
+                        readTagParams.PictureStreamHandler(ref mem, picType, Utils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
+                        mem.Close();
+                    }
+                }
+                else
+                {
+                    source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+                }
+            }
+            else if (2 == fieldDataType) // 16-bit Boolean (metadata); 32-bit Boolean (extended header)
+            {
+                if (isExtendedHeader) fieldValue = source.ReadUInt32().ToString();
+                else fieldValue = source.ReadUInt16().ToString();
+            }
+            else if (3 == fieldDataType) // 32-bit unsigned integer
+            {
+                fieldValue = (source.ReadUInt32() + 1).ToString(); // TODO - Why the +1 ?? If related to ID3v1 genre index, conversion should be done while getting field name into account
+            }
+            else if (4 == fieldDataType) // 64-bit unsigned integer
+            {
+                fieldValue = source.ReadUInt64().ToString();
+            }
+            else if (5 == fieldDataType) // 16-bit unsigned integer
+            {
+                fieldValue = source.ReadUInt16().ToString();
+            }
+            else if (6 == fieldDataType) // 128-bit GUID; unused for now
+            {
+                source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+            }
+
+            setMetaField(zoneCode, fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, streamNumber, languageIndex);
+        }
+
+        private void setMetaField(string zone, string ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, ushort languageIndex = 0)
         {
             byte supportedMetaId = 255;
 
@@ -398,8 +409,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                if (ID.StartsWith("WM/")) ID = ID.Substring(3);
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data);
+                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, getLanguage(languageIndex), zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -413,54 +423,19 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readObject(byte[] ID, BinaryReader Source, ref FileData Data, MetaDataIO.ReadTagParams readTagParams)
-        {
-			// Read data from header object if supported
-			if ( StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID,ID) )
-			{
-                // Read file properties
-                Source.BaseStream.Seek(40, SeekOrigin.Current);
-                duration = Source.ReadUInt64() / 10000000.0;    // Play duration (100-nanoseconds)
-                Source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
-                duration -= Source.ReadUInt64() / 1000.0;       // Preroll duration (ms)
-            }
-			else if ( StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID,ID) )
-			{
-				// Read stream properties
-				Source.BaseStream.Seek(54, SeekOrigin.Current);
-				Data.FormatTag = Source.ReadUInt16();
-				Data.Channels = Source.ReadUInt16();
-				Data.SampleRate = Source.ReadInt32();
-			}
-			else if ( StreamUtils.ArrEqualsArr(WMA_CONTENT_DESCRIPTION_ID,ID) && readTagParams.ReadTag )
-			{
-                // Read standard tag data
-                tagExists = true;
-				readTagStandard(Source, readTagParams);
-			}
-			else if ( StreamUtils.ArrEqualsArr(WMA_EXTENDED_CONTENT_DESCRIPTION_ID,ID) && readTagParams.ReadTag )
-			{
-                // Read extended tag data
-                tagExists = true;
-				readTagExtended(Source, readTagParams);
-			}
-            else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
-            {
-                // Read extended header (where additional metadata might be stored)
-                readHeaderExtended(Source, readTagParams);
-            }
-		}
-
-		// ---------------------------------------------------------------------------
-
-		private bool readData(BinaryReader source, ref FileData Data, MetaDataIO.ReadTagParams readTagParams)
+		private bool readData(ref BinaryReader source, ref FileData Data, MetaDataIO.ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
 
             byte[] ID;
-			int objectCount;
-			long objectSize, initialPos, position;
+			uint objectCount;
+            ulong headerSize, objectSize;
+			long initialPos, position, position2;
+            long countPosition, sizePosition1, sizePosition2;
             bool result = false;
+
+            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // TODO - Clearing should be handled in calling classes, especially for RemoveTag
+            if (languages != null) languages.Clear();
 
             fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -469,20 +444,92 @@ namespace ATL.AudioData.IO
             // Check for existing header
             ID = source.ReadBytes(16);
 
+            // Header (mandatory; one only)
 			if ( StreamUtils.ArrEqualsArr(WMA_HEADER_ID,ID) )
 			{
-				fs.Seek(8, SeekOrigin.Current);
-                objectCount = source.ReadInt32();		  
-				fs.Seek(2, SeekOrigin.Current);
+                sizePosition1 = fs.Position;
+                headerSize = source.ReadUInt64();
+                countPosition = fs.Position;
+                objectCount = source.ReadUInt32();		  
+				fs.Seek(2, SeekOrigin.Current); // Reserved data
 
 				// Read all objects in header and get needed data
 				for (int i=0; i<objectCount; i++)
 				{
 					position = fs.Position;
                     ID = source.ReadBytes(16);
-                    objectSize = source.ReadInt64();
-                    readObject(ID, source, ref Data, readTagParams);
-					fs.Seek(position + objectSize, SeekOrigin.Begin);				
+                    sizePosition2 = fs.Position;
+                    objectSize = source.ReadUInt64();
+
+                    // File properties (mandatory; one only)
+                    if (StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID, ID))
+                    {
+                        source.BaseStream.Seek(40, SeekOrigin.Current);
+                        duration = source.ReadUInt64() / 10000000.0;    // Play duration (100-nanoseconds)
+                        source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
+                        duration -= source.ReadUInt64() / 1000.0;       // Preroll duration (ms)
+                    }
+                    // Stream properties (mandatory; one per stream)
+                    else if (StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID, ID))
+                    {
+                        source.BaseStream.Seek(54, SeekOrigin.Current);
+                        Data.FormatTag = source.ReadUInt16();
+                        Data.Channels = source.ReadUInt16();
+                        Data.SampleRate = source.ReadInt32();
+                    }
+                    // Language index (optional; one only -- useful to map language codes to extended header tag information)
+                    // TODO don't read there; only when language code needed (getLanguage method)
+                    else if (StreamUtils.ArrEqualsArr(WMA_LANGUAGE_LIST_OBJECT_ID, ID))
+                    {
+                        ushort nbLanguages = source.ReadUInt16();
+                        byte strLen;
+                        if (nbLanguages > 0 && null == languages) languages = new List<string>();
+                        for (int j=0; j<nbLanguages; j++)
+                        {
+                            strLen = source.ReadByte();
+                            position2 = source.BaseStream.Position;
+                            if (strLen > 2) languages.Add(Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(strLen))));
+                            source.BaseStream.Seek(position2 + strLen, SeekOrigin.Begin);
+                        }
+                    }
+                    // Content description (optional; one only)
+                    // -> standard, pre-defined metadata
+                    else if (StreamUtils.ArrEqualsArr(WMA_CONTENT_DESCRIPTION_ID, ID) && readTagParams.ReadTag)
+                    {
+                        tagExists = true;
+                        structureHelper.AddZone(position, (int)objectSize, ZONE_CONTENT_DESCRIPTION);
+                        // Store frame information for future editing, since current frame is optional
+                        if (readTagParams.PrepareForWriting)
+                        {
+                            structureHelper.AddSize(sizePosition1, objectSize, ZONE_CONTENT_DESCRIPTION);
+                            structureHelper.AddSize(sizePosition2, objectSize, ZONE_CONTENT_DESCRIPTION);
+                            structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
+                        }
+                        readTagStandard(ref source, readTagParams);
+                    }
+                    // Extended content description (optional; one only)
+                    // -> extended, dynamic metadata
+                    else if (StreamUtils.ArrEqualsArr(WMA_EXTENDED_CONTENT_DESCRIPTION_ID, ID) && readTagParams.ReadTag)
+                    {
+                        tagExists = true;
+                        structureHelper.AddZone(position, (int)objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                        // Store frame information for future editing, since current frame is optional
+                        if (readTagParams.PrepareForWriting)
+                        {
+                            structureHelper.AddSize(sizePosition1, objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                            structureHelper.AddSize(sizePosition2, objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                            structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                        }
+                        readTagExtended(ref source, readTagParams);
+                    }
+                    // Header extension (mandatory; one only)
+                    // -> extended, dynamic additional metadata such as additional embedded pictures (any picture after the 1st one stored in extended content)
+                    else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
+                    {
+                        readHeaderExtended(ref source, readTagParams);
+                    }
+
+                    fs.Seek(position + (long)objectSize, SeekOrigin.Begin);				
 				}
                 result = true;
 			}
@@ -532,16 +579,17 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader Source, MetaDataIO.ReadTagParams readTagParams)
+        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            return read(Source, readTagParams);
+            return read(source, readTagParams);
         }
 
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             FileData Data = new FileData();
 
-            bool result = readData(source, ref Data, readTagParams);
+            ResetData();
+            bool result = readData(ref source, ref Data, readTagParams);
 
 			// Process data if loaded and valid
 			if ( result && isValid(Data) )
@@ -576,9 +624,371 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        protected override bool write(TagData tag, BinaryWriter w)
+        protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
-            throw new NotImplementedException();
+            bool result = false;
+
+                // TODO - add new zone when starting from an empty file (e.g. content description, extended content description, extended header metadata, extended header metadata library)
+
+            if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) result = writeContentDescription(tag, ref w);
+            else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) result = writeExtendedContentDescription(tag, ref w);
+            else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) result = writeExtendedHeaderMeta(tag, ref w);
+            else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) result = writeExtendedHeaderMetaLibrary(tag, ref w);
+
+            return result;
+        }
+
+        private bool writeContentDescription(TagData tag, ref BinaryWriter w)
+        {
+            bool result = true;
+            long frameSizePos, finalFramePos;
+
+            w.Write(WMA_CONTENT_DESCRIPTION_ID);
+            frameSizePos = w.BaseStream.Position;
+            w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
+
+            string title = "";
+            string author = "";
+            string copyright = "";
+            string comment = "";
+            string rating = ""; // TODO - check if it really should be a string
+
+            IDictionary<byte, String> map = tag.ToMap();
+
+            // Supported textual fields
+            foreach (byte frameType in map.Keys)
+            {
+                if (map[frameType].Length > 0) // No frame with empty value
+                {
+                    if (TagData.TAG_FIELD_TITLE.Equals(frameType)) title = map[frameType];
+                    else if (TagData.TAG_FIELD_ARTIST.Equals(frameType)) author = map[frameType];
+                    else if (TagData.TAG_FIELD_COPYRIGHT.Equals(frameType)) copyright = map[frameType];
+                    else if (TagData.TAG_FIELD_COMMENT.Equals(frameType)) comment = map[frameType];
+                    else if (TagData.TAG_FIELD_RATING.Equals(frameType)) rating = map[frameType];
+                }
+            }
+
+            // Read standard field sizes (+1 for last null characher; x2 for unicode)
+            if (title.Length > 0) w.Write((ushort)((title.Length + 1) * 2)); else w.Write((ushort)0);
+            if (author.Length > 0) w.Write((ushort)((author.Length + 1) * 2)); else w.Write((ushort)0);
+            if (copyright.Length > 0) w.Write((ushort)((copyright.Length + 1) * 2)); else w.Write((ushort)0);
+            if (comment.Length > 0) w.Write((ushort)((comment.Length + 1) * 2)); else w.Write((ushort)0);
+            if (rating.Length > 0) w.Write((ushort)((rating.Length + 1) * 2)); else w.Write((ushort)0);
+
+            if (title.Length > 0) w.Write(Encoding.Unicode.GetBytes(title + '\0'));
+            if (author.Length > 0) w.Write(Encoding.Unicode.GetBytes(author + '\0'));
+            if (copyright.Length > 0) w.Write(Encoding.Unicode.GetBytes(copyright + '\0'));
+            if (comment.Length > 0) w.Write(Encoding.Unicode.GetBytes(comment + '\0'));
+            if (rating.Length > 0) w.Write(Encoding.Unicode.GetBytes(rating + '\0'));
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+            return result;
+        }
+
+        private bool writeExtendedContentDescription(TagData tag, ref BinaryWriter w)
+        {
+            bool result = true;
+            long frameSizePos, counterPos, finalFramePos;
+            ushort counter = 0;
+            bool doWritePicture;
+
+            w.Write(WMA_EXTENDED_CONTENT_DESCRIPTION_ID);
+            frameSizePos = w.BaseStream.Position;
+            w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
+            counterPos = w.BaseStream.Position;
+            w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
+
+            IDictionary<byte, String> map = tag.ToMap();
+
+            // Supported textual fields
+            foreach (byte frameType in map.Keys)
+            {
+                foreach (string s in frameMapping.Keys)
+                {
+                    if (!embeddedFields.Contains(s) && frameType == frameMapping[s])
+                    {
+                        if (map[frameType].Length > 0) // No frame with empty value
+                        {
+                            writeTextFrame(ref w, s, map[frameType]);
+                            counter++;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Other textual fields
+            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            {
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) && "".Equals(fieldInfo.Zone))
+                {
+                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    counter++;
+                }
+            }
+
+            // Picture fields
+            bool firstPic = true;
+            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            {
+                // Picture has either to be supported, or to come from the right tag standard
+                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                if (doWritePicture && firstPic)
+                {
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    firstPic = false;
+                }
+            }
+
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
+            w.Write(counter);
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+            return result;
+        }
+
+        private bool writeExtendedHeaderMeta(TagData tag, ref BinaryWriter w)
+        {
+            bool result = true;
+            long frameSizePos, counterPos, finalFramePos;
+            ushort counter = 0;
+
+            w.Write(WMA_METADATA_OBJECT_ID);
+            frameSizePos = w.BaseStream.Position;
+            w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
+            counterPos = w.BaseStream.Position;
+            w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
+
+            result = writeExtendedMeta(tag, ref w, out counter);
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
+            w.Write(counter);
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+            return result;
+        }
+
+        private bool writeExtendedHeaderMetaLibrary(TagData tag, ref BinaryWriter w)
+        {
+            bool result = true;
+            long frameSizePos, counterPos, finalFramePos;
+            ushort counter = 0;
+
+            w.Write(WMA_METADATA_LIBRARY_OBJECT_ID);
+            frameSizePos = w.BaseStream.Position;
+            w.Write((ulong)0); // Frame size placeholder to be rewritten at the end of the method
+            counterPos = w.BaseStream.Position;
+            w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
+
+            result = writeExtendedMeta(tag, ref w, out counter, true);
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(Convert.ToUInt64(finalFramePos - frameSizePos));
+            w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
+            w.Write(counter);
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+            return result;
+        }
+
+        private bool writeExtendedMeta(TagData tag, ref BinaryWriter w, out ushort counter, bool isExtendedMetaLibrary=false)
+        {
+            bool result = true;
+            bool doWritePicture;
+            counter = 0;
+
+            IDictionary<byte, String> map = tag.ToMap();
+
+            // Supported textual fields : all current supported fields are located in extended content description frame
+
+            // Other textual fields
+            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            {
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && ( ZONE_EXTENDED_HEADER_METADATA.Equals(fieldInfo.Zone) || ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(fieldInfo.Zone)) )
+                {
+                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, true);
+                    counter++;
+                }
+            }
+
+            // Picture fields (exclusively written in Metadata Library Object zone)
+            if (isExtendedMetaLibrary)
+            {
+                bool firstPic = true;
+                foreach (TagData.PictureInfo picInfo in tag.Pictures)
+                {
+                    // Picture has either to be supported, or to come from the right tag standard
+                    doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                    // It also has not to be marked for deletion
+                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                    if (doWritePicture)
+                    {
+                        if (!firstPic)
+                        {
+                            writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                        }
+                        else
+                        {
+                            firstPic = false;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private void writeTextFrame(ref BinaryWriter writer, string frameCode, string text, bool isExtendedHeader=false)
+        {
+            long dataSizePos, dataPos, finalFramePos;
+            byte[] nameBytes = Encoding.Unicode.GetBytes(frameCode + '\0');
+            ushort nameSize = (ushort)nameBytes.Length;
+
+            if (isExtendedHeader)
+            {
+                writer.Write((ushort)0); // Metadata object : Reserved / Metadata library object : Language list index; unused for now
+                writer.Write((ushort)0); // Corresponding stream number; unused for now
+            }
+
+            // Name length and name
+            writer.Write(nameSize);
+            if (!isExtendedHeader) writer.Write(nameBytes);
+
+            ushort frameClass = 0;
+            if (frameClasses.ContainsKey(frameCode)) frameClass = frameClasses[frameCode];
+            writer.Write(frameClass);
+
+            dataSizePos = writer.BaseStream.Position;
+            // Data size placeholder to be rewritten in a few lines
+            if (isExtendedHeader)
+            {
+                writer.Write((uint)0);
+            }
+            else
+            {
+                writer.Write((ushort)0);
+            }
+
+            if (isExtendedHeader) writer.Write(nameBytes);
+
+            dataPos = writer.BaseStream.Position;
+            if (0 == frameClass) // Unicode string
+            {
+                writer.Write(Encoding.Unicode.GetBytes(text + '\0'));
+            }
+            else if (1 == frameClass) // Byte array
+            {
+                // Only used for embedded pictures
+            }
+            else if (2 == frameClass) // 32-bit boolean; 16-bit boolean if in extended header
+            {
+                if (isExtendedHeader) writer.Write(Utils.ToBoolean(text)?(ushort)1:(ushort)0);
+                else writer.Write(Utils.ToBoolean(text) ? (uint)1 : (uint)0);
+            }
+            else if (3 == frameClass) // 32-bit unsigned integer
+            {
+                writer.Write(Convert.ToUInt32(text));
+            }
+            else if (4 == frameClass) // 64-bit unsigned integer
+            {
+                writer.Write(Convert.ToUInt64(text));
+            }
+            else if (5 == frameClass) // 16-bit unsigned integer
+            {
+                writer.Write(Convert.ToUInt16(text));
+            }
+            else if (6 == frameClass) // 128-bit GUID
+            {
+                // Unused for now
+            }
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = writer.BaseStream.Position;
+            writer.BaseStream.Seek(dataSizePos, SeekOrigin.Begin);
+            if (!isExtendedHeader)
+            {
+                writer.Write(Convert.ToUInt16(finalFramePos - dataPos));
+            } else
+            {
+                writer.Write(Convert.ToUInt32(finalFramePos - dataPos));
+            }
+            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, bool isExtendedHeader = false)
+        {
+            long dataSizePos, finalFramePos;
+            byte[] nameBytes = Encoding.Unicode.GetBytes("WM/Picture" + '\0');
+            ushort nameSize = (ushort)nameBytes.Length;
+
+            if (isExtendedHeader)
+            {
+                writer.Write((ushort)0); // Metadata object : Reserved / Metadata library object : Language list index; unused for now
+                writer.Write((ushort)0); // Corresponding stream number; unused for now
+            }
+
+            // Name length and name
+            writer.Write(nameSize);
+            if (!isExtendedHeader) writer.Write(nameBytes);
+
+            ushort frameClass = 1;
+            writer.Write(frameClass);
+
+            dataSizePos = writer.BaseStream.Position;
+            // Data size placeholder to be rewritten in a few lines
+            if (isExtendedHeader)
+            {
+                writer.Write((uint)0);
+            }
+            else
+            {
+                writer.Write((ushort)0);
+            }
+
+            if (isExtendedHeader) writer.Write(nameBytes);
+
+            writer.Write(pictureTypeCode);
+            writer.Write(pictureData.Length);
+
+            writer.Write(Encoding.Unicode.GetBytes(mimeType+'\0'));
+            writer.Write(Encoding.Unicode.GetBytes("" + '\0'));     // Picture description
+
+            writer.Write(pictureData);
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = writer.BaseStream.Position;
+            writer.BaseStream.Seek(dataSizePos, SeekOrigin.Begin);
+            if (!isExtendedHeader)
+            {
+                writer.Write(Convert.ToUInt16(pictureData.Length));
+            }
+            else
+            {
+                writer.Write(Convert.ToUInt32(pictureData.Length));
+            }
+            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
     }

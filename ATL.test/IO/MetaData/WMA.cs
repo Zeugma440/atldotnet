@@ -74,7 +74,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile);
         }
         
-        //[TestMethod]
+//        [TestMethod]
         public void TagIO_RW_WMA_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -82,15 +82,14 @@ namespace ATL.test.IO.MetaData
             // Source : tag-free MP3
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
-
+//            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively
 
             // Construct a new tag
             TagData theTag = new TagData();
@@ -144,7 +143,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
+            //            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -376,9 +375,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
 
-            // Unsupported field (MOOD, translated as WM/Mood)
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("Mood"));
-            Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["Mood"]);
+            // Unsupported field (MOOD)
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("WM/Mood"));
+            Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["WM/Mood"]);
 
 
             // Pictures
