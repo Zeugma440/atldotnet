@@ -52,6 +52,7 @@ namespace ATL.AudioData
         }
 
         private IDictionary<string, Zone> zones;
+        private IDictionary<string,KeyValuePair<long, long>> dynamicOffsetCorrection = new Dictionary<string,KeyValuePair<long,long>>();
         private bool isLittleEndian;
 
 
@@ -198,6 +199,7 @@ namespace ATL.AudioData
         {
             bool result = true;
             int delta;
+            long offsetCorrection;
             byte[] value;
             object updatedValue;
 
@@ -205,6 +207,12 @@ namespace ATL.AudioData
             {
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
+                    offsetCorrection = 0;
+                    foreach(KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
+                    {
+                        if (header.Position >= offsetDelta.Key) offsetCorrection += offsetDelta.Value;
+                    }
+
                     if (FrameHeader.TYPE_COUNTER == header.Type)
                     {
                         switch (action)
@@ -216,11 +224,15 @@ namespace ATL.AudioData
 
                     } else {
                         delta = deltaSize;
+                        if (!dynamicOffsetCorrection.ContainsKey(zone))
+                        {
+                            dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
+                        }
                     }
 
                     if (delta != 0)
                     {
-                        w.BaseStream.Seek(header.Position, SeekOrigin.Begin);
+                        w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
 
                         value = addToValue(header.Value, delta, out updatedValue);
 

@@ -513,19 +513,22 @@ namespace ATL.AudioData
         public bool Remove(BinaryWriter w)
         {
             bool result = true;
+            long cumulativeDelta = 0;
 
             foreach (Zone zone in Zones)
             {
                 if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size, (uint)(zone.Size - zone.CoreSignature.Length));
+                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
                     if (zone.CoreSignature.Length > 0)
                     {
-                        w.BaseStream.Position = zone.Offset;
+                        w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
                     if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(ref w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+
+                    cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
             }
 
