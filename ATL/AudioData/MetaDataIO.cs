@@ -437,15 +437,16 @@ namespace ATL.AudioData
                 TagData dataToWrite;
                 tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
 
-                if (!tagExists || zone.CoreSignature.Length == zone.Size) // If tag not found (e.g. empty file)
+/*                if (!tagExists || zone.CoreSignature.Length == zone.Size) // If tag not found (e.g. empty file)
                 {
                     dataToWrite = tag; // Write new tag information
                 }
                 else
                 {
+*/
                     dataToWrite = tagData;
                     dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
-                }
+//                }
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
@@ -454,55 +455,68 @@ namespace ATL.AudioData
                     if (write(dataToWrite, msw, zone.Name))
                     {
                         newTagSize = s.Length;
+                    } else {
+                        newTagSize = zone.CoreSignature.Length;
+                    }
 
-                        // -- Adjust tag slot to new size in file --
-                        long tagEndOffset;
-                        long tagBeginOffset;
+                    // -- Adjust tag slot to new size in file --
+                    long tagEndOffset;
+                    long tagBeginOffset;
 
-                        if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
+                    if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
+                    {
+                        tagBeginOffset = zone.Offset + cumulativeDelta;
+                        tagEndOffset = tagBeginOffset + zone.Size;
+                    }
+                    else // A brand new tag has been added to the file
+                    {
+                        switch (getDefaultTagOffset())
                         {
-                            tagBeginOffset = zone.Offset;
-                            tagEndOffset = tagBeginOffset + zone.Size;
+                            case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
+                            case TO_BOF: tagBeginOffset = 0; break;
+                            case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
+                            default: tagBeginOffset = -1; break;
                         }
-                        else // A brand new tag has been added to the file
-                        {
-                            switch (getDefaultTagOffset())
-                            {
-                                case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
-                                case TO_BOF: tagBeginOffset = 0; break;
-                                case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
-                                default: tagBeginOffset = -1; break;
-                            }
-                            tagEndOffset = tagBeginOffset + zone.Size;
-                        }
+                        tagEndOffset = tagBeginOffset + zone.Size;
+                    }
 
-                        // Need to build a larger file
-                        if (newTagSize > zone.Size)
-                        {
-                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
-                        }
-                        else if (newTagSize < zone.Size) // Need to reduce file size
-                        {
-                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
-                        }
+                    // Need to build a larger file
+                    if (newTagSize > zone.Size)
+                    {
+                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
+                    }
+                    else if (newTagSize < zone.Size) // Need to reduce file size
+                    {
+                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
+                    }
 
-                        // Copy tag contents to the new slot
-                        r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                        s.Seek(0, SeekOrigin.Begin);
+                    // Copy tag contents to the new slot
+                    r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                    s.Seek(0, SeekOrigin.Begin);
+
+                    if (newTagSize > zone.CoreSignature.Length)
+                    {
                         StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+                    } else
+                    {
+                        if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                    }
 
-                        tagData = dataToWrite;
+                    tagData = dataToWrite;
 
-                        int delta = (int)(newTagSize - oldTagSize);
-                        cumulativeDelta += delta;
+                    int delta = (int)(newTagSize - oldTagSize);
+                    cumulativeDelta += delta;
 
-                        int action = (oldTagSize == zone.CoreSignature.Length && delta > 0) ? FileStructureHelper.ACTION_ADD : FileStructureHelper.ACTION_EDIT;
+                    // Edit wrapping size markers and frame counters if needed
+                    if (delta != 0 && MetaDataIOFactory.TAG_NATIVE == getImplementedTagType())
+                    {
+                        int action;
 
-                        // Edit wrapping size markers and frame counters if needed
-                        if (delta != 0 && MetaDataIOFactory.TAG_NATIVE == getImplementedTagType())
-                        {
-                            result = structureHelper.RewriteMarkers(ref w, delta, action, zone.Name);
-                        }
+                        if (oldTagSize == zone.CoreSignature.Length && delta > 0) action = ACTION_ADD;
+                        else if (newTagSize == zone.CoreSignature.Length && delta < 0) action = ACTION_DELETE;
+                        else action = ACTION_EDIT;
+
+                        result = structureHelper.RewriteMarkers(ref w, delta, action, zone.Name);
                     }
                 }
             }
@@ -510,7 +524,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Remove(BinaryWriter w)
+        public virtual bool Remove(BinaryWriter w)
         {
             bool result = true;
             long cumulativeDelta = 0;

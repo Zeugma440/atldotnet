@@ -124,11 +124,16 @@ namespace ATL
                 TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; StreamNumber = streamNumber; Language = language; Zone = zone;
             }
 
+            public MetaFieldInfo(MetaFieldInfo info)
+            {
+                TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone;
+            }
+
             // ---------------- OVERRIDES FOR DICTIONARY STORING
 
             public override string ToString()
             {
-                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0') + Language;
+                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0') + Language + Zone;
             }
 
             public override int GetHashCode()

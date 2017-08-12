@@ -79,7 +79,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : tag-free MP3
+            // Source : tag-free WMA
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
@@ -89,7 +89,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-//            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively
+            //            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively for playback usage, e.g. DeviceConformanceTemplate, isVBR, WMFSDKxxx
 
             // Construct a new tag
             TagData theTag = new TagData();
@@ -135,21 +135,19 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            //            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively
+            //            Assert.IsFalse(theFile.NativeTag.Exists); A WMA file _always_ embeds metadata natively for playback usage, e.g. DeviceConformanceTemplate, isVBR, WMFSDKxxx
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            /* NOT POSSIBLE YET : ATL deletes _every_ metadata, contrary to fb2k or mp3tag that keeps some non-descriptive (non-WM/xxx ?) stuff, e.g. isVBR, DeviceConformanceTemplate, WMFSDKxxx
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
             string originalMD5 = TestUtils.GetFileMD5Hash(location);
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
             Assert.IsTrue(originalMD5.Equals(testMD5));
-            */
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
@@ -221,7 +219,7 @@ namespace ATL.test.IO.MetaData
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
             string originalMD5 = TestUtils.GetFileMD5Hash(location);
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);

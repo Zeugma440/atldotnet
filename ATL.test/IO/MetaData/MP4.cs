@@ -145,7 +145,7 @@ namespace ATL.test.IO.MetaData
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
             string originalMD5 = TestUtils.GetFileMD5Hash(location);
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
@@ -223,7 +223,7 @@ namespace ATL.test.IO.MetaData
                         FileInfo originalFileInfo = new FileInfo(location);
                         FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-                        Assert.AreEqual(testFileInfo.Length, originalFileInfo.Length);
+                        Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
                         string originalMD5 = TestUtils.GetFileMD5Hash(location);
                         string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
