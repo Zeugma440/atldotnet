@@ -432,15 +432,14 @@ namespace ATL.AudioData
                 structureHelper.AddZone(0, 0);
             }
 
+            TagData dataToWrite;
+            tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
+            dataToWrite = tagData;
+            dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+
             foreach (Zone zone in Zones)
             {
                 oldTagSize = zone.Size;
-
-                TagData dataToWrite;
-                tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
-
-                dataToWrite = tagData;
-                dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
@@ -496,8 +495,6 @@ namespace ATL.AudioData
                         if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
                     }
 
-                    tagData = dataToWrite;
-
                     int delta = (int)(newTagSize - oldTagSize);
                     cumulativeDelta += delta;
 
@@ -514,6 +511,7 @@ namespace ATL.AudioData
                     }
                 }
             }
+            tagData = dataToWrite;
 
             return result;
         }

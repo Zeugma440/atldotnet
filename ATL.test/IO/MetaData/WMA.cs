@@ -236,13 +236,14 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TagIO_RW_WMA_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
+            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (WM/Mood)
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -297,8 +298,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-
-/* NOT POSSIBLE YET mainly due to tag order and padding differences
+/* Not possible yet due to zone order differences
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
