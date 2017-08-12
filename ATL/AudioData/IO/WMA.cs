@@ -1041,28 +1041,35 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        // Necessary override for ASF specifics (non-WM/xxx fields have to be kept for playback needs)
+        // Override for conservation of non-WM/xxx fields
         public override bool Remove(BinaryWriter w)
         {
-            TagData tag = new TagData();
-
-            foreach (byte b in frameMapping.Values)
+            if (ASF_keepNonWMFieldsWhenRemovingTag)
             {
-                tag.IntegrateValue(b, "");
-            }
+                TagData tag = new TagData();
 
-            foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
-            {
-                if (fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/"))
+                foreach (byte b in frameMapping.Values)
                 {
-                    TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
-                    emptyFieldInfo.MarkedForDeletion = true;
-                    tag.AdditionalFields.Add(emptyFieldInfo);
+                    tag.IntegrateValue(b, "");
                 }
-            }
 
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+                foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
+                {
+                    if (fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/"))
+                    {
+                        TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
+                        emptyFieldInfo.MarkedForDeletion = true;
+                        tag.AdditionalFields.Add(emptyFieldInfo);
+                    }
+                }
+
+                BinaryReader r = new BinaryReader(w.BaseStream);
+                return Write(r, w, tag);
+            } else
+            {
+                return base.Remove(w);
+            }
         }
+
     }
 }

@@ -11,7 +11,8 @@ namespace ATL.AudioData
     public abstract class MetaDataIO : IMetaDataIO
     {
         // General properties
-        protected static bool useID3v2ExtendedHeaderRestrictions = false;
+        protected static bool ID3v2_useExtendedHeaderRestrictions = false;
+        protected static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 
         // Default tag offset
         protected const int TO_EOF = 0;     // End Of File
@@ -46,7 +47,8 @@ namespace ATL.AudioData
         protected FileStructureHelper structureHelper;
 
 
-        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { useID3v2ExtendedHeaderRestrictions = b; }
+        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
+        public static void SetASFKeepNonWMFieldWhenRemoving(bool b) { ASF_keepNonWMFieldsWhenRemovingTag = b; }
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
@@ -427,7 +429,7 @@ namespace ATL.AudioData
 
             if (!tagExists && 0 == Zones.Count)
             {
-                structureHelper.AddZone(0, 0); // TODO - test if this applies to complex situations where there is no core signature (empty WMA ?)
+                structureHelper.AddZone(0, 0);
             }
 
             foreach (Zone zone in Zones)
@@ -437,16 +439,8 @@ namespace ATL.AudioData
                 TagData dataToWrite;
                 tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
 
-/*                if (!tagExists || zone.CoreSignature.Length == zone.Size) // If tag not found (e.g. empty file)
-                {
-                    dataToWrite = tag; // Write new tag information
-                }
-                else
-                {
-*/
-                    dataToWrite = tagData;
-                    dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
-//                }
+                dataToWrite = tagData;
+                dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))

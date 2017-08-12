@@ -112,7 +112,8 @@
     <Content Include="Resources\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\duck hunt.wav" />
-    <Content Include="Resources\empty.wma" />
+    <Content Include="Resources\empty_full.wma" />
+    <Content Include="Resources\empty_non-WMFields.wma" />
     <Content Include="Resources\id3v1.mp3" />
     <Content Include="Resources\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\ID3v2.2 ANSI charset only.mp3" />
