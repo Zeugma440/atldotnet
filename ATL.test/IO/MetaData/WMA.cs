@@ -431,6 +431,25 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_RW_WMA_ID3v1()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WMA_ID3v2()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WMA_APE()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
+        }
+
+
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
         {
             pictures.Clear();
