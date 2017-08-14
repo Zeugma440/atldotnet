@@ -36,6 +36,7 @@ namespace ATL.AudioData
             public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
         }
 
+        // TODO - instanciate only when needed !
         private IMetaDataIO iD3v1 = new ID3v1();
         private IMetaDataIO iD3v2 = new ID3v2();
         private IMetaDataIO aPEtag = new APEtag();

@@ -276,57 +276,14 @@ namespace ATL.AudioData
             return metaData.Write(r, w, tag);
         }
 
+
         // TODO - make interfaces more modular to clean the mess below
-        public ID3v1 ID3v1
-        {
-            get { throw new NotImplementedException(); }
-        }
-        public ID3v2 ID3v2
-        {
-            get { throw new NotImplementedException(); }
-        }
-        public APEtag APEtag
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-
-        public IMetaDataIO NativeTag
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RemoveTagFromFile(int tagType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AddTagToFile(int tagType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool UpdateTagInFile(TagData theTag, int tagType)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool HasNativeMeta()
         {
             throw new NotImplementedException();
         }
 
         public bool IsMetaSupported(int metaDataType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RewriteSizeMarkers(BinaryWriter w, int deltaSize)
         {
             throw new NotImplementedException();
         }
