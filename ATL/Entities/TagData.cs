@@ -131,6 +131,11 @@ namespace ATL
 
             // ---------------- OVERRIDES FOR DICTIONARY STORING
 
+            public string ToStringWithoutZone()
+            {
+                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0') + Language;
+            }
+
             public override string ToString()
             {
                 return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0') + Language + Zone;
@@ -139,6 +144,18 @@ namespace ATL
             public override int GetHashCode()
             {
                 return Utils.GetInt32MD5Hash(ToString());
+            }
+
+            public bool EqualsWithoutZone(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+
+                // Actually check the type, should not throw exception from Equals override
+                if (obj.GetType() != this.GetType()) return false;
+
+                // Call the implementation from IEquatable
+                return this.ToStringWithoutZone().Equals(((MetaFieldInfo)obj).ToStringWithoutZone());
             }
 
             public override bool Equals(object obj)
@@ -273,31 +290,31 @@ namespace ATL
                 }
             }
 
+            bool found;
             // Additional textual fields
             foreach (MetaFieldInfo newMetaInfo in data.AdditionalFields)
             {
-                // New MetaFieldInfo field type already exists in current TagData
-                if (AdditionalFields.Contains(newMetaInfo))
+                found = false;
+                foreach (MetaFieldInfo metaInfo in AdditionalFields)
                 {
-                    // New MetaFieldInfo is a demand for deletion
-                    if (newMetaInfo.MarkedForDeletion)
+                    if (metaInfo.EqualsWithoutZone(newMetaInfo)) // New MetaFieldInfo field type+streamNumber+language already exists in current TagData
                     {
-                        foreach (MetaFieldInfo metaInfo in AdditionalFields)
+                        if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
+                        else
                         {
-                            if (metaInfo.ToString().Equals(newMetaInfo.ToString()))
-                            {
-                                metaInfo.MarkedForDeletion = true;
-                            }
+                            found = true;
+                            break;
                         }
                     }
-                    else // New MetaFieldInfo is a X-th field of the same type : unsupported
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field type "+newMetaInfo.NativeFieldCode+" already exists for tag type "+newMetaInfo.TagType+ " on current TagData");
-                    }
                 }
-                else // New MetaFieldInfo type does not exist in current TagData
+
+                if (!newMetaInfo.MarkedForDeletion && !found) // New MetaFieldInfo type+streamNumber+language does not exist in current TagData
                 {
                     AdditionalFields.Add(newMetaInfo);
+                }
+                else // New MetaFieldInfo is a X-th field of the same type+streamNumber+language : unsupported
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field type "+newMetaInfo.NativeFieldCode+" already exists for tag type "+newMetaInfo.TagType+ " on current TagData");
                 }
             }
         }

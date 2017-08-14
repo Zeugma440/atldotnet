@@ -313,7 +313,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
             // Source : tag-free MP3

@@ -357,10 +357,7 @@ namespace ATL.AudioData.IO
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
                 }
-                else
-                {
-                    tagData.AdditionalFields.Add(fieldInfo);
-                }
+                tagData.AdditionalFields.Add(fieldInfo);
             }
         }
 
