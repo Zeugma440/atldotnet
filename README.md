@@ -98,7 +98,7 @@ True Audio|.TTA|R|R|R| |
 TwinVQ|.VQF| | | |R|
 PCM (uncompressed audio)|.WAV|R| | | |
 WavPack|.WV| | |R| |
-Windows Media Audio|.WMA| | | |R|
+Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 
 (1) : MIDI meta events appear on the track's Comment field
