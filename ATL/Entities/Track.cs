@@ -49,20 +49,26 @@ namespace ATL
         protected Image coverArt = null;
 
 
-        public Image GetEmbeddedPicture()
+        public Image GetEmbeddedPicture(bool useOldImplementation = false)
         {
             if (null == coverArt)
             {
-                Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                if (useOldImplementation)
+                {
+                    UpdateOld(new StreamUtils.StreamHandlerDelegate(this.readImageDataOld));
+                }
+                else
+                {
+                    Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                }
             }
             
             return coverArt;
         }
 
-        // Kept for compatibility issues during parallel development
-        protected void readImageData(ref MemoryStream s)
+        protected void readImageDataOld(ref MemoryStream s)
         {
-            readImageData(ref s, TagData.PIC_TYPE.Front, ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0, 1);
+            coverArt = Image.FromStream(s);
         }
 
         protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)

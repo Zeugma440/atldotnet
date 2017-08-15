@@ -58,8 +58,13 @@ namespace ATL.test
         [TestMethod, TestCategory("manual")]
         public void FF_FilterAndDisplayAudioFiles()
         {
+            FF_FilterAndDisplayAudioFiles(null, false);
+        }
+
+        public void FF_FilterAndDisplayAudioFiles(string path, bool useOldImplementation = false)
+        {
             //string folder = TestUtils.GetResourceLocationRoot();
-            string folder = @"E:\temp\wma";
+            string folder = (null == path) ? @"E:\temp\wma" : path;
             string[] files = Directory.GetFiles(folder);
 
             Track t;
@@ -68,9 +73,9 @@ namespace ATL.test
             {
                 if (isFormatSupported(file))
                 {
-                    t = new Track(file);
+                    t = new Track(file, useOldImplementation);
                     Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR?" VBR)":")") );
-                    Console.WriteLine(Utils.BuildStrictLengthString("",t.Path.Length,'.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + (t.PictureTokens.Count>0?" ("+ t.PictureTokens.Count+" picture(s))":""));
+                    Console.WriteLine(Utils.BuildStrictLengthString("",t.Path.Length,'.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + ( (t.PictureTokens != null && t.PictureTokens.Count>0)?" ("+ t.PictureTokens.Count+" picture(s))":""));
                 }
             }
         }
