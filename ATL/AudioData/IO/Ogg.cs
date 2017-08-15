@@ -102,15 +102,15 @@ namespace ATL.AudioData.IO
 		// Ogg page header
 		private class OggHeader 
 		{
-			public char[] ID = new char[4];                           // Always "OggS"
-			public byte StreamVersion;                     // Stream structure version
-			public byte TypeFlag;                                  // Header type flag
-			public long AbsolutePosition;                 // Absolute granule position
-			public int Serial;                                 // Stream serial number
-			public int PageNumber;                             // Page sequence number
-			public int Checksum;                                      // Page checksum
-			public byte Segments;                           // Number of page segments
-			public byte[] LacingValues = new byte[0xFF]; // Lacing values - segment sizes
+			public char[] ID = new char[4];                                 // Always "OggS"
+			public byte StreamVersion;                           // Stream structure version
+			public byte TypeFlag;                                        // Header type flag
+			public long AbsolutePosition;                       // Absolute granule position
+			public int Serial;                                       // Stream serial number
+			public int PageNumber;                                   // Page sequence number
+			public int Checksum;                                            // Page checksum
+			public byte Segments;                                 // Number of page segments
+			public byte[] LacingValues = new byte[0xFF];    // Lacing values - segment sizes
 
 			public void Reset()
 			{
@@ -124,6 +124,19 @@ namespace ATL.AudioData.IO
 				Segments = 0;
 				Array.Clear(LacingValues,0,LacingValues.Length);
 			}
+
+            public void ReadFromStream(ref BinaryReader r)
+            {
+                ID = r.ReadChars(4);
+                StreamVersion = r.ReadByte();
+                TypeFlag = r.ReadByte();
+                AbsolutePosition = r.ReadInt64();
+                Serial = r.ReadInt32();
+                PageNumber = r.ReadInt32();
+                Checksum = r.ReadInt32();
+                Segments = r.ReadByte();
+                LacingValues = r.ReadBytes(Segments);
+            }
 
             public int GetPageLength()
             {
@@ -195,19 +208,23 @@ namespace ATL.AudioData.IO
 		// File data
 		private class FileInfo
 		{
-			public OggHeader FPage = new OggHeader();
-			public OggHeader SPage = new OggHeader();
-			public OggHeader LPage = new OggHeader();               // First, second and last page
+			public OggHeader IdentificationHeader = new OggHeader();
+			public OggHeader CommentHeader = new OggHeader();
+			public OggHeader SetupHeader = new OggHeader();               // First, second and last page
+            
+            // Following two properties are mutually exclusive
 			public VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
             public OpusHeader OpusParameters = new OpusHeader();          // Opus parameter header
+            // TODO - handle Theora
+
 			public int Samples;                                         // Total number of samples
 			public int SPagePos;                                    // Position of second Ogg page
 
 			public void Reset()
 			{
-				FPage.Reset();
-				SPage.Reset();
-				LPage.Reset();
+				IdentificationHeader.Reset();
+				CommentHeader.Reset();
+				SetupHeader.Reset();
 				VorbisParameters.Reset();
                 OpusParameters.Reset();
 				Samples = 0;
@@ -453,16 +470,7 @@ namespace ATL.AudioData.IO
 					if ( StreamUtils.StringEqualsArr(OGG_PAGE_ID,tempArray) ) 
 					{
 						Source.BaseStream.Seek(DataIndex + iterator, SeekOrigin.Begin);
-        
-						Header.ID = Source.ReadChars(4);
-						Header.StreamVersion = Source.ReadByte();
-						Header.TypeFlag = Source.ReadByte();
-						Header.AbsolutePosition = Source.ReadInt64();
-						Header.Serial = Source.ReadInt32();
-						Header.PageNumber = Source.ReadInt32();
-						Header.Checksum = Source.ReadInt32();
-						Header.Segments = Source.ReadByte();
-						Header.LacingValues = Source.ReadBytes(0xFF);
+                        Header.ReadFromStream(ref Source);
 						return Header.AbsolutePosition;
 					}
 				}
@@ -481,22 +489,14 @@ namespace ATL.AudioData.IO
             bool isValidHeader = false;
 
             // Check for ID3v2
-			source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);    
+			source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // Read global file header
-			info.FPage.ID = source.ReadChars(4);
-			info.FPage.StreamVersion = source.ReadByte();
-			info.FPage.TypeFlag = source.ReadByte();
-			info.FPage.AbsolutePosition = source.ReadInt64();
-			info.FPage.Serial = source.ReadInt32();
-			info.FPage.PageNumber = source.ReadInt32();
-			info.FPage.Checksum = source.ReadInt32();
-			info.FPage.Segments = source.ReadByte();
-			info.FPage.LacingValues = source.ReadBytes(0xFF);
+            info.IdentificationHeader.ReadFromStream(ref source);
 
-			if ( StreamUtils.StringEqualsArr(OGG_PAGE_ID,info.FPage.ID) )
+			if ( StreamUtils.StringEqualsArr(OGG_PAGE_ID,info.IdentificationHeader.ID) )
 			{
-				source.BaseStream.Seek(sizeInfo.ID3v2Size + info.FPage.Segments + 27, SeekOrigin.Begin);
+				source.BaseStream.Seek(sizeInfo.ID3v2Size + info.IdentificationHeader.Segments + 27, SeekOrigin.Begin); // 27 being the size from 'ID' to 'Segments'
 
 				// Read Vorbis or Opus stream info
                 long position = source.BaseStream.Position;
@@ -549,7 +549,7 @@ namespace ATL.AudioData.IO
 
 				if ( isValidHeader ) 
 				{
-                    // Reads all related Vorbis pages that describe file header
+                    // Reads all related Vorbis pages that describe Comment and Setup headers
                     // and concatenate their content into a single, continuous data stream
                     bool loop = true;
                     bool first = true;
@@ -560,28 +560,28 @@ namespace ATL.AudioData.IO
                         {
                             info.SPagePos = (int)fs.Position;
 
-                            info.SPage.ID = source.ReadChars(4);
-                            info.SPage.StreamVersion = source.ReadByte();
-                            info.SPage.TypeFlag = source.ReadByte();
+                            info.CommentHeader.ID = source.ReadChars(4);
+                            info.CommentHeader.StreamVersion = source.ReadByte();
+                            info.CommentHeader.TypeFlag = source.ReadByte();
                             // 0 marks a new page
-                            if (0 == info.SPage.TypeFlag)
+                            if (0 == info.CommentHeader.TypeFlag)
                             {
                                 loop = first;
                             }
                             if (loop)
                             {
-                                info.SPage.AbsolutePosition = source.ReadInt64();
-                                info.SPage.Serial = source.ReadInt32();
-                                info.SPage.PageNumber = source.ReadInt32();
-                                info.SPage.Checksum = source.ReadInt32();
-                                info.SPage.Segments = source.ReadByte();
-                                info.SPage.LacingValues = source.ReadBytes(info.SPage.Segments);
-                                s.Write(source.ReadBytes(info.SPage.GetPageLength()), 0, info.SPage.GetPageLength());
+                                info.CommentHeader.AbsolutePosition = source.ReadInt64();
+                                info.CommentHeader.Serial = source.ReadInt32();
+                                info.CommentHeader.PageNumber = source.ReadInt32();
+                                info.CommentHeader.Checksum = source.ReadInt32();
+                                info.CommentHeader.Segments = source.ReadByte();
+                                info.CommentHeader.LacingValues = source.ReadBytes(info.CommentHeader.Segments);
+                                s.Write(source.ReadBytes(info.CommentHeader.GetPageLength()), 0, info.CommentHeader.GetPageLength());
                             }
                             first = false;
                         }
 
-                        // Get total number of samples -- unused so far
+                        // Get total number of samples
                         info.Samples = (int)GetSamples(ref source);
 
                         if (readTagParams.ReadTag)

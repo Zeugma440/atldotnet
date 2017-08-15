@@ -153,8 +153,8 @@ namespace ATL.AudioData.IO
                 Source.Read(encodedData, 0, size);
 
                 // Gets rid of unwanted zeroes
-                // TODO document this treatment - why the 61 ?
-                for (int i = 0; i < encodedData.Length; i++) if (0 == encodedData[i]) encodedData[i] = 61;
+                // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
+                for (int i = 0; i < encodedData.Length; i++) if (0 == encodedData[i]) encodedData[i] = 0x3D;
 
                 int picturePosition;
                 MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
