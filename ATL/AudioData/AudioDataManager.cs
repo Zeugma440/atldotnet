@@ -220,21 +220,17 @@ namespace ATL.AudioData
             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
             readTagParams.PrepareForWriting = prepareForWriting;
 
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read begin");
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {
                 if (iD3v1.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V1, iD3v1.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v1 end");
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
                 if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read id3v2 end");
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_APE))
             {
                 if (aPEtag.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_APE, aPEtag.Size);
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read ape end");
             }
 
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
@@ -249,7 +245,6 @@ namespace ATL.AudioData
                 readTagParams.ReadTag = false;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
             }
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "read end");
 
             return result;
         }
