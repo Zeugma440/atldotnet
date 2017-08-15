@@ -2,7 +2,6 @@ using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ATL.PlaylistReaders.BinaryLogic
@@ -55,23 +54,29 @@ namespace ATL.PlaylistReaders.BinaryLogic
                     result = source.Value;
 
                     // It it an URI ?
-                    if (result.Contains("://") && Uri.IsWellFormedUriString(result,UriKind.RelativeOrAbsolute))
+                    if (result.Contains("://"))
                     {
-                        try
+                        if (Uri.IsWellFormedUriString(result, UriKind.RelativeOrAbsolute))
                         {
-                            Uri uri = new Uri(result);
-                            if (uri.IsFile)
+                            try
                             {
-                                result = uri.LocalPath;
+                                Uri uri = new Uri(result);
+                                if (uri.IsFile)
+                                {
+                                    result = uri.LocalPath;
+                                }
+                                else // other protocols (e.g. HTTP, SMB)
+                                {
+                                    //TODO
+                                }
                             }
-                            else // other protocols (e.g. HTTP, SMB)
+                            catch (UriFormatException)
                             {
-                                //TODO
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
                             }
-                        }
-                        catch (UriFormatException)
+                        } else
                         {
-                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
+                            result = result.Replace("file:///", "").Replace("file://", "");
                         }
                     }
                     
@@ -79,6 +84,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
                     {
                         result = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), result);
                     }
+                    result = System.IO.Path.GetFullPath(result);
                 }
             }
             return result;
