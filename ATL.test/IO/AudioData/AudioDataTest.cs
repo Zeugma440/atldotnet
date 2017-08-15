@@ -36,43 +36,43 @@ namespace ATL.test
         [TestMethod]
         public void Audio_MP3_VBR()
         {
-            testGenericAudio("01 - Title Screen.mp3", 4, 129, 44100, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("MP3/01 - Title Screen.mp3", 4, 129, 44100, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_AAC_MP4()
         {
-            testGenericAudio("mp4.m4a", 14, 75, 48000, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("AAC/mp4.m4a", 14, 75, 48000, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_AAC_ADTS()
         {
-            testGenericAudio("adts_CBR88_8s.aac", 8, 88, 44100, false, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("AAC/adts_CBR88_8s.aac", 8, 88, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_AAC_ADIF()
         {
-            testGenericAudio("adif_CBR88_8s.aac", 8, 88, 44100, false, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("AAC/adif_CBR88_8s.aac", 8, 88, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_WMA()
         {
-            testGenericAudio("wma.wma", 14, 9, 8000, false, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("WMA/wma.wma", 14, 9, 8000, false, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_OGG()
         {
-            testGenericAudio("Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("OGG/Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
         public void Audio_Opus()
         {
-            testGenericAudio("01_2_32.opus", 31, 33, 48000, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("OPUS/01_2_32.opus", 31, 33, 48000, true, AudioDataIOFactory.CF_LOSSY);
         }
 
 

@@ -59,8 +59,8 @@ namespace ATL.test.IO.MetaData
     {
         public MP4()
         {
-            emptyFile = "empty.m4a";
-            notEmptyFile = "mp4.m4a";
+            emptyFile = "AAC/empty.m4a";
+            notEmptyFile = "AAC/mp4.m4a";
         }
 
 
@@ -70,7 +70,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "mp4.m4a";
+            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             readExistingTagsOnFile(ref theFile,1);
@@ -82,8 +82,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : tag-free M4A
-            string location = TestUtils.GetResourceLocationRoot() + "empty.m4a";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
+            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 
@@ -162,7 +162,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile("mp4.m4a");
+            String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
             // Add a new supported field and a new supported picture
@@ -238,7 +238,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_Unsupported_Empty()
         {
             // Source : tag-free M4A
-            String testFileLocation = TestUtils.GetTempTestFile("empty.m4a");
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 

@@ -14,7 +14,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : tag-free MP3
-            string resourceName = "empty.mp3";
+            string resourceName = "MP3/empty.mp3";
             string location = TestUtils.GetResourceLocationRoot() + resourceName;
             string testFileLocation = TestUtils.GetTempTestFile(resourceName);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
@@ -84,7 +84,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag
-            String testFileLocation = TestUtils.GetTempTestFile("id3v1.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v1.mp3");
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
             // Construct a new tag; only rewrite Genre and track number
@@ -115,7 +115,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v1()
         {
             // Source : MP3 with existing tag
-            String location = TestUtils.GetResourceLocationRoot()+"id3v1.mp3";
+            String location = TestUtils.GetResourceLocationRoot()+ "MP3/id3v1.mp3";
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             Assert.IsTrue(theFile.ReadFromFile());

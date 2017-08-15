@@ -1,0 +1,7 @@
+#EXTM3U
+#EXTINF:103,local.MID
+local.MID
+#EXTINF:3,empty
+$PATH\MP3\empty.mp3
+#EXTINF:7,empty.ogg
+$NODISK_PATH\OGG\empty.ogg

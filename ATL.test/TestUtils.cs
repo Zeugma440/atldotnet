@@ -10,7 +10,7 @@ namespace ATL.test
         public static string REPO_NAME = "atldotnet";
         private static string locationRoot = null;
 
-        public static string GetResourceLocationRoot()
+        public static string GetResourceLocationRoot(bool includeFinalSeparator = true)
         {
             if (null == locationRoot)
             {
@@ -18,17 +18,19 @@ namespace ATL.test
 
                 locationRoot = locationRoot.Substring(0, locationRoot.IndexOf(REPO_NAME) + REPO_NAME.Length);
 
-                locationRoot += Path.DirectorySeparatorChar + "ATL.test" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar;
+                locationRoot += Path.DirectorySeparatorChar + "ATL.test" + Path.DirectorySeparatorChar + "Resources";
             }
 
-            return locationRoot;
+            if (includeFinalSeparator) return locationRoot + Path.DirectorySeparatorChar; else return locationRoot;
         }
 
         public static string GetTempTestFile(string fileName)
         {
             string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
+            int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
+            string bareFileName = fileName.Substring(lastSeparatorPos+1, fileName.Length - lastSeparatorPos - 1);
             if (!Directory.Exists(GetResourceLocationRoot()+"tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
-            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + fileName + "--" + DateTime.Now.ToLongTimeString().Replace(":", ".") + extension;
+            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToLongTimeString().Replace(":", ".") + extension;
 
             // Create writable a working copy
             File.Copy(GetResourceLocationRoot() + fileName, result, true);

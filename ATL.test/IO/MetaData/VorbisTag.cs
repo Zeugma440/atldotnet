@@ -57,8 +57,8 @@ namespace ATL.test.IO.MetaData
     {
         public VorbisTag()
         {
-            emptyFile = "empty.ogg";
-            notEmptyFile = "Rayman_2_music_sample.ogg";
+            emptyFile = "OGG/empty.ogg";
+            notEmptyFile = "OGG/Rayman_2_music_sample.ogg";
         }
 
         [TestMethod]

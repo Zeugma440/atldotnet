@@ -1,9 +1,0 @@
-<smil>
-  <head />
-  <body>
-    <seq repeatCount="indefinite">
-      <media src="mustang_12kHz.flac" />
-      <media src="duck hunt.wav" />
-    </seq>
-  </body>
-</smil>

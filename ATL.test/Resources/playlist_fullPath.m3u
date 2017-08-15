@@ -1,7 +1,0 @@
-#EXTM3U
-#EXTINF:0,ARTIST - noTagnoTag
-$PATH\ID3v2.2 3 pictures.mp3
-#EXTINF:0,ARTIST - noTagnoTag
-$PATH\ID3v2.2 ANSI charset only.mp3
-#EXTINF:3,Artist - Title
-$PATH\id3v1.mp3

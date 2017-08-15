@@ -18,7 +18,7 @@ namespace ATL.test.IO
             /* end set options */
 
             // TODO SWITCH OLD CODE TO NEW CODE
-            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "01 - Title Screen.mp3");
+            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(0, theTrack.Year); // Specifically tagged as empty on the ID3v1 tag
@@ -35,7 +35,7 @@ namespace ATL.test.IO
             /* end set options */
 
             // TODO SWITCH OLD CODE TO NEW CODE
-            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "01 - Title Screen.mp3");
+            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(1984, theTrack.Year); // Empty on the ID3v1 tag => cross-reading should read it on ID3v2

@@ -58,8 +58,8 @@ namespace ATL.test.IO.MetaData
     {
         public APE()
         {
-            emptyFile = "empty.mp3";
-            notEmptyFile = "APE.mp3";
+            emptyFile = "MP3/empty.mp3";
+            notEmptyFile = "MP3/APE.mp3";
         }
 
 

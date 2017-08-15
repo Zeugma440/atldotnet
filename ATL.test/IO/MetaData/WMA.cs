@@ -57,8 +57,8 @@ namespace ATL.test.IO.MetaData
     {
         public WMA()
         {
-            emptyFile = "empty_full.wma";
-            notEmptyFile = "wma.wma";
+            emptyFile = "WMA/empty_full.wma";
+            notEmptyFile = "WMA/wma.wma";
         }
 
         [TestMethod]
@@ -157,8 +157,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : WMA with remaining non-WM metadata used for playback (isVBR, DeviceConformanceTemplate, WMFSDKxxx)
-            string location = TestUtils.GetResourceLocationRoot() + "empty_non-WMFields.wma";
-            string testFileLocation = TestUtils.GetTempTestFile("empty_non-WMFields.wma");
+            string location = TestUtils.GetResourceLocationRoot() + "WMA/empty_non-WMFields.wma";
+            string testFileLocation = TestUtils.GetTempTestFile("WMA/empty_non-WMFields.wma");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check that it is indeed tag-free

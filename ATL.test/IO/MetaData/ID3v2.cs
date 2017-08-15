@@ -64,14 +64,14 @@ namespace ATL.test.IO.MetaData
     {
         public ID3v2()
         {
-            emptyFile = "empty.mp3";
-            notEmptyFile = "ID3v2.2 UTF16.mp3";
+            emptyFile = "MP3/empty.mp3";
+            notEmptyFile = "MP3/ID3v2.2 UTF16.mp3";
         }
 
         [TestMethod]
         public void TagIO_R_ID3v22_simple()
         {
-            string location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 ANSI charset only.mp3";
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 ANSI charset only.mp3";
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
             pictures.Clear();
@@ -116,7 +116,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 UTF16.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 UTF16.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
             pictures.Clear();
@@ -161,7 +161,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_3pictures()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "ID3v2.2 3 pictures.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
             pictures.Clear();
@@ -195,7 +195,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v23_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "id3v2.3_UTF16.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
             readExistingTagsOnFile(ref theFile);
@@ -205,7 +205,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v24_UTF8()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "id3v2.4_UTF8.mp3";
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_UTF8.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
             readExistingTagsOnFile(ref theFile);
@@ -215,8 +215,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Empty()
         {
             // Source : tag-free MP3
-            string location = TestUtils.GetResourceLocationRoot() + "empty.mp3";
-            string testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
+            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
 
@@ -303,7 +303,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile("id3v2.3_UTF16.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.3_UTF16.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -378,7 +378,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Unsupported_Empty()
         {
             // Source : tag-free MP3
-            String testFileLocation = TestUtils.GetTempTestFile("empty.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 
 

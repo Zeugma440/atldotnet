@@ -11,7 +11,7 @@ namespace ATL.test.IO.Perf
         const int NB_COPIES = 2000;
         const FileOptions FILE_FLAG_NOBUFFERING = (FileOptions)0x20000000;
 
-        static string LOCATION = TestUtils.GetResourceLocationRoot()+"01 - Title Screen_pic.mp3";
+        static string LOCATION = TestUtils.GetResourceLocationRoot()+"MP3/01 - Title Screen_pic.mp3";
 
         private static string getNewLocation(int index)
         {
