@@ -13,37 +13,37 @@ namespace ATL.AudioData.IO
 	{
 
 		// Table for bit rates (KBit/s)
-		public static ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
-   {
-	   // For MPEG 2.5
-		{
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
-			{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
-			{0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0}
-		},
-	   // Reserved
-		{
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-		},
-	   // For MPEG 2
-		{
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
-			{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
-			{0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0}
-		},
-	   // For MPEG 1
-		{
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0},
-			{0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0},
-			{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0}
-		}
-   };
+		public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
+        {
+	       // For MPEG 2.5
+		    {
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
+			    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
+			    {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0}
+		    },
+	       // Reserved
+		    {
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+		    },
+	       // For MPEG 2
+		    {
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
+			    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0},
+			    {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0}
+		    },
+	       // For MPEG 1
+		    {
+			    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			    {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0},
+			    {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0},
+			    {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0}
+		    }
+        };
 
 		// Sample rate codes
 		public const byte MPEG_SAMPLE_RATE_LEVEL_3 = 0;                    // Level 3
@@ -52,13 +52,13 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_SAMPLE_RATE_UNKNOWN = 3;              // Unknown value
 
 		// Table for sample rates
-		public static ushort[,] MPEG_SAMPLE_RATE = new ushort[4,4]
-	{
-		{11025, 12000, 8000, 0},                                   // For MPEG 2.5
-		{0, 0, 0, 0},                                                  // Reserved
-		{22050, 24000, 16000, 0},                                    // For MPEG 2
-		{44100, 48000, 32000, 0}                                     // For MPEG 1
-	};
+		public readonly static ushort[,] MPEG_SAMPLE_RATE = new ushort[4,4]
+	    {
+		    {11025, 12000, 8000, 0},                                   // For MPEG 2.5
+		    {0, 0, 0, 0},                                                  // Reserved
+		    {22050, 24000, 16000, 0},                                    // For MPEG 2
+		    {44100, 48000, 32000, 0}                                     // For MPEG 1
+    	};
 
 		// VBR header ID for Xing/FhG
 		public const String VBR_ID_XING = "Xing";                       // Xing VBR ID
@@ -71,8 +71,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_VERSION_1 = 3;                                // MPEG 1
 
 		// MPEG version names
-		public String[] MPEG_VERSION = new String[4]
-	{"MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1"};
+		public readonly String[] MPEG_VERSION = new String[4] {"MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1"};
 
 		// MPEG layer codes
 		public const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
@@ -81,8 +80,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_LAYER_I = 3;                                 // Layer I
 
 		// MPEG layer names
-		public String[] MPEG_LAYER = new String[4]
-	{"Layer ?", "Layer III", "Layer II", "Layer I"};
+		public readonly String[] MPEG_LAYER = new String[4]	{"Layer ?", "Layer III", "Layer II", "Layer I"};
 
 		// Channel mode codes
 		public const byte MPEG_CM_STEREO = 0;                                // Stereo
@@ -92,8 +90,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
 
 		// Channel mode names
-		public String[] MPEG_CM_MODE = new String[5]
-	{"Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown"};
+		public readonly String[] MPEG_CM_MODE = new String[5] {"Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown"};
 
 		// Extension mode codes (for Joint Stereo)
 		public const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
@@ -109,8 +106,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
 
 		// Emphasis names
-		public String[] MPEG_EMPHASIS = new String[4]
-	{"None", "50/15 ms", "Unknown", "CCIT J.17"};
+		public readonly String[] MPEG_EMPHASIS = new String[4] {"None", "50/15 ms", "Unknown", "CCIT J.17"};
 
 		// Encoder codes
 		public const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
@@ -123,8 +119,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
 
 		// Encoder names
-		public String[] MPEG_ENCODER = new String[8]
-	{"Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign"};
+		public readonly String[] MPEG_ENCODER = new String[8] {"Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign"};
 
 		// Xing/FhG VBR header data
 		public class VBRData
@@ -200,7 +195,7 @@ namespace ATL.AudioData.IO
 		private VBRData FVBR = new VBRData();
 		private FrameData HeaderFrame = new FrameData();
         private AudioDataManager.SizeInfo sizeInfo;
-        private String fileName;
+        private String filePath;
     
 		public VBRData VBR // VBR header data
 		{
@@ -242,19 +237,10 @@ namespace ATL.AudioData.IO
         {
             get { return this.FGetValid(); }
         }
-
         public bool IsVBR
 		{
 			get { return this.FVBR.Found; }
 		}
-        public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_LOSSY; }
-		}
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public double BitRate
         {
             get { return FGetBitRate() / 1000.0; }
@@ -269,7 +255,7 @@ namespace ATL.AudioData.IO
         }
         public string FileName
         {
-            get { return fileName; }
+            get { return filePath; }
         }
 
         // Limitation constants
@@ -285,10 +271,29 @@ namespace ATL.AudioData.IO
 
 
 
-        public MPEGaudio(string fileName)
+        public MPEGaudio(string filePath)
         {
-            this.fileName = fileName;
+            this.filePath = filePath;
             resetData();
+        }
+
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_LOSSY; }
+        }
+        public bool AllowsParsableMetadata
+        {
+            get { return true; }
+        }
+        public bool HasNativeMeta()
+        {
+            return false;
+        }
+        public bool IsMetaSupported(int metaDataType)
+        {
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
         }
 
         // ********************* Auxiliary functions & voids ********************
@@ -762,11 +767,6 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public bool IsMetaSupported(int metaType)
-        {
-            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE);
-        }
-
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
@@ -801,9 +801,5 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        public bool HasNativeMeta()
-        {
-            return false;
-        }
     }
 }

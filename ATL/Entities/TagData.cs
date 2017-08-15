@@ -16,6 +16,7 @@ namespace ATL
 	{
         public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
 
+        // TODO - test memory usage with alternate signature using byte[], which could be simpler than current MemoryStream-based implementations
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
         public class PictureInfo

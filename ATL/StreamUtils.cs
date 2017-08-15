@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
@@ -468,6 +466,7 @@ namespace ATL
         /// <param name="encodedData">The String containing the characters to decode.</param>
         /// <param name="s">The Stream where the resulting decoded data will be written.</param>
         /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
+        [Obsolete("use Utils.DecodeFrom64")]
         public static void DecodeFrom64(byte[] encodedData, Stream s)
         {
             if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");

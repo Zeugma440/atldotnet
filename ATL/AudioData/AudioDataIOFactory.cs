@@ -231,12 +231,11 @@ namespace ATL.AudioData
                 case CID_WMA:
                     theDataReader = new IO.WMA(path);
                     break;
-
-                /*
             case CID_OGG :		
-                theDataReader = new IO.TOgg();
+                theDataReader = new IO.Ogg(path);
                 break;
 
+                /*
             case CID_MPC :		
                 theDataReader = new IO.TMPEGplus();
                 break;

@@ -313,6 +313,11 @@ namespace ATL.AudioData
             pictureTokens.Add(new TagData.PictureInfo(null, tagType, nativePicCode) );
         }
 
+        protected void addPictureToken(int tagType, string nativePicCode)
+        {
+            pictureTokens.Add(new TagData.PictureInfo(null, tagType, nativePicCode));
+        }
+
         protected int takePicturePosition(TagData.PIC_TYPE picType)
         {
             return takePicturePosition(new TagData.PictureInfo(null, picType));

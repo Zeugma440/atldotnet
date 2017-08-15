@@ -42,7 +42,7 @@ namespace ATL.AudioData.IO
         private IList<string> languages; // Optional language index described in the WMA header
 
         private AudioDataManager.SizeInfo sizeInfo;
-        private string fileName;
+        private string filePath;
 
 
 		public byte ChannelModeID // Channel mode code
@@ -79,7 +79,7 @@ namespace ATL.AudioData.IO
 			get { return true; }
 		}
 
-        public string FileName { get { return fileName; } }
+        public string FileName { get { return filePath; } }
 
         public double BitRate { get { return bitrate; } }
 
@@ -172,9 +172,9 @@ namespace ATL.AudioData.IO
             frameClasses = new Dictionary<string, ushort>(); // To be populated while reading; all fields above are class 0
         }
 
-        public WMA(string fileName)
+        public WMA(string filePath)
         {
-            this.fileName = fileName;
+            this.filePath = filePath;
             ResetData();
         }
 

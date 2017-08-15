@@ -96,6 +96,22 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        // --------------- MANDATORY INFORMATIVE OVERRIDES
+
+        protected override void resetSpecificData()
+        {
+            // No specific behaviour here
+        }
+
+        protected override int getDefaultTagOffset()
+        {
+            return TO_EOF;
+        }
+
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_APE;
+        }
 
         // ********************* Auxiliary functions & voids ********************
 
@@ -150,7 +166,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_APE, FieldName, FieldValue);
+                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), FieldName, FieldValue);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in APE
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -187,22 +203,20 @@ namespace ATL.AudioData.IO
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
-                    TagData.PictureInfo picInfo;
                     int picturePosition;
                     TagData.PIC_TYPE picType = decodeAPEPictureType(frameName);
 
                     if (picType.Equals(TagData.PIC_TYPE.Unsupported))
                     {
-                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_APE, frameName);
-                        picInfo = new TagData.PictureInfo(null, MetaDataIOFactory.TAG_APE, frameName, picturePosition);
+                        addPictureToken(getImplementedTagType(), frameName);
+                        picturePosition = takePicturePosition(getImplementedTagType(), frameName);
                     }
                     else
                     {
+                        addPictureToken(picType);
                         picturePosition = takePicturePosition(picType);
-                        picInfo = new TagData.PictureInfo(null, picType, picturePosition);
                     }
 
-                    addPictureToken(picType);
                     if (readTagParams.PictureStreamHandler != null)
                     {
                         // Description seems to be a null-terminated ANSI string containing 
@@ -214,7 +228,7 @@ namespace ATL.AudioData.IO
 
                         MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, frameDataSize - description.Length - 1);
-                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_APE, frameName, picturePosition);
+                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, getImplementedTagType(), frameName, picturePosition);
                         mem.Close();
                     }
                 }
@@ -273,21 +287,6 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-        }
-
-        protected override int getDefaultTagOffset()
-        {
-            return TO_EOF;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_APE;
-        }
-
-        protected override void resetSpecificData()
-        {
-            // No specific behaviour here
         }
 
         /// <summary>

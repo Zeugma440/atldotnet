@@ -671,14 +671,9 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PictureStreamHandler != null)
                         {
-                            ImageFormat imgFormat = ImageFormat.Png;
-
                             // Peek the next 3 bytes to know the picture type
-                            byte[] data = Source.ReadBytes(3);
+                            ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(Source.ReadBytes(3));
                             Source.BaseStream.Seek(-3, SeekOrigin.Current);
-                            if (0xFF == data[0] && 0xD8 == data[1] && 0xFF == data[2]) imgFormat = ImageFormat.Jpeg; // JPEG signature
-                            if (0x42 == data[0] && 0x4D == data[1]) imgFormat = ImageFormat.Bmp;  // BMP signature
-                            if (0x47 == data[0] && 0x49 == data[1] && 0x46 == data[2]) imgFormat = ImageFormat.Gif;  // GIF signature
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);
                             StreamUtils.CopyStream(Source.BaseStream, mem, metadataSize - 16);

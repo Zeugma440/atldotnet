@@ -57,6 +57,8 @@
     <Compile Include="AudioData\IO\ID3v1.cs" />
     <Compile Include="AudioData\IO\ID3v2.cs" />
     <Compile Include="AudioData\IO\MPEGaudio.cs" />
+    <Compile Include="AudioData\IO\Ogg.cs" />
+    <Compile Include="AudioData\IO\VorbisTag.cs" />
     <Compile Include="AudioData\IO\WMA.cs" />
     <Compile Include="AudioData\MetaDataIO.cs" />
     <Compile Include="AudioData\MetaDataIOFactory.cs" />

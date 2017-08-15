@@ -17,13 +17,14 @@ namespace ATL.test.IO.MetaData
         {
             public Image Picture;
             public string NativeCodeStr;
-            public byte NativeCodeInt;
+            public int NativeCodeInt;
 
             public PictureInfo(Image picture, object code)
             {
                 Picture = picture;
                 if (code is string) NativeCodeStr = (string)code;
                 if (code is byte) NativeCodeInt = (byte)code;
+                if (code is int) NativeCodeInt = (int)code;
             }
         }
 

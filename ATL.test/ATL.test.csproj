@@ -57,6 +57,7 @@
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\MetaData\VorbisTag.cs" />
     <Compile Include="IO\MetaData\WMA.cs" />
     <Compile Include="IO\MetaData\MetaIOTest.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />

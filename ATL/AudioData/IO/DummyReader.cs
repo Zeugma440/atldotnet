@@ -8,17 +8,17 @@ namespace ATL.AudioData.IO
 	/// </summary>
 	public class DummyReader : IAudioDataIO
 	{
-        private string fileName = "";
+        private string filePath = "";
 
-        public DummyReader(string path)
+        public DummyReader(string filePath)
         {
-            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Audio Data Reader for " + path);
-            fileName = path;
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Audio Data Reader for " + filePath);
+            this.filePath = filePath;
         }
 
         public string FileName
         {
-            get { return fileName; }
+            get { return filePath; }
         }
         public double BitRate
 		{

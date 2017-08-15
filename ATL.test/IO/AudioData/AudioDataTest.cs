@@ -10,6 +10,7 @@ namespace ATL.test
 
         private void testGenericAudio(string resource, int duration, int bitrate, int samplerate, bool isVbr, int codecFamily, int alternate = 0)
         {
+            ConsoleLogger log = new ConsoleLogger();
             string theResource = TestUtils.GetResourceLocationRoot() + resource;
 
             IAudioDataIO theReader = AudioDataIOFactory.GetInstance().GetDataReader(theResource, alternate);
@@ -62,6 +63,19 @@ namespace ATL.test
             testGenericAudio("wma.wma", 14, 9, 8000, false, AudioDataIOFactory.CF_LOSSY);
         }
 
+        [TestMethod]
+        public void Audio_OGG()
+        {
+            testGenericAudio("Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
+        }
+
+        [TestMethod]
+        public void Audio_Opus()
+        {
+            testGenericAudio("01_2_32.opus", 31, 33, 48000, true, AudioDataIOFactory.CF_LOSSY);
+        }
+
+
         /*
                 [TestMethod]
                 public void TestFLACAudio()
@@ -79,18 +93,6 @@ namespace ATL.test
                 public void TestDSF_PSFAudio()
                 {
                     testGenericAudio("adgpp_PLAY_01_05.dsf", 26, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV, 1);
-                }
-
-                [TestMethod]
-                public void TestOpusAudio()
-                {
-                    testGenericAudio("01_2_32.opus", 31, 33, 48000, true, AudioDataIOFactory.CF_LOSSY);
-                }
-
-                [TestMethod]
-                public void TestVorbisAudio()
-                {
-                    testGenericAudio("Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
                 }
 
                 [TestMethod]

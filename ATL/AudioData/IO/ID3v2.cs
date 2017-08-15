@@ -64,9 +64,6 @@ namespace ATL.AudioData.IO
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
 
-        // Unicode ID
-        public const char UNICODE_ID = (char)0x1;
-
         // Frame header (universal)
         private class FrameHeader
         {

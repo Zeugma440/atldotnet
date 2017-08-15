@@ -439,5 +439,40 @@ namespace Commons
 
             return false;
         }
+
+        /// <summary>
+        /// The method to Decode your Base64 strings.
+        /// </summary>
+        /// <param name="encodedData">The String containing the characters to decode.</param>
+        /// <param name="s">The Stream where the resulting decoded data will be written.</param>
+        /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
+        public static byte[] DecodeFrom64(byte[] encodedData)
+        {
+            if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
+
+            char[] encodedDataChar = new char[encodedData.Length];
+            /*
+                        for (int i = 0; i < encodedData.Length; i++)
+                        {
+                            encodedDataChar[i] = System.Convert.ToChar(encodedData[i]);
+                        }
+            */
+            Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
+
+            return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+        }
+
+        // TODO DOC
+        public static ImageFormat GetImageFormatFromPictureHeader(byte[] header)
+        {
+            if (header.Length < 3) throw new FormatException("Header length must be at least 3");
+
+            if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
+            else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
+            else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
+            else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
+            else return ImageFormat.Png; // TODO
+        }
+
     }
 }
