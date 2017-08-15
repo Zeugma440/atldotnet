@@ -18,7 +18,7 @@ namespace ATL.test.IO.Perf
             return LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + index.ToString());
         }
 
-        [TestMethod, TestCategory("mass")]
+        [TestMethod, TestCategory("manual")]
         public void Perf_Method()
         {
             ulong test = 32974337984693648;
@@ -49,7 +49,7 @@ namespace ATL.test.IO.Perf
             System.Console.WriteLine("ReverseInt64 : " + (ticksNow - ticksBefore) / 10000 + " ms");
         }
 
-        [TestMethod, TestCategory("mass")]
+        [TestMethod, TestCategory("manual")]
         public void Perf_Massread()
         {
             long ticksBefore, ticksNow;

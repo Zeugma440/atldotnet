@@ -33,7 +33,7 @@ namespace ATL.test
             return result;
         }
 
-        [TestMethod, TestCategory("mass")]
+        [TestMethod, TestCategory("manual")]
         public void FF_RecursiveExplore()
         {
             //String dirName = "E:/Music/XXX";
@@ -49,13 +49,13 @@ namespace ATL.test
             }
         }
 
-        [TestMethod, TestCategory("mass")]
+        [TestMethod, TestCategory("manual")]
         public void FF_ReadOneFile()
         {
             Track t = new Track(@"E:\temp\wma\a.wma");
         }
 
-        [TestMethod, TestCategory("mass")]
+        [TestMethod, TestCategory("manual")]
         public void FF_FilterAndDisplayAudioFiles()
         {
             //string folder = TestUtils.GetResourceLocationRoot();
