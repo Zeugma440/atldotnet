@@ -444,7 +444,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private long GetSamples(ref BinaryReader Source)
+        private long GetSamples(ref BinaryReader source)
 		{  
 			int DataIndex;	
 			// Using byte instead of char here to avoid mistaking range of bytes for unicode chars
@@ -456,24 +456,16 @@ namespace ATL.AudioData.IO
 
 			for (int index=1; index<=50; index++)
 			{
-				DataIndex = (int)(Source.BaseStream.Length - (/*Data.Length*/251 - 10) * index - 10);
-				Source.BaseStream.Seek(DataIndex, SeekOrigin.Begin);
-				Data = Source.ReadBytes(251);
-
-				// Get number of PCM samples from last Ogg packet header
-				for (int iterator=251 - 10; iterator>=0; iterator--)
-				{
-					char[] tempArray = new char[4] { (char)Data[iterator],
-													   (char)Data[iterator + 1],
-													   (char)Data[iterator + 2],
-													   (char)Data[iterator + 3] };
-					if ( StreamUtils.StringEqualsArr(OGG_PAGE_ID,tempArray) ) 
-					{
-						Source.BaseStream.Seek(DataIndex + iterator, SeekOrigin.Begin);
-                        Header.ReadFromStream(ref Source);
-						return Header.AbsolutePosition;
-					}
-				}
+				DataIndex = (int)(source.BaseStream.Length - (251 - 10) * index - 10);
+				source.BaseStream.Seek(DataIndex, SeekOrigin.Begin);
+                
+                // Get number of PCM samples from last Ogg packet header
+                if (StreamUtils.FindSequence(ref source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID), false))
+                {
+                    source.BaseStream.Seek(-OGG_PAGE_ID.Length, SeekOrigin.Current);
+                    Header.ReadFromStream(ref source);
+                    return Header.AbsolutePosition;
+                }
 			}
 			return result;
 		}
@@ -554,7 +546,6 @@ namespace ATL.AudioData.IO
                     bool loop = true;
                     bool first = true;
                     using (MemoryStream s = new MemoryStream())
-                    using (BinaryReader msr = new BinaryReader(s))
                     {
                         while (loop)
                         {
@@ -586,22 +577,25 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.ReadTag)
                         {
-                            s.Seek(0, SeekOrigin.Begin);
-
-                            string tagId;
-                            bool isValidTagHeader = false;
-                            if (contents.Equals(CONTENTS_VORBIS))
+                            using (BinaryReader msr = new BinaryReader(s))
                             {
-                                tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(7));
-                                isValidTagHeader = (VORBIS_TAG_ID.Equals(tagId));
-                            }
-                            else if (contents.Equals(CONTENTS_OPUS))
-                            {
-                                tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(8));
-                                isValidTagHeader = (OPUS_TAG_ID.Equals(tagId));
-                            }
+                                s.Seek(0, SeekOrigin.Begin);
 
-                            if (isValidTagHeader) vorbisTag.Read(msr, readTagParams);
+                                string tagId;
+                                bool isValidTagHeader = false;
+                                if (contents.Equals(CONTENTS_VORBIS))
+                                {
+                                    tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(7));
+                                    isValidTagHeader = (VORBIS_TAG_ID.Equals(tagId));
+                                }
+                                else if (contents.Equals(CONTENTS_OPUS))
+                                {
+                                    tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(8));
+                                    isValidTagHeader = (OPUS_TAG_ID.Equals(tagId));
+                                }
+
+                                if (isValidTagHeader) vorbisTag.Read(msr, readTagParams);
+                            }
                         }
                     }
 		    

@@ -98,6 +98,13 @@ namespace ATL.test
 
                 Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2)));
                 Assert.AreEqual(285, fs.Position);
+
+                fs.Seek(20, SeekOrigin.Begin);
+
+                Assert.AreEqual(false, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2),true, 100));
+
+                Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence1), false));
+                Assert.AreEqual(12, fs.Position);
             }
             finally
             {

@@ -25,7 +25,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
             try
             {
-                while (StreamUtils.FindSequence(ref source, FILE_IDENTIFIER, 0))
+                while (StreamUtils.FindSequence(ref source, FILE_IDENTIFIER))
                 {
                     filePath = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
                     if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;

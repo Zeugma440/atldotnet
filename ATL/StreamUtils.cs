@@ -663,13 +663,14 @@ namespace ATL
         /// </summary>
         /// <param name="r">Stream to search into</param>
         /// <param name="sequence">Sequence to find</param>
+        /// <param name="forward">True if the sequence to find has to be looked for after current position; false instead</param>
         /// <param name="maxDistance">Maximum distance (in bytes) of the sequence to find.
         /// Put 0 for an infinite distance</param>
         /// <returns>
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(ref BinaryReader r, byte[] sequence, long maxDistance = 0)
+        public static bool FindSequence(ref BinaryReader r, byte[] sequence, bool forward = true, long maxDistance = 0)
         {
             byte[] window = r.ReadBytes(sequence.Length);
             long initialPos = r.BaseStream.Position;
@@ -677,21 +678,45 @@ namespace ATL
             bool found = false;
             int i;
 
-            while (r.BaseStream.Position < r.BaseStream.Length || (maxDistance > 0 && distance > maxDistance) )
+            if (forward)
             {
-                if (ArrEqualsArr(sequence, window))
+                while (r.BaseStream.Position < r.BaseStream.Length && ((0 == maxDistance) || (maxDistance > 0 && distance < maxDistance)))
                 {
-                    found = true;
-                    break;
+                    if (ArrEqualsArr(sequence, window))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    for (i = 0; i < window.Length - 1; i++)
+                    {
+                        window[i] = window[i + 1];
+                    }
+                    window[window.Length - 1] = r.ReadByte();
+
+                    distance++;
+                }
+            } else
+            {
+                while (r.BaseStream.Position > 0 && ((0 == maxDistance) || (maxDistance > 0 && distance < maxDistance)))
+                {
+                    if (ArrEqualsArr(sequence, window))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    for (i = window.Length-1; i > 0; i--)
+                    {
+                        window[i] = window[i - 1];
+                    }
+                    r.BaseStream.Seek(-2, SeekOrigin.Current);
+                    window[0] = r.ReadByte();
+
+                    distance++;
                 }
 
-                for (i = 0; i < window.Length - 1; i++)
-                {
-                    window[i] = window[i + 1];
-                }
-                window[window.Length - 1] = r.ReadByte();
-
-                distance++;
+                if (found) r.BaseStream.Seek(sequence.Length-1, SeekOrigin.Current);
             }
 
             if (!found) r.BaseStream.Position = initialPos;
