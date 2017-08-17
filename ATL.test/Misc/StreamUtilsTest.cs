@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Commons;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -79,6 +80,29 @@ namespace ATL.test
             Assert.AreEqual(0x37, encoded[1]);
             Assert.AreEqual(0x25, encoded[0]);
             Assert.AreEqual(test, StreamUtils.DecodeSynchSafeInt32(encoded));
+        }
+
+        [TestMethod]
+        public void StreamUtils_FindSequence()
+        {
+            string sequence1 = "<ASX VERSION";
+            string sequence2 = "$PATH/MID";
+
+            FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read);
+            BinaryReader r = new BinaryReader(fs);
+
+            try
+            {
+                Assert.AreEqual(true,StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence1)));
+                Assert.AreEqual(12, fs.Position);
+
+                Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2)));
+                Assert.AreEqual(285, fs.Position);
+            }
+            finally
+            {
+                r.Close();
+            }
         }
     }
 }

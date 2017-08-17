@@ -669,7 +669,7 @@ namespace ATL
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(ref BinaryReader r, byte[] sequence, long maxDistance)
+        public static bool FindSequence(ref BinaryReader r, byte[] sequence, long maxDistance = 0)
         {
             byte[] window = r.ReadBytes(sequence.Length);
             long initialPos = r.BaseStream.Position;
