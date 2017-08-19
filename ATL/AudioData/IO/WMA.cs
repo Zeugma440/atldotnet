@@ -1066,7 +1066,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        // Override for conservation of non-WM/xxx fields
+        // Specific implementation for conservation of non-WM/xxx fields
         public override bool Remove(BinaryWriter w)
         {
             if (ASF_keepNonWMFieldsWhenRemovingTag)

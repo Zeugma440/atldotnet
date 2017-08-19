@@ -11,6 +11,11 @@ namespace ATL.AudioData.IO
     /// Class for OGG files manipulation. Current implementation covers :
     ///   - Vorbis data (extensions : .OGG)
     ///   - Opus data (extensions : .OPUS)
+    ///   
+    /// Implementation notes
+    /// 
+    ///   1. CRC's : Current implementation does not test OGG page header CRC's
+    /// 
     /// </summary>
 	class Ogg : IAudioDataIO, IMetaDataIO
 	{
@@ -86,11 +91,14 @@ namespace ATL.AudioData.IO
         // Ogg page header ID
         private const String OGG_PAGE_ID = "OggS";
 
-		// Vorbis parameter frame ID
+		// Vorbis identification packet (frame) ID
 		private readonly String VORBIS_HEADER_ID = (char)1 + "vorbis";
 
-		// Vorbis tag frame ID
+		// Vorbis tag packet (frame) ID
 		private readonly String VORBIS_TAG_ID = (char)3 + "vorbis";
+
+        // Vorbis setup packet (frame) ID
+        private readonly String VORBIS_SETUP_ID = (char)5 + "vorbis";
 
         // Vorbis parameter frame ID
         private const String OPUS_HEADER_ID = "OpusHead";
@@ -597,7 +605,7 @@ namespace ATL.AudioData.IO
                                 if (isValidTagHeader) vorbisTag.Read(msr, readTagParams);
                             }
                         }
-                    }
+                    } // using MemoryStream
 		    
 					result = true;
 				}
@@ -675,8 +683,6 @@ namespace ATL.AudioData.IO
 
             if ( GetInfo(ref source, ref info, readTagParams) )
 			{
-                //                FValid = true;
-				
                 // Fill variables
                 if (contents.Equals(CONTENTS_VORBIS))
                 {
@@ -704,7 +710,8 @@ namespace ATL.AudioData.IO
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            return (vorbisTag).Write(r, w, tag);
+            // TODO Generate CRC's
+            return vorbisTag.Write(r, w, tag);
         }
 
         public bool Remove(BinaryWriter w)

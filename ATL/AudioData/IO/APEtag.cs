@@ -297,12 +297,12 @@ namespace ATL.AudioData.IO
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override bool write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result;
+            bool result = true;
             long tagSizePos;
             int tagSize;
 
             long itemCountPos;
-            int itemCount = 0;
+            int itemCount;
 
             uint flags = 0xA0000000; // Flag for "tag contains a footer, a header, and this is the header"
 
@@ -331,7 +331,7 @@ namespace ATL.AudioData.IO
             // == FRAMES ==
             // ============
             long dataPos = w.BaseStream.Position;
-            result = writeFrames(ref tag, w, out itemCount);
+            itemCount = writeFrames(ref tag, ref w);
 
             // Record final size of tag into "tag size" field of header
             long finalTagPos = w.BaseStream.Position;
@@ -358,14 +358,14 @@ namespace ATL.AudioData.IO
             // Reserved space
             w.Write((long)0);
 
+
             return result;
         }
 
-        private bool writeFrames(ref TagData tag, BinaryWriter w, out int nbFrames)
+        private int writeFrames(ref TagData tag, ref BinaryWriter w)
         {
-            bool result = true;
             bool doWritePicture;
-            nbFrames = 0;
+            int nbFrames = 0;
 
             // Picture fields (first before textual fields, since APE tag is located on the footer)
             foreach (TagData.PictureInfo picInfo in tag.Pictures)
@@ -412,7 +412,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return result;
+            return nbFrames;
         }
 
         private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text)

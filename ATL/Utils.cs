@@ -451,15 +451,31 @@ namespace Commons
             if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
 
             char[] encodedDataChar = new char[encodedData.Length];
-            /*
-                        for (int i = 0; i < encodedData.Length; i++)
-                        {
-                            encodedDataChar[i] = System.Convert.ToChar(encodedData[i]);
-                        }
-            */
             Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
 
             return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+        }
+
+        // Convert the binary input into Base64 UUEncoded output.
+        // TODO DOC
+        public static byte[] EncodeTo64(byte[] data)
+        {
+            // Each 3 byte sequence in the source data becomes a 4 byte
+            // sequence in the character array. 
+            long arrayLength = (long)((4.0d / 3.0d) * data.Length);
+
+            // If array length is not divisible by 4, go up to the next
+            // multiple of 4.
+            if (arrayLength % 4 != 0)
+            {
+                arrayLength += 4 - arrayLength % 4;
+            }
+
+            char[] dataChar = new char[arrayLength];
+
+            System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
+
+            return Utils.Latin1Encoding.GetBytes(dataChar);
         }
 
         // TODO DOC

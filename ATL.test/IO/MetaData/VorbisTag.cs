@@ -62,7 +62,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_Vorbis_simple()
+        public void TagIO_R_Vorbis_simple_OnePageForTag()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -71,8 +71,19 @@ namespace ATL.test.IO.MetaData
 
             readExistingTagsOnFile(ref theFile);
         }
-        
-//        [TestMethod]
+
+        [TestMethod]
+        public void TagIO_R_Vorbis_simple_MultiplePagesForTag()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_bigPicture.ogg";
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+
+            readExistingTagsOnFile(ref theFile, 3);
+        }
+
+        //        [TestMethod]
         public void TagIO_RW_Vorbis_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();

@@ -392,7 +392,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public virtual bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             long oldTagSize;
             long newTagSize;
@@ -546,7 +546,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        private void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
+        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
