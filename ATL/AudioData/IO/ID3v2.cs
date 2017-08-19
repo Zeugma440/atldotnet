@@ -359,28 +359,26 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, long offset, ReadTagParams readTagParams)
+        private void readFrames(BinaryReader source, ref TagInfo tag, long offset, ReadTagParams readTagParams)
         {
-            Stream fs = SourceFile.BaseStream;
+            Stream fs = source.BaseStream;
             FrameHeader Frame = new FrameHeader();
             int encodingCode;
             long dataSize;
             long dataPosition;
             string strData;
-
-            // ID3v2.2 tags use ISO-8859-1 encoding by default, unless frame header says the contrary
-            if (TAG_VERSION_2_2 == tagVersion) tagEncoding = Utils.Latin1Encoding;
+            Encoding frameEncoding;
 
             fs.Seek(offset + 10, SeekOrigin.Begin);
 
-            while ((fs.Position - offset < getTagSize(Tag)) && (fs.Position < fs.Length))
+            while ((fs.Position - offset < getTagSize(tag)) && (fs.Position < fs.Length))
             {
                 // Read frame header and check frame ID
-                Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? new string(SourceFile.ReadChars(3)) : new string(StreamUtils.ReadOneByteChars(SourceFile, 4));
+                Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                 if (!(Char.IsLetter(Frame.ID[0]) && Char.IsUpper(Frame.ID[0])))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted"); // TODO - there are still too many of these
                     break;
                 }
 
@@ -392,13 +390,13 @@ namespace ATL.AudioData.IO
                 */
                 if (TAG_VERSION_2_2 == tagVersion)
                 {
-                    byte[] size = SourceFile.ReadBytes(3);
+                    byte[] size = source.ReadBytes(3);
                     Frame.Size = (size[0] << 16) + (size[1] << 8) + size[2];
                 }
-                else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.ReverseInt32(SourceFile.ReadInt32());
+                else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.ReverseInt32(source.ReadInt32());
                 else if (TAG_VERSION_2_4 == tagVersion)
                 {
-                    byte[] size = SourceFile.ReadBytes(4);
+                    byte[] size = source.ReadBytes(4);
                     Frame.Size = StreamUtils.DecodeSynchSafeInt32(size);
                 }
 
@@ -408,7 +406,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    Frame.Flags = StreamUtils.ReverseUInt16(SourceFile.ReadUInt16());
+                    Frame.Flags = StreamUtils.ReverseUInt16(source.ReadUInt16());
                 }
                 dataSize = Frame.Size - 1; // Minus encoding byte
 
@@ -420,7 +418,7 @@ namespace ATL.AudioData.IO
                 }
 
                 encodingCode = fs.ReadByte();
-                tagEncoding = decodeID3v2CharEncoding((byte)encodingCode);
+                frameEncoding = decodeID3v2CharEncoding((byte)encodingCode);
 
                 // COMM fields contain :
                 //   a 3-byte langage ID
@@ -444,7 +442,7 @@ namespace ATL.AudioData.IO
                     if (contentDescriptionBOM.Size <= 3)
                     {
                         // Skip content description
-                        StreamUtils.ReadNullTerminatedString(SourceFile, tagEncoding);
+                        StreamUtils.ReadNullTerminatedString(source, frameEncoding);
                     }
                     else
                     {
@@ -476,7 +474,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        tagEncoding = bom.Encoding;
+                        frameEncoding = bom.Encoding;
                         dataSize = dataSize - bom.Size;
                     }
                 }
@@ -484,7 +482,7 @@ namespace ATL.AudioData.IO
                 // If encoding > 3, we might have caught an actual character, which means there is no encoding flag
                 if (encodingCode > 3)
                 {
-                    tagEncoding = decodeID3v2CharEncoding(0);
+                    frameEncoding = decodeID3v2CharEncoding(0);
                     fs.Seek(-1, SeekOrigin.Current);
                     dataSize++;
                 }
@@ -502,13 +500,13 @@ namespace ATL.AudioData.IO
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
                          * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
-                        strData = readRatingInPopularityMeter(SourceFile, Utils.Latin1Encoding).ToString();
+                        strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
                     else if ("TXX".Equals(Frame.ID.Substring(0,3)))
                     {
                         // Read frame data and set tag item if frame supported
-                        byte[] bData = SourceFile.ReadBytes((int)dataSize);
-                        strData = Utils.StripEndingZeroChars(tagEncoding.GetString(bData));
+                        byte[] bData = source.ReadBytes((int)dataSize);
+                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         string[] tabS = strData.Split('\0');
                         Frame.ID = tabS[0];
@@ -517,11 +515,11 @@ namespace ATL.AudioData.IO
                     else
                     {
                         // Read frame data and set tag item if frame supported
-                        byte[] bData = SourceFile.ReadBytes((int)dataSize);
-                        strData = Utils.StripEndingZeroChars(tagEncoding.GetString(bData));
+                        byte[] bData = source.ReadBytes((int)dataSize);
+                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
                     }
 
-                    setMetaField(Frame.ID, strData, ref Tag, readTagParams.ReadAllMetaFrames);
+                    setMetaField(Frame.ID, strData, ref tag, readTagParams.ReadAllMetaFrames);
 
                     if (TAG_VERSION_2_2 == tagVersion) fs.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
@@ -534,7 +532,7 @@ namespace ATL.AudioData.IO
                         if (TAG_VERSION_2_2 == tagVersion)
                         {
                             // Image format
-                            String imageFormat = new String(StreamUtils.ReadOneByteChars(SourceFile, 3)).ToUpper();
+                            String imageFormat = new String(StreamUtils.ReadOneByteChars(source, 3)).ToUpper();
 
                             if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
                             else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
@@ -546,11 +544,11 @@ namespace ATL.AudioData.IO
                             // mime-type always coded in ASCII
                             if (1 == encodingCode) fs.Seek(-1, SeekOrigin.Current);
                             // Mime-type
-                            String mimeType = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding);
+                            String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                             imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
                         }
 
-                        byte picCode = SourceFile.ReadByte();
+                        byte picCode = source.ReadByte();
                         // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
                         TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
@@ -569,20 +567,20 @@ namespace ATL.AudioData.IO
                         // Image description (unused)
                         // Description can be coded with another convention
                         if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(ref fs);
-                        StreamUtils.ReadNullTerminatedString(SourceFile, tagEncoding);
+                        StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
                         if (readTagParams.PictureStreamHandler != null)
                         {
                             int picSize = (int)(dataSize - (fs.Position - position));
                             MemoryStream mem = new MemoryStream(picSize);
 
-                            if (Tag.UsesUnsynchronisation)
+                            if (tag.UsesUnsynchronisation)
                             {
-                                decodeUnsynchronizedStreamTo(mem, SourceFile, picSize);
+                                decodeUnsynchronizedStreamTo(mem, source, picSize);
                             }
                             else
                             {
-                                StreamUtils.CopyStream(SourceFile.BaseStream, mem, picSize);
+                                StreamUtils.CopyStream(source.BaseStream, mem, picSize);
                             }
 
                             mem.Seek(0, SeekOrigin.Begin);
@@ -716,6 +714,7 @@ namespace ATL.AudioData.IO
             bool result = true;
             int nbFrames = 0;
             bool doWritePicture;
+            Encoding tagEncoding = Encoding.UTF8; // TODO make this customizable
 
             // Rewrites extended header as is
             if (FTagHeader.HasExtendedHeader)
@@ -751,7 +750,7 @@ namespace ATL.AudioData.IO
                 {
                     if (frameType == frameMapping_v23_24[s])
                     {
-                        writeTextFrame(ref w, s, map[frameType]);
+                        writeTextFrame(ref w, s, map[frameType], tagEncoding);
                         nbFrames++;
                         break;
                     }
@@ -763,7 +762,7 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding);
                     nbFrames++;
                 }
             }
@@ -778,7 +777,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "");
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
                     nbFrames++;
                 }
             }
@@ -794,7 +793,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text, Encoding tagEncoding)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
@@ -905,7 +904,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, String picDescription)
+        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding)
         {
             // Binary tag writing management
             long frameOffset;

@@ -36,7 +36,6 @@ namespace ATL.AudioData
 
 
         protected bool tagExists;
-        protected Encoding tagEncoding; // TODO check if needs to be there + check if a tag-wide encoding does have any sense 
         protected int tagVersion;
 
         protected TagData tagData;
@@ -438,7 +437,6 @@ namespace ATL.AudioData
             }
 
             TagData dataToWrite;
-            tagEncoding = Encoding.UTF8; // TODO make default UTF-8 encoding customizable
             dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
@@ -448,7 +446,7 @@ namespace ATL.AudioData
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
+                using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8)) // TODO make default UTF-8 encoding customizable
                 {
                     if (write(dataToWrite, msw, zone.Name))
                     {

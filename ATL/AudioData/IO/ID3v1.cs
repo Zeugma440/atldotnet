@@ -214,16 +214,16 @@ namespace ATL.AudioData.IO
 #endif
 
 			// ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
-            TagData.Header = tagEncoding.GetString(source.ReadBytes(3), 0, 3);
+            TagData.Header = Utils.Latin1Encoding.GetString(source.ReadBytes(3), 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
                 structureHelper.AddZone(source.BaseStream.Position, ID3V1_TAG_SIZE);
 
-                TagData.Title = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Artist = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Album = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Year = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(4), 0, 4));
-                TagData.Comment = Utils.StripZeroChars(tagEncoding.GetString(source.ReadBytes(28), 0, 28));
+                TagData.Title = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Artist = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Album = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
+                TagData.Year = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(4), 0, 4));
+                TagData.Comment = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(28), 0, 28));
                 TagData.EndComment = source.ReadBytes(2);
                 TagData.Genre = source.ReadByte();
                 result = true;
@@ -258,7 +258,6 @@ namespace ATL.AudioData.IO
         protected override void resetSpecificData()
 		{
 			tagVersion = TAG_VERSION_1_0;
-            tagEncoding = Utils.Latin1Encoding;
         }
 
 		// ---------------------------------------------------------------------------
@@ -284,7 +283,7 @@ namespace ATL.AudioData.IO
                 Year = tagData.Year;
 				if (TAG_VERSION_1_0 == tagVersion)
 				{
-                    Comment = tagData.Comment + Utils.StripZeroChars(tagEncoding.GetString(tagData.EndComment,0,2));
+                    Comment = tagData.Comment + Utils.StripZeroChars(Utils.Latin1Encoding.GetString(tagData.EndComment,0,2));
 				}
 				else
 				{

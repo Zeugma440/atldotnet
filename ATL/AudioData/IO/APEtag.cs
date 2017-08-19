@@ -430,7 +430,7 @@ namespace ATL.AudioData.IO
             writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
-            byte[] binaryValue = tagEncoding.GetBytes(text);
+            byte[] binaryValue = Encoding.UTF8.GetBytes(text);
             writer.Write(binaryValue);
 
             // Go back to frame size location to write its actual size 

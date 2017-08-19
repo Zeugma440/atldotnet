@@ -305,7 +305,7 @@ namespace ATL.AudioData.IO
 
             // Write new tag to a MemoryStream
             using (MemoryStream s = new MemoryStream(zone.Size))
-            using (BinaryWriter msw = new BinaryWriter(s, tagEncoding))
+            using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8))
             {
                 if (write(dataToWrite, msw, zone.Name))
                 {
