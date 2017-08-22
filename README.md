@@ -4,9 +4,11 @@
 
 __Linux and OSX Mono Build__ : [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet) (powered by Travis CI)
 
-__Windows .NET Core Build :__ [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
 
-__Code coverage :__ [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
+__Windows .NET Build__ : [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
+
+
+__Code coverage__ : [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
 
 
 ## What is ATL .NET ?
@@ -118,6 +120,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 ## What is the roadmap of ATL.NET ?
 
 * Being able to create, edit and remove metadata (tags) <== WIP on the "IO" branch
+* Compatibility with .NET Core (some emulation of System.Drawing needed here and there)
 * Support for __more video game-specific music formats__ (.GYM, .VGM)
 * Connectors to __other library file formats__ (iTunes)
 
