@@ -2,11 +2,11 @@
 
 ## Status / master branch
 
-**Linux and OSX Mono Build :** [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet) (powered by Travis CI)
+__Linux and OSX Mono Build__ : [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet) (powered by Travis CI)
 
-**Windows .NET Core Build :** [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
+__Windows .NET Core Build :__ [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
 
-**Code coverage :** [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
+__Code coverage :__ [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
 
 
 ## What is ATL .NET ?
@@ -42,11 +42,11 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## Why would I want to use ATL while TagLib is out there ?
 
-* ATL is a **fully native C# implementation**, which makes portability trivial if your app is already based on .NET or Mono frameworks
+* ATL is a __fully native C# implementation__, which makes portability trivial if your app is already based on .NET or Mono frameworks
 
-* ATL features a **flexible logging system** which allows you to catch and record audio file reading/writing incidents into your app
+* ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
   
-* ATL features **Playlists and Cuesheets readers**
+* ATL features __Playlists and Cuesheets readers__
 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
@@ -66,7 +66,7 @@ Please refer to the [Code snippets section of the Documentation](Usage-_-Code-sn
 
 NB1 : Empty cells mean "not applicable for this audio format"
 
-NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, which means any "foreign" character (japanese, chinese, cyrillic...) **will** be recognized and displayed properly
+NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, which means any "foreign" character (japanese, chinese, cyrillic...) __will__ be recognized and displayed properly
 
 R= Read
 
@@ -88,7 +88,7 @@ Monkey's Audio | .APE | R | R | R |
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
 MusePack / MPEGplus|.MPC, .MP+|R|R|R| |
 Noisetracker/Soundtracker/Protracker|.MOD| | | |R (2)|
-OGG : Vorbis, Opus|.OGG, .OPUS| | | |R|
+OGG : Vorbis, Opus|.OGG, .OPUS| | | |R/W|
 OptimFROG|.OFR, .OFS|R|R|R| |
 Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |R|
 ScreamTracker|.S3M| | | |R (2)|
@@ -118,8 +118,8 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 ## What is the roadmap of ATL.NET ?
 
 * Being able to create, edit and remove metadata (tags) <== WIP on the "IO" branch
-* Support for **more video game-specific music formats** (.GYM, .VGM)
-* Connectors to **other library file formats** (iTunes)
+* Support for __more video game-specific music formats__ (.GYM, .VGM)
+* Connectors to __other library file formats__ (iTunes)
 
 
 ## Does ATL.NET include code authored by other people ?
