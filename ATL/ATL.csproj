@@ -54,6 +54,7 @@
     <Compile Include="AudioData\IO\APEtag.cs" />
     <Compile Include="AudioData\IO\DummyReader.cs" />
     <Compile Include="AudioData\IO\DummyTag.cs" />
+    <Compile Include="AudioData\IO\FLAC.cs" />
     <Compile Include="AudioData\IO\ID3v1.cs" />
     <Compile Include="AudioData\IO\ID3v2.cs" />
     <Compile Include="AudioData\IO\MPEGaudio.cs" />

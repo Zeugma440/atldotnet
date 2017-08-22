@@ -164,35 +164,16 @@ namespace ATL.AudioData.IO
                 // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
                 for (int i = 0; i < encodedData.Length; i++) if (0 == encodedData[i]) encodedData[i] = 0x3D;
 
-                int picturePosition;
                 MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
-                mem.Seek(0, SeekOrigin.Begin);
-
-                VorbisMetaDataBlockPicture block = ReadMetadataBlockPicture(mem);
-
-                if (block.picType.Equals(TagData.PIC_TYPE.Unsupported))
+                try
                 {
-                    addPictureToken(getImplementedTagType(), (byte)block.nativePicCode);
-                    picturePosition = takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode);
+                    mem.Seek(0, SeekOrigin.Begin);
+                    ReadPicture(mem, readTagParams);
                 }
-                else
+                finally
                 {
-                    addPictureToken(block.picType);
-                    picturePosition = takePicturePosition(block.picType);
+                    mem.Close();
                 }
-
-                if (readTagParams.PictureStreamHandler != null)
-                {
-                    MemoryStream picMem = new MemoryStream(block.picDataLength);
-                    mem.Seek(block.picDataOffset, SeekOrigin.Begin);
-                    StreamUtils.CopyStream(mem, picMem, block.picDataLength);
-
-                    picMem.Seek(0, SeekOrigin.Begin);
-                    readTagParams.PictureStreamHandler(ref picMem, block.picType, Utils.GetImageFormatFromMimeType(block.mimeType), getImplementedTagType(), block.nativePicCode, picturePosition);
-
-                    picMem.Close();
-                }
-                mem.Close();
             }
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
@@ -210,20 +191,60 @@ namespace ATL.AudioData.IO
 
                     // Read the whole base64-encoded picture binary data
                     MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
+                    try
+                    {
+                        mem.Seek(0, SeekOrigin.Begin);
+                        byte[] imgHeader = new byte[3];
+                        mem.Read(imgHeader, 0, 3);
+                        ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(imgHeader);
+                        mem.Seek(0, SeekOrigin.Begin);
 
-                    mem.Seek(0, SeekOrigin.Begin);
-                    byte[] imgHeader = new byte[3];
-                    mem.Read(imgHeader, 0, 3);
-                    ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(imgHeader);
-                    mem.Seek(0, SeekOrigin.Begin);
-
-                    readTagParams.PictureStreamHandler(ref mem, TagData.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
-                    mem.Close();
+                        readTagParams.PictureStreamHandler(ref mem, TagData.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
+                    }
+                    finally
+                    {
+                        mem.Close();
+                    }
                 }
             }
         }
 
-        // ---------------------------------------------------------------------------
+        public void ReadPicture(Stream s, ReadTagParams readTagParams)
+        {
+            int picturePosition;
+            long initPosition = s.Position;
+            VorbisMetaDataBlockPicture block = ReadMetadataBlockPicture(s);
+
+            if (block.picType.Equals(TagData.PIC_TYPE.Unsupported))
+            {
+                addPictureToken(getImplementedTagType(), (byte)block.nativePicCode);
+                picturePosition = takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode);
+            }
+            else
+            {
+                addPictureToken(block.picType);
+                picturePosition = takePicturePosition(block.picType);
+            }
+
+            if (readTagParams.PictureStreamHandler != null)
+            {
+                MemoryStream picMem = new MemoryStream(block.picDataLength);
+                try
+                {
+                    s.Seek(initPosition+block.picDataOffset, SeekOrigin.Begin);
+                    StreamUtils.CopyStream(s, picMem, block.picDataLength);
+
+                    picMem.Seek(0, SeekOrigin.Begin);
+                    readTagParams.PictureStreamHandler(ref picMem, block.picType, Utils.GetImageFormatFromMimeType(block.mimeType), getImplementedTagType(), block.nativePicCode, picturePosition);
+
+                    if (!tagExists) tagExists = true;
+                }
+                finally
+                {
+                    picMem.Close();
+                }
+            }
+        }
 
         public override bool Read(BinaryReader Source, ReadTagParams readTagParams)
         {

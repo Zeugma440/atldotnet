@@ -53,16 +53,16 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class VorbisTag : MetaIOTest
+    public class Vorbis_FLAC : MetaIOTest
     {
-        public VorbisTag()
+        public Vorbis_FLAC()
         {
-            emptyFile = "OGG/empty.ogg";
-            notEmptyFile = "OGG/Rayman_2_music_sample.ogg";
+            emptyFile = "FLAC/empty.flac";
+            notEmptyFile = "FLAC/flac.flac";
         }
 
         [TestMethod]
-        public void TagIO_R_Vorbis_simple_OnePager()
+        public void TagIO_R_VorbisFLAC_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -71,20 +71,9 @@ namespace ATL.test.IO.MetaData
 
             readExistingTagsOnFile(ref theFile);
         }
-
-        [TestMethod]
-        public void TagIO_R_Vorbis_simple_MultiplePager()
-        {
-            ConsoleLogger log = new ConsoleLogger();
-
-            string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_bigPicture.ogg";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
-
-            readExistingTagsOnFile(ref theFile, 3);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_Vorbis_Empty()
+        
+        //[TestMethod]
+        public void TagIO_RW_VorbisFLAC_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -162,35 +151,21 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void TagIO_RW_Vorbis_Existing_OnePager()
+        //[TestMethod]
+        public void TagIO_RW_VorbisFLAC_Existin()
         {
             MetaDataIO.SetEnablePadding(true);
 
             try
             {
-                tagIO_RW_Vorbis_Existing(notEmptyFile, 2);
+                tagIO_RW_VorbisFLAC_Existing(notEmptyFile, 2);
             } finally
             {
                 MetaDataIO.SetEnablePadding(false);
             }
         }
 
-        [TestMethod]
-        public void TagIO_RW_Vorbis_Existing_MultiplePager()
-        {
-            MetaDataIO.SetEnablePadding(true);
-
-            try
-            {
-                tagIO_RW_Vorbis_Existing("OGG/ogg_bigPicture.ogg", 3);
-            } finally
-            {
-                MetaDataIO.SetEnablePadding(false);
-            }
-        }
-
-        private void tagIO_RW_Vorbis_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
+        private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -265,8 +240,8 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile) File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void TagIO_RW_Vorbis_Unsupported_Empty()
+        //[TestMethod]
+        public void TagIO_RW_VorbisFLAC_Unsupported_Empty()
         {
             // Source : tag-free MP3
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
@@ -383,7 +358,11 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        // No cohabitation here since other tags are not supported in OGG files
+        //[TestMethod]
+        public void TagIO_RW_VorbisFLAC_ID3v2()
+        {
+            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
+        }
 
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)

@@ -97,7 +97,7 @@ namespace ATL.test
                 Assert.AreEqual(12, fs.Position);
 
                 Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2)));
-                Assert.AreEqual(285, fs.Position);
+                Assert.AreEqual(261, fs.Position);
 
                 fs.Seek(20, SeekOrigin.Begin);
 

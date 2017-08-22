@@ -1,10 +1,10 @@
 <ASX VERSION = "3.0">
 	<TITLE>Title</TITLE>
 	<ENTRY>
-		<REF HREF = "file:///$PATH/FLAC/mustang_12kHz.flac" />
+		<REF HREF = "file:///$PATH/FLAC/empty.flac" />
 	</ENTRY>
 	<ENTRY>
-		<REF HREF = "file:///$PATH/FLAC/mustang_12kHz_tagged.flac" />
+		<REF HREF = "file:///$PATH/FLAC/flac.flac" />
 	</ENTRY>
 	<ENTRY>
 		some text

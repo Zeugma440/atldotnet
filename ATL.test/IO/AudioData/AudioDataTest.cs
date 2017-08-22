@@ -75,13 +75,13 @@ namespace ATL.test
             testGenericAudio("OPUS/01_2_32.opus", 31, 33, 48000, true, AudioDataIOFactory.CF_LOSSY);
         }
 
+        [TestMethod]
+        public void TestFLACAudio()
+        {
+            testGenericAudio("FLAC/flac.flac", 5, 694, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
 
         /*
-                [TestMethod]
-                public void TestFLACAudio()
-                {
-                    testGenericAudio("mustang_12kHz.flac", 5, 694, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
-                }
 
                 [TestMethod]
                 public void TestDSF_DSDAudio()

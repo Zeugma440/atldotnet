@@ -56,7 +56,8 @@
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
-    <Compile Include="IO\MetaData\VorbisTag.cs" />
+    <Compile Include="IO\MetaData\Vorbis_FLAC.cs" />
+    <Compile Include="IO\MetaData\Vorbis_OGG.cs" />
     <Compile Include="IO\MetaData\WMA.cs" />
     <Compile Include="IO\MetaData\MetaIOTest.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />
@@ -87,9 +88,12 @@
   <ItemGroup>
     <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\DSF\Yeah.dsf" />
+    <None Include="Resources\FLAC\empty.flac" />
+    <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\sommix.it" />
     <None Include="Resources\IT\SuperMario28bits%28tssf%29.it" />
     <None Include="Resources\OGG\empty.ogg" />
+    <None Include="Resources\OGG\ogg_bigPicture.ogg" />
     <None Include="Resources\OGG\Rayman_2_music_sample.ogg" />
     <None Include="Resources\OPUS\01_2_32.opus" />
     <None Include="Resources\S3M\2ND_PM.S3M" />
@@ -110,8 +114,6 @@
     <Content Include="Resources\AAC\loasLatm_CBR88_8s.aac" />
     <Content Include="Resources\AAC\mdat_before_moov.m4a" />
     <Content Include="Resources\AAC\mp4.m4a" />
-    <Content Include="Resources\FLAC\mustang_12kHz.flac" />
-    <Content Include="Resources\FLAC\mustang_12kHz_tagged.flac" />
     <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\MID\ROQ.MID" />
     <Content Include="Resources\MID\TRANSIT1.MID" />
