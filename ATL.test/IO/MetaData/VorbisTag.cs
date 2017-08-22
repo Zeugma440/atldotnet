@@ -265,7 +265,7 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile) File.Delete(testFileLocation);
         }
 
-        //        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_Vorbis_Unsupported_Empty()
         {
             // Source : tag-free MP3
@@ -301,7 +301,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            Assert.AreEqual(2, theFile.NativeTag.AdditionalFields.Count);
+            Assert.AreEqual(3, theFile.NativeTag.AdditionalFields.Count); // 3 instead of 2 because of the VENDOR field...
 
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST"));
             Assert.AreEqual("This is a test 父", theFile.NativeTag.AdditionalFields["TEST"]);
@@ -355,7 +355,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Additional removed field
-            Assert.AreEqual(1, theFile.NativeTag.AdditionalFields.Count);
+            Assert.AreEqual(2, theFile.NativeTag.AdditionalFields.Count); // 2 instead of 1 because of the VENDOR field...
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST2"));
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
 
@@ -383,23 +383,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
-        public void TagIO_RW_Vorbis_ID3v1()
-        {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
-        }
-
-//      [TestMethod]
-        public void TagIO_RW_Vorbis_ID3v2()
-        {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
-        }
-
-//        [TestMethod]
-        public void TagIO_RW_Vorbis_APE()
-        {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
-        }
+        // No cohabitation here since other tags are not supported in OGG files
 
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
