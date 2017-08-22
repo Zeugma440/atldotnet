@@ -62,6 +62,7 @@
     <Compile Include="AudioData\IO\WMA.cs" />
     <Compile Include="AudioData\MetaDataIO.cs" />
     <Compile Include="AudioData\MetaDataIOFactory.cs" />
+    <Compile Include="AudioData\Utils\CRC.cs" />
     <Compile Include="AudioData\Utils\FileStructureHelper.cs" />
     <Compile Include="AudioData\Utils\TrackUtils.cs" />
     <Compile Include="AudioReaders\AudioDataReader.cs" />

@@ -52,6 +52,7 @@ namespace ATL.AudioData.IO
                 { "DESCRIPTION", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
                 { "TITLE", TagData.TAG_FIELD_TITLE },
                 { "ARTIST", TagData.TAG_FIELD_ARTIST },
+                { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
                 { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
                 { "ALBUM", TagData.TAG_FIELD_ALBUM },
                 { "TRACKNUMBER", TagData.TAG_FIELD_TRACK_NUMBER },
@@ -226,16 +227,21 @@ namespace ATL.AudioData.IO
 
         public override bool Read(BinaryReader Source, ReadTagParams readTagParams)
         {
-            int index, size;
-            long initialPos, position, fieldCounterPos;
+            int size;
             string strData;
+            long initialPos, position;
+            long fieldCounterPos = 0;
             int nbFields = 0;
+            int index = 0;
             bool result = true;
 
             // Read Vorbis tag
-            index = 0;
-            fieldCounterPos = 0;
-            tagExists = true;
+            ResetData();
+
+            if (readTagParams.PrepareForWriting && (null == readTagParams.PictureStreamHandler))
+            {
+                readTagParams.PictureStreamHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
+            }
 
             initialPos = Source.BaseStream.Position;
             do
@@ -272,7 +278,8 @@ namespace ATL.AudioData.IO
                 index++;
             } while (index <= nbFields);
 
-            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos),CORE_SIGNATURE);
+            tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
+            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), CORE_SIGNATURE);
 
             return result;
         }
@@ -281,89 +288,21 @@ namespace ATL.AudioData.IO
         // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of 3rd Vorbis header (setup header)
-        public override bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(Stream s, ref TagData tag)
         {
-            long oldTagSize;
-            long newTagSize;
-            long cumulativeDelta = 0;
-            bool result = true;
-
-            tagData.Pictures.Clear();
-
-            // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
-            readTagParams.PrepareForWriting = true;
-            this.Read(r, readTagParams);
-
+            bool result;
             TagData dataToWrite;
             dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
             Zone zone = structureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
 
-            oldTagSize = zone.Size;
-
             // Write new tag to a MemoryStream
-            using (MemoryStream s = new MemoryStream(zone.Size))
-            using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8))
-            {
-                if (write(dataToWrite, msw, zone.Name))
-                {
-                    newTagSize = s.Length;
-                }
-                else
-                {
-                    newTagSize = zone.CoreSignature.Length;
-                }
+            BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8);
 
-                // -- Adjust tag slot to new size in file --
-                long tagEndOffset;
-                long tagBeginOffset;
+            result = write(dataToWrite, msw, zone.Name);
 
-                if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
-                {
-                    tagBeginOffset = zone.Offset + cumulativeDelta;
-                    tagEndOffset = tagBeginOffset + zone.Size;
-                }
-                else // A brand new tag has been added to the file
-                {
-                    switch (getDefaultTagOffset())
-                    {
-                        case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
-                        case TO_BOF: tagBeginOffset = 0; break;
-                        case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
-                        default: tagBeginOffset = -1; break;
-                    }
-                    tagEndOffset = tagBeginOffset + zone.Size;
-                }
-
-                // Need to build a larger file
-                if (newTagSize > zone.Size)
-                {
-                    StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
-                }
-                else if (newTagSize < zone.Size) // Need to reduce file size
-                {
-                    StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
-                }
-
-                // Copy tag contents to the new slot
-                r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                s.Seek(0, SeekOrigin.Begin);
-
-                if (newTagSize > zone.CoreSignature.Length)
-                {
-                    StreamUtils.CopyStream(s, w.BaseStream, s.Length);
-                }
-                else
-                {
-                    if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
-                }
-
-                int delta = (int)(newTagSize - oldTagSize);
-                cumulativeDelta += delta;
-            }
-            tagData = dataToWrite;
+            if (result) tagData = dataToWrite; // TODO - A bit too soon ?
 
             return result;
         }
@@ -385,8 +324,10 @@ namespace ATL.AudioData.IO
 
             w.Write((byte)1); // Mandatory framing bit
 
+            long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
             w.Write(counter);
+            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
 
             return result;
         }
@@ -434,7 +375,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
+                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
                     writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;
@@ -459,7 +400,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write(finalFramePos-frameSizePos-4);
+            writer.Write((uint)(finalFramePos-frameSizePos-4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
@@ -478,6 +419,7 @@ namespace ATL.AudioData.IO
             writer.Write(Encoding.UTF8.GetBytes(picDescription));
 
             // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
+            // in order to reach .NET Core compatibility
             using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
             {
                 writer.Write(StreamUtils.ReverseInt32(img.Width));
@@ -494,8 +436,30 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write(finalFramePos - frameSizePos - 4);
+            writer.Write((uint)(finalFramePos - frameSizePos - 4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        public TagData GetDeletionTagData()
+        {
+            TagData tag = new TagData();
+
+            foreach (byte b in frameMapping.Values)
+            {
+                tag.IntegrateValue(b, "");
+            }
+
+            foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
+            {
+                if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
+                {
+                    TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
+                    emptyFieldInfo.MarkedForDeletion = true;
+                    tag.AdditionalFields.Add(emptyFieldInfo);
+                }
+            }
+
+            return tag;
         }
     }
 }

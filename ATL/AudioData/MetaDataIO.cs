@@ -347,11 +347,12 @@ namespace ATL.AudioData
 
         // ------ ABSTRACT METHODS -----------------------------------------------------
 
+        abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
+
+
         abstract protected int getDefaultTagOffset();
 
         abstract protected int getImplementedTagType();
-
-        abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
 
         abstract protected bool write(TagData tag, BinaryWriter w, string zone);
 
@@ -391,7 +392,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public virtual bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             long oldTagSize;
             long newTagSize;

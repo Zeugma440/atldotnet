@@ -8,7 +8,7 @@ namespace ATL
 	/// <summary>
 	/// Misc. utilities used by binary readers
 	/// </summary>
-	public class StreamUtils
+	public static class StreamUtils
 	{	
 		// Size of the buffer used by memory stream copy methods
 		private const int BUFFERSIZE = 4096;
@@ -175,6 +175,7 @@ namespace ATL
         /// <summary>
         /// Copies a given number of bytes from a given stream to another, starting at current stream positions
         /// i.e. first byte will be read at from.Position and written at to.Position
+        /// NB : This method cannot be used to move data within one single stream
         /// </summary>
         /// <param name="from">Stream to start copy from</param>
         /// <param name="to">Stream to copy to</param>
@@ -194,6 +195,34 @@ namespace ATL
                 from.Read(data, 0, bufSize);
                 to.Write(data, 0, bufSize);
                 i += bufSize;
+            }
+        }
+
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize = BUFFERSIZE)
+        {
+            if (offsetFrom == offsetTo) return;
+
+            byte[] data = new byte[bufferSize];
+            int bufSize;
+            int written = 0;
+            bool forward = (offsetTo > offsetFrom);
+
+            while (written < length)
+            {
+                bufSize = Math.Min(bufferSize, length - written);
+                if (forward)
+                {
+                    s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
+                    s.Read(data, 0, bufSize);
+                    s.Seek(offsetTo + length - written -bufSize, SeekOrigin.Begin);
+                } else
+                {
+                    s.Seek(offsetFrom + written, SeekOrigin.Begin);
+                    s.Read(data, 0, bufSize);
+                    s.Seek(offsetTo + written, SeekOrigin.Begin);
+                }
+                s.Write(data, 0, bufSize);
+                written += bufSize;
             }
         }
 

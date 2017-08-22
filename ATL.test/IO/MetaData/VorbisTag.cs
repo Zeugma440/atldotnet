@@ -62,7 +62,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_Vorbis_simple_OnePageForTag()
+        public void TagIO_R_Vorbis_simple_OnePager()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -73,7 +73,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_Vorbis_simple_MultiplePagesForTag()
+        public void TagIO_R_Vorbis_simple_MultiplePager()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -83,7 +83,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile, 3);
         }
 
-        //        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_Vorbis_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -163,7 +163,7 @@ namespace ATL.test.IO.MetaData
         }
 
 //        [TestMethod]
-        public void TagIO_RW_Vorbis_Existing()
+        public void TagIO_RW_Vorbis_Existing_OnePager()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -239,7 +239,12 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+
+        // TODO public void TagIO_RW_Vorbis_Existing_MultiplePager()
+
+
+
+        //        [TestMethod]
         public void TagIO_RW_Vorbis_Unsupported_Empty()
         {
             // Source : tag-free MP3

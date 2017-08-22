@@ -111,5 +111,24 @@ namespace ATL.test
                 r.Close();
             }
         }
+
+        [TestMethod]
+        public void StreamUtils_CopySameStream()
+        {
+            byte[] finalListForward =       new byte[10] { 0, 1, 2, 3, 2, 3, 4, 5, 6, 7 };
+            byte[] finalListBackward =      new byte[10] { 0, 1, 4, 5, 6, 7, 8, 9, 8, 9 };
+
+            using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
+            {
+                StreamUtils.CopySameStream(stream, 2, 4, 6, 3);
+                Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListForward, stream.ToArray()));
+            }
+
+            using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
+            {
+                StreamUtils.CopySameStream(stream, 4, 2, 6, 3);
+                Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListBackward, stream.ToArray()));
+            }
+        }
     }
 }
