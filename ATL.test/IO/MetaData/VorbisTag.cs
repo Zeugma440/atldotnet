@@ -162,14 +162,41 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_Vorbis_Existing_OnePager()
+        {
+            MetaDataIO.SetEnablePadding(true);
+
+            try
+            {
+                tagIO_RW_Vorbis_Existing(notEmptyFile, 2);
+            } finally
+            {
+                MetaDataIO.SetEnablePadding(false);
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_Vorbis_Existing_MultiplePager()
+        {
+            MetaDataIO.SetEnablePadding(true);
+
+            try
+            {
+                tagIO_RW_Vorbis_Existing("OGG/ogg_bigPicture.ogg", 3);
+            } finally
+            {
+                MetaDataIO.SetEnablePadding(false);
+            }
+        }
+
+        private void tagIO_RW_Vorbis_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.GetTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -178,7 +205,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.Back);
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+"pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -186,16 +213,16 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile, 3);
+            readExistingTagsOnFile(ref theFile, initialNbPictures+1);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Back))
+                if (pic.Key.Equals(TagData.PIC_TYPE.CD))
                 {
-                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x04);
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x06);
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
@@ -210,21 +237,20 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.Back);
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile);
+            readExistingTagsOnFile(ref theFile, initialNbPictures);
 
             // Additional removed field
             Assert.AreEqual("", theFile.NativeTag.Conductor);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-/* Not possible yet due to zone order differences
             FileInfo originalFileInfo = new FileInfo(location);
             FileInfo testFileInfo = new FileInfo(testFileLocation);
 
@@ -234,15 +260,10 @@ namespace ATL.test.IO.MetaData
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
             Assert.IsTrue(originalMD5.Equals(testMD5));
-*/
+
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (deleteTempFile) File.Delete(testFileLocation);
         }
-
-
-        // TODO public void TagIO_RW_Vorbis_Existing_MultiplePager()
-
-
 
         //        [TestMethod]
         public void TagIO_RW_Vorbis_Unsupported_Empty()

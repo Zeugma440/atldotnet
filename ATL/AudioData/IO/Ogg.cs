@@ -16,6 +16,7 @@ namespace ATL.AudioData.IO
     /// Implementation notes
     /// 
     ///   1. CRC's : Current implementation does not test OGG page header CRC's
+    ///   2. Page numbers : Current implementation does not test page numbers consistency
     /// 
     /// </summary>
 	class Ogg : IAudioDataIO, IMetaDataIO
@@ -135,11 +136,6 @@ namespace ATL.AudioData.IO
 				Segments = 0;
 			}
 
-            public int GetHeaderSize()
-            {
-                return 27 + LacingValues.Length;
-            }
-
             public void ReadFromStream(ref BinaryReader r)
             {
                 ID = Utils.Latin1Encoding.GetChars( r.ReadBytes(4) );
@@ -175,10 +171,20 @@ namespace ATL.AudioData.IO
                 }
                 return length;
             }
-		}
 
-		// Vorbis parameter header
-		private class VorbisHeader
+            public int GetHeaderSize()
+            {
+                return 27 + LacingValues.Length;
+            }
+
+            public bool IsValid()
+            {
+                return ((ID != null) && (4 == ID.Length) && (StreamUtils.ArrEqualsArr(ID, OGG_PAGE_ID.ToCharArray())) );
+            }
+        }
+
+        // Vorbis parameter header
+        private class VorbisHeader
 		{
             public String ID;
 			public byte[] BitstreamVersion = new byte[4];  // Bitstream version number
@@ -625,7 +631,7 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            // Determines the boundaries of 3rd header (Setup header)
+                            // Determine the boundaries of 3rd header (Setup header)
                             if (StreamUtils.FindSequence(ref source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID), false))
                             {
                                 info.SetupHeaderStart = source.BaseStream.Position - VORBIS_SETUP_ID.Length;
@@ -795,10 +801,12 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
+        // Specific implementation for OGG structure (multiple pages with limited size)
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             bool result = true;
             int writtenPages = 0;
+            long nextPageOffset = 0;
 
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(null, true);
@@ -823,7 +831,10 @@ namespace ATL.AudioData.IO
                 else
                 {
                     // TODO - handle case where initial setup header spans across two pages
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ATL does not yet handle the case where Vorbis setup header spans across two OGG pages");
+                    return false;
                 }
+                
 
                 // Construct the entire segments table
                 int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
@@ -847,8 +858,10 @@ namespace ATL.AudioData.IO
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
                 int totalPageHeadersSize = (nbPageHeaders * 27) + setupHeader_nbSegments + commentsHeader_nbSegments;
 
+
                 // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
                 stream.SetLength(stream.Position + totalPageHeadersSize);
+
 
                 /// Repage comments header & setup header within the virtual stream
                 stream.Seek(0, SeekOrigin.Begin);
@@ -858,7 +871,7 @@ namespace ATL.AudioData.IO
                     ID = OGG_PAGE_ID.ToCharArray(),
                     StreamVersion = info.CommentHeader.StreamVersion,
                     TypeFlag = 0,
-                    AbsolutePosition = info.CommentHeader.AbsolutePosition,
+                    AbsolutePosition = ulong.MaxValue,
                     Serial = info.CommentHeader.Serial,
                     PageNumber = 1,
                     Checksum = 0
@@ -873,11 +886,13 @@ namespace ATL.AudioData.IO
                 BinaryWriter virtualW = new BinaryWriter(stream);
                 IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
 
-                // Repage
+                // Repaging
                 while (segmentsLeftToPage > 0)
                 {
                     header.Segments = (byte)Math.Min(255, segmentsLeftToPage);
                     header.LacingValues = new byte[header.Segments];
+                    if (segmentsLeftToPage == header.Segments) header.AbsolutePosition = 0; // Last header page has its absolutePosition = 0
+
                     Array.Copy(entireSegmentsTable, pagedSegments, header.LacingValues, 0, header.Segments);
 
                     position = stream.Position;
@@ -900,11 +915,13 @@ namespace ATL.AudioData.IO
                 }
                 writtenPages = header.PageNumber - 1;
 
+
                 // Generate CRC32 of created pages
-                uint crc = 0;
+                uint crc;
                 byte[] data;
                 foreach (KeyValuePair<long,int> kv in pageHeaderOffsets)
                 {
+                    crc = 0;
                     stream.Seek(kv.Key, SeekOrigin.Begin);
                     data = new byte[kv.Value];
                     stream.Read(data, 0, kv.Value);
@@ -913,12 +930,12 @@ namespace ATL.AudioData.IO
                     virtualW.Write(crc);
                 }
 
+
                 /// Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
                 long newHeadersSize = stream.Length;
 
-                // Need to build a larger file
-                if (newHeadersSize > oldHeadersSize)
+                if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
                     StreamUtils.LengthenStream(w.BaseStream, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
@@ -932,13 +949,54 @@ namespace ATL.AudioData.IO
                 stream.Seek(0, SeekOrigin.Begin);
 
                 StreamUtils.CopyStream(stream, w.BaseStream, stream.Length);
-            }
 
+                nextPageOffset = info.CommentHeaderStart + stream.Length;
+            }
+            
             // If the number of written pages is different than the number of previous existing pages,
-            // all the pages of the file need to be renumbered
+            // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages+info.SetupHeaderSpanPages-1)
             {
-                // TODO - pass on page indexes, if applicable
+                OggHeader header = new OggHeader();
+                byte[] data;
+                uint crc;
+
+                do
+                {
+                    w.BaseStream.Seek(nextPageOffset, SeekOrigin.Begin);
+                    header.ReadFromStream(ref r);
+
+                    if (header.IsValid())
+                    {
+                        // Rewrite page number
+                        writtenPages++;
+                        w.BaseStream.Seek(nextPageOffset + 18, SeekOrigin.Begin);
+                        w.Write(writtenPages);
+
+                        // Rewrite CRC
+                        w.BaseStream.Seek(nextPageOffset, SeekOrigin.Begin);
+                        data = new byte[header.GetHeaderSize() + header.GetPageLength()];
+                        r.Read(data, 0, data.Length);
+
+                        // Checksum has to include its own location, as if it were 0
+                        data[22] = 0;
+                        data[23] = 0;
+                        data[24] = 0;
+                        data[25] = 0;
+
+                        crc = OggCRC32.CalculateCRC(0, data, (uint)data.Length);
+                        r.BaseStream.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
+                        w.Write(crc);
+
+                        // To the next header
+                        nextPageOffset += data.Length;
+                    } else
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting writing operation");
+                        return false;
+                    }
+
+                } while (0 == (header.TypeFlag & 0x04));
             }
 
             return result;

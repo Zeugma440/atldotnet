@@ -50,18 +50,18 @@ namespace ATL.AudioData.IO
             frameMapping = new Dictionary<string, byte>
             {
                 { "DESCRIPTION", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TITLE", TagData.TAG_FIELD_TITLE },
                 { "ARTIST", TagData.TAG_FIELD_ARTIST },
-                { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
-                { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
+                { "TITLE", TagData.TAG_FIELD_TITLE },
                 { "ALBUM", TagData.TAG_FIELD_ALBUM },
+                { "DATE", TagData.TAG_FIELD_RECORDING_DATE },
+                { "GENRE", TagData.TAG_FIELD_GENRE },
+                { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
                 { "TRACKNUMBER", TagData.TAG_FIELD_TRACK_NUMBER },
                 { "DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER },
-                { "DATE", TagData.TAG_FIELD_RECORDING_DATE },
                 { "COMMENT", TagData.TAG_FIELD_COMMENT },
-                { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
+                { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
+                { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
                 { "RATING", TagData.TAG_FIELD_RATING },
-                { "GENRE", TagData.TAG_FIELD_GENRE },
                 { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
                 { "PUBLISHER", TagData.TAG_FIELD_PUBLISHER }
             };
@@ -324,6 +324,9 @@ namespace ATL.AudioData.IO
 
             w.Write((byte)1); // Mandatory framing bit
 
+            // NB : Foobar2000 adds a padding block of 2048 bytes here, regardless of the type or size of written fields
+            if (enablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
+
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
             w.Write(counter);
@@ -336,22 +339,6 @@ namespace ATL.AudioData.IO
         {
             bool doWritePicture;
             uint nbFrames = 0;
-
-            // Picture fields (first before textual fields, since APE tag is located on the footer)
-            foreach (TagData.PictureInfo picInfo in tag.Pictures)
-            {
-                // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                if (doWritePicture)
-                {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
-                    nbFrames++;
-                }
-            }
 
             IDictionary<byte, String> map = tag.ToMap();
 
@@ -378,6 +365,22 @@ namespace ATL.AudioData.IO
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
                     writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    nbFrames++;
+                }
+            }
+
+            // Picture fields
+            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            {
+                // Picture has either to be supported, or to come from the right tag standard
+                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                if (doWritePicture)
+                {
+                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -412,26 +415,38 @@ namespace ATL.AudioData.IO
             frameSizePos = writer.BaseStream.Position;
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
 
-            writer.Write(StreamUtils.ReverseInt32(pictureTypeCode));
-            writer.Write(StreamUtils.ReverseInt32(mimeType.Length));
-            writer.Write(Utils.Latin1Encoding.GetBytes(mimeType));
-            writer.Write(StreamUtils.ReverseInt32(picDescription.Length));
-            writer.Write(Encoding.UTF8.GetBytes(picDescription));
+            writer.Write(Utils.Latin1Encoding.GetBytes(PICTURE_METADATA_ID_NEW + "="));
 
-            // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
-            // in order to reach .NET Core compatibility
-            using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
+            using (MemoryStream picStream = new MemoryStream(pictureData.Length + 60))
+            using (BinaryWriter picW = new BinaryWriter(picStream))
             {
-                writer.Write(StreamUtils.ReverseInt32(img.Width));
-                writer.Write(StreamUtils.ReverseInt32(img.Height));
-                writer.Write(StreamUtils.ReverseInt32(Image.GetPixelFormatSize(img.PixelFormat)));
-                writer.Write(StreamUtils.ReverseInt32(img.Palette.Entries.Length));
+                picW.Write(StreamUtils.ReverseInt32(pictureTypeCode));
+                picW.Write(StreamUtils.ReverseInt32(mimeType.Length));
+                picW.Write(Utils.Latin1Encoding.GetBytes(mimeType));
+                picW.Write(StreamUtils.ReverseInt32(picDescription.Length));
+                picW.Write(Encoding.UTF8.GetBytes(picDescription));
+
+                // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
+                // in order to reach .NET Core compatibility
+                using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
+                {
+                    picW.Write(StreamUtils.ReverseInt32(img.Width));
+                    picW.Write(StreamUtils.ReverseInt32(img.Height));
+                    picW.Write(StreamUtils.ReverseInt32(Image.GetPixelFormatSize(img.PixelFormat)));    // Color depth
+                    if (picFormat.Equals(ImageFormat.Gif))
+                    {
+                        picW.Write(StreamUtils.ReverseInt32(img.Palette.Entries.Length));                   // Color num
+                    } else
+                    {
+                        picW.Write((int)0);
+                    }
+                }
+
+                picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
+                picW.Write(pictureData);
+
+                writer.Write(Utils.EncodeTo64(picStream.ToArray()));
             }
-
-            byte[] base64PictureData = Utils.EncodeTo64(pictureData);
-
-            writer.Write(StreamUtils.ReverseInt32(base64PictureData.Length));
-            writer.Write(base64PictureData);
 
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;

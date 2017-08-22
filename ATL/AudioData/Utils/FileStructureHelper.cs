@@ -36,6 +36,7 @@ namespace ATL.AudioData
             public long Offset;
             public int Size;
             public byte[] CoreSignature;
+            // insert padding size information here ?
             public IList<FrameHeader> Headers;
 
             public Zone(string name, long offset, int size, byte[] coreSignature)

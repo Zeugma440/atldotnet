@@ -26,7 +26,7 @@ namespace ATL
             public int Position;                           // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
 
             public int TagType;                             // Tag type where the picture originates from
-            public byte NativePicCode;                      // Native picture code according to TagType convention (byte : e.g. ID3v2)
+            public int NativePicCode;                      // Native picture code according to TagType convention (byte : e.g. ID3v2)
             public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
 
             public byte[] PictureData;                      // Binary picture data
@@ -44,9 +44,14 @@ namespace ATL
                 } else if (nativePicCode is byte)
                 {
                     NativePicCode = (byte)nativePicCode;
-                } else
+                }
+                else if (nativePicCode is int)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte or string; found "+nativePicCode.GetType().Name);
+                    NativePicCode = (int)nativePicCode;
+                }
+                else
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found "+nativePicCode.GetType().Name);
                 }
             }
             public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int position = 1) { PicType = picType; NativeFormat = nativeFormat; Position = position; }
@@ -61,9 +66,13 @@ namespace ATL
                 {
                     NativePicCode = (byte)nativePicCode;
                 }
+                else if (nativePicCode is int)
+                {
+                    NativePicCode = (int)nativePicCode;
+                }
                 else
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte or string; found " + nativePicCode.GetType().Name);
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
                 }
             }
             public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
@@ -78,9 +87,9 @@ namespace ATL
                 if (PicType.Equals(PIC_TYPE.Unsupported))
                 {
                     if (NativePicCode > 0)
-                        result = result + ((100 * TagType) + NativePicCode).ToString();
+                        result = result + ((10000000 * TagType) + NativePicCode).ToString();
                     else if ((NativePicCodeStr != null) && (NativePicCodeStr.Length > 0))
-                        result = result + (100 * TagType).ToString() + NativePicCodeStr;
+                        result = result + (10000000 * TagType).ToString() + NativePicCodeStr;
                     else
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Non-supported picture detected, but no native picture code found");
                 }
@@ -176,7 +185,7 @@ namespace ATL
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;
         public const byte TAG_FIELD_COMPOSER                = 3;
-        public const byte TAG_FIELD_COMMENT                 = 4; 
+        public const byte TAG_FIELD_COMMENT                 = 4;
         public const byte TAG_FIELD_GENRE                   = 5;
         public const byte TAG_FIELD_ALBUM                   = 6;
         public const byte TAG_FIELD_RECORDING_DATE          = 7;
@@ -324,19 +333,19 @@ namespace ATL
         {
             IDictionary<byte, String> result = new Dictionary<byte, String>();
 
-            // Supported fields
-            addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, ref result);
-            addIfConsistent(Title, TAG_FIELD_TITLE, ref result);
+            // Supported fields only
+            // NB : The following block of code determines the order of appearance of fields within written files
             addIfConsistent(Artist, TAG_FIELD_ARTIST, ref result);
-            addIfConsistent(Composer, TAG_FIELD_COMPOSER, ref result);
-            addIfConsistent(Comment, TAG_FIELD_COMMENT, ref result);
-            addIfConsistent(Genre, TAG_FIELD_GENRE, ref result);
+            addIfConsistent(Title, TAG_FIELD_TITLE, ref result);
             addIfConsistent(Album, TAG_FIELD_ALBUM, ref result);
             addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, ref result);
             addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, ref result);
             addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, ref result);
+            addIfConsistent(Genre, TAG_FIELD_GENRE, ref result);
+            addIfConsistent(Composer, TAG_FIELD_COMPOSER, ref result);
             addIfConsistent(TrackNumber, TAG_FIELD_TRACK_NUMBER, ref result);
             addIfConsistent(DiscNumber, TAG_FIELD_DISC_NUMBER, ref result);
+            addIfConsistent(Comment, TAG_FIELD_COMMENT, ref result);
             addIfConsistent(Rating, TAG_FIELD_RATING, ref result);
             addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, ref result);
             addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, ref result);
@@ -344,6 +353,7 @@ namespace ATL
             addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, ref result);
             addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, ref result);
             addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, ref result);
+            addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, ref result);
 
             return result;
         }

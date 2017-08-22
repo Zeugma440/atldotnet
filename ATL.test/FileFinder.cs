@@ -52,7 +52,8 @@ namespace ATL.test
         [TestMethod, TestCategory("manual")]
         public void FF_ReadOneFile()
         {
-            Track t = new Track(@"E:\temp\wma\a.wma");
+            //Track t = new Track(@"E:\temp\wma\a.wma");
+            //Track t = new Track(TestUtils.GetResourceLocationRoot() + "/OGG/ogg_bigPicture.ogg");
         }
 
         [TestMethod, TestCategory("manual")]
