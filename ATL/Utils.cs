@@ -308,6 +308,10 @@ namespace Commons
             {
                 result += "bmp";
             }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Tiff))
+            {
+                result += "tiff";
+            }
 
             return result;
         }
@@ -334,6 +338,10 @@ namespace Commons
             else if (mimeType.Contains("bmp"))
             {
                 result = ImageFormat.Bmp;
+            }
+            else if (mimeType.Contains("tiff"))
+            {
+                result = ImageFormat.Tiff;
             }
 
             return result;
@@ -489,6 +497,8 @@ namespace Commons
             else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
             else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
             else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
+            else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
+            else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
             else return ImageFormat.Png; // TODO
         }
 
