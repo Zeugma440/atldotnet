@@ -23,11 +23,13 @@ namespace ATL
         {
             public PIC_TYPE PicType;                        // Normalized picture type
             public ImageFormat NativeFormat;                // Native image format
-            public int Position;                           // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
+            public int Position;                            // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
 
             public int TagType;                             // Tag type where the picture originates from
-            public int NativePicCode;                      // Native picture code according to TagType convention (byte : e.g. ID3v2)
+            public int NativePicCode;                       // Native picture code according to TagType convention (byte : e.g. ID3v2)
             public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
+
+            // TODO - add a description field
 
             public byte[] PictureData;                      // Binary picture data
 

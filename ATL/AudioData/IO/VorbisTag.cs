@@ -10,13 +10,14 @@ using static ATL.AudioData.FileStructureHelper;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Vorbistags manipulation
+    /// Class for Vorbis tags manipulation
+    /// 
+    /// TODO - Rewrite as "pure" helper, with Ogg and FLAC inheriting MetaDataIO
     /// </summary>
     class VorbisTag : MetaDataIO
     {
         private const string PICTURE_METADATA_ID_NEW = "METADATA_BLOCK_PICTURE";
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
-
         private const string VENDOR_METADATA_ID = "VENDOR";
 
         // "Xiph.Org libVorbis I 20150105" vendor with zero fields
@@ -41,6 +42,8 @@ namespace ATL.AudioData.IO
 
         // Mapping between Vorbis field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping;
+        // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
+        private readonly bool writePicturesWithMetadata;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -70,6 +73,11 @@ namespace ATL.AudioData.IO
         protected override void resetSpecificData()
         {
             // Nothing special to reset here
+        }
+
+        public VorbisTag(bool writePicturesWithMetadata)
+        {
+            this.writePicturesWithMetadata = writePicturesWithMetadata;
         }
 
 
@@ -164,15 +172,10 @@ namespace ATL.AudioData.IO
                 // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
                 for (int i = 0; i < encodedData.Length; i++) if (0 == encodedData[i]) encodedData[i] = 0x3D;
 
-                MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
-                try
+                using (MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData)))
                 {
                     mem.Seek(0, SeekOrigin.Begin);
                     ReadPicture(mem, readTagParams);
-                }
-                finally
-                {
-                    mem.Close();
                 }
             }
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
@@ -309,11 +312,10 @@ namespace ATL.AudioData.IO
         // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of 3rd Vorbis header (setup header)
-        public bool Write(Stream s, ref TagData tag)
+        public bool Write(Stream s, TagData tag)
         {
             bool result;
-            TagData dataToWrite;
-            dataToWrite = tagData;
+            TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
             Zone zone = structureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
@@ -341,11 +343,11 @@ namespace ATL.AudioData.IO
             counterPos = w.BaseStream.Position;
             w.Write((uint)0); // Tag counter placeholder to be rewritten in a few lines
 
-            counter = writeFrames(ref tag, ref w);
+            counter = writeFrames(tag, w);
 
             w.Write((byte)1); // Mandatory framing bit
 
-            // NB : Foobar2000 adds a padding block of 2048 bytes here, regardless of the type or size of written fields
+            // NB : Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
             if (enablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
 
             long finalPos = w.BaseStream.Position;
@@ -356,7 +358,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private uint writeFrames(ref TagData tag, ref BinaryWriter w)
+        private uint writeFrames(TagData tag, BinaryWriter w)
         {
             bool doWritePicture;
             uint nbFrames = 0;
@@ -372,7 +374,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(ref w, s, map[frameType]);
+                            writeTextFrame(w, s, map[frameType]);
                             nbFrames++;
                         }
                         break;
@@ -385,31 +387,34 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;
                 }
             }
 
             // Picture fields
-            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            if (writePicturesWithMetadata)
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                if (doWritePicture)
+                foreach (TagData.PictureInfo picInfo in tag.Pictures)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
-                    nbFrames++;
+                    // Picture has either to be supported, or to come from the right tag standard
+                    doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                    // It also has not to be marked for deletion
+                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                    if (doWritePicture)
+                    {
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
+                        nbFrames++;
+                    }
                 }
             }
 
             return nbFrames;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
         {
             long frameSizePos;
             long finalFramePos;
@@ -428,7 +433,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
         {
             long frameSizePos;
             long finalFramePos;
@@ -441,31 +446,7 @@ namespace ATL.AudioData.IO
             using (MemoryStream picStream = new MemoryStream(pictureData.Length + 60))
             using (BinaryWriter picW = new BinaryWriter(picStream))
             {
-                picW.Write(StreamUtils.ReverseInt32(pictureTypeCode));
-                picW.Write(StreamUtils.ReverseInt32(mimeType.Length));
-                picW.Write(Utils.Latin1Encoding.GetBytes(mimeType));
-                picW.Write(StreamUtils.ReverseInt32(picDescription.Length));
-                picW.Write(Encoding.UTF8.GetBytes(picDescription));
-
-                // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
-                // in order to reach .NET Core compatibility
-                using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
-                {
-                    picW.Write(StreamUtils.ReverseInt32(img.Width));
-                    picW.Write(StreamUtils.ReverseInt32(img.Height));
-                    picW.Write(StreamUtils.ReverseInt32(Image.GetPixelFormatSize(img.PixelFormat)));    // Color depth
-                    if (picFormat.Equals(ImageFormat.Gif))
-                    {
-                        picW.Write(StreamUtils.ReverseInt32(img.Palette.Entries.Length));                   // Color num
-                    } else
-                    {
-                        picW.Write((int)0);
-                    }
-                }
-
-                picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
-                picW.Write(pictureData);
-
+                WritePicture(picW, pictureData, picFormat, mimeType, pictureTypeCode, picDescription);
                 writer.Write(Utils.EncodeTo64(picStream.ToArray()));
             }
 
@@ -474,6 +455,35 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             writer.Write((uint)(finalFramePos - frameSizePos - 4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        public void WritePicture(BinaryWriter picW, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
+        {
+            picW.Write(StreamUtils.ReverseInt32(pictureTypeCode));
+            picW.Write(StreamUtils.ReverseInt32(mimeType.Length));
+            picW.Write(Utils.Latin1Encoding.GetBytes(mimeType));
+            picW.Write(StreamUtils.ReverseInt32(picDescription.Length));
+            picW.Write(Encoding.UTF8.GetBytes(picDescription));
+
+            // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
+            // in order to reach .NET Core compatibility
+            using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
+            {
+                picW.Write(StreamUtils.ReverseInt32(img.Width));
+                picW.Write(StreamUtils.ReverseInt32(img.Height));
+                picW.Write(StreamUtils.ReverseInt32(Image.GetPixelFormatSize(img.PixelFormat)));    // Color depth
+                if (picFormat.Equals(ImageFormat.Gif))
+                {
+                    picW.Write(StreamUtils.ReverseInt32(img.Palette.Entries.Length));                   // Color num
+                }
+                else
+                {
+                    picW.Write((int)0);
+                }
+            }
+
+            picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
+            picW.Write(pictureData);
         }
 
         public TagData GetDeletionTagData()

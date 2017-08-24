@@ -7,6 +7,8 @@ using System.IO;
 
 namespace ATL.test.IO.Profiling
 {
+    //TODO - Test BenchmarkDotNet
+
     [TestClass]
     public class Memory
     {

@@ -5,6 +5,8 @@ using System.IO;
 
 namespace ATL.test.IO.Perf
 {
+    //TODO - Test BenchmarkDotNet
+
     //[TestClass]
     public class Perf
     {

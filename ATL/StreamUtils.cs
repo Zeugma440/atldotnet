@@ -686,6 +686,20 @@ namespace ATL
             return result;
         }
 
+        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
+        {
+            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size="+(value.Length-offset)+" bytes");
+            return (uint)value[offset] << 16 | (uint)value[offset + 1] << 8 | (uint)value[offset + 2];
+        }
+
+        public static byte[] EncodeBEUInt24(uint value)
+        {
+            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than "+0x00FFFFFF+"; actual value="+value);
+            
+            // Output has to be big-endian
+            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
 
         /// <summary>
         /// Finds a byte sequence within a stream
@@ -699,7 +713,7 @@ namespace ATL
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(ref BinaryReader r, byte[] sequence, bool forward = true, long maxDistance = 0)
+        public static bool FindSequence(BinaryReader r, byte[] sequence, bool forward = true, long maxDistance = 0)
         {
             byte[] window = r.ReadBytes(sequence.Length);
             long initialPos = r.BaseStream.Position;

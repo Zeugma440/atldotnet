@@ -22,19 +22,11 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
 
             BinaryReader source = new BinaryReader(fs);
-
-            try
+            while (StreamUtils.FindSequence(source, FILE_IDENTIFIER))
             {
-                while (StreamUtils.FindSequence(ref source, FILE_IDENTIFIER))
-                {
-                    filePath = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
-                    if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;
-                    result.Add(filePath);
-                }
-            }
-            finally
-            {
-                source.Close();
+                filePath = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
+                if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;
+                result.Add(filePath);
             }
 		}
 	}

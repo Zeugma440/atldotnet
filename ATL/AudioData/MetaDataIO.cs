@@ -13,7 +13,7 @@ namespace ATL.AudioData
         // General properties
         protected static bool ID3v2_useExtendedHeaderRestrictions = false;
         protected static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
-        protected static bool enablePadding = false;
+        protected static bool enablePadding = false;                        // Used by OGG container
 
         // Default tag offset
         protected const int TO_EOF = 0;     // End Of File
@@ -283,6 +283,21 @@ namespace ATL.AudioData
             }
         }
 
+        public IList<TagData.PictureInfo> Pictures
+        {
+            get
+            {
+                IList<TagData.PictureInfo> result = new List<TagData.PictureInfo>();
+
+                foreach (TagData.PictureInfo picInfo in tagData.Pictures)
+                {
+                    if (picInfo.TagType.Equals(getImplementedTagType())) result.Add(picInfo);
+                }
+
+                return result;
+            }
+        }
+
         /// <summary>
         /// Each positioned flag indicates the presence of an embedded picture
         /// </summary>
@@ -434,6 +449,7 @@ namespace ATL.AudioData
             readTagParams.PrepareForWriting = true;
             this.Read(r, readTagParams);
 
+            // Give engine something to work with if the tag is really empty
             if (!tagExists && 0 == Zones.Count)
             {
                 structureHelper.AddZone(0, 0);
@@ -459,8 +475,7 @@ namespace ATL.AudioData
                     }
 
                     // -- Adjust tag slot to new size in file --
-                    long tagEndOffset;
-                    long tagBeginOffset;
+                    long tagBeginOffset, tagEndOffset;
 
                     if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
                     {
@@ -513,10 +528,10 @@ namespace ATL.AudioData
                         else if (newTagSize == zone.CoreSignature.Length && delta < 0) action = ACTION_DELETE;
                         else action = ACTION_EDIT;
 
-                        result = structureHelper.RewriteMarkers(ref w, delta, action, zone.Name);
+                        result = structureHelper.RewriteMarkers(w, delta, action, zone.Name);
                     }
                 }
-            }
+            } // Loop through zones
             tagData = dataToWrite;
 
             return result;
@@ -538,7 +553,7 @@ namespace ATL.AudioData
                         w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(ref w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }

@@ -12,8 +12,6 @@ namespace ATL.AudioData
         public const int ACTION_ADD     = 1;
         public const int ACTION_DELETE  = 2;
 
-        // Description of a chunk/frame within a structured file 
-        // Useful to rewrite after editing the chunk (e.g. adding/removing metadata)
         public class FrameHeader
         {
             public const byte TYPE_COUNTER = 0;
@@ -30,18 +28,21 @@ namespace ATL.AudioData
             }
         }
 
+        // Description of a chunk/frame within a structured file 
+        // Useful to rewrite after editing the chunk (e.g. adding/removing metadata)
         public class Zone
         {
-            public string Name;
-            public long Offset;
-            public int Size;
-            public byte[] CoreSignature;
+            public string Name;                         // Name
+            public long Offset;                         // Offset at the time of its reading, in bytes
+            public int Size;                            // Size at the time of its reading, in bytes
+            public byte[] CoreSignature;                // Header that has to be written no matter what, even if the zone does not contain any data
+            public byte Flag;                           // Generic usage flag for storing information
             // insert padding size information here ?
-            public IList<FrameHeader> Headers;
+            public IList<FrameHeader> Headers;          // Size descriptors and item counters referencing the zone elsehwere on the file
 
-            public Zone(string name, long offset, int size, byte[] coreSignature)
+            public Zone(string name, long offset, int size, byte[] coreSignature, byte flag = 0)
             {
-                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature;
+                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; Flag = flag;
                 Headers = new List<FrameHeader>();
             }
 
@@ -195,7 +196,7 @@ namespace ATL.AudioData
             }
         }
 
-        public bool RewriteMarkers(ref BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
+        public bool RewriteMarkers(BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
         {
             bool result = true;
             int delta;

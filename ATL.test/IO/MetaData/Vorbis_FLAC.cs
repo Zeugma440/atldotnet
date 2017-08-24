@@ -151,25 +151,17 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        //[TestMethod]
-        public void TagIO_RW_VorbisFLAC_Existin()
+        [TestMethod]
+        public void TagIO_RW_VorbisFLAC_Existing()
         {
-            MetaDataIO.SetEnablePadding(true);
-
-            try
-            {
-                tagIO_RW_VorbisFLAC_Existing(notEmptyFile, 2);
-            } finally
-            {
-                MetaDataIO.SetEnablePadding(false);
-            }
+            tagIO_RW_VorbisFLAC_Existing(notEmptyFile, 2);
         }
 
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
@@ -180,7 +172,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD); // TODO - specify tag type
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+"pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -243,7 +235,7 @@ namespace ATL.test.IO.MetaData
         //[TestMethod]
         public void TagIO_RW_VorbisFLAC_Unsupported_Empty()
         {
-            // Source : tag-free MP3
+            // Source : tag-free file
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 

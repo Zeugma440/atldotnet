@@ -22,9 +22,9 @@ namespace ATL.test
                 list.RemoveAt(4);
                 list.RemoveAt(4);
                 stream.Seek(0, SeekOrigin.Begin);
-                for (int i = 0; i < 11; i++) Assert.AreEqual(list[i],stream.ReadByte());
+                for (int i = 0; i < 11; i++) Assert.AreEqual(list[i], stream.ReadByte());
             }
-            
+
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace ATL.test
                 list.Insert(6, 0);
                 list.Insert(6, 0);
                 stream.Seek(0, SeekOrigin.Begin);
-                for (int i = 0; i < 15; i++) Assert.AreEqual(list[i],stream.ReadByte());
+                for (int i = 0; i < 15; i++) Assert.AreEqual(list[i], stream.ReadByte());
             }
 
         }
@@ -49,15 +49,15 @@ namespace ATL.test
         public void StreamUtils_EncodeDecodeSafeSynchInt()
         {
             Random rnd = new Random(DateTime.Now.Millisecond);
-            int ticks = rnd.Next(0, (int)(Math.Floor(Math.Pow(2, 28)/2)-1));
+            int ticks = rnd.Next(0, (int)(Math.Floor(Math.Pow(2, 28) / 2) - 1));
 
             // 4-byte synchsafe (28 bits)
-            byte[] encoded = StreamUtils.EncodeSynchSafeInt(ticks,4);
+            byte[] encoded = StreamUtils.EncodeSynchSafeInt(ticks, 4);
             int decoded = StreamUtils.DecodeSynchSafeInt(encoded);
 
             Assert.AreEqual(ticks, decoded);
 
-            ticks = rnd.Next(0, (int)(Math.Floor(Math.Pow(2, 32) / 2)-1));
+            ticks = rnd.Next(0, (int)(Math.Floor(Math.Pow(2, 32) / 2) - 1));
 
             // 5-byte synchsafe (32 bits)
             encoded = StreamUtils.EncodeSynchSafeInt(ticks, 5);
@@ -88,35 +88,29 @@ namespace ATL.test
             string sequence1 = "<ASX VERSION";
             string sequence2 = "$PATH/MID";
 
-            FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read);
-            BinaryReader r = new BinaryReader(fs);
-
-            try
+            using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read))
+            using (BinaryReader r = new BinaryReader(fs))
             {
-                Assert.AreEqual(true,StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence1)));
+                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence1)));
                 Assert.AreEqual(12, fs.Position);
 
-                Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2)));
+                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence2)));
                 Assert.AreEqual(261, fs.Position);
 
                 fs.Seek(20, SeekOrigin.Begin);
 
-                Assert.AreEqual(false, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence2),true, 100));
+                Assert.AreEqual(false, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence2), true, 100));
 
-                Assert.AreEqual(true, StreamUtils.FindSequence(ref r, Utils.Latin1Encoding.GetBytes(sequence1), false));
+                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence1), false));
                 Assert.AreEqual(12, fs.Position);
-            }
-            finally
-            {
-                r.Close();
             }
         }
 
         [TestMethod]
         public void StreamUtils_CopySameStream()
         {
-            byte[] finalListForward =       new byte[10] { 0, 1, 2, 3, 2, 3, 4, 5, 6, 7 };
-            byte[] finalListBackward =      new byte[10] { 0, 1, 4, 5, 6, 7, 8, 9, 8, 9 };
+            byte[] finalListForward = new byte[10] { 0, 1, 2, 3, 2, 3, 4, 5, 6, 7 };
+            byte[] finalListBackward = new byte[10] { 0, 1, 4, 5, 6, 7, 8, 9, 8, 9 };
 
             using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
             {
@@ -129,6 +123,17 @@ namespace ATL.test
                 StreamUtils.CopySameStream(stream, 4, 2, 6, 3);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListBackward, stream.ToArray()));
             }
+        }
+
+        [TestMethod]
+        public void StreamUtils_BE24UintConverters()
+        {
+            uint intValue = 0x00873529;
+
+            Assert.AreEqual((uint)0x00FFFFFF, StreamUtils.DecodeBEUInt24( new byte[3] { 0xFF, 0xFF, 0xFF } ));
+
+            byte[] byteValue = StreamUtils.EncodeBEUInt24(intValue);
+            Assert.AreEqual(intValue, StreamUtils.DecodeBEUInt24(byteValue));
         }
     }
 }

@@ -10,7 +10,7 @@ namespace ATL.test
     {
         private FileStructureHelper structureHelper = new FileStructureHelper();
 
-        private void init(ref BinaryWriter w)
+        private void init(BinaryWriter w)
         {
             w.Write((ulong)10);                         // 1st size descriptor; position 0
             w.Write((byte)2);                           // Counter; position 8
@@ -37,16 +37,14 @@ namespace ATL.test
         [TestMethod]
         public void FSH_Edit()
         {
-            Stream s = new MemoryStream();
-
-            BinaryWriter w = new BinaryWriter(s);
-            BinaryReader r = new BinaryReader(s);
-            try
+            using (Stream s = new MemoryStream())
+            using (BinaryWriter w = new BinaryWriter(s))
+            using (BinaryReader r = new BinaryReader(s))
             {
-                init(ref w);
+                init(w);
 
                 StreamUtils.ShortenStream(s, 18, 2);
-                structureHelper.RewriteMarkers(ref w, -2, FileStructureHelper.ACTION_EDIT, "zone1");
+                structureHelper.RewriteMarkers(w, -2, FileStructureHelper.ACTION_EDIT, "zone1");
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
                 Assert.AreEqual((ulong)8, r.ReadUInt64());
@@ -62,7 +60,7 @@ namespace ATL.test
 
 
                 StreamUtils.ShortenStream(s, 25, 2);
-                structureHelper.RewriteMarkers(ref w, -2, FileStructureHelper.ACTION_EDIT, "zone2");
+                structureHelper.RewriteMarkers(w, -2, FileStructureHelper.ACTION_EDIT, "zone2");
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
                 Assert.AreEqual((ulong)6, r.ReadUInt64());
@@ -76,24 +74,18 @@ namespace ATL.test
                 r.BaseStream.Seek(16, SeekOrigin.Begin);
                 Assert.AreEqual((uint)3, r.ReadUInt32());
             }
-            finally
-            {
-                w.Close();
-            }
         }
 
         [TestMethod]
         public void FSH_Remove()
         {
-            Stream s = new MemoryStream();
-
-            BinaryWriter w = new BinaryWriter(s);
-            BinaryReader r = new BinaryReader(s);
-            try
+            using (Stream s = new MemoryStream())
+            using (BinaryWriter w = new BinaryWriter(s))
+            using (BinaryReader r = new BinaryReader(s))
             {
-                init(ref w);
+                init(w);
 
-                structureHelper.RewriteMarkers(ref w, -5, FileStructureHelper.ACTION_DELETE, "zone1");
+                structureHelper.RewriteMarkers(w, -5, FileStructureHelper.ACTION_DELETE, "zone1");
                 StreamUtils.ShortenStream(s, 18, 5);
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -108,24 +100,18 @@ namespace ATL.test
                 r.BaseStream.Seek(13, SeekOrigin.Begin);
                 Assert.AreEqual((uint)5, r.ReadUInt32());
             }
-            finally
-            {
-                w.Close();
-            }
         }
 
         [TestMethod]
         public void FSH_Add()
         {
-            Stream s = new MemoryStream();
-
-            BinaryWriter w = new BinaryWriter(s);
-            BinaryReader r = new BinaryReader(s);
-            try
+            using (Stream s = new MemoryStream())
+            using (BinaryWriter w = new BinaryWriter(s))
+            using (BinaryReader r = new BinaryReader(s))
             {
-                init(ref w);
+                init(w);
 
-                structureHelper.RewriteMarkers(ref w, 5, FileStructureHelper.ACTION_ADD, "zone3");
+                structureHelper.RewriteMarkers(w, 5, FileStructureHelper.ACTION_ADD, "zone3");
                 StreamUtils.LengthenStream(s, 27, 5);
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -139,10 +125,6 @@ namespace ATL.test
 
                 r.BaseStream.Seek(18, SeekOrigin.Begin);
                 Assert.AreEqual((uint)5, r.ReadUInt32());
-            }
-            finally
-            {
-                w.Close();
             }
         }
     }
