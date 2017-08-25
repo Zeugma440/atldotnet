@@ -92,6 +92,7 @@
     <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\sommix.it" />
     <None Include="Resources\IT\SuperMario28bits%28tssf%29.it" />
+    <None Include="Resources\MPC\mpc.mpc" />
     <None Include="Resources\OGG\empty.ogg" />
     <None Include="Resources\OGG\ogg_bigPicture.ogg" />
     <None Include="Resources\OGG\Rayman_2_music_sample.ogg" />

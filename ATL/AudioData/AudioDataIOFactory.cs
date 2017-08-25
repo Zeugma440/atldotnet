@@ -237,11 +237,11 @@ namespace ATL.AudioData
                 case CID_FLAC:
                     theDataReader = new IO.FLAC(path);
                     break;
+                case CID_MPC:
+                    theDataReader = new IO.MPEGplus(path);
+                    break;
 
                 /*
-            case CID_MPC :		
-                theDataReader = new IO.TMPEGplus();
-                break;
 
             case CID_APE :		
                 theDataReader = new IO.TMonkey();

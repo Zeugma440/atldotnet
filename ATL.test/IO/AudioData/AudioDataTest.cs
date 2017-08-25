@@ -76,9 +76,15 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestFLACAudio()
+        public void Audio_FLAC()
         {
             testGenericAudio("FLAC/flac.flac", 5, 694, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void Audio_MPC()
+        {
+            testGenericAudio("MPC/mpc.mpc", 8, 127, 44100, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         /*

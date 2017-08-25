@@ -87,18 +87,18 @@ namespace ATL.AudioData.IO
 
 
         // Object IDs
-        private static byte[] WMA_HEADER_ID = new byte[16] { 48, 38, 178, 117, 142, 102, 207, 17, 166, 217, 0, 170, 0, 98, 206, 108 };
-        private static byte[] WMA_HEADER_EXTENSION_ID = new byte[16] { 0xB5, 0x03, 0xBF, 0x5F, 0x2E, 0xA9, 0xCF, 0x11, 0x8E, 0xE3, 0x00, 0xc0, 0x0c, 0x20, 0x53, 0x65 };
+        private static readonly byte[] WMA_HEADER_ID = new byte[16] { 48, 38, 178, 117, 142, 102, 207, 17, 166, 217, 0, 170, 0, 98, 206, 108 };
+        private static readonly byte[] WMA_HEADER_EXTENSION_ID = new byte[16] { 0xB5, 0x03, 0xBF, 0x5F, 0x2E, 0xA9, 0xCF, 0x11, 0x8E, 0xE3, 0x00, 0xc0, 0x0c, 0x20, 0x53, 0x65 };
 
-        private static byte[] WMA_METADATA_OBJECT_ID = new byte[16] { 0xEA, 0xCB, 0xF8, 0xC5, 0xAF, 0x5B, 0x77, 0x48, 0x84, 0x67, 0xAA, 0x8C, 0x44, 0xFA, 0x4C, 0xCA };
-        private static byte[] WMA_METADATA_LIBRARY_OBJECT_ID = new byte[16] { 0x94, 0x1C, 0x23, 0x44, 0x98, 0x94, 0xD1, 0x49, 0xA1, 0x41, 0x1D, 0x13, 0x4E, 0x45, 0x70, 0x54 };
+        private static readonly byte[] WMA_METADATA_OBJECT_ID = new byte[16] { 0xEA, 0xCB, 0xF8, 0xC5, 0xAF, 0x5B, 0x77, 0x48, 0x84, 0x67, 0xAA, 0x8C, 0x44, 0xFA, 0x4C, 0xCA };
+        private static readonly byte[] WMA_METADATA_LIBRARY_OBJECT_ID = new byte[16] { 0x94, 0x1C, 0x23, 0x44, 0x98, 0x94, 0xD1, 0x49, 0xA1, 0x41, 0x1D, 0x13, 0x4E, 0x45, 0x70, 0x54 };
 
-        private static byte[] WMA_FILE_PROPERTIES_ID = new byte[16] { 161, 220, 171, 140, 71, 169, 207, 17, 142, 228, 0, 192, 12, 32, 83, 101 };
-        private static byte[] WMA_STREAM_PROPERTIES_ID = new byte[16] { 145, 7, 220, 183, 183, 169, 207, 17, 142, 230, 0, 192, 12, 32, 83, 101 };
-        private static byte[] WMA_CONTENT_DESCRIPTION_ID = new byte[16] { 51, 38, 178, 117, 142, 102, 207, 17, 166, 217, 0, 170, 0, 98, 206, 108 };
-        private static byte[] WMA_EXTENDED_CONTENT_DESCRIPTION_ID = new byte[16] { 64, 164, 208, 210, 7, 227, 210, 17, 151, 240, 0, 160, 201, 94, 168, 80 };
+        private static readonly byte[] WMA_FILE_PROPERTIES_ID = new byte[16] { 161, 220, 171, 140, 71, 169, 207, 17, 142, 228, 0, 192, 12, 32, 83, 101 };
+        private static readonly byte[] WMA_STREAM_PROPERTIES_ID = new byte[16] { 145, 7, 220, 183, 183, 169, 207, 17, 142, 230, 0, 192, 12, 32, 83, 101 };
+        private static readonly byte[] WMA_CONTENT_DESCRIPTION_ID = new byte[16] { 51, 38, 178, 117, 142, 102, 207, 17, 166, 217, 0, 170, 0, 98, 206, 108 };
+        private static readonly byte[] WMA_EXTENDED_CONTENT_DESCRIPTION_ID = new byte[16] { 64, 164, 208, 210, 7, 227, 210, 17, 151, 240, 0, 160, 201, 94, 168, 80 };
 
-        private static byte[] WMA_LANGUAGE_LIST_OBJECT_ID = new byte[16] { 0xA9, 0x46, 0x43, 0x7C, 0xE0, 0xEF, 0xFC, 0x4B, 0xB2, 0x29, 0x39, 0x3E, 0xDE, 0x41, 0x5C, 0x85 };
+        private static readonly byte[] WMA_LANGUAGE_LIST_OBJECT_ID = new byte[16] { 0xA9, 0x46, 0x43, 0x7C, 0xE0, 0xEF, 0xFC, 0x4B, 0xB2, 0x29, 0x39, 0x3E, 0xDE, 0x41, 0x5C, 0x85 };
 
 
         // Format IDs
