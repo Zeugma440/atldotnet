@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace ATL.test.IO.MetaData
 {
+    /* TODO generic tests to add
+     *   - Correct update of tagData within the IMetaDataIO just after an Update/Remove (by comparing with the same TagData obtained with Read)
+    */
     public class MetaIOTest
     {
         protected class PictureInfo

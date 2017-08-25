@@ -825,9 +825,9 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result;
+            int result;
             long tagSizePos;
             uint tagSize;
 
@@ -854,9 +854,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool writeFrames(ref TagData tag, BinaryWriter w)
+        private int writeFrames(ref TagData tag, BinaryWriter w)
         {
-            bool result = true;
+            int counter = 0;
             bool doWritePicture;
 
             IDictionary<byte, String> map = tag.ToMap();
@@ -871,6 +871,7 @@ namespace ATL.AudioData.IO
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             writeTextFrame(ref w, s, map[frameType]);
+                            counter++;
                         }
                         break;
                     }
@@ -883,6 +884,7 @@ namespace ATL.AudioData.IO
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
                     writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    counter++;
                 }
             }
 
@@ -899,11 +901,12 @@ namespace ATL.AudioData.IO
                 if (doWritePicture)
                 {
                     writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, firstPic);
+                    counter++;
                     firstPic = false;
                 }
             }
 
-            return result;
+            return counter;
         }
 
         private void writeTextFrame(ref BinaryWriter writer, string frameCode, string text)

@@ -371,7 +371,7 @@ namespace ATL.AudioData
 
         abstract protected int getImplementedTagType();
 
-        abstract protected bool write(TagData tag, BinaryWriter w, string zone);
+        abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
         abstract protected void resetSpecificData();
 
@@ -467,7 +467,7 @@ namespace ATL.AudioData
                 using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8)) // TODO make default UTF-8 encoding customizable
                 {
-                    if (write(dataToWrite, msw, zone.Name))
+                    if (write(dataToWrite, msw, zone.Name) > 0)
                     {
                         newTagSize = s.Length;
                     } else {
@@ -532,6 +532,12 @@ namespace ATL.AudioData
                     }
                 }
             } // Loop through zones
+
+            // Update tag information without calling Read
+            /* TODO - this implementation is too risky : 
+             *   - if one of the writing operations fails, data is updated as if everything went right
+             *   - any picture slot with a markForDeletion flag is recorded as-is in the tag
+             */
             tagData = dataToWrite;
 
             return result;

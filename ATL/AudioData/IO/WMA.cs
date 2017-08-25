@@ -706,16 +706,16 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) return writeContentDescription(tag, ref w);
             else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) return writeExtendedHeaderMeta(tag, ref w);
             else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) return writeExtendedHeaderMetaLibrary(tag, ref w);
             else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) return writeExtendedContentDescription(tag, ref w);
-            else return false;
+            else return 0;
         }
 
-        private bool writeContentDescription(TagData tag, ref BinaryWriter w)
+        private int writeContentDescription(TagData tag, ref BinaryWriter w)
         {
             long beginPos, frameSizePos, finalFramePos;
 
@@ -764,10 +764,10 @@ namespace ATL.AudioData.IO
             w.Write(Convert.ToUInt64(finalFramePos - beginPos));
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return (title.Length > 0) || (author.Length > 0) || (copyright.Length > 0) || (comment.Length > 0) || (rating.Length > 0);
+            return ((title.Length > 0)?1:0) + ((author.Length > 0)?1:0) + ((copyright.Length > 0)?1:0) + ((comment.Length > 0)?1:0) + ((rating.Length > 0)?1:0);
         }
 
-        private bool writeExtendedContentDescription(TagData tag, ref BinaryWriter w)
+        private int writeExtendedContentDescription(TagData tag, ref BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter = 0;
@@ -834,10 +834,10 @@ namespace ATL.AudioData.IO
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return (counter > 0);
+            return counter;
         }
 
-        private bool writeExtendedHeaderMeta(TagData tag, ref BinaryWriter w)
+        private int writeExtendedHeaderMeta(TagData tag, ref BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter;
@@ -859,10 +859,10 @@ namespace ATL.AudioData.IO
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return (counter > 0);
+            return counter;
         }
 
-        private bool writeExtendedHeaderMetaLibrary(TagData tag, ref BinaryWriter w)
+        private int writeExtendedHeaderMetaLibrary(TagData tag, ref BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter;
@@ -884,7 +884,7 @@ namespace ATL.AudioData.IO
             w.Write(counter);
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-            return (counter > 0);
+            return counter;
         }
 
         private ushort writeExtendedMeta(TagData tag, ref BinaryWriter w, bool isExtendedMetaLibrary=false)

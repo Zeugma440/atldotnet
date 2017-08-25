@@ -667,9 +667,9 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result;
+            int result;
             long tagSizePos;
             int tagSize;
 
@@ -709,9 +709,8 @@ namespace ATL.AudioData.IO
         // TODO : Write ID3v2.4 footer
         // TODO : check date field format (YYYY, DDMM, timestamp)
 
-        private bool writeExtHeaderAndFrames(ref TagData tag, BinaryWriter w)
+        private int writeExtHeaderAndFrames(ref TagData tag, BinaryWriter w)
         {
-            bool result = true;
             int nbFrames = 0;
             bool doWritePicture;
             Encoding tagEncoding = Encoding.UTF8; // TODO make this customizable
@@ -790,7 +789,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return result;
+            return nbFrames;
         }
 
         private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text, Encoding tagEncoding)

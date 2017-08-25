@@ -294,11 +294,10 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result = true;
+            int result, tagSize;
             long tagSizePos;
-            int tagSize;
 
             long itemCountPos;
             int itemCount;
@@ -358,7 +357,7 @@ namespace ATL.AudioData.IO
             w.Write((long)0);
 
 
-            return result;
+            return itemCount;
         }
 
         private int writeFrames(ref TagData tag, ref BinaryWriter w)

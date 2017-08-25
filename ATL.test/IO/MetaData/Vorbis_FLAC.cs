@@ -357,7 +357,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TagIO_RW_VorbisFLAC_ID3v2()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);

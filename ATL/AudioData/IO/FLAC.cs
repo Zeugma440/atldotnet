@@ -417,7 +417,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false);
+            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false, false);
 
             byte[] aMetaDataBlockHeader;
             long position;
@@ -515,11 +515,12 @@ namespace ATL.AudioData.IO
 			return result;  
 		}
 
-        // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
+        // NB1 : previously scattered picture blocks become contiguous after rewriting
+        // NB2 : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             bool result = true;
-            int oldTagSize;
+            int oldTagSize, writtenFields;
             long newTagSize;
             bool pictureBlockFound = false;
             long cumulativeDelta = 0;
@@ -538,18 +539,23 @@ namespace ATL.AudioData.IO
                 using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8)) // TODO make default UTF-8 encoding customizable
                 {
-                    if (zone.Name.Equals(ZONE_VORBISTAG)) writeVorbisTag(msw, tag, 1 == zone.Flag);
+                    if (zone.Name.Equals(ZONE_VORBISTAG)) writtenFields = writeVorbisTag(msw, tag, 1 == zone.Flag);
                     else if (zone.Name.Equals(ZONE_PICTURE))
                     {
                         if (!pictureBlockFound) // All pictures are written at the position of the 1st picture block
                         {
                             pictureBlockFound = true;
-                            writePictures(msw, vorbisTag.Pictures, 1 == zone.Flag);
+                            writtenFields = writePictures(msw, vorbisTag.Pictures, 1 == zone.Flag);
                         } else
                         {
-                            s.SetLength(0); // Other picture blocks are erased
+                            writtenFields = 0; // Other picture blocks are erased
                         }
+                    } else
+                    {
+                        writtenFields = 0;
                     }
+
+                    if (0 == writtenFields) s.SetLength(0); // No core signature for metadata in FLAC structure
 
                     newTagSize = s.Length;
 
@@ -584,15 +590,12 @@ namespace ATL.AudioData.IO
                 }
             } // Loop through zones
 
-            // TODO : Rewrite _first_ picture zone
-            // NB : previously scattered picture blocks become contiguous after rewriting
-
             return result;
         }
 
-        private bool writeVorbisTag(BinaryWriter w, TagData tag, bool isLast)
+        private int writeVorbisTag(BinaryWriter w, TagData tag, bool isLast)
         {
-            bool result;
+            int result;
             long sizePos, dataPos, finalPos;
             byte blockType = META_VORBIS_COMMENT;
             if (isLast) blockType = (byte)(blockType & 0x80);
@@ -612,9 +615,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool writePictures(BinaryWriter w, IList<TagData.PictureInfo> pictures, bool isLast)
+        private int writePictures(BinaryWriter w, IList<TagData.PictureInfo> pictures, bool isLast)
         {
-            bool result = true;
+            int result = 0;
             long sizePos, dataPos, finalPos;
             byte blockType;
 
@@ -634,6 +637,7 @@ namespace ATL.AudioData.IO
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
                 w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+                result++;
             }
 
             return result;
@@ -641,10 +645,21 @@ namespace ATL.AudioData.IO
 
         public bool Remove(BinaryWriter w)
         {
-            TagData tag = vorbisTag.GetDeletionTagData();
+            bool result = true;
+            long cumulativeDelta = 0;
 
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+            foreach (Zone zone in zones)
+            {
+                if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
+                {
+                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                    vorbisTag.ResetData();
+
+                    cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                }
+            }
+
+            return result;
         }
     }
 }

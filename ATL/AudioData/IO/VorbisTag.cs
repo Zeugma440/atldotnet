@@ -44,11 +44,13 @@ namespace ATL.AudioData.IO
 
         // Mapping between Vorbis field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping;
+        
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
         private readonly bool writePicturesWithMetadata;
         // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
         private readonly bool writeMetadataFramingBit;
-
+        // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
+        private readonly bool hasCoreSignature;
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
@@ -79,10 +81,11 @@ namespace ATL.AudioData.IO
             // Nothing special to reset here
         }
 
-        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit)
+        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature)
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;
             this.writeMetadataFramingBit = writeMetadataFramingBit;
+            this.hasCoreSignature = hasCoreSignature;
             ResetData();
         }
 
@@ -309,18 +312,15 @@ namespace ATL.AudioData.IO
             } while (index <= nbFields);
 
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), CORE_SIGNATURE);
+            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), hasCoreSignature?CORE_SIGNATURE:new byte[0]);
 
             return result;
         }
 
         // TODO DOC
-        // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
-        //  - tag spans over multiple pages, each having its own header
-        //  - last page may include whole or part of 3rd Vorbis header (setup header)
-        public bool Write(Stream s, TagData tag)
+        public int Write(Stream s, TagData tag)
         {
-            bool result;
+            int result;
             TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
@@ -329,16 +329,15 @@ namespace ATL.AudioData.IO
 
             result = write(dataToWrite, msw, DEFAULT_ZONE_NAME);
 
-            if (result) tagData = dataToWrite; // TODO - A bit too soon ?
+            if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
 
             return result;
         }
 
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             long counterPos;
             uint counter = 0;
-            bool result = true;
             string vendor;
 
             if (AdditionalFields.ContainsKey(VENDOR_METADATA_ID))
@@ -369,7 +368,7 @@ namespace ATL.AudioData.IO
             w.Write(counter);
             w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
 
-            return result;
+            return (int)counter;
         }
 
         private uint writeFrames(TagData tag, BinaryWriter w)

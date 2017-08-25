@@ -769,7 +769,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true, true);
+            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true, true, true);
             info.Reset();
 
             if ( GetInfo(source, info, readTagParams) )
@@ -795,6 +795,12 @@ namespace ATL.AudioData.IO
 		}
 
         // Specific implementation for OGG container (multiple pages with limited size)
+
+        // TODO DOC
+        // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
+        //  - tag spans over multiple pages, each having its own header
+        //  - last page may include whole or part of 3rd Vorbis header (setup header)
+
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             bool result = true;

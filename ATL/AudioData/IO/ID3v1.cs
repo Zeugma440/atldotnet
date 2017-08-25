@@ -305,10 +305,8 @@ namespace ATL.AudioData.IO
         /// <param name="tag">Metadata to be written</param>
         /// <param name="w">Stream to be used</param>
         /// <returns>True if operation completed successfuly; else false</returns>
-        protected override bool write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            bool result = true;
-
             // ID3v1 tags are C-String(null-terminated)-based tags
             // they are not unicode-encoded, hence the use of ReadOneByteChars
             w.Write(ID3V1_ID.ToCharArray());
@@ -338,7 +336,7 @@ namespace ATL.AudioData.IO
             }
             w.Write(genre);
 
-            return result;
+            return 7;
         }
 
         protected override int getDefaultTagOffset()
