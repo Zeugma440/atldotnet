@@ -83,7 +83,7 @@ Digital Theatre System | .DTS |  |  |  |
 Direct Stream Digital | .DSD, .DSF |  | R |  | 
 Dolby Digital | .AC3 |  |  | R | 
 Extended Module | .XM |  |  |  | R (2)
-Free Lossless Audio Codec | .FLAC |  | R |  | R
+Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Impulse Tracker | .IT |  |  |  | R (2)
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R (1)
 Monkey's Audio | .APE | R | R | R | 
