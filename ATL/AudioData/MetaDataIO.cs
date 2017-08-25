@@ -291,7 +291,7 @@ namespace ATL.AudioData
 
                 foreach (TagData.PictureInfo picInfo in tagData.Pictures)
                 {
-                    if (picInfo.TagType.Equals(getImplementedTagType())) result.Add(picInfo);
+                    if ( !picInfo.MarkedForDeletion && ( !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType()) ) ) ) result.Add(picInfo);
                 }
 
                 return result;

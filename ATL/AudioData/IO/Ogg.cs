@@ -769,7 +769,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true);
+            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true, true);
             info.Reset();
 
             if ( GetInfo(source, info, readTagParams) )

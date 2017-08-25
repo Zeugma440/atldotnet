@@ -218,6 +218,7 @@ namespace ATL.test.IO.MetaData
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
+            int nbFound = 0;
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
                 if (pic.Key.Equals(TagData.PIC_TYPE.CD))
@@ -227,10 +228,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
                     Assert.AreEqual(picture.Width, 900);
+                    nbFound++;
                     break;
                 }
             }
-
+            Assert.AreEqual(1, nbFound);
 
             // Remove the additional supported field
             theTag = new TagData();
@@ -413,6 +415,7 @@ namespace ATL.test.IO.MetaData
             // Pictures
             Assert.AreEqual(nbPictures, pictures.Count);
 
+            int nbFound = 0;
             foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
             {
                 Image picture;
@@ -423,6 +426,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 150);
                     Assert.AreEqual(picture.Width, 150);
+                    nbFound++;
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
                 {
@@ -431,8 +435,10 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);
                     Assert.AreEqual(picture.Width, 175);
+                    nbFound++;
                 }
             }
+            Assert.AreEqual(2, nbFound);
         }
     }
 }

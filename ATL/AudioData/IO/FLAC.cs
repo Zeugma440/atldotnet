@@ -417,7 +417,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false);
+            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false);
 
             byte[] aMetaDataBlockHeader;
             long position;
@@ -628,7 +628,7 @@ namespace ATL.AudioData.IO
                 w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
                 dataPos = w.BaseStream.Position;
-                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, Utils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.NativePicCode, "");
+                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, Utils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
 
                 finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

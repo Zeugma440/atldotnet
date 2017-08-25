@@ -44,6 +44,8 @@ namespace ATL.AudioData.IO
         private static IDictionary<string, byte> frameMapping;
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
         private readonly bool writePicturesWithMetadata;
+        // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
+        private readonly bool writeMetadataFramingBit;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -75,9 +77,10 @@ namespace ATL.AudioData.IO
             // Nothing special to reset here
         }
 
-        public VorbisTag(bool writePicturesWithMetadata)
+        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit)
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;
+            this.writeMetadataFramingBit = writeMetadataFramingBit;
         }
 
 
@@ -345,7 +348,7 @@ namespace ATL.AudioData.IO
 
             counter = writeFrames(tag, w);
 
-            w.Write((byte)1); // Mandatory framing bit
+            if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
             // NB : Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
             if (enablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
