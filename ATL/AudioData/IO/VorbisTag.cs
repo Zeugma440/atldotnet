@@ -20,6 +20,8 @@ namespace ATL.AudioData.IO
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
         private const string VENDOR_METADATA_ID = "VENDOR";
 
+        private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
+
         // "Xiph.Org libVorbis I 20150105" vendor with zero fields
         private static readonly byte[] CORE_SIGNATURE = new byte[43] { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
 
@@ -81,6 +83,7 @@ namespace ATL.AudioData.IO
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;
             this.writeMetadataFramingBit = writeMetadataFramingBit;
+            ResetData();
         }
 
 
@@ -321,12 +324,10 @@ namespace ATL.AudioData.IO
             TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
 
-            Zone zone = structureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
-
             // Write new tag to a MemoryStream
             BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8);
 
-            result = write(dataToWrite, msw, zone.Name);
+            result = write(dataToWrite, msw, DEFAULT_ZONE_NAME);
 
             if (result) tagData = dataToWrite; // TODO - A bit too soon ?
 
@@ -338,7 +339,17 @@ namespace ATL.AudioData.IO
             long counterPos;
             uint counter = 0;
             bool result = true;
-            string vendor = AdditionalFields[VENDOR_METADATA_ID];
+            string vendor;
+
+            if (AdditionalFields.ContainsKey(VENDOR_METADATA_ID))
+            {
+                vendor = AdditionalFields[VENDOR_METADATA_ID];
+            } else
+            {
+                // Even when no existing field, vendor field is mandatory in OGG structure
+                // => a file with no vendor is a FLAC file
+                vendor = VENDOR_DEFAULT_FLAC;
+            }
 
             w.Write((uint)vendor.Length);
             w.Write(Encoding.UTF8.GetBytes(vendor));
