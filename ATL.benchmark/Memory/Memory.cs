@@ -1,20 +1,17 @@
 ﻿using ATL.AudioData;
 using ATL.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace ATL.test.IO.Profiling
+namespace ATL.benchmark
 {
     //TODO - Test BenchmarkDotNet
 
-    [TestClass]
     public class Memory
     {
         FileFinder ff = new FileFinder();
 
-        [TestMethod, TestCategory("manual")]
         public void Mem_OldNew()
         {
             ConsoleLogger log = new ConsoleLogger();

@@ -62,12 +62,10 @@
     <Compile Include="IO\MetaData\MetaIOTest.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />
     <Compile Include="IO\MetaData\APE.cs" />
-    <Compile Include="IO\Profiling\Memory.cs" />
     <Compile Include="Misc\FactoryTest.cs" />
     <Compile Include="IO\MetaData\ID3v2.cs" />
     <Compile Include="IO\MetaData\ID3v1.cs" />
     <Compile Include="IO\HighLevel.cs" />
-    <Compile Include="IO\Profiling\Perf.cs" />
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Logging\LoggingTest.cs" />
     <Compile Include="Misc\FileStructureHelperTest.cs" />
@@ -75,7 +73,6 @@
     <Compile Include="PlaylistReaders\PlaylistTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils.cs" />
-    <Compile Include="FileFinder.cs" />
     <Compile Include="Misc\StreamUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup />

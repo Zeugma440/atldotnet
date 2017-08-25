@@ -1,26 +1,22 @@
-﻿using System;
-using ATL.AudioData;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using ATL.AudioData;
 using System.IO;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Attributes;
 
-namespace ATL.test.IO.Perf
+namespace ATL.benchmark
 {
-    //TODO - Test BenchmarkDotNet
-
-    //[TestClass]
-    public class Perf
+    public class Speed
     {
-        const int NB_COPIES = 2000;
+        const int NB_COPIES = 20;
         const FileOptions FILE_FLAG_NOBUFFERING = (FileOptions)0x20000000;
 
         static string LOCATION = TestUtils.GetResourceLocationRoot()+"MP3/01 - Title Screen_pic.mp3";
 
         private static string getNewLocation(int index)
         {
-            return LOCATION.Replace("01", "tmp" + Path.DirectorySeparatorChar + index.ToString());
+            return LOCATION.Replace("MP3/", "tmp/" + index.ToString());
         }
 
-        [TestMethod, TestCategory("manual")]
         public void Perf_Method()
         {
             ulong test = 32974337984693648;
@@ -51,7 +47,6 @@ namespace ATL.test.IO.Perf
             System.Console.WriteLine("ReverseInt64 : " + (ticksNow - ticksBefore) / 10000 + " ms");
         }
 
-        [TestMethod, TestCategory("manual")]
         public void Perf_Massread()
         {
             long ticksBefore, ticksNow;
@@ -109,6 +104,34 @@ namespace ATL.test.IO.Perf
             }
         }
 
+        [GlobalSetup]
+        public void Setup()
+        {
+            // Duplicate resource
+            for (int i = 0; i < NB_COPIES; i++)
+            {
+                string newLocation = getNewLocation(i);
+                File.Copy(LOCATION, newLocation, true);
+
+                FileInfo fileInfo = new FileInfo(newLocation);
+                fileInfo.IsReadOnly = false;
+            }
+
+            // First pass to allow cache to kick-in
+            Perf_Massread_noFileOptions();
+        }
+
+        [GlobalCleanup]
+        public void Cleanup()
+        {
+            // Mass delete resulting files
+            for (int i = 0; i < NB_COPIES; i++)
+            {
+                File.Delete(getNewLocation(i));
+            }
+        }
+
+        [Benchmark]
         public void Perf_Massread_noFileOptions()
         {
             AudioDataManager.ChangeFileOptions(FileOptions.None);
@@ -117,6 +140,7 @@ namespace ATL.test.IO.Perf
             performMassRead();
         }
 
+        [Benchmark]
         public void Perf_Massread_randomAccess()
         {
             AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
@@ -125,6 +149,7 @@ namespace ATL.test.IO.Perf
             performMassRead();
         }
 
+        [Benchmark]
         public void Perf_Massread_RA_buf8192()
         {
             AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
@@ -133,10 +158,38 @@ namespace ATL.test.IO.Perf
             performMassRead();
         }
 
+        [Benchmark]
         public void Perf_Massread_RA_buf2048()
         {
             AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
             AudioDataManager.ChangeBufferSize(2048);
+
+            performMassRead();
+        }
+
+        [Benchmark]
+        public void Perf_Massread_RA_buf1024()
+        {
+            AudioDataManager.ChangeFileOptions(FileOptions.RandomAccess);
+            AudioDataManager.ChangeBufferSize(1024);
+
+            performMassRead();
+        }
+
+        [Benchmark]
+        public void Perf_Massread_NO_buf2048()
+        {
+            AudioDataManager.ChangeFileOptions(FileOptions.None);
+            AudioDataManager.ChangeBufferSize(2048);
+
+            performMassRead();
+        }
+
+        [Benchmark]
+        public void Perf_Massread_NO_buf1024()
+        {
+            AudioDataManager.ChangeFileOptions(FileOptions.None);
+            AudioDataManager.ChangeBufferSize(1024);
 
             performMassRead();
         }

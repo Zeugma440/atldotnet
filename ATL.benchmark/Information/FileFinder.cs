@@ -1,12 +1,10 @@
 ﻿using System;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Commons;
 
-namespace ATL.test
+namespace ATL.benchmark
 {
-    [TestClass]
     public class FileFinder
     {
         static ICollection<Format> supportedFormats;
@@ -33,7 +31,6 @@ namespace ATL.test
             return result;
         }
 
-        [TestMethod, TestCategory("manual")]
         public void FF_RecursiveExplore()
         {
             //String dirName = "E:/Music/XXX";
@@ -49,14 +46,12 @@ namespace ATL.test
             }
         }
 
-        [TestMethod, TestCategory("manual")]
         public void FF_ReadOneFile()
         {
             //Track t = new Track(@"E:\temp\wma\a.wma");
             //Track t = new Track(TestUtils.GetResourceLocationRoot() + "/OGG/ogg_bigPicture.ogg");
         }
 
-        [TestMethod, TestCategory("manual")]
         public void FF_FilterAndDisplayAudioFiles()
         {
             FF_FilterAndDisplayAudioFiles(null, false);
