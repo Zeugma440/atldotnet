@@ -88,7 +88,7 @@ Impulse Tracker | .IT |  |  |  | R (2)
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R (1)
 Monkey's Audio | .APE | R | R | R | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
-MusePack / MPEGplus|.MPC, .MP+|R|R|R| |
+MusePack / MPEGplus|.MPC, .MP+|R/W|R/W|R/W| |
 Noisetracker/Soundtracker/Protracker|.MOD| | | |R (2)|
 OGG : Vorbis, Opus|.OGG, .OPUS| | | |R/W|
 OptimFROG|.OFR, .OFS|R|R|R| |
