@@ -456,7 +456,7 @@ namespace ATL
         /// </summary>
         /// <param name="file">FileStream to read from</param>
         /// <returns>Detected encoding; system Default if detection failed</returns>
-        public static Encoding GetEncodingFromFileBOM(ref FileStream file)
+        public static Encoding GetEncodingFromFileBOM(FileStream file)
         {
             Encoding result;
             byte[] bom = new byte[4]; // Get the byte-order mark, if there is one

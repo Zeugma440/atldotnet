@@ -41,7 +41,7 @@ namespace ATL.AudioData
                 found = dataIO.ReadFromFile(pictureStreamHandler);
             }
 
-            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(ref dataIO);
+            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(dataIO);
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
         }

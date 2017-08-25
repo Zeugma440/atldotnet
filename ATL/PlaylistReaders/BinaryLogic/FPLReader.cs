@@ -15,7 +15,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
         private static byte[] FILE_IDENTIFIER =  new byte[7] {102,105,108,101,58,47,47}; // "file://"
 
 
-		public override void GetFiles(FileStream fs, ref IList<string> result)
+		public override void GetFiles(FileStream fs, IList<string> result)
 		{
             string filePath;
             string playlistPath = System.IO.Path.GetDirectoryName(fs.Name) + System.IO.Path.DirectorySeparatorChar;

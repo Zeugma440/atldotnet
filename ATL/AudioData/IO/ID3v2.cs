@@ -260,7 +260,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        private bool readHeader(BinaryReader SourceFile, ref TagInfo Tag, long offset)
+        private bool readHeader(BinaryReader SourceFile, TagInfo Tag, long offset)
         {
             bool result = true;
 
@@ -320,7 +320,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void setMetaField(String ID, String Data, ref TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(String ID, String Data, TagInfo Tag, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
             ID = ID.ToUpper();
@@ -359,7 +359,7 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BinaryReader source, ref TagInfo tag, long offset, ReadTagParams readTagParams)
+        private void readFrames(BinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
             FrameHeader Frame = new FrameHeader();
@@ -436,7 +436,7 @@ namespace ATL.AudioData.IO
                     // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
                     if ( tagVersion > TAG_VERSION_2_2 && (1 == encodingCode) )
                     {
-                        contentDescriptionBOM = readBOM(ref fs);
+                        contentDescriptionBOM = readBOM(fs);
                     }
 
                     if (contentDescriptionBOM.Size <= 3)
@@ -464,7 +464,7 @@ namespace ATL.AudioData.IO
                 if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                 {
                     long initialPos = fs.Position;
-                    BOMProperties bom = readBOM(ref fs);
+                    BOMProperties bom = readBOM(fs);
 
                     // A BOM has been read, but it lies outside the current frame
                     // => Backtrack and directly read data without BOM
@@ -519,7 +519,7 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
                     }
 
-                    setMetaField(Frame.ID, strData, ref tag, readTagParams.ReadAllMetaFrames);
+                    setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
 
                     if (TAG_VERSION_2_2 == tagVersion) fs.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
@@ -566,7 +566,7 @@ namespace ATL.AudioData.IO
 
                         // Image description (unused)
                         // Description can be coded with another convention
-                        if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(ref fs);
+                        if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(fs);
                         StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
                         if (readTagParams.PictureStreamHandler != null)
@@ -621,7 +621,7 @@ namespace ATL.AudioData.IO
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = readHeader(source, ref FTagHeader, offset);
+            bool result = readHeader(source, FTagHeader, offset);
 
             // Process data if loaded and header valid
             if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
@@ -635,7 +635,7 @@ namespace ATL.AudioData.IO
                 if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (Size > 0))
                 {
                     tagData = new TagData();
-                    readFrames(source, ref FTagHeader, offset, readTagParams);
+                    readFrames(source, FTagHeader, offset, readTagParams);
                 }
                 else
                 {
@@ -685,7 +685,7 @@ namespace ATL.AudioData.IO
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
 
-            result = writeExtHeaderAndFrames(ref tag, w);
+            result = writeExtHeaderAndFrames(tag, w);
 
             // Record final(*) size of tag into "tag size" field of header
             // (*) : Spec clearly states that the tag final size is tag size after unsynchronization
@@ -709,7 +709,7 @@ namespace ATL.AudioData.IO
         // TODO : Write ID3v2.4 footer
         // TODO : check date field format (YYYY, DDMM, timestamp)
 
-        private int writeExtHeaderAndFrames(ref TagData tag, BinaryWriter w)
+        private int writeExtHeaderAndFrames(TagData tag, BinaryWriter w)
         {
             int nbFrames = 0;
             bool doWritePicture;
@@ -749,7 +749,7 @@ namespace ATL.AudioData.IO
                 {
                     if (frameType == frameMapping_v23_24[s])
                     {
-                        writeTextFrame(ref w, s, map[frameType], tagEncoding);
+                        writeTextFrame(w, s, map[frameType], tagEncoding);
                         nbFrames++;
                         break;
                     }
@@ -761,7 +761,7 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding);
                     nbFrames++;
                 }
             }
@@ -776,7 +776,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
                     nbFrames++;
                 }
             }
@@ -792,7 +792,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text, Encoding tagEncoding)
+        private void writeTextFrame(BinaryWriter writer, String frameCode, String text, Encoding tagEncoding)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
@@ -903,7 +903,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding)
         {
             // Binary tag writing management
             long frameOffset;
@@ -1085,7 +1085,7 @@ namespace ATL.AudioData.IO
 
         // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
         // NB : This implementation only works with UTF-16 BOMs (i.e. UTF-8 and UTF-32 BOMs will not be detected)
-        private BOMProperties readBOM(ref Stream fs)
+        private BOMProperties readBOM(Stream fs)
         {
             BOMProperties result = new BOMProperties();
             result.Size = 1;

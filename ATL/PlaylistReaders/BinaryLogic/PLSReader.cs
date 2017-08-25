@@ -12,9 +12,9 @@ namespace ATL.PlaylistReaders.BinaryLogic
 	/// </summary>
 	public class PLSReader : PlaylistReader
 	{
-        public override void GetFiles(FileStream fs, ref IList<String> result)
+        public override void GetFiles(FileStream fs, IList<String> result)
 		{
-            Encoding encoding = StreamUtils.GetEncodingFromFileBOM(ref fs);
+            Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
             StreamReader source = new StreamReader(fs, encoding);
 
 			String s = source.ReadLine();

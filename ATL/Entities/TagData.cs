@@ -337,30 +337,30 @@ namespace ATL
 
             // Supported fields only
             // NB : The following block of code determines the order of appearance of fields within written files
-            addIfConsistent(Artist, TAG_FIELD_ARTIST, ref result);
-            addIfConsistent(Title, TAG_FIELD_TITLE, ref result);
-            addIfConsistent(Album, TAG_FIELD_ALBUM, ref result);
-            addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, ref result);
-            addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, ref result);
-            addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, ref result);
-            addIfConsistent(Genre, TAG_FIELD_GENRE, ref result);
-            addIfConsistent(Composer, TAG_FIELD_COMPOSER, ref result);
-            addIfConsistent(TrackNumber, TAG_FIELD_TRACK_NUMBER, ref result);
-            addIfConsistent(DiscNumber, TAG_FIELD_DISC_NUMBER, ref result);
-            addIfConsistent(Comment, TAG_FIELD_COMMENT, ref result);
-            addIfConsistent(Rating, TAG_FIELD_RATING, ref result);
-            addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, ref result);
-            addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, ref result);
-            addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, ref result);
-            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, ref result);
-            addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, ref result);
-            addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, ref result);
-            addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, ref result);
+            addIfConsistent(Artist, TAG_FIELD_ARTIST, result);
+            addIfConsistent(Title, TAG_FIELD_TITLE, result);
+            addIfConsistent(Album, TAG_FIELD_ALBUM, result);
+            addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, result);
+            addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, result);
+            addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, result);
+            addIfConsistent(Genre, TAG_FIELD_GENRE, result);
+            addIfConsistent(Composer, TAG_FIELD_COMPOSER, result);
+            addIfConsistent(TrackNumber, TAG_FIELD_TRACK_NUMBER, result);
+            addIfConsistent(DiscNumber, TAG_FIELD_DISC_NUMBER, result);
+            addIfConsistent(Comment, TAG_FIELD_COMMENT, result);
+            addIfConsistent(Rating, TAG_FIELD_RATING, result);
+            addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, result);
+            addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, result);
+            addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, result);
+            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, result);
+            addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, result);
+            addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
+            addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
 
             return result;
         }
 
-        private void addIfConsistent(String data, byte id, ref IDictionary<byte,String> map)
+        private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
         {
             if (data != null) map[id] = data;
         }

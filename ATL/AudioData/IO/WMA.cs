@@ -185,7 +185,7 @@ namespace ATL.AudioData.IO
             if (!frameClasses.ContainsKey(frameCode)) frameClasses.Add(frameCode, frameClass);
         }
 
-        private void cacheLanguageIndex(ref Stream source)
+        private void cacheLanguageIndex(Stream source)
         {
             if (null == languages)
             {
@@ -230,7 +230,7 @@ namespace ATL.AudioData.IO
 
         private ushort encodeLanguage(Stream source, string languageCode)
         {
-            if (null == languages) cacheLanguageIndex(ref source);
+            if (null == languages) cacheLanguageIndex(source);
 
             if (0 == languages.Count)
             {
@@ -243,7 +243,7 @@ namespace ATL.AudioData.IO
 
         private string decodeLanguage(Stream source, ushort languageIndex)
         {
-            if (null == languages) cacheLanguageIndex(ref source);
+            if (null == languages) cacheLanguageIndex(source);
 
             if (languages.Count > 0)
             {
@@ -261,7 +261,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-		private void readContentDescription(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+		private void readContentDescription(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
 		{
             ushort[] fieldSize = new ushort[5];
 			string fieldValue;
@@ -292,7 +292,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readHeaderExtended(ref BinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
+        private void readHeaderExtended(BinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] headerExtensionObjectId;
             ulong headerExtensionObjectSize = 0;
@@ -346,7 +346,7 @@ namespace ATL.AudioData.IO
                         fieldName = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(nameSize)));
 
                         dataPosition = source.BaseStream.Position;
-                        readTagField(ref source, zoneCode, fieldName, fieldDataType, fieldDataSize, readTagParams, true, languageIndex, streamNumber);
+                        readTagField(source, zoneCode, fieldName, fieldDataType, fieldDataSize, readTagParams, true, languageIndex, streamNumber);
 
                         source.BaseStream.Seek(dataPosition + fieldDataSize, SeekOrigin.Begin);
                     }
@@ -376,7 +376,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readExtendedContentDescription(ref BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readExtendedContentDescription(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             long dataPosition;
 			ushort fieldCount;
@@ -396,13 +396,13 @@ namespace ATL.AudioData.IO
 				dataSize = source.ReadUInt16();
 
                 dataPosition = source.BaseStream.Position;
-                readTagField(ref source, ZONE_EXTENDED_CONTENT_DESCRIPTION, fieldName, dataType, dataSize, readTagParams);
+                readTagField(source, ZONE_EXTENDED_CONTENT_DESCRIPTION, fieldName, dataType, dataSize, readTagParams);
 
                 source.BaseStream.Seek(dataPosition + dataSize, SeekOrigin.Begin);
             }
 		}
 
-        public void readTagField(ref BinaryReader source, string zoneCode, string fieldName, ushort fieldDataType, int fieldDataSize, ReadTagParams readTagParams, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        public void readTagField(BinaryReader source, string zoneCode, string fieldName, ushort fieldDataType, int fieldDataSize, ReadTagParams readTagParams, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             string fieldValue = "";
             bool setMeta = true;
@@ -502,7 +502,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-		private bool readData(ref BinaryReader source, ReadTagParams readTagParams)
+		private bool readData(BinaryReader source, ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
 
@@ -570,7 +570,7 @@ namespace ATL.AudioData.IO
                             structureHelper.AddSize(sizePosition1, headerSize, ZONE_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
                         }
-                        readContentDescription(ref source, readTagParams);
+                        readContentDescription(source, readTagParams);
                     }
                     // Extended content description (optional; one only)
                     // -> extended, dynamic metadata
@@ -584,13 +584,13 @@ namespace ATL.AudioData.IO
                             structureHelper.AddSize(sizePosition1, headerSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         }
-                        readExtendedContentDescription(ref source, readTagParams);
+                        readExtendedContentDescription(source, readTagParams);
                     }
                     // Header extension (mandatory; one only)
                     // -> extended, dynamic additional metadata such as additional embedded pictures (any picture after the 1st one stored in extended content)
                     else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
                     {
-                        readHeaderExtended(ref source, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
+                        readHeaderExtended(source, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
                     }
 
                     fs.Seek(position + (long)objectSize, SeekOrigin.Begin);				
@@ -671,7 +671,7 @@ namespace ATL.AudioData.IO
             fileData = new FileData();
 
             ResetData();
-            bool result = readData(ref source, readTagParams);
+            bool result = readData(source, readTagParams);
 
 			// Process data if loaded and valid
 			if ( result && isValid(fileData) )
@@ -708,14 +708,14 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) return writeContentDescription(tag, ref w);
-            else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) return writeExtendedHeaderMeta(tag, ref w);
-            else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) return writeExtendedHeaderMetaLibrary(tag, ref w);
-            else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) return writeExtendedContentDescription(tag, ref w);
+            if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) return writeContentDescription(tag, w);
+            else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) return writeExtendedHeaderMeta(tag, w);
+            else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) return writeExtendedHeaderMetaLibrary(tag, w);
+            else if (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(zone)) return writeExtendedContentDescription(tag, w);
             else return 0;
         }
 
-        private int writeContentDescription(TagData tag, ref BinaryWriter w)
+        private int writeContentDescription(TagData tag, BinaryWriter w)
         {
             long beginPos, frameSizePos, finalFramePos;
 
@@ -767,7 +767,7 @@ namespace ATL.AudioData.IO
             return ((title.Length > 0)?1:0) + ((author.Length > 0)?1:0) + ((copyright.Length > 0)?1:0) + ((comment.Length > 0)?1:0) + ((rating.Length > 0)?1:0);
         }
 
-        private int writeExtendedContentDescription(TagData tag, ref BinaryWriter w)
+        private int writeExtendedContentDescription(TagData tag, BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter = 0;
@@ -791,7 +791,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(ref w, s, map[frameType]);
+                            writeTextFrame(w, s, map[frameType]);
                             counter++;
                         }
                         break;
@@ -804,7 +804,7 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone)) )
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     counter++;
                 }
             }
@@ -820,7 +820,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture && picInfo.PictureData.Length + 50 <= ushort.MaxValue)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
                     counter++;
                 }
             }
@@ -837,7 +837,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private int writeExtendedHeaderMeta(TagData tag, ref BinaryWriter w)
+        private int writeExtendedHeaderMeta(TagData tag, BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter;
@@ -849,7 +849,7 @@ namespace ATL.AudioData.IO
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            counter = writeExtendedMeta(tag, ref w);
+            counter = writeExtendedMeta(tag, w);
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
@@ -862,7 +862,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private int writeExtendedHeaderMetaLibrary(TagData tag, ref BinaryWriter w)
+        private int writeExtendedHeaderMetaLibrary(TagData tag, BinaryWriter w)
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter;
@@ -874,7 +874,7 @@ namespace ATL.AudioData.IO
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            counter = writeExtendedMeta(tag, ref w, true);
+            counter = writeExtendedMeta(tag, w, true);
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = w.BaseStream.Position;
@@ -887,7 +887,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private ushort writeExtendedMeta(TagData tag, ref BinaryWriter w, bool isExtendedMetaLibrary=false)
+        private ushort writeExtendedMeta(TagData tag, BinaryWriter w, bool isExtendedMetaLibrary=false)
         {
             bool doWritePicture;
             ushort counter = 0;
@@ -903,7 +903,7 @@ namespace ATL.AudioData.IO
                 {
                     if ( (ZONE_EXTENDED_HEADER_METADATA.Equals(fieldInfo.Zone) && !isExtendedMetaLibrary) || (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(fieldInfo.Zone) && isExtendedMetaLibrary) )
                     {
-                        writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value, true, encodeLanguage(w.BaseStream, fieldInfo.Language), fieldInfo.StreamNumber);
+                        writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value, true, encodeLanguage(w.BaseStream, fieldInfo.Language), fieldInfo.StreamNumber);
                         counter++;
                     }
                 }
@@ -922,7 +922,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture && picInfo.PictureData.Length + 50 > ushort.MaxValue)
                     {
-                        writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
                         counter++;
                     }
                 }
@@ -931,7 +931,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, string frameCode, string text, bool isExtendedHeader=false, ushort languageIndex = 0, ushort streamNumber = 0)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, bool isExtendedHeader=false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             long dataSizePos, dataPos, finalFramePos;
             byte[] nameBytes = Encoding.Unicode.GetBytes(frameCode + '\0');
@@ -1008,7 +1008,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             long dataSizePos, dataPos, finalFramePos;
             byte[] nameBytes = Encoding.Unicode.GetBytes("WM/Picture" + '\0');

@@ -79,7 +79,7 @@ namespace ATL.AudioData
         /// <param name="theDataManager">AudioDataReader produced for this file</param>
         /// <param name="forceTagType">Forces a certain tag type to be read regardless of the current "cross reading" settings</param>
         /// <returns>Metadata reader able to give metadata info for this file (or the dummy reader if the format is unknown)</returns>
-        public IMetaDataIO GetMetaReader(ref AudioDataManager theDataManager, int forceTagType = -1)
+        public IMetaDataIO GetMetaReader(AudioDataManager theDataManager, int forceTagType = -1)
 		{
             IMetaDataIO theMetaReader = null;
             
@@ -93,7 +93,7 @@ namespace ATL.AudioData
 			// to cross-format tagging systems
 			if (m_enableCrossReading && (tagCount > 1) && (-1 == forceTagType) )
 			{
-				theMetaReader = new CrossMetadataReader(ref theDataManager, tagPriority);
+				theMetaReader = new CrossMetadataReader(theDataManager, tagPriority);
 			}
             else
 			{

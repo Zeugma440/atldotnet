@@ -842,7 +842,7 @@ namespace ATL.AudioData.IO
             // == FRAMES ==
             // ============
             long dataPos = w.BaseStream.Position;
-            result = writeFrames(ref tag, w);
+            result = writeFrames(tag, w);
 
             // Record final size of tag into "tag size" field of header
             long finalTagPos = w.BaseStream.Position;
@@ -854,7 +854,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writeFrames(ref TagData tag, BinaryWriter w)
+        private int writeFrames(TagData tag, BinaryWriter w)
         {
             int counter = 0;
             bool doWritePicture;
@@ -870,7 +870,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(ref w, s, map[frameType]);
+                            writeTextFrame(w, s, map[frameType]);
                             counter++;
                         }
                         break;
@@ -883,7 +883,7 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     counter++;
                 }
             }
@@ -900,7 +900,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, firstPic);
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, firstPic);
                     counter++;
                     firstPic = false;
                 }
@@ -909,7 +909,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, string frameCode, string text)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             long frameSizePos1;
             long frameSizePos2;
@@ -989,7 +989,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, bool firstPicture)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, bool firstPicture)
         {
             long frameSizePos1 = 0;
             long frameSizePos2;

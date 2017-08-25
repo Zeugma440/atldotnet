@@ -14,7 +14,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class B4SReader : PlaylistReader
     {
 
-        public override void GetFiles(FileStream fs, ref IList<String> result)
+        public override void GetFiles(FileStream fs, IList<String> result)
         {
             XmlTextReader source = new XmlTextReader(fs);
 
@@ -38,7 +38,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
                         }
                         else if (inTracklist && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase))
                         {
-                            result.Add(getResourceLocation(ref source));
+                            result.Add(getResourceLocation(source));
                         }
                         break;
 
@@ -61,7 +61,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
             source.Close();
         }
 
-        private String getResourceLocation(ref XmlTextReader source)
+        private String getResourceLocation(XmlTextReader source)
         {
             String result = "";
             while (source.MoveToNextAttribute()) // Read the attributes.

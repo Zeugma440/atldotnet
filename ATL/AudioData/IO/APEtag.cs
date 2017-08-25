@@ -114,7 +114,7 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        private bool readFooter(BinaryReader SourceFile, ref TagInfo Tag)
+        private bool readFooter(BinaryReader SourceFile, TagInfo Tag)
         {
             char[] tagID = new char[3];
             //int Transferred;
@@ -149,7 +149,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void setMetaField(string FieldName, string FieldValue, ref TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(string FieldName, string FieldValue, TagInfo Tag, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
             FieldName = FieldName.Replace("\0", "").ToUpper();
@@ -176,7 +176,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void readFrames(BinaryReader SourceFile, ref TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
+        private void readFrames(BinaryReader SourceFile, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
             string strValue;
@@ -198,7 +198,7 @@ namespace ATL.AudioData.IO
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
                     strValue = Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize));
-                    setMetaField(frameName.Trim(), strValue.Trim(), ref Tag, readTagParams.ReadAllMetaFrames);
+                    setMetaField(frameName.Trim(), strValue.Trim(), Tag, readTagParams.ReadAllMetaFrames);
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
@@ -262,7 +262,7 @@ namespace ATL.AudioData.IO
             ResetData();
             Tag.Reset();
 
-            bool result = readFooter(source, ref Tag);
+            bool result = readFooter(source, Tag);
 
             // Process data if loaded and footer valid
             if (result)
@@ -282,7 +282,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(tagOffset, tagSize);
 
                 // Get information from fields
-                readFrames(source, ref Tag, readTagParams);
+                readFrames(source, Tag, readTagParams);
             }
 
             return result;
@@ -329,7 +329,7 @@ namespace ATL.AudioData.IO
             // == FRAMES ==
             // ============
             long dataPos = w.BaseStream.Position;
-            itemCount = writeFrames(ref tag, ref w);
+            itemCount = writeFrames(tag, w);
 
             // Record final size of tag into "tag size" field of header
             long finalTagPos = w.BaseStream.Position;
@@ -360,7 +360,7 @@ namespace ATL.AudioData.IO
             return itemCount;
         }
 
-        private int writeFrames(ref TagData tag, ref BinaryWriter w)
+        private int writeFrames(TagData tag, BinaryWriter w)
         {
             bool doWritePicture;
             int nbFrames = 0;
@@ -376,7 +376,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(ref w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -392,7 +392,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(ref w, s, map[frameType]);
+                            writeTextFrame(w, s, map[frameType]);
                             nbFrames++;
                         }
                         break;
@@ -405,7 +405,7 @@ namespace ATL.AudioData.IO
             {
                 if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(ref w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;
                 }
             }
@@ -413,7 +413,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(ref BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
         {
             long frameSizePos;
             long finalFramePos;
@@ -438,7 +438,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(ref BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, string pictureTypeCode, String picDescription)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, string pictureTypeCode, String picDescription)
         {
             // Binary tag writing management
             long frameSizePos;

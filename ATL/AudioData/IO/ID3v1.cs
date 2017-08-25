@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
 
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(BinaryReader source, ref TagRecord TagData)
+        private bool ReadTag(BinaryReader source, TagRecord TagData)
         {
             bool result = false;
 
@@ -266,7 +266,7 @@ namespace ATL.AudioData.IO
 	
 			// Reset and load tag data from file to variable
 			ResetData();
-            bool result = ReadTag(source, ref tagData);
+            bool result = ReadTag(source, tagData);
 
 			// Process data if loaded successfuly
 			if (result)

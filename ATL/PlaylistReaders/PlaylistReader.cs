@@ -18,7 +18,7 @@ namespace ATL.PlaylistReaders
 		}
 
 
-        abstract public void GetFiles(FileStream fs, ref IList<String> result);
+        abstract public void GetFiles(FileStream fs, IList<String> result);
 
         public IList<String> GetFiles()
 		{
@@ -28,7 +28,7 @@ namespace ATL.PlaylistReaders
 			{
                 using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.Read))
                 {
-                    GetFiles(fs, ref result);
+                    GetFiles(fs, result);
                 }
 			}
 			catch (Exception e) 
