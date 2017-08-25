@@ -296,7 +296,7 @@ namespace ATL.AudioData.IO
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            int result, tagSize;
+            int tagSize;
             long tagSizePos;
 
             long itemCountPos;
