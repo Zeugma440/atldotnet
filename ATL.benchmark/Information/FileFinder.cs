@@ -54,10 +54,10 @@ namespace ATL.benchmark
 
         public void FF_FilterAndDisplayAudioFiles()
         {
-            FF_FilterAndDisplayAudioFiles(null, false);
+            FF_BrowseAudioFiles(null);
         }
 
-        public void FF_FilterAndDisplayAudioFiles(string path, bool useOldImplementation = false, bool display=true)
+        public void FF_BrowseAudioFiles(string path, bool useOldImplementation = false, bool fetchPicture = false, bool display=true)
         {
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
@@ -70,6 +70,7 @@ namespace ATL.benchmark
                 if (isFormatSupported(file))
                 {
                     t = new Track(file, useOldImplementation);
+                    if (fetchPicture) t.GetEmbeddedPicture();
                     if (display)
                     {
                         Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")"));

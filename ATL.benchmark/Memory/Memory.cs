@@ -9,7 +9,7 @@ namespace ATL.benchmark
     [InliningDiagnoser]
     public class Memory
     {
-        [Params("E:/temp/wma", "E:/temp/mp3", "E:/temp/aac/mp4")]
+        [Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
         public string path;
 
         FileFinder ff = new FileFinder();
@@ -23,7 +23,7 @@ namespace ATL.benchmark
                 t.GetEmbeddedPicture(true);
             } else if (Directory.Exists(path))
             {
-                ff.FF_FilterAndDisplayAudioFiles(path, true, false);
+                ff.FF_BrowseAudioFiles(path, true, true, false);
             }
         }
 
@@ -37,7 +37,7 @@ namespace ATL.benchmark
             }
             else if (Directory.Exists(path))
             {
-                ff.FF_FilterAndDisplayAudioFiles(path, false, false);
+                ff.FF_BrowseAudioFiles(path, false, true, false);
             }
         }
     }
