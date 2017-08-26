@@ -1,60 +1,35 @@
-﻿using ATL.AudioData;
-using ATL.Logging;
-using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
 
 namespace ATL.benchmark
 {
-    //TODO - Test BenchmarkDotNet
-
+    [MemoryDiagnoser]
+    [InliningDiagnoser]
     public class Memory
     {
+        [Params("E:/temp/wma", "E:/temp/mp3", "E:/temp/aac/mp4")]
+        public string path;
+
         FileFinder ff = new FileFinder();
 
-        public void Mem_OldNew()
+        [Benchmark(Baseline = true)]
+        public void mem_Old()
         {
-            ConsoleLogger log = new ConsoleLogger();
-
-            //string path = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_UTF8.mp3";
-            string path = @"E:\temp\wma";
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            mem_Old(path);
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            mem_New(path);
-        }
-
-        private void mem_Old(string path)
-        {
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "-------------------------------------------------------");
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin old");
-
             if (File.Exists(path))
             {
                 Track t = new Track(path, true);
                 t.GetEmbeddedPicture(true);
             } else if (Directory.Exists(path))
             {
-                ff.FF_FilterAndDisplayAudioFiles(path, true);
+                ff.FF_FilterAndDisplayAudioFiles(path, true, false);
             }
-
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, GC.GetTotalMemory(false).ToString("N0"));
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, Process.GetCurrentProcess().WorkingSet64.ToString("N0"));
         }
 
-        private void mem_New(string path)
+        [Benchmark]
+        public void mem_New()
         {
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "-------------------------------------------------------");
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "begin new");
-
             if (File.Exists(path))
             {
                 Track t = new Track(path);
@@ -62,11 +37,8 @@ namespace ATL.benchmark
             }
             else if (Directory.Exists(path))
             {
-                ff.FF_FilterAndDisplayAudioFiles(path);
+                ff.FF_FilterAndDisplayAudioFiles(path, false, false);
             }
-
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, GC.GetTotalMemory(false).ToString("N0"));
-            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, Process.GetCurrentProcess().WorkingSet64.ToString("N0"));
         }
     }
 }

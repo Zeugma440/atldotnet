@@ -57,7 +57,7 @@ namespace ATL.benchmark
             FF_FilterAndDisplayAudioFiles(null, false);
         }
 
-        public void FF_FilterAndDisplayAudioFiles(string path, bool useOldImplementation = false)
+        public void FF_FilterAndDisplayAudioFiles(string path, bool useOldImplementation = false, bool display=true)
         {
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
@@ -70,8 +70,11 @@ namespace ATL.benchmark
                 if (isFormatSupported(file))
                 {
                     t = new Track(file, useOldImplementation);
-                    Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR?" VBR)":")") );
-                    Console.WriteLine(Utils.BuildStrictLengthString("",t.Path.Length,'.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + ( (t.PictureTokens != null && t.PictureTokens.Count>0)?" ("+ t.PictureTokens.Count+" picture(s))":""));
+                    if (display)
+                    {
+                        Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")"));
+                        Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + ((t.PictureTokens != null && t.PictureTokens.Count > 0) ? " (" + t.PictureTokens.Count + " picture(s))" : ""));
+                    }
                 }
             }
         }
