@@ -24,13 +24,14 @@ namespace ATL.benchmark
             if (includeFinalSeparator) return locationRoot + Path.DirectorySeparatorChar; else return locationRoot;
         }
 
-        public static string GetTempTestFile(string fileName)
+        public static string GenerateTempTestFile(string fileName, int index = -1)
         {
             string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
             int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
             string bareFileName = fileName.Substring(lastSeparatorPos+1, fileName.Length - lastSeparatorPos - 1);
+            string specifics = (index > -1) ? index.ToString() : "--" + DateTime.Now.ToLongTimeString().Replace(":", ".");
             if (!Directory.Exists(GetResourceLocationRoot()+"tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
-            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToLongTimeString().Replace(":", ".") + extension;
+            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + specifics + extension;
 
             // Create writable a working copy
             File.Copy(GetResourceLocationRoot() + fileName, result, true);

@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ATL.benchmark")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PricewaterhouseCoopers")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ATL.benchmark")]
-[assembly: AssemblyCopyright("Copyright © PricewaterhouseCoopers 2017")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
