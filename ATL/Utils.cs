@@ -384,20 +384,6 @@ namespace Commons
 
         /// <summary>
         /// Get the MD5 hash of the given string, interpreted as UTF-8
-        /// Returned value is an Int32 computed from the first 4 bytes of the actual MD5 according to the byte order ("endianness") in which data is stored in the current computer architecture.
-        /// 
-        /// Warning : Given the nature of MD5 hashes which are coded on 32 bytes, this function actually truncates information !
-        /// USE IT AT YOUR OWN RISK
-        /// </summary>
-        /// <param name="value">String to get the MD5 hash from</param>
-        /// <returns>MD5 hash converted to Int32 according to the rules documented in the method description</returns>
-        public static int GetInt32MD5Hash(string value)
-        {
-            return BitConverter.ToInt32(GetMD5Hash(value),0);
-        }
-
-        /// <summary>
-        /// Get the MD5 hash of the given string, interpreted as UTF-8
         /// Returned value is a string representing the MD5 in hex values
         /// </summary>
         /// <param name="value">Strinsg to get the MD5 hash from</param>

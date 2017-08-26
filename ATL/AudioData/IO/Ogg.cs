@@ -78,7 +78,7 @@ namespace ATL.AudioData.IO
 		}	
 		public String ChannelMode // Channel mode name
 		{
-			get { return this.FGetChannelMode(); }
+			get { return this.getChannelMode(); }
 		}	
 		public int SampleRate // Sample rate (hz)
 		{
@@ -497,35 +497,36 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private ulong GetSamples(BinaryReader source)
-		{  
-			int DataIndex;	
-			// Using byte instead of char here to avoid mistaking range of bytes for unicode chars
-			byte[] Data = new byte[251];
-			OggHeader Header = new OggHeader();
+        private ulong getSamples(BinaryReader source)
+		{
+            OggHeader header = new OggHeader();
+            
+            // Start from the 1st page following headers
+            long nextPageOffset = info.SetupHeaderEnd;
 
-			// Get total number of samples
-			uint result = 0;
+            // Iterate until last page is encountered
+            do
+            {
+                source.BaseStream.Seek(nextPageOffset, SeekOrigin.Begin);
+                header.ReadFromStream(source);
 
-			for (int index=1; index<=50; index++)
-			{
-				DataIndex = (int)(source.BaseStream.Length - (251 - 10) * index - 10);
-				source.BaseStream.Seek(DataIndex, SeekOrigin.Begin);
-                
-                // Get number of PCM samples from last Ogg packet header
-                if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID), false))
+                if (header.IsValid())
                 {
-                    source.BaseStream.Seek(-OGG_PAGE_ID.Length, SeekOrigin.Current);
-                    Header.ReadFromStream(source);
-                    return Header.AbsolutePosition;
+                    // To the next header
+                    nextPageOffset += (header.GetHeaderSize() + header.GetPageLength());
                 }
-			}
-			return result;
+                else
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting writing operation"); // Throw exception ?
+                    return 0;
+                }
+
+            } while (0 == (header.TypeFlag & 0x04)); // 0x04 marks the last page of the logical bitstream
+
+            return header.AbsolutePosition;
 		}
 
-		// ---------------------------------------------------------------------------
-
-		private bool GetInfo(BinaryReader source, FileInfo info, ReadTagParams readTagParams)
+		private bool getInfo(BinaryReader source, FileInfo info, ReadTagParams readTagParams)
 		{
             Stream fs = source.BaseStream;
 
@@ -603,9 +604,10 @@ namespace ATL.AudioData.IO
                     bool first = true;
                     using (MemoryStream s = new MemoryStream())
                     {
+                        // Reconstruct the whole Comment header from OGG pages to a MemoryStream
                         while (loop)
                         {
-                            info.SetupHeaderEnd = fs.Position;
+                            info.SetupHeaderEnd = fs.Position; // When the loop stops, cursor is starting to read a brand new page located after Comment _and_ Setup headers
                             info.CommentHeader.ID = Utils.Latin1Encoding.GetChars(source.ReadBytes(4));
                             info.CommentHeader.StreamVersion = source.ReadByte();
                             info.CommentHeader.TypeFlag = source.ReadByte();
@@ -630,7 +632,7 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            // Determine the boundaries of 3rd header (Setup header)
+                            // Determine the boundaries of 3rd header (Setup header) by searching backwards from current position
                             if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID), false))
                             {
                                 info.SetupHeaderStart = source.BaseStream.Position - VORBIS_SETUP_ID.Length;
@@ -664,8 +666,9 @@ namespace ATL.AudioData.IO
                         }
 
                         // Get total number of samples
-                        info.Samples = GetSamples(source);
+                        info.Samples = getSamples(source);
 
+                        // Read metadata from the reconstructed Comment header inside the memoryStream
                         if (readTagParams.ReadTag)
                         {
                             BinaryReader msr = new BinaryReader(s);
@@ -695,9 +698,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-		// ---------------------------------------------------------------------------
-
-		private String FGetChannelMode()
+		private String getChannelMode()
 		{
 			String result;
 			// Get channel mode name
@@ -707,8 +708,6 @@ namespace ATL.AudioData.IO
 
 			return VORBIS_MODE[channelModeID];
 		}
-
-		// ---------------------------------------------------------------------------
 
         // Calculate duration time
 		private double getDuration()
@@ -730,8 +729,6 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-		// ---------------------------------------------------------------------------
-
 		private double getBitRate()
 		{
 			// Calculate average bit rate
@@ -741,8 +738,6 @@ namespace ATL.AudioData.IO
 	
 			return result;
 		}
-
-		// ---------------------------------------------------------------------------
 
 		private bool isValid()
 		{
@@ -772,7 +767,7 @@ namespace ATL.AudioData.IO
             if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true, true, true);
             info.Reset();
 
-            if ( GetInfo(source, info, readTagParams) )
+            if ( getInfo(source, info, readTagParams) )
 			{
                 // Fill variables
                 if (contents.Equals(CONTENTS_VORBIS))
@@ -991,11 +986,11 @@ namespace ATL.AudioData.IO
                         nextPageOffset += data.Length;
                     } else
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting writing operation");
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting writing operation"); // Throw exception ?
                         return false;
                     }
 
-                } while (0 == (header.TypeFlag & 0x04));
+                } while (0 == (header.TypeFlag & 0x04));  // 0x04 marks the last page of the logical bitstream
             }
 
             return result;

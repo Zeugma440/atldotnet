@@ -13,18 +13,36 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="TrackString">Raw "track" field in string form</param>
         /// <returns>Track number, in integer form; 0 if no track number has been found</returns>
-        public static ushort ExtractTrackNumber(String TrackString)
+        public static ushort ExtractTrackNumber(String str)
         {
-            if ((null == TrackString) || (0 == TrackString.Trim().Length)) return 0;
+            // == Optimizations (Regex are too damn expensive to use them lazily)
+
+            // Invalid inputs
+            if (null == str) return 0;
+            str = str.Trim();
+            if (str.Length < 1) return 0;
+
+            // Obvious case : string begins with a number
+            int i = 0;
+            while (char.IsNumber(str[i]))
+            {
+                i++;
+                if (str.Length == i) break;
+            }
+
+            if (i > 0) return ushort.Parse(str.Substring(0, i));
+
+
+            // == If everything above fails...
 
             // This case covers both single track numbers and (trk/total) formatting
             Regex regex = new Regex("\\d+");
 
-            Match match = regex.Match(TrackString.Trim());
+            Match match = regex.Match(str);
             // First match is directly returned
             if (match.Success)
             {
-                return UInt16.Parse(match.Value);
+                return ushort.Parse(match.Value);
             }
             return 0;
         }
@@ -92,8 +110,30 @@ namespace ATL.AudioData
 		/// <param name="str">String to search the year into</param>
 		/// <returns>Found year in string form; "" if no year has been found</returns>
 		public static String ExtractStrYear(String str)
-		{
-			if ((null == str) || (0 == str.Trim().Length)) return "";
+        {
+            // == Optimizations (Regex are too damn expensive to use them lazily)
+
+            // Invalid inputs
+            if (null == str) return "";
+            str = str.Trim();
+            if (str.Length < 4) return "";
+
+            // Obvious plain year
+            if (str.Length > 3)
+            {
+                // Begins with 4 numeric chars
+                if (char.IsNumber(str[0]) && char.IsNumber(str[1]) && char.IsNumber(str[2]) && char.IsNumber(str[3]))
+                {
+                    return str.Substring(0, 4);
+                }
+                // Ends with 4 numeric chars
+                if (char.IsNumber(str[str.Length - 1]) && char.IsNumber(str[str.Length - 2]) && char.IsNumber(str[str.Length - 3]) && char.IsNumber(str[str.Length - 4]))
+                {
+                    return str.Substring(str.Length - 4, 4);
+                }
+            }
+
+            // == If everything above fails...
             Regex regex = new Regex("\\d{4}");
 
             Match match = regex.Match(str.Trim());

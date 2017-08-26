@@ -54,14 +54,8 @@ namespace ATL.test
         {
             string test = "this is a test string !";
             Assert.AreEqual("b5a1c8176ec92291ff3595e4104c3759", Utils.GetStrMD5Hash(test) );
-            if (BitConverter.IsLittleEndian)
-            {
-                Assert.AreEqual(399024565, Utils.GetInt32MD5Hash(test));
-            } else
-            {
-                Assert.AreEqual(3047278615, Utils.GetInt32MD5Hash(test));
-            }
         }
+
         [TestMethod]
         public void Utils_FormatTime()
         {

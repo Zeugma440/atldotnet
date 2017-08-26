@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
+using HashDepot;
 
 namespace ATL
 {
@@ -101,7 +102,7 @@ namespace ATL
 
             public override int GetHashCode()
             {
-                return Utils.GetInt32MD5Hash(ToString());
+                return (int)Fnv1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
             }
 
             public override bool Equals(object obj)
@@ -155,7 +156,7 @@ namespace ATL
 
             public override int GetHashCode()
             {
-                return Utils.GetInt32MD5Hash(ToString());
+                return (int)Fnv1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
             }
 
             public bool EqualsWithoutZone(object obj)

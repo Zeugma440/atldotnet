@@ -130,6 +130,7 @@
     <Compile Include="Entities\Format.cs" />
     <Compile Include="Entities\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
+    <Compile Include="FNV1a.cs" />
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogDelegator.cs" />

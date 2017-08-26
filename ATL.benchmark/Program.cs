@@ -9,9 +9,8 @@ namespace ATL.benchmark
         {
             //BenchmarkRunner.Run<Speed>();
 
-            BenchmarkRunner.Run<Memory>();
+            //BenchmarkRunner.Run<Memory>();
 
-            /*
             //string filePath = TestUtils.GetResourceLocationRoot() + "/OGG/ogg_bigPicture.ogg";
             string filePath = @"E:\Dev\Source\Repos\atldotnet\ATL.benchmark\Resources/OGG/ogg_bigPicture.ogg";
 
@@ -23,7 +22,6 @@ namespace ATL.benchmark
             t.GetEmbeddedPicture();
 
             Console.ReadLine();
-            */
         }
     }
 }
