@@ -11,16 +11,19 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Memory>();
 
-            //string filePath = TestUtils.GetResourceLocationRoot() + "/OGG/ogg_bigPicture.ogg";
-            string filePath = @"E:\Dev\Source\Repos\atldotnet\ATL.benchmark\Resources/OGG/ogg_bigPicture.ogg";
+            readAt(TestUtils.GetResourceLocationRoot() + "OGG/singlePicture.ogg", true);
+        }
 
-            Console.WriteLine(Environment.CurrentDirectory);
+        static private void readAt(string filePath, bool useOldImplementation = false)
+        {
+            Console.WriteLine(filePath);
 
-            Console.ReadLine();
+            Track t = new Track(filePath, useOldImplementation);
+            t.GetEmbeddedPicture(useOldImplementation);
 
-            Track t = new Track(filePath);
-            t.GetEmbeddedPicture();
+            Console.WriteLine(t.Title);
 
+            Console.WriteLine("end");
             Console.ReadLine();
         }
     }

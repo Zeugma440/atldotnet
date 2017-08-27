@@ -9,7 +9,8 @@ namespace ATL.benchmark
     [InliningDiagnoser]
     public class Memory
     {
-        [Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
+        //[Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
+        //[Params("E:/temp/ogg")]
         public string path;
 
         FileFinder ff = new FileFinder();

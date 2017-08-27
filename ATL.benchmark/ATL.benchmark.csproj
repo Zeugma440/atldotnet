@@ -192,10 +192,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\MP3\01 - Title Screen_pic.mp3" />
-    <Content Include="Resources\tmp\001 - Title Screen_pic.mp3" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ATL\ATL.csproj">
       <Project>{27c03311-c017-4e99-8b35-0005102b2dac}</Project>
       <Name>ATL</Name>
