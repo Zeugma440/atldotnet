@@ -10,7 +10,7 @@ namespace ATL.benchmark
     public class ATLOld_ATLNew
     {
         //[Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
-        //[Params("E:/temp/ogg")]
+        [Params("E:/temp/id3v2")]
         public string path;
 
         FileFinder ff = new FileFinder();

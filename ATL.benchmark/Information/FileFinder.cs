@@ -94,7 +94,7 @@ namespace ATL.benchmark
                     tagFile = TagLib.File.Create(file);
                     if (display)
                     {
-                        Console.WriteLine(tagFile.Name + "......." + Commons.Utils.FormatTime(tagFile.Length) + " | " + tagFile.Properties.AudioSampleRate + " (" + tagFile.Properties.AudioBitrate + " kpbs)");// + (tagFile. ? " VBR)" : ")"));
+                        Console.WriteLine(tagFile.Name + "......." + tagFile.Properties.Duration + " | " + tagFile.Properties.AudioSampleRate + " (" + tagFile.Properties.AudioBitrate + " kpbs)");// + (tagFile. ? " VBR)" : ")"));
                         Console.WriteLine(Utils.BuildStrictLengthString("", tagFile.Name.Length, '.') + "......." + tagFile.Tag.Disc + " | " + tagFile.Tag.Track + " | " + tagFile.Tag.Title + " | " + tagFile.Tag.FirstPerformer + " | " + tagFile.Tag.Album + " | " + tagFile.Tag.Year +  ((tagFile.Tag.Pictures != null && tagFile.Tag.Pictures.Length > 0) ? " (" + tagFile.Tag.Pictures.Length + " picture(s))" : ""));
                     }
                 }

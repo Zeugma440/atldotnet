@@ -42,7 +42,7 @@ namespace ATL.AudioData.IO
             public char[] Reserved = new char[8];                  // Reserved for later use
                                                                             // Extended data
             public byte DataShift;                                 // Used if ID3v1 tag found
-            public int FileSize;		                                 // File size (bytes)
+            public long FileSize;		                                 // File size (bytes)
 
             public void Reset()
             {
@@ -116,30 +116,28 @@ namespace ATL.AudioData.IO
 
         private bool readFooter(BinaryReader SourceFile, TagInfo Tag)
         {
-            char[] tagID = new char[3];
-            //int Transferred;
+            string tagID;
             bool result = true;
-            Stream fs = SourceFile.BaseStream;
 
             // Load footer from file to variable
-            Tag.FileSize = (int)fs.Length;
+            Tag.FileSize = SourceFile.BaseStream.Length;
 
             // Check for existing ID3v1 tag in order to get the correct offset for APEtag packet
-            fs.Seek(Tag.FileSize - ID3v1.ID3V1_TAG_SIZE, SeekOrigin.Begin);
-            tagID = StreamUtils.ReadOneByteChars(SourceFile, 3);
-            if (StreamUtils.StringEqualsArr(ID3v1.ID3V1_ID, tagID)) Tag.DataShift = ID3v1.ID3V1_TAG_SIZE;
+            SourceFile.BaseStream.Seek(Tag.FileSize - ID3v1.ID3V1_TAG_SIZE, SeekOrigin.Begin);
+            tagID = Utils.Latin1Encoding.GetString(SourceFile.ReadBytes(3));
+            if (ID3v1.ID3V1_ID.Equals(tagID)) Tag.DataShift = ID3v1.ID3V1_TAG_SIZE;
 
             // Read footer data
-            fs.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
+            SourceFile.BaseStream.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
 
-            Tag.ID = StreamUtils.ReadOneByteChars(SourceFile, 8);
+            Tag.ID = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(8));
             if (StreamUtils.StringEqualsArr(APE_ID, Tag.ID))
             {
                 Tag.Version = SourceFile.ReadInt32();
                 Tag.Size = SourceFile.ReadInt32();
                 Tag.FrameCount = SourceFile.ReadInt32();
                 Tag.Flags = SourceFile.ReadInt32();
-                Tag.Reserved = StreamUtils.ReadOneByteChars(SourceFile, 8);
+                Tag.Reserved = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(8));
             }
             else
             {
@@ -183,9 +181,8 @@ namespace ATL.AudioData.IO
             int frameDataSize;
             long valuePosition;
             int frameFlags;
-            Stream fs = SourceFile.BaseStream;
 
-            fs.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
+            SourceFile.BaseStream.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
             // Read all stored fields
             for (int iterator = 0; iterator < Tag.FrameCount; iterator++)
             {
@@ -193,7 +190,7 @@ namespace ATL.AudioData.IO
                 frameFlags = SourceFile.ReadInt32();
                 frameName = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
-                valuePosition = fs.Position;
+                valuePosition = SourceFile.BaseStream.Position;
 
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
@@ -231,7 +228,7 @@ namespace ATL.AudioData.IO
                         mem.Close();
                     }
                 }
-                fs.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
+                SourceFile.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
             }
         }
 
