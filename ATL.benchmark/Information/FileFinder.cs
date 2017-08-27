@@ -54,10 +54,10 @@ namespace ATL.benchmark
 
         public void FF_FilterAndDisplayAudioFiles()
         {
-            FF_BrowseAudioFiles(null);
+            FF_BrowseATLAudioFiles(null);
         }
 
-        public void FF_BrowseAudioFiles(string path, bool useOldImplementation = false, bool fetchPicture = false, bool display=true)
+        public void FF_BrowseATLAudioFiles(string path, bool useOldImplementation = false, bool fetchPicture = false, bool display=true)
         {
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
@@ -75,6 +75,27 @@ namespace ATL.benchmark
                     {
                         Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")"));
                         Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year + ((t.PictureTokens != null && t.PictureTokens.Count > 0) ? " (" + t.PictureTokens.Count + " picture(s))" : ""));
+                    }
+                }
+            }
+        }
+
+        public void FF_BrowseTagLibAudioFiles(string path, bool fetchPicture = false, bool display = true)
+        {
+            string folder = (null == path) ? @"E:\temp\wma" : path;
+            string[] files = Directory.GetFiles(folder);
+
+            TagLib.File tagFile;
+
+            foreach (string file in files)
+            {
+                if (isFormatSupported(file))
+                {
+                    tagFile = TagLib.File.Create(file);
+                    if (display)
+                    {
+                        Console.WriteLine(tagFile.Name + "......." + Commons.Utils.FormatTime(tagFile.Length) + " | " + tagFile.Properties.AudioSampleRate + " (" + tagFile.Properties.AudioBitrate + " kpbs)");// + (tagFile. ? " VBR)" : ")"));
+                        Console.WriteLine(Utils.BuildStrictLengthString("", tagFile.Name.Length, '.') + "......." + tagFile.Tag.Disc + " | " + tagFile.Tag.Track + " | " + tagFile.Tag.Title + " | " + tagFile.Tag.FirstPerformer + " | " + tagFile.Tag.Album + " | " + tagFile.Tag.Year +  ((tagFile.Tag.Pictures != null && tagFile.Tag.Pictures.Length > 0) ? " (" + tagFile.Tag.Pictures.Length + " picture(s))" : ""));
                     }
                 }
             }

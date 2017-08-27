@@ -9,9 +9,11 @@ namespace ATL.benchmark
         {
             //BenchmarkRunner.Run<Speed>();
 
-            //BenchmarkRunner.Run<Memory>();
+            //BenchmarkRunner.Run<ATLOld_ATLNew>();
 
-            readAt(TestUtils.GetResourceLocationRoot() + "OGG/singlePicture.ogg", true);
+            BenchmarkRunner.Run<ATL_TagLib>();
+
+            //readAt(TestUtils.GetResourceLocationRoot() + "OGG/singlePicture.ogg", true);
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false)
