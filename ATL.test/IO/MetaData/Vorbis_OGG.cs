@@ -58,7 +58,7 @@ namespace ATL.test.IO.MetaData
         public Vorbis_OGG()
         {
             emptyFile = "OGG/empty.ogg";
-            notEmptyFile = "OGG/Rayman_2_music_sample.ogg";
+            notEmptyFile = "OGG/ogg.ogg";
         }
 
         [TestMethod]
@@ -77,7 +77,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_bigPicture.ogg";
+            string location = TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
             readExistingTagsOnFile(ref theFile, 3);
@@ -183,7 +183,7 @@ namespace ATL.test.IO.MetaData
 
             try
             {
-                tagIO_RW_VorbisOGG_Existing("OGG/ogg_bigPicture.ogg", 3);
+                tagIO_RW_VorbisOGG_Existing("OGG/bigPicture.ogg", 3);
             } finally
             {
                 MetaDataIO.SetEnablePadding(false);

@@ -90,9 +90,10 @@
     <None Include="Resources\IT\sommix.it" />
     <None Include="Resources\IT\SuperMario28bits%28tssf%29.it" />
     <None Include="Resources\MPC\mpc.mpc" />
+    <None Include="Resources\OGG\bigPicture.ogg" />
     <None Include="Resources\OGG\empty.ogg" />
-    <None Include="Resources\OGG\ogg_bigPicture.ogg" />
-    <None Include="Resources\OGG\Rayman_2_music_sample.ogg" />
+    <None Include="Resources\OGG\noPicture.ogg" />
+    <None Include="Resources\OGG\ogg.ogg" />
     <None Include="Resources\OPUS\01_2_32.opus" />
     <None Include="Resources\S3M\2ND_PM.S3M" />
     <None Include="Resources\TAK\003 BlackBird.tak" />

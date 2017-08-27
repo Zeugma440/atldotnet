@@ -66,7 +66,7 @@ namespace ATL.test
         [TestMethod]
         public void Audio_OGG()
         {
-            testGenericAudio("OGG/Rayman_2_music_sample.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("OGG/ogg.ogg", 33, 69, 22050, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
