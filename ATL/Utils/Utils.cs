@@ -134,7 +134,13 @@ namespace Commons
         /// <returns>Given string, without any null character</returns>
         public static string StripZeroChars(string iStr)
         {
-            return Regex.Replace(iStr, @"\0", "");
+            //return Regex.Replace(iStr, @"\0", "");  Too expensive
+            StringBuilder sbl = new StringBuilder();
+            for (int i=0;i<iStr.Length;i++)
+            {
+                if (iStr[i] != '\0') sbl.Append(iStr[i]);
+            }
+            return sbl.ToString();
         }
 
         /// <summary>
@@ -144,7 +150,11 @@ namespace Commons
         /// <returns>Given string, without any ending null character</returns>
         public static string StripEndingZeroChars(string iStr)
         {
-            return Regex.Replace(iStr, @"\0+\Z", "");
+            //return Regex.Replace(iStr, @"\0+\Z", "");  Too expensive
+            int i = iStr.Length;
+            while ('\0' == iStr[i - 1]) i--;
+
+            return iStr.Substring(0, i);
         }
 
         /// <summary>

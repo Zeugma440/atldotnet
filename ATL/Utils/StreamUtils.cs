@@ -11,7 +11,7 @@ namespace ATL
 	public static class StreamUtils
 	{	
 		// Size of the buffer used by memory stream copy methods
-		private const int BUFFERSIZE = 4096;
+		private const int BUFFERSIZE = 512;
 
         /// <summary>
         /// Handler signature to be used when needing to process a MemoryStream
@@ -588,6 +588,10 @@ namespace ATL
         public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
             return readNullTerminatedString(r.BaseStream, encoding, 0, false);
+        }
+        public static String ReadNullTerminatedString(Stream s, Encoding encoding)
+        {
+            return readNullTerminatedString(s, encoding, 0, false);
         }
 
         /// <summary>

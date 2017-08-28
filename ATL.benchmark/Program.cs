@@ -14,10 +14,10 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
-            readAt("E:/temp/id3v2", true);
+            readAt("E:/temp/id3v2/05 Sember Invicta.mp3");
         }
 
-        static private void readAt(string filePath, bool useOldImplementation = false)
+        static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
         {
             FileFinder ff = new FileFinder();
 
@@ -33,12 +33,15 @@ namespace ATL.benchmark
             else if (Directory.Exists(filePath))
             {
                 ff.FF_BrowseATLAudioFiles(filePath, false, true, true);
-                Console.WriteLine("________________________________________________________");
-                ff.FF_BrowseTagLibAudioFiles(filePath, true, true);
+                if (useTagLib)
+                {
+                    Console.WriteLine("________________________________________________________");
+                    ff.FF_BrowseTagLibAudioFiles(filePath, true, true);
+                }
             }
 
             Console.WriteLine("end");
-            Console.ReadLine();
+//            Console.ReadLine();
         }
     }
 }

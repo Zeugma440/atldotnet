@@ -31,7 +31,7 @@ namespace ATL.AudioData.IO
         private String FLanguage;
         private String FLink;
 
-        private TagInfo FTagHeader;
+        private TagInfo tagHeader;
 
         public String Encoder // Encoder
         {
@@ -84,6 +84,7 @@ namespace ATL.AudioData.IO
             // Extended data
             public long FileSize;                                 // File size (bytes)
             public long HeaderEnd;                           // End position of header
+            public long ActualEnd;     // End position of entire tag (including all padding bytes)
 
             // Extended header flags
             public int ExtendedHeaderSize = 0;
@@ -269,7 +270,7 @@ namespace ATL.AudioData.IO
             SourceFile.BaseStream.Seek(offset, SeekOrigin.Begin);
             Tag.ID = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(3));
 
-            if (!StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID)) return false;
+            if (!StreamUtils.StringEqualsArr(ID3V2_ID, tagHeader.ID)) return false;
 
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
@@ -312,7 +313,7 @@ namespace ATL.AudioData.IO
         private int getTagSize(TagInfo Tag, bool includeFooter = true)
         {
             // Get total tag size
-            int result = StreamUtils.DecodeSynchSafeInt32(Tag.Size) + 10; // 10 being the header ?
+            int result = StreamUtils.DecodeSynchSafeInt32(Tag.Size) + 10; // 10 being the size of the header
 
             if (includeFooter && Tag.HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
 
@@ -370,18 +371,50 @@ namespace ATL.AudioData.IO
             long dataPosition;
             string strData;
             Encoding frameEncoding;
+            long streamPos;
+            long streamLength = source.BaseStream.Length;
+            int tagSize = getTagSize(tag, false);
+            tag.ActualEnd = -1;
 
             source.BaseStream.Seek(tag.HeaderEnd, SeekOrigin.Begin);
+            streamPos = source.BaseStream.Position;
 
-            while ((source.BaseStream.Position - offset < getTagSize(tag, false)) && (source.BaseStream.Position < source.BaseStream.Length))
+            while ((streamPos - offset < tagSize) && (streamPos < streamLength))
             {
                 // Read frame header and check frame ID
                 Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                 if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted"); // TODO - there are still too many of these
-                    break;
+                    // We might be at the beginning of a padding frame
+                    if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
+                    {
+                        // Read until there's something else than zeroes
+                        byte[] data = new byte[512];
+                        bool endReached = false;
+                        long initialPos = source.BaseStream.Position;
+                        int read = 0;
+
+                        while (!endReached)
+                        {
+                            source.BaseStream.Read(data, 0, 512);
+                            for (int i=0;i<512;i++)
+                            {
+                                if (data[i] > 0)
+                                {
+                                    tag.ActualEnd = initialPos + read + i;
+                                    endReached = true;
+                                    break;
+                                }
+                            }
+                            if (!endReached) read += 512;
+                        }
+                    }
+                    else // If not, we're in the wrong place
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
+                        break;
+                    }
                 }
 
                 // Frame size measures number of bytes between end of flag and end of payload
@@ -490,7 +523,7 @@ namespace ATL.AudioData.IO
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
                          * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
-                        strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
+                        strData = readRatingInPopularityMeter(source.BaseStream, Utils.Latin1Encoding).ToString();
                     }
                     else if ("TXX".Equals(Frame.ID.Substring(0,3)))
                     {
@@ -582,7 +615,41 @@ namespace ATL.AudioData.IO
                     }
                     source.BaseStream.Seek(position + dataSize, SeekOrigin.Begin);
                 } // End picture frame
+
+                streamPos = source.BaseStream.Position;
             } // End frames loop
+
+            if (-1 == tag.ActualEnd)
+            {
+                int test = source.ReadInt32();
+                // See if there's padding after the end of the tag
+                if (0 == test)
+                {
+                    // Read until there's something else than zeroes
+                    byte[] data = new byte[512];
+                    bool endReached = false;
+                    long initialPos = source.BaseStream.Position;
+                    int read = 0;
+
+                    while (!endReached)
+                    {
+                        source.BaseStream.Read(data, 0, 512);
+                        for (int i = 0; i < 512; i++)
+                        {
+                            if (data[i] > 0)
+                            {
+                                tag.ActualEnd = initialPos + read + i;
+                                endReached = true;
+                                break;
+                            }
+                        }
+                        if (!endReached) read += 512;
+                    }
+                } else
+                {
+                    tag.ActualEnd = streamPos;
+                }
+            }
         }
 
         protected override void resetSpecificData()
@@ -607,25 +674,25 @@ namespace ATL.AudioData.IO
         /// <returns></returns>
         public bool Read(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
-            FTagHeader = new TagInfo();
+            tagHeader = new TagInfo();
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = readHeader(source, FTagHeader, offset);
+            bool result = readHeader(source, tagHeader, offset);
 
             // Process data if loaded and header valid
-            if ((result) && StreamUtils.StringEqualsArr(ID3V2_ID, FTagHeader.ID))
+            if (result && StreamUtils.StringEqualsArr(ID3V2_ID, tagHeader.ID))
             {
                 tagExists = true;
-                structureHelper.AddZone(offset, getTagSize(FTagHeader));
                 // Fill properties with header data
-                tagVersion = FTagHeader.Version;
+                tagVersion = tagHeader.Version;
 
                 // Get information from frames if version supported
-                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (Size > 0))
+                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (getTagSize(tagHeader) > 0))
                 {
                     tagData = new TagData();
-                    readFrames(source, FTagHeader, offset, readTagParams);
+                    readFrames(source, tagHeader, offset, readTagParams);
+                    structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
                 }
                 else
                 {
@@ -670,7 +737,7 @@ namespace ATL.AudioData.IO
             w.Write((byte)0);
 
             // Flags : keep initial flags
-            w.Write(FTagHeader.Flags);
+            w.Write(tagHeader.Flags);
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
@@ -686,9 +753,9 @@ namespace ATL.AudioData.IO
 
             if (ID3v2_useExtendedHeaderRestrictions)
             {
-                if (tagSize/1024 > FTagHeader.TagSizeRestrictionKB)
+                if (tagSize/1024 > tagHeader.TagSizeRestrictionKB)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize/1024 + "KB) according to ID3v2 restrictions (" + FTagHeader.TagSizeRestrictionKB + ") !");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize/1024 + "KB) according to ID3v2 restrictions (" + tagHeader.TagSizeRestrictionKB + ") !");
                 }
             }
 
@@ -706,20 +773,20 @@ namespace ATL.AudioData.IO
             Encoding tagEncoding = Encoding.UTF8; // TODO make this customizable
 
             // Rewrites extended header as is
-            if (FTagHeader.HasExtendedHeader)
+            if (tagHeader.HasExtendedHeader)
             {
-                w.Write(StreamUtils.EncodeSynchSafeInt(FTagHeader.ExtendedHeaderSize,4));
+                w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.ExtendedHeaderSize,4));
                 w.Write((byte)1); // Number of flag bytes; always 1 according to spec
-                w.Write(FTagHeader.ExtendedFlags);
+                w.Write(tagHeader.ExtendedFlags);
                 // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is
-                if (FTagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(FTagHeader.CRC, 5));
-                if (FTagHeader.TagRestrictions > 0) w.Write(FTagHeader.TagRestrictions);
+                if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
+                if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
 
                 if (ID3v2_useExtendedHeaderRestrictions)
                 {
                     // Force UTF-8 if encoding restriction is enabled and current encoding is not among authorized types
                     // TODO : make target format customizable (UTF-8 or ISO-8859-1)
-                    if (FTagHeader.HasTextEncodingRestriction)
+                    if (tagHeader.HasTextEncodingRestriction)
                     {
                         if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
                         {
@@ -773,9 +840,9 @@ namespace ATL.AudioData.IO
 
             if (ID3v2_useExtendedHeaderRestrictions)
             {
-                if (nbFrames > FTagHeader.TagFramesRestriction)
+                if (nbFrames > tagHeader.TagFramesRestriction)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames ("+ nbFrames +") according to ID3v2 restrictions ("+ FTagHeader.TagFramesRestriction +") !");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames ("+ nbFrames +") according to ID3v2 restrictions ("+ tagHeader.TagFramesRestriction +") !");
                 }
             }
 
@@ -797,7 +864,7 @@ namespace ATL.AudioData.IO
             BinaryWriter w;
             MemoryStream s = null;
 
-            if (FTagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation)
             {
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
@@ -809,11 +876,11 @@ namespace ATL.AudioData.IO
 
             if (ID3v2_useExtendedHeaderRestrictions)
             {
-                if (text.Length > FTagHeader.TextFieldSizeRestriction)
+                if (text.Length > tagHeader.TextFieldSizeRestriction)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + FTagHeader.TextFieldSizeRestriction + " characters");
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + tagHeader.TextFieldSizeRestriction + " characters");
 
-                    text = text.Substring(0, FTagHeader.TextFieldSizeRestriction);
+                    text = text.Substring(0, tagHeader.TextFieldSizeRestriction);
                 }
             }
 
@@ -832,7 +899,7 @@ namespace ATL.AudioData.IO
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
             UInt16 flags = 0;
-            if (FTagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation)
             {
                 flags = 2;
             }
@@ -879,7 +946,7 @@ namespace ATL.AudioData.IO
             }
 
 
-            if (FTagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);
@@ -911,7 +978,7 @@ namespace ATL.AudioData.IO
             MemoryStream s = null;
 
 
-            if (FTagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation)
             {
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
@@ -935,7 +1002,7 @@ namespace ATL.AudioData.IO
             w.Write('\0');
             */
             UInt16 flags = 1;
-            if (FTagHeader.UsesUnsynchronisation) flags = 3;
+            if (tagHeader.UsesUnsynchronisation) flags = 3;
             w.Write(StreamUtils.ReverseUInt16(flags));
             dataSizeModifier += 2;
 
@@ -952,7 +1019,7 @@ namespace ATL.AudioData.IO
             {
                 // Force JPEG if encoding restriction is enabled and mime-type is not among authorized types
                 // TODO : make target format customizable (JPEG or PNG)
-                if (FTagHeader.HasPictureEncodingRestriction)
+                if (tagHeader.HasPictureEncodingRestriction)
                 {
                     if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
                     {
@@ -966,23 +1033,23 @@ namespace ATL.AudioData.IO
                 }
 
                 // Force picture dimensions if a size restriction is enabled
-                if (FTagHeader.PictureSizeRestriction > 0)
+                if (tagHeader.PictureSizeRestriction > 0)
                 {
-                    if ( (256 == FTagHeader.PictureSizeRestriction) && ((picture.Height > 256) || (picture.Width > 256))) // 256x256 or less
+                    if ( (256 == tagHeader.PictureSizeRestriction) && ((picture.Height > 256) || (picture.Width > 256))) // 256x256 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ picture.Width + "x" + picture.Height +") does not respect ID3v2 restrictions (256x256 or less); resizing");
 
                         picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
                     }
-                    else if ((64 == FTagHeader.PictureSizeRestriction) && ((picture.Height > 64) || (picture.Width > 64))) // 64x64 or less
+                    else if ((64 == tagHeader.PictureSizeRestriction) && ((picture.Height > 64) || (picture.Width > 64))) // 64x64 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (64x64 or less); resizing");
 
                         picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
                     }
-                    else if ((63 == FTagHeader.PictureSizeRestriction) && ((picture.Height != 64) && (picture.Width != 64))) // exactly 64x64
+                    else if ((63 == tagHeader.PictureSizeRestriction) && ((picture.Height != 64) && (picture.Width != 64))) // exactly 64x64
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (exactly 64x64); resizing");
 
@@ -1011,7 +1078,7 @@ namespace ATL.AudioData.IO
 
             finalFramePosRaw = w.BaseStream.Position;
 
-            if (FTagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);
@@ -1043,9 +1110,23 @@ namespace ATL.AudioData.IO
         {
             if (null == iGenre) return "";
 
-            String result = Utils.StripZeroChars(iGenre.Trim());
+            string result = Utils.StripZeroChars(iGenre.Trim());
             int genreIndex = -1;
+            int openParenthesisIndex = -1;
 
+            for (int i=0;i< result.Length;i++)
+            {
+                if ('(' == result[i]) openParenthesisIndex = i;
+                else if (')' == result[i] && openParenthesisIndex > -1)
+                {
+                    genreIndex = int.Parse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1));
+                    // Delete genre index string from the tag value
+                    result = result.Remove(0, i+1);
+                    break;
+                }
+            }
+
+            /* Regexes are too expensive
             // Any number between parenthesis
             Regex regex = new Regex(@"(?<=\()\d+?(?=\))");
 
@@ -1057,6 +1138,7 @@ namespace ATL.AudioData.IO
                 // Delete genre index string from the tag value
                 result = result.Remove(0, result.LastIndexOf(')') + 1);
             }
+            */
 
             if (("" == result) && (genreIndex != -1) && (genreIndex < ID3v1.MusicGenre.Length)) result = ID3v1.MusicGenre[genreIndex];
 
@@ -1064,7 +1146,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data
-        private static byte readRatingInPopularityMeter(BinaryReader Source, Encoding encoding)
+        private static int readRatingInPopularityMeter(Stream Source, Encoding encoding)
         {
             // Skip the e-mail, which is a null-terminated string
             StreamUtils.ReadNullTerminatedString(Source, encoding);
@@ -1195,7 +1277,7 @@ namespace ATL.AudioData.IO
         ///  $03    UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
         private static Encoding decodeID3v2CharEncoding(byte encoding)
         {
-            if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1");   // aka ISO Latin-1
+            if (0 == encoding) return Utils.Latin1Encoding;                 // aka ISO Latin-1
             else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM if version > 2.2
             else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
             else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
