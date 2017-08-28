@@ -47,9 +47,10 @@ namespace ATL
         public IList<TagData.PictureInfo> PictureTokens;
 
         protected Image coverArt = null;
+        protected byte[] coverArtBinary = null;
 
 
-        public Image GetEmbeddedPicture(bool useOldImplementation = false)
+        public Image GetEmbeddedPicture(bool useOldImplementation = false, bool loadIntoImage = true)
         {
             if (null == coverArt)
             {
@@ -59,7 +60,8 @@ namespace ATL
                 }
                 else
                 {
-                    Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                    if (loadIntoImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                    else Update(new TagData.PictureStreamHandlerDelegate(this.readBinaryImageData));
                 }
             }
             
@@ -74,6 +76,11 @@ namespace ATL
         protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             coverArt = Image.FromStream(s);
+        }
+
+        protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
+        {
+            coverArtBinary = s.GetBuffer();
         }
 
         [Obsolete]
