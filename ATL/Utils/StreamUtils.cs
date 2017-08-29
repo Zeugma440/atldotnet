@@ -757,17 +757,90 @@ namespace ATL
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(BinaryReader r, byte[] sequence, bool forward = true, long maxDistance = 0)
+        public static bool FindSequence(Stream stream, byte[] sequence, bool forward = true, long limit = 0)
         {
-            byte[] window = r.ReadBytes(sequence.Length);
-            long initialPos = r.BaseStream.Position;
+            /*
+            const int BUFFER_SIZE = 512;
+            byte[] readBuffer = new byte[BUFFER_SIZE];
+
+            int remainingBytes, bytesToRead;
+            int iSequence = 0;
+            int readBytes = 0;
+            long initialPos = stream.Position;
+
+
+            if (forward)
+            {
+                remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+
+                while (remainingBytes > 0)
+                {
+                    bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                    stream.Read(readBuffer, 0, bytesToRead);
+
+                    for (int i = 0; i < bytesToRead; i++)
+                    {
+                        if (sequence[iSequence] == readBuffer[i]) iSequence++;
+                        else if (iSequence > 0) iSequence = 0;
+
+                        if (sequence.Length == iSequence)
+                        {
+                            stream.Position = initialPos + readBytes + i + 1;
+                            return true;
+                        }
+                    }
+
+                    remainingBytes -= bytesToRead;
+                    readBytes += bytesToRead;
+                }
+            }
+            else
+            {
+                remainingBytes = (int)((limit > 0) ? Math.Min(stream.Position, limit) : stream.Position);
+
+                while (remainingBytes > 0)
+                {
+                    bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                    stream.Position -= bytesToRead;
+                    stream.Read(readBuffer, 0, bytesToRead);
+                    stream.Position -= bytesToRead;
+
+                    for (int i = bytesToRead - 1; i > -1; i--)
+                    {
+                        if (sequence[sequence.Length - iSequence - 1] == readBuffer[i]) iSequence++;
+                        else if (iSequence > 0) iSequence = 0;
+
+                        if (sequence.Length == iSequence)
+                        {
+                            stream.Position = initialPos - readBytes - bytesToRead + i + sequence.Length;
+                            return true;
+                        }
+                    }
+
+                    remainingBytes -= bytesToRead;
+                    readBytes += bytesToRead;
+                }
+            }
+
+            // If we're here, the sequence hasn't been found
+            stream.Position = initialPos;
+            return false;
+            */
+
+
+            byte[] window = new byte[sequence.Length];
+            long initialPos = stream.Position;
             long distance = 0;
             bool found = false;
             int i;
 
+            stream.Read(window, 0, sequence.Length);
+
             if (forward)
             {
-                while (r.BaseStream.Position < r.BaseStream.Length && ((0 == maxDistance) || (maxDistance > 0 && distance < maxDistance)))
+                while (stream.Position < stream.Length && ((0 == limit) || (limit > 0 && distance < limit)))
                 {
                     if (ArrEqualsArr(sequence, window))
                     {
@@ -779,13 +852,13 @@ namespace ATL
                     {
                         window[i] = window[i + 1];
                     }
-                    window[window.Length - 1] = r.ReadByte();
+                    stream.Read(window, window.Length - 1, 1);
 
                     distance++;
                 }
             } else
             {
-                while (r.BaseStream.Position > 0 && ((0 == maxDistance) || (maxDistance > 0 && distance < maxDistance)))
+                while (stream.Position > 0 && ((0 == limit) || (limit > 0 && distance < limit)))
                 {
                     if (ArrEqualsArr(sequence, window))
                     {
@@ -797,16 +870,16 @@ namespace ATL
                     {
                         window[i] = window[i - 1];
                     }
-                    r.BaseStream.Seek(-2, SeekOrigin.Current);
-                    window[0] = r.ReadByte();
+                    stream.Seek(-2, SeekOrigin.Current);
+                    stream.Read(window, 0, 1);
 
                     distance++;
                 }
 
-                if (found) r.BaseStream.Seek(sequence.Length-1, SeekOrigin.Current);
+                if (found) stream.Seek(sequence.Length-1, SeekOrigin.Current);
             }
 
-            if (!found) r.BaseStream.Position = initialPos;
+            if (!found) stream.Position = initialPos;
 
             return found;
         }

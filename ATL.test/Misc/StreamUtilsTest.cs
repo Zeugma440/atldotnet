@@ -89,19 +89,18 @@ namespace ATL.test
             string sequence2 = "$PATH/MID";
 
             using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read))
-            using (BinaryReader r = new BinaryReader(fs))
             {
-                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence1)));
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1)));
                 Assert.AreEqual(12, fs.Position);
 
-                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence2)));
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2)));
                 Assert.AreEqual(261, fs.Position);
 
                 fs.Seek(20, SeekOrigin.Begin);
 
-                Assert.AreEqual(false, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence2), true, 100));
+                Assert.AreEqual(false, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2), true, 100));
 
-                Assert.AreEqual(true, StreamUtils.FindSequence(r, Utils.Latin1Encoding.GetBytes(sequence1), false));
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1), false));
                 Assert.AreEqual(12, fs.Position);
             }
         }

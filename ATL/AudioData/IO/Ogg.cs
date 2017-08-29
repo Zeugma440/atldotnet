@@ -633,7 +633,7 @@ namespace ATL.AudioData.IO
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
                             // Determine the boundaries of 3rd header (Setup header) by searching backwards from current position
-                            if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID), false))
+                            if (StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID), false))
                             {
                                 info.SetupHeaderStart = source.BaseStream.Position - VORBIS_SETUP_ID.Length;
                                 info.CommentHeaderEnd = info.SetupHeaderStart;

@@ -365,7 +365,6 @@ namespace ATL.AudioData.IO
         // Get information from frames (universal)
         private void readFrames(BinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
-            const int PADDING_BUFFER_SIZE = 512;
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
             long dataSize;
@@ -375,8 +374,6 @@ namespace ATL.AudioData.IO
             long streamPos;
             long streamLength = source.BaseStream.Length;
             int tagSize = getTagSize(tag, false);
-
-
             tag.ActualEnd = -1;
 
             source.BaseStream.Seek(tag.HeaderEnd, SeekOrigin.Begin);
@@ -393,15 +390,15 @@ namespace ATL.AudioData.IO
                     if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                     {
                         // Read until there's something else than zeroes
-                        byte[] data = new byte[PADDING_BUFFER_SIZE];
+                        byte[] data = new byte[512];
                         bool endReached = false;
                         long initialPos = source.BaseStream.Position;
                         int read = 0;
 
                         while (!endReached)
                         {
-                            source.BaseStream.Read(data, 0, PADDING_BUFFER_SIZE);
-                            for (int i=0;i< PADDING_BUFFER_SIZE; i++)
+                            source.BaseStream.Read(data, 0, 512);
+                            for (int i=0;i<512;i++)
                             {
                                 if (data[i] > 0)
                                 {
@@ -410,7 +407,7 @@ namespace ATL.AudioData.IO
                                     break;
                                 }
                             }
-                            if (!endReached) read += PADDING_BUFFER_SIZE;
+                            if (!endReached) read += 512;
                         }
                     }
                     else // If not, we're in the wrong place
@@ -629,15 +626,15 @@ namespace ATL.AudioData.IO
                 if (0 == test)
                 {
                     // Read until there's something else than zeroes
-                    byte[] data = new byte[PADDING_BUFFER_SIZE];
+                    byte[] data = new byte[512];
                     bool endReached = false;
                     long initialPos = source.BaseStream.Position;
                     int read = 0;
 
                     while (!endReached)
                     {
-                        source.BaseStream.Read(data, 0, PADDING_BUFFER_SIZE);
-                        for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
+                        source.BaseStream.Read(data, 0, 512);
+                        for (int i = 0; i < 512; i++)
                         {
                             if (data[i] > 0)
                             {
@@ -646,7 +643,7 @@ namespace ATL.AudioData.IO
                                 break;
                             }
                         }
-                        if (!endReached) read += PADDING_BUFFER_SIZE;
+                        if (!endReached) read += 512;
                     }
                 } else
                 {
@@ -1117,7 +1114,7 @@ namespace ATL.AudioData.IO
             int genreIndex = -1;
             int openParenthesisIndex = -1;
 
-            for (int i=0;i< result.Length;i++)
+            for (int i=0;i < result.Length;i++)
             {
                 if ('(' == result[i]) openParenthesisIndex = i;
                 else if (')' == result[i] && openParenthesisIndex > -1)
@@ -1215,28 +1212,41 @@ namespace ATL.AudioData.IO
 
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
-        //
-        // TODO make buffered
         private static void decodeUnsynchronizedStreamTo(Stream from, Stream to, long length)
         {
-            const int PICTURE_BUFFER_SIZE = 4096;
-            long effectiveLength;
-            long initialPosition;
-            byte prevB_2 = 0;
-            byte prevB_1 = 0;
-            byte[] b = new byte[1];
+            const int BUFFER_SIZE = 2048;
 
-            initialPosition = from.Position;
-            if (0 == length) effectiveLength = from.Length; else effectiveLength = length;
+            int bytesToRead;
+            bool foundFF = false;
 
-            while (from.Position < initialPosition + effectiveLength && from.Position < from.Length)
+            byte[] readBuffer = new byte[BUFFER_SIZE];
+            byte[] writeBuffer = new byte[BUFFER_SIZE];
+
+            int remainingBytes = (int)(from.Length - from.Position);
+            int written;
+
+            while (remainingBytes > 0)
             {
-                from.Read(b, 0, 1);
-                if ((0xFF == prevB_1) && (0x00 == b[0])) from.Read(b, 0, 1);
+                written = 0;
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                to.Write(b, 0, 1);
-                prevB_2 = prevB_1;
-                prevB_1 = b[0];
+                from.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    if (0xff == readBuffer[i]) foundFF = true;
+                    else if (0x00 == readBuffer[i] && foundFF)
+                    {
+                        foundFF = false;
+                        continue; // i.e. do not write 0x00 to output stream
+                    }
+                    else if (foundFF) foundFF = false;
+
+                    writeBuffer[written++] = readBuffer[i];
+                }
+                to.Write(writeBuffer, 0, written);
+
+                remainingBytes -= bytesToRead;
             }
         }
 

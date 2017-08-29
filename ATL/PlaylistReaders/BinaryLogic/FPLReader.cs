@@ -20,11 +20,9 @@ namespace ATL.PlaylistReaders.BinaryLogic
             string filePath;
             string playlistPath = System.IO.Path.GetDirectoryName(fs.Name) + System.IO.Path.DirectorySeparatorChar;
 
-
-            BinaryReader source = new BinaryReader(fs);
-            while (StreamUtils.FindSequence(source, FILE_IDENTIFIER))
+            while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
-                filePath = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
+                filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
                 if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;
                 result.Add(filePath);
             }
