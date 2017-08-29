@@ -14,7 +14,7 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
-            readAt("E:/temp/id3v2/05 Sember Invicta.mp3");
+            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
@@ -26,7 +26,7 @@ namespace ATL.benchmark
             if (File.Exists(filePath))
             {
                 Track t = new Track(filePath, useOldImplementation);
-                t.GetEmbeddedPicture(useOldImplementation);
+                t.GetEmbeddedPicture(useOldImplementation, false);
 
                 Console.WriteLine(t.Title);
             }

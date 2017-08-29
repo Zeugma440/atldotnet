@@ -10,7 +10,7 @@ namespace ATL.benchmark
     public class ATLOld_ATLNew
     {
         //[Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
-        [Params("E:/temp/id3v2")]
+        [Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/ID3v2.2 UTF16.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.4_UTF8.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.3_UTF16.mp3")]
         public string path;
 
         FileFinder ff = new FileFinder();
@@ -34,7 +34,7 @@ namespace ATL.benchmark
             if (File.Exists(path))
             {
                 Track t = new Track(path);
-                t.GetEmbeddedPicture();
+                t.GetEmbeddedPicture(false, false);
             }
             else if (Directory.Exists(path))
             {
