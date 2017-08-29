@@ -98,10 +98,7 @@ namespace ATL.test
 
                 fs.Seek(20, SeekOrigin.Begin);
 
-                Assert.AreEqual(false, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2), true, 100));
-
-                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1), false));
-                Assert.AreEqual(12, fs.Position);
+                Assert.AreEqual(false, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2), 100));
             }
         }
 

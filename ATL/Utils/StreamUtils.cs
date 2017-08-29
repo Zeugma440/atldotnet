@@ -744,7 +744,6 @@ namespace ATL
             return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
-
         /// <summary>
         /// Finds a byte sequence within a stream
         /// </summary>
@@ -757,10 +756,9 @@ namespace ATL
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(Stream stream, byte[] sequence, bool forward = true, long limit = 0)
+        public static bool FindSequence(Stream stream, byte[] sequence, long limit = 0)
         {
-            /*
-            const int BUFFER_SIZE = 512;
+            int BUFFER_SIZE = 512;
             byte[] readBuffer = new byte[BUFFER_SIZE];
 
             int remainingBytes, bytesToRead;
@@ -768,120 +766,33 @@ namespace ATL
             int readBytes = 0;
             long initialPos = stream.Position;
 
+            remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
 
-            if (forward)
+            while (remainingBytes > 0)
             {
-                remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                while (remainingBytes > 0)
+                stream.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
                 {
-                    bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+                    if (sequence[iSequence] == readBuffer[i]) iSequence++;
+                    else if (iSequence > 0) iSequence = 0;
 
-                    stream.Read(readBuffer, 0, bytesToRead);
-
-                    for (int i = 0; i < bytesToRead; i++)
+                    if (sequence.Length == iSequence)
                     {
-                        if (sequence[iSequence] == readBuffer[i]) iSequence++;
-                        else if (iSequence > 0) iSequence = 0;
-
-                        if (sequence.Length == iSequence)
-                        {
-                            stream.Position = initialPos + readBytes + i + 1;
-                            return true;
-                        }
+                        stream.Position = initialPos + readBytes + i + 1;
+                        return true;
                     }
-
-                    remainingBytes -= bytesToRead;
-                    readBytes += bytesToRead;
                 }
-            }
-            else
-            {
-                remainingBytes = (int)((limit > 0) ? Math.Min(stream.Position, limit) : stream.Position);
 
-                while (remainingBytes > 0)
-                {
-                    bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
-
-                    stream.Position -= bytesToRead;
-                    stream.Read(readBuffer, 0, bytesToRead);
-                    stream.Position -= bytesToRead;
-
-                    for (int i = bytesToRead - 1; i > -1; i--)
-                    {
-                        if (sequence[sequence.Length - iSequence - 1] == readBuffer[i]) iSequence++;
-                        else if (iSequence > 0) iSequence = 0;
-
-                        if (sequence.Length == iSequence)
-                        {
-                            stream.Position = initialPos - readBytes - bytesToRead + i + sequence.Length;
-                            return true;
-                        }
-                    }
-
-                    remainingBytes -= bytesToRead;
-                    readBytes += bytesToRead;
-                }
+                remainingBytes -= bytesToRead;
+                readBytes += bytesToRead;
             }
 
             // If we're here, the sequence hasn't been found
             stream.Position = initialPos;
             return false;
-            */
-
-
-            byte[] window = new byte[sequence.Length];
-            long initialPos = stream.Position;
-            long distance = 0;
-            bool found = false;
-            int i;
-
-            stream.Read(window, 0, sequence.Length);
-
-            if (forward)
-            {
-                while (stream.Position < stream.Length && ((0 == limit) || (limit > 0 && distance < limit)))
-                {
-                    if (ArrEqualsArr(sequence, window))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    for (i = 0; i < window.Length - 1; i++)
-                    {
-                        window[i] = window[i + 1];
-                    }
-                    stream.Read(window, window.Length - 1, 1);
-
-                    distance++;
-                }
-            } else
-            {
-                while (stream.Position > 0 && ((0 == limit) || (limit > 0 && distance < limit)))
-                {
-                    if (ArrEqualsArr(sequence, window))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    for (i = window.Length-1; i > 0; i--)
-                    {
-                        window[i] = window[i - 1];
-                    }
-                    stream.Seek(-2, SeekOrigin.Current);
-                    stream.Read(window, 0, 1);
-
-                    distance++;
-                }
-
-                if (found) stream.Seek(sequence.Length-1, SeekOrigin.Current);
-            }
-
-            if (!found) stream.Position = initialPos;
-
-            return found;
         }
 
         /// <summary>

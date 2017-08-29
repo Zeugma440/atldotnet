@@ -632,8 +632,10 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            // Determine the boundaries of 3rd header (Setup header) by searching backwards from current position
-                            if (StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID), false))
+                            if (pagePos.Count > 1) source.BaseStream.Position = pagePos[pagePos.Count - 2]; else source.BaseStream.Position = pagePos[0];
+
+                            // Determine the boundaries of 3rd header (Setup header) by searching from last-but-one page
+                            if (StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID)))
                             {
                                 info.SetupHeaderStart = source.BaseStream.Position - VORBIS_SETUP_ID.Length;
                                 info.CommentHeaderEnd = info.SetupHeaderStart;
@@ -641,7 +643,7 @@ namespace ATL.AudioData.IO
                                 if (pagePos.Count > 1)
                                 {
                                     int firstSetupPage = -1;
-                                    for (int i=1; i<pagePos.Count; i++)
+                                    for (int i = 1; i < pagePos.Count; i++)
                                     {
                                         if (info.CommentHeaderEnd < pagePos[i])
                                         {
@@ -657,7 +659,8 @@ namespace ATL.AudioData.IO
                                         info.SetupHeaderSpanPages = 1;
                                     }
 
-                                } else
+                                }
+                                else
                                 {
                                     info.CommentHeaderSpanPages = 1;
                                     info.SetupHeaderSpanPages = 1;
