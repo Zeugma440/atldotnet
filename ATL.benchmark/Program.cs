@@ -8,13 +8,13 @@ namespace ATL.benchmark
     {
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<Speed>();
+            BenchmarkRunner.Run<BufferSizes>();
 
             //BenchmarkRunner.Run<ATLOld_ATLNew>();
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
-            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ATL.benchmark
 {
-    public class Speed
+    public class BufferSizes
     {
         // NB : Using FILE_FLAG_NOBUFFERING causes exceptions due to seeking operations not being an integer multiple of the volume sector size
         // (see http://stackoverflow.com/questions/29234340/filestream-setlength-the-parameter-is-incorrect)
