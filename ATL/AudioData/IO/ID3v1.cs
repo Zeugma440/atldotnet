@@ -200,30 +200,29 @@ namespace ATL.AudioData.IO
 
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(BinaryReader source, TagRecord TagData)
+        private bool ReadTag(Stream source, TagRecord TagData)
         {
             bool result = false;
 
             // Read tag
-            source.BaseStream.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
+            source.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
 
-#if DEBUG
-//            LogDelegator.GetLogDelegate()(Log.LV_DEBUG, System.DateTime.Now.ToString("hh:mm:ss.ffff") + " ID3v1-seeked");
-#endif
+            // ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
+            byte[] data = new byte[ID3V1_TAG_SIZE];
+            source.Read(data, 0, ID3V1_TAG_SIZE);
 
-			// ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
-            TagData.Header = Utils.Latin1Encoding.GetString(source.ReadBytes(3), 0, 3);
+            TagData.Header = Utils.Latin1Encoding.GetString(data, 0, 3);
             if (ID3V1_ID == TagData.Header)
             {
-                structureHelper.AddZone(source.BaseStream.Position, ID3V1_TAG_SIZE);
+                structureHelper.AddZone(source.Position-ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
-                TagData.Title = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Artist = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Album = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(30), 0, 30));
-                TagData.Year = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(4), 0, 4));
-                TagData.Comment = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(source.ReadBytes(28), 0, 28));
-                TagData.EndComment = source.ReadBytes(2);
-                TagData.Genre = source.ReadByte();
+                TagData.Title = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 3, 30));
+                TagData.Artist = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 33, 30));
+                TagData.Album = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 63, 30));
+                TagData.Year = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 93, 4));
+                TagData.Comment = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 97, 28));
+                Array.Copy(data, 125, TagData.EndComment, 0, 2);
+                TagData.Genre = data[127];
                 result = true;
             }
 
@@ -266,7 +265,7 @@ namespace ATL.AudioData.IO
 	
 			// Reset and load tag data from file to variable
 			ResetData();
-            bool result = ReadTag(source, tagData);
+            bool result = ReadTag(source.BaseStream, tagData);
 
 			// Process data if loaded successfuly
 			if (result)
