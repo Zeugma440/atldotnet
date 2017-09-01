@@ -163,3 +163,6 @@ $RECYCLE.BIN/
 /ATL.test/packages.config
 /git tagging.txt
 /ATL.test/Resources/tmp
+/ATL.test/Resources/pic_hacker_175x168.png
+*.ide
+/ATL.test/Resources/pic_kgb_150x150.jpg
