@@ -423,7 +423,7 @@ namespace ATL.AudioData
                 {
                     if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
                     {
-                        if (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength)
+                        if ( (-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength) )
                         {
                             throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
                         }

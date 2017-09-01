@@ -198,6 +198,24 @@ namespace ATL
             }
         }
 
+        public static void CopyStream(BufferedBinaryReader from, Stream to, long length = 0)
+        {
+            byte[] data = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
+
+            if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
+
+            while (i < bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
+                from.Read(data, 0, bufSize);
+                to.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+        }
+
         public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize = BUFFERSIZE)
         {
             if (offsetFrom == offsetTo) return;
@@ -593,6 +611,10 @@ namespace ATL
         {
             return readNullTerminatedString(s, encoding, 0, false);
         }
+        public static String ReadNullTerminatedString(BufferedBinaryReader s, Encoding encoding)
+        {
+            return readNullTerminatedString(s, encoding, 0, false);
+        }
 
         /// <summary>
         /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding, within a given limit of bytes
@@ -651,6 +673,44 @@ namespace ATL
             if (moveStreamToLimit && nbRead < limit) r.Seek(limit - nbRead, SeekOrigin.Current);
 
             return encoding.GetString(readBytes,0,nbRead);
+        }
+
+        private static String readNullTerminatedString(BufferedBinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
+        {
+            int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
+            byte[] readBytes = new byte[limit > 0 ? limit : 100];
+            byte[] buffer = new byte[2];
+            int nbRead = 0;
+            long streamLength = r.Length;
+            long streamPos = r.Position;
+
+            while (streamPos < streamLength && ((0 == limit) || (nbRead < limit)))
+            {
+                // Read the size of a character
+                r.Read(buffer, 0, nbChars);
+
+                if ((1 == nbChars) && (0 == buffer[0])) // Null character read for single-char encodings
+                {
+                    break;
+                }
+                else if ((2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1])) // Null character read for two-char encodings
+                {
+                    break;
+                }
+                else // All clear; store the read char in the byte array
+                {
+                    if (readBytes.Length < nbRead + nbChars) Array.Resize<byte>(ref readBytes, readBytes.Length + 100);
+
+                    readBytes[nbRead] = buffer[0];
+                    if (2 == nbChars) readBytes[nbRead + 1] = buffer[1];
+                    nbRead += nbChars;
+                    streamPos += nbChars;
+                }
+            }
+
+            if (moveStreamToLimit && nbRead < limit) r.Seek(limit - nbRead, SeekOrigin.Current);
+
+            return encoding.GetString(readBytes, 0, nbRead);
         }
 
         /// <summary>

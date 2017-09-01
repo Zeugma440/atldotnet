@@ -392,7 +392,7 @@ namespace ATL.test.IO.MetaData
             // Add new unsupported fields
             TagData theTag = new TagData();
             theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "TES2", "This is another test 父"));
 
             // Add new unsupported pictures
             TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ID3V2, 0x0A);
@@ -415,8 +415,8 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST"));
             Assert.AreEqual("This is a test 父", theFile.ID3v2.AdditionalFields["TEST"]);
 
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TES2"));
+            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TES2"]);
 
             Assert.AreEqual(2, pictures.Count);
             byte found = 0;
@@ -465,8 +465,8 @@ namespace ATL.test.IO.MetaData
 
             // Additional removed field
             Assert.AreEqual(1, theFile.ID3v2.AdditionalFields.Count);
-            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TEST2"));
-            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TEST2"]);
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.Keys.Contains("TES2"));
+            Assert.AreEqual("This is another test 父", theFile.ID3v2.AdditionalFields["TES2"]);
 
             // Pictures
             Assert.AreEqual(1, pictures.Count);

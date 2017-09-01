@@ -396,7 +396,7 @@ namespace ATL.AudioData.IO
 				(Data[Index + 5] == 0) );
 		}
 
-		private static VBRData getXingInfo(Stream source, long position)
+		private static VBRData getXingInfo(BufferedBinaryReader source, long position)
 		{
 			VBRData result = new VBRData();
             byte[] data = new byte[8];
@@ -422,27 +422,11 @@ namespace ATL.AudioData.IO
             result.Scale = (byte)source.ReadByte();
             source.Read(data, 0, 8);
             result.VendorID = Utils.Latin1Encoding.GetString(data, 0, 8);
-            /*
-                        result.Frames =
-                            Data[position + 8] * 0x1000000 +
-                            Data[position + 9] * 0x10000 +
-                            Data[position + 10] * 0x100 +
-                            Data[position + 11];
-                        result.Bytes =
-                            Data[position + 12] * 0x1000000 +
-                            Data[position + 13] * 0x10000 +
-                            Data[position + 14] * 0x100 +
-                            Data[position + 15];
-                        result.Scale = Data[position + 119];
-
-                        // Vendor ID may not be present
-                        result.VendorID = Utils.Latin1Encoding.GetString(Data, position+120, 8);
-            */
 
             return result;
 		}
 
-		private static VBRData getFhGInfo(Stream source, long position)
+		private static VBRData getFhGInfo(BufferedBinaryReader source, long position)
 		{
 			VBRData result = new VBRData();
             byte[] data = new byte[9];
@@ -465,25 +449,12 @@ namespace ATL.AudioData.IO
                 data[7] * 0x100 +
                 data[8];
 
-            /*
-			result.Scale = Data[position + 9];
-			result.Bytes =
-				Data[position + 10] * 0x1000000 +
-				Data[position + 11] * 0x10000 +
-				Data[position + 12] * 0x100 +
-				Data[position + 13];
-			result.Frames =
-				Data[position + 14] * 0x1000000 +
-				Data[position + 15] * 0x10000 +
-				Data[position + 16] * 0x100 +
-				Data[position + 17];
-            */
             result.VendorID = "";
 	
 			return result;
 		}
 
-		private static VBRData findVBR(Stream source, long position) 
+		private static VBRData findVBR(BufferedBinaryReader source, long position) 
 		{
 			VBRData result;
             byte[] data = new byte[4];
@@ -516,7 +487,7 @@ namespace ATL.AudioData.IO
 			else return 13;
 		}
 
-		private static FrameHeader findFrame(Stream source, ref VBRData oVBR)
+		private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR)
 		{
 			byte[] headerData = new byte[4];  
 			FrameHeader result = new FrameHeader();
@@ -542,30 +513,6 @@ namespace ATL.AudioData.IO
             {
                 result.Found = false;
             }
-/*
-			for (int i=0; i <= Data.Length - MAX_MPEG_FRAME_LENGTH; i++)
-			{
-				// Decode data if frame header found
-				if ( isValidFrameHeader(HeaderData) )
-				{
-                    result.Reset();
-					decodeHeader(HeaderData, ref result);
-                    frameLength = getFrameLength(result);
-					// Check for next frame and try to find VBR header
-                    if (validFrameAt(i + frameLength, Data))
-					{
-                        result.Found = true;
-						result.Position = i;
-                        result.Size = frameLength;
-						result.Xing = isXing(i + 4, Data);
-						oVBR = findVBR(i + getVBRDeviation(result), Data);
-						break;
-					}
-				}
-				// Prepare next data block
-                Array.ConstrainedCopy(Data, i + 1, HeaderData, 0, 4);
-			}
-*/
 
 			return result;
 		}
@@ -761,27 +708,16 @@ namespace ATL.AudioData.IO
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-//			byte[] Data = new byte[MAX_MPEG_FRAME_LENGTH * 2];
             this.sizeInfo = sizeInfo;
             resetData();
 
 			bool result = false;
 
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-			HeaderFrame = findFrame(source.BaseStream, ref vbrData);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 
-            // Try to search in the middle if no frame found at the beginning
-            /* 
-             * TODO - this is a shabby implementation -> wrap with a unit test and optimize, or delete
-             * 
-             * /
-            if ( ! HeaderFrame.Found ) 
-			{
-                source.BaseStream.Seek((long)Math.Floor((sizeInfo.FileSize- sizeInfo.ID3v2Size) / 2.0),SeekOrigin.Begin);
-                HeaderFrame = findFrame(Data, ref FVBR);
-			}
-			
-            
+            reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+			HeaderFrame = findFrame(reader, ref vbrData);
+
             // Search for vendor ID at the end if CBR encoded
 /*
  *  This is a nightmarish implementation; to be redone when vendor ID is required by upper interfaces

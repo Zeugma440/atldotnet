@@ -262,12 +262,12 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        private bool readHeader(BinaryReader SourceFile, TagInfo Tag, long offset)
+        private bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
         {
             bool result = true;
 
             // Reads mandatory (base) header
-            SourceFile.BaseStream.Seek(offset, SeekOrigin.Begin);
+            SourceFile.Seek(offset, SeekOrigin.Begin);
             Tag.ID = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(3));
 
             if (!StreamUtils.StringEqualsArr(ID3V2_ID, tagHeader.ID)) return false;
@@ -283,9 +283,9 @@ namespace ATL.AudioData.IO
             if (Tag.HasExtendedHeader)
             {
                 Tag.ExtendedHeaderSize = StreamUtils.DecodeSynchSafeInt(SourceFile.ReadBytes(4)); // Extended header size
-                SourceFile.BaseStream.Seek(1, SeekOrigin.Current); // Number of flag bytes; always 1 according to spec
+                SourceFile.Skip(1); // Number of flag bytes; always 1 according to spec
 
-                Tag.ExtendedFlags = SourceFile.BaseStream.ReadByte();
+                Tag.ExtendedFlags = SourceFile.ReadByte();
 
                 if ((Tag.ExtendedFlags & 64) > 0) // Tag is an update
                 {
@@ -297,13 +297,13 @@ namespace ATL.AudioData.IO
                 }
                 if ((Tag.ExtendedFlags & 16) > 0) // Tag has at least one restriction
                 {
-                    Tag.TagRestrictions = SourceFile.BaseStream.ReadByte();
+                    Tag.TagRestrictions = SourceFile.ReadByte();
                 }
             }
-            Tag.HeaderEnd = SourceFile.BaseStream.Position;
+            Tag.HeaderEnd = SourceFile.Position;
 
             // File size
-            Tag.FileSize = SourceFile.BaseStream.Length;
+            Tag.FileSize = SourceFile.Length;
 
             return result;
         }
@@ -363,8 +363,9 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
+        private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
+            const int PADDING_BUFFER_SIZE = 512;
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
             long dataSize;
@@ -372,12 +373,12 @@ namespace ATL.AudioData.IO
             string strData;
             Encoding frameEncoding;
             long streamPos;
-            long streamLength = source.BaseStream.Length;
+            long streamLength = source.Length;
             int tagSize = getTagSize(tag, false);
             tag.ActualEnd = -1;
 
-            source.BaseStream.Seek(tag.HeaderEnd, SeekOrigin.Begin);
-            streamPos = source.BaseStream.Position;
+            source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
+            streamPos = source.Position;
 
             while ((streamPos - offset < tagSize) && (streamPos < streamLength))
             {
@@ -390,15 +391,15 @@ namespace ATL.AudioData.IO
                     if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                     {
                         // Read until there's something else than zeroes
-                        byte[] data = new byte[512];
+                        byte[] data = new byte[PADDING_BUFFER_SIZE];
                         bool endReached = false;
-                        long initialPos = source.BaseStream.Position;
+                        long initialPos = source.Position;
                         int read = 0;
 
                         while (!endReached)
                         {
-                            source.BaseStream.Read(data, 0, 512);
-                            for (int i=0;i<512;i++)
+                            source.Read(data, 0, PADDING_BUFFER_SIZE);
+                            for (int i=0;i< PADDING_BUFFER_SIZE; i++)
                             {
                                 if (data[i] > 0)
                                 {
@@ -407,7 +408,7 @@ namespace ATL.AudioData.IO
                                     break;
                                 }
                             }
-                            if (!endReached) read += 512;
+                            if (!endReached) read += PADDING_BUFFER_SIZE;
                         }
                     }
                     else // If not, we're in the wrong place
@@ -435,7 +436,7 @@ namespace ATL.AudioData.IO
                 // Skips data size indicator if signaled by the flag
                 if ((Frame.Flags & 1) > 0)
                 {
-                    source.BaseStream.Seek(4, SeekOrigin.Current);
+                    source.Skip(4);
                     dataSize = dataSize - 4;
                 }
 
@@ -450,16 +451,16 @@ namespace ATL.AudioData.IO
                 // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
                 if ("COM".Equals(Frame.ID.Substring(0, 3)))
                 {
-                    long initialPos = source.BaseStream.Position;
+                    long initialPos = source.Position;
 
                     // Skip langage ID
-                    source.BaseStream.Seek(3, SeekOrigin.Current);
+                    source.Skip(3);
 
                     BOMProperties contentDescriptionBOM = new BOMProperties();
                     // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
                     if ( tagVersion > TAG_VERSION_2_2 && (1 == encodingCode) )
                     {
-                        contentDescriptionBOM = readBOM(source.BaseStream);
+                        contentDescriptionBOM = readBOM(source);
                     }
 
                     if (contentDescriptionBOM.Size <= 3)
@@ -472,10 +473,10 @@ namespace ATL.AudioData.IO
                         // If content description BOM > 3 bytes, there might not be any BOM
                         // for content description, and the algorithm might have bumped into
                         // the comment BOM => backtrack just after langage tag
-                        source.BaseStream.Seek(initialPos + 3, SeekOrigin.Begin);
+                        source.Seek(initialPos + 3, SeekOrigin.Begin);
                     }
 
-                    dataSize = dataSize - (source.BaseStream.Position - initialPos);
+                    dataSize = dataSize - (source.Position - initialPos);
                 }
 
                 // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
@@ -486,14 +487,14 @@ namespace ATL.AudioData.IO
                 //    Other variants...
                 if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                 {
-                    long initialPos = source.BaseStream.Position;
-                    BOMProperties bom = readBOM(source.BaseStream);
+                    long initialPos = source.Position;
+                    BOMProperties bom = readBOM(source);
 
                     // A BOM has been read, but it lies outside the current frame
                     // => Backtrack and directly read data without BOM
                     if (bom.Size > dataSize)
                     {
-                        source.BaseStream.Seek(initialPos, SeekOrigin.Begin);
+                        source.Seek(initialPos, SeekOrigin.Begin);
                     }
                     else
                     {
@@ -506,14 +507,14 @@ namespace ATL.AudioData.IO
                 if (encodingCode > 3)
                 {
                     frameEncoding = decodeID3v2CharEncoding(0);
-                    source.BaseStream.Seek(-1, SeekOrigin.Current);
+                    source.Seek(-1, SeekOrigin.Current);
                     dataSize++;
                 }
 
 
                 // == READ ACTUAL FRAME DATA
 
-                dataPosition = source.BaseStream.Position;
+                dataPosition = source.Position;
                 if ((dataSize > 0) && (dataSize < 500))
                 {
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
@@ -523,7 +524,7 @@ namespace ATL.AudioData.IO
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
                          * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
-                        strData = readRatingInPopularityMeter(source.BaseStream, Utils.Latin1Encoding).ToString();
+                        strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
                     else if ("TXX".Equals(Frame.ID.Substring(0,3)))
                     {
@@ -544,11 +545,11 @@ namespace ATL.AudioData.IO
 
                     setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
 
-                    if (TAG_VERSION_2_2 == tagVersion) source.BaseStream.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                    if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
                 else if (dataSize > 0) // Size > 500 => Probably an embedded picture
                 {
-                    long position = source.BaseStream.Position;
+                    long position = source.Position;
                     if ("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))
                     {
                         ImageFormat imgFormat;
@@ -565,7 +566,7 @@ namespace ATL.AudioData.IO
                         else
                         {
                             // mime-type always coded in ASCII
-                            if (1 == encodingCode) source.BaseStream.Seek(-1, SeekOrigin.Current);
+                            if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
                             // Mime-type
                             String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                             imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
@@ -589,21 +590,21 @@ namespace ATL.AudioData.IO
 
                         // Image description (unused)
                         // Description can be coded with another convention
-                        if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source.BaseStream);
+                        if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                         StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
                         if (readTagParams.PictureStreamHandler != null)
                         {
-                            int picSize = (int)(dataSize - (source.BaseStream.Position - position));
+                            int picSize = (int)(dataSize - (source.Position - position));
                             MemoryStream mem = new MemoryStream(picSize);
 
                             if (tag.UsesUnsynchronisation)
                             {
-                                decodeUnsynchronizedStreamTo(source.BaseStream, mem, picSize);
+                                decodeUnsynchronizedStreamTo(source, mem, picSize);
                             }
                             else
                             {
-                                StreamUtils.CopyStream(source.BaseStream, mem, picSize);
+                                StreamUtils.CopyStream(source, mem, picSize);
                             }
 
                             mem.Seek(0, SeekOrigin.Begin);
@@ -613,10 +614,10 @@ namespace ATL.AudioData.IO
                             mem.Close();
                         }
                     }
-                    source.BaseStream.Seek(position + dataSize, SeekOrigin.Begin);
+                    source.Seek(position + dataSize, SeekOrigin.Begin);
                 } // End picture frame
 
-                streamPos = source.BaseStream.Position;
+                streamPos = source.Position;
             } // End frames loop
 
             if (-1 == tag.ActualEnd)
@@ -626,15 +627,15 @@ namespace ATL.AudioData.IO
                 if (0 == test)
                 {
                     // Read until there's something else than zeroes
-                    byte[] data = new byte[512];
+                    byte[] data = new byte[PADDING_BUFFER_SIZE];
                     bool endReached = false;
-                    long initialPos = source.BaseStream.Position;
+                    long initialPos = source.Position;
                     int read = 0;
 
                     while (!endReached)
                     {
-                        source.BaseStream.Read(data, 0, 512);
-                        for (int i = 0; i < 512; i++)
+                        source.Read(data, 0, PADDING_BUFFER_SIZE);
+                        for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
                         {
                             if (data[i] > 0)
                             {
@@ -643,7 +644,7 @@ namespace ATL.AudioData.IO
                                 break;
                             }
                         }
-                        if (!endReached) read += 512;
+                        if (!endReached) read += PADDING_BUFFER_SIZE;
                     }
                 } else
                 {
@@ -676,9 +677,11 @@ namespace ATL.AudioData.IO
         {
             tagHeader = new TagInfo();
 
+            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+
             // Reset data and load header from file to variable
             ResetData();
-            bool result = readHeader(source, tagHeader, offset);
+            bool result = readHeader(reader, tagHeader, offset);
 
             // Process data if loaded and header valid
             if (result && StreamUtils.StringEqualsArr(ID3V2_ID, tagHeader.ID))
@@ -691,7 +694,7 @@ namespace ATL.AudioData.IO
                 if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (getTagSize(tagHeader) > 0))
                 {
                     tagData = new TagData();
-                    readFrames(source, tagHeader, offset, readTagParams);
+                    readFrames(reader, tagHeader, offset, readTagParams);
                     structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
                 }
                 else
@@ -712,6 +715,11 @@ namespace ATL.AudioData.IO
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_ID3V2;
+        }
+
+        public override byte FieldCodeFixedLength
+        {
+            get { return 4; }
         }
 
 
@@ -1146,7 +1154,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data
-        private static int readRatingInPopularityMeter(Stream Source, Encoding encoding)
+        private static int readRatingInPopularityMeter(BufferedBinaryReader Source, Encoding encoding)
         {
             // Skip the e-mail, which is a null-terminated string
             StreamUtils.ReadNullTerminatedString(Source, encoding);
@@ -1157,7 +1165,7 @@ namespace ATL.AudioData.IO
 
         // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
         // NB : This implementation only works with UTF-16 BOMs (i.e. UTF-8 and UTF-32 BOMs will not be detected)
-        private BOMProperties readBOM(Stream fs)
+        private BOMProperties readBOM(BufferedBinaryReader fs)
         {
             BOMProperties result = new BOMProperties();
             result.Size = 1;
@@ -1212,7 +1220,7 @@ namespace ATL.AudioData.IO
 
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
-        private static void decodeUnsynchronizedStreamTo(Stream from, Stream to, long length)
+        private static void decodeUnsynchronizedStreamTo(BufferedBinaryReader from, Stream to, long length)
         {
             const int BUFFER_SIZE = 2048;
 

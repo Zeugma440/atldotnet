@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
 
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(Stream source, TagRecord TagData)
+        private bool ReadTag(BufferedBinaryReader source, TagRecord TagData)
         {
             bool result = false;
 
@@ -262,10 +262,12 @@ namespace ATL.AudioData.IO
         public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
 			TagRecord tagData = new TagRecord();
-	
+
+            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+
 			// Reset and load tag data from file to variable
 			ResetData();
-            bool result = ReadTag(source.BaseStream, tagData);
+            bool result = ReadTag(reader, tagData);
 
 			// Process data if loaded successfuly
 			if (result)

@@ -44,6 +44,7 @@ namespace ATL
                 if (nativePicCode is string)
                 {
                     NativePicCodeStr = (string)nativePicCode;
+                    NativePicCode = -1;
                 } else if (nativePicCode is byte)
                 {
                     NativePicCode = (byte)nativePicCode;
@@ -64,6 +65,7 @@ namespace ATL
                 if (nativePicCode is string)
                 {
                     NativePicCodeStr = (string)nativePicCode;
+                    NativePicCode = -1;
                 }
                 else if (nativePicCode is byte)
                 {
@@ -79,7 +81,7 @@ namespace ATL
                 }
             }
             public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
-            public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+            public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativePicCode = -1; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
 
             // ---------------- OVERRIDES FOR DICTIONARY STORING
 
