@@ -36,8 +36,6 @@ namespace ATL
 		public bool IsVBR;
 		public int CodecFamily;
         public int SampleRate;
-		public long Size;
-		public long LastModified;
 		public int Duration;		
 		public int TrackNumber;
         public int DiscNumber;
@@ -86,14 +84,6 @@ namespace ATL
         [Obsolete]
         protected void UpdateOld(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
         {
-            FileInfo theFileInfo = new FileInfo(Path);
-
-            if (theFileInfo.Exists)
-            {
-                Size = theFileInfo.Length;
-                LastModified = theFileInfo.LastWriteTime.Ticks;
-            }
-
             //TODO when tag is not available, customize by naming options // tracks (...)
             AudioFileReader theReader = new AudioFileReader(Path, pictureStreamHandler);
 
@@ -130,14 +120,6 @@ namespace ATL
 
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
-            FileInfo theFileInfo = new FileInfo(Path);
-
-            if (theFileInfo.Exists)
-            {
-                Size = theFileInfo.Length;
-                LastModified = theFileInfo.LastWriteTime.Ticks;
-            }
-
             // TODO when tag is not available, customize by naming options // tracks (...)
             AudioFileIO theReader = new AudioFileIO(Path, pictureStreamHandler);
 
