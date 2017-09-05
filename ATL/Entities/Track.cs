@@ -48,7 +48,7 @@ namespace ATL
         protected byte[] coverArtBinary = null;
 
 
-        public Image GetEmbeddedPicture(bool useOldImplementation = false, bool loadIntoImage = true)
+        public Image GetEmbeddedPicture(bool useOldImplementation = false, bool loadIntoDotNetImage = true)
         {
             if (null == coverArt)
             {
@@ -58,7 +58,7 @@ namespace ATL
                 }
                 else
                 {
-                    if (loadIntoImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                    if (loadIntoDotNetImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
                     else Update(new TagData.PictureStreamHandlerDelegate(this.readBinaryImageData));
                 }
             }
