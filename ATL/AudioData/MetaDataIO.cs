@@ -41,7 +41,7 @@ namespace ATL.AudioData
 
         protected TagData tagData;
 
-        private IDictionary<TagData.PictureInfo, int> picturePositions;
+        private IList<KeyValuePair<string, int>> picturePositions;
         protected IList<TagData.PictureInfo> pictureTokens;
 
         protected FileStructureHelper structureHelper;
@@ -351,15 +351,27 @@ namespace ATL.AudioData
 
         protected int takePicturePosition(TagData.PictureInfo picInfo)
         {
-            if (picturePositions.ContainsKey(picInfo))
+            string picId = picInfo.ToString();
+            bool found = false;
+            int picPosition = 1;
+
+            for (int i=0;i<picturePositions.Count; i++)
             {
-                picturePositions[picInfo] = picturePositions[picInfo] + 1;
+                if (picturePositions[i].Key.Equals(picId))
+                {
+                    picPosition = picturePositions[i].Value + 1;
+                    picturePositions[i] = new KeyValuePair<string, int>(picId, picPosition);
+                    found = true;
+                    break;
+                }
             }
-            else
+
+            if (!found)
             {
-                picturePositions.Add(picInfo, 1);
+                picturePositions.Add(new KeyValuePair<string, int>(picId, 1));
             }
-            return picturePositions[picInfo]; ;
+
+            return picPosition;
         }
 
         // ------ ABSTRACT METHODS -----------------------------------------------------
@@ -384,7 +396,7 @@ namespace ATL.AudioData
 
             tagData = new TagData();
             pictureTokens = new List<TagData.PictureInfo>();
-            picturePositions = new Dictionary<TagData.PictureInfo, int>();
+            picturePositions = new List<KeyValuePair<string, int>>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
 
             resetSpecificData();
