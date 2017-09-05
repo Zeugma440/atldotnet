@@ -156,16 +156,27 @@ namespace ATL.AudioData.IO
         // Reads large data chunks by streaming
         private void SetExtendedTagItem(Stream Source, int size, ReadTagParams readTagParams)
         {
+            const int KEY_BUFFER = 20;
             string tagId = "";
-            int IdSize = 1;
-            char c = StreamUtils.ReadOneByteChar(Source);
+            byte[] stringData = new byte[KEY_BUFFER];
+            int equalsIndex = -1;
 
-            while (c != '=')
+            while (-1 == equalsIndex)
             {
-                tagId += c;
-                IdSize++;
-                c = StreamUtils.ReadOneByteChar(Source);
+                Source.Read(stringData, 0, KEY_BUFFER);
+
+                for (int i = 0; i < KEY_BUFFER; i++)
+                {
+                    if (stringData[i] == 0x3D) // '=' character
+                    {
+                        equalsIndex = i;
+                        break;
+                    }
+                }
+
+                tagId += Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex)?KEY_BUFFER:equalsIndex);
             }
+            Source.Seek(-(KEY_BUFFER - equalsIndex - 1), SeekOrigin.Current);
 
             if (tagId.Equals(PICTURE_METADATA_ID_NEW))
             {
