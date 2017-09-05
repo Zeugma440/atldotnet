@@ -49,16 +49,14 @@ namespace ATL
         protected IList<ATL.Format> getFormatsFromPath(String path)
         {
             IList<ATL.Format> result = null;
+            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToUpper();
 
-            if (File.Exists(path))
+            if (formatList.ContainsKey(extension))
             {
-                if (formatList.ContainsKey(Path.GetExtension(path).ToUpper()))
+                IList<Format> formats = formatList[extension];
+                if (formats != null && formats.Count > 0)
                 {
-                    IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
-                    if (formats != null && formats.Count > 0)
-                    {
-                        result = formats;
-                    }
+                    result = formats;
                 }
             }
 
