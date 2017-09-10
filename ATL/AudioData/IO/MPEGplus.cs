@@ -76,18 +76,10 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.frameCount; }
 		}	
-        public bool IsVBR
-		{
-			get { return true; }
-		}
         public byte StreamVersion // Stream version
 		{
 			get { return this.FStreamVersion; }
 		}	
-		public int SampleRate
-		{
-			get { return this.sampleRate; }
-		}
 		public byte ProfileID // Profile code
 		{
 			get { return this.profileID; }
@@ -135,6 +127,10 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
+        public bool IsVBR
+        {
+            get { return true; }
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -154,6 +150,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public int SampleRate
+        {
+            get { return this.sampleRate; }
         }
         public bool HasNativeMeta()
         {
