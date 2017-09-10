@@ -15,6 +15,8 @@ namespace ATL
 	{
 		public Track() {}
 
+        // TODO create a constructor that directly loads pictures instead of opening the file two times
+
         public Track(String iPath, bool useOldImplementation = false)
         {
             Path = iPath;
