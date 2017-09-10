@@ -240,6 +240,15 @@ namespace ATL.AudioData
                 case CID_MPC:
                     theDataReader = new IO.MPEGplus(path);
                     break;
+                case CID_AC3:
+                    theDataReader = new IO.AC3(path);
+                    break;
+                case CID_DSF:
+                    theDataReader = new IO.DSF(path);
+                    break;
+                case CID_DTS:
+                    theDataReader = new IO.DTS(path);
+                    break;
 
                 /*
 
@@ -251,9 +260,6 @@ namespace ATL.AudioData
                 theDataReader = new IO.TMidi();
                 break;
 
-            case CID_AC3 :		
-                theDataReader = new IO.TAC3();
-                break;
 
             case CID_OFR :		
                 theDataReader = new IO.TOptimFrog();
@@ -275,9 +281,6 @@ namespace ATL.AudioData
                 theDataReader = new IO.TSPC();
                 break;
 
-            case CID_DSF :
-                theDataReader = new IO.TDSF();
-                break;
 
             case CID_TAK:
                 theDataReader = new IO.TTAK();

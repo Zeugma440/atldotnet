@@ -85,6 +85,7 @@
   <ItemGroup>
     <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\DSF\Yeah.dsf" />
+    <None Include="Resources\DTS\dts.dts" />
     <None Include="Resources\FLAC\empty.flac" />
     <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\sommix.it" />
@@ -112,6 +113,7 @@
     <Content Include="Resources\AAC\loasLatm_CBR88_8s.aac" />
     <Content Include="Resources\AAC\mdat_before_moov.m4a" />
     <Content Include="Resources\AAC\mp4.m4a" />
+    <Content Include="Resources\AC3\empty.ac3" />
     <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\MID\ROQ.MID" />
     <Content Include="Resources\MID\TRANSIT1.MID" />

@@ -69,7 +69,10 @@
     <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
     <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
     <Compile Include="AudioData\IO\AAC.cs" />
+    <Compile Include="AudioData\IO\AC3.cs" />
     <Compile Include="AudioData\IO\APEtag.cs" />
+    <Compile Include="AudioData\IO\DSF.cs" />
+    <Compile Include="AudioData\IO\DTS.cs" />
     <Compile Include="AudioData\IO\DummyReader.cs" />
     <Compile Include="AudioData\IO\DummyTag.cs" />
     <Compile Include="AudioData\IO\FLAC.cs" />

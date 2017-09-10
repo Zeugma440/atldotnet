@@ -87,13 +87,24 @@ namespace ATL.test
             testGenericAudio("MPC/mpc.mpc", 8, 127, 44100, true, AudioDataIOFactory.CF_LOSSY);
         }
 
-        /*
+        [TestMethod]
+        public void Audio_AC3()
+        {
+            testGenericAudio("AC3/empty.ac3", 18, 128, 44100, false, AudioDataIOFactory.CF_LOSSY);
+        }
 
-                [TestMethod]
-                public void TestDSF_DSDAudio()
-                {
-                    testGenericAudio("Yeah.dsf", 4, 5953, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
-                }
+        public void Audio_DTS()
+        {
+            testGenericAudio("DTS/dts.dts", 10, 1512, 96000, false, AudioDataIOFactory.CF_LOSSY);
+        }
+
+        [TestMethod]
+        public void TestDSF_DSDAudio()
+        {
+            testGenericAudio("DSF/Yeah.dsf", 4, 5953, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        /*
 
                 [TestMethod]
                 public void TestDSF_PSFAudio()
