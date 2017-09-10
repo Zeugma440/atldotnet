@@ -1217,12 +1217,11 @@ namespace ATL.AudioData.IO
             else return 0;
         }
 
-
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
         private static void decodeUnsynchronizedStreamTo(BufferedBinaryReader from, Stream to, long length)
         {
-            const int BUFFER_SIZE = 2048;
+            const int BUFFER_SIZE = 8192;
 
             int bytesToRead;
             bool foundFF = false;
@@ -1230,8 +1229,15 @@ namespace ATL.AudioData.IO
             byte[] readBuffer = new byte[BUFFER_SIZE];
             byte[] writeBuffer = new byte[BUFFER_SIZE];
 
-            int remainingBytes = (int)(from.Length - from.Position);
             int written;
+            int remainingBytes;
+            if (length > 0)
+            {
+                remainingBytes = (int)Math.Min(length, from.Length - from.Position);
+            } else
+            {
+                remainingBytes = (int)(from.Length - from.Position);
+            }
 
             while (remainingBytes > 0)
             {
