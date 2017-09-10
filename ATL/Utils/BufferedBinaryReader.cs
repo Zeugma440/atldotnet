@@ -5,6 +5,16 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 // Initial credits go to Jackson Dunstan for his article (http://jacksondunstan.com/articles/3568)
+
+/*
+ *
+ * stream ------------[================>=======================]--------------------------------------*EOS
+ *                    ^                ^                       ^
+ *                    bufferOffset     cursorPosition          streamPosition
+ *                    (absolute)       (relative to buffer)    (absolute)
+ */
+
+// TODO - integrate StreamUtils methods to work with embedded buffer
 namespace ATL
 {
     public class BufferedBinaryReader : IDisposable
@@ -16,14 +26,14 @@ namespace ATL
         private readonly int bufferDefaultSize;
         private readonly long streamSize;
 
-        private int bufferOffset;
-        private int numBufferedBytes;
-        private long streamOffset = 0;
+        private long bufferOffset;
+        private int cursorPosition;
+        private long streamPosition;
         private int bufferSize;
 
         public long Position
         {
-            get { return streamOffset-(bufferSize-bufferOffset); }
+            get { return bufferOffset + cursorPosition; }
             set { Seek(value, SeekOrigin.Begin); }
         }
 
@@ -38,7 +48,8 @@ namespace ATL
             bufferDefaultSize = BUFFER_SIZE;
             buffer = new byte[bufferDefaultSize];
             streamSize = stream.Length;
-            streamOffset = stream.Position;
+            streamPosition = stream.Position;
+            bufferOffset = streamPosition;
         }
 
         public BufferedBinaryReader(Stream stream, int bufferSize)
@@ -47,22 +58,23 @@ namespace ATL
             bufferDefaultSize = bufferSize;
             buffer = new byte[bufferSize];
             streamSize = stream.Length;
-            streamOffset = stream.Position;
+            streamPosition = stream.Position;
+            bufferOffset = streamPosition;
         }
 
         // NB : cannot handle when previousBytesToKeep > bufferSize
         private bool fillBuffer(int previousBytesToKeep = 0)
         {
-            if (previousBytesToKeep > 0) Array.Copy(buffer, bufferOffset, buffer, 0, previousBytesToKeep);
-            int bytesToRead = (int)Math.Min(bufferDefaultSize-previousBytesToKeep, streamSize - streamOffset - previousBytesToKeep);
+            if (previousBytesToKeep > 0) Array.Copy(buffer, cursorPosition, buffer, 0, previousBytesToKeep);
+            int bytesToRead = (int)Math.Min(bufferDefaultSize-previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep);
 
             if (bytesToRead > 0)
             {
-                stream.Read(buffer, (int)previousBytesToKeep, bytesToRead);
-                numBufferedBytes += bytesToRead;
-                streamOffset += bytesToRead;
+                bufferOffset = streamPosition;
+                stream.Read(buffer, previousBytesToKeep, bytesToRead);
+                streamPosition += bytesToRead;
                 bufferSize = bytesToRead;
-                bufferOffset = 0;
+                cursorPosition = 0;
                 return true;
             }
 
@@ -71,41 +83,47 @@ namespace ATL
 
         private void prepareBuffer(int bytesToRead, bool skip = false)
         {
-            if (bufferSize - bufferOffset < bytesToRead)
+            if (bufferSize - cursorPosition < bytesToRead)
             {
                 if (skip) fillBuffer();
-                else fillBuffer(bufferSize - bufferOffset);
+                else fillBuffer(Math.Max(0,bufferSize - cursorPosition));
             }
         }
 
         public void Seek(long offset, SeekOrigin origin)
         {
-            long delta = 0;
+            long delta = 0; // Distance between absolute cursor position and specified position in bytes
 
             if (origin.Equals(SeekOrigin.Current)) delta = offset;
             else if (origin.Equals(SeekOrigin.Begin))
             {
-                delta = offset - streamOffset;
+                delta = offset - Position;
             }
             else if (origin.Equals(SeekOrigin.End))
             {
-                delta = streamSize + offset - streamOffset;
+                delta = (streamSize + offset) - Position;
             }
 
-            // TODO - optimize by detected "small" jumps -> only move within the limits of current buffer
             if (0 == delta) return;
             else if (delta < 0)
             {
-                streamOffset += delta;
-                stream.Position = streamOffset;
-                fillBuffer();
-            } else if (delta < bufferDefaultSize) // Optimize this
+                // Jump within buffer
+                if ((cursorPosition < bufferSize) && (cursorPosition + delta >= 0))
+                {
+                    cursorPosition += (int)delta;
+                } else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
+                {
+                    streamPosition = bufferOffset + cursorPosition + delta;
+                    stream.Position = streamPosition;
+                    fillBuffer();
+                }
+            } else if (delta < bufferDefaultSize) // Jump within buffer -- TODO : Optimize this
             {
                 Skip((int)delta);
-            } else
+            } else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
             {
-                streamOffset += delta;
-                stream.Position = streamOffset;
+                streamPosition = bufferOffset + cursorPosition + delta;
+                stream.Position = streamPosition;
                 fillBuffer();
             }
         }
@@ -113,80 +131,132 @@ namespace ATL
         public void Skip(int nbBytes)
         {
             prepareBuffer(nbBytes, true);
-            bufferOffset += nbBytes;
+            cursorPosition += nbBytes;
         }
 
         public int Read([In, Out] byte[] buffer, int offset, int count)
         {
-            if (count <= bufferSize - bufferOffset)
+            // Bytes to read are all already buffered
+            if (count <= bufferSize - cursorPosition)
             {
                 prepareBuffer(count);
-                Array.Copy(this.buffer, bufferOffset, buffer, offset, count);
-                bufferOffset += count;
+                Array.Copy(this.buffer, cursorPosition, buffer, offset, count);
+                cursorPosition += count;
                 return count;
             }
             else
             {
-                // First retrieve buffered data
-                int availableBytes = bufferSize - bufferOffset;
-                Array.Copy(this.buffer, bufferOffset, buffer, 0, availableBytes);
+                // First retrieve buffered data if possible
+                int availableBytes = bufferSize - cursorPosition;
+                if (availableBytes > 0)
+                {
+                    Array.Copy(this.buffer, cursorPosition, buffer, 0, availableBytes);
+                } else
+                {
+                    availableBytes = 0;
+                }
 
                 // Then retrieve the rest by reading the stream
                 stream.Read(buffer, availableBytes, count - availableBytes);
 
-                bufferOffset = bufferSize; // Force buffer refill on next read
-                streamOffset += count - availableBytes;
+                streamPosition += count - availableBytes;
+                stream.Position = streamPosition;
+
+                cursorPosition += count; // Virtual position outside buffer zone
+                //fillBuffer();
+
                 return count;
             }
         }
 
         public byte[] ReadBytes(int nbBytes)
         {
-            if (nbBytes <= bufferSize - bufferOffset)
+            byte[] buffer = new byte[nbBytes];
+
+            // Bytes to read are all already buffered
+            if (nbBytes <= bufferSize - cursorPosition)
             {
                 prepareBuffer(nbBytes);
-                byte[] val = new byte[nbBytes];
-                Array.Copy(buffer, bufferOffset, val, 0, nbBytes);
-                bufferOffset += nbBytes;
-                return val;
+                Array.Copy(this.buffer, cursorPosition, buffer, 0, nbBytes);
+                cursorPosition += nbBytes;
             } else
             {
-                byte[] result = new byte[nbBytes];
-
-                // First retrieve buffered data
-                int availableBytes = bufferSize - bufferOffset;
-                Array.Copy(buffer, bufferOffset, result, 0, availableBytes);
+                // First retrieve buffered data if possible
+                int availableBytes = bufferSize - cursorPosition;
+                if (availableBytes > 0)
+                {
+                    Array.Copy(this.buffer, cursorPosition, buffer, 0, availableBytes);
+                }
+                else
+                {
+                    availableBytes = 0;
+                }
 
                 // Then retrieve the rest by reading the stream
-                stream.Read(result, availableBytes, nbBytes - availableBytes);
+                stream.Read(buffer, availableBytes, nbBytes - availableBytes);
 
-                bufferOffset = bufferSize; // Force buffer refill on next read
-                streamOffset += nbBytes - availableBytes;
-                return result;
+                streamPosition += nbBytes - availableBytes;
+                stream.Position = streamPosition;
+
+                cursorPosition += nbBytes; // Virtual position outside buffer zone
+                //fillBuffer();
             }
+            return buffer;
         }
 
         public byte ReadByte()
         {
             prepareBuffer(1);
-            byte val = buffer[bufferOffset];
-            bufferOffset++;
+            byte val = buffer[cursorPosition];
+            cursorPosition++;
             return val;
         }
 
         public ushort ReadUInt16()
         {
             prepareBuffer(2);
-            ushort val = (ushort)(buffer[bufferOffset] | buffer[bufferOffset + 1] << 8);
-            bufferOffset += 2;
+            ushort val = (ushort)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8);
+            cursorPosition += 2;
+            return val;
+        }
+
+        public short ReadInt16()
+        {
+            prepareBuffer(2);
+            short val = (short)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8);
+            cursorPosition += 2;
+            return val;
+        }
+
+        public uint ReadUInt32()
+        {
+            prepareBuffer(4);
+            uint val = (uint)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24);
+            cursorPosition += 4;
             return val;
         }
 
         public int ReadInt32()
         {
             prepareBuffer(4);
-            int val = (buffer[bufferOffset] | buffer[bufferOffset + 1] << 8 | buffer[bufferOffset + 2] << 16 | buffer[bufferOffset + 3] << 24);
-            bufferOffset += 4;
+            int val = (buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24);
+            cursorPosition += 4;
+            return val;
+        }
+
+        public ulong ReadUInt64()
+        {
+            prepareBuffer(8);
+            ulong val = (ulong)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24 | buffer[cursorPosition + 4] << 32 | buffer[cursorPosition + 5] << 40 | buffer[cursorPosition + 6] << 48 | buffer[cursorPosition + 7] << 56);
+            cursorPosition += 8;
+            return val;
+        }
+
+        public long ReadInt64()
+        {
+            prepareBuffer(8);
+            long val = (long)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24 | buffer[cursorPosition + 4] << 32 | buffer[cursorPosition + 5] << 40 | buffer[cursorPosition + 6] << 48 | buffer[cursorPosition + 7] << 56);
+            cursorPosition += 8;
             return val;
         }
 

@@ -855,6 +855,45 @@ namespace ATL
             return false;
         }
 
+        public static bool FindSequence(BufferedBinaryReader stream, byte[] sequence, long limit = 0)
+        {
+            int BUFFER_SIZE = 512;
+            byte[] readBuffer = new byte[BUFFER_SIZE];
+
+            int remainingBytes, bytesToRead;
+            int iSequence = 0;
+            int readBytes = 0;
+            long initialPos = stream.Position;
+
+            remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+
+            while (remainingBytes > 0)
+            {
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                stream.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    if (sequence[iSequence] == readBuffer[i]) iSequence++;
+                    else if (iSequence > 0) iSequence = 0;
+
+                    if (sequence.Length == iSequence)
+                    {
+                        stream.Position = initialPos + readBytes + i + 1;
+                        return true;
+                    }
+                }
+
+                remainingBytes -= bytesToRead;
+                readBytes += bytesToRead;
+            }
+
+            // If we're here, the sequence hasn't been found
+            stream.Position = initialPos;
+            return false;
+        }
+
         /// <summary>
         /// Reads the given number of bits from the given position and converts it to an unsigned int32
         /// according to big-endian convention
