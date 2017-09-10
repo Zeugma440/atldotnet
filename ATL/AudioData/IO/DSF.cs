@@ -348,7 +348,7 @@ namespace ATL.AudioData.IO
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            TODO write tag at the END of the file and update tag offset within header
+            //TODO write tag at the END of the file and update tag offset within header
             return ((IMetaDataIO)id3v2).Write(r, w, tag);
         }
 
