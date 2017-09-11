@@ -9,7 +9,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for DSD Stream File files manipulation (extension : .DSF)
     /// </summary>
-	class DSF : IAudioDataIO, IMetaDataIO
+	class DSF : MetaDataIO, IAudioDataIO
     {
         // Headers ID
         public const String DSD_ID = "DSD ";
@@ -30,7 +30,8 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        private ID3v2 id3v2; // Has to be there as a "native" field because DSF forces ID3v2 to be an end-of-file tag, which is not standard
+        // Has to be there as a "native" field because DSF forces ID3v2 to be an end-of-file tag, which is not standard
+        private ID3v2 id3v2 = new ID3v2();
 
 
         // Public declarations 
@@ -44,7 +45,7 @@ namespace ATL.AudioData.IO
 		}
         public double CompressionRatio
         {
-            get { return FGetCompressionRatio(); }
+            get { return getCompressionRatio(); }
         }
 
         
@@ -78,177 +79,6 @@ namespace ATL.AudioData.IO
         {
             get { return duration; }
         }
-
-        #region IMetaData
-        public bool Exists
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Exists;
-            }
-        }
-
-        public string Title
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Title;
-            }
-        }
-
-        public string Artist
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Artist;
-            }
-        }
-
-        public string Composer
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Composer;
-            }
-        }
-
-        public string Comment
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Comment;
-            }
-        }
-
-        public string Genre
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Genre;
-            }
-        }
-
-        public ushort Track
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Track;
-            }
-        }
-
-        public ushort Disc
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Disc;
-            }
-        }
-
-        public string Year
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Year;
-            }
-        }
-
-        public string Album
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Album;
-            }
-        }
-
-        public ushort Rating
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Rating;
-            }
-        }
-
-        public string Copyright
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Copyright;
-            }
-        }
-
-        public string OriginalArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).OriginalArtist;
-            }
-        }
-
-        public string OriginalAlbum
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).OriginalAlbum;
-            }
-        }
-
-        public string GeneralDescription
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).GeneralDescription;
-            }
-        }
-
-        public string Publisher
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Publisher;
-            }
-        }
-
-        public string AlbumArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).AlbumArtist;
-            }
-        }
-
-        public string Conductor
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Conductor;
-            }
-        }
-
-        public IList<TagData.PictureInfo> PictureTokens
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).PictureTokens;
-            }
-        }
-
-        public int Size
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).Size;
-            }
-        }
-
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                return ((IMetaDataIO)id3v2).AdditionalFields;
-            }
-        }
-#endregion
-
         public bool HasNativeMeta()
         {
             return true; // For ID3v2 located at the end of file (!)
@@ -268,18 +98,24 @@ namespace ATL.AudioData.IO
 			channels = 0;
 			bits = 0;
 			sampleRate = 0;
+            duration = 0;
+            bitrate = 0;
+            isValid = false;
 		}
 
 		public DSF(string filePath)
 		{
             this.filePath = filePath;
-			resetData();
+            delegatedMeta = id3v2;
+            // TODO : delegate tagData, pictureTokens and structureHelper
+
+            resetData();
 		}
 
         
         // ---------- SUPPORT METHODS
 
-        private double FGetCompressionRatio()
+        private double getCompressionRatio()
         {
             // Get compression ratio 
             if (isValid)
@@ -295,7 +131,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
@@ -303,7 +139,9 @@ namespace ATL.AudioData.IO
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
+            resetData();
 
+            source.BaseStream.Seek(0, SeekOrigin.Begin);
             if (StreamUtils.StringEqualsArr(DSD_ID,StreamUtils.ReadOneByteChars(source, 4)))
 			{
 				source.BaseStream.Seek(16, SeekOrigin.Current); // Boring stuff
@@ -320,6 +158,8 @@ namespace ATL.AudioData.IO
                         LogDelegator.GetLogDelegate()(Log.LV_ERROR, "DSF format version " + formatVersion + " not supported");
                         return result;
                     }
+
+                    isValid = true;
 
                     source.BaseStream.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
@@ -338,23 +178,39 @@ namespace ATL.AudioData.IO
                 // Load tag if exists
                 if (id3v2Offset > 0)
                 {
-                    id3v2 = new ID3v2();
                     id3v2.Read(source, id3v2Offset, readTagParams);
+                    // Zone is already added by Id3v2.Read
+                    id3v2.structureHelper.AddIndex(20, id3v2Offset);
+                    copyFrom(id3v2);
+                } else if (readTagParams.PrepareForWriting)
+                {
+                    // Add EOF zone for future tag writing
+                    id3v2.structureHelper.AddZone(source.BaseStream.Length, 0);
+                    id3v2.structureHelper.AddIndex(20, source.BaseStream.Length);
                 }
             }
 
             return result;
 		}
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        protected override int getDefaultTagOffset()
         {
-            //TODO write tag at the END of the file and update tag offset within header
-            return ((IMetaDataIO)id3v2).Write(r, w, tag);
+            return TO_BUILTIN;
         }
 
-        public bool Remove(BinaryWriter w)
+        protected override int getImplementedTagType()
         {
-            return ((IMetaDataIO)id3v2).Remove(w);
+            return MetaDataIOFactory.TAG_NATIVE;
+        }
+
+        protected override int write(TagData tag, BinaryWriter w, string zone)
+        {
+            return id3v2.writeInternal(tag, w, zone);
+        }
+
+        protected override void resetSpecificData()
+        {
+            // Nothing to do at this level
         }
     }
 }

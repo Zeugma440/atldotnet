@@ -88,6 +88,9 @@ namespace ATL.AudioData.IO
 			channels = 0;
 			bits = 0;
 			sampleRate = 0;
+            duration = 0;
+            bitrate = 0;
+            isValid = false;
 		}
 
 		public AC3(string filePath)
@@ -113,6 +116,7 @@ namespace ATL.AudioData.IO
             ushort signatureChunk;
 			byte aByte;
             this.sizeInfo = sizeInfo;
+            resetData();
 
             bool result = false;
 

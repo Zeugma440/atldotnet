@@ -3,8 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using static ATL.AudioData.MetaDataIO;
+using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {

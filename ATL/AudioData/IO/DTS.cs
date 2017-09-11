@@ -91,6 +91,9 @@ namespace ATL.AudioData.IO
 			channels = 0;
 			bits = 0;
 			sampleRate = 0;
+            bitrate = 0;
+            duration = 0;
+            isValid = false;
 		}
 
 		public DTS(string filePath)
@@ -113,12 +116,14 @@ namespace ATL.AudioData.IO
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
-
-            uint signatureChunk;  
-			ushort aWord;
+            uint signatureChunk;
+            ushort aWord;
             byte[] specDTS;
             bool result = false;
+
+            this.sizeInfo = sizeInfo;
+
+            resetData();
        	
 			signatureChunk = source.ReadUInt32();
 			if ( /*0x7FFE8001*/ 25230975 == signatureChunk ) 

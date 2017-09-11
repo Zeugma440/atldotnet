@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using static ATL.AudioData.MetaDataIO;
 using Commons;
 using static ATL.AudioData.FileStructureHelper;
 using System.Text;
+using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {

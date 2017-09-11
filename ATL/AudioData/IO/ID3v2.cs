@@ -620,31 +620,37 @@ namespace ATL.AudioData.IO
                 streamPos = source.Position;
             } // End frames loop
 
-            if (-1 == tag.ActualEnd)
+            if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {
-                int test = source.ReadInt32();
-                // See if there's padding after the end of the tag
-                if (0 == test)
+                if (streamPos + 4 < source.Length)
                 {
-                    // Read until there's something else than zeroes
-                    byte[] data = new byte[PADDING_BUFFER_SIZE];
-                    bool endReached = false;
-                    long initialPos = source.Position;
-                    int read = 0;
-
-                    while (!endReached)
+                    int test = source.ReadInt32();
+                    // See if there's padding after the end of the tag
+                    if (0 == test)
                     {
-                        source.Read(data, 0, PADDING_BUFFER_SIZE);
-                        for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
+                        // Read until there's something else than zeroes
+                        byte[] data = new byte[PADDING_BUFFER_SIZE];
+                        bool endReached = false;
+                        long initialPos = source.Position;
+                        int read = 0;
+
+                        while (!endReached)
                         {
-                            if (data[i] > 0)
+                            source.Read(data, 0, PADDING_BUFFER_SIZE);
+                            for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
                             {
-                                tag.ActualEnd = initialPos + read + i;
-                                endReached = true;
-                                break;
+                                if (data[i] > 0)
+                                {
+                                    tag.ActualEnd = initialPos + read + i;
+                                    endReached = true;
+                                    break;
+                                }
                             }
+                            if (!endReached) read += PADDING_BUFFER_SIZE;
                         }
-                        if (!endReached) read += PADDING_BUFFER_SIZE;
+                    } else
+                    {
+                        tag.ActualEnd = streamPos;
                     }
                 } else
                 {
@@ -693,7 +699,6 @@ namespace ATL.AudioData.IO
                 // Get information from frames if version supported
                 if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (getTagSize(tagHeader) > 0))
                 {
-                    tagData = new TagData();
                     readFrames(reader, tagHeader, offset, readTagParams);
                     structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
                 }
@@ -725,6 +730,11 @@ namespace ATL.AudioData.IO
 
         // Writes tag info using ID3v2.4 conventions
         // TODO much later : support ID3v2.3- conventions
+
+        internal int writeInternal(TagData tag, BinaryWriter w, string zone)
+        {
+            return write(tag, w, zone);
+        }
 
         /// <summary>
         /// Writes the given tag into the given Writer using ID3v2.4 conventions

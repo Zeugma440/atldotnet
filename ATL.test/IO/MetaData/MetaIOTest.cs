@@ -41,6 +41,7 @@ namespace ATL.test.IO.MetaData
 
         protected string emptyFile;
         protected string notEmptyFile;
+        protected int tagType;
 
         protected void test_RW_Cohabitation(int tagType1, int tagType2)
         {
@@ -133,6 +134,145 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
+        }
+
+        protected void test_RW_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.GetTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Add a new supported field and a new supported picture
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            TagData theTag = new TagData();
+            theTag.Conductor = "John Jackman";
+
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
+            theTag.Pictures.Add(picInfo);
+
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            readExistingTagsOnFile(theFile, initialNbPictures + 1);
+
+            // Additional supported field
+            Assert.AreEqual("John Jackman", theFile.getMeta(tagType).Conductor);
+
+            int nbFound = 0;
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(TagData.PIC_TYPE.CD))
+                {
+                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x06);
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 600);
+                    Assert.AreEqual(picture.Width, 900);
+                    nbFound++;
+                    break;
+                }
+            }
+
+            Assert.AreEqual(1, nbFound);
+
+            // Remove the additional supported field
+            theTag = new TagData();
+            theTag.Conductor = "";
+
+            // Remove additional picture
+            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo.MarkedForDeletion = true;
+            theTag.Pictures.Add(picInfo);
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            readExistingTagsOnFile(theFile, initialNbPictures);
+
+            // Additional removed field
+            Assert.AreEqual("", theFile.getMeta(tagType).Conductor);
+
+
+            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
+
+            if (sameSizeAfterEdit || sameBitsAfterEdit)
+            {
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+                if (sameSizeAfterEdit) Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                if (sameBitsAfterEdit)
+                {
+                    string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                    string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+
+                    Assert.IsTrue(originalMD5.Equals(testMD5));
+                }
+            }
+
+            // Get rid of the working copy
+            if (deleteTempFile) File.Delete(testFileLocation);
+        }
+
+        protected void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
+        {
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            // Supported fields
+            Assert.AreEqual("Title", meta.Title);
+            Assert.AreEqual("父", meta.Album);
+            Assert.AreEqual("Artist", meta.Artist);
+            Assert.AreEqual("Test!", meta.Comment);
+            Assert.AreEqual("2017", meta.Year);
+            Assert.AreEqual("Test", meta.Genre);
+            Assert.AreEqual(22, meta.Track);
+            Assert.AreEqual("Me", meta.Composer);
+            Assert.AreEqual(2, meta.Disc);
+
+            // Unsupported field (MOOD)
+            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("MOOD"));
+            Assert.AreEqual("xxx", meta.AdditionalFields["MOOD"]);
+
+
+            // Pictures
+            Assert.AreEqual(nbPictures, pictures.Count);
+
+            byte nbFound = 0;
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                Image picture;
+                if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
+                {
+                    Assert.AreEqual(0x03, pic.Value.NativeCodeInt);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                    Assert.AreEqual(150, picture.Height);
+                    Assert.AreEqual(150, picture.Width);
+                    nbFound++;
+                }
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
+                {
+                    Assert.AreEqual(0x02, pic.Value.NativeCodeInt);
+                    picture = pic.Value.Picture;
+                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
+                    Assert.AreEqual(168, picture.Height);
+                    Assert.AreEqual(175, picture.Width);
+                    nbFound++;
+                }
+            }
+            Assert.AreEqual(2, nbFound);
         }
 
     }

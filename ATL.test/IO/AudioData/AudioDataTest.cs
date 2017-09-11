@@ -101,7 +101,7 @@ namespace ATL.test
         [TestMethod]
         public void TestDSF_DSDAudio()
         {
-            testGenericAudio("DSF/Yeah.dsf", 4, 5953, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("DSF/dsf.dsf", 4, 5671, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         /*

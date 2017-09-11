@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
 
-namespace ATL.AudioData
+namespace ATL.AudioData.IO
 {
     public abstract class MetaDataIO : IMetaDataIO
     {
@@ -44,7 +44,9 @@ namespace ATL.AudioData
         private IList<KeyValuePair<string, int>> picturePositions;
         protected IList<TagData.PictureInfo> pictureTokens;
 
-        protected FileStructureHelper structureHelper;
+        internal FileStructureHelper structureHelper;
+
+        protected MetaDataIO delegatedMeta = null;
 
 
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
@@ -394,6 +396,7 @@ namespace ATL.AudioData
             tagExists = false;
             tagVersion = 0;
 
+            // TODO -- shouldn't below instructions be Clear calls instead of new instanciations ?
             tagData = new TagData();
             pictureTokens = new List<TagData.PictureInfo>();
             picturePositions = new List<KeyValuePair<string, int>>();
@@ -457,7 +460,15 @@ namespace ATL.AudioData
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true);
+            TagData.PictureStreamHandlerDelegate pictureHandler;
+            if (delegatedMeta != null)
+            {
+                pictureHandler = new TagData.PictureStreamHandlerDelegate(delegatedMeta.readPictureData);
+            } else
+            {
+                pictureHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
+            }
+            ReadTagParams readTagParams = new ReadTagParams(pictureHandler, true);
             readTagParams.PrepareForWriting = true;
             this.Read(r, readTagParams);
 
@@ -586,6 +597,15 @@ namespace ATL.AudioData
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
 
             tagData.Pictures.Add(picInfo);
+        }
+
+        protected void copyFrom(MetaDataIO meta)
+        {
+            this.tagData = meta.tagData;
+            this.tagExists = meta.tagExists;
+            this.tagVersion = meta.tagVersion;
+            this.pictureTokens = meta.pictureTokens;
+            this.structureHelper = meta.structureHelper;
         }
     }
 }

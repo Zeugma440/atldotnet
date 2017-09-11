@@ -16,6 +16,7 @@ namespace ATL.AudioData
         {
             public const byte TYPE_COUNTER = 0;
             public const byte TYPE_SIZE = 1;
+            public const byte TYPE_INDEX = 2;
 
             public byte Type;
             public long Position;
@@ -121,6 +122,11 @@ namespace ATL.AudioData
             addZoneHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
         }
 
+        public void AddIndex(long position, object value, string zone = DEFAULT_ZONE_NAME)
+        {
+            addZoneHeader(zone, FrameHeader.TYPE_INDEX, position, value, isLittleEndian);
+        }
+
         private void addZoneHeader(string zone, byte type, long position, object value, bool isLittleEndian)
         {
             if (!zones.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
@@ -209,6 +215,7 @@ namespace ATL.AudioData
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
                     offsetCorrection = 0;
+                    delta = 0;
                     foreach(KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
                     {
                         if (header.Position >= offsetDelta.Key) offsetCorrection += offsetDelta.Value;
@@ -223,7 +230,9 @@ namespace ATL.AudioData
                             default: delta = 0; break;
                         }
 
-                    } else {
+                    }
+                    else if (FrameHeader.TYPE_SIZE == header.Type)
+                    {
                         delta = deltaSize;
                         if (!dynamicOffsetCorrection.ContainsKey(zone))
                         {
@@ -231,7 +240,7 @@ namespace ATL.AudioData
                         }
                     }
 
-                    if (delta != 0)
+                    if ((FrameHeader.TYPE_COUNTER == header.Type || FrameHeader.TYPE_SIZE == header.Type) && (delta != 0))
                     {
                         w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
 
@@ -242,6 +251,15 @@ namespace ATL.AudioData
                         // The very same frame header is referenced from another frame and must be updated to its new value
                         updateAcrossEntireCollection(header.Position, updatedValue);
 
+                        if (!header.IsLittleEndian) Array.Reverse(value);
+
+                        w.Write(value);
+                    }
+                    else if (FrameHeader.TYPE_INDEX == header.Type)
+                    {
+                        w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
+
+                        value = BitConverter.GetBytes(zones[zone].Offset + offsetCorrection);
                         if (!header.IsLittleEndian) Array.Reverse(value);
 
                         w.Write(value);
