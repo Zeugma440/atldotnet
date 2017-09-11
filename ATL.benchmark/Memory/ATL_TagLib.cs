@@ -11,7 +11,7 @@ namespace ATL.benchmark
     {
         //[Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
         //[Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/ID3v2.2 UTF16.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.4_UTF8.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.3_UTF16.mp3")]
-        [Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/ID3v2.2 UTF16.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.3_UTF16.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/id3v2.3_UTF16_ting.mp3")]
+        [Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/OGG/empty.ogg", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/OGG/ogg.ogg", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/OGG/bigPicture.ogg")]
         public string path;
 
         FileFinder ff = new FileFinder();
@@ -35,7 +35,7 @@ namespace ATL.benchmark
             if (File.Exists(path))
             {
                 Track t = new Track(path);
-                t.GetEmbeddedPicture(false, false);
+//                t.GetEmbeddedPicture(false, false);
             }
             else if (Directory.Exists(path))
             {

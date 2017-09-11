@@ -189,6 +189,7 @@
   <ItemGroup>
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Information\FileFinder.cs" />
+    <Compile Include="Memory\Misc.cs" />
     <Compile Include="Memory\ATL_TagLib.cs" />
     <Compile Include="Memory\ATLOld_ATLNew.cs" />
     <Compile Include="Program.cs" />

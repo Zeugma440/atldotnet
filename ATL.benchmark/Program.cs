@@ -8,27 +8,35 @@ namespace ATL.benchmark
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<BufferSizes>();
+            //BenchmarkRunner.Run<BufferSizes>();
 
             //BenchmarkRunner.Run<ATLOld_ATLNew>();
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+            //BenchmarkRunner.Run<Misc>();
+
+            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+
+            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
+
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
         {
             FileFinder ff = new FileFinder();
 
-            Console.WriteLine(filePath);
+//            Console.WriteLine(filePath);
 
             if (File.Exists(filePath))
             {
                 Track t = new Track(filePath, useOldImplementation);
-                t.GetEmbeddedPicture(useOldImplementation, false);
+                //t.GetEmbeddedPicture(useOldImplementation, false);
 
-                Console.WriteLine(t.Title);
+//                Console.WriteLine(t.Title);
             }
             else if (Directory.Exists(filePath))
             {
@@ -40,7 +48,7 @@ namespace ATL.benchmark
                 }
             }
 
-            Console.WriteLine("end");
+//            Console.WriteLine("end");
 //            Console.ReadLine();
         }
     }
