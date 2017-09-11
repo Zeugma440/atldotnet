@@ -80,8 +80,8 @@ Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1
 Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R |  | R
 Digital Theatre System | .DTS |  |  |  | 
-Direct Stream Digital | .DSD, .DSF |  | R |  | 
-Dolby Digital | .AC3 |  |  | R | 
+Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
+Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Impulse Tracker | .IT |  |  |  | R (2)
