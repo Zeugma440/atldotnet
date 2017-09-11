@@ -820,13 +820,16 @@ namespace ATL.AudioData.IO
             // Supported textual fields
             foreach (byte frameType in map.Keys)
             {
-                foreach(string s in frameMapping_v23_24.Keys)
+                if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    if (frameType == frameMapping_v23_24[s])
+                    foreach (string s in frameMapping_v23_24.Keys)
                     {
-                        writeTextFrame(w, s, map[frameType], tagEncoding);
-                        nbFrames++;
-                        break;
+                        if (frameType == frameMapping_v23_24[s])
+                        {
+                            writeTextFrame(w, s, map[frameType], tagEncoding);
+                            nbFrames++;
+                            break;
+                        }
                     }
                 }
             }
@@ -877,7 +880,7 @@ namespace ATL.AudioData.IO
 
             bool writeFieldValue = true;
             bool writeFieldEncoding = true;
-            bool writeNullTermination = false;
+            bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
 
             BinaryWriter w;
             MemoryStream s = null;

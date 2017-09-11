@@ -242,8 +242,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, meta.Disc);
 
             // Unsupported field (MOOD)
-            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("MOOD"));
-            Assert.AreEqual("xxx", meta.AdditionalFields["MOOD"]);
+            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST"));
+            Assert.AreEqual("xxx", meta.AdditionalFields["TEST"]);
 
 
             // Pictures

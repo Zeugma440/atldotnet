@@ -79,7 +79,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_DSF_ID3v2_Existing()
         {
-            test_RW_Existing(notEmptyFile, 2);
+            test_RW_Existing(notEmptyFile, 2, true, true);
         }
     }
 }
