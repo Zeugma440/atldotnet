@@ -249,17 +249,20 @@ namespace ATL.AudioData
                 case CID_DTS:
                     theDataReader = new IO.DTS(path);
                     break;
+                case CID_IT:
+                    theDataReader = new IO.IT(path);
+                    break;
+                case CID_MIDI:
+                    theDataReader = new IO.Midi(path);
+                    break;
+                case CID_MOD:
+                    theDataReader = new IO.MOD(path);
+                    break;
+                case CID_APE:
+                    theDataReader = new IO.APE(path);
+                    break;
 
                 /*
-
-            case CID_APE :		
-                theDataReader = new IO.TMonkey();
-                break;
-
-            case CID_MIDI :		
-                theDataReader = new IO.TMidi();
-                break;
-
 
             case CID_OFR :		
                 theDataReader = new IO.TOptimFrog();
@@ -286,9 +289,6 @@ namespace ATL.AudioData
                 theDataReader = new IO.TTAK();
                 break;
 
-            case CID_MOD:
-                theDataReader = new IO.TMOD();
-                break;
 
             case CID_S3M:
                 theDataReader = new IO.TS3M();

@@ -130,7 +130,7 @@ namespace ATL.test.IO.MetaData
             string originalMD5 = TestUtils.GetFileMD5Hash(location);
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-            Assert.IsTrue(originalMD5.Equals(testMD5));
+            Assert.AreEqual(originalMD5, testMD5);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
@@ -213,7 +213,7 @@ namespace ATL.test.IO.MetaData
                     string originalMD5 = TestUtils.GetFileMD5Hash(location);
                     string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-                    Assert.IsTrue(originalMD5.Equals(testMD5));
+                    Assert.AreEqual(originalMD5, testMD5);
                 }
             }
 

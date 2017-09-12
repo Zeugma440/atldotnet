@@ -81,7 +81,7 @@ namespace ATL.AudioData.IO
         }
         public bool HasNativeMeta()
         {
-            return true; // For ID3v2 located at the end of file (!)
+            return true; // For non-standard (i.e. EOF) ID3v2 (!)
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -101,7 +101,9 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
             isValid = false;
-		}
+
+            ResetData();
+        }
 
 		public DSF(string filePath)
 		{
@@ -139,6 +141,7 @@ namespace ATL.AudioData.IO
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
+
             resetData();
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -208,7 +211,7 @@ namespace ATL.AudioData.IO
             return id3v2.writeInternal(tag, w, zone);
         }
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
         {
             // Nothing to do at this level
         }

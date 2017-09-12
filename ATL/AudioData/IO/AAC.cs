@@ -65,11 +65,11 @@ namespace ATL.AudioData.IO
         public static readonly string[] AAC_BITRATE_TYPE = { "Unknown", "CBR", "VBR" };
 
         // Sample rate values
-        private static readonly int[] SAMPLE_RATE = {    96000, 88200, 64000, 48000, 44100, 32000,
-                                                24000, 22050, 16000, 12000, 11025, 8000,
-                                                0, 0, 0, 0 };
+        private static readonly int[] SAMPLE_RATE = {   96000, 88200, 64000, 48000, 44100, 32000,
+                                                        24000, 22050, 16000, 12000, 11025, 8000,
+                                                        0, 0, 0, 0 };
 
-        private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code}
+        private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
 
         private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
@@ -81,7 +81,6 @@ namespace ATL.AudioData.IO
         private byte FProfileID;
         private byte FChannels;
         private byte FBitrateTypeID;
-        private byte FVersionID;
 
         private double bitrate;
         private double duration;
@@ -91,10 +90,6 @@ namespace ATL.AudioData.IO
         private string fileName;
 
 
-        public byte VersionID // Version code
-        {
-            get { return this.FVersionID; }
-        }
         public byte HeaderTypeID // Header type code
         {
             get { return this.FHeaderTypeID; }
@@ -136,6 +131,10 @@ namespace ATL.AudioData.IO
             get { return this.isValid(); }
         }
 
+
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+
+        // Audio data
         public bool IsVBR
         {
             get { return (AAC_BITRATE_TYPE_VBR == FBitrateTypeID); }
@@ -165,29 +164,58 @@ namespace ATL.AudioData.IO
             get { return fileName; }
         }
 
+        // Metadata
+        public bool IsMetaSupported(int metaType)
+        {
+            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
+        }
+        public bool HasNativeMeta()
+        {
+            return true;
+        }
+        protected override int getDefaultTagOffset()
+        {
+            return TO_BUILTIN;
+        }
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_NATIVE;
+        }
         public override byte FieldCodeFixedLength
         {
-            get
-            {
-                return 4;
-            }
+            get { return 4; }
         }
-
         protected override bool IsLittleEndian
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
 
-        // ===== CONTRUCTORS
+        // ---------- CONSTRUCTORS & INITIALIZERS
+
+        protected override void resetMetaData()
+        {
+            // Nothing to do here
+        }
+
+        protected void resetData()
+        {
+            FHeaderTypeID = AAC_HEADER_TYPE_UNKNOWN;
+            FMPEGVersionID = AAC_MPEG_VERSION_UNKNOWN;
+            FProfileID = AAC_PROFILE_UNKNOWN;
+            FChannels = 0;
+            FBitrateTypeID = AAC_BITRATE_TYPE_UNKNOWN;
+            FTotalFrames = 0;
+
+            bitrate = 0;
+            sampleRate = 0;
+            duration = 0;
+        }
 
         public AAC(string fileName)
         {
             this.fileName = fileName;
-            ResetData();
+            resetData();
         }
 
         static AAC()
@@ -233,23 +261,6 @@ namespace ATL.AudioData.IO
 
 
         // ********************** Private functions & procedures *********************
-
-        // Reset all variables
-        protected override void resetSpecificData()
-        {
-            FHeaderTypeID = AAC_HEADER_TYPE_UNKNOWN;
-            FMPEGVersionID = AAC_MPEG_VERSION_UNKNOWN;
-            FProfileID = AAC_PROFILE_UNKNOWN;
-            FChannels = 0;
-            FBitrateTypeID = AAC_BITRATE_TYPE_UNKNOWN;
-            FTotalFrames = 0;
-
-            bitrate = 0;
-            sampleRate = 0;
-            duration = 0;
-
-            FVersionID = 0;
-        }
 
         private static void addFrameClass(string frameCode, byte frameClass)
         {
@@ -803,26 +814,6 @@ namespace ATL.AudioData.IO
             result = true;
 
             return result;
-        }
-
-        public bool IsMetaSupported(int metaType)
-        {
-            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
-        }
-
-        public bool HasNativeMeta()
-        {
-            return true;
-        }
-
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_NATIVE;
         }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)

@@ -97,7 +97,7 @@ namespace ATL.AudioData.IO
 
         // --------------- MANDATORY INFORMATIVE OVERRIDES
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
         {
             // No specific behaviour here
         }

@@ -252,7 +252,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
 		{
 			tagVersion = TAG_VERSION_1_0;
         }

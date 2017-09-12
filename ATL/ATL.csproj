@@ -78,6 +78,10 @@
     <Compile Include="AudioData\IO\FLAC.cs" />
     <Compile Include="AudioData\IO\ID3v1.cs" />
     <Compile Include="AudioData\IO\ID3v2.cs" />
+    <Compile Include="AudioData\IO\IT.cs" />
+    <Compile Include="AudioData\IO\MIDI.cs" />
+    <Compile Include="AudioData\IO\MOD.cs" />
+    <Compile Include="AudioData\IO\Ape.cs" />
     <Compile Include="AudioData\IO\MPEGaudio.cs" />
     <Compile Include="AudioData\IO\MPEGplus.cs" />
     <Compile Include="AudioData\IO\Ogg.cs" />

@@ -76,7 +76,7 @@ namespace ATL.AudioData.IO
             };
         }
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
         {
             // Nothing special to reset here
         }

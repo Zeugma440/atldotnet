@@ -104,6 +104,33 @@ namespace ATL.test
             testGenericAudio("DSF/dsf.dsf", 4, 5671, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
+        [TestMethod]
+        public void TestITAudio()
+        {
+            testGenericAudio("IT/empty.it", 476, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("IT/it.it", 42, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
+
+        [TestMethod]
+        public void TestMidiAudio()
+        {
+            testGenericAudio("MID/ROQ.MID", 504, 0, 0, false, AudioDataIOFactory.CF_SEQ);
+        }
+
+        [TestMethod]
+        public void TestModAudio()
+        {
+            testGenericAudio("MOD/empty.mod", 159, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("MOD/mod.mod", 330, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
+
+        [TestMethod]
+        public void TestApeAudio()
+        {
+            testGenericAudio("APE/ape.ape", 8, 652, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+
         /*
 
                 [TestMethod]
@@ -118,11 +145,6 @@ namespace ATL.test
                     testGenericAudio("003 BlackBird.tak", 6, 634, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
                 }
 
-                [TestMethod]
-                public void TestModAudio()
-                {
-                    testGenericAudio("4-mat - Thala-Music (Sanxion).mod", 330, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
-                }
 
                 [TestMethod]
                 public void TestS3MAudio()
@@ -134,12 +156,6 @@ namespace ATL.test
                 public void TestXMAudio()
                 {
                     testGenericAudio("v_chrtrg.xm", 261, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
-                }
-
-                [TestMethod]
-                public void TestITAudio()
-                {
-                    testGenericAudio("sommix.it", 476, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
                 }
 
                 [TestMethod]

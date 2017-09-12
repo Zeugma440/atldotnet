@@ -634,7 +634,7 @@ namespace ATL.AudioData.IO
 
         // ********************** Private functions & voids *********************
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
         {
             channelModeID = WMA_CM_UNKNOWN;
 			sampleRate = 0;

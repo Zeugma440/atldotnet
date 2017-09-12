@@ -659,7 +659,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override void resetSpecificData()
+        protected override void resetMetaData()
         {
             // No specific behaviour here
         }

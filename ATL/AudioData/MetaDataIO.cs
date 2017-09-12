@@ -387,7 +387,7 @@ namespace ATL.AudioData.IO
 
         abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
-        abstract protected void resetSpecificData();
+        abstract protected void resetMetaData();
 
         // ------ COMMON METHODS -----------------------------------------------------
 
@@ -402,7 +402,7 @@ namespace ATL.AudioData.IO
             picturePositions = new List<KeyValuePair<string, int>>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
 
-            resetSpecificData();
+            resetMetaData();
         }
 
         public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
@@ -485,6 +485,7 @@ namespace ATL.AudioData.IO
             foreach (Zone zone in Zones)
             {
                 oldTagSize = zone.Size;
+                bool isTagWritten;
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
@@ -492,8 +493,10 @@ namespace ATL.AudioData.IO
                 {
                     if (write(dataToWrite, msw, zone.Name) > 0)
                     {
+                        isTagWritten = true;
                         newTagSize = s.Length;
                     } else {
+                        isTagWritten = false;
                         newTagSize = zone.CoreSignature.Length;
                     }
 
@@ -531,7 +534,7 @@ namespace ATL.AudioData.IO
                     r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
                     s.Seek(0, SeekOrigin.Begin);
 
-                    if (newTagSize > zone.CoreSignature.Length)
+                    if (isTagWritten)
                     {
                         StreamUtils.CopyStream(s, w.BaseStream, s.Length);
                     } else
@@ -547,8 +550,8 @@ namespace ATL.AudioData.IO
                     {
                         int action;
 
-                        if (oldTagSize == zone.CoreSignature.Length && delta > 0) action = ACTION_ADD;
-                        else if (newTagSize == zone.CoreSignature.Length && delta < 0) action = ACTION_DELETE;
+                        if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION_ADD;
+                        else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
                         else action = ACTION_EDIT;
 
                         result = structureHelper.RewriteMarkers(w, delta, action, zone.Name);
@@ -573,9 +576,9 @@ namespace ATL.AudioData.IO
 
             foreach (Zone zone in Zones)
             {
-                if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
+                if (zone.Offset > -1)
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                    if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
                     if (zone.CoreSignature.Length > 0)
                     {
