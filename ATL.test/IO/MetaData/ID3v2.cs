@@ -44,7 +44,7 @@ namespace ATL.test.IO.MetaData
      * 
      * Individual picture removal (from index > 1)
      * 
-     * Extended header compliance cases incl. limit cases
+     * Extended ID3v2 header compliance cases incl. limit cases
      * 
      * 
      * TECHNICAL
