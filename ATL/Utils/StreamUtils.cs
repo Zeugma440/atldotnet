@@ -644,7 +644,8 @@ namespace ATL
             byte[] buffer = new byte[2];
             int nbRead = 0;
             long streamLength = r.Length;
-            long streamPos = r.Position;
+            long initialPos = r.Position;
+            long streamPos = initialPos;
 
             while (streamPos < streamLength && ( (0 == limit) || (nbRead < limit) ) )
             {
@@ -670,7 +671,7 @@ namespace ATL
                 }
             }
 
-            if (moveStreamToLimit && nbRead < limit) r.Seek(limit - nbRead, SeekOrigin.Current);
+            if (moveStreamToLimit) r.Seek(initialPos + limit, SeekOrigin.Begin);
 
             return encoding.GetString(readBytes,0,nbRead);
         }
