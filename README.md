@@ -84,12 +84,12 @@ Direct Stream Digital | .DSD, .DSF |  | R/W |  |
 Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
-Impulse Tracker | .IT |  |  |  | R (2)
+Impulse Tracker | .IT |  |  |  | R/W (2)
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R (1)
-Monkey's Audio | .APE | R | R | R | 
+Monkey's Audio | .APE | R/W | R/W | R/W | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
 MusePack / MPEGplus|.MPC, .MP+|R/W|R/W|R/W| |
-Noisetracker/Soundtracker/Protracker|.MOD| | | |R (2)|
+Noisetracker/Soundtracker/Protracker|.MOD| | | |R/W (2)|
 OGG : Vorbis, Opus|.OGG, .OPUS| | | |R/W|
 OptimFROG|.OFR, .OFS|R|R|R| |
 Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |R|
@@ -105,7 +105,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 (1) : MIDI meta events appear on the track's Comment field
 
-(2) : all sample names appear on the track's Comment field
+(2) : all sample names appear on the track's Comment field. Track title only is editable.
 
 
 * Detected fields
