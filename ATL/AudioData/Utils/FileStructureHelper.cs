@@ -258,9 +258,26 @@ namespace ATL.AudioData
                     else if (FrameHeader.TYPE_INDEX == header.Type)
                     {
                         w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
+                        value = null;
 
-                        value = BitConverter.GetBytes(zones[zone].Offset + offsetCorrection);
-                        if (!header.IsLittleEndian) Array.Reverse(value);
+                        if (action != ACTION_DELETE)
+                        {
+                            if (header.Value is long)
+                            {
+                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetCorrection);
+                            }
+
+                            if (!header.IsLittleEndian) Array.Reverse(value);
+                        }
+                        else
+                        {
+                            if (header.Value is long)
+                            {
+                                value = BitConverter.GetBytes((long)0);
+                            }
+                        }
+
+                        if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
                         w.Write(value);
                     }
