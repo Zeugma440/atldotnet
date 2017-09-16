@@ -5,13 +5,13 @@ using System.IO;
 namespace ATL.test.IO.MetaData
 {
     [TestClass]
-    public class IT
+    public class XM
     {
-        string notEmptyFile = "IT/it.it";
-        string emptyFile = "IT/empty.it";
+        string notEmptyFile = "XM/xm.xm";
+        string emptyFile = "XM/empty.xm";
 
         [TestMethod]
-        public void TagIO_R_IT()
+        public void TagIO_R_XM()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -24,12 +24,12 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("God I'm Bored-Part 2", theFile.NativeTag.Title);
-            Assert.AreEqual("Gameboy/NES Samples by:/virt/Original NES 8-bit:/Koji Kondo/Tracked by:/Mathew Valente [TSSF]/Super Mario Brothers 2/Overworld", theFile.NativeTag.Comment);
+            Assert.AreEqual("Chrono Trigger", theFile.NativeTag.Title);
+            Assert.AreEqual(@"@Copyright    97-05-16/DreamWorks Design/presents/VeritaS/""Chrono Trigger""/(Ending Theme)/Rendered for the/truth of sequence/music disk./----< STEREO >----/----< Greetz >----/SquareSoft (of course)/Mr.Zenap/DWD/Kenneth.S/Sorry, no more greetz!/----< Se Ya >----/Just close your eyes/and let your mind/float away with the/Music. Let the sounds/create a fantasy world/for you in your mind./----<Enjoy!!!!!!>----/If you want info on/DreamWorks Design/or other releases on/the net. Please/contact me at:/fredrik.lundgren@/mbox302.swipnet.se/---< The enD >---/\I//\I//\I//\I//\I//\I//\I//\I//\I//\I//Remember!!!!!/Use STEREO!!!!!", theFile.NativeTag.Comment);
         }
 
         [TestMethod]
-        public void TagIO_RW_IT_Empty()
+        public void TagIO_RW_XM_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -43,7 +43,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            // Assert.IsFalse(theFile.NativeTag.Exists); IT files have embedded comments that prevent from saying that the tag does not exist at all
+            // Assert.IsFalse(theFile.NativeTag.Exists); XM files have embedded comments that prevent from saying that the tag does not exist at all
 
             // Construct a new tag
             TagData theTag = new TagData();
@@ -66,7 +66,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            // Assert.IsFalse(theFile.NativeTag.Exists); IT files have embedded comments that prevent from saying that the tag does not exist at all
+            // Assert.IsFalse(theFile.NativeTag.Exists); XM files have embedded comments that prevent from saying that the tag does not exist at all
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -85,7 +85,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void tagIO_RW_IT_Existing()
+        public void tagIO_RW_XM_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -134,7 +134,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("Gameboy/NES Samples by:/virt/Original NES 8-bit:/Koji Kondo/Tracked by:/Mathew Valente [TSSF]/Super Mario Brothers 2/Overworld", theFile.NativeTag.Comment);
+            Assert.AreEqual(@"@Copyright    97-05-16/DreamWorks Design/presents/VeritaS/""Chrono Trigger""/(Ending Theme)/Rendered for the/truth of sequence/music disk./----< STEREO >----/----< Greetz >----/SquareSoft (of course)/Mr.Zenap/DWD/Kenneth.S/Sorry, no more greetz!/----< Se Ya >----/Just close your eyes/and let your mind/float away with the/Music. Let the sounds/create a fantasy world/for you in your mind./----<Enjoy!!!!!!>----/If you want info on/DreamWorks Design/or other releases on/the net. Please/contact me at:/fredrik.lundgren@/mbox302.swipnet.se/---< The enD >---/\I//\I//\I//\I//\I//\I//\I//\I//\I//\I//Remember!!!!!/Use STEREO!!!!!", theFile.NativeTag.Comment);
         }
     }
 }

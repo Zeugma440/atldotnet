@@ -1,10 +1,6 @@
-﻿ using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -37,7 +33,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : totally metadata-free OGG
+            // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
@@ -93,7 +89,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            // Source : file with existing tag
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));

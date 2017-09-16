@@ -99,80 +99,109 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestDSF_DSDAudio()
+        public void Audio_DSF_DSD()
         {
             testGenericAudio("DSF/dsf.dsf", 4, 5671, 2822400, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
-        public void TestITAudio()
+        public void Audio_IT()
         {
             testGenericAudio("IT/empty.it", 476, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
             testGenericAudio("IT/it.it", 42, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
-        public void TestMidiAudio()
+        public void Audio_Midi()
         {
             testGenericAudio("MID/ROQ.MID", 504, 0, 0, false, AudioDataIOFactory.CF_SEQ);
         }
 
         [TestMethod]
-        public void TestModAudio()
+        public void Audio_MOD()
         {
             testGenericAudio("MOD/empty.mod", 159, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
             testGenericAudio("MOD/mod.mod", 330, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
-        public void TestApeAudio()
+        public void Audio_Ape()
         {
             testGenericAudio("APE/ape.ape", 8, 652, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
+        [TestMethod]
+        public void Audio_S3M()
+        {
+            testGenericAudio("S3M/empty.s3m", 127, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("S3M/s3m.s3m", 405, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
+
+        [TestMethod]
+        public void Audio_XM()
+        {
+            testGenericAudio("XM/empty.xm", 55, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("XM/xm.xm", 261, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
+
+        [TestMethod]
+        public void Audio_DSF_PSF()
+        {
+            testGenericAudio("PSF/psf.psf", 159, 10, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", 26, 0, 44100, false, AudioDataIOFactory.CF_SEQ_WAV, 1);
+        }
+
+        [TestMethod]
+        public void Audio_SPC()
+        {
+            testGenericAudio("SPC/spc.spc", 69, 8, 32000, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
+
+        [TestMethod]
+        public void Audio_VQF()
+        {
+            testGenericAudio("VQF/vqf.vqf", 120, 20, 22050, false, AudioDataIOFactory.CF_LOSSY);
+        }
+
+        [TestMethod]
+        public void Audio_TAK()
+        {
+            testGenericAudio("TAK/003 BlackBird.tak", 6, 634, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void Audio_WAV()
+        {
+            testGenericAudio("WAV/duck hunt.wav", 8, 1411, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void Audio_WV()
+        {
+            testGenericAudio("WV/BlackBird.wv", 6, 645, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void Audio_OFR()
+        {
+            testGenericAudio("OFR/BlackBird.ofr", 6, 620, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
+
+        [TestMethod]
+        public void Audio_TTA()
+        {
+            testGenericAudio("TTA/BlackBird.tta", 6, 659, 44100, false, AudioDataIOFactory.CF_LOSSY);
+        }
 
         /*
-
                 [TestMethod]
-                public void TestDSF_PSFAudio()
-                {
-                    testGenericAudio("adgpp_PLAY_01_05.dsf", 26, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV, 1);
-                }
-
-                [TestMethod]
-                public void TestTakAudio()
-                {
-                    testGenericAudio("003 BlackBird.tak", 6, 634, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
-                }
-
-
-                [TestMethod]
-                public void TestS3MAudio()
-                {
-                    testGenericAudio("2ND_PM.S3M", 405, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
-                }
-
-                [TestMethod]
-                public void TestXMAudio()
-                {
-                    testGenericAudio("v_chrtrg.xm", 261, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
-                }
-
-                [TestMethod]
-                public void TestM4AAudio()
-                {
-                    testGenericAudio("mp4.m4a", 14, 75, 48000, true, AudioDataIOFactory.CF_LOSSY);
-                }
-        */
-        /*
-                [TestMethod]
-                public void TestAIFFAudio()
+                public void Audio_AIFF()
                 {
                     testGenericAudio("M1F1-int32-AFsp.aif", 3, 512, 8000, false, AudioReaderFactory.CF_LOSSLESS);
                 }
 
                 [TestMethod]
-                public void TestAIFCAudio()
+                public void Audio_AIFC()
                 {
                     testGenericAudio("M1F1-AlawC-AFsp_tagged.aif", 3, 128, 8000, false, AudioReaderFactory.CF_LOSSY);
                 }

@@ -52,6 +52,7 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
+        
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // For IAudioDataIO
@@ -178,7 +179,7 @@ namespace ATL.AudioData.IO
             modFormats.Add("9CHN", new ModFormat("TakeTracker", "9CHN", 31, 9));
         }
 
-        protected void resetData()
+        private void resetData()
         {
             duration = 0;
             bitrate = 0;
@@ -207,7 +208,7 @@ namespace ATL.AudioData.IO
 
 
 
-		// === PRIVATE METHODS ===
+        // ---------- SUPPORT METHODS
 
         //                 24 * beats/minute
         // lines/minute = -----------------

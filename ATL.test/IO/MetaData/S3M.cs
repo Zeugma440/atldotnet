@@ -5,13 +5,13 @@ using System.IO;
 namespace ATL.test.IO.MetaData
 {
     [TestClass]
-    public class IT
+    public class S3M
     {
-        string notEmptyFile = "IT/it.it";
-        string emptyFile = "IT/empty.it";
+        string notEmptyFile = "S3M/s3m.s3m";
+        string emptyFile = "S3M/empty.s3m";
 
         [TestMethod]
-        public void TagIO_R_IT()
+        public void TagIO_R_S3M()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -24,12 +24,12 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("God I'm Bored-Part 2", theFile.NativeTag.Title);
-            Assert.AreEqual("Gameboy/NES Samples by:/virt/Original NES 8-bit:/Koji Kondo/Tracked by:/Mathew Valente [TSSF]/Super Mario Brothers 2/Overworld", theFile.NativeTag.Comment);
+            Assert.AreEqual("Unreal ][ / PM", theFile.NativeTag.Title);
+            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", theFile.NativeTag.Comment);
         }
 
         [TestMethod]
-        public void TagIO_RW_IT_Empty()
+        public void TagIO_RW_S3M_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -43,7 +43,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            // Assert.IsFalse(theFile.NativeTag.Exists); IT files have embedded comments that prevent from saying that the tag does not exist at all
+            // Assert.IsFalse(theFile.NativeTag.Exists); S3M files have embedded comments that prevent from saying that the tag does not exist at all
 
             // Construct a new tag
             TagData theTag = new TagData();
@@ -66,7 +66,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            // Assert.IsFalse(theFile.NativeTag.Exists); IT files have embedded comments that prevent from saying that the tag does not exist at all
+            // Assert.IsFalse(theFile.NativeTag.Exists); S3M files have embedded comments that prevent from saying that the tag does not exist at all
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -85,7 +85,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void tagIO_RW_IT_Existing()
+        public void tagIO_RW_S3M_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -134,7 +134,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("Gameboy/NES Samples by:/virt/Original NES 8-bit:/Koji Kondo/Tracked by:/Mathew Valente [TSSF]/Super Mario Brothers 2/Overworld", theFile.NativeTag.Comment);
+            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", theFile.NativeTag.Comment);
         }
     }
 }

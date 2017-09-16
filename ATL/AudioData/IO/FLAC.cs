@@ -331,8 +331,8 @@ namespace ATL.AudioData.IO
 
 
 
-        /* -------------------------------------------------------------------------- */
-        
+        // ---------- SUPPORT METHODS
+
         // Check for right FLAC file data
         private bool isValid()
 		{

@@ -43,7 +43,7 @@ namespace ATL.test.IO.MetaData
         protected string notEmptyFile;
         protected int tagType;
 
-        protected void test_RW_Cohabitation(int tagType1, int tagType2)
+        protected void test_RW_Cohabitation(int tagType1, int tagType2, bool canMeta1NotExist = true)
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -59,7 +59,7 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta2 = theFile.getMeta(tagType2);
 
             Assert.IsNotNull(meta1);
-            Assert.IsFalse(meta1.Exists);
+            if (canMeta1NotExist) Assert.IsFalse(meta1.Exists);
             Assert.IsNotNull(meta2);
             Assert.IsFalse(meta2.Exists);
 
@@ -101,7 +101,7 @@ namespace ATL.test.IO.MetaData
             meta2 = theFile.getMeta(tagType2);
 
             Assert.IsNotNull(meta1);
-            Assert.IsFalse(meta1.Exists);
+            if (canMeta1NotExist) Assert.IsFalse(meta1.Exists);
 
             Assert.IsNotNull(meta2);
             Assert.IsTrue(meta2.Exists);
@@ -116,7 +116,7 @@ namespace ATL.test.IO.MetaData
             meta2 = theFile.getMeta(tagType2);
 
             Assert.IsNotNull(meta1);
-            Assert.IsFalse(meta1.Exists);
+            if (canMeta1NotExist) Assert.IsFalse(meta1.Exists);
 
             Assert.IsNotNull(meta2);
             Assert.IsFalse(meta2.Exists);

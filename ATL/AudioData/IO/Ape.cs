@@ -256,10 +256,10 @@ namespace ATL.AudioData.IO
 			bool result = false;
 
             this.sizeInfo = sizeInfo;
-
-			// reading data from file
-			LoadSuccess = false;
             resetData();
+
+            // reading data from file
+            LoadSuccess = false;
 
             readCommonHeader(source);
 
