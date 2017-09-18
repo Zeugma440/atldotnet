@@ -92,6 +92,11 @@ namespace ATL.AudioData
             if (zones.ContainsKey(name)) return zones[name]; else return null;
         }
 
+        public void AddZone(Zone zone)
+        {
+            AddZone(zone.Offset, zone.Size, zone.CoreSignature, zone.Name);
+        }
+
         public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME)
         {
             AddZone(offset, size, new byte[0], name);

@@ -63,6 +63,14 @@ namespace ATL.AudioData.IO
         private readonly String filePath;
 
 
+        // File header data - for internal use
+        private class HeaderRecord
+        {
+            public byte[] ByteArray = new byte[32];               // Data as byte array
+            public int[] IntegerArray = new int[8];            // Data as integer array
+        }
+
+
 
         public byte ChannelModeID // Channel mode code
 		{
@@ -96,33 +104,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.encoder; }
 		}
-
-		// File header data - for internal use
-		private class HeaderRecord
-		{
-			public byte[] ByteArray = new byte[32];               // Data as byte array
-			public int[] IntegerArray = new int[8];            // Data as integer array
-		}
-
-
-        // ---------- CONSTRUCTORS & INITIALIZERS
-
-        private void resetData()
-        {
-            channelModeID = 0;
-            frameCount = 0;
-            FStreamVersion = 0;
-            sampleRate = 0;
-            FSampleCount = 0;
-            encoder = "";
-            profileID = MPP_PROFILE_UNKNOWN;
-        }
-
-        public MPEGplus(string filePath)
-        {
-            this.filePath = filePath;
-            resetData();
-        }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -162,6 +143,26 @@ namespace ATL.AudioData.IO
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
+        }
+
+
+        // ---------- CONSTRUCTORS & INITIALIZERS
+
+        private void resetData()
+        {
+            channelModeID = 0;
+            frameCount = 0;
+            FStreamVersion = 0;
+            sampleRate = 0;
+            FSampleCount = 0;
+            encoder = "";
+            profileID = MPP_PROFILE_UNKNOWN;
+        }
+
+        public MPEGplus(string filePath)
+        {
+            this.filePath = filePath;
+            resetData();
         }
 
 

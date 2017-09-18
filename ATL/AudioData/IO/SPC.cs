@@ -133,7 +133,7 @@ namespace ATL.AudioData.IO
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_APE);
         }
 
-        // For IMetaDataIO
+        // IMetaDataIO
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
@@ -244,11 +244,6 @@ namespace ATL.AudioData.IO
             duration = SPC_DEFAULT_DURATION;
 
             ResetData();
-        }
-
-        protected override void resetMetaData()
-        {
-            // Nothing to do
         }
 
         public SPC(string filePath)

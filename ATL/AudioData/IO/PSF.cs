@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Collections;
 using ATL.Logging;
 using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
@@ -90,7 +89,7 @@ namespace ATL.AudioData.IO
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
 
-        // For IMetaDataIO
+        // IMetaDataIO
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
@@ -166,11 +165,6 @@ namespace ATL.AudioData.IO
             duration = 0;
 
             ResetData();
-        }
-
-        protected override void resetMetaData()
-        {
-            // Nothing to do
         }
 
         public PSF(string filePath)

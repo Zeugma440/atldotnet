@@ -918,5 +918,143 @@ namespace ATL
 
             return result;
         }
+
+        /// <summary>Converts the given extended-format byte array (which
+        /// is assumed to be in little-endian form) to a .NET Double,
+        /// as closely as possible. Values which are too small to be 
+        /// represented are returned as an appropriately signed 0. Values 
+        /// which are too large
+        /// to be represented (but not infinite) are returned as   
+        /// Double.NaN,
+        /// as are unsupported values and actual NaN values.</summary>
+        /// 
+        /// Credits : Jon Skeet (http://groups.google.com/groups?selm=MPG.19a6985d4683f5d398a313%40news.microsoft.com)
+        public static double ExtendedToDouble(byte[] extended)
+        {
+            // Read information from the extended form - variable names as 
+            // used in http://cch.loria.fr/documentation/
+            // IEEE754/numerical_comp_guide/ncg_math.doc.html
+            int s = extended[9] >> 7;
+
+            int e = (((extended[9] & 0x7f) << 8) | (extended[8]));
+
+            int j = extended[7] >> 7;
+            long f = extended[7] & 0x7f;
+            for (int i = 6; i >= 0; i--)
+            {
+                f = (f << 8) | extended[i];
+            }
+
+            // Now go through each possibility
+            if (j == 1)
+            {
+                if (e == 0)
+                {
+                    // Value = (-1)^s * 2^16382*1.f 
+                    // (Pseudo-denormal numbers)
+                    // Anything pseudo-denormal in extended form is 
+                    // definitely 0 in double form.
+                    return FromComponents(s, 0, 0);
+                }
+                else if (e != 32767)
+                {
+                    // Value = (-1)^s * 2^(e-16383)*1.f  (Normal numbers)
+
+                    // Lose the last 11 bits of the fractional part
+                    f = f >> 11;
+
+                    // Convert exponent to the appropriate one
+                    e += 1023 - 16383;
+
+                    // Out of range - too large
+                    if (e > 2047)
+                        return Double.NaN;
+
+                    // Out of range - too small
+                    if (e < 0)
+                    {
+                        // See if we can get a subnormal version
+                        if (e >= -51)
+                        {
+                            // Put a 1 at the front of f
+                            f = f | (1 << 52);
+                            // Now shift it appropriately
+                            f = f >> (1 - e);
+                            // Return a subnormal version
+                            return FromComponents(s, 0, f);
+                        }
+                        else // Return an appropriate 0
+                        {
+                            return FromComponents(s, 0, 0);
+                        }
+                    }
+
+                    return FromComponents(s, e, f);
+                }
+                else
+                {
+                    if (f == 0)
+                    {
+                        // Value = positive/negative infinity
+                        return FromComponents(s, 2047, 0);
+                    }
+                    else
+                    {
+                        // Don't really understand the document about the 
+                        // remaining two values, but they're both NaN...
+                        return Double.NaN;
+                    }
+                }
+            }
+            else // Okay, j==0
+            {
+                if (e == 0)
+                {
+                    // Either 0 or a subnormal number, which will 
+                    // still be 0 in double form
+                    return FromComponents(s, 0, 0);
+                }
+                else
+                {
+                    // Unsupported
+                    return Double.NaN;
+                }
+            }
+        }
+
+        /// <summary>Returns a double from the IEEE sign/exponent/fraction
+        /// components.</summary>
+        /// 
+        /// Credits : Jon Skeet (http://groups.google.com/groups?selm=MPG.19a6985d4683f5d398a313%40news.microsoft.com)
+        private static double FromComponents(int s, int e, long f)
+        {
+            byte[] data = new byte[8];
+
+            // Put the data into appropriate slots based on endianness.
+            if (BitConverter.IsLittleEndian)
+            {
+                data[7] = (byte)((s << 7) | (e >> 4));
+                data[6] = (byte)(((e & 0xf) << 4) | (int)(f >> 48));
+                data[5] = (byte)((f & 0xff0000000000L) >> 40);
+                data[4] = (byte)((f & 0xff00000000L) >> 32);
+                data[3] = (byte)((f & 0xff000000L) >> 24);
+                data[2] = (byte)((f & 0xff0000L) >> 16);
+                data[1] = (byte)((f & 0xff00L) >> 8);
+                data[0] = (byte)(f & 0xff);
+            }
+            else
+            {
+                data[0] = (byte)((s << 7) | (e >> 4));
+                data[1] = (byte)(((e & 0xf) << 4) | (int)(f >> 48));
+                data[2] = (byte)((f & 0xff0000000000L) >> 40);
+                data[3] = (byte)((f & 0xff00000000L) >> 32);
+                data[4] = (byte)((f & 0xff000000L) >> 24);
+                data[5] = (byte)((f & 0xff0000L) >> 16);
+                data[6] = (byte)((f & 0xff00L) >> 8);
+                data[7] = (byte)(f & 0xff);
+            }
+
+            return BitConverter.ToDouble(data, 0);
+        }
     }
 }

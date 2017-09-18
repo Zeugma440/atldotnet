@@ -1070,5 +1070,10 @@ namespace ATL.AudioData.IO
             BinaryReader r = new BinaryReader(w.BaseStream);
             return Write(r, w, tag);
         }
+
+        public void SetEmbedder(IMetaDataEmbedder embedder)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

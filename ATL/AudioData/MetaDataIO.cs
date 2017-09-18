@@ -29,6 +29,8 @@ namespace ATL.AudioData.IO
             public bool ReadTag = true;
             public bool PrepareForWriting = false;
 
+            public long offset = 0;
+
             public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
             {
                 PictureStreamHandler = pictureStreamHandler; ReadAllMetaFrames = readAllMetaFrames;
@@ -47,6 +49,8 @@ namespace ATL.AudioData.IO
         internal FileStructureHelper structureHelper;
 
         protected MetaDataIO delegatedMeta = null;
+
+        protected IMetaDataEmbedder embedder;
 
 
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
@@ -387,8 +391,6 @@ namespace ATL.AudioData.IO
 
         abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
-        abstract protected void resetMetaData();
-
         // ------ COMMON METHODS -----------------------------------------------------
 
         public void ResetData()
@@ -401,8 +403,6 @@ namespace ATL.AudioData.IO
             pictureTokens = new List<TagData.PictureInfo>();
             picturePositions = new List<KeyValuePair<string, int>>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
-
-            resetMetaData();
         }
 
         public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
@@ -470,7 +470,19 @@ namespace ATL.AudioData.IO
             }
             ReadTagParams readTagParams = new ReadTagParams(pictureHandler, true);
             readTagParams.PrepareForWriting = true;
+
+            if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
+            {
+                readTagParams.offset = embedder.HasEmbeddedID3v2;
+            }
+
             this.Read(r, readTagParams);
+
+            if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
+            {
+                structureHelper.Clear();
+                structureHelper.AddZone(embedder.Id3v2Zone);
+            }
 
             // Give engine something to work with if the tag is really empty
             if (!tagExists && 0 == Zones.Count)
@@ -495,6 +507,15 @@ namespace ATL.AudioData.IO
                     {
                         isTagWritten = true;
                         newTagSize = s.Length;
+
+                        if (embedder != null && embedder.HasEmbeddedID3v2 > 0 && embedder.TagHeaderSize > 0)
+                        {
+                            StreamUtils.LengthenStream(s, 0, embedder.TagHeaderSize);
+                            s.Position = 0;
+                            embedder.WriteTagHeader(msw, newTagSize);
+
+                            newTagSize = s.Length;
+                        }
                     } else {
                         isTagWritten = false;
                         newTagSize = zone.CoreSignature.Length;
@@ -609,6 +630,11 @@ namespace ATL.AudioData.IO
             this.tagVersion = meta.tagVersion;
             this.pictureTokens = meta.pictureTokens;
             this.structureHelper = meta.structureHelper;
+        }
+
+        public void SetEmbedder(IMetaDataEmbedder embedder)
+        {
+            this.embedder = embedder;
         }
     }
 }

@@ -241,7 +241,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", meta.Composer);
             Assert.AreEqual(2, meta.Disc);
 
-            // Unsupported field (MOOD)
+            // Unsupported field (TEST)
             Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST"));
             Assert.AreEqual("xxx", meta.AdditionalFields["TEST"]);
 

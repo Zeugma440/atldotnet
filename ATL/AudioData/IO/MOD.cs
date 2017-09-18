@@ -55,7 +55,7 @@ namespace ATL.AudioData.IO
         
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // For IAudioDataIO
+        // IAudioDataIO
         public int SampleRate // Sample rate (hz)
 		{
 			get { return 0; }
@@ -93,7 +93,7 @@ namespace ATL.AudioData.IO
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
 
-        // For IMetaDataIO
+        // IMetaDataIO
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
@@ -193,11 +193,6 @@ namespace ATL.AudioData.IO
             nbChannels = 0;
 
             ResetData();
-        }
-
-        protected override void resetMetaData()
-        {
-            // Nothing to do
         }
 
         public MOD(string filePath)

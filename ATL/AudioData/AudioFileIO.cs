@@ -251,6 +251,17 @@ namespace ATL.AudioData
             get { return audioData.Duration; }
         }
 
+        public bool HasNativeMeta()
+        {
+            return audioData.HasNativeMeta();
+        }
+
+        public bool IsMetaSupported(int metaDataType)
+        {
+            return audioData.IsMetaSupported(metaDataType);
+        }
+
+
         // AudioFileReader aims at simplifying standard interfaces
         // => the below methods are not implemented
         public int Size
@@ -278,22 +289,17 @@ namespace ATL.AudioData
 
 
         // TODO - make interfaces more modular to clean the mess below
-        public bool HasNativeMeta()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsMetaSupported(int metaDataType)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }
 
         public bool Remove(BinaryWriter w)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }

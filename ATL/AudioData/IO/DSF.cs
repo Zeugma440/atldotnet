@@ -9,7 +9,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for DSD Stream File files manipulation (extension : .DSF)
     /// </summary>
-	class DSF : MetaDataIO, IAudioDataIO
+	class DSF : IAudioDataIO, IMetaDataEmbedder
     {
         // Headers ID
         public const String DSD_ID = "DSD ";
@@ -31,7 +31,9 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         // Has to be there as a "native" field because DSF forces ID3v2 to be an end-of-file tag, which is not standard
-        private ID3v2 id3v2 = new ID3v2();
+        //private ID3v2 id3v2 = new ID3v2();
+        private long id3v2Offset;
+        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
 
 
         // Public declarations 
@@ -81,13 +83,26 @@ namespace ATL.AudioData.IO
         }
         public bool HasNativeMeta()
         {
-            return true; // For non-standard (i.e. EOF) ID3v2 (!)
+            return false;
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
 
+        // IMetaDataEmbedder
+        public long HasEmbeddedID3v2
+        {
+            get { return id3v2Offset; }
+        }
+        public uint TagHeaderSize
+        {
+            get { return 0; }
+        }
+        public FileStructureHelper.Zone Id3v2Zone
+        {
+            get { return id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME); }
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -101,15 +116,12 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
             isValid = false;
-
-            ResetData();
+            id3v2Offset = -1;
         }
 
-		public DSF(string filePath)
+        public DSF(string filePath)
 		{
             this.filePath = filePath;
-            delegatedMeta = id3v2;
-            // TODO : delegate tagData, pictureTokens and structureHelper
 
             resetData();
 		}
@@ -129,17 +141,6 @@ namespace ATL.AudioData.IO
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
-
-            return read(source, readTagParams);
-        }
-
-        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
             bool result = false;
 
             resetData();
@@ -148,7 +149,7 @@ namespace ATL.AudioData.IO
             if (StreamUtils.StringEqualsArr(DSD_ID,StreamUtils.ReadOneByteChars(source, 4)))
 			{
 				source.BaseStream.Seek(16, SeekOrigin.Current); // Boring stuff
-                long id3v2Offset = source.ReadInt64();
+                id3v2Offset = source.ReadInt64();
 
                 if (StreamUtils.StringEqualsArr(FMT_ID, StreamUtils.ReadOneByteChars(source, 4)))
                 {
@@ -181,39 +182,31 @@ namespace ATL.AudioData.IO
                 // Load tag if exists
                 if (id3v2Offset > 0)
                 {
-                    id3v2.Read(source, id3v2Offset, readTagParams);
-                    // Zone is already added by Id3v2.Read
-                    id3v2.structureHelper.AddIndex(20, id3v2Offset);
-                    copyFrom(id3v2);
-                } else if (readTagParams.PrepareForWriting)
+                    if (readTagParams.PrepareForWriting)
+                    {
+                        id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.BaseStream.Length - id3v2Offset));
+                        id3v2StructureHelper.AddIndex(20, id3v2Offset);
+                    }
+                }
+                else
                 {
-                    // Add EOF zone for future tag writing
-                    id3v2.structureHelper.AddZone(source.BaseStream.Length, 0);
-                    id3v2.structureHelper.AddIndex(20, source.BaseStream.Length);
+                    id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
+
+                    if (readTagParams.PrepareForWriting)
+                    {
+                        // Add EOF zone for future tag writing
+                        id3v2StructureHelper.AddZone(source.BaseStream.Length, 0);
+                        id3v2StructureHelper.AddIndex(20, source.BaseStream.Length);
+                    }
                 }
             }
 
             return result;
 		}
 
-        protected override int getDefaultTagOffset()
+        public void WriteTagHeader(BinaryWriter w, long tagSize)
         {
-            return TO_BUILTIN;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_NATIVE;
-        }
-
-        protected override int write(TagData tag, BinaryWriter w, string zone)
-        {
-            return id3v2.writeInternal(tag, w, zone);
-        }
-
-        protected override void resetMetaData()
-        {
-            // Nothing to do at this level
+            // Nothing to do here; DSF format defines no frame header for its embedded ID3v2 tag
         }
     }
 }

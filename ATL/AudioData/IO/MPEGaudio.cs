@@ -11,9 +11,20 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class MPEGaudio : IAudioDataIO
 	{
+        // Limitation constants
+        public const int MAX_MPEG_FRAME_LENGTH = 8068;          // Max. MPEG frame length according to all extreme values
+        public const int MIN_MPEG_BIT_RATE = 8;                 // Min. bit rate value (KBit/s)
+        public const int MAX_MPEG_BIT_RATE = 448;               // Max. bit rate value (KBit/s)
+        public const double MIN_ALLOWED_DURATION = 0.1;         // Min. song duration value
 
-		// Table for bit rates (KBit/s)
-		public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
+
+        // VBR Vendor ID strings
+        public const String VENDOR_ID_LAME = "LAME";                      // For LAME
+        public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
+        public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
+
+        // Table for bit rates (KBit/s)
+        public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
         {
 	       // For MPEG 2.5
 		    {
@@ -205,15 +216,12 @@ namespace ATL.AudioData.IO
 		private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
         private readonly String filePath;
-    
-		public VBRData VBR // VBR header data
-		{
-			get { return this.vbrData; }
-		}	
-		public FrameHeader Frame // Frame header data
-		{
-			get { return this.HeaderFrame; }
-		}
+
+
+        public FrameHeader Frame // Frame header data
+        {
+            get { return this.HeaderFrame; }
+        }
         public String Version // MPEG version name
         {
             get { return this.getVersion(); }
@@ -242,6 +250,14 @@ namespace ATL.AudioData.IO
         {
             get { return this.getEncoder(); }
         }
+
+
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+
+        public VBRData VBR // VBR header data
+		{
+			get { return this.vbrData; }
+		}	
         public bool Valid // True if MPEG file valid
         {
             get { return this.getValid(); }
@@ -266,18 +282,6 @@ namespace ATL.AudioData.IO
         {
             get { return filePath; }
         }
-
-        // Limitation constants
-        public const int MAX_MPEG_FRAME_LENGTH = 8068;          // Max. MPEG frame length according to all extreme values
-        public const int MIN_MPEG_BIT_RATE = 8;                 // Min. bit rate value (KBit/s)
-        public const int MAX_MPEG_BIT_RATE = 448;               // Max. bit rate value (KBit/s)
-		public const double MIN_ALLOWED_DURATION = 0.1;         // Min. song duration value
-
-
-        // VBR Vendor ID strings
-        public const String VENDOR_ID_LAME = "LAME";                      // For LAME
-		public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
-		public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS

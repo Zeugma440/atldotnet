@@ -97,11 +97,6 @@ namespace ATL.AudioData.IO
 
         // --------------- MANDATORY INFORMATIVE OVERRIDES
 
-        protected override void resetMetaData()
-        {
-            // No specific behaviour here
-        }
-
         protected override int getDefaultTagOffset()
         {
             return TO_EOF;

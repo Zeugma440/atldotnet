@@ -193,18 +193,16 @@ namespace ATL.test
             testGenericAudio("TTA/BlackBird.tta", 6, 659, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
-        /*
-                [TestMethod]
-                public void Audio_AIFF()
-                {
-                    testGenericAudio("M1F1-int32-AFsp.aif", 3, 512, 8000, false, AudioReaderFactory.CF_LOSSLESS);
-                }
+        [TestMethod]
+        public void Audio_AIFF()
+        {
+            testGenericAudio("AIF/aiff_empty.aif", 3, 512, 8000, false, AudioDataIOFactory.CF_LOSSLESS);
+        }
 
-                [TestMethod]
-                public void Audio_AIFC()
-                {
-                    testGenericAudio("M1F1-AlawC-AFsp_tagged.aif", 3, 128, 8000, false, AudioReaderFactory.CF_LOSSY);
-                }
-        */
+        [TestMethod]
+        public void Audio_AIFC()
+        {
+            testGenericAudio("AIF/aifc_tagged.aif", 3, 128, 8000, false, AudioDataIOFactory.CF_LOSSY);
+        }
     }
 }

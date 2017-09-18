@@ -78,7 +78,10 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE);
         }
-
+        public long HasEmbeddedID3v2
+        {
+            get { return -2; }
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS

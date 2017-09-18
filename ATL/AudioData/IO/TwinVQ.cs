@@ -168,11 +168,6 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        protected override void resetMetaData()
-        {
-            // Nothing to do
-        }
-
         public TwinVQ(string filePath)
         {
             this.filePath = filePath;

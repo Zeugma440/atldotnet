@@ -76,11 +76,6 @@ namespace ATL.AudioData.IO
             };
         }
 
-        protected override void resetMetaData()
-        {
-            // Nothing special to reset here
-        }
-
         public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature)
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;

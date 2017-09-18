@@ -300,12 +300,9 @@ namespace ATL.AudioData
                 case CID_VQF:
                     theDataReader = new IO.TwinVQ(path);
                     break;
-
-                /*
-            case CID_AIFF:
-                theDataReader = new IO.AIFF(path);
-                break;
-                */
+                case CID_AIFF:
+                    theDataReader = new IO.AIFF(path);
+                    break;
                 default:
 					theDataReader = new IO.DummyReader(path);
 					break;

@@ -56,6 +56,7 @@
     <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
     <Compile Include="IO\MetaData\VQF.cs" />
     <Compile Include="IO\MetaData\S3M.cs" />
@@ -134,6 +135,8 @@
     <Content Include="Resources\AAC\mdat_before_moov.m4a" />
     <Content Include="Resources\AAC\mp4.m4a" />
     <Content Include="Resources\AC3\empty.ac3" />
+    <Content Include="Resources\AIF\aifc_tagged.aif" />
+    <Content Include="Resources\AIF\aiff_empty.aif" />
     <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\MID\ROQ.MID" />
     <Content Include="Resources\MID\TRANSIT1.MID" />

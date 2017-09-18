@@ -374,5 +374,9 @@ namespace ATL.AudioData
 
         public bool Remove(BinaryWriter w) { throw new NotImplementedException(); }
 
+        public void SetEmbedder(IMetaDataEmbedder embedder)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -160,6 +160,15 @@ namespace ATL.AudioData
                     using (BinaryReader r = new BinaryReader(fs))
                     using (BinaryWriter w = new BinaryWriter(fs))
                     {
+                        if (audioDataIO is IMetaDataEmbedder)
+                        {
+                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(null, false);
+                            readTagParams.PrepareForWriting = true;
+
+                            audioDataIO.Read(r, sizeInfo, readTagParams);
+                            theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
+                        }
+
                         result = theMetaIO.Write(r, w, theTag);
                     }
                 }
@@ -226,7 +235,10 @@ namespace ATL.AudioData
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
-                if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version
+                {
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                }
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_APE))
             {
@@ -244,6 +256,15 @@ namespace ATL.AudioData
             {
                 readTagParams.ReadTag = false;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
+            }
+
+            if (audioDataIO is IMetaDataEmbedder) // Embedded ID3v2 tag detected while reading
+            {
+                if (((IMetaDataEmbedder)audioDataIO).HasEmbeddedID3v2 > 0)
+                {
+                    readTagParams.offset = ((IMetaDataEmbedder)audioDataIO).HasEmbeddedID3v2;
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                }
             }
 
             return result;

@@ -57,17 +57,17 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class ID3v2_DSF : MetaIOTest
+    public class ID3v2_AIF : MetaIOTest
     {
-        public ID3v2_DSF()
+        public ID3v2_AIF()
         {
-            emptyFile = "DSF/dsf.dsf";
-            notEmptyFile = "DSF/dsf.dsf";
+            emptyFile = "AIF/aiff_empty.aif";
+            notEmptyFile = "AIF/aifc_tagged.aif";
             tagType = MetaDataIOFactory.TAG_ID3V2;
         }
 
         [TestMethod]
-        public void TagIO_R_DSF_ID3v2()
+        public void TagIO_R_AIF_ID3v2()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
@@ -77,7 +77,7 @@ namespace ATL.test.IO.MetaData
         }
         
         [TestMethod]
-        public void TagIO_RW_DSF_ID3v2_Existing()
+        public void TagIO_RW_AIF_ID3v2_Existing()
         {
             test_RW_Existing(notEmptyFile, 2, true, true);
         }

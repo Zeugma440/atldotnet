@@ -95,22 +95,28 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string filePath;
 
-        
+
+        public bool IsStreamed
+        {
+            get { return true; }
+        }
+        public byte ChannelModeID // Channel mode code
+        {
+            get { return this.channelModeID; }
+        }
+        public String ChannelMode // Channel mode name
+        {
+            get { return this.getChannelMode(); }
+        }
+
+
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public byte ChannelModeID // Channel mode code
-		{
-			get { return this.channelModeID; }
-		}	
-		public String ChannelMode // Channel mode name
-		{
-			get { return this.getChannelMode(); }
-		}
-		public int SampleRate // Sample rate (hz)
+        // IAudioDataIO
+        public int SampleRate // Sample rate (hz)
 		{
 			get { return this.sampleRate; }
 		}	
-
         public bool IsVBR
 		{
 			get { return this.isVBR; }
@@ -122,23 +128,34 @@ namespace ATL.AudioData.IO
                 return isLossless ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
             }
         }
-		
         public bool AllowsParsableMetadata
         {
             get { return true; }
         }
-		public bool IsStreamed
-		{
-			get { return true; }
-		}
-
         public string FileName { get { return filePath; } }
-
         public double BitRate { get { return bitrate; } }
-
         public double Duration { get { return duration; } }
+        public bool IsMetaSupported(int metaDataType)
+        {
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+        }
+        public bool HasNativeMeta()
+        {
+            return true;
+        }
 
-        
+
+        // IMetaDataIO
+        protected override int getDefaultTagOffset()
+        {
+            return TO_BUILTIN;
+        }
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_NATIVE;
+        }
+
+
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         static WMA()
@@ -177,10 +194,22 @@ namespace ATL.AudioData.IO
             frameClasses = new Dictionary<string, ushort>(); // To be populated while reading; all fields above are class 0
         }
 
+        private void resetData()
+        {
+            channelModeID = WMA_CM_UNKNOWN;
+            sampleRate = 0;
+            isVBR = false;
+            isLossless = false;
+            bitrate = 0;
+            duration = 0;
+
+            ResetData();
+        }
+
         public WMA(string filePath)
         {
             this.filePath = filePath;
-            ResetData();
+            resetData();
         }
 
 
@@ -295,8 +324,6 @@ namespace ATL.AudioData.IO
                 }
             }
 		}
-
-        // ---------------------------------------------------------------------------
 
         private void readHeaderExtended(BinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -506,8 +533,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // ---------------------------------------------------------------------------
-
 		private bool readData(BinaryReader source, ReadTagParams readTagParams)
         {
             Stream fs = source.BaseStream;
@@ -627,8 +652,6 @@ namespace ATL.AudioData.IO
             return result;
 		}
 
-		// ---------------------------------------------------------------------------
-
 		private bool isValid(FileData Data)
 		{
 			// Check for data validity
@@ -638,27 +661,11 @@ namespace ATL.AudioData.IO
                 );
 		}
 
-        // ********************** Private functions & voids *********************
-
-        protected override void resetMetaData()
-        {
-            channelModeID = WMA_CM_UNKNOWN;
-			sampleRate = 0;
-			isVBR = false;
-			isLossless = false;
-            bitrate = 0;
-            duration = 0;
-		}
-
-		// ---------------------------------------------------------------------------
-
 		private string getChannelMode()
 		{
 			// Get channel mode name
 			return WMA_MODE[channelModeID];
 		}
-
-        // ********************** Public functions & voids **********************
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -676,7 +683,7 @@ namespace ATL.AudioData.IO
         {
             fileData = new FileData();
 
-            ResetData();
+            resetData();
             bool result = readData(source, readTagParams);
 
 			// Process data if loaded and valid
@@ -691,26 +698,6 @@ namespace ATL.AudioData.IO
 
             return result;
 		}
-
-        public bool IsMetaSupported(int metaDataType)
-        {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
-        }
-
-        public bool HasNativeMeta()
-        {
-            return true;
-        }
-
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_NATIVE;
-        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {

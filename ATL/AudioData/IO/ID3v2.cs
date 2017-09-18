@@ -659,16 +659,11 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override void resetMetaData()
-        {
-            // No specific behaviour here
-        }
-
         // ********************** Public functions & voids **********************
 
         public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
-            return Read(source, 0, readTagParams);
+            return Read(source, readTagParams.offset, readTagParams);
         }
 
         /// <summary>

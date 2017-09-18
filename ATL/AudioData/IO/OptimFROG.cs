@@ -57,7 +57,6 @@ namespace ATL.AudioData.IO
 
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
@@ -133,14 +132,13 @@ namespace ATL.AudioData.IO
             return (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
 
-        
+
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         private void resetData()
         {
             duration = 0;
             bitrate = 0;
-            isValid = false;
 
             FHeader.Reset();
 		}
@@ -246,7 +244,6 @@ namespace ATL.AudioData.IO
 
             if (StreamUtils.StringEqualsArr("OFR ", FHeader.ID))
             {
-                isValid = true;
                 result = true;
                 duration = getDuration();
                 bitrate = getBitrate();

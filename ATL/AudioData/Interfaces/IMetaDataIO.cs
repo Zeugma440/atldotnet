@@ -160,6 +160,8 @@ namespace ATL.AudioData
             get;
         }
 
+        void SetEmbedder(IMetaDataEmbedder embedder);
+
         /// <summary>
         /// Parses the binary data read from the given reader
         /// </summary>

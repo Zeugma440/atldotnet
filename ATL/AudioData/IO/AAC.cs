@@ -134,7 +134,7 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // Audio data
+        // IAudioDataIO
         public bool IsVBR
         {
             get { return (AAC_BITRATE_TYPE_VBR == FBitrateTypeID); }
@@ -163,8 +163,6 @@ namespace ATL.AudioData.IO
         {
             get { return fileName; }
         }
-
-        // Metadata
         public bool IsMetaSupported(int metaType)
         {
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
@@ -173,6 +171,8 @@ namespace ATL.AudioData.IO
         {
             return true;
         }
+
+        // IMetaDataIO
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
@@ -192,11 +192,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        protected override void resetMetaData()
-        {
-            // Nothing to do here
-        }
 
         protected void resetData()
         {

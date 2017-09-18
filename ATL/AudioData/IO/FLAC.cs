@@ -79,76 +79,55 @@ namespace ATL.AudioData.IO
 		{
 			get { return channels; }
 		}
-		public int SampleRate // Sample rate (hz)
-		{
-			get { return sampleRate; }
-		}
-		public byte BitsPerSample // Bits per sample
-		{
-			get { return bitsPerSample; }
-		}
-		public long Samples // Number of samples
-		{
-			get { return samples; }
-		}
-		public double Ratio // Compression ratio (%)
-		{
-			get { return getCompressionRatio(); }
-		}
+        public long AudioOffset //offset of audio data
+        {
+            get { return audioOffset; }
+        }
+        public byte BitsPerSample // Bits per sample
+        {
+            get { return bitsPerSample; }
+        }
+        public long Samples // Number of samples
+        {
+            get { return samples; }
+        }
+        public double Ratio // Compression ratio (%)
+        {
+            get { return getCompressionRatio(); }
+        }
+        public String ChannelMode
+        {
+            get { return getChannelMode(); }
+        }
+
+
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+
+        // IAudioDataIO
+        public int SampleRate // Sample rate (hz)
+        {
+            get { return sampleRate; }
+        }
         public bool IsVBR
         {
-			get { return false; }
-		}
-        public String ChannelMode 
-		{
-			get { return getChannelMode(); }
-		}
-		public bool Exists 
-		{
-			get { return vorbisTag.Exists; }
-		}
-		public long AudioOffset //offset of audio data
-		{
-			get { return audioOffset; }
-		}
+            get { return false; }
+        }
+        public bool Exists
+        {
+            get { return vorbisTag.Exists; }
+        }
         public string FileName
         {
             get { return filePath; }
         }
         public double BitRate
         {
-            get { return Math.Round( ((double)(sizeInfo.FileSize - audioOffset)) * 8 / Duration / 1000.0 ); }
+            get { return Math.Round(((double)(sizeInfo.FileSize - audioOffset)) * 8 / Duration / 1000.0); }
         }
         public double Duration
         {
             get { return getDuration(); }
         }
-
-
-        // ---------- CONSTRUCTORS & INITIALIZERS
-
-        protected void resetData()
-        {
-            // Audio data
-			padding = 0;
-			paddingLast = false;
-			channels = 0;
-			sampleRate = 0;
-			bitsPerSample = 0;
-			samples = 0;
-			paddingIndex = 0;
-			audioOffset = 0;
-		}
-
-        public FLAC(string path)
-        {
-            filePath = path;
-            header = new FlacHeader();
-            resetData();
-        }
-
-        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
-
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
@@ -329,6 +308,28 @@ namespace ATL.AudioData.IO
             return true; // Native is for VorbisTag
         }
 
+
+        // ---------- CONSTRUCTORS & INITIALIZERS
+
+        protected void resetData()
+        {
+            // Audio data
+			padding = 0;
+			paddingLast = false;
+			channels = 0;
+			sampleRate = 0;
+			bitsPerSample = 0;
+			samples = 0;
+			paddingIndex = 0;
+			audioOffset = 0;
+		}
+
+        public FLAC(string path)
+        {
+            filePath = path;
+            header = new FlacHeader();
+            resetData();
+        }
 
 
         // ---------- SUPPORT METHODS
@@ -660,6 +661,11 @@ namespace ATL.AudioData.IO
             }
 
             return result;
+        }
+
+        public void SetEmbedder(IMetaDataEmbedder embedder)
+        {
+            throw new NotImplementedException();
         }
     }
 }

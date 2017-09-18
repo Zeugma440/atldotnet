@@ -250,15 +250,6 @@ namespace ATL.AudioData.IO
 			ResetData();
 		}
 
-        // ---------------------------------------------------------------------------
-
-        protected override void resetMetaData()
-		{
-			tagVersion = TAG_VERSION_1_0;
-        }
-
-		// ---------------------------------------------------------------------------
-
         public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
 			TagRecord tagData = new TagRecord();
@@ -267,6 +258,8 @@ namespace ATL.AudioData.IO
 
 			// Reset and load tag data from file to variable
 			ResetData();
+            tagVersion = TAG_VERSION_1_0;
+
             bool result = ReadTag(reader, tagData);
 
 			// Process data if loaded successfuly
