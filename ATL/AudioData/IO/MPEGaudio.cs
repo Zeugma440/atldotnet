@@ -606,8 +606,8 @@ namespace ATL.AudioData.IO
 					return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 / getSampleRate(HeaderFrame);
 				else
 				{
-                    long MPEGSize = sizeInfo.FileSize - sizeInfo.ID3v2Size - sizeInfo.ID3v1Size - sizeInfo.APESize;
-                    return (MPEGSize - HeaderFrame.Position) / getBitRate(HeaderFrame) / 1000.0 * 8;
+                    long MPEGSize = sizeInfo.FileSize - sizeInfo.TotalTagSize;
+                    return (MPEGSize/* - HeaderFrame.Position*/) / getBitRate(HeaderFrame) / 1000.0 * 8;
 				}
 			else
 				return 0;
