@@ -152,7 +152,7 @@ namespace Commons
         {
             //return Regex.Replace(iStr, @"\0+\Z", "");  Too expensive
             int i = iStr.Length;
-            while ('\0' == iStr[i - 1]) i--;
+            while (i > 0 && '\0' == iStr[i - 1]) i--;
 
             return iStr.Substring(0, i);
         }
