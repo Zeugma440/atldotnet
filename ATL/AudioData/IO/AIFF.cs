@@ -59,9 +59,6 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        // Has to be there as a "native" field because AIFx forces ID3v2 tag to be positioned within a chunk in the middle of the file, which is not standard
-        //private ID3v2 id3v2 = new ID3v2();
-
         private long id3v2Offset;
         private FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
 
@@ -191,7 +188,6 @@ namespace ATL.AudioData.IO
         public AIFF(string filePath)
         {
             this.filePath = filePath;
-            // TODO : delegate tagData, pictureTokens and structureHelper
 
             resetData();
         }
@@ -392,14 +388,12 @@ namespace ATL.AudioData.IO
                         {
                             id3v2Offset = source.BaseStream.Position;
 
-                            //id3v2.Read(source, id3v2Offset, readTagParams);
                             // Zone is already added by Id3v2.Read
                             if (id3v2StructureHelper != null)
                             {
                                 id3v2StructureHelper.AddZone(id3v2Offset - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
                                 id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                             }
-                            //copyFrom(id3v2);
                         }
 
                         source.BaseStream.Position = position + header.Size;
@@ -422,7 +416,6 @@ namespace ATL.AudioData.IO
                             id3v2StructureHelper.AddZone(containerChunkPos + containerChunkSize + 4, 0, CHUNKTYPE_ID3TAG);
                             id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
-                        // TODO - not sure which structureHelper to use...
                         if (!nameFound)
                         {
                             structureHelper.AddZone(containerChunkPos + containerChunkSize + 4, 0, CHUNKTYPE_NAME);
@@ -480,12 +473,6 @@ namespace ATL.AudioData.IO
                     result++;
                 }
             }
-            /*
-            else if (zone.Equals(CHUNKTYPE_ID3TAG))
-            {
-                return id3v2.writeInternal(tag, w, zone);
-            }
-            */
 
             return result;
         }

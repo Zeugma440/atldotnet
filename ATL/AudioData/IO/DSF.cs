@@ -30,8 +30,6 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        // Has to be there as a "native" field because DSF forces ID3v2 to be an end-of-file tag, which is not standard
-        //private ID3v2 id3v2 = new ID3v2();
         private long id3v2Offset;
         private FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
 
@@ -126,12 +124,12 @@ namespace ATL.AudioData.IO
             resetData();
 		}
 
-        
+
         // ---------- SUPPORT METHODS
 
+        // Get compression ratio 
         private double getCompressionRatio()
         {
-            // Get compression ratio 
             if (isValid)
                 return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channels * bits / 8) + 44) * 100;
             else
