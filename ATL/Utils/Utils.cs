@@ -156,71 +156,7 @@ namespace Commons
 
             return iStr.Substring(0, i);
         }
-
-        /// <summary>
-        /// Indicates if the current user has the credentials to read the given file
-        /// </summary>
-        /// <param name="iFile">Access path to the file to test</param>
-        /// <returns>True if the file can be read; false if not</returns>
-        public static bool IsFileReadable(string iFile)
-        {
-            FileIOPermission filePermission = new FileIOPermission(FileIOPermissionAccess.Read, @iFile);
-            try
-            {
-                filePermission.Demand();
-                return true;
-            }
-            catch (SecurityException)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if the current user can list the contents of the given folder
-        /// e.g. a visible network folder whose access is retricted may be visible, but not "listable"
-        /// </summary>
-        /// <param name="iFile">Access path to the folder to test</param>
-        /// <returns>True if the folder can be listed; false if not</returns>
-        public static bool IsFolderListable(string iPath)
-        {
-            FileIOPermission filePermission = new FileIOPermission(FileIOPermissionAccess.PathDiscovery, @iPath);
-            try
-            {
-                filePermission.Demand();
-                return true;
-            }
-            catch (SecurityException)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if the given file can actually be modified.
-        /// 
-        /// NB : Will be seen as non-modifiable :
-        ///   - resources accessible in read-only mode
-        ///   - resources accessible in write mode, and locked by another application
-        /// </summary>
-        /// <param name="iPath">Access path to the folder to test</param>
-        /// <returns>True if the file can be modified; false if not</returns>
-        public static bool IsFileModifiable(string iPath)
-        {
-            try
-            {
-                // NB: The use of fileStream is intentional to test the scenario where file access
-                // is granted to the user while the resource is locked by another application
-                FileStream fs = new FileStream(iPath, FileMode.Create);
-                fs.Close();
-                return true;
-            }
-            catch (IOException)
-            {
-                return false;
-            }
-        }
-
+        
         /// <summary>
         /// Indicates if the current environment is running under Mono
         /// </summary>
