@@ -16,13 +16,18 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
 
-            readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
+
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
+
+            //readAt(@"E:\temp\opus\detodos.opus");
+
+            compareInfo(@"E:\temp");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
@@ -50,6 +55,13 @@ namespace ATL.benchmark
 
 //            Console.WriteLine("end");
 //            Console.ReadLine();
+        }
+
+        static private void compareInfo(string path)
+        {
+            FileFinder_ATL_TagLib ff = new FileFinder_ATL_TagLib();
+
+            ff.FF_RecursiveExplore(path);
         }
     }
 }

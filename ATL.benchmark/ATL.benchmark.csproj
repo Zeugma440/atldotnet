@@ -188,6 +188,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleLogger.cs" />
+    <Compile Include="Information\FileFinder_ATL_TagLib.cs" />
     <Compile Include="Information\FileFinder.cs" />
     <Compile Include="Memory\Misc.cs" />
     <Compile Include="Memory\ATL_TagLib.cs" />
