@@ -23,7 +23,7 @@ namespace ATL.AudioData
 		private int[] tagPriority = new int[TAG_TYPE_COUNT] { TAG_NATIVE, TAG_ID3V2, TAG_APE, TAG_ID3V1 };
 
 		// Defines whether the next created metadatareaders should use cross-tag reading
-		private bool m_enableCrossReading = false;
+		private bool m_enableCrossReading = true;
 
 		// The instance of this factory
 		private static MetaDataIOFactory theFactory = null;
@@ -31,9 +31,9 @@ namespace ATL.AudioData
 
 		/// <summary>
 		/// Sets whether the next created metadatareaders should use cross-tag reading
-        ///   - false (default) :  the most important tagging standard (according to priorities)
+        ///   - false           :  the most important tagging standard (according to priorities)
         ///                        detected on the track is exclusively used to populate fields
-        ///   - true            :  for each field, the most important tagging standard (according to
+        ///   - true (default)  :  for each field, the most important tagging standard (according to
         ///                        priorities) is first read. If the value is empty, the next
         ///                        tagging standard (according to priorities) is read, and so on...
         /// </summary>
@@ -89,8 +89,6 @@ namespace ATL.AudioData
             if (theDataManager.ID3v2.Exists) tagCount++;
             if (theDataManager.APEtag.Exists) tagCount++;
 			
-			// Step 1 : The physical reader may have already parsed the metadata if it belongs
-			// to cross-format tagging systems
 			if (m_enableCrossReading && (tagCount > 1) && (-1 == forceTagType) )
 			{
 				theMetaReader = new CrossMetadataReader(theDataManager, tagPriority);
@@ -118,18 +116,6 @@ namespace ATL.AudioData
 				}
 			}
 
-			// Step 2 : Nothing found in step 1 -> consider specific tagging (data+meta file formats)
-            // TODO : what if cross-tagging is enabled _and_ additional info exists in specific tagging ?
-            // => Need to consider specific tagging information within the CrossMetadataReader code, above
-			if (null == theMetaReader)
-			{
-				if (theDataManager is IMetaDataIO)
-				{
-					theMetaReader = (IMetaDataIO)theDataManager;
-				}
-			}
-
-			// Step 3 : default (no tagging at all - provides the dummy reader)
             if (null == theMetaReader) theMetaReader = new IO.DummyTag();
 
 			return theMetaReader;
