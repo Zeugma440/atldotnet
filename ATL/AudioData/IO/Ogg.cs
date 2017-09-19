@@ -520,7 +520,10 @@ namespace ATL.AudioData.IO
             byte[] lacingValues = new byte[255];
             long nextPageOffset = 0;
 
-            source.Seek(-(int)(MAX_PAGE_SIZE * 0.75), SeekOrigin.End); // TODO - fine tune this value
+            // TODO - fine tune seekSize value
+            int seekSize = (int)Math.Round(MAX_PAGE_SIZE * 0.75);
+            if (seekSize > source.Length) seekSize = (int)Math.Round(source.Length * 0.5);
+            source.Seek(-seekSize, SeekOrigin.End); 
             StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID));
             source.Seek(-4, SeekOrigin.Current);
 

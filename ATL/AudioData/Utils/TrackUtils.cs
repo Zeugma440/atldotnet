@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Commons;
+using System;
 using System.Text.RegularExpressions;
 
 namespace ATL.AudioData
@@ -65,6 +66,8 @@ namespace ATL.AudioData
             {
                 return (ushort)match.Value.Length;
             }
+
+            if (Utils.IsNumeric(RatingString)) return ExtractIntRating(Byte.Parse(RatingString));
 
             // If the field is only one byte long, rating is evaluated numerically
             if (1 == RatingString.Length) return ExtractIntRating((byte)RatingString[0]);

@@ -22,7 +22,7 @@ namespace ATL.AudioData
 
 			for (int i=0; i<tagPriority.Length; i++)
 			{
-                if ((MetaDataIOFactory.TAG_NATIVE == tagPriority[i]) && (baseReader.HasNativeMeta()))
+                if ((MetaDataIOFactory.TAG_NATIVE == tagPriority[i]) && (baseReader.HasNativeMeta()) && (baseReader.NativeTag != null))
                 {
                     metaReaders.Add(baseReader.NativeTag);
                 }

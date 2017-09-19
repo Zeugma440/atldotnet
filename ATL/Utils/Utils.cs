@@ -497,5 +497,17 @@ namespace Commons
             else return ImageFormat.Png; // TODO
         }
 
+        public static bool IsNumeric(string s)
+        {
+            if ((null == s) || (0 == s.Length)) return false;
+
+            for (int i=0; i<s.Length; i++)
+            {
+                if (!char.IsDigit(s[i]) && !(s[i] == '.')) return false;
+            }
+
+            return true;
+        }
+
     }
 }

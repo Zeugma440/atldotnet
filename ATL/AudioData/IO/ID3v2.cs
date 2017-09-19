@@ -614,8 +614,9 @@ namespace ATL.AudioData.IO
                             mem.Close();
                         }
                     }
-                    source.Seek(position + dataSize, SeekOrigin.Begin);
                 } // End picture frame
+
+                source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
 
                 streamPos = source.Position;
             } // End frames loop
