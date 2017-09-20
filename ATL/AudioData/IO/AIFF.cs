@@ -146,7 +146,7 @@ namespace ATL.AudioData.IO
         {
             get { return id3v2Offset; }
         }
-        public uint TagHeaderSize
+        public uint ID3v2EmbeddingHeaderSize
         {
             get { return 8; }
         }
@@ -477,7 +477,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public void WriteTagHeader(BinaryWriter w, long tagSize)
+        public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
             w.Write(StreamUtils.ReverseInt32((int)tagSize));

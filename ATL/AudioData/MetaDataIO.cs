@@ -508,11 +508,11 @@ namespace ATL.AudioData.IO
                         isTagWritten = true;
                         newTagSize = s.Length;
 
-                        if (embedder != null && embedder.HasEmbeddedID3v2 > 0 && embedder.TagHeaderSize > 0)
+                        if (embedder != null && embedder.HasEmbeddedID3v2 > 0 && embedder.ID3v2EmbeddingHeaderSize > 0)
                         {
-                            StreamUtils.LengthenStream(s, 0, embedder.TagHeaderSize);
+                            StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
                             s.Position = 0;
-                            embedder.WriteTagHeader(msw, newTagSize);
+                            embedder.WriteID3v2EmbeddingHeader(msw, newTagSize);
 
                             newTagSize = s.Length;
                         }
@@ -575,7 +575,7 @@ namespace ATL.AudioData.IO
                         else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
                         else action = ACTION_EDIT;
 
-                        result = structureHelper.RewriteMarkers(w, delta, action, zone.Name);
+                        result = structureHelper.RewriteHeaders(w, delta, action, zone.Name);
                     }
                 }
             } // Loop through zones
@@ -606,7 +606,7 @@ namespace ATL.AudioData.IO
                         w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteMarkers(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }

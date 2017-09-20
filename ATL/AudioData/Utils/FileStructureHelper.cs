@@ -4,77 +4,148 @@ using System.IO;
 
 namespace ATL.AudioData
 {
+    /// <summary>
+    /// Helper class used to :
+    ///   - Record location and size of specific chunks of data within a structured file, called "Zones"
+    ///   - Record location, value and type of headers describing Zones
+    ///   - Modify these headers as Zones appear, disappear, expand or shrink
+    /// </summary>
     public class FileStructureHelper
     {
-        public const string DEFAULT_ZONE_NAME = "default";
+        public const string DEFAULT_ZONE_NAME = "default"; // Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
 
-        public const int ACTION_EDIT    = 0;
-        public const int ACTION_ADD     = 1;
-        public const int ACTION_DELETE  = 2;
+        // Type of action to react to
+        public const int ACTION_EDIT    = 0; // Existing zone is edited, and not removed
+        public const int ACTION_ADD     = 1; // New zone is added
+        public const int ACTION_DELETE  = 2; // Existing zone is removed
 
+        /// <summary>
+        /// Container class describing a frame header
+        /// </summary>
         public class FrameHeader
         {
-            public const byte TYPE_COUNTER = 0;
-            public const byte TYPE_SIZE = 1;
-            public const byte TYPE_INDEX = 2;
+            // Header types
+            public const byte TYPE_COUNTER = 0;  // Counter : counts the underlying number of frames
+            public const byte TYPE_SIZE = 1;     // Size : documents the size of a given frame / group of frames
+            public const byte TYPE_INDEX = 2;    // Index : documents the offset (position of 1st byte) of a given frame
 
+            /// <summary>
+            /// Header type (allowed values are TYPE_XXX within FrameHeader class)
+            /// </summary>
             public byte Type;
+            /// <summary>
+            /// Position of the header
+            /// </summary>
             public long Position;
+            /// <summary>
+            /// Current value of the header (counter : number of frames / size : frame size / index : frame index)
+            /// </summary>
             public object Value;
+            /// <summary>
+            /// True if header value is stored using little-endian convention; false if big-endian
+            /// </summary>
             public bool IsLittleEndian;
 
+            /// <summary>
+            /// Constructs a new frame header using the given field values
+            /// </summary>
             public FrameHeader(byte type, long position, object value, bool isLittleEndian = true)
             {
                 Type = type;  Position = position; Value = value; IsLittleEndian = isLittleEndian;
             }
         }
 
-        // Description of a chunk/frame within a structured file 
-        // Useful to rewrite after editing the chunk (e.g. adding/removing metadata)
+        /// <summary>
+        /// Container class describing a chunk/frame within a structured file 
+        /// </summary>
         public class Zone
         {
-            public string Name;                         // Name
-            public long Offset;                         // Offset at the time of its reading, in bytes
-            public int Size;                            // Size at the time of its reading, in bytes
-            public byte[] CoreSignature;                // Header that has to be written no matter what, even if the zone does not contain any data
-            public byte Flag;                           // Generic usage flag for storing information
-            // insert padding size information here ?
-            public IList<FrameHeader> Headers;          // Size descriptors and item counters referencing the zone elsehwere on the file
+            /// <summary>
+            /// Zone name (any unique value will do; used as internal reference only)
+            /// </summary>
+            public string Name;
+            /// <summary>
+            /// Offset in bytes
+            /// </summary>
+            public long Offset;
+            /// <summary>
+            /// Size in bytes
+            /// </summary>
+            public int Size;
+            /// <summary>
+            /// Data sequence that has to be written in the zone when the zone does not contain any other data
+            /// </summary>
+            public byte[] CoreSignature;
+            /// <summary>
+            /// Generic usage flag for storing information
+            /// </summary>
+            public byte Flag;
+            /// <summary>
+            /// Size descriptors and item counters referencing the zone elsehwere on the file
+            /// </summary>
+            public IList<FrameHeader> Headers;
 
+            /// <summary>
+            /// Construct a new Zone using the given field values
+            /// </summary>
             public Zone(string name, long offset, int size, byte[] coreSignature, byte flag = 0)
             {
                 Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; Flag = flag;
                 Headers = new List<FrameHeader>();
             }
 
+            /// <summary>
+            /// Remove all headers
+            /// </summary>
             public void Clear()
             {
                 if (Headers != null) Headers.Clear();
             }
         }
 
+        // Recorded zones
         private IDictionary<string, Zone> zones;
+        
+        // Stores offset variations caused by zone editing (add/remove/shrink/expand) within current file
+        //      Dictionary key  : zone name
+        //      KVP Key         : initial end offset of given zone (i.e. position of last byte within zone)
+        //      KVP Value       : variation applied to given zone (can be positive or negative)
         private IDictionary<string,KeyValuePair<long, long>> dynamicOffsetCorrection = new Dictionary<string,KeyValuePair<long,long>>();
+        
+        // True if attached file uses little-endian convention for number representation; false if big-endian
         private bool isLittleEndian;
 
 
+        /// <summary>
+        /// Names of recorded zones
+        /// </summary>
         public ICollection<string> ZoneNames
         {
             get { return zones.Keys;  }
         }
 
+        /// <summary>
+        /// Recorded zones
+        /// </summary>
         public ICollection<Zone> Zones
         {
             get { return zones.Values; }
         }
 
 
+        /// <summary>
+        /// Construct a new FileStructureHelper
+        /// </summary>
+        /// <param name="isLittleEndian">True if unerlying file uses little-endian convention for number representation; false if big-endian</param>
         public FileStructureHelper(bool isLittleEndian = true)
         {
             this.isLittleEndian = isLittleEndian;
             zones = new Dictionary<string, Zone>();
         }
 
+        /// <summary>
+        /// Clears all recorded Zones
+        /// </summary>
         public void Clear()
         {
             if (null != zones)
@@ -87,21 +158,41 @@ namespace ATL.AudioData
             }
         }
 
+        /// <summary>
+        /// Retrieve a zone by its name
+        /// </summary>
+        /// <param name="name">Name of the zone to retrieve</param>
+        /// <returns>The zone corresponding to the given name; null if not found</returns>
         public Zone GetZone(string name)
         {
             if (zones.ContainsKey(name)) return zones[name]; else return null;
         }
 
+        /// <summary>
+        /// Record a new zone by copying the given zone
+        /// </summary>
+        /// <param name="zone">Zone to be recorded</param>
         public void AddZone(Zone zone)
         {
             AddZone(zone.Offset, zone.Size, zone.CoreSignature, zone.Name);
+
+            foreach (FrameHeader header in zone.Headers)
+            {
+                addZoneHeader(zone.Name, header.Type, header.Position, header.Value, header.IsLittleEndian);
+            }
         }
 
+        /// <summary>
+        /// Record a new zone using the given fields
+        /// </summary>
         public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME)
         {
             AddZone(offset, size, new byte[0], name);
         }
 
+        /// <summary>
+        /// Record a new zone using the given fields
+        /// </summary>
         public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME)
         {
             if (!zones.ContainsKey(zone))
@@ -117,21 +208,33 @@ namespace ATL.AudioData
             }
         }
 
+        /// <summary>
+        /// Record a new Counter-type header using the given fields and attach it to the zone of given name
+        /// </summary>
         public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
             addZoneHeader(zone, FrameHeader.TYPE_COUNTER, position, value, isLittleEndian);
         }
 
+        /// <summary>
+        /// Record a new Size-type header using the given fields and attach it to the zone of given name
+        /// </summary>
         public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
             addZoneHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
         }
 
+        /// <summary>
+        /// Record a new Index-type header using the given fields and attach it to the zone of given name
+        /// </summary>
         public void AddIndex(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
             addZoneHeader(zone, FrameHeader.TYPE_INDEX, position, value, isLittleEndian);
         }
 
+        /// <summary>
+        /// Record a new header using the given fields and attach it to the zone of given name
+        /// </summary>
         private void addZoneHeader(string zone, byte type, long position, object value, bool isLittleEndian)
         {
             if (!zones.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
@@ -141,9 +244,15 @@ namespace ATL.AudioData
             zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
         }
 
-        // NB : this method should perform quite badly -- evolve to using position-based dictionary if any performance issue arise
-        private void updateAcrossEntireCollection(long position, object newValue)
+        /// <summary>
+        /// Update all headers at the given position to the given value
+        /// (useful when multiple zones refer to the very same header)
+        /// </summary>
+        /// <param name="position">Position of header to be updated</param>
+        /// <param name="newValue">New value to be assigned to header</param>
+        private void updateAllHeadersAtPosition(long position, object newValue)
         {
+            // NB : this method should perform quite badly -- evolve to using position-based dictionary if any performance issue arise
             foreach (Zone frame in zones.Values)
             {
                 foreach (FrameHeader header in frame.Headers)
@@ -156,6 +265,13 @@ namespace ATL.AudioData
             }
         }
 
+        /// <summary>
+        /// Perform the addition between the two given values and encodes the result to an array of bytes, according to the type of the reference value
+        /// </summary>
+        /// <param name="value">Reference value</param>
+        /// <param name="delta">Value to add</param>
+        /// <param name="updatedValue">Updated value (out parameter; will be returned as same type as reference value)</param>
+        /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value</returns>
         private static byte[] addToValue(object value, int delta, out object updatedValue)
         {
             if (value is byte)
@@ -207,7 +323,15 @@ namespace ATL.AudioData
             }
         }
 
-        public bool RewriteMarkers(BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
+        /// <summary>
+        /// Rewrite all zone headers in the given stream according to the given size evolution and the given action
+        /// </summary>
+        /// <param name="w">Stream to write modifications to</param>
+        /// <param name="deltaSize">Evolution of zone size (in bytes; positive or negative)</param>
+        /// <param name="action">Action applied to zone</param>
+        /// <param name="zone">Name of zone</param>
+        /// <returns></returns>
+        public bool RewriteHeaders(BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
         {
             bool result = true;
             int delta;
@@ -254,7 +378,7 @@ namespace ATL.AudioData
                         if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
                         // The very same frame header is referenced from another frame and must be updated to its new value
-                        updateAcrossEntireCollection(header.Position, updatedValue);
+                        updateAllHeadersAtPosition(header.Position, updatedValue);
 
                         if (!header.IsLittleEndian) Array.Reverse(value);
 

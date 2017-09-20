@@ -44,7 +44,7 @@ namespace ATL.test
                 init(w);
 
                 StreamUtils.ShortenStream(s, 18, 2);
-                structureHelper.RewriteMarkers(w, -2, FileStructureHelper.ACTION_EDIT, "zone1");
+                structureHelper.RewriteHeaders(w, -2, FileStructureHelper.ACTION_EDIT, "zone1");
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
                 Assert.AreEqual((ulong)8, r.ReadUInt64());
@@ -60,7 +60,7 @@ namespace ATL.test
 
 
                 StreamUtils.ShortenStream(s, 25, 2);
-                structureHelper.RewriteMarkers(w, -2, FileStructureHelper.ACTION_EDIT, "zone2");
+                structureHelper.RewriteHeaders(w, -2, FileStructureHelper.ACTION_EDIT, "zone2");
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
                 Assert.AreEqual((ulong)6, r.ReadUInt64());
@@ -85,7 +85,7 @@ namespace ATL.test
             {
                 init(w);
 
-                structureHelper.RewriteMarkers(w, -5, FileStructureHelper.ACTION_DELETE, "zone1");
+                structureHelper.RewriteHeaders(w, -5, FileStructureHelper.ACTION_DELETE, "zone1");
                 StreamUtils.ShortenStream(s, 18, 5);
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -111,7 +111,7 @@ namespace ATL.test
             {
                 init(w);
 
-                structureHelper.RewriteMarkers(w, 5, FileStructureHelper.ACTION_ADD, "zone3");
+                structureHelper.RewriteHeaders(w, 5, FileStructureHelper.ACTION_ADD, "zone3");
                 StreamUtils.LengthenStream(s, 27, 5);
 
                 r.BaseStream.Seek(0, SeekOrigin.Begin);

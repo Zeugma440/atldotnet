@@ -355,7 +355,15 @@ namespace Commons
             }
         }
 
-        // TODO DOC
+        /// <summary>
+        /// Coverts given string value to boolean.
+        ///   - Returns true if string represents a non-null numeric value or the word "true"
+        ///   - Returns false if not
+        ///   
+        /// NB : This implementation exists because default .NET implementation has a different convention as for parsing numbers
+        /// </summary>
+        /// <param name="value">Value to be converted</param>
+        /// <returns>Resulting boolean value</returns>
         public static bool ToBoolean(string value)
         {
             if (value != null)
@@ -397,8 +405,11 @@ namespace Commons
             return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
         }
 
-        // Convert the binary input into Base64 UUEncoded output.
-        // TODO DOC
+        /// <summary>
+        /// Convert the given input to a Base64 UUencoded output
+        /// </summary>
+        /// <param name="data">Data to be encoded</param>
+        /// <returns>Encoded data</returns>
         public static byte[] EncodeTo64(byte[] data)
         {
             // Each 3 byte sequence in the source data becomes a 4 byte
@@ -419,7 +430,11 @@ namespace Commons
             return Utils.Latin1Encoding.GetBytes(dataChar);
         }
 
-        // TODO DOC
+        /// <summary>
+        /// Detects image format from the given signature
+        /// </summary>
+        /// <param name="header">Binary signature; must be at least 3-bytes long</param>
+        /// <returns>Detected image format corresponding to the given signature; null if no match is found</returns>
         public static ImageFormat GetImageFormatFromPictureHeader(byte[] header)
         {
             if (header.Length < 3) throw new FormatException("Header length must be at least 3");
@@ -430,9 +445,17 @@ namespace Commons
             else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
             else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
             else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
-            else return ImageFormat.Png; // TODO
+            else return null;
         }
 
+        /// <summary>
+        /// Indicates if the given string is exclusively composed of digital charachers
+        /// NB1 : decimal separator '.' is tolerated
+        /// NB2 : whitespaces ' ' are not tolerated
+        /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
+        /// </summary>
+        /// <param name="s">String to analyze</param>
+        /// <returns>True if the string is a digital value; false if not</returns>
         public static bool IsNumeric(string s)
         {
             if ((null == s) || (0 == s.Length)) return false;
