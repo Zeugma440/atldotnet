@@ -78,28 +78,28 @@ W= Write (work in progress in the IO branch; ATL only writes using the latest st
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
 Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R/W | R/W | R/W | R/W
-Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R |  | R
+Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
 Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
 Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
-Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R (1)
+Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (1)
 Monkey's Audio | .APE | R/W | R/W | R/W | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
 MusePack / MPEGplus|.MPC, .MP+|R/W|R/W|R/W| |
 Noisetracker/Soundtracker/Protracker|.MOD| | | |R/W (2)|
 OGG : Vorbis, Opus|.OGG, .OPUS| | | |R/W|
-OptimFROG|.OFR, .OFS|R|R|R| |
-Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |R|
-ScreamTracker|.S3M| | | |R (2)|
-SPC700 (Super Nintendo Sound files)|.SPC| | | |R|
-Toms' losslesss Audio Kompressor|.TAK| | |R| |
-True Audio|.TTA|R|R|R| |
-TwinVQ|.VQF| | | |R|
-PCM (uncompressed audio)|.WAV|R| | | |
-WavPack|.WV| | |R| |
+OptimFROG|.OFR, .OFS|R/W|R/W|R/W| |
+Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF| | | |R/W|
+ScreamTracker|.S3M| | | |R/W (2)|
+SPC700 (Super Nintendo Sound files)|.SPC| | | |R/W|
+Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
+True Audio|.TTA|R/W|R/W|R/W| |
+TwinVQ|.VQF| | | |R/W|
+PCM (uncompressed audio)|.WAV|R/W| | | |
+WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 
