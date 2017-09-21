@@ -23,9 +23,7 @@ It is currently being tested extensively, and will be merged with the main branc
 
 **What's the progress so far ?**
 
-* Tagging standards covered : ID3v1, ID3v2, APE Tag
-
-* Audio formats covered : MP3, MP4/AAC/M4A, WMA/ASF, Ogg Vorbis, OPUS, FLAC, MPC/MP+, AC3, DSF/DSD, DTS, APE, MIDI, MOD, IT
+All audio and tagging formats of the master branch are implemented and unit-tested; massive-scale non-regression testing is currently ongoing
 
 
 **Will it require changes to change the way my program invoke ATL ?**
