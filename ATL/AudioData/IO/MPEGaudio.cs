@@ -512,10 +512,17 @@ namespace ATL.AudioData.IO
                     if (StreamUtils.ArrEqualsArr(headerData, RIFF_MP3_ID)) // RIFF header does encapsulate MP3 data
                     {
                         source.Seek(8, SeekOrigin.Current); // Useless information
-                        source.Read(headerData, 0, 4);
-                        result.Found = isValidFrameHeader(headerData);
+                    }
+                } else if (0x55 == headerData[0] || 0xaa == headerData[0]) // MP3 starts with padding bytes _before_ MP3 header
+                {
+                    if (StreamUtils.FindSequence(source, new byte[1] { 0xFF })) // Look for the beginning of the MP3 header
+                    {
+                        source.Seek(-1, SeekOrigin.Current);
                     }
                 }
+
+                source.Read(headerData, 0, 4);
+                result.Found = isValidFrameHeader(headerData);
             }
 
             if (result.Found)
