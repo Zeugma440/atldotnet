@@ -283,7 +283,7 @@ namespace ATL.AudioData.IO
             if (Tag.HasExtendedHeader)
             {
                 Tag.ExtendedHeaderSize = StreamUtils.DecodeSynchSafeInt(SourceFile.ReadBytes(4)); // Extended header size
-                SourceFile.Skip(1); // Number of flag bytes; always 1 according to spec
+                SourceFile.Seek(1, SeekOrigin.Current); // Number of flag bytes; always 1 according to spec
 
                 Tag.ExtendedFlags = SourceFile.ReadByte();
 
@@ -405,7 +405,7 @@ namespace ATL.AudioData.IO
                                 {
                                     tag.ActualEnd = initialPos + read + i;
                                     endReached = true;
-                                    break;
+                                    return;
                                 }
                             }
                             if (!endReached) read += PADDING_BUFFER_SIZE;
@@ -436,7 +436,7 @@ namespace ATL.AudioData.IO
                 // Skips data size indicator if signaled by the flag
                 if ((Frame.Flags & 1) > 0)
                 {
-                    source.Skip(4);
+                    source.Seek(4, SeekOrigin.Current);
                     dataSize = dataSize - 4;
                 }
 
@@ -454,7 +454,7 @@ namespace ATL.AudioData.IO
                     long initialPos = source.Position;
 
                     // Skip langage ID
-                    source.Skip(3);
+                    source.Seek(3, SeekOrigin.Current);
 
                     BOMProperties contentDescriptionBOM = new BOMProperties();
                     // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
