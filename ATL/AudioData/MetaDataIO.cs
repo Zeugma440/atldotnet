@@ -20,7 +20,9 @@ namespace ATL.AudioData.IO
         protected const int TO_BOF = 1;     // Beginning Of File
         protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
 
-
+        /// <summary>
+        /// Container class describing tag reading parameters
+        /// </summary>
         public class ReadTagParams
         {
             public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
