@@ -23,6 +23,10 @@ namespace ATL.AudioData.IO
         public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
         public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
+        public static readonly byte[] RIFF_HEADER = new byte[4] { 0x52, 0x49, 0x46, 0x46 }; // 'RIFF'
+        public static readonly byte[] RIFF_MP3_ID = new byte[4] { 0x52, 0x4D, 0x50, 0x33 }; // 'RMP3'
+
+
         // Table for bit rates (KBit/s)
         public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
         {
@@ -496,15 +500,28 @@ namespace ATL.AudioData.IO
 			byte[] headerData = new byte[4];  
 			FrameHeader result = new FrameHeader();
 
-            result.Found = false;
-
             source.Read(headerData, 0, 4);
+            result.Found = isValidFrameHeader(headerData);
 
-            if (isValidFrameHeader(headerData))
+            if (!result.Found)
+            {
+                if (StreamUtils.ArrEqualsArr(headerData,RIFF_HEADER)) // MP3 is hidden behind a RIFF header
+                {
+                    source.Seek(4, SeekOrigin.Current); // Redundant size info
+                    source.Read(headerData, 0, 4);
+                    if (StreamUtils.ArrEqualsArr(headerData, RIFF_MP3_ID)) // RIFF header does encapsulate MP3 data
+                    {
+                        source.Seek(8, SeekOrigin.Current); // Useless information
+                        source.Read(headerData, 0, 4);
+                        result.Found = isValidFrameHeader(headerData);
+                    }
+                }
+            }
+
+            if (result.Found)
             {
                 result.LoadFromByteArray(headerData);
 
-                result.Found = true;
                 result.Position = source.Position;
                 result.Size = getFrameSize(result);
 
@@ -512,10 +529,6 @@ namespace ATL.AudioData.IO
 
                 // Look for VBR signature
                 oVBR = findVBR(source, result.Position - 4 + getVBRDeviation(result));
-            }
-            else
-            {
-                result.Found = false;
             }
 
 			return result;
