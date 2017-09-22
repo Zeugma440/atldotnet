@@ -529,10 +529,10 @@ namespace ATL.AudioData.IO
 
                     // If padding uses 0xFF bytes, take one step back in case MP3 header lies there
                     if (0xFF == headerData[0]) source.Seek(-1, SeekOrigin.Current);
-                }
 
-                source.Read(headerData, 0, 4);
-                result.Found = isValidFrameHeader(headerData);
+                    source.Read(headerData, 0, 4);
+                    result.Found = isValidFrameHeader(headerData);
+                }
 
                 // Blindly look for the MP3 header
                 if (!result.Found)
