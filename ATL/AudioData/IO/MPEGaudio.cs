@@ -23,9 +23,12 @@ namespace ATL.AudioData.IO
         public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
         public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
+        /*
         public static readonly byte[] RIFF_HEADER = new byte[4] { 0x52, 0x49, 0x46, 0x46 }; // 'RIFF'
         public static readonly byte[] RIFF_MP3_ID = new byte[4] { 0x52, 0x4D, 0x50, 0x33 }; // 'RMP3'
-
+        public static readonly byte[] RIFF_WAV_ID = new byte[4] { 0x57, 0x41, 0x56, 0x45 }; // 'WAVE'
+        public static readonly byte[] RIFF_WAV_DATA_SUBCHUNK_ID = new byte[4] { 0x64, 0x61, 0x74, 0x61 }; // 'data'
+        */
 
         // Table for bit rates (KBit/s)
         public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4,4,16]
@@ -503,26 +506,57 @@ namespace ATL.AudioData.IO
             source.Read(headerData, 0, 4);
             result.Found = isValidFrameHeader(headerData);
 
+            /*
+             * Many things can actually be found before a proper MP3 header :
+             *    - Padding with 0x55, 0xAA and even 0xFF bytes
+             *    - RIFF header declaring either MP3 or WAVE data
+             *    - Xing encoder-specific frame
+             *    - One of the above with a few "parasite" bytes before their own header
+             * 
+             * The most solid way to deal with all of them is to "scan" the file until proper MP3 header is found.
+             * This method may not the be fastest, but ensures audio data is actually detected, whatever garbage lies before
+             */
+
             if (!result.Found)
             {
-                if (StreamUtils.ArrEqualsArr(headerData,RIFF_HEADER)) // MP3 is hidden behind a RIFF header
+                // 4 identical bytes => MP3 starts with padding bytes => Skip padding
+                if ((headerData[0] == headerData[1]) && (headerData[1] == headerData[2]) && (headerData[2] == headerData[3]) ) 
                 {
-                    source.Seek(4, SeekOrigin.Current); // Redundant size info
-                    source.Read(headerData, 0, 4);
-                    if (StreamUtils.ArrEqualsArr(headerData, RIFF_MP3_ID)) // RIFF header does encapsulate MP3 data
-                    {
-                        source.Seek(8, SeekOrigin.Current); // Useless information
-                    }
-                } else if (0x55 == headerData[0] || 0xaa == headerData[0]) // MP3 starts with padding bytes _before_ MP3 header
-                {
-                    if (StreamUtils.FindSequence(source, new byte[1] { 0xFF })) // Look for the beginning of the MP3 header
-                    {
-                        source.Seek(-1, SeekOrigin.Current);
-                    }
+                    // Scan the whole padding until it stops
+                    while (headerData[0] == source.ReadByte());
+
+                    source.Seek(-1, SeekOrigin.Current);
+
+                    // If padding uses 0xFF bytes, take one step back in case MP3 header lies there
+                    if (0xFF == headerData[0]) source.Seek(-1, SeekOrigin.Current);
                 }
 
                 source.Read(headerData, 0, 4);
                 result.Found = isValidFrameHeader(headerData);
+
+                // Blindly look for the MP3 header
+                if (!result.Found)
+                {
+                    source.Seek(-4, SeekOrigin.Current);
+                    long limit = (long)Math.Round(source.Length * 0.3);
+
+                    // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched that way)
+                    while (!result.Found && source.Position < limit)
+                    {
+                        while (0xFF != source.ReadByte() && source.Position < limit) ;
+                        
+                        source.Seek(-1, SeekOrigin.Current);
+                        source.Read(headerData, 0, 4);
+                        result.Found = isValidFrameHeader(headerData);
+                        if (result.Found)
+                        {
+                            break;
+                        } else
+                        {
+                            source.Seek(-3, SeekOrigin.Current);
+                        }
+                    }
+                }
             }
 
             if (result.Found)

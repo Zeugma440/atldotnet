@@ -81,12 +81,11 @@ namespace ATL
             return false;
         }
 
-        private void prepareBuffer(int bytesToRead, bool skip = false)
+        private void prepareBuffer(int bytesToRead)
         {
             if (bufferSize - cursorPosition < bytesToRead)
             {
-                if (skip) fillBuffer();
-                else fillBuffer(Math.Max(0,bufferSize - cursorPosition));
+                fillBuffer(Math.Max(0, bufferSize - cursorPosition));
             }
         }
 
@@ -107,8 +106,8 @@ namespace ATL
             if (0 == delta) return;
             else if (delta < 0)
             {
-                // Jump within buffer
-                if ((cursorPosition < bufferSize) && (cursorPosition + delta >= 0))
+                // If cursor is still within buffer, jump within buffer
+                if ((cursorPosition + delta < bufferSize) && (cursorPosition + delta >= 0))
                 {
                     cursorPosition += (int)delta;
                 } else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
@@ -117,21 +116,15 @@ namespace ATL
                     stream.Position = streamPosition;
                     fillBuffer();
                 }
-            } else if (delta < bufferDefaultSize) // Jump within buffer -- TODO : Optimize this
+            } else if (cursorPosition + delta < bufferSize) // Jump within buffer
             {
-                Skip((int)delta);
+                cursorPosition += (int)delta;
             } else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
             {
                 streamPosition = bufferOffset + cursorPosition + delta;
                 stream.Position = streamPosition;
                 fillBuffer();
             }
-        }
-
-        public void Skip(int nbBytes)
-        {
-            prepareBuffer(nbBytes, true);
-            cursorPosition += nbBytes;
         }
 
         public int Read([In, Out] byte[] buffer, int offset, int count)
@@ -150,14 +143,14 @@ namespace ATL
                 int availableBytes = bufferSize - cursorPosition;
                 if (availableBytes > 0)
                 {
-                    Array.Copy(this.buffer, cursorPosition, buffer, 0, availableBytes);
+                    Array.Copy(this.buffer, cursorPosition, buffer, offset, availableBytes);
                 } else
                 {
                     availableBytes = 0;
                 }
 
                 // Then retrieve the rest by reading the stream
-                stream.Read(buffer, availableBytes, count - availableBytes);
+                stream.Read(buffer, offset + availableBytes, count - availableBytes);
 
                 streamPosition += count - availableBytes;
                 stream.Position = streamPosition;
@@ -173,34 +166,8 @@ namespace ATL
         {
             byte[] buffer = new byte[nbBytes];
 
-            // Bytes to read are all already buffered
-            if (nbBytes <= bufferSize - cursorPosition)
-            {
-                prepareBuffer(nbBytes);
-                Array.Copy(this.buffer, cursorPosition, buffer, 0, nbBytes);
-                cursorPosition += nbBytes;
-            } else
-            {
-                // First retrieve buffered data if possible
-                int availableBytes = bufferSize - cursorPosition;
-                if (availableBytes > 0)
-                {
-                    Array.Copy(this.buffer, cursorPosition, buffer, 0, availableBytes);
-                }
-                else
-                {
-                    availableBytes = 0;
-                }
+            Read(buffer, 0, nbBytes);
 
-                // Then retrieve the rest by reading the stream
-                stream.Read(buffer, availableBytes, nbBytes - availableBytes);
-
-                streamPosition += nbBytes - availableBytes;
-                stream.Position = streamPosition;
-
-                cursorPosition += nbBytes; // Virtual position outside buffer zone
-                //fillBuffer();
-            }
             return buffer;
         }
 
