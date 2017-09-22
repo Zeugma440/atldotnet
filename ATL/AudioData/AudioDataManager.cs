@@ -22,6 +22,7 @@ namespace ATL.AudioData
             bufferSize = bufSize;
         }
 
+
         public class SizeInfo
         {
             public long FileSize = 0;
@@ -68,11 +69,15 @@ namespace ATL.AudioData
             get { return this.nativeTag; }
         }
 
-        // ====================== METHODS =========================
+
+
         public AudioDataManager(IAudioDataIO audioDataReader)
         {
             this.audioDataIO = audioDataReader;
         }
+
+
+        // ====================== METHODS =========================
 
         private void resetData()
         {

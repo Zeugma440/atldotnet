@@ -679,6 +679,7 @@ namespace ATL.AudioData.IO
                         {
                             // Peek the next 3 bytes to know the picture type
                             ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(Source.ReadBytes(3));
+                            if (null == imgFormat) imgFormat = ImageFormat.Png;
                             Source.BaseStream.Seek(-3, SeekOrigin.Current);
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);

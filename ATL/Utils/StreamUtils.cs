@@ -396,36 +396,66 @@ namespace ATL
             return BitConverter.ToInt64(binary, 0);
         }
 
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt32(byte[] data)
         {
             if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
             return (uint)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0));
         }
 
+        /// <summary>
+        /// Decodes a signed Big-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static int DecodeBEInt32(byte[] data)
         {
             if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
         }
 
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt24(byte[] data)
         {
             if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
             return (uint)((data[0] << 16) | (data[1] << 8) | (data[2] << 0));
         }
 
+        /// <summary>
+        /// Decodes a signed Big-Endian 24-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static int DecodeBEInt24(byte[] data)
         {
             if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
             return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
         }
 
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static ushort DecodeBEUInt16(byte[] data)
         {
             if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
         }
 
+        /// <summary>
+        /// Decodes a signed Big-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
         public static short DecodeBEInt16(byte[] data)
         {
             if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
@@ -715,7 +745,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Extracts a Int32 from a byte array using the "synch-safe" convention
+        /// Extracts a signed 32-bit integer from a byte array using the "synch-safe" convention
         /// as to ID3v2 definition (§6.2)
         /// </summary>
         /// <param name="bytes">Byte array containing data
@@ -735,7 +765,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Decodes a Int32 from a 4-byte array using the "synch-safe" convention
+        /// Decodes a signed 32-bit integer from a 4-byte array using the "synch-safe" convention
         /// as to ID3v2 definition (§6.2)
         /// NB : The actual capacity of the integer thus reaches 28 bits
         /// </summary>
@@ -753,7 +783,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Encodes an Int32 to a 4-byte array using the "synch-safe" convention
+        /// Encodes the given values as a (nbBytes*8)-bit integer to a (nbBytes)-byte array using the "synch-safe" convention
         /// as to ID3v2 definition (§6.2)
         /// </summary>
         /// <param name="value">Value to encode</param>
@@ -775,7 +805,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Encodes a Int32 to a 4-byte array using the "synch-safe" convention
+        /// Encodes the given value as a 32-bit integer to a 4-byte array using the "synch-safe" convention
         /// as to ID3v2 definition (§6.2)
         /// </summary>
         /// <param name="value">Integer to be encoded</param>
@@ -791,12 +821,23 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <param name="offset">Offset to read value from (default : 0)</param>
+        /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt24(byte[] value, int offset = 0)
         {
             if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size="+(value.Length-offset)+" bytes");
             return (uint)value[offset] << 16 | (uint)value[offset + 1] << 8 | (uint)value[offset + 2];
         }
 
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeBEUInt24(uint value)
         {
             if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than "+0x00FFFFFF+"; actual value="+value);

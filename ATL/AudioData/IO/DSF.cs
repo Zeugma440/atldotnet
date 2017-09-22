@@ -93,7 +93,7 @@ namespace ATL.AudioData.IO
         {
             get { return id3v2Offset; }
         }
-        public uint TagHeaderSize
+        public uint ID3v2EmbeddingHeaderSize
         {
             get { return 0; }
         }
@@ -202,7 +202,7 @@ namespace ATL.AudioData.IO
             return result;
 		}
 
-        public void WriteTagHeader(BinaryWriter w, long tagSize)
+        public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
         {
             // Nothing to do here; DSF format defines no frame header for its embedded ID3v2 tag
         }

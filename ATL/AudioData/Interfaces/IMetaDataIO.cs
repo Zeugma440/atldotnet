@@ -160,10 +160,14 @@ namespace ATL.AudioData
             get;
         }
 
+        /// <summary>
+        /// Set metadata to be written using the given embedder
+        /// </summary>
+        /// <param name="embedder">Metadata embedder to be used to write current metadata</param>
         void SetEmbedder(IMetaDataEmbedder embedder);
 
         /// <summary>
-        /// Parses the binary data read from the given reader
+        /// Parse binary data read from the given stream
         /// </summary>
         /// <param name="source">Reader to parse data from</param>
         /// <param name="readTagParams">Tag reading parameters</param>

@@ -503,7 +503,7 @@ namespace ATL.AudioData.IO
                     }
                 }
                 
-                // If encoding > 3, we might have caught an actual character, which means there is no encoding flag
+                // If encoding > 3, we might have caught an actual character, which means there is no encoding flag => switch to default encoding
                 if (encodingCode > 3)
                 {
                     frameEncoding = decodeID3v2CharEncoding(0);

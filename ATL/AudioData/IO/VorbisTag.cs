@@ -215,6 +215,7 @@ namespace ATL.AudioData.IO
                         byte[] imgHeader = new byte[3];
                         mem.Read(imgHeader, 0, 3);
                         ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(imgHeader);
+                        if (null == imgFormat) imgFormat = ImageFormat.Png;
                         mem.Seek(0, SeekOrigin.Begin);
 
                         readTagParams.PictureStreamHandler(ref mem, TagData.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);

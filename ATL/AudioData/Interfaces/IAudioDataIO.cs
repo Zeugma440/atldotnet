@@ -8,12 +8,15 @@ namespace ATL.AudioData
 	/// </summary>
 	public interface IAudioDataIO
 	{
+        /// <summary>
+        /// Full access path of the underlying file
+        /// </summary>
         string FileName
         {
             get;
         }
         /// <summary>
-        /// Bitrate of the file
+        /// Bitrate (kilobytes per second)
         /// </summary>
         double BitRate
 		{
@@ -40,30 +43,42 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-		/// <summary>
-		/// Returns the family of the coded used for that file (see MetaDataManager for codec families)
-		/// </summary>
-		int CodecFamily
+        /// <summary>
+        /// Family of the audio codec (see AudioDataIOFactory for the list of codec families)
+        /// </summary>
+        int CodecFamily
 		{
 			get;
 		}
         /// <summary>
-        /// Indicates if file format allows parsable metadata to be present (e.g. not MIDI files)
+        /// Indicates if audio format supports parsable native or standard metadata
         /// </summary>
         bool AllowsParsableMetadata
         {
             get;
         }
-
-        // TODO DOC
-        bool IsMetaSupported(int metaDataType);
-
+        
         /// <summary>
-        /// Indicates if file format has a native metadata tagging system (e.g. not ID3v1, ID3v2 nor APEtag)
+        /// Indicated wether the given metadata type is supported
+        /// </summary>
+        /// <param name="metaDataType">Metadata type to be tested (see list in MetaDataIOFactory)</param>
+        /// <returns>True if current file supports the given metadata type; false if not</returns>
+        bool IsMetaSupported(int metaDataType);
+        
+        /// <summary>
+        /// Indicates if file format has a native embedded metadata tagging format (i.e. not ID3v1, ID3v2 nor APEtag - e.g. MP4 atom structure or MOD title)
         /// </summary>
         bool HasNativeMeta();
-
-        // TODO DOC
+        
+        /// <summary>
+        /// Reads audio data from the given stream.
+        /// NB1 : Standard metadata (i.e. ID3v2, ID3v1 and APE) have to be read _before_ calling this method, and their size stored in sizeInfo
+        /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller
+        /// </summary>
+        /// <param name="source">BinaryReader opened on the stream to read</param>
+        /// <param name="sizeInfo">Description of the size of the undelying stream and associated metadata</param>
+        /// <param name="readTagParams">Reading parameters and options</param>
+        /// <returns>True if the stream has been successfuly read; false if not</returns>
         bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
     }
 }

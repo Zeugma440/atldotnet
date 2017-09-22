@@ -1,6 +1,4 @@
 using System;
-using System.Drawing.Imaging;
-using System.IO;
 
 namespace ATL.AudioData
 {
@@ -20,7 +18,7 @@ namespace ATL.AudioData
         public const int TAG_TYPE_COUNT = 4;
 
 		// Defines the default reading priority of the metadata
-		private int[] tagPriority = new int[TAG_TYPE_COUNT] { TAG_NATIVE, TAG_ID3V2, TAG_APE, TAG_ID3V1 };
+		private int[] tagPriority = new int[TAG_TYPE_COUNT] { TAG_ID3V2, TAG_APE, TAG_NATIVE, TAG_ID3V1 };
 
 		// Defines whether the next created metadatareaders should use cross-tag reading
 		private bool m_enableCrossReading = true;

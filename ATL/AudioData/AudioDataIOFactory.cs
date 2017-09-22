@@ -12,7 +12,7 @@ namespace ATL.AudioData
 		public const int CF_LOSSY		= 0; // Streamed, lossy data
 		public const int CF_LOSSLESS	= 1; // Streamed, lossless data
 		public const int CF_SEQ_WAV		= 2; // Sequenced with embedded sound library
-		public const int CF_SEQ			= 3; // Sequenced with codec-dependent sound library
+		public const int CF_SEQ			= 3; // Sequenced with codec or hardware-dependent sound library
 
 		public const int NB_CODEC_FAMILIES = 4;
 
