@@ -25,9 +25,9 @@ namespace ATL.benchmark
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
 
-            //readAt(@"E:\temp\opus\detodos.opus");
+            //readAt(@"E:\Music\Anime\Pita Ten\OST 1\02 - Kotarou, itsumo no mainichi.mp3");
 
-            compareInfo(@"E:\temp");
+            compareInfo(@"E:\Music\Anime");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
@@ -59,7 +59,7 @@ namespace ATL.benchmark
 
         static private void compareInfo(string path)
         {
-            FileFinder_ATL_TagLib ff = new FileFinder_ATL_TagLib();
+            FileFinder_ATL_NewOld ff = new FileFinder_ATL_NewOld();
 
             ff.FF_RecursiveExplore(path);
         }

@@ -5,11 +5,11 @@ using Commons;
 
 namespace ATL.benchmark
 {
-    public class FileFinder_ATL_TagLib
+    public class FileFinder_ATL_NewOld
     {
         static ICollection<Format> supportedFormats;
 
-        static FileFinder_ATL_TagLib()
+        static FileFinder_ATL_NewOld()
         {
             supportedFormats = AudioData.AudioDataIOFactory.GetInstance().getFormats();
         }
@@ -39,12 +39,14 @@ namespace ATL.benchmark
             using (FileStream fs = new FileStream(@"E:\temp\diff." + DateTime.Now.ToLongTimeString().Replace(":", ".") + ".csv", FileMode.OpenOrCreate))
             using (StreamWriter w = new StreamWriter(fs))
             {
-                w.WriteLine("fileName" + ";" + "field" + ";" + "oldValue" + ";" + "newValue");
+                w.WriteLine("fileName" + ";" + "field" + ";" + "oldValue" + ";" + "newValue" + ";" + "KO?");
 
                 foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.AllDirectories))
                 {
                     if (isFormatSupported(f.FullName))
                     {
+                        Console.WriteLine(f.FullName);
+
                         try
                         {
                             t = new Track(f.FullName);
@@ -89,7 +91,11 @@ namespace ATL.benchmark
         {
             if (!oldValue.ToString().Equals(newValue.ToString()) && !oldValue.ToString().Equals("0") && !oldValue.ToString().Equals(""))
             {
-                w.WriteLine(fileName + ";" + field + ";" + oldValue + ";" + newValue);
+                bool filtered = false;
+                // Filter known bugfix : duration increase on MP3s
+                filtered = filtered || (field.Equals("Duration") && fileName.Substring(fileName.LastIndexOf('.') + 1, 3).ToLower().Equals("mp3") && ((int)newValue - (int)oldValue < 11) && ((int)newValue - (int)oldValue > 0));
+
+                if (!filtered) w.WriteLine(fileName + ";" + field + ";" + oldValue + ";" + newValue);
             }
         }
 
