@@ -350,10 +350,13 @@ namespace ATL.AudioData
                 IDictionary<string,string> result = new Dictionary<string, string>();
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    if (reader.AdditionalFields.Count > 0)
+                    IDictionary<string, string> readerAdditionalFields = reader.AdditionalFields;
+                    if (readerAdditionalFields.Count > 0)
                     {
-                        result = reader.AdditionalFields;
-                        break;
+                        foreach (string s in readerAdditionalFields.Keys)
+                        {
+                            if (!result.ContainsKey(s)) result.Add(s, readerAdditionalFields[s]);
+                        }
                     }
                 }
                 return result;
