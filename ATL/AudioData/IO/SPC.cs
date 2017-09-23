@@ -458,8 +458,11 @@ namespace ATL.AudioData.IO
                             break;
 						case XID6_TSTR :
                             intData = 0;
-                            strData = Utils.Latin1Encoding.GetString(source.ReadBytes(size)).Replace("\0", "").Trim();
-							break;
+                            strData = Utils.Latin1Encoding.GetString(source.ReadBytes(size)).Replace("\0","").Trim();
+
+                            while (source.BaseStream.Position < source.BaseStream.Length && 0 == source.ReadByte()) ; // Skip parasite ending zeroes
+                            if (source.BaseStream.Position < source.BaseStream.Length) source.BaseStream.Seek(-1, SeekOrigin.Current);
+                            break;
 						case XID6_TINT :
 							intData = source.ReadInt32();
                             strData = intData.ToString();
