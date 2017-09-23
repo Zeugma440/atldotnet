@@ -1147,10 +1147,12 @@ namespace ATL.AudioData.IO
                 if ('(' == result[i]) openParenthesisIndex = i;
                 else if (')' == result[i] && openParenthesisIndex > -1)
                 {
-                    genreIndex = int.Parse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1));
-                    // Delete genre index string from the tag value
-                    result = result.Remove(0, i+1);
-                    break;
+                    if (int.TryParse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1), out genreIndex))
+                    {
+                        // Delete genre index string from the tag value
+                        result = result.Remove(0, i + 1);
+                        break;
+                    }
                 }
             }
 
