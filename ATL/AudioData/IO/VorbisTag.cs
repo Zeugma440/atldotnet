@@ -294,7 +294,7 @@ namespace ATL.AudioData.IO
                     int strIndex = strData.IndexOf('=');
                     if (strIndex > -1 && strIndex < strData.Length)
                     {
-                        setMetaField(strData.Substring(0, strIndex), strData.Substring(strIndex + 1, strData.Length - strIndex - 1), readTagParams.ReadAllMetaFrames);
+                        setMetaField(strData.Substring(0, strIndex), strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
                     }
                     else if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                     {
