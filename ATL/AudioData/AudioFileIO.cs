@@ -48,7 +48,7 @@ namespace ATL.AudioData
 
         private string processString(string value)
         {
-            return value.Replace('\t', ',').Replace("\r", "").Replace(MetaDataIO.internalLineSeparator, MetaDataIO.displayLineSeparator).Replace("\0", "").Replace(MetaDataIO.internalValueSeparator, MetaDataIO.displayValueSeparator);
+            return value.Replace('\t', ',').Replace("\r", "").Replace("\n", ",").Replace(MetaDataIO.internalLineSeparator, MetaDataIO.displayLineSeparator).Replace("\0", "").Replace(MetaDataIO.internalValueSeparator, MetaDataIO.displayValueSeparator);
         }
 
         /// <summary>

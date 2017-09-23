@@ -1,5 +1,6 @@
 using ATL.AudioData;
 using ATL.AudioReaders;
+using Commons;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -26,14 +27,21 @@ namespace ATL
 
         // TODO align on TagData properties
 
-		public String Path;		
-		public String Title;
-		public String Artist;
-        public String Composer;
-		public String Comment;
-		public String Genre;		
-		public String Album;
-		public int Year;
+		public string Path;		
+		public string Title;
+		public string Artist;
+        public string Composer;
+		public string Comment;
+		public string Genre;
+		public string Album;
+        public string OriginalAlbum;
+        public string OriginalArtist;
+        public string Copyright;
+        public string Description;
+        public string Publisher;
+        public string AlbumArtist;
+        public string Conductor;
+        public int Year;
 		public int Bitrate;
 		public bool IsVBR;
 		public int CodecFamily;
@@ -42,9 +50,11 @@ namespace ATL
 		public int TrackNumber;
         public int DiscNumber;
         public int Rating;
+        public IDictionary<string, string> AdditionalFields;
+        public IList<TagData.PictureInfo> PictureTokens;
+
         [Obsolete]
         public IList<MetaReaderFactory.PIC_CODE> Pictures;
-        public IList<TagData.PictureInfo> PictureTokens;
 
         protected Image coverArt = null;
         protected byte[] coverArtBinary = null;
@@ -134,14 +144,18 @@ namespace ATL
                 {
                     Title = System.IO.Path.GetFileNameWithoutExtension(Path);
                 }
-                Artist = theReader.Artist;
-                if (null == Artist) { Artist = ""; }
-                Composer = theReader.Composer;
-                if (null == Composer) { Composer = ""; }
-                Comment = theReader.Comment;
-                if (null == Comment) { Comment = ""; }
-                Genre = theReader.Genre;
-                if (null == Genre) { Genre = ""; }
+                Artist = Utils.ProtectValue(theReader.Artist);
+                Composer = Utils.ProtectValue(theReader.Composer);
+                Comment = Utils.ProtectValue(theReader.Comment);
+                Genre = Utils.ProtectValue(theReader.Genre);
+                OriginalArtist = Utils.ProtectValue(theReader.OriginalArtist);
+                OriginalAlbum = Utils.ProtectValue(theReader.OriginalAlbum);
+                Description = Utils.ProtectValue(theReader.GeneralDescription);
+                Copyright = Utils.ProtectValue(theReader.Copyright);
+                Publisher = Utils.ProtectValue(theReader.Publisher);
+                AlbumArtist = Utils.ProtectValue(theReader.AlbumArtist);
+                Conductor = Utils.ProtectValue(theReader.Conductor);
+                AdditionalFields = theReader.AdditionalFields;
                 Year = theReader.IntYear;
                 Album = theReader.Album;
                 TrackNumber = theReader.Track;
