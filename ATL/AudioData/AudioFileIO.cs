@@ -46,6 +46,11 @@ namespace ATL.AudioData
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
         }
 
+        private string processString(string value)
+        {
+            return value.Replace('\t', ',').Replace("\r", "").Replace(MetaDataIO.internalLineSeparator, MetaDataIO.displayLineSeparator).Replace("\0", "").Replace(MetaDataIO.internalValueSeparator, MetaDataIO.displayValueSeparator);
+        }
+
         /// <summary>
         /// Audio file name
         /// </summary>
@@ -58,70 +63,70 @@ namespace ATL.AudioData
         /// </summary>
         public string Title
         {
-            get { return metaData.Title.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Title); }
         }
         /// <summary>
         /// Artist
         /// </summary>
         public string Artist
         {
-            get { return metaData.Artist.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Artist); }
         }
         /// <summary>
         /// Composer
         /// </summary>
         public string Composer
         {
-            get { return metaData.Composer.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Composer); }
         }
         /// <summary>
         /// Publisher
         /// </summary>
         public string Publisher
         {
-            get { return metaData.Publisher.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Publisher); }
         }
         /// <summary>
         /// Conductor
         /// </summary>
         public string Conductor
         {
-            get { return metaData.Conductor.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Conductor); }
         }
         /// <summary>
         /// Album Artist
         /// </summary>
         public string AlbumArtist
         {
-            get { return metaData.AlbumArtist.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.AlbumArtist); }
         }
         /// <summary>
         /// General description
         /// </summary>
         public string GeneralDescription
         {
-            get { return metaData.GeneralDescription.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.GeneralDescription); }
         }
         /// <summary>
         /// Copyright
         /// </summary>
         public string Copyright
         {
-            get { return metaData.Copyright.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.Copyright); }
         }
         /// <summary>
         /// Original artist
         /// </summary>
         public string OriginalArtist
         {
-            get { return metaData.OriginalArtist.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.OriginalArtist); }
         }
         /// <summary>
         /// Original album
         /// </summary>
         public string OriginalAlbum
         {
-            get { return metaData.OriginalAlbum.Replace('\t', ',').Replace("\r", "").Replace('\n', ',').Replace("\0", ""); }
+            get { return processString(metaData.OriginalAlbum); }
         }
 
         /// <summary>
@@ -129,7 +134,7 @@ namespace ATL.AudioData
         /// </summary>
         public string Comment
         {
-            get { return metaData.Comment.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
+            get { return processString(metaData.Comment); }
         }
         /// <summary>
         /// Flag indicating the presence of embedded pictures
@@ -143,7 +148,7 @@ namespace ATL.AudioData
         /// </summary>
         public string Genre
         {
-            get { return metaData.Genre.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
+            get { return processString(metaData.Genre); }
         }
         /// <summary>
         /// Track number
@@ -171,7 +176,7 @@ namespace ATL.AudioData
         /// </summary>
         public string Album
         {
-            get { return metaData.Album.Replace('\t', ',').Replace("\r", "").Replace('\n', ' ').Replace("\0", ""); }
+            get { return processString(metaData.Album); }
         }
         /// <summary>
         /// Track duration (seconds), rounded

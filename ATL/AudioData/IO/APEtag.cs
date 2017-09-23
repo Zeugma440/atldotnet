@@ -189,8 +189,15 @@ namespace ATL.AudioData.IO
 
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
-                    strValue = Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize));
-                    setMetaField(frameName.Trim(), strValue.Trim(), Tag, readTagParams.ReadAllMetaFrames);
+                    /* 
+                     * According to spec : "Items are not zero-terminated like in C / C++.
+                     * If there's a zero character, multiple items are stored under the key and the items are separated by zero characters."
+                     * 
+                     * => Values have to be splitted
+                     */
+                    strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize)));
+                    strValue = strValue.Replace("\0", internalValueSeparator).Trim();
+                    setMetaField(frameName.Trim(), strValue, Tag, readTagParams.ReadAllMetaFrames);
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {

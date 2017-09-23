@@ -10,10 +10,17 @@ namespace ATL.AudioData.IO
 {
     public abstract class MetaDataIO : IMetaDataIO
     {
+        // TODO - move everything to general option class
         // General properties
         protected static bool ID3v2_useExtendedHeaderRestrictions = false;
         protected static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
         protected static bool enablePadding = false;                        // Used by OGG container
+        
+        // Used by APE tag
+        public static string internalValueSeparator = "˵"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
+        public static string displayValueSeparator = ";";
+        public static string internalLineSeparator = "˶"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
+        public static string displayLineSeparator = "/";
 
         // Default tag offset
         protected const int TO_EOF = 0;     // End Of File
@@ -58,6 +65,8 @@ namespace ATL.AudioData.IO
         public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
         public static void SetASFKeepNonWMFieldWhenRemoving(bool b) { ASF_keepNonWMFieldsWhenRemovingTag = b; }
         public static void SetEnablePadding(bool b) { enablePadding = b; }
+        public static void SetValueSeparator(string s) { displayValueSeparator = s; }
+        public static void SetLineSeparator(string s) { displayLineSeparator = s; }
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
