@@ -107,6 +107,7 @@
     <None Include="Resources\OGG\empty.ogg" />
     <None Include="Resources\OGG\ogg.ogg" />
     <None Include="Resources\OPUS\01_2_32.opus" />
+    <None Include="Resources\PSF\nolength.PSF" />
     <None Include="Resources\PSF\empty.psf" />
     <None Include="Resources\PSF\psf.psf" />
     <None Include="Resources\S3M\empty.s3m" />

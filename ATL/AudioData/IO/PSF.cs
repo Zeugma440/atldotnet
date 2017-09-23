@@ -259,6 +259,7 @@ namespace ATL.AudioData.IO
                 string keyStr, valueStr, lowKeyStr;
                 string lastKey = "";
                 string lastValue = "";
+                bool lengthFieldFound = false;
 
 				while ( s != "" )
 				{
@@ -273,6 +274,7 @@ namespace ATL.AudioData.IO
 
                         if (lowKeyStr.Equals(TAG_LENGTH) || lowKeyStr.Equals(TAG_FADE))
                         {
+                            if (lowKeyStr.Equals(TAG_LENGTH)) lengthFieldFound = true;
                             duration += parsePSFDuration(valueStr);
                         }
 
@@ -290,8 +292,11 @@ namespace ATL.AudioData.IO
 					}
 
 					s = readPSFLine(source.BaseStream, encoding);
-				}
+				} // Metadata lines 
                 setMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
+
+                // PSF files without any 'length' tag take default duration, regardless of 'fade' value
+                if (!lengthFieldFound) duration = PSF_DEFAULT_DURATION;
 
                 tag.size = (int)(source.BaseStream.Position - initialPosition);
                 if (readTagParams.PrepareForWriting)
@@ -400,8 +405,6 @@ namespace ATL.AudioData.IO
 
                 tagExists = true;
 			} 
-
-            if (0 == duration) duration = PSF_DEFAULT_DURATION;
 
             bitrate = (sizeInfo.FileSize-tag.size)* 8 / duration;
 

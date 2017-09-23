@@ -148,6 +148,7 @@ namespace ATL.test
         public void Audio_DSF_PSF()
         {
             testGenericAudio("PSF/psf.psf", 159, 10, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("PSF/nolength.psf", 180, 13, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
             testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", 26, 0, 44100, false, AudioDataIOFactory.CF_SEQ_WAV, 1);
         }
 
