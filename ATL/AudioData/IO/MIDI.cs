@@ -449,8 +449,7 @@ namespace ATL.AudioData.IO
             // 2 - multiple tracks, asynchronous
             if (type > 1)
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_ERROR, "[MIDI Reader] only SMF Type 0 and 1 supported");
-                return false;
+                Logging.LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
             }
 
             tagExists = true;
