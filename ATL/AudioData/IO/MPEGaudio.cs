@@ -498,7 +498,7 @@ namespace ATL.AudioData.IO
 			else return 13;
 		}
 
-		private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR)
+		private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR, SizeInfo sizeInfo)
 		{
 			byte[] headerData = new byte[4];  
 			FrameHeader result = new FrameHeader();
@@ -539,7 +539,7 @@ namespace ATL.AudioData.IO
                 if (!result.Found)
                 {
                     source.Seek(-4, SeekOrigin.Current);
-                    long limit = (long)Math.Round(source.Length * 0.3);
+                    long limit = sizeInfo.ID3v2Size + (long)Math.Round((source.Length-sizeInfo.ID3v2Size) * 0.3);
 
                     // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched that way)
                     while (!result.Found && source.Position < limit)
@@ -796,7 +796,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 
             reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-			HeaderFrame = findFrame(reader, ref vbrData);
+			HeaderFrame = findFrame(reader, ref vbrData, sizeInfo);
 
             // Search for vendor ID at the end if CBR encoded
 /*
