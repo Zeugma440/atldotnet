@@ -519,6 +519,7 @@ namespace ATL.AudioData.IO
 
             if (!result.Found)
             {
+                // "Quick win" for files starting with padding bytes
                 // 4 identical bytes => MP3 starts with padding bytes => Skip padding
                 if ((headerData[0] == headerData[1]) && (headerData[1] == headerData[2]) && (headerData[2] == headerData[3]) ) 
                 {
@@ -548,9 +549,31 @@ namespace ATL.AudioData.IO
                         source.Seek(-1, SeekOrigin.Current);
                         source.Read(headerData, 0, 4);
                         result.Found = isValidFrameHeader(headerData);
+
+                        // Valid header candidate found
+                        // => let's see if it is a legit MP3 header by using its Size descriptor to find the next header
                         if (result.Found)
                         {
-                            break;
+                            result.LoadFromByteArray(headerData);
+
+                            result.Position = source.Position - 4;
+                            result.Size = getFrameSize(result);
+
+                            byte[] nextHeaderData = new byte[4];
+                            source.Seek(result.Position + result.Size, SeekOrigin.Begin);
+                            source.Read(nextHeaderData, 0, 4);
+                            result.Found = isValidFrameHeader(nextHeaderData);
+
+                            if (result.Found)
+                            {
+                                source.Seek(result.Position + 4, SeekOrigin.Begin); // Go back to header candidate position
+                                break;
+                            }
+                            else
+                            {
+                                // Restart looking for a candidate
+                                source.Seek(result.Position + 1, SeekOrigin.Begin);
+                            }
                         } else
                         {
                             source.Seek(-3, SeekOrigin.Current);
@@ -563,13 +586,12 @@ namespace ATL.AudioData.IO
             {
                 result.LoadFromByteArray(headerData);
 
-                result.Position = source.Position;
-                result.Size = getFrameSize(result);
+                result.Position = source.Position - 4;
 
                 // result.Xing = isXing(i + 4, Data); // Will look into it when encoder ID is needed by upper interfaces
 
                 // Look for VBR signature
-                oVBR = findVBR(source, result.Position - 4 + getVBRDeviation(result));
+                oVBR = findVBR(source, result.Position + getVBRDeviation(result));
             }
 
 			return result;

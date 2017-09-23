@@ -19,6 +19,14 @@ namespace ATL.AudioData.IO
     /// 
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
     ///     implementation of decoding extended header data is still theoretical
+    ///     
+    ///     2. Comment description
+    ///     
+    ///     Currently, only the last COMM field is read (and rewritten).
+    ///     However, there can be as many COMM fields as long as their language ID and description are different
+    ///     Some taggers even seem to use COMM + description the same way as the XXX field (e.g. : COMM_eng_Catalog Number_CTL0992)
+    ///     
+    ///     ATL does not support multiple COMM fields yet
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -373,6 +381,7 @@ namespace ATL.AudioData.IO
             string strData;
             Encoding frameEncoding;
             long streamPos;
+            long initialTagPos = source.Position;
             long streamLength = source.Length;
             int tagSize = getTagSize(tag, false);
             tag.ActualEnd = -1;
@@ -414,6 +423,8 @@ namespace ATL.AudioData.IO
                     else // If not, we're in the wrong place
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
+                        source.Seek(initialTagPos - tag.HeaderEnd + tagSize, SeekOrigin.Begin);
+                        streamPos = source.Position;
                         break;
                     }
                 }
