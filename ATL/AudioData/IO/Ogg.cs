@@ -516,20 +516,29 @@ namespace ATL.AudioData.IO
 
             string headerId;
             byte typeFlag;
-            byte nbLacingValues;
             byte[] lacingValues = new byte[255];
+            byte nbLacingValues = 0;
             long nextPageOffset = 0;
 
             // TODO - fine tune seekSize value
             int seekSize = (int)Math.Round(MAX_PAGE_SIZE * 0.75);
             if (seekSize > source.Length) seekSize = (int)Math.Round(source.Length * 0.5);
             source.Seek(-seekSize, SeekOrigin.End); 
-            StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID));
+            if (!StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID)))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "No OGG header found; aborting read operation"); // Throw exception ?
+                return 0;
+            }
             source.Seek(-4, SeekOrigin.Current);
 
             // Iterate until last page is encountered
             do
             {
+                if (source.Position + nextPageOffset + 27 > source.Length) // End of stream about to be reached => last OGG header did not have the proper type flag
+                {
+                    break;
+                }
+
                 source.Seek(nextPageOffset, SeekOrigin.Current);
 
                 headerId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
