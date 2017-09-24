@@ -57,7 +57,7 @@ namespace ATL.benchmark
             FF_BrowseATLAudioFiles(null);
         }
 
-        public void FF_BrowseATLAudioFiles(string path, bool useOldImplementation = false, bool fetchPicture = false, bool display=true)
+        public void FF_BrowseATLAudioFiles(string path, bool fetchPicture = false, bool display=true)
         {
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
@@ -69,7 +69,7 @@ namespace ATL.benchmark
             {
                 if (isFormatSupported(file))
                 {
-                    t = new Track(file, useOldImplementation);
+                    t = new Track(file);
                     if (fetchPicture) t.GetEmbeddedPicture();
                     if (display)
                     {

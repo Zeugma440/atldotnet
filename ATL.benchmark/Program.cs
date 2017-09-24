@@ -45,7 +45,7 @@ namespace ATL.benchmark
             }
             else if (Directory.Exists(filePath))
             {
-                ff.FF_BrowseATLAudioFiles(filePath, false, true, true);
+                ff.FF_BrowseATLAudioFiles(filePath, true, true);
                 if (useTagLib)
                 {
                     Console.WriteLine("________________________________________________________");

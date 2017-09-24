@@ -28,7 +28,7 @@ namespace ATL.benchmark
             }
             else if (Directory.Exists(path))
             {
-                ff.FF_BrowseATLAudioFiles(path, false, true, false);
+                ff.FF_BrowseATLAudioFiles(path, true, false);
             }
         }
     }
