@@ -191,5 +191,10 @@ namespace ATL.AudioData
         /// <param name="w">Writer to the resource to edit</param>
         /// <returns>true if the operation suceeded; false if not</returns>
         bool Remove(BinaryWriter w);
+
+        /// <summary>
+        /// Clears all metadata
+        /// </summary>
+        void Clear();
     }
 }

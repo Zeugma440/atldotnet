@@ -115,6 +115,7 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             isValid = false;
             id3v2Offset = -1;
+            id3v2StructureHelper.Clear();
         }
 
         public DSF(string filePath)

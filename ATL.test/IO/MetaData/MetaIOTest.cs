@@ -221,6 +221,94 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile) File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void test_RW_Empty(string fileName, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : totally metadata-free file
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.GetTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+
+            // Check that it is indeed metadata-free
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+            // Construct a new tag
+            TagData theTag = new TagData();
+            theTag.Title = "Test !!";
+            theTag.Album = "Album";
+            theTag.Artist = "Artist";
+            theTag.AlbumArtist = "Mike";
+            theTag.Comment = "This is a test";
+            theTag.RecordingYear = "2008";
+            theTag.RecordingDate = "2008/01/01";
+            theTag.Genre = "Merengue";
+            theTag.TrackNumber = "01/01";
+            theTag.DiscNumber = "2";
+            theTag.Composer = "Me";
+            theTag.Copyright = "父";
+            theTag.Conductor = "John Johnson Jr.";
+            theTag.Publisher = "Z Corp.";
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("Test !!", meta.Title);
+            Assert.AreEqual("Album", meta.Album);
+            Assert.AreEqual("Artist", meta.Artist);
+            Assert.AreEqual("Mike", meta.AlbumArtist);
+            Assert.AreEqual("This is a test", meta.Comment);
+            Assert.AreEqual("2008", meta.Year);
+            Assert.AreEqual("Merengue", meta.Genre);
+            Assert.AreEqual(1, meta.Track);
+            Assert.AreEqual(2, meta.Disc);
+            Assert.AreEqual("Me", meta.Composer);
+            Assert.AreEqual("父", meta.Copyright);
+            Assert.AreEqual("John Johnson Jr.", meta.Conductor);
+            Assert.AreEqual("Z Corp.", meta.Publisher);
+
+
+            // Remove the tag and check that it has been indeed removed
+            Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+
+            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
+            if (sameSizeAfterEdit || sameBitsAfterEdit)
+            {
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+                if (sameSizeAfterEdit) Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                if (sameBitsAfterEdit)
+                {
+                    string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                    string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+
+                    Assert.AreEqual(originalMD5, testMD5);
+                }
+            }
+
+            // Get rid of the working copy
+            if (deleteTempFile) File.Delete(testFileLocation);
+        }
+
         protected void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {
             pictures.Clear();

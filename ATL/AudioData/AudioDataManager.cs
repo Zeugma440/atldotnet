@@ -269,6 +269,9 @@ namespace ATL.AudioData
                 {
                     readTagParams.offset = ((IMetaDataEmbedder)audioDataIO).HasEmbeddedID3v2;
                     if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                } else
+                {
+                    iD3v2.Clear();
                 }
             }
 

@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         private long id3v2Offset;
-        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
+        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
         private static IDictionary<string, byte> frameMapping; // Mapping between AIFx frame codes and ATL frame codes
 
@@ -174,6 +174,7 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
             isValid = false;
+            id3v2StructureHelper.Clear();
 
             channels = 0;
 			bits = 0;
@@ -289,6 +290,11 @@ namespace ATL.AudioData.IO
                 long containerChunkPos = source.BaseStream.Position;
                 int containerChunkSize = StreamUtils.ReverseInt32(source.ReadInt32());
 
+                if (containerChunkPos + containerChunkSize + 4 != source.BaseStream.Length)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Header size is incoherent with file size");
+                }
+
                 // Form type
                 format = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
@@ -301,10 +307,11 @@ namespace ATL.AudioData.IO
                     bool nameFound = false;
                     bool authorFound = false;
                     bool copyrightFound = false;
+                    long limit = Math.Min(containerChunkPos + containerChunkSize + 4, source.BaseStream.Length);
 
-                    while (source.BaseStream.Position < containerChunkPos + containerChunkSize + 4)
+                    while (source.BaseStream.Position < limit)
                     {
-                        ChunkHeader header = seekNextChunkHeader(source, containerChunkPos + containerChunkSize + 4);
+                        ChunkHeader header = seekNextChunkHeader(source, limit);
 
                         position = source.BaseStream.Position;
 
@@ -401,11 +408,8 @@ namespace ATL.AudioData.IO
                             id3v2Offset = source.BaseStream.Position;
 
                             // Zone is already added by Id3v2.Read
-                            if (id3v2StructureHelper != null)
-                            {
-                                id3v2StructureHelper.AddZone(id3v2Offset - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
-                                id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
-                            }
+                            id3v2StructureHelper.AddZone(id3v2Offset - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
+                            id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
 
                         source.BaseStream.Position = position + header.Size;
@@ -418,16 +422,17 @@ namespace ATL.AudioData.IO
                     if (-1 == id3v2Offset)
                     {
                         id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
-                    }
 
-                    if (readTagParams.PrepareForWriting)
-                    {
-                        // Add zone placeholders for future tag writing
-                        if (-1 == id3v2Offset && id3v2StructureHelper != null)
+                        if (readTagParams.PrepareForWriting)
                         {
                             id3v2StructureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_ID3TAG);
                             id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
+                    }
+
+                    // Add zone placeholders for future tag writing
+                    if (readTagParams.PrepareForWriting)
+                    {
                         if (!nameFound)
                         {
                             structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_NAME);

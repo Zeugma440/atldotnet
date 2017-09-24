@@ -61,7 +61,7 @@ namespace ATL.test.IO.MetaData
     {
         public ID3v2_DSF()
         {
-            emptyFile = "DSF/dsf.dsf";
+            emptyFile = "DSF/empty.dsf";
             notEmptyFile = "DSF/dsf.dsf";
             tagType = MetaDataIOFactory.TAG_ID3V2;
         }
@@ -80,6 +80,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_DSF_ID3v2_Existing()
         {
             test_RW_Existing(notEmptyFile, 2, true, true);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_DSF_ID3v2_Empty()
+        {
+            test_RW_Empty(emptyFile, true, true, true);
         }
     }
 }

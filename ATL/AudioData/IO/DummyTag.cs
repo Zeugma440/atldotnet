@@ -126,5 +126,10 @@ namespace ATL.AudioData.IO
         {
             throw new NotImplementedException();
         }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

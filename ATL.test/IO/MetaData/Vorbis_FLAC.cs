@@ -72,7 +72,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(ref theFile);
         }
         
-        //[TestMethod]
+        [TestMethod]
         public void TagIO_RW_VorbisFLAC_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();

@@ -1087,5 +1087,10 @@ namespace ATL.AudioData.IO
         {
             throw new NotImplementedException();
         }
+
+        public void Clear()
+        {
+            vorbisTag.Clear();
+        }
     }
 }

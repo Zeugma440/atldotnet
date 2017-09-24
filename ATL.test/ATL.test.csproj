@@ -97,6 +97,7 @@
     <None Include="Resources\APE\ape.ape" />
     <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\DSF\dsf.dsf" />
+    <None Include="Resources\DSF\empty.dsf" />
     <None Include="Resources\DTS\dts.dts" />
     <None Include="Resources\FLAC\empty.flac" />
     <None Include="Resources\FLAC\flac.flac" />

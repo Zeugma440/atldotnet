@@ -404,7 +404,7 @@ namespace ATL.AudioData.IO
 
         // ------ COMMON METHODS -----------------------------------------------------
 
-        public void ResetData()
+        protected void ResetData()
         {
             tagExists = false;
             tagVersion = 0;
@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
 
             this.Read(r, readTagParams);
 
-            if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
+            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
             {
                 structureHelper.Clear();
                 structureHelper.AddZone(embedder.Id3v2Zone);
@@ -519,7 +519,7 @@ namespace ATL.AudioData.IO
                         isTagWritten = true;
                         newTagSize = s.Length;
 
-                        if (embedder != null && embedder.HasEmbeddedID3v2 > 0 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2  && embedder.ID3v2EmbeddingHeaderSize > 0)
                         {
                             StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
                             s.Position = 0;
@@ -542,12 +542,19 @@ namespace ATL.AudioData.IO
                     }
                     else // A brand new tag has been added to the file
                     {
-                        switch (getDefaultTagOffset())
+                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
                         {
-                            case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
-                            case TO_BOF: tagBeginOffset = 0; break;
-                            case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
-                            default: tagBeginOffset = -1; break;
+                            tagBeginOffset = embedder.Id3v2Zone.Offset;
+                        }
+                        else
+                        {
+                            switch (getDefaultTagOffset())
+                            {
+                                case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
+                                case TO_BOF: tagBeginOffset = 0; break;
+                                case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
+                                default: tagBeginOffset = -1; break;
+                            }
                         }
                         tagEndOffset = tagBeginOffset + zone.Size;
                     }
@@ -578,7 +585,7 @@ namespace ATL.AudioData.IO
                     cumulativeDelta += delta;
 
                     // Edit wrapping size markers and frame counters if needed
-                    if (delta != 0 && MetaDataIOFactory.TAG_NATIVE == getImplementedTagType())
+                    if (delta != 0 && (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)))
                     {
                         int action;
 
@@ -606,6 +613,12 @@ namespace ATL.AudioData.IO
             bool result = true;
             long cumulativeDelta = 0;
 
+            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
+            {
+                structureHelper.Clear();
+                structureHelper.AddZone(embedder.Id3v2Zone);
+            }
+
             foreach (Zone zone in Zones)
             {
                 if (zone.Offset > -1)
@@ -617,7 +630,7 @@ namespace ATL.AudioData.IO
                         w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType()) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
@@ -646,6 +659,11 @@ namespace ATL.AudioData.IO
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             this.embedder = embedder;
+        }
+
+        public void Clear()
+        {
+            ResetData();
         }
     }
 }

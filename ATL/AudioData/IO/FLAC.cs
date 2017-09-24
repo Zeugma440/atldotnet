@@ -13,7 +13,6 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class FLAC : IMetaDataIO, IAudioDataIO
 	{
-
 		private const byte META_STREAMINFO      = 0;
 		private const byte META_PADDING         = 1;
 		private const byte META_APPLICATION     = 2;
@@ -654,7 +653,7 @@ namespace ATL.AudioData.IO
                 if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
                 {
                     StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-                    vorbisTag.ResetData();
+                    vorbisTag.Clear();
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
@@ -666,6 +665,11 @@ namespace ATL.AudioData.IO
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            vorbisTag.Clear();
         }
     }
 }

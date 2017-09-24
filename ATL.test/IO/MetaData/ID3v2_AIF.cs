@@ -81,5 +81,11 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Existing(notEmptyFile, 2, true, true);
         }
+
+        [TestMethod]
+        public void TagIO_RW_AIF_ID3v2_Empty()
+        {
+            test_RW_Empty(emptyFile, true, true, true);
+        }
     }
 }
