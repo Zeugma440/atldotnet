@@ -1,4 +1,3 @@
-using ATL.AudioReaders.BinaryLogic;
 using ATL.Logging;
 using Commons;
 using System;

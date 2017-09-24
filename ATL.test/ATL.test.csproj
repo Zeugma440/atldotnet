@@ -53,7 +53,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AudioReaders\AudioFileTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
@@ -73,7 +72,6 @@
     <Compile Include="IO\MetaData\MetaIOTest.cs" />
     <Compile Include="IO\MetaData\MP4.cs" />
     <Compile Include="IO\MetaData\APE.cs" />
-    <Compile Include="Misc\FactoryTest.cs" />
     <Compile Include="IO\MetaData\ID3v2.cs" />
     <Compile Include="IO\MetaData\ID3v1.cs" />
     <Compile Include="IO\HighLevel.cs" />

@@ -3,7 +3,6 @@ using System.Collections;
 using System.IO;
 using CueSharp;
 using System.Collections.Generic;
-using ATL.AudioReaders;
 using Commons;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
@@ -103,7 +102,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         cueTrack.Bitrate = physicalTrack.Bitrate;
                         cueTrack.CodecFamily = physicalTrack.CodecFamily;
 						cueTrack.Year = physicalTrack.Year;
-                        cueTrack.Pictures = physicalTrack.Pictures;
+                        cueTrack.PictureTokens = physicalTrack.PictureTokens;
 
 						trackList.Add(cueTrack);
                         previousCueTrack = cueTrack;

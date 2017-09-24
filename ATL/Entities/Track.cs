@@ -1,5 +1,4 @@
 using ATL.AudioData;
-using ATL.AudioReaders;
 using Commons;
 using System;
 using System.Collections.Generic;
@@ -21,8 +20,7 @@ namespace ATL
         public Track(String iPath, bool useOldImplementation = false)
         {
             Path = iPath;
-
-            if (useOldImplementation) UpdateOld(); else Update();
+            Update();
         }
 
         // TODO align on TagData properties
@@ -46,7 +44,6 @@ namespace ATL
         public double SampleRate;
         public bool IsVBR;
 		public int CodecFamily;
-        public int SampleRate;
 		public int Duration;		
 		public int TrackNumber;
         public int DiscNumber;
@@ -54,26 +51,16 @@ namespace ATL
         public IDictionary<string, string> AdditionalFields;
         public IList<TagData.PictureInfo> PictureTokens;
 
-        [Obsolete]
-        public IList<MetaReaderFactory.PIC_CODE> Pictures;
-
         protected Image coverArt = null;
         protected byte[] coverArtBinary = null;
 
 
-        public Image GetEmbeddedPicture(bool useOldImplementation = false, bool loadIntoDotNetImage = true)
+        public Image GetEmbeddedPicture(bool loadIntoDotNetImage = true)
         {
             if (null == coverArt)
             {
-                if (useOldImplementation)
-                {
-                    UpdateOld(new StreamUtils.StreamHandlerDelegate(this.readImageDataOld));
-                }
-                else
-                {
-                    if (loadIntoDotNetImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
-                    else Update(new TagData.PictureStreamHandlerDelegate(this.readBinaryImageData));
-                }
+                if (loadIntoDotNetImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
+                else Update(new TagData.PictureStreamHandlerDelegate(this.readBinaryImageData));
             }
             
             return coverArt;
@@ -92,44 +79,6 @@ namespace ATL
         protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             coverArtBinary = s.GetBuffer();
-        }
-
-        [Obsolete]
-        protected void UpdateOld(StreamUtils.StreamHandlerDelegate pictureStreamHandler = null)
-        {
-            //TODO when tag is not available, customize by naming options // tracks (...)
-            AudioFileReader theReader = new AudioFileReader(Path, pictureStreamHandler);
-
-            // Per convention, the presence of a pictureStreamHandler
-            // indicates that we only want coverArt updated
-            if (null == pictureStreamHandler)
-            {
-                Title = theReader.Title;
-                if ("" == Title || null == Title)
-                {
-                    Title = System.IO.Path.GetFileNameWithoutExtension(Path);
-                }
-                Artist = theReader.Artist;
-                if (null == Artist) { Artist = ""; }
-                Composer = theReader.Composer;
-                if (null == Composer) { Composer = ""; }
-                Comment = theReader.Comment;
-                if (null == Comment) { Comment = ""; }
-                Genre = theReader.Genre;
-                if (null == Genre) { Genre = ""; }
-                Year = theReader.IntYear;
-                Album = theReader.Album;
-                TrackNumber = theReader.Track;
-                DiscNumber = theReader.Disc;
-                Bitrate = theReader.IntBitRate;
-                SampleRate = theReader.SampleRate;
-                CodecFamily = theReader.CodecFamily;
-                SampleRate = 0;
-                Duration = theReader.IntDuration;
-                Rating = theReader.Rating;
-                IsVBR = theReader.IsVBR;
-                Pictures = new List<MetaReaderFactory.PIC_CODE>(theReader.Pictures);
-            }
         }
 
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
