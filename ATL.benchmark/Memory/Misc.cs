@@ -24,7 +24,7 @@ namespace ATL.benchmark
             if (File.Exists(path))
             {
                 Track t = new Track(path);
-                t.GetEmbeddedPicture(false, false);
+                t.GetEmbeddedPicture(false);
             }
             else if (Directory.Exists(path))
             {

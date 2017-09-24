@@ -30,7 +30,7 @@ namespace ATL.benchmark
             //compareInfo(@"E:\Music\VGM");
         }
 
-        static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)
+        static private void readAt(string filePath, bool useTagLib = false)
         {
             FileFinder ff = new FileFinder();
 
@@ -38,7 +38,7 @@ namespace ATL.benchmark
 
             if (File.Exists(filePath))
             {
-                Track t = new Track(filePath, useOldImplementation);
+                Track t = new Track(filePath);
                 //t.GetEmbeddedPicture(useOldImplementation, false);
 
 //                Console.WriteLine(t.Title);
@@ -56,12 +56,6 @@ namespace ATL.benchmark
 //            Console.WriteLine("end");
 //            Console.ReadLine();
         }
-
-        static private void compareInfo(string path)
-        {
-            FileFinder_ATL_NewOld ff = new FileFinder_ATL_NewOld();
-
-            ff.FF_RecursiveExplore(path);
-        }
+        
     }
 }
