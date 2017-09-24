@@ -173,3 +173,7 @@ $RECYCLE.BIN/
 /.vs/ATL/v15/sqlite3/storage.ide
 /ATL.benchmark/Resources/tmp
 *.ide-journal
+/ATL/nuget_push.bat
+/ATL/nuget_pack.bat
+*.nupkg
+*.nuspec

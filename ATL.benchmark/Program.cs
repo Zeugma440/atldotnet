@@ -25,9 +25,9 @@ namespace ATL.benchmark
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
 
-            //readAt(@"E:\Music\Anime\Pita Ten\OST 1\02 - Kotarou, itsumo no mainichi.mp3");
+            //readAt(@"E:\temp\ogg\lastHeaderInvalidTypeFlag.OGG");
 
-            compareInfo(@"E:\Music\Anime");
+            //compareInfo(@"E:\Music\VGM");
         }
 
         static private void readAt(string filePath, bool useOldImplementation = false, bool useTagLib = false)

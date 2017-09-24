@@ -156,7 +156,6 @@ namespace ATL
                 stream.Position = streamPosition;
 
                 cursorPosition += count; // Virtual position outside buffer zone
-                //fillBuffer();
 
                 return count;
             }
