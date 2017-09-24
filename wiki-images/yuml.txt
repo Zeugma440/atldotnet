@@ -1,0 +1,54 @@
+LOGGING
+
+v1.x
+
+[LogDelegator|+delegate LogWriteDelegate|+SetLog(Log);+LogWriteDelegate GetLogDelegate()]<>-logs in 1>[Log], [Log|+Debug(String);+Info(String);+Warning(String);+Error(String);+Register(ILogDevice);+IList of LogItem GetAllItems()]++-generates log 0..*>[LogItem|+DateTime When;+int Level;+String Message],[Log]<>-sends messages to 0..*>[ILogDevice],[interface ILogDevice|+DoLog(LogItem){bg:lemonchiffon}]-[note:Implement your own class here{bg:wheat}]
+
+
+v2.x
+
+[LogDelegator|+delegate LogWriteDelegate;+delegate LogLocateDelegate|+SetLog(Log);+LogWriteDelegate GetLogDelegate();+LogLocateDelegate GetLocateDelegate()]<>-logs in 1>[Log], [Log|+Debug(string);+Info(string);+Warning(string);+Error(string);+Register(ILogDevice);+SetLocation(string);+IList of LogItem GetAllItems()]++-generates log 0..*>[LogItem|+DateTime When;+string Location;+int Level;+string Message],[Log]<>-sends messages to 0..*>[ILogDevice],[interface ILogDevice|+DoLog(LogItem){bg:lemonchiffon}]-[note:Implement your own class here{bg:wheat}]
+
+
+PLAYLISTS
+
+[abstract ReaderFactory|+ICollection of Format getFormats(){bg:slategray}]^-[PlaylistReaderFactory], [PlaylistReaderFactory|+PlaylistReaderFactory GetInstance();+IPlaylistReader GetPlaylistReader(string path){bg:slategray}]uses -.->[PLSReader],[PlaylistReaderFactory]uses -.->[M3UReader],[PlaylistReaderFactory]uses -.->[FPLReader],[<<IPlaylistReader>>;abstract PlaylistReader],[PLSReader]-^[<<IPlaylistReader>>;abstract PlaylistReader],[M3UReader]-^[<<IPlaylistReader>>;abstract PlaylistReader],[FPLReader]-^[<<IPlaylistReader>>;abstract PlaylistReader],[interface IPlaylistReader|+string Path|+IList of string GetFiles(){bg:lemonchiffon}]
+
+
+CATALOGDATA
+
+[CatalogDataReaderFactory|+CatalogDataReaderFactory GetInstance();+ICatalogDataReader GetCatalogDataReader(string path){bg:slategray}]uses -.->[<<ICatalogDataReader>>;CueAdapter],[<<ICatalogDataReader>>;CueAdapter]uses -.->[CuseSharp.CueSheet{bg:turquoise}],[interface ICatalogDataReader|+string Path;+string Title;+string Artist;+IList of Track Tracks{bg:lemonchiffon}], [abstract ReaderFactory|+ICollection of Format getFormats(){bg:slategray}]^-[CatalogDataReaderFactory]
+
+
+AUDIO
+
+GENERAL
+
+v1.x
+
+[abstract ReaderFactory|+ICollection of Format getFormats(){bg:slategray}], [MetaReaderFactory|+MetaReaderFactory GetInstance();+IMetaDataReader GetMetaReader(IAudioDataReader){bg:slategray}],[AudioReaderFactory|+AudioReaderFactoryGetInstance();+IAudioDataReader GetDataReader(String path){bg:slategray}], [Track]uses -.->[<<IMetaDataReader>>;<<IAudioDataReader>>;AudioFileReader],[<<IMetaDataReader>>;<<IAudioDataReader>>;AudioFileReader]uses -.->[AudioReaderFactory],[<<IMetaDataReader>>;<<IAudioDataReader>>;AudioFileReader]uses -.->[MetaReaderFactory], [abstract ReaderFactory]^-[MetaReaderFactory], [abstract ReaderFactory]^-[AudioReaderFactory], [interface IAudioDataReader|+double BitRate;+double Duration;+bool IsVBR;+int CodecFamily|+bool ReadFromFile(String fileName){bg:lemonchiffon}], [interface IMetaDataReader|+bool Exists;+String Title;+String Artist;+String Composer;...|+Read(BinaryReader){bg:lemonchiffon}]
+
+v2.x
+
+[abstract ReaderFactory|+ICollection of Format getFormats(){bg:slategray}], [MetaDataIOFactory|+MetaDataIOFactory GetInstance();+IMetaDataIO GetMetaReader(AudioDataManager){bg:slategray}],[AudioDataIOFactory|+AudioDataIOFactoryGetInstance();+IAudioDataIO GetDataReader(string path){bg:slategray}], [Track]uses -.->[<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO],[<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO]uses -.->[AudioDataIOFactory],[<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO]uses -.->[MetaDataIOFactory], [abstract ReaderFactory]^-[MetaDataIOFactory], [abstract ReaderFactory]^-[AudioDataIOFactory], [interface IAudioDataIO|+double BitRate;+double Duration;+bool IsVBR;+int CodecFamily;...|+bool ReadFromFile(string fileName){bg:lemonchiffon}], [interface IMetaDataIO|+bool Exists;+string Title;+string Artist;+string Composer;...|+Read(BinaryReader){bg:lemonchiffon}], [AudioDataManager|+ReadFromFile;+UpdateTagInFile;+RemoveTagFromFile], [<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO]uses -.->[AudioDataManager]
+
+
+METADATA IO (WIP)
+
+v1.x
+
+[MetaDataIOFactory{bg:slategray}], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;CrossMetadataReader], [MetaDataIOFactory]uses -.->[TAPEtag], [MetaDataIOFactory]uses -.->[TID3v1], [MetaDataIOFactory]uses -.->[TID3v2], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TOggVorbis], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TWMAFile], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TAACFile], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TFLACFile], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TPSFFile], [MetaDataIOFactory]uses -.->[<<IMetaDataIO>>;TSPCFile], [<<IMetaDataIO>>;abstract MetaDataReader]^-[TAPEtag], [<<IMetaDataIO>>;abstract MetaDataReader]^-[TID3v1], [<<IMetaDataIO>>;abstract MetaDataReader]^-[TID3v2], [<<IMetaDataIO>>;CrossMetadataReader]uses -.->[TAPEtag], [<<IMetaDataIO>>;CrossMetadataReader]uses -.->[TID3v1], [<<IMetaDataIO>>;CrossMetadataReader]uses -.->[TID3v2]
+
+v2.x
+
+[MetaDataIOFactory{bg:slategray}], [<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO]uses -.->[MetaDataIOFactory], [AudioDataManager|+ReadFromFile;+UpdateTagInFile;+RemoveTagFromFile],  [<<IMetaDataIO>>;<<IAudioDataIO>>;AudioFileIO]uses -.->[AudioDataManager], [MetaDataIOFactory]uses -.->[AudioDataManager]
+
+
+AUDIODATA IO (WIP)
+
+v1.x
+
+[AudioDataIOFactory{bg:slategray}], [AudioDataIOFactory]uses -.->[TMPEGAudio], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TOggVorbis], [AudioDataIOFactory]uses -.->[TMPEGPlus], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TFLACFile], [AudioDataIOFactory]uses -.->[TMonkey], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TWMAFile], [AudioDataIOFactory]uses -.->[Midi], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TAACFile], [AudioDataIOFactory]uses -.->[TAC3], [AudioDataIOFactory]uses -.->[TOptimFrog], [AudioDataIOFactory]uses -.->[TWAVPackFile], [AudioDataIOFactory]uses -.->[TWAVFile], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TPSFFile], [AudioDataIOFactory]uses -.->[<<IMetaDataIO>>;TSPCFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TMPEGAudio], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TOggVorbis], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TMPEGPlus], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TFLACFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TMonkey], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TWMAFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[Midi], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TAACFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TAC3], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TOptimFrog], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TWAVPackFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[TWAVFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TPSFFile], [<<IAudioDataIO>>;abstract AudioDataReader]^-[<<IMetaDataIO>>;TSPCFile]
+
+v2.x
+

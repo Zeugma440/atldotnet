@@ -19,6 +19,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.benchmark", "ATL.benchmark\ATL.benchmark.csproj", "{64F84F45-D8D6-46CE-96BF-3D7F93A43C63}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wiki-images", "wiki-images", "{45AB5527-A5C5-48A7-B5DC-973FD02101A8}"
+	ProjectSection(SolutionItems) = preProject
+		wiki-images\yuml.txt = wiki-images\yuml.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -17,13 +17,11 @@ namespace ATL
 
         // TODO create a constructor that directly loads pictures instead of opening the file two times
 
-        public Track(String iPath, bool useOldImplementation = false)
+        public Track(String iPath)
         {
             Path = iPath;
             Update();
         }
-
-        // TODO align on TagData properties
 
 		public string Path;		
 		public string Title;
@@ -54,6 +52,8 @@ namespace ATL
         protected Image coverArt = null;
         protected byte[] coverArtBinary = null;
 
+        
+        // TODO make all embedded pictures available (not only the first one found)
 
         public Image GetEmbeddedPicture(bool loadIntoDotNetImage = true)
         {

@@ -30,20 +30,20 @@ namespace ATL.AudioData
             thePath = path;
 
             audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
-            AudioDataManager dataIO = new AudioDataManager(audioData);
-            found = dataIO.ReadFromFile(pictureStreamHandler);
+            AudioDataManager audioManager = new AudioDataManager(audioData);
+            found = audioManager.ReadFromFile(pictureStreamHandler);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
-                dataIO = new AudioDataManager(audioData);
-                found = dataIO.ReadFromFile(pictureStreamHandler);
+                audioManager = new AudioDataManager(audioData);
+                found = audioManager.ReadFromFile(pictureStreamHandler);
             }
 
-            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(dataIO);
+            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
 
-            if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata for " + thePath);
+            if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
         private string processString(string value)

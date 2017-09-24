@@ -16,27 +16,27 @@ namespace ATL.AudioData
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
 		private IList<IMetaDataIO> metaReaders = null;
 
-		public CrossMetadataReader(AudioDataManager baseReader, int[] tagPriority)
+		public CrossMetadataReader(AudioDataManager audioManager, int[] tagPriority)
 		{
             metaReaders = new List<IMetaDataIO>();
 
 			for (int i=0; i<tagPriority.Length; i++)
 			{
-                if ((MetaDataIOFactory.TAG_NATIVE == tagPriority[i]) && (baseReader.HasNativeMeta()) && (baseReader.NativeTag != null))
+                if ((MetaDataIOFactory.TAG_NATIVE == tagPriority[i]) && (audioManager.HasNativeMeta()) && (audioManager.NativeTag != null))
                 {
-                    metaReaders.Add(baseReader.NativeTag);
+                    metaReaders.Add(audioManager.NativeTag);
                 }
-                if ( (MetaDataIOFactory.TAG_ID3V1 == tagPriority[i]) && (baseReader.ID3v1.Exists) )
+                if ( (MetaDataIOFactory.TAG_ID3V1 == tagPriority[i]) && (audioManager.ID3v1.Exists) )
 				{
-					metaReaders.Add(baseReader.ID3v1);
+					metaReaders.Add(audioManager.ID3v1);
 				}
-				if ( (MetaDataIOFactory.TAG_ID3V2 == tagPriority[i]) && (baseReader.ID3v2.Exists) )
+				if ( (MetaDataIOFactory.TAG_ID3V2 == tagPriority[i]) && (audioManager.ID3v2.Exists) )
 				{
-					metaReaders.Add(baseReader.ID3v2);
+					metaReaders.Add(audioManager.ID3v2);
 				}
-				if ( (MetaDataIOFactory.TAG_APE == tagPriority[i]) && (baseReader.APEtag.Exists) )
+				if ( (MetaDataIOFactory.TAG_APE == tagPriority[i]) && (audioManager.APEtag.Exists) )
 				{
-					metaReaders.Add(baseReader.APEtag);
+					metaReaders.Add(audioManager.APEtag);
 				}
 			}
 		}
