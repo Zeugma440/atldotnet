@@ -221,7 +221,6 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile) File.Delete(testFileLocation);
         }
 
-        [TestMethod]
         public void test_RW_Empty(string fileName, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
         {
             ConsoleLogger log = new ConsoleLogger();
