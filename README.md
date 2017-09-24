@@ -10,6 +10,8 @@ __Windows .NET Build__ : [![Build status](https://ci.appveyor.com/api/projects/s
 
 __Code coverage__ : [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
 
+__Optimized with__ : [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) and [CodeTrack](http://www.getcodetrack.com/)
+
 
 ## What is ATL .NET ?
 
