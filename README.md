@@ -22,13 +22,9 @@ As a showcase, I have used ATL.NET as a cornerstone to build [Ethos Cataloger](h
 
 ## What is NOT ATL .NET ?
 
-Audio Tools Library .NET is not :
+Audio Tools Library .NET is not
 
 * a standalone application : it is a library aimed at being used by developers to build software
-
-* an audio file tagger : it only _reads_ data
-
-NB : I'm currently playing with experimental classes aimed at securely creating, editing and removing metadata (tags). It might take some time to stabilize, since altering audio files needs thorough testing
 
 * an audio music player : it gives access to various properties and metadata (see below for the comprehensive list), but does not process audio data into an audible signal
 
@@ -47,8 +43,10 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 * ATL is a __fully native C# implementation__, which makes portability trivial if your app is already based on .NET or Mono frameworks
 
 * ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
-  
-* ATL features __Playlists and Cuesheets readers__
+
+* ATL supports __more audio formats than TagLib, including video game audio formats (SPC, PSF)__
+
+* ATL supports __Playlists and Cuesheets__
 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
@@ -72,7 +70,7 @@ NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, 
 
 R= Read
 
-W= Write (work in progress in the IO branch; ATL only writes using the latest standard available - e.g. ID3v1.1, ID3v2.4, APEv2)
+W= Write
 
 
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
@@ -110,7 +108,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 * Detected fields
 	* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-	* Metadata (from tags) : Title, Artist, Composer, Comment, Genre, Track number, Disc number, Year, Album, Rating, Embedded pictures
+	* Metadata (from tags) : Title, Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures
 
 * Supported playlists formats : ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
 
@@ -119,7 +117,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Being able to create, edit and remove metadata (tags) <== WIP on the "IO" branch
+* Better support of ID3v2 tags with multiple Comments (each having a specific comment description, which is currently not supported)
 * Compatibility with .NET Core (some emulation of System.Drawing needed here and there)
 * Support for __more video game-specific music formats__ (.GYM, .VGM)
 * Connectors to __other library file formats__ (iTunes)
