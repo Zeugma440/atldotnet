@@ -25,9 +25,10 @@ namespace ATL.AudioData.IO
         private const string COMPRESSION_NONE_LE    = "sowt";
 
         private const string CHUNKTYPE_COMMON       = "COMM";
+        private const string CHUNKTYPE_SOUND        = "SSND";
+
         private const string CHUNKTYPE_MARKER       = "MARK";
         private const string CHUNKTYPE_INSTRUMENT   = "INST";
-        private const string CHUNKTYPE_SOUND        = "SSND";
         private const string CHUNKTYPE_COMMENTS     = "COMT";
         private const string CHUNKTYPE_NAME         = "NAME";
         private const string CHUNKTYPE_AUTHOR       = "AUTH";
@@ -286,7 +287,7 @@ namespace ATL.AudioData.IO
             {
                 // Container chunk size
                 long containerChunkPos = source.BaseStream.Position;
-                long containerChunkSize = StreamUtils.ReverseInt32(source.ReadInt32());
+                int containerChunkSize = StreamUtils.ReverseInt32(source.ReadInt32());
 
                 // Form type
                 format = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
@@ -296,8 +297,10 @@ namespace ATL.AudioData.IO
                     isValid = true;
 
                     StringBuilder comment = new StringBuilder("");
+                    long soundChunkPosition = 0;
                     bool nameFound = false;
                     bool authorFound = false;
+                    bool copyrightFound = false;
 
                     while (source.BaseStream.Position < containerChunkPos + containerChunkSize + 4)
                     {
@@ -338,29 +341,37 @@ namespace ATL.AudioData.IO
                                 if (duration > 0) bitrate = sampleSize * numSampleFrames * channels / duration;
                             }
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR))
+                        else if (header.ID.Equals(CHUNKTYPE_SOUND))
+                        {
+                            soundChunkPosition = source.BaseStream.Position - 8;
+                        }
+                        else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR) || header.ID.Equals(CHUNKTYPE_COPYRIGHT))
                         {
                             structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
 
-                            nameFound = header.ID.Equals(CHUNKTYPE_NAME);
-                            authorFound = header.ID.Equals(CHUNKTYPE_AUTHOR);
+                            tagExists = true;
+                            if (header.ID.Equals(CHUNKTYPE_NAME)) nameFound = true;
+                            if (header.ID.Equals(CHUNKTYPE_AUTHOR)) authorFound = true;
+                            if (header.ID.Equals(CHUNKTYPE_COPYRIGHT)) copyrightFound = true;
 
                             setMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
                         }
                         else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
-                            if (comment.Length > 0) comment.Append("/");
+                            if (comment.Length > 0) comment.Append(internalLineSeparator);
                             comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
+                            tagExists = true;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
                             /*
-                             * TODO - Support writing these comments, including timestamp
+                             * TODO - Support writing AIFx comments, including timestamp
                              * 
                             structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID);
                             id3v2.structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
                             */
+                            tagExists = true;
 
                             ushort numComs = StreamUtils.ReverseUInt16(source.ReadUInt16());
 
@@ -376,9 +387,10 @@ namespace ATL.AudioData.IO
                                 // Only read general purpose comments, not those linked to a marker
                                 if (0 == markerId)
                                 {
-                                    if (comment.Length > 0) comment.Append("/");
+                                    if (comment.Length > 0) comment.Append(internalLineSeparator);
                                     comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(comLength)));
-                                } else
+                                }
+                                else
                                 {
                                     source.BaseStream.Seek(comLength, SeekOrigin.Current);
                                 }
@@ -413,18 +425,23 @@ namespace ATL.AudioData.IO
                         // Add zone placeholders for future tag writing
                         if (-1 == id3v2Offset && id3v2StructureHelper != null)
                         {
-                            id3v2StructureHelper.AddZone(containerChunkPos + containerChunkSize + 4, 0, CHUNKTYPE_ID3TAG);
+                            id3v2StructureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_ID3TAG);
                             id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
                         if (!nameFound)
                         {
-                            structureHelper.AddZone(containerChunkPos + containerChunkSize + 4, 0, CHUNKTYPE_NAME);
+                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_NAME);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_NAME);
                         }
                         if (!authorFound)
                         {
-                            structureHelper.AddZone(containerChunkPos + containerChunkSize + 4, 0, CHUNKTYPE_AUTHOR);
+                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_AUTHOR);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_AUTHOR);
+                        }
+                        if (!copyrightFound)
+                        {
+                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COPYRIGHT);
+                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COPYRIGHT);
                         }
                     }
 
@@ -473,6 +490,26 @@ namespace ATL.AudioData.IO
                     result++;
                 }
             }
+            else if (zone.Equals(CHUNKTYPE_COPYRIGHT))
+            {
+                if (tag.Copyright.Length > 0)
+                {
+                    w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                    long sizePos = w.BaseStream.Position;
+                    w.Write((int)0); // Placeholder for field size that will be rewritten at the end of the method
+
+                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Copyright);
+                    w.Write(strBytes);
+
+                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                    w.Write(StreamUtils.ReverseInt32((int)strBytes.Length));
+
+                    result++;
+                }
+            }
+            /*
+            * TODO - Support writing AIFx comments, including timestamp
+            */
 
             return result;
         }
