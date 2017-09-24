@@ -13,7 +13,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 	public class M3UReader : PlaylistReader
 	{
 
-        public override void GetFiles(FileStream fs, ref IList<String> result)
+        public override void GetFiles(FileStream fs, IList<String> result)
 		{
 			TextReader source = null;
 
@@ -25,7 +25,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
 			if (null == encoding)
 			{
-				encoding = StreamUtils.GetEncodingFromFileBOM(ref fs);
+				encoding = StreamUtils.GetEncodingFromFileBOM(fs);
 			}
 
 			source = new StreamReader(fs,encoding);

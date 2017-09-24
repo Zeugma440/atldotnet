@@ -154,6 +154,7 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+
 /ATL.online
 /ATL.test/AudioReaders/WIPTest.cs
 /ATL.test/WebConnectors/WebTest.cs
@@ -162,7 +163,17 @@ $RECYCLE.BIN/
 /ATL.test/app.config
 /ATL.test/packages.config
 /git tagging.txt
+/ATL.test/FileFinder_.cs
+/ATL.test/FileFinder.cs
 /ATL.test/Resources/tmp
+/ATL.VC.VC.opendb
+/ATL.VC.db
 /ATL.test/Resources/pic_hacker_175x168.png
-*.ide
 /ATL.test/Resources/pic_kgb_150x150.jpg
+/.vs/ATL/v15/sqlite3/storage.ide
+/ATL.benchmark/Resources/tmp
+*.ide-journal
+/ATL/nuget_push.bat
+/ATL/nuget_pack.bat
+*.nupkg
+*.nuspec

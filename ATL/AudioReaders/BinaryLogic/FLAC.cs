@@ -513,8 +513,8 @@ namespace ATL.AudioReaders.BinaryLogic
 			// save content in a stream
             theMetaData.Data = new MemoryStream(iBlocklength);
 			theMetaData.Data.Position = 0;
-				
-			StreamUtils.CopyStreamFrom(theMetaData.Data, stream, iBlocklength );
+
+            StreamUtils.CopyStream(stream.BaseStream, theMetaData.Data, iBlocklength);
 
 			aMetaBlockOther.Add(theMetaData);
 		}

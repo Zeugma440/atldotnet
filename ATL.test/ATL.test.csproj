@@ -16,8 +16,6 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,17 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -65,15 +53,37 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AudioReaders\AudioDataTest.cs" />
     <Compile Include="AudioReaders\AudioFileTest.cs" />
-    <Compile Include="AudioReaders\MassAudioTest.cs" />
     <Compile Include="CatalogDataReaders\CUETest.cs" />
+    <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
+    <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
+    <Compile Include="IO\MetaData\AIF.cs" />
+    <Compile Include="IO\MetaData\VQF.cs" />
+    <Compile Include="IO\MetaData\S3M.cs" />
+    <Compile Include="IO\MetaData\PSF.cs" />
+    <Compile Include="IO\MetaData\SPC.cs" />
+    <Compile Include="IO\MetaData\XM.cs" />
+    <Compile Include="IO\MetaData\MIDI.cs" />
+    <Compile Include="IO\MetaData\MOD.cs" />
+    <Compile Include="IO\MetaData\IT.cs" />
+    <Compile Include="IO\MetaData\Vorbis_FLAC.cs" />
+    <Compile Include="IO\MetaData\Vorbis_OGG.cs" />
+    <Compile Include="IO\MetaData\WMA.cs" />
+    <Compile Include="IO\MetaData\MetaIOTest.cs" />
+    <Compile Include="IO\MetaData\MP4.cs" />
+    <Compile Include="IO\MetaData\APE.cs" />
     <Compile Include="Misc\FactoryTest.cs" />
+    <Compile Include="IO\MetaData\ID3v2.cs" />
+    <Compile Include="IO\MetaData\ID3v1.cs" />
+    <Compile Include="IO\HighLevel.cs" />
+    <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Logging\LoggingTest.cs" />
+    <Compile Include="Misc\FileStructureHelperTest.cs" />
+    <Compile Include="Misc\UtilsTest.cs" />
     <Compile Include="PlaylistReaders\PlaylistTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestHelper.cs" />
+    <Compile Include="TestUtils.cs" />
     <Compile Include="Misc\StreamUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup />
@@ -84,38 +94,82 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="Resources\003 BlackBird.tak" />
-    <None Include="Resources\01_2_32.opus" />
-    <None Include="Resources\2ND_PM.S3M" />
-    <None Include="Resources\adgpp_PLAY_01_05.dsf" />
-    <None Include="Resources\mustang_12kHz.flac" />
-    <None Include="Resources\mustang_12kHz_tagged.flac" />
-    <None Include="Resources\duck hunt.cue" />
-    <None Include="Resources\playlist.b4s" />
-    <None Include="Resources\playlist.smil" />
-    <None Include="Resources\playlist.xspf" />
-    <None Include="Resources\Rayman_2_music_sample.ogg" />
-    <None Include="Resources\sommix.it" />
-    <None Include="Resources\SuperMario28bits%28tssf%29.it" />
-    <None Include="Resources\tutte.b4s" />
-    <None Include="Resources\v_chrtrg.xm" />
-    <None Include="Resources\Yeah.dsf" />
+    <None Include="Resources\APE\ape.ape" />
+    <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
+    <None Include="Resources\DSF\dsf.dsf" />
+    <None Include="Resources\DSF\empty.dsf" />
+    <None Include="Resources\DTS\dts.dts" />
+    <None Include="Resources\FLAC\empty.flac" />
+    <None Include="Resources\FLAC\flac.flac" />
+    <None Include="Resources\IT\empty.it" />
+    <None Include="Resources\IT\it.it" />
+    <None Include="Resources\MPC\mpc.mpc" />
+    <None Include="Resources\OFR\BlackBird.ofr" />
+    <None Include="Resources\OGG\bigPicture.ogg" />
+    <None Include="Resources\OGG\empty.ogg" />
+    <None Include="Resources\OGG\ogg.ogg" />
+    <None Include="Resources\OPUS\01_2_32.opus" />
+    <None Include="Resources\PSF\nolength.PSF" />
+    <None Include="Resources\PSF\empty.psf" />
+    <None Include="Resources\PSF\psf.psf" />
+    <None Include="Resources\S3M\empty.s3m" />
+    <None Include="Resources\S3M\s3m.s3m" />
+    <None Include="Resources\SPC\empty.spc" />
+    <None Include="Resources\SPC\spc.spc" />
+    <None Include="Resources\TAK\003 BlackBird.tak" />
+    <None Include="Resources\TTA\BlackBird.tta" />
+    <None Include="Resources\VQF\empty.vqf" />
+    <None Include="Resources\VQF\vqf.vqf" />
+    <None Include="Resources\XM\empty.xm" />
+    <None Include="Resources\XM\xm.xm" />
+    <None Include="Resources\_Cuesheet\duck hunt.cue" />
+    <None Include="Resources\_Playlists\playlist.b4s" />
+    <None Include="Resources\_Playlists\playlist.fpl" />
+    <None Include="Resources\_Playlists\playlist.smil" />
+    <None Include="Resources\_Playlists\playlist.xspf" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\01 - Title Screen.mp3" />
-    <Content Include="Resources\01 - Title Screen_pic.mp3" />
-    <Content Include="Resources\06 I%27m All In Love.m4a" />
-    <Content Include="Resources\4-mat - Thala-Music %28Sanxion%29.mod" />
-    <Content Include="Resources\ataezou - I %28HEART%29 RUEAMATASU.mid" />
-    <Content Include="Resources\duck hunt.wav" />
-    <Content Include="Resources\M1F1-AlawC-AFsp_tagged.aif" />
-    <Content Include="Resources\M1F1-int32-AFsp.aif" />
-    <Content Include="Resources\mp4.m4a" />
-    <Content Include="Resources\playlist.asx" />
-    <Content Include="Resources\playlist.m3u" />
-    <Content Include="Resources\ROQ.MID" />
-    <Content Include="Resources\TRANSIT1.MID" />
+    <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\empty.m4a" />
+    <Content Include="Resources\AAC\latmMcp0_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\latmMcp1_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\loasLatm_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\mdat_before_moov.m4a" />
+    <Content Include="Resources\AAC\mp4.m4a" />
+    <Content Include="Resources\AC3\empty.ac3" />
+    <Content Include="Resources\AIF\aifc_tagged.aif" />
+    <Content Include="Resources\AIF\aiff.aiff" />
+    <Content Include="Resources\AIF\aiff_empty.aif" />
+    <Content Include="Resources\AIF\empty.aif" />
+    <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
+    <Content Include="Resources\MID\ROQ.MID" />
+    <Content Include="Resources\MID\TRANSIT1.MID" />
+    <Content Include="Resources\MOD\empty.mod" />
+    <Content Include="Resources\MOD\mod.mod" />
+    <Content Include="Resources\MP3\01 - Title Screen.mp3" />
+    <Content Include="Resources\MP3\01 - Title Screen_pic.mp3" />
+    <Content Include="Resources\MP3\APE.mp3" />
+    <Content Include="Resources\MP3\empty - Copie.mp3" />
+    <Content Include="Resources\MP3\empty.mp3" />
+    <Content Include="Resources\MP3\id3v1.mp3" />
+    <Content Include="Resources\MP3\ID3v2.2 3 pictures.mp3" />
+    <Content Include="Resources\MP3\ID3v2.2 ANSI charset only.mp3" />
+    <Content Include="Resources\MP3\ID3v2.2 UTF16.mp3" />
+    <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
+    <Content Include="Resources\pic1.jpg" />
+    <Content Include="Resources\pic2.jpg" />
+    <Content Include="Resources\WAV\duck hunt.wav" />
+    <Content Include="Resources\WMA\empty_full.wma" />
+    <Content Include="Resources\WMA\empty_non-WMFields.wma" />
+    <Content Include="Resources\WMA\wma.wma" />
+    <Content Include="Resources\WV\BlackBird.wv" />
+    <Content Include="Resources\_Playlists\local.MID" />
+    <Content Include="Resources\_Playlists\playlist.asx" />
+    <Content Include="Resources\_Playlists\playlist.pls" />
+    <Content Include="Resources\_Playlists\playlist_fullPath.m3u" />
+    <Content Include="Resources\_Playlists\playlist_simple.m3u" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

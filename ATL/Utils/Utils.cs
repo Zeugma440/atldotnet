@@ -5,46 +5,86 @@ using System.Text;
 using System.Security;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Security.Cryptography;
 
 namespace Commons
 {
-	/// <summary>
-	/// General utility class
-	/// </summary>
-    public class Utils
+    /// <summary>
+    /// General utility class
+    /// </summary>
+    public static class Utils
     {
+        private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+
+
+        /// <summary>
+        /// Defines a delegate that does not carry any argument (useful for "pinging")
+        /// </summary>
         public delegate void voidDelegate();
 
-        public Utils() { }
+        public static Encoding Latin1Encoding { get { return latin1Encoding; } }
 
 
+        /// <summary>
+        /// Transforms the given string so that is becomes non-null
+        /// </summary>
+        /// <param name="value">String to protect</param>
+        /// <returns>Given string if non-null; else empty string</returns>
         public static String ProtectValue(String value)
         {
             return (null == value) ? "" : value;
         }
 
+        /// <summary>
+        /// Format the given duration using the following format
+        ///     DDdHH:MM:SS.UUUU
+        ///     
+        ///  Where
+        ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
+        ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
+        ///     MM is the number of minutes
+        ///     SS is the number of seconds
+        ///     UUUU is the number of milliseconds
+        /// </summary>
+        /// <param name="milliseconds">Duration to format (in milliseconds)</param>
+        /// <returns>Formatted duration according to the abovementioned convention</returns>
         public static String FormatTime_ms(long milliseconds)
         {
-            long seconds = (long)Math.Floor(milliseconds / 1000.00);
+            long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
 
             return FormatTime(seconds) + "." + (milliseconds - seconds * 1000);
         }
 
+        /// <summary>
+        /// Format the given duration using the following format
+        ///     DDdHH:MM:SS
+        ///     
+        ///  Where
+        ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
+        ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
+        ///     MM is the number of minutes
+        ///     SS is the number of seconds
+        /// </summary>
+        /// <param name="seconds">Duration to format (in seconds)</param>
+        /// <returns>Formatted duration according to the abovementioned convention</returns>
         public static String FormatTime(long seconds)
         {
             int h;
             long m;
-            String mStr;
+            String hStr, mStr, sStr;
             long s;
-            String sStr;
             int d;
 
             h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
-            m = Convert.ToInt32(Math.Floor((seconds - 3600.00 * h) / 60));
+            m = Convert.ToInt64(Math.Floor((seconds - 3600.00 * h) / 60));
             s = seconds - (60 * m) - (3600 * h);
             d = Convert.ToInt32(Math.Floor(h / 24.00));
             if (d > 0) h = h - (24 * d);
 
+            hStr = h.ToString();
+            if (1 == hStr.Length) hStr = "0" + hStr;
             mStr = m.ToString();
             if (1 == mStr.Length) mStr = "0" + mStr;
             sStr = s.ToString();
@@ -52,13 +92,13 @@ namespace Commons
 
             if (d > 0)
             {
-                return d + "d " + h + ":" + mStr + ":" + sStr;
+                return d + "d " + hStr + ":" + mStr + ":" + sStr;
             }
             else
             {
                 if (h > 0)
                 {
-                    return h + ":" + mStr + ":" + sStr;
+                    return hStr + ":" + mStr + ":" + sStr;
                 }
                 else
                 {
@@ -67,278 +107,70 @@ namespace Commons
             }
         }
 
+        /// <summary>
+        /// Formats a .NET Color to its six-digit "hex triplet" RGB representation (#RRGGBB)
+        /// </summary>
+        /// <param name="col">Color to be formatted</param>
+        /// <returns>Formatted color</returns>
         public static String GetColorCodeFromColor(Color col)
         {
-            String res = "#";
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.R / 16)));
-            res += NumToHex(Convert.ToInt32(col.R % 16));
-
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.G / 16)));
-            res += NumToHex(Convert.ToInt32(col.G % 16));
-
-            res += NumToHex(Convert.ToInt32(Math.Floor((double)col.B / 16)));
-            res += NumToHex(Convert.ToInt32(col.B % 16));
-
-            return res;
+            return "#"+col.ToArgb().ToString("X6").Remove(0,2);
         }
 
-        // Because nothing simple seems to be available on the .NET framework :/
-        private static Char NumToHex(int num)
-        {
-            if (num < 10) return num.ToString()[0];
-            if (10 == num) return 'A';
-            if (11 == num) return 'B';
-            if (12 == num) return 'C';
-            if (13 == num) return 'D';
-            if (14 == num) return 'E';
-            if (15 == num) return 'F';
-            return ' ';
-        }
-
-
-        // ====================================
-        // === Font & Color import / export ===
-        // ====================================
-
-        public static void SaveFontToStream(Font fnt, BinaryWriter w)
-        {
-            w.Write(fnt.Name);			// string
-            w.Write(fnt.SizeInPoints);	// float = single
-            w.Write(fnt.Italic);		// bool
-            w.Write(fnt.Bold);			// bool
-            w.Write(fnt.Underline);		// bool
-            w.Write(fnt.Strikeout);		// bool
-        }
-
-        public static void SaveColorToStream(Color col, BinaryWriter w)
-        {
-            w.Write(col.R);
-            w.Write(col.G);
-            w.Write(col.B);
-        }
-
-        public static Font LoadFontFromStream(BinaryReader r)
-        {
-            String theName = r.ReadString();
-            float theSizePt = r.ReadSingle();
-            bool isIta = r.ReadBoolean();
-            bool isBold = r.ReadBoolean();
-            bool isUnderL = r.ReadBoolean();
-            bool isStrike = r.ReadBoolean();
-
-            FontStyle fs = new FontStyle();
-            if (isIta) { fs = fs | FontStyle.Italic; }
-            if (isBold) { fs = fs | FontStyle.Bold; }
-            if (isUnderL) { fs = fs | FontStyle.Underline; }
-            if (isStrike) { fs = fs | FontStyle.Strikeout; }
-
-            Font fnt = new Font(theName, theSizePt, fs);
-            return fnt;
-        }
-
-        public static Color LoadColorFromStream(BinaryReader r)
-        {
-            return Color.FromArgb(r.ReadByte(), r.ReadByte(), r.ReadByte());
-        }
-
-        // ====================================
-        // ====================================
-
-
-        public static String SanitizeFileName(String str)
+        /// <summary>
+        /// Strips the given string from all invalid characters that could prevent it from being a proper file name
+        /// </summary>
+        /// <param name="str">String to sanitize</param>
+        /// <returns>Given string stripped of all characters that are not valid in a file name</returns>
+        public static string SanitizeFileName(string str)
         {
             return str.Trim().Trim(Path.GetInvalidFileNameChars());
         }
 
-        public static String GetNETRegexpFromDOSRegexp(String dosRegexp)
+        /// <summary>
+        /// Strips the given string from all null '\0' characters (anywhere in the string)
+        /// </summary>
+        /// <param name="iStr">String to process</param>
+        /// <returns>Given string, without any null character</returns>
+        public static string StripZeroChars(string iStr)
         {
-            return dosRegexp.Replace("*", ".*").Replace("?", ".?");
-        }
-
-        public static String StripZeroChars(String iStr)
-        {
-            return Regex.Replace(iStr, @"\0", "");
-        }
-
-        public static bool IsOccidentalChar(char c)
-        {
-            return (
-                ((64 < c) && (c < 91)) ||
-            ('à' == c) ||
-            ('â' == c) ||
-            ('ä' == c) ||
-            ('Â' == c) ||
-            ('Â' == c) ||
-            ('À' == c) ||
-            ('Ä' == c) ||
-            ('ç' == c) ||
-            ('Ç' == c) ||
-            ('é' == c) ||
-            ('è' == c) ||
-            ('ë' == c) ||
-            ('ê' == c) ||
-            ('É' == c) ||
-            ('È' == c) ||
-            ('Ë' == c) ||
-            ('Ê' == c) ||
-            ('î' == c) ||
-            ('ï' == c) ||
-            ('Î' == c) ||
-            ('Ï' == c) ||
-            ('ñ' == c) ||
-            ('Ñ' == c) ||
-            ('ô' == c) ||
-            ('ö' == c) ||
-            ('ò' == c) ||
-            ('Ô' == c) ||
-            ('Ö' == c) ||
-            ('Ò' == c) ||
-            ('ù' == c) ||
-            ('û' == c) ||
-            ('ü' == c) ||
-            ('Ù' == c) ||
-            ('Û' == c) ||
-            ('Ü' == c) ||
-            ('ÿ' == c) ||
-            ('Ý' == c) ||
-            ('Æ' == c) ||
-            ('æ' == c)
-                );
+            //return Regex.Replace(iStr, @"\0", "");  Too expensive
+            StringBuilder sbl = new StringBuilder();
+            for (int i=0;i<iStr.Length;i++)
+            {
+                if (iStr[i] != '\0') sbl.Append(iStr[i]);
+            }
+            return sbl.ToString();
         }
 
         /// <summary>
-        /// Make the given char displayable in "plain" HTML
+        /// Strips the given string from all ending null '\0' characters
         /// </summary>
-        /// <param name="c">Char to simplify</param>
-        /// <returns>Simplified char</returns>
-        public static char HTMLizeChar(char c)
+        /// <param name="iStr">String to process</param>
+        /// <returns>Given string, without any ending null character</returns>
+        public static string StripEndingZeroChars(string iStr)
         {
-            // http://en.wikipedia.org/wiki/Windows-1252
-            if (!IsOccidentalChar(c))
-            {
-                return c;
-            }
-            if ('à' == c) return 'a';
-            if ('â' == c) return 'a';
-            if ('ä' == c) return 'a';
-            if ('Â' == c) return 'A';
-            if ('Â' == c) return 'A';
-            if ('À' == c) return 'A';
-            if ('Ä' == c) return 'A';
-            if ('ç' == c) return 'c';
-            if ('Ç' == c) return 'C';
-            if ('é' == c) return 'e';
-            if ('è' == c) return 'e';
-            if ('ë' == c) return 'e';
-            if ('ê' == c) return 'e';
-            if ('É' == c) return 'E';
-            if ('È' == c) return 'E';
-            if ('Ë' == c) return 'E';
-            if ('Ê' == c) return 'E';
-            if ('î' == c) return 'i';
-            if ('ï' == c) return 'i';
-            if ('Î' == c) return 'I';
-            if ('Ï' == c) return 'I';
-            if ('ñ' == c) return 'n';
-            if ('Ñ' == c) return 'N';
-            if ('ô' == c) return 'o';
-            if ('ö' == c) return 'o';
-            if ('ò' == c) return 'o';
-            if ('Ô' == c) return 'O';
-            if ('Ö' == c) return 'O';
-            if ('Ò' == c) return 'O';
-            if ('ù' == c) return 'u';
-            if ('û' == c) return 'u';
-            if ('ü' == c) return 'u';
-            if ('Ù' == c) return 'U';
-            if ('Û' == c) return 'U';
-            if ('Ü' == c) return 'U';
-            if ('ÿ' == c) return 'y';
-            if ('Ý' == c) return 'Y';
-            if ('Æ' == c) return 'A';
-            if ('æ' == c) return 'a';
-            return c;
+            //return Regex.Replace(iStr, @"\0+\Z", "");  Too expensive
+            int i = iStr.Length;
+            while (i > 0 && '\0' == iStr[i - 1]) i--;
+
+            return iStr.Substring(0, i);
         }
-
-        public static bool IsFileReadable(String iFile)
-        {
-            FileIOPermission filePermission = new
-                FileIOPermission(FileIOPermissionAccess.Read,
-                @iFile);
-            try
-            {
-                filePermission.Demand();
-                return true;
-            }
-            catch (SecurityException)
-            {
-                return false;
-            }
-        }
-
-        // WARNING : Doesn't work yet...
-        public static bool IsFolderListable(String iPath)
-        {
-            FileIOPermission filePermission = new
-                    FileIOPermission(FileIOPermissionAccess.PathDiscovery,
-                                     @iPath);
-            try
-            {
-                filePermission.Demand();
-                return true;
-            }
-            catch (SecurityException)
-            {
-                return false;
-            }
-        }
-
-        // Check if the given file can be accessed by Creation mode
-        // NB : The use of fileStream is intentional to test the scenario where file access is
-        // granted to the user while the resource is locked by another application
-        public static bool IsFileModifiable(String iPath)
-        {
-            try
-            {
-                FileStream fs = new FileStream(iPath, FileMode.Create);
-                fs.Close();
-                return true;
-            }
-            catch (IOException)
-            {
-                return false;
-            }
-        }
-
-        // Tries to guess public folder path based on "My folder" path
-        // Returns null if algorithm fails
-        public static String GuessPublicFolderPath(String myFolderPath)
-        {
-            // Public folder path is obtained by replacing folder name with "Public"
-            // in the user's special folder paths
-            int accountPosEnd = 0;
-            int accountPosStart = myFolderPath.Length;
-
-            while (accountPosStart > -1)
-            {
-                accountPosEnd = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosStart - 1);
-                accountPosStart = myFolderPath.LastIndexOf(Path.DirectorySeparatorChar, accountPosEnd - 1);
-                myFolderPath = myFolderPath.Substring(0, accountPosStart + 1) + "Public" + myFolderPath.Substring(accountPosEnd, myFolderPath.Length - accountPosEnd);
-                if (Directory.Exists(myFolderPath))
-                {
-                    return myFolderPath;
-                }
-            }
-            return null;
-        }
-
-        // Returns true if the app is running under Mono
+        
+        /// <summary>
+        /// Indicates if the current environment is running under Mono
+        /// </summary>
+        /// <returns>True if the current environment is running under Mono; false if not</returns>
         public static bool IsRunningMono()
         {
             Type t = Type.GetType("Mono.Runtime");
             return (t != null);
         }
 
+        /// <summary>
+        /// Indicates if the current OS is Windows
+        /// </summary>
+        /// <returns>True if the current OS is Windows; false if not</returns>
         public static bool IsRunningWindows()
         {
             PlatformID pid = Environment.OSVersion.Platform;
@@ -354,6 +186,10 @@ namespace Commons
             }
         }
 
+        /// <summary>
+        /// Indicates if the current OS is Linux/Unix
+        /// </summary>
+        /// <returns>True if the current OS is Linux/Unix; false if not</returns>
         public static bool IsRunningUnix()
         {
             PlatformID pid = Environment.OSVersion.Platform;
@@ -366,14 +202,271 @@ namespace Commons
             }
         }
 
-        public static String BuildStrictLengthString(String value, int length, char paddingChar)
+        /// <summary>
+        /// Transforms the given string to format with a given length
+        ///  - If the given length is shorter than the actual length of the string, it will be truncated
+        ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given character
+        /// </summary>
+        /// <param name="value">String to transform</param>
+        /// <param name="length">Target length of the final string</param>
+        /// <param name="paddingChar">Character to use if padding is needed</param>
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// false if the padding has to be done on the left-side (optional; default value = true)</param>
+        /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
+        public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
-            String result = (null == value) ? "" : value;
+            string result = (null == value) ? "" : value;
 
-            if (value.Length > length) value = value.Substring(0, length);
-            if (value.Length < length) value = value.PadRight(30, paddingChar);
+            if (result.Length > length) result = result.Substring(0, length);
+            else if (result.Length < length)
+            {
+                if (padRight) result = result.PadRight(length, paddingChar);
+                else result = result.PadLeft(length, paddingChar);
+            }
 
             return result;
         }
+
+        /// <summary>
+        /// Returns the mime-type of the given .NET image format
+        /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// </summary>
+        /// <param name="imageFormat">Image format whose mime-type to obtain</param>
+        /// <returns>mime-type of the given image format</returns>
+        public static string GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
+        {
+            string result = "image/";
+
+            if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg))
+            {
+                result += "jpeg";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Gif))
+            {
+                result += "gif";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Png))
+            {
+                result += "png";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Bmp))
+            {
+                result += "bmp";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Tiff))
+            {
+                result += "tiff";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the .NET image format of the given mime-type
+        /// NB1 : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// NB2 : This function does not verify the syntax of the mime-type (e.g. "image/XXX"), and only focuses on the presence of specific substrings (e.g. "gif")
+        /// </summary>
+        /// <param name="mimeType">Mime-type whose ImageFormat to obtain</param>
+        /// <returns>ImageFormat of the given mime-type (default : JPEG)</returns>
+        public static ImageFormat GetImageFormatFromMimeType(string mimeType)
+        {
+            ImageFormat result = ImageFormat.Jpeg;
+
+            if (mimeType.Contains("gif"))
+            {
+                result = ImageFormat.Gif;
+            }
+            else if (mimeType.Contains("png"))
+            {
+                result = ImageFormat.Png;
+            }
+            else if (mimeType.Contains("bmp"))
+            {
+                result = ImageFormat.Bmp;
+            }
+            else if (mimeType.Contains("tiff"))
+            {
+                result = ImageFormat.Tiff;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Resizes the given image to the given dimensions
+        /// </summary>
+        /// <param name="image">Image to resize</param>
+        /// <param name="size">Target dimensions</param>
+        /// <param name="preserveAspectRatio">True if the resized image has to keep the same aspect ratio as the given image; false if not (optional; default value = true)</param>
+        /// <returns>Resized image</returns>
+        public static Image ResizeImage(Image image, Size size, bool preserveAspectRatio = true)
+        {
+            int newWidth;
+            int newHeight;
+            if (preserveAspectRatio)
+            {
+                int originalWidth = image.Width;
+                int originalHeight = image.Height;
+                float percentWidth = (float)size.Width / originalWidth;
+                float percentHeight = (float)size.Height / originalHeight;
+                float percent = percentHeight < percentWidth ? percentHeight : percentWidth;
+                newWidth = Convert.ToInt32( Math.Round(originalWidth * percent, 0) );
+                newHeight = Convert.ToInt32( Math.Round(originalHeight * percent, 0) );
+            }
+            else
+            {
+                newWidth = size.Width;
+                newHeight = size.Height;
+            }
+            Image newImage = new Bitmap(newWidth, newHeight);
+            using (Graphics graphicsHandle = Graphics.FromImage(newImage))
+            {
+                graphicsHandle.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
+            }
+            return newImage;
+        }
+
+        /// <summary>
+        /// Get the MD5 hash of the given string, interpreted as UTF-8
+        /// Returned value is a string representing the MD5 in hex values
+        /// </summary>
+        /// <param name="value">Strinsg to get the MD5 hash from</param>
+        /// <returns>MD5 hash converted to string according to the rules documented in the method description</returns>
+        public static string GetStrMD5Hash(string value)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (byte b in GetMD5Hash(value)) { sb.Append(b.ToString("x2")); }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Get the MD5 hash of the given string, interpreted as UTF-8
+        /// </summary>
+        /// <param name="value">String to get the MD5 hash from</param>
+        /// <returns>MD5 hash of the given string</returns>
+        private static byte[] GetMD5Hash(string value)
+        {
+            using (var md5 = MD5.Create())
+            {
+                return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
+            }
+        }
+
+        /// <summary>
+        /// Coverts given string value to boolean.
+        ///   - Returns true if string represents a non-null numeric value or the word "true"
+        ///   - Returns false if not
+        ///   
+        /// NB : This implementation exists because default .NET implementation has a different convention as for parsing numbers
+        /// </summary>
+        /// <param name="value">Value to be converted</param>
+        /// <returns>Resulting boolean value</returns>
+        public static bool ToBoolean(string value)
+        {
+            if (value != null)
+            {
+                value = value.Trim();
+
+                if (value.Length > 0)
+                {
+                    // Numeric convert
+                    float f;
+                    if (float.TryParse(value, out f))
+                    {
+                        return (f != 0);
+                    }
+                    else
+                    {
+                        value = value.ToLower();
+                        return ("true".Equals(value));
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The method to Decode your Base64 strings.
+        /// </summary>
+        /// <param name="encodedData">The String containing the characters to decode.</param>
+        /// <param name="s">The Stream where the resulting decoded data will be written.</param>
+        /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
+        public static byte[] DecodeFrom64(byte[] encodedData)
+        {
+            if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
+
+            char[] encodedDataChar = new char[encodedData.Length];
+            Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
+
+            return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+        }
+
+        /// <summary>
+        /// Convert the given input to a Base64 UUencoded output
+        /// </summary>
+        /// <param name="data">Data to be encoded</param>
+        /// <returns>Encoded data</returns>
+        public static byte[] EncodeTo64(byte[] data)
+        {
+            // Each 3 byte sequence in the source data becomes a 4 byte
+            // sequence in the character array. 
+            long arrayLength = (long)((4.0d / 3.0d) * data.Length);
+
+            // If array length is not divisible by 4, go up to the next
+            // multiple of 4.
+            if (arrayLength % 4 != 0)
+            {
+                arrayLength += 4 - arrayLength % 4;
+            }
+
+            char[] dataChar = new char[arrayLength];
+
+            System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
+
+            return Utils.Latin1Encoding.GetBytes(dataChar);
+        }
+
+        /// <summary>
+        /// Detects image format from the given signature
+        /// </summary>
+        /// <param name="header">Binary signature; must be at least 3-bytes long</param>
+        /// <returns>Detected image format corresponding to the given signature; null if no match is found</returns>
+        public static ImageFormat GetImageFormatFromPictureHeader(byte[] header)
+        {
+            if (header.Length < 3) throw new FormatException("Header length must be at least 3");
+
+            if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
+            else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
+            else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
+            else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
+            else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
+            else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
+            else return null;
+        }
+
+        /// <summary>
+        /// Indicates if the given string is exclusively composed of digital charachers
+        /// NB1 : decimal separator '.' is tolerated
+        /// NB2 : whitespaces ' ' are not tolerated
+        /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
+        /// </summary>
+        /// <param name="s">String to analyze</param>
+        /// <returns>True if the string is a digital value; false if not</returns>
+        public static bool IsNumeric(string s)
+        {
+            if ((null == s) || (0 == s.Length)) return false;
+
+            for (int i=0; i<s.Length; i++)
+            {
+                if (!char.IsDigit(s[i]) && !(s[i] == '.')) return false;
+            }
+
+            return true;
+        }
+
     }
 }

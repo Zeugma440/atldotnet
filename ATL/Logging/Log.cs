@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ATL.Logging
 {
@@ -21,7 +22,8 @@ namespace ATL.Logging
 		{
 			public DateTime When;	// Date of the message
 			public int Level;		// Logging level
-			public String Message;	// Contents of the message
+            public string Location; // Location of the message (e.g. filename, line, module...)
+			public string Message;	// Contents of the message
 		}
 
 
@@ -30,6 +32,9 @@ namespace ATL.Logging
 		
 		// Storage structure containing each LogDevice registered by this class
         private IList<ILogDevice> logDevices;
+
+        // Storage structure containing current locations according to calling thread ID
+        private IDictionary<int, string> locations;
 
         
         // ASYNCHRONOUS LOGGING
@@ -50,6 +55,10 @@ namespace ATL.Logging
 		{
             masterLog = new List<LogItem>();
 			logDevices = new List<ILogDevice>();
+            locations = new Dictionary<int, string>();
+
+            // Define default location
+            locations[Thread.CurrentThread.ManagedThreadId] = "";
 		}
 
 		/// <summary>
@@ -87,26 +96,44 @@ namespace ATL.Logging
 		{
 			Write(LV_ERROR,msg);
 		}
-		
 
-		/// <summary>
-		/// Logs the provided message with the provided logging level
-		/// </summary>
-		/// <param name="level">Logging level of the new message</param>
-		/// <param name="msg">Contents of the new message</param>
+        /// <summary>
+        /// Set current location
+        /// 
+        /// NB : Implementation is based on current thread ID, 
+        /// so that Log object can be accessed by multiple threads,
+        /// each setting its own location
+        /// </summary>
+        /// <param name="location">Location value</param>
+        public void SetLocation(string location)
+        {
+            lock (locations)
+            {
+                locations[Thread.CurrentThread.ManagedThreadId] = location;
+            }
+        }
+
+
+        /// <summary>
+        /// Logs the provided message with the provided logging level
+        /// </summary>
+        /// <param name="level">Logging level of the new message</param>
+        /// <param name="msg">Contents of the new message</param>
+        /// <param name="forceDisplay">If true, forces all registered ILogDevices to immediately log the message, even if asynchoronous logging is enabled</param>
         public void Write(int level, String msg)
         {
             write(level, msg, false);
         }
 
-		private void write(int level, String msg, bool forceDisplay)
+		private void write(int level, string msg, bool forceDisplay)
 		{
-			// Creation and filling of the new LogItem
-			LogItem theItem;
+            // Creation and filling of the new LogItem
+            LogItem theItem = new LogItem();
 
 			theItem.When = DateTime.Now;
 			theItem.Level = level;
 			theItem.Message = msg;
+            if (locations.ContainsKey(Thread.CurrentThread.ManagedThreadId)) theItem.Location = locations[Thread.CurrentThread.ManagedThreadId]; else theItem.Location = "";
 
             lock (masterLog)
             {
@@ -117,6 +144,11 @@ namespace ATL.Logging
             doWrite(theItem, forceDisplay);
         }
 
+        /// <summary>
+        /// Logs the provided message with the provided logging level
+        /// </summary>
+        /// <param name="theItem">Message to log</param>
+        /// <param name="forceDisplay">If true, forces all registered ILogDevices to immediately log the message, even if asynchoronous logging is enabled</param>
         private void doWrite(LogItem theItem, bool forceDisplay)
         {
             if (asynchronous && !forceDisplay)

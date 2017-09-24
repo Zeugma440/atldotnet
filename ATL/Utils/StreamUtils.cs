@@ -1,54 +1,52 @@
-﻿using Commons;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace ATL
 {
-    /// <summary>
-    /// Misc. utilities used by binary readers
-    /// </summary>
-    public class StreamUtils
-    {
-        // Size of the buffer used for memory stream copies
-        // (see CopyMemoryStreamFrom method)
-        private const int BUFFERSIZE = 1;
+	/// <summary>
+	/// Misc. utilities used by binary readers
+	/// </summary>
+	public static class StreamUtils
+	{	
+		// Size of the buffer used by memory stream copy methods
+		private const int BUFFERSIZE = 512;
 
+        /// <summary>
+        /// Handler signature to be used when needing to process a MemoryStream
+        /// </summary>
         public delegate void StreamHandlerDelegate(ref MemoryStream stream);
 
 
-        /// <summary>
-        /// Determines if the contents of a string (character by character) is the same
-        /// as the contents of a char array
-        /// </summary>
-        /// <param name="a">String to be tested</param>
-        /// <param name="b">Char array to be tested</param>
-        /// <returns>True if both contain the same character sequence; false if not</returns>
-        public static bool StringEqualsArr(String a, char[] b)
-        {
+		/// <summary>
+		/// Determines if the contents of a string (character by character) is the same
+		/// as the contents of a char array
+		/// </summary>
+		/// <param name="a">String to be tested</param>
+		/// <param name="b">Char array to be tested</param>
+		/// <returns>True if both contain the same character sequence; false if not</returns>
+		public static bool StringEqualsArr(String a, char[] b)
+		{
             return ArrEqualsArr(a.ToCharArray(), b);
-        }
+		}
 
 
-        /// <summary>
-        /// Determines if two char arrays have the same contents
-        /// </summary>
-        /// <param name="a">First array to be tested</param>
-        /// <param name="b">Second array to be tested</param>
-        /// <returns>True if both arrays have the same contents; false if not</returns>
-        public static bool ArrEqualsArr(char[] a, char[] b)
-        {
-            if (b.Length != a.Length) return false;
-            for (int i = 0; i < b.Length; i++)
-            {
-                if (a[i] != b[i]) return false;
-            }
-            return true;
-        }
+		/// <summary>
+		/// Determines if two char arrays have the same contents
+		/// </summary>
+		/// <param name="a">First array to be tested</param>
+		/// <param name="b">Second array to be tested</param>
+		/// <returns>True if both arrays have the same contents; false if not</returns>
+		public static bool ArrEqualsArr(char[] a, char[] b)
+		{			
+			if (b.Length != a.Length) return false;
+			for (int i=0; i<b.Length; i++)
+			{
+				if (a[i] != b[i]) return false;
+			}
+			return true;
+		}
 
         /// <summary>
         /// Determines if two byte arrays have the same contents
@@ -71,35 +69,39 @@ namespace ATL
         /// Reads a given number of one-byte chars from the provided source
         /// (this method is there because the default behaviour of .NET's binary char reading
         /// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
-        /// 
-        /// TODO : Progressively replace this with Encoding.ASCII.GetString
         /// </summary>
         /// <param name="r">Source to read from</param>
         /// <param name="length">Number of one-byte chars to read</param>
         /// <returns>Array of chars read from the source</returns>
+        
+        // TODO : limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.Latin1Encoding.GetString(r.ReadBytes)
         public static char[] ReadOneByteChars(BinaryReader r, int length)
         {
-            byte[] byteArr;
+            return ReadOneByteChars(r.BaseStream, length);
+        }
+        public static char[] ReadOneByteChars(Stream s, int length)
+		{
+			byte[] byteArr = new byte[length];
             char[] result = new char[length];
 
-            byteArr = r.ReadBytes(length);
-            for (int i = 0; i < length; i++)
-            {
-                result[i] = (char)byteArr[i];
-            }
+            s.Read(byteArr, 0, length);
+			for (int i=0; i<length; i++)
+			{
+				result[i] = (char)byteArr[i];
+			}
 
-            return result;
-        }
+			return result;
+		}
 
-        /// <summary>
-        /// Reads one one-byte char from the provided source
-        /// </summary>
-        /// <param name="r">Source to read from</param>
-        /// <returns>Chars read from the source</returns>
-        public static char ReadOneByteChar(BinaryReader r)
-        {
-            return (char)r.ReadByte();
-        }
+		/// <summary>
+		/// Reads one one-byte char from the provided source
+		/// </summary>
+		/// <param name="r">Source to read from</param>
+		/// <returns>Chars read from the source</returns>
+		public static char ReadOneByteChar(BinaryReader r)
+		{
+			return (char)r.ReadByte();
+		}
 
         /// <summary>
         /// Reads one one-byte char from the provided source
@@ -117,12 +119,13 @@ namespace ATL
         /// <param name="mTo">Target stream</param>
         /// <param name="mFrom">Source stream</param>
         /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
         public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
-        {
+		{
             BinaryWriter w = new BinaryWriter(mTo);
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
-        }
+		}
 
         /// <summary>
         /// Writes a given number of bytes from a stream to a writer
@@ -130,11 +133,12 @@ namespace ATL
         /// <param name="mTo">Writer to be used</param>
         /// <param name="mFrom">Source stream</param>
         /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
         public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
-        {
+		{
             BinaryReader r = new BinaryReader(mFrom);
             CopyStreamFrom(w, r, length);
-        }
+		}
 
         /// <summary>
         /// Writes a given number of bytes from a reader to a stream
@@ -142,55 +146,169 @@ namespace ATL
         /// <param name="mTo">Target stream</param>
         /// <param name="r">Reader to be used</param>
         /// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
         public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
-        {
+		{
             BinaryWriter w = new BinaryWriter(mTo);
             CopyStreamFrom(w, r, length);
+		}
+
+		/// <summary>
+		/// Writes a given number of bytes from a reader to a writer
+		/// </summary>
+		/// <param name="mTo">Writer to be used</param>
+		/// <param name="r">Reader to be used</param>
+		/// <param name="length">Number of bytes to be copied</param>
+        [Obsolete("use CopyStream")]
+		public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
+		{			
+			long effectiveLength;
+			long initialPosition;
+
+			initialPosition = r.BaseStream.Position;
+			if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+
+			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
+				w.Write(r.ReadBytes(BUFFERSIZE));
+		}
+
+        /// <summary>
+        /// Copies a given number of bytes from a given stream to another, starting at current stream positions
+        /// i.e. first byte will be read at from.Position and written at to.Position
+        /// NB : This method cannot be used to move data within one single stream; use CopySameStream instead
+        /// </summary>
+        /// <param name="from">Stream to start copy from</param>
+        /// <param name="to">Stream to copy to</param>
+        /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the stream)</param>
+        public static void CopyStream(Stream from, Stream to, long length = 0)
+        {
+            byte[] data = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
+
+            if (0 == length) bytesToRead = from.Length-from.Position; else bytesToRead = Math.Min(from.Length - from.Position,length);
+
+            while (i< bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
+                from.Read(data, 0, bufSize);
+                to.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+        }
+
+        public static void CopyStream(BufferedBinaryReader from, Stream to, long length = 0)
+        {
+            byte[] data = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
+
+            if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
+
+            while (i < bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
+                from.Read(data, 0, bufSize);
+                to.Write(data, 0, bufSize);
+                i += bufSize;
+            }
+        }
+
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize = BUFFERSIZE)
+        {
+            if (offsetFrom == offsetTo) return;
+
+            byte[] data = new byte[bufferSize];
+            int bufSize;
+            int written = 0;
+            bool forward = (offsetTo > offsetFrom);
+
+            while (written < length)
+            {
+                bufSize = Math.Min(bufferSize, length - written);
+                if (forward)
+                {
+                    s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
+                    s.Read(data, 0, bufSize);
+                    s.Seek(offsetTo + length - written -bufSize, SeekOrigin.Begin);
+                } else
+                {
+                    s.Seek(offsetFrom + written, SeekOrigin.Begin);
+                    s.Read(data, 0, bufSize);
+                    s.Seek(offsetTo + written, SeekOrigin.Begin);
+                }
+                s.Write(data, 0, bufSize);
+                written += bufSize;
+            }
         }
 
         /// <summary>
-        /// Writes a given number of bytes from a reader to a writer
+        /// Read a given number of bytes from a given stream, starting at current stream position
+        /// i.e. first byte will be read at from.Position, EXCEPT if the stream has already reached its end, in which case reading restarts at its beginning
         /// </summary>
-        /// <param name="mTo">Writer to be used</param>
-        /// <param name="r">Reader to be used</param>
-        /// <param name="length">Number of bytes to be copied</param>
-        public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
+        /// <param name="from">Stream to read data from</param>
+        /// <param name="length">Number of bytes to read</param>
+        /// <returns>Bytes read from the stream</returns>
+        public static byte[] ReadBinaryStream(Stream from, long length = 0)
         {
-            long effectiveLength;
-            long initialPosition;
+            byte[] buffer = new byte[BUFFERSIZE];
+            long bytesToRead;
+            int bufSize;
+            long i = 0;
 
-            initialPosition = r.BaseStream.Position;
-            if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
+            if (from.Position == from.Length) from.Seek(0, SeekOrigin.Begin);
 
-            while (r.BaseStream.Position < initialPosition + effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
-                w.Write(r.ReadBytes(BUFFERSIZE));
+            if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
+            byte[] result = new byte[bytesToRead];
+
+            while (i < bytesToRead)
+            {
+                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
+                from.Read(buffer, 0, bufSize);
+                Array.Copy(buffer, 0, result, i, bufSize);
+                i += bufSize;
+            }
+
+            return result;
         }
 
-        // TODO DOC
-        public static void ShortenStream(Stream s, long oldIndex, uint delta) // Forward loop
+        /// <summary>
+        /// Remove a portion of bytes within the given stream
+        /// </summary>
+        /// <param name="s">Stream to process; must be accessible for reading and writing</param>
+        /// <param name="endOffset">End offset of the portion of bytes to remove</param>
+        /// <param name="delta">Number of bytes to remove</param>
+        public static void ShortenStream(Stream s, long endOffset, uint delta) 
         {
-            byte[] data = new byte[BUFFERSIZE];
-            long newIndex = oldIndex - delta;
-            long i = 0;
             int bufSize;
+            byte[] data = new byte[BUFFERSIZE];
+            long newIndex = endOffset - delta;
+            long initialLength = s.Length;
+            long i = 0;
 
-            while (i < s.Length - oldIndex)
+            while (i < initialLength - endOffset) // Forward loop
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, s.Length - oldIndex - i);
-                s.Seek(oldIndex + i, SeekOrigin.Begin);
+                bufSize = (int)Math.Min(BUFFERSIZE, initialLength - endOffset - i);
+                s.Seek(endOffset + i, SeekOrigin.Begin);
                 s.Read(data, 0, bufSize);
                 s.Seek(newIndex + i, SeekOrigin.Begin);
                 s.Write(data, 0, bufSize);
                 i += bufSize;
             }
 
-            s.SetLength(s.Length - delta);
+            s.SetLength(initialLength - delta);
         }
 
-
-
-        // TODO DOC
-        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false) // Backward loop
+        /// <summary>
+        /// Add bytes within the given stream
+        /// </summary>
+        /// <param name="s">Stream to process; must be accessible for reading and writing</param>
+        /// <param name="oldIndex">Offset where to add new bytes</param>
+        /// <param name="delta">Number of bytes to add</param>
+        /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
+        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false)
         {
             byte[] data = new byte[BUFFERSIZE];
             long newIndex = oldIndex + delta;
@@ -201,10 +319,10 @@ namespace ATL
             long i = 0;
             int bufSize;
 
-            while (newLength - i > newIndex)
+            while (newLength - i > newIndex) // Backward loop
             {
                 bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
-                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract diffBytes
+                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract delta
                 s.Read(data, 0, bufSize);
                 s.Seek(-i - bufSize, SeekOrigin.End);
                 s.Write(data, 0, bufSize);
@@ -224,8 +342,32 @@ namespace ATL
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
-        public static Int64 ReverseInt64(UInt64 n)
+        public static ulong ReverseUInt64(ulong n)
         {
+            byte b0;
+            byte b1;
+            byte b2;
+            byte b3;
+            byte b4;
+            byte b5;
+            byte b6;
+            byte b7;
+
+            b0 = (byte) ((n & 0x00000000000000FF) >> 0);
+            b1 = (byte) ((n & 0x000000000000FF00) >> 8);
+            b2 = (byte) ((n & 0x0000000000FF0000) >> 16);
+            b3 = (byte) ((n & 0x00000000FF000000) >> 24);
+            b4 = (byte) ((n & 0x000000FF00000000) >> 32);
+            b5 = (byte) ((n & 0x0000FF0000000000) >> 40);
+            b6 = (byte) ((n & 0x00FF000000000000) >> 48);
+            b7 = (byte) ((n & 0xFF00000000000000) >> 56);
+
+            return (ulong)((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0));
+        }
+
+        public static long ReverseInt64(long n)
+        {
+            /*
             byte b0;
             byte b1;
             byte b2;
@@ -242,30 +384,90 @@ namespace ATL
             b4 = (byte)((n & 0x000000FF00000000) >> 32);
             b5 = (byte)((n & 0x0000FF0000000000) >> 40);
             b6 = (byte)((n & 0x00FF000000000000) >> 48);
-            b7 = (byte)((n & 0xFF00000000000000) >> 56);
+            b7 = (byte)((n & 0xFF00000000000000) >> 56); // <-- type incompatibility issue there
 
             return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
+            */
+
+            // Above code does not work due to 0xFF00000000000000 not being an unsigned long
+            // Below code does work but is 3 times slower
+            byte[] binary = BitConverter.GetBytes(n);
+            Array.Reverse(binary);
+            return BitConverter.ToInt64(binary, 0);
         }
 
         /// <summary>
-        /// Switches the format of an Int32 between big endian and little endian
+        /// Decodes an unsigned Big-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeBEUInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (uint)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0));
+        }
+
+        /// <summary>
+        /// Decodes a signed Big-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static int DecodeBEInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeBEUInt24(byte[] data)
+        {
+            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
+            return (uint)((data[0] << 16) | (data[1] << 8) | (data[2] << 0));
+        }
+
+        /// <summary>
+        /// Decodes a signed Big-Endian 24-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static int DecodeBEInt24(byte[] data)
+        {
+            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
+            return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static ushort DecodeBEUInt16(byte[] data)
+        {
+            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
+            return (ushort)((data[0] << 8) | (data[1] << 0));
+        }
+
+        /// <summary>
+        /// Decodes a signed Big-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static short DecodeBEInt16(byte[] data)
+        {
+            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
+            return (short)((data[0] << 8) | (data[1] << 0));
+        }
+
+
+        /// <summary>
+        /// Switches the format of an unsigned Int32 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
-        public static Int32 ReverseInt32(Int32 n)
-        {
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-
-            b0 = (byte)((n & 0x000000FF) >> 0);
-            b1 = (byte)((n & 0x0000FF00) >> 8);
-            b2 = (byte)((n & 0x00FF0000) >> 16);
-            b3 = (byte)((n & 0xFF000000) >> 24);
-
-            return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
-        }
         public static uint ReverseUInt32(uint n)
         {
             byte b0;
@@ -282,7 +484,27 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an Int16 between big endian and little endian
+        /// Switches the format of a signed Int32 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
+        public static int ReverseInt32(int n)
+		{
+			byte b0;
+			byte b1;
+			byte b2;
+			byte b3;
+
+			b0 = (byte)((n & 0x000000FF) >> 0); 
+			b1 = (byte)((n & 0x0000FF00) >> 8); 
+			b2 = (byte)((n & 0x00FF0000) >> 16); 
+			b3 = (byte)((n & 0xFF000000) >> 24); 
+			
+			return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
+        }
+
+        /// <summary>
+        /// Switches the format of an unsigned Int16 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
@@ -296,6 +518,12 @@ namespace ATL
 
             return (ushort)((b0 << 8) | (b1 << 0));
         }
+
+        /// <summary>
+        /// Switches the format of a signed Int16 between big endian and little endian
+        /// </summary>
+        /// <param name="n">value to convert</param>
+        /// <returns>converted value</returns>
         public static short ReverseInt16(short n)
         {
             byte b0;
@@ -307,10 +535,14 @@ namespace ATL
             return (short)((b0 << 8) | (b1 << 0));
         }
 
-        // Guesses the encoding from the file Byte Order Mark (BOM)
-        // NB : This obviously only works for files that actually start with a BOM
-        // http://en.wikipedia.org/wiki/Byte_order_mark
-        public static Encoding GetEncodingFromFileBOM(ref FileStream file)
+        /// <summary>
+        /// Guesses the encoding from the file Byte Order Mark (BOM)
+        /// http://en.wikipedia.org/wiki/Byte_order_mark 
+        /// NB : This obviously only works for files that actually start with a BOM
+        /// </summary>
+        /// <param name="file">FileStream to read from</param>
+        /// <returns>Detected encoding; system Default if detection failed</returns>
+        public static Encoding GetEncodingFromFileBOM(FileStream file)
         {
             Encoding result;
             byte[] bom = new byte[4]; // Get the byte-order mark, if there is one
@@ -343,42 +575,19 @@ namespace ATL
             return result;
         }
 
-        // Converts a list of chars into a Long (big-endian evaluated)
-        public static long GetLongFromChars(char[] chars)
-        {
-            if (chars.Length > 8) throw new Exception("Long cannot be read from a record larger than 8 bytes");
-            long result = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                result = (result << 8) + chars[i];
-            }
-            return result;
-        }
-
-        // Converts a list of chars into an Int (big-endian evaluated)
-        public static int GetIntFromChars(char[] chars)
-        {
-            if (chars.Length > 4) throw new Exception("Long cannot be read from a record larger than 4 bytes");
-            int result = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                result = (result << 8) + chars[i];
-            }
-            return result;
-        }
-
         /// <summary>
         /// The method to Decode your Base64 strings.
         /// </summary>
         /// <param name="encodedData">The String containing the characters to decode.</param>
         /// <param name="s">The Stream where the resulting decoded data will be written.</param>
         /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
+        [Obsolete("use Utils.DecodeFrom64")]
         public static void DecodeFrom64(byte[] encodedData, Stream s)
         {
             if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
 
             char[] encodedDataChar = new char[encodedData.Length];
-            for (int i = 0; i < encodedData.Length; i++)
+            for (int i = 0; i < encodedData.Length;i++ )
             {
                 encodedDataChar[i] = System.Convert.ToChar(encodedData[i]);
             }
@@ -401,24 +610,13 @@ namespace ATL
         ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
         ///  Terminated with $00 00.
         ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+        [Obsolete("use ReadNullTerminatedString(BinaryReader, Encoding)")]
         public static String ReadNullTerminatedString(BinaryReader r, int encoding)
         {
-            /*
-            int nbBytesPerChar = (1 == encoding || 2 == encoding)?2:1;
-            char[] endingChars = (1 == encoding || 2 == encoding) ? new char[] { '\0', '\0' } : new char[]  { '\0' };
-            char[] c = StreamUtils.ReadOneByteChars(r, nbBytesPerChar);
-            String result = "";
-            while (!StreamUtils.ArrEqualsArr(c,endingChars))
-            {
-                result += new String(c);
-                c = StreamUtils.ReadOneByteChars(r, nbBytesPerChar);
-            }
-            // Strip all Unicode null-chars
-            return Utils.StripZeroChars(result);
-             */
             return ReadNullTerminatedString(r, GetEncodingFromID3v2Encoding(encoding));
         }
 
+        [Obsolete("marked for deletion; belongs to ID3v2")]
         public static Encoding GetEncodingFromID3v2Encoding(int encoding)
         {
             if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
@@ -428,69 +626,224 @@ namespace ATL
             else return Encoding.Default;
         }
 
+        /// <summary>
+        /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding
+        /// Returns with the BinaryReader positioned after the last null-character(s)
+        /// </summary>
+        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
+        /// <param name="encoding">Encoding to use for reading the stream</param>
+        /// <returns>Read value</returns>
         public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
-            return ReadNullTerminatedString(r, encoding, 0, false);
+            return readNullTerminatedString(r.BaseStream, encoding, 0, false);
         }
-
-        public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
+        public static String ReadNullTerminatedString(Stream s, Encoding encoding)
         {
-            return ReadNullTerminatedString(r, encoding, limit, true);
+            return readNullTerminatedString(s, encoding, 0, false);
+        }
+        public static String ReadNullTerminatedString(BufferedBinaryReader s, Encoding encoding)
+        {
+            return readNullTerminatedString(s, encoding, 0, false);
         }
 
         /// <summary>
-        /// Reads a null-terminated string using the giver StreamReader
+        /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding, within a given limit of bytes
+        /// Returns with the BinaryReader positioned at (start+limit)
         /// </summary>
-        /// <param name="r">Stream reader to be used to read the string</param>
+        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
+        /// <param name="encoding">Encoding to use for reading the stream</param>
+        /// <param name="limit">Maximum number of bytes to read</param>
+        /// <returns>Read value</returns>
+        public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
+        {
+            return readNullTerminatedString(r.BaseStream, encoding, limit, true);
+        }
+
+        /// <summary>
+        /// Reads a null-terminated string using the giver BinaryReader
+        /// </summary>
+        /// <param name="r">Stream reader to read the string from</param>
         /// <param name="encoding">Encoding to use to parse the read bytes into the resulting String</param>
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
         /// <returns>The string read, without the zeroes at its end</returns>
-        private static String ReadNullTerminatedString(BinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
+        private static String readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
-            IList<byte> readBytes = new List<byte>(limit > 0 ? limit : 40);
-            byte justRead = 0;
-            long distance = 0;
+            byte[] readBytes = new byte[limit > 0 ? limit : 100];
+            byte[] buffer = new byte[2];
+            int nbRead = 0;
+            long streamLength = r.Length;
+            long initialPos = r.Position;
+            long streamPos = initialPos;
 
-            while (r.BaseStream.Position < r.BaseStream.Length && ((0 == limit) || (distance < limit)))
+            while (streamPos < streamLength && ( (0 == limit) || (nbRead < limit) ) )
             {
-                for (int i = 0; i < nbChars; i++)
-                {
-                    justRead = r.ReadByte();
-                    readBytes.Add(justRead);
-                    distance++;
-                }
+                // Read the size of a character
+                r.Read(buffer, 0, nbChars);
 
-                if ((1 == nbChars) && (0 == justRead))
+                if ( (1 == nbChars) && (0 == buffer[0]) ) // Null character read for single-char encodings
                 {
-                    readBytes.RemoveAt(readBytes.Count - 1);
                     break;
                 }
-                if ((2 == nbChars) && (readBytes.Count > 1) && (0 == justRead) && (0 == readBytes[readBytes.Count - 2]))
+                else if ( (2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1]) ) // Null character read for two-char encodings
                 {
-                    readBytes.RemoveAt(readBytes.Count - 1);
-                    readBytes.RemoveAt(readBytes.Count - 1);
                     break;
+                }
+                else // All clear; store the read char in the byte array
+                {
+                    if (readBytes.Length < nbRead + nbChars) Array.Resize<byte>(ref readBytes, readBytes.Length + 100);
+
+                    readBytes[nbRead] = buffer[0];
+                    if (2 == nbChars) readBytes[nbRead+1] = buffer[1];
+                    nbRead += nbChars;
+                    streamPos += nbChars;
                 }
             }
 
-            if (moveStreamToLimit && distance < limit) r.BaseStream.Seek(limit - distance, SeekOrigin.Current);
+            if (moveStreamToLimit) r.Seek(initialPos + limit, SeekOrigin.Begin);
 
-            byte[] readBytesArr = new byte[readBytes.Count];
-            readBytes.CopyTo(readBytesArr, 0);
-            return encoding.GetString(readBytesArr);
+            return encoding.GetString(readBytes,0,nbRead);
         }
 
-        // Extracts a "synch-safe" Int32 from a byte array
-        // according to ID3v2 definition (§6.2)
-        public static int ExtractSynchSafeInt32(byte[] bytes)
+        private static String readNullTerminatedString(BufferedBinaryReader r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
-            return
-                bytes[0] * 0x200000 +
-                bytes[1] * 0x4000 +
-                bytes[2] * 0x80 +
+            int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
+            byte[] readBytes = new byte[limit > 0 ? limit : 100];
+            byte[] buffer = new byte[2];
+            int nbRead = 0;
+            long streamLength = r.Length;
+            long streamPos = r.Position;
+
+            while (streamPos < streamLength && ((0 == limit) || (nbRead < limit)))
+            {
+                // Read the size of a character
+                r.Read(buffer, 0, nbChars);
+
+                if ((1 == nbChars) && (0 == buffer[0])) // Null character read for single-char encodings
+                {
+                    break;
+                }
+                else if ((2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1])) // Null character read for two-char encodings
+                {
+                    break;
+                }
+                else // All clear; store the read char in the byte array
+                {
+                    if (readBytes.Length < nbRead + nbChars) Array.Resize<byte>(ref readBytes, readBytes.Length + 100);
+
+                    readBytes[nbRead] = buffer[0];
+                    if (2 == nbChars) readBytes[nbRead + 1] = buffer[1];
+                    nbRead += nbChars;
+                    streamPos += nbChars;
+                }
+            }
+
+            if (moveStreamToLimit && nbRead < limit) r.Seek(limit - nbRead, SeekOrigin.Current);
+
+            return encoding.GetString(readBytes, 0, nbRead);
+        }
+
+        /// <summary>
+        /// Extracts a signed 32-bit integer from a byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="bytes">Byte array containing data
+        /// NB : Array size can vary from 1 to 5 bytes, as only 7 bits of each is actually used
+        /// </param>
+        /// <returns>Decoded Int32</returns>
+        public static int DecodeSynchSafeInt(byte[] bytes)
+        {
+            if (bytes.Length > 5) throw new Exception("Array too long : has to be 1 to 5 bytes; found : " + bytes.Length + " bytes");
+            int result = 0;
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                result += bytes[i] * (int)Math.Floor(Math.Pow(2, (7 * (bytes.Length - 1 - i))));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Decodes a signed 32-bit integer from a 4-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// NB : The actual capacity of the integer thus reaches 28 bits
+        /// </summary>
+        /// <param name="bytes">4-byte array containing to convert</param>
+        /// <returns>Decoded Int32</returns>
+        public static int DecodeSynchSafeInt32(byte[] bytes)
+        {
+            if (bytes.Length != 4) throw new Exception("Array length has to be 4 bytes; found : "+bytes.Length+" bytes");
+
+            return                 
+                bytes[0] * 0x200000 +   //2^21
+                bytes[1] * 0x4000 +     //2^14
+                bytes[2] * 0x80 +       //2^7
                 bytes[3];
+        }
+
+        /// <summary>
+        /// Encodes the given values as a (nbBytes*8)-bit integer to a (nbBytes)-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="value">Value to encode</param>
+        /// <param name="nbBytes">Number of bytes to encode to (can be 1 to 5)</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
+        {
+            if ((nbBytes < 1) || (nbBytes > 5)) throw new Exception("nbBytes has to be 1 to 5; found : " + nbBytes);
+            byte[] result = new byte[nbBytes];
+            int range;
+
+            for (int i = 0; i < nbBytes; i++)
+            {
+                range = (7 * (nbBytes - 1 - i));
+                result[i] = (byte)( (value & (0x7F << range)) >> range);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Encodes the given value as a 32-bit integer to a 4-byte array using the "synch-safe" convention
+        /// as to ID3v2 definition (§6.2)
+        /// </summary>
+        /// <param name="value">Integer to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeSynchSafeInt32(int value)
+        {
+            byte[] result = new byte[4];
+            result[0] = (byte)((value & 0xFE00000) >> 21);
+            result[1] = (byte)((value & 0x01FC000) >> 14);
+            result[2] = (byte)((value & 0x0003F80) >> 7);
+            result[3] = (byte)((value & 0x000007F));
+
+            return result;
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <param name="offset">Offset to read value from (default : 0)</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
+        {
+            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size="+(value.Length-offset)+" bytes");
+            return (uint)value[offset] << 16 | (uint)value[offset + 1] << 8 | (uint)value[offset + 2];
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt24(uint value)
+        {
+            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than "+0x00FFFFFF+"; actual value="+value);
+            
+            // Output has to be big-endian
+            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -498,40 +851,113 @@ namespace ATL
         /// </summary>
         /// <param name="r">Stream to search into</param>
         /// <param name="sequence">Sequence to find</param>
+        /// <param name="forward">True if the sequence to find has to be looked for after current position; false instead</param>
         /// <param name="maxDistance">Maximum distance (in bytes) of the sequence to find.
         /// Put 0 for an infinite distance</param>
         /// <returns>
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence
         ///     false if the sequence has not been found; the stream will keep its initial position
         /// </returns>
-        public static bool FindSequence(ref BinaryReader r, byte[] sequence, long maxDistance)
+        public static bool FindSequence(Stream stream, byte[] sequence, long limit = 0)
         {
-            byte[] window = r.ReadBytes(sequence.Length);
-            long initialPos = r.BaseStream.Position;
-            long distance = 0;
-            bool found = false;
-            int i;
+            int BUFFER_SIZE = 512;
+            byte[] readBuffer = new byte[BUFFER_SIZE];
 
-            while (r.BaseStream.Position < r.BaseStream.Length || (maxDistance > 0 && distance > maxDistance))
+            int remainingBytes, bytesToRead;
+            int iSequence = 0;
+            int readBytes = 0;
+            long initialPos = stream.Position;
+
+            remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+
+            while (remainingBytes > 0)
             {
-                if (ArrEqualsArr(sequence, window))
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                stream.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
                 {
-                    found = true;
-                    break;
+                    if (sequence[iSequence] == readBuffer[i]) iSequence++;
+                    else if (iSequence > 0) iSequence = 0;
+
+                    if (sequence.Length == iSequence)
+                    {
+                        stream.Position = initialPos + readBytes + i + 1;
+                        return true;
+                    }
                 }
 
-                for (i = 0; i < window.Length - 1; i++)
-                {
-                    window[i] = window[i + 1];
-                }
-                window[window.Length - 1] = r.ReadByte();
-
-                distance++;
+                remainingBytes -= bytesToRead;
+                readBytes += bytesToRead;
             }
 
-            if (!found) r.BaseStream.Position = initialPos;
+            // If we're here, the sequence hasn't been found
+            stream.Position = initialPos;
+            return false;
+        }
 
-            return found;
+        public static bool FindSequence(BufferedBinaryReader stream, byte[] sequence, long limit = 0)
+        {
+            int BUFFER_SIZE = 512;
+            byte[] readBuffer = new byte[BUFFER_SIZE];
+
+            int remainingBytes, bytesToRead;
+            int iSequence = 0;
+            int readBytes = 0;
+            long initialPos = stream.Position;
+
+            remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+
+            while (remainingBytes > 0)
+            {
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                stream.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    if (sequence[iSequence] == readBuffer[i]) iSequence++;
+                    else if (iSequence > 0) iSequence = 0;
+
+                    if (sequence.Length == iSequence)
+                    {
+                        stream.Position = initialPos + readBytes + i + 1;
+                        return true;
+                    }
+                }
+
+                remainingBytes -= bytesToRead;
+                readBytes += bytesToRead;
+            }
+
+            // If we're here, the sequence hasn't been found
+            stream.Position = initialPos;
+            return false;
+        }
+
+        /// <summary>
+        /// Reads the given number of bits from the given position and converts it to an unsigned int32
+        /// according to big-endian convention
+        /// 
+        /// NB : reader position _always_ progresses by 4, no matter how many bits are needed
+        /// </summary>
+        /// <param name="source">BinaryReader to read the data from</param>
+        /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning) </param>
+        /// <param name="bitCount">Number of bits to read</param>
+        /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
+        public static uint ReadBits(BinaryReader source, int bitPosition, int bitCount)
+        {
+            if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
+            byte[] buffer = new byte[4];
+
+            // Read a number of bits from file at the given position
+            source.BaseStream.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
+            buffer = source.ReadBytes(4);
+            uint result = (uint)((buffer[0] << 24) + (buffer[1] << 16) + (buffer[2] << 8) + buffer[3]);
+            result = (result << (bitPosition % 8)) >> (32 - bitCount);
+
+            return result;
         }
 
         /// <summary>Converts the given extended-format byte array (which
@@ -672,5 +1098,4 @@ namespace ATL
             return BitConverter.ToDouble(data, 0);
         }
     }
-
 }

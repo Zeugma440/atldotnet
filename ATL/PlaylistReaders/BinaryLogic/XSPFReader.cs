@@ -13,7 +13,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class XSPFReader : PlaylistReader
     {
 
-        public override void GetFiles(FileStream fs, ref IList<String> result)
+        public override void GetFiles(FileStream fs, IList<String> result)
         {
             Uri uri;
             XmlTextReader source = new XmlTextReader(fs);

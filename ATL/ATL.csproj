@@ -37,6 +37,24 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -44,8 +62,49 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioData\AudioDataManager.cs" />
+    <Compile Include="AudioData\AudioDataIOFactory.cs" />
+    <Compile Include="AudioData\AudioFileIO.cs" />
+    <Compile Include="AudioData\CrossMetadataReader.cs" />
+    <Compile Include="AudioData\Interfaces\IAudioDataIO.cs" />
+    <Compile Include="AudioData\Interfaces\IMetaDataEmbedder.cs" />
+    <Compile Include="AudioData\Interfaces\IMetaDataIO.cs" />
+    <Compile Include="AudioData\IO\AAC.cs" />
+    <Compile Include="AudioData\IO\AC3.cs" />
+    <Compile Include="AudioData\IO\AIFF.cs" />
+    <Compile Include="AudioData\IO\APEtag.cs" />
+    <Compile Include="AudioData\IO\DSF.cs" />
+    <Compile Include="AudioData\IO\DTS.cs" />
+    <Compile Include="AudioData\IO\DummyReader.cs" />
+    <Compile Include="AudioData\IO\DummyTag.cs" />
+    <Compile Include="AudioData\IO\FLAC.cs" />
+    <Compile Include="AudioData\IO\ID3v1.cs" />
+    <Compile Include="AudioData\IO\ID3v2.cs" />
+    <Compile Include="AudioData\IO\IT.cs" />
+    <Compile Include="AudioData\IO\MIDI.cs" />
+    <Compile Include="AudioData\IO\MOD.cs" />
+    <Compile Include="AudioData\IO\Ape.cs" />
+    <Compile Include="AudioData\IO\MPEGaudio.cs" />
+    <Compile Include="AudioData\IO\MPEGplus.cs" />
+    <Compile Include="AudioData\IO\Ogg.cs" />
+    <Compile Include="AudioData\IO\OptimFROG.cs" />
+    <Compile Include="AudioData\IO\PSF.cs" />
+    <Compile Include="AudioData\IO\S3M.cs" />
+    <Compile Include="AudioData\IO\SPC.cs" />
+    <Compile Include="AudioData\IO\TAK.cs" />
+    <Compile Include="AudioData\IO\TTA.cs" />
+    <Compile Include="AudioData\IO\TwinVQ.cs" />
+    <Compile Include="AudioData\IO\VorbisTag.cs" />
+    <Compile Include="AudioData\IO\WAV.cs" />
+    <Compile Include="AudioData\IO\WAVPack.cs" />
+    <Compile Include="AudioData\IO\WMA.cs" />
+    <Compile Include="AudioData\IO\XM.cs" />
+    <Compile Include="AudioData\MetaDataIO.cs" />
+    <Compile Include="AudioData\MetaDataIOFactory.cs" />
+    <Compile Include="AudioData\Utils\CRC.cs" />
+    <Compile Include="AudioData\Utils\FileStructureHelper.cs" />
+    <Compile Include="AudioData\Utils\TrackUtils.cs" />
     <Compile Include="AudioReaders\AudioDataReader.cs" />
-    <Compile Include="AudioReaders\BinaryLogic\AIFF.cs" />
     <Compile Include="AudioReaders\BinaryLogic\IT.cs" />
     <Compile Include="AudioReaders\BinaryLogic\XM.cs" />
     <Compile Include="AudioReaders\BinaryLogic\S3M.cs" />
@@ -88,7 +147,10 @@
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\Format.cs" />
+    <Compile Include="Entities\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
+    <Compile Include="Utils\BufferedBinaryReader.cs" />
+    <Compile Include="Utils\FNV1a.cs" />
     <Compile Include="Logging\ILogDevice.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogDelegator.cs" />
@@ -114,6 +176,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,6 +1,7 @@
 ﻿using ATL.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ATL.test
 {
@@ -17,7 +18,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestSyncMessage()
+        public void Log_Sync()
         {
             messages.Clear();
 
@@ -28,7 +29,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestASyncMessage1()
+        public void Log_ASync_SwitchSync()
         {
             messages.Clear();
 
@@ -48,7 +49,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void TestASyncMessage2()
+        public void Log_ASync_FlushQueue()
         {
             messages.Clear();
 
@@ -58,8 +59,52 @@ namespace ATL.test
             Assert.AreEqual(0, messages.Count);
             theLog.FlushQueue();
 
+
             Assert.AreEqual(Log.LV_DEBUG, messages[0].Level);
             Assert.AreEqual("test message", messages[0].Message);
+        }
+
+        [TestMethod]
+        public void Log_Location()
+        {
+            messages.Clear();
+
+            LogDelegator.GetLocateDelegate()("here");
+            LogDelegator.GetLogDelegate()(Log.LV_INFO, "test1");
+            Assert.AreEqual("here", messages[0].Location);
+
+            LogDelegator.GetLocateDelegate()("there");
+            LogDelegator.GetLogDelegate()(Log.LV_INFO, "test2");
+            Assert.AreEqual("there", messages[1].Location);
+        }
+
+        [TestMethod]
+        public void Log_Location_MultiThread()
+        {
+            messages.Clear();
+
+            Thread thread = new Thread(log_Location_MultiThread_sub);
+            thread.Start();
+
+            LogDelegator.GetLocateDelegate()("here");
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "testI");
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "testD");
+
+            Thread.Sleep(200);
+
+            Assert.AreEqual(messages.Count, 4);
+            foreach (Log.LogItem logItem in messages)
+            {
+                if (logItem.Level.Equals(Log.LV_WARNING)) Assert.AreEqual(logItem.Location, "over there");
+                if (logItem.Level.Equals(Log.LV_ERROR)) Assert.AreEqual(logItem.Location, "here");
+            }
+        }
+
+        private void log_Location_MultiThread_sub()
+        {
+            LogDelegator.GetLocateDelegate()("over there");
+            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "testE");
+            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "testW");
         }
 
         public void DoLog(Log.LogItem anItem)

@@ -1,0 +1,10 @@
+<smil>
+  <head />
+  <body>
+    <seq repeatCount="indefinite">
+	  <media src="local.MID" />
+      <media src="file:///$NODISK_PATH/OGG/empty.ogg" />
+      <media src="file:///$PATH/MP3/empty.mp3" />
+    </seq>
+  </body>
+</smil>

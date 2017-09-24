@@ -1,0 +1,17 @@
+<ASX VERSION = "3.0">
+	<TITLE>Title</TITLE>
+	<ENTRY>
+		<REF HREF = "file:///$PATH/FLAC/empty.flac" />
+	</ENTRY>
+	<ENTRY>
+		<REF HREF = "file:///$PATH/FLAC/flac.flac" />
+	</ENTRY>
+	<ENTRY>
+		some text
+		some other text
+		<REF HREF = "file:///$PATH/MID/ROQ.MID" />
+	</ENTRY>
+	<ENTRY>
+		<REF HREF = "file:///$PATH/MP3/01%20-%20Title%20Screen_pic.mp3" />
+	</ENTRY>
+</ASX>

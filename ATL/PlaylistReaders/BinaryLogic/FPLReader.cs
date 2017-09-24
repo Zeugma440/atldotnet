@@ -1,7 +1,5 @@
-using System;
 using System.IO;
 using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders.BinaryLogic
@@ -17,18 +15,17 @@ namespace ATL.PlaylistReaders.BinaryLogic
         private static byte[] FILE_IDENTIFIER =  new byte[7] {102,105,108,101,58,47,47}; // "file://"
 
 
-		public override void GetFiles(FileStream fs, ref IList<String> result)
+		public override void GetFiles(FileStream fs, IList<string> result)
 		{
-            BinaryReader source = new BinaryReader(fs);
-            String filePath;
+            string filePath;
+            string playlistPath = System.IO.Path.GetDirectoryName(fs.Name) + System.IO.Path.DirectorySeparatorChar;
 
-            while (StreamUtils.FindSequence(ref source, FILE_IDENTIFIER, 0))
+            while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
-                filePath = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
-                result.Add(System.IO.Path.GetFullPath(filePath));
+                filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
+                if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;
+                result.Add(filePath);
             }
-
-            source.Close();
 		}
 	}
 }

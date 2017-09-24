@@ -1,16 +1,14 @@
 using System;
 using System.IO;
-using System.Collections;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL
 {
-	/// <summary>
-	/// Abstract factory for data readers, containing shared methods and members
-	/// </summary>
-	public abstract class ReaderFactory
-	{
+    /// <summary>
+    /// Abstract factory for data readers, containing shared methods and members
+    /// </summary>
+    public abstract class ReaderFactory
+    {
         // ID representing the absence of format
         public const int NO_FORMAT = -1;
 
@@ -33,11 +31,11 @@ namespace ATL
                     matchingFormats = new List<ATL.Format>();
                     matchingFormats.Add(f);
                     formatList.Add(ext, matchingFormats);
-                } else {
+                }
+                else
+                {
                     matchingFormats = formatList[ext];
                     matchingFormats.Add(f);
-                    //formatList.Remove(ext);
-                    //formatList.Add(ext, matchingFormats);
                 }
             }
         }
@@ -51,16 +49,14 @@ namespace ATL
         protected IList<ATL.Format> getFormatsFromPath(String path)
         {
             IList<ATL.Format> result = null;
+            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToUpper();
 
-            if (File.Exists(path))
+            if (formatList.ContainsKey(extension))
             {
-                if (formatList.ContainsKey(Path.GetExtension(path).ToUpper()))
+                IList<Format> formats = formatList[extension];
+                if (formats != null && formats.Count > 0)
                 {
-                    IList<Format> formats = formatList[Path.GetExtension(path).ToUpper()];
-                    if (formats != null && formats.Count > 0)
-                    {
-                        result = formats;
-                    }
+                    result = formats;
                 }
             }
 
@@ -85,5 +81,5 @@ namespace ATL
             return result.Values;
         }
 
-	}
+    }
 }

@@ -7,9 +7,9 @@ namespace ATL.test
     public class CUETest
     {
         [TestMethod]
-        public void TestReadTracks()
+        public void Cue_ReadTracks()
         {
-           ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(TestHelper.getResourceLocationRoot()+"duck hunt.cue");
+           ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(TestUtils.GetResourceLocationRoot()+ "_Cuesheet/duck hunt.cue");
 
            System.Console.WriteLine(theReader.Artist);
            System.Console.WriteLine(theReader.Title);
