@@ -11,7 +11,7 @@ __Windows .NET Build__ : [![Build status](https://ci.appveyor.com/api/projects/s
 __Code coverage__ : [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
 
 
-__NuGet version__ : ![](https://img.shields.io/nuget/v/z440.atl.core.svg)
+__NuGet version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/)
 
 
 __Optimized with__ : [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) and [CodeTrack](http://www.getcodetrack.com/)
