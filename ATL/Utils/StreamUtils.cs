@@ -73,13 +73,12 @@ namespace ATL
         /// <param name="r">Source to read from</param>
         /// <param name="length">Number of one-byte chars to read</param>
         /// <returns>Array of chars read from the source</returns>
-        
-        // TODO : limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.Latin1Encoding.GetString(r.ReadBytes)
+        [Obsolete ("limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.Latin1Encoding.GetString(r.ReadBytes)")]
         public static char[] ReadOneByteChars(BinaryReader r, int length)
         {
             return ReadOneByteChars(r.BaseStream, length);
         }
-        public static char[] ReadOneByteChars(Stream s, int length)
+        private static char[] ReadOneByteChars(Stream s, int length)
 		{
 			byte[] byteArr = new byte[length];
             char[] result = new char[length];
@@ -511,27 +510,6 @@ namespace ATL
             return result;
         }
 
-        /// <summary>
-        /// The method to Decode your Base64 strings.
-        /// </summary>
-        /// <param name="encodedData">The String containing the characters to decode.</param>
-        /// <param name="s">The Stream where the resulting decoded data will be written.</param>
-        /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
-        [Obsolete("use Utils.DecodeFrom64")]
-        public static void DecodeFrom64(byte[] encodedData, Stream s)
-        {
-            if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
-
-            char[] encodedDataChar = new char[encodedData.Length];
-            for (int i = 0; i < encodedData.Length;i++ )
-            {
-                encodedDataChar[i] = System.Convert.ToChar(encodedData[i]);
-            }
-            byte[] convertedData = System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
-
-            s.Write(convertedData, 0, convertedData.Length);
-        }
-        
         /// <summary>
         /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding
         /// Returns with the BinaryReader positioned after the last null-character(s)
