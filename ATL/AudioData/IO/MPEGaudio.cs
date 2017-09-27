@@ -249,6 +249,8 @@ namespace ATL.AudioData.IO
         {
             get { return this.getFrames(); }
         }
+
+        /* Unused for now
         public byte EncoderID // Guessed encoder ID
         {
             get { return this.getEncoderID(); }
@@ -257,6 +259,7 @@ namespace ATL.AudioData.IO
         {
             get { return this.getEncoder(); }
         }
+        */
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -597,7 +600,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-        // Nightmarish implementation to be redone when Vendor ID is really useful
+        /* Nightmarish implementation to be redone when Vendor ID is really useful
 		private static String findVendorID(byte[] Data, int Size)
 		{
 			String VendorID;
@@ -621,6 +624,7 @@ namespace ATL.AudioData.IO
 			}
 			return result;
 		}
+        */
 
 		private String getVersion()
 		{
@@ -689,6 +693,8 @@ namespace ATL.AudioData.IO
 				return 0;
 		}
 
+        /* Unused
+         * 
 		private byte getVBREncoderID()
 		{
 			// Guess VBR encoder and get ID
@@ -774,7 +780,7 @@ namespace ATL.AudioData.IO
 					VendorID[6] +
 					VendorID[7];
 			return result;
-		}
+		}*/
 
 		private bool getValid()
 		{
