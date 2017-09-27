@@ -93,9 +93,10 @@ namespace ATL.test
             testGenericAudio("AC3/empty.ac3", 18, 128, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
+        [TestMethod]
         public void Audio_DTS()
         {
-            testGenericAudio("DTS/dts.dts", 10, 1512, 96000, false, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("DTS/dts.dts", 10, 1536, 48000, false, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
