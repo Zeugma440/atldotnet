@@ -287,7 +287,7 @@ namespace ATL.AudioData.IO
             {
                 Instrument instrument = new Instrument();
                 instrumentHeaderSize = source.ReadUInt32();
-                instrument.DisplayName = new String(StreamUtils.ReadOneByteChars(source, 22)).Trim();
+                instrument.DisplayName = Utils.Latin1Encoding.GetString(source.ReadBytes(22)).Trim();
                 instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
                 source.BaseStream.Seek(1, SeekOrigin.Current); // Instrument type; useless according to documentation
                 nbSamples = source.ReadUInt16();

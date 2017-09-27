@@ -6,6 +6,9 @@ using System.IO;
 
 namespace ATL.AudioData
 {
+    /// <summary>
+    /// Handles high-level basic operations on the given audio file, calling Metadata readers when needed
+    /// </summary>
     public class AudioDataManager
     {
         // Optimal settings according to performance test
@@ -165,6 +168,7 @@ namespace ATL.AudioData
                     using (BinaryReader r = new BinaryReader(fs))
                     using (BinaryWriter w = new BinaryWriter(fs))
                     {
+                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         if (audioDataIO is IMetaDataEmbedder)
                         {
                             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(null, false);
@@ -252,7 +256,7 @@ namespace ATL.AudioData
 
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
             {
-                IMetaDataIO nativeTag = (IMetaDataIO)audioDataIO; // TODO : This is dirty as ****; there must be a better way !
+                IMetaDataIO nativeTag = (IMetaDataIO)audioDataIO;
                 this.nativeTag = nativeTag;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
 

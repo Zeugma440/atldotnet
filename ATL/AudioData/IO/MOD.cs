@@ -324,7 +324,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(1080, SeekOrigin.Begin);
 
-            formatTag = new String(StreamUtils.ReadOneByteChars(source, 4)).Trim();
+            formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
 
             if (!modFormats.ContainsKey(formatTag)) result = 15;
 
@@ -410,7 +410,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < 128; i++) FPatternTable.Add(source.ReadByte()); // Pattern table
 
             // File format tag
-            formatTag = new String(StreamUtils.ReadOneByteChars(source, 4)).Trim();
+            formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
             if (modFormats.ContainsKey(formatTag))
             {
                 nbChannels = modFormats[formatTag].NbChannels;

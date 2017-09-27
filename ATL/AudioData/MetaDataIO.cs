@@ -8,9 +8,14 @@ using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Superclass that "consolidates" all metadata I/O algorithms to ease development of new classes and minimize their code
+    /// </summary>
     public abstract class MetaDataIO : IMetaDataIO
     {
-        // TODO - move everything to general option class
+        // ------ OPTIONS -----------------------------------------------------
+
+        // TODO - move all options below to a general ATL option class
         // General properties
         protected static bool ID3v2_useExtendedHeaderRestrictions = false;
         protected static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
@@ -22,10 +27,22 @@ namespace ATL.AudioData.IO
         public static string internalLineSeparator = "˶"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
         public static string displayLineSeparator = "/";
 
+        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
+        public static void SetASFKeepNonWMFieldWhenRemoving(bool b) { ASF_keepNonWMFieldsWhenRemovingTag = b; }
+        public static void SetEnablePadding(bool b) { enablePadding = b; }
+        public static void SetValueSeparator(string s) { displayValueSeparator = s; }
+        public static void SetLineSeparator(string s) { displayLineSeparator = s; }
+
+
+        // ------ CONSTS -----------------------------------------------------
+
         // Default tag offset
         protected const int TO_EOF = 0;     // End Of File
         protected const int TO_BOF = 1;     // Beginning Of File
         protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
+
+
+        // ------ INNER CLASSES -----------------------------------------------------
 
         /// <summary>
         /// Container class describing tag reading parameters
@@ -47,6 +64,8 @@ namespace ATL.AudioData.IO
         }
 
 
+        // ------ PROPERTIES -----------------------------------------------------
+
         protected bool tagExists;
         protected int tagVersion;
 
@@ -57,16 +76,8 @@ namespace ATL.AudioData.IO
 
         internal FileStructureHelper structureHelper;
 
-        protected MetaDataIO delegatedMeta = null;
-
         protected IMetaDataEmbedder embedder;
 
-
-        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
-        public static void SetASFKeepNonWMFieldWhenRemoving(bool b) { ASF_keepNonWMFieldsWhenRemovingTag = b; }
-        public static void SetEnablePadding(bool b) { enablePadding = b; }
-        public static void SetValueSeparator(string s) { displayValueSeparator = s; }
-        public static void SetLineSeparator(string s) { displayLineSeparator = s; }
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
@@ -300,6 +311,25 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
+        {
+            IList<TagData.MetaFieldInfo> result = new List<TagData.MetaFieldInfo>();
+
+            foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
+            {
+                if (
+                    getImplementedTagType().Equals(fieldInfo.TagType)
+                    && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
+                    && ("".Equals(language) || language.Equals(fieldInfo.Language))
+                    )
+                {
+                    result.Add(fieldInfo);
+                }
+            }
+
+            return result;
+        }
+
         public IList<TagData.PictureInfo> Pictures
         {
             get
@@ -391,16 +421,17 @@ namespace ATL.AudioData.IO
             return picPosition;
         }
 
+
         // ------ ABSTRACT METHODS -----------------------------------------------------
 
         abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
 
+        abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
         abstract protected int getDefaultTagOffset();
 
         abstract protected int getImplementedTagType();
 
-        abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
         // ------ COMMON METHODS -----------------------------------------------------
 
@@ -409,30 +440,21 @@ namespace ATL.AudioData.IO
             tagExists = false;
             tagVersion = 0;
 
-            // TODO -- shouldn't below instructions be Clear calls instead of new instanciations ?
+            // TODO -- shouldn't below instructions be Clear calls instead of new instanciations for smoother performance ? GC sure has a lot of work right now...
             tagData = new TagData();
             pictureTokens = new List<TagData.PictureInfo>();
             picturePositions = new List<KeyValuePair<string, int>>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
         }
 
-        public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
+        public void SetEmbedder(IMetaDataEmbedder embedder)
         {
-            IList<TagData.MetaFieldInfo> result = new List<TagData.MetaFieldInfo>();
+            this.embedder = embedder;
+        }
 
-            foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
-            {
-                if (
-                    getImplementedTagType().Equals(fieldInfo.TagType)
-                    && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
-                    && ("".Equals(language) || language.Equals(fieldInfo.Language))
-                    )
-                {
-                    result.Add(fieldInfo);
-                }
-            }
-
-            return result;
+        public void Clear()
+        {
+            ResetData();
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
@@ -472,13 +494,8 @@ namespace ATL.AudioData.IO
 
             // Read all the fields in the existing tag (including unsupported fields)
             TagData.PictureStreamHandlerDelegate pictureHandler;
-            if (delegatedMeta != null)
-            {
-                pictureHandler = new TagData.PictureStreamHandlerDelegate(delegatedMeta.readPictureData);
-            } else
-            {
-                pictureHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
-            }
+            pictureHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
+            
             ReadTagParams readTagParams = new ReadTagParams(pictureHandler, true);
             readTagParams.PrepareForWriting = true;
 
@@ -645,25 +662,6 @@ namespace ATL.AudioData.IO
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
 
             tagData.Pictures.Add(picInfo);
-        }
-
-        protected void copyFrom(MetaDataIO meta)
-        {
-            this.tagData = meta.tagData;
-            this.tagExists = meta.tagExists;
-            this.tagVersion = meta.tagVersion;
-            this.pictureTokens = meta.pictureTokens;
-            this.structureHelper = meta.structureHelper;
-        }
-
-        public void SetEmbedder(IMetaDataEmbedder embedder)
-        {
-            this.embedder = embedder;
-        }
-
-        public void Clear()
-        {
-            ResetData();
         }
     }
 }

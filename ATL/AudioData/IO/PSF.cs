@@ -178,7 +178,7 @@ namespace ATL.AudioData.IO
 
         private bool readHeader(BinaryReader source, ref PSFHeader header)
 		{
-			header.FormatTag = new String( StreamUtils.ReadOneByteChars(source, 3) );
+            header.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
 			if (PSF_FORMAT_TAG == header.FormatTag)
 			{
 				header.VersionByte = source.ReadByte();

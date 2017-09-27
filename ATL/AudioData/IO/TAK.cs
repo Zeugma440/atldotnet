@@ -138,7 +138,7 @@ namespace ATL.AudioData.IO
             resetData();
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            if (StreamUtils.StringEqualsArr(TAK_ID,StreamUtils.ReadOneByteChars(source, 4)))
+            if (TAK_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
 			{
                 result = true;
                 position = source.BaseStream.Position;

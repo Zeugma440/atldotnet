@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -145,12 +146,12 @@ namespace ATL.AudioData.IO
             resetData();
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
-            if (StreamUtils.StringEqualsArr(DSD_ID,StreamUtils.ReadOneByteChars(source, 4)))
+            if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
 			{
 				source.BaseStream.Seek(16, SeekOrigin.Current); // Boring stuff
                 id3v2Offset = source.ReadInt64();
 
-                if (StreamUtils.StringEqualsArr(FMT_ID, StreamUtils.ReadOneByteChars(source, 4)))
+                if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
                 {
                     source.BaseStream.Seek(8, SeekOrigin.Current); // Chunk size
 

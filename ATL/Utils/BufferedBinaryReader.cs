@@ -1,35 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 
-// Initial credits go to Jackson Dunstan for his article (http://jacksondunstan.com/articles/3568)
-
-/*
- *
- * stream ------------[================>=======================]--------------------------------------*EOS
- *                    ^                ^                       ^
- *                    bufferOffset     cursorPosition          streamPosition
- *                    (absolute)       (relative to buffer)    (absolute)
- */
+// Initial inspiration go to Jackson Dunstan for his article (http://jacksondunstan.com/articles/3568)
 
 // TODO - integrate StreamUtils methods to work with embedded buffer
+
 namespace ATL
 {
+    /// <summary>
+    /// Reads data from the given Stream using a forward buffer in order to reduce disk stress and have better control of when data is actually read from the disk.
+    /// 
+    /// NB1 : Using BufferedBinaryReader instead of the classic BinaryReader create a 10% speed gain on the dev environment (MS .NET under Windows)
+    /// 
+    /// NB2 : The interface of this class is designed to be called exactly like a BinaryReader in order to facilitate swapping in classes that use BinaryReader
+    /// However, is does _not_ give access to BaseStream, in order to keep control on buffer and cursor positions.
+    /// </summary>
     public class BufferedBinaryReader : IDisposable
     {
-        private const int BUFFER_SIZE = 512;
+        private const int DEFAULT_BUFFER_SIZE = 512;
 
         private readonly Stream stream;
         private readonly byte[] buffer;
         private readonly int bufferDefaultSize;
         private readonly long streamSize;
 
+        /*
+         *
+         * stream ------------[================>=======================]--------------------------------------*EOS
+         *                    ^                ^                       ^
+         *                    bufferOffset     cursorPosition          streamPosition
+         *                    (absolute)       (relative to buffer)    (absolute)
+         */
         private long bufferOffset;
-        private int cursorPosition;
+        private int cursorPosition; // NB : cursorPosition can be > bufferSize in certain cases when BufferedBinaryReader has to read a chunk of data larger than bufferSize
         private long streamPosition;
-        private int bufferSize;
+        private int bufferSize; // NB : bufferSize can be < DEFAULT_BUFFER_SIZE when bufferOffset nears the end of the stream (not enough remaining bytes to fill the whole buffer space)
 
         public long Position
         {
@@ -45,7 +51,7 @@ namespace ATL
         public BufferedBinaryReader(Stream stream)
         {
             this.stream = stream;
-            bufferDefaultSize = BUFFER_SIZE;
+            bufferDefaultSize = DEFAULT_BUFFER_SIZE;
             buffer = new byte[bufferDefaultSize];
             streamSize = stream.Length;
             streamPosition = stream.Position;

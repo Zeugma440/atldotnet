@@ -260,8 +260,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
             long initialPosition = source.BaseStream.Position;
-			header.FormatTag = new String( StreamUtils.ReadOneByteChars(source, SPC_FORMAT_TAG.Length) );
-			if (SPC_FORMAT_TAG == header.FormatTag)
+            if (SPC_FORMAT_TAG.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(SPC_FORMAT_TAG.Length))))
 			{
 				source.BaseStream.Seek(8,SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
 				header.TagInHeader = source.ReadByte();
@@ -309,16 +308,13 @@ namespace ATL.AudioData.IO
             setMetaField(ZONE_HEADER, HEADER_DUMPERNAME, Utils.Latin1Encoding.GetString(source.ReadBytes(16)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
             setMetaField(ZONE_HEADER, HEADER_COMMENT, Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
 
-            char[] date;
-			char[] song;
-			char[] fade;
+            byte[] date, song, fade;
 
             // NB : Dump date is used to determine if the tag is binary or text-based.
             // It won't be recorded as a property of TSPC
-            // TODO - process following values as byte[]
-            date = StreamUtils.ReadOneByteChars(source,11);
-			song = StreamUtils.ReadOneByteChars(source,3);
-            fade = StreamUtils.ReadOneByteChars(source,5);
+            date = source.ReadBytes(11);
+            song = source.ReadBytes(3);
+            fade = source.ReadBytes(5);
 			
 			bool bin;
 			int dateRes = isText(date);
@@ -347,7 +343,7 @@ namespace ATL.AudioData.IO
 					bin = true;
 					for (int i=4; i<8; i++)
 					{
-						bin = bin & (0 == (byte)date[i]);
+						bin = bin & (0 == date[i]);
 					}
 				}
 			}
@@ -362,31 +358,28 @@ namespace ATL.AudioData.IO
 			if (bin)
 			{
                 fadeVal = 
-                    (byte)fade[0]*0x000001 + 
-					(byte)fade[1]*0x0000FF + 
-					(byte)fade[2]*0x00FF00 + 
-					(byte)fade[3]*0xFF0000;
+                    fade[0]*0x000001 + 
+					fade[1]*0x0000FF + 
+					fade[2]*0x00FF00 + 
+					fade[3]*0xFF0000;
 				if (fadeVal > 59999) fadeVal = 59999;
 
-				songVal = (byte)song[0]*0x01 +
-					(byte)song[1]*0x10;
+				songVal =   song[0]*0x01 + song[1]*0x10;
 				if (songVal > 959) songVal = 959;
 
 				source.BaseStream.Seek(-1,SeekOrigin.Current); // We're one byte ahead
-
-                byte[] realFade = new byte[4] { (byte)fade[0], (byte)fade[1], (byte)fade[2], (byte)fade[3] };
-                setMetaField(ZONE_HEADER, HEADER_FADE, Utils.Latin1Encoding.GetString(realFade), readTagParams.ReadAllMetaFrames);
+                setMetaField(ZONE_HEADER, HEADER_FADE, Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames);
             }
 			else
 			{
-                fadeVal = TrackUtils.ExtractTrackNumber(new String(fade));
-                songVal = TrackUtils.ExtractTrackNumber(new String(song));
+                fadeVal = TrackUtils.ExtractTrackNumber(Utils.Latin1Encoding.GetString(fade));
+                songVal = TrackUtils.ExtractTrackNumber(Utils.Latin1Encoding.GetString(song));
 
-                setMetaField(ZONE_HEADER, HEADER_FADE, new string(fade), readTagParams.ReadAllMetaFrames);
+                setMetaField(ZONE_HEADER, HEADER_FADE, Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames);
             }
 
-            setMetaField(ZONE_HEADER, HEADER_DUMPDATE, new string(date), readTagParams.ReadAllMetaFrames);
-            setMetaField(ZONE_HEADER, HEADER_SONGLENGTH, new string(song), readTagParams.ReadAllMetaFrames);
+            setMetaField(ZONE_HEADER, HEADER_DUMPDATE, Utils.Latin1Encoding.GetString(date), readTagParams.ReadAllMetaFrames);
+            setMetaField(ZONE_HEADER, HEADER_SONGLENGTH, Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
             if (songVal > 0) duration = Math.Round((double)fadeVal / 1000) + songVal;
@@ -400,13 +393,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private int isText(char[] str)
+        private int isText(byte[] data)
 		{
 			int c = 0;
 
-			while (c<str.Length && (((byte)str[c]>=0x30 && str[c]<=0x39) || '/'==str[c])) c++;
+			while (c < data.Length && ( (data[c]>=0x30 && data[c]<=0x39) || 0x2F == data[c] ) ) c++; // 0x2F = '/' (date separator)
 
-            if (c==str.Length || str[c]==0)
+            if (c==data.Length || data[c]==0)
 				return c;
 			else
 				return -1;

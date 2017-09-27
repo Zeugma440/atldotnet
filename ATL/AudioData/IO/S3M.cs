@@ -307,7 +307,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(1080, SeekOrigin.Begin);
 
-            formatTag = new String(StreamUtils.ReadOneByteChars(source, 4)).Trim();
+            formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
 
             source.BaseStream.Seek(position, SeekOrigin.Begin);
 
@@ -338,7 +338,7 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(pos << 4, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
                 instrument.Type = source.ReadByte();
-                instrument.FileName = new String(StreamUtils.ReadOneByteChars(source, 12)).Trim();
+                instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
                 instrument.FileName = instrument.FileName.Replace("\0", "");
 
                 if (instrument.Type > 0) // Same offsets for PCM and AdLib display names
@@ -452,7 +452,7 @@ namespace ATL.AudioData.IO
             trackerName = getTrackerName(trackerVersion);
 
             source.BaseStream.Seek(2, SeekOrigin.Current); // sampleType (16b)
-            if (!S3M_SIGNATURE.Equals(new String(StreamUtils.ReadOneByteChars(source, 4))))
+            if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
                 result = false;
                 throw new Exception("Invalid S3M file (file signature mismatch)");

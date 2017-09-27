@@ -294,7 +294,7 @@ namespace ATL.AudioData.IO
                 Instrument instrument = new Instrument();
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Signature
-                instrument.FileName = new String(StreamUtils.ReadOneByteChars(source, 12)).Trim();
+                instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
                 instrument.FileName = instrument.FileName.Replace("\0", "");
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Data not relevant for ATL
@@ -314,7 +314,7 @@ namespace ATL.AudioData.IO
                 Instrument instrument = new Instrument();
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Signature
-                instrument.FileName = new String(StreamUtils.ReadOneByteChars(source, 12)).Trim();
+                instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
                 instrument.FileName = instrument.FileName.Replace("\0", "");
 
                 source.BaseStream.Seek(16, SeekOrigin.Current); // Data not relevant for ATL

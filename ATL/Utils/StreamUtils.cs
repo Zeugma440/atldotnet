@@ -64,34 +64,6 @@ namespace ATL
             return true;
         }
 
-
-        /// <summary>
-        /// Reads a given number of one-byte chars from the provided source
-        /// (this method is there because the default behaviour of .NET's binary char reading
-        /// tries to read unicode stuff, thus reading two bytes in a row from time to time :S)
-        /// </summary>
-        /// <param name="r">Source to read from</param>
-        /// <param name="length">Number of one-byte chars to read</param>
-        /// <returns>Array of chars read from the source</returns>
-        [Obsolete ("limit use in favour of Encoding.ASCII.GetString(r.ReadBytes) or Utils.Latin1Encoding.GetString(r.ReadBytes)")]
-        public static char[] ReadOneByteChars(BinaryReader r, int length)
-        {
-            return ReadOneByteChars(r.BaseStream, length);
-        }
-        private static char[] ReadOneByteChars(Stream s, int length)
-		{
-			byte[] byteArr = new byte[length];
-            char[] result = new char[length];
-
-            s.Read(byteArr, 0, length);
-			for (int i=0; i<length; i++)
-			{
-				result[i] = (char)byteArr[i];
-			}
-
-			return result;
-		}
-
         /// <summary>
         /// Copies a given number of bytes from a given stream to another, starting at current stream positions
         /// i.e. first byte will be read at from.Position and written at to.Position
