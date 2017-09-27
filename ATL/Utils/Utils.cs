@@ -108,16 +108,6 @@ namespace Commons
         }
 
         /// <summary>
-        /// Formats a .NET Color to its six-digit "hex triplet" RGB representation (#RRGGBB)
-        /// </summary>
-        /// <param name="col">Color to be formatted</param>
-        /// <returns>Formatted color</returns>
-        public static String GetColorCodeFromColor(Color col)
-        {
-            return "#"+col.ToArgb().ToString("X6").Remove(0,2);
-        }
-
-        /// <summary>
         /// Strips the given string from all ending null '\0' characters
         /// </summary>
         /// <param name="iStr">String to process</param>

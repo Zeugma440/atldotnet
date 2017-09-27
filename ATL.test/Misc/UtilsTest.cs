@@ -17,15 +17,6 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void Utils_ColorFromCodeColor()
-        {
-            Assert.AreEqual("#000000", Utils.GetColorCodeFromColor(Color.Black));
-            Assert.AreEqual("#FFFFFF", Utils.GetColorCodeFromColor(Color.White));
-            Assert.AreEqual("#A52A2A", Utils.GetColorCodeFromColor(Color.Brown));
-            Assert.AreEqual("#DC143C", Utils.GetColorCodeFromColor(Color.Crimson));
-        }
-
-        [TestMethod]
         public void Utils_ResizePic()
         {
             Image image = Image.FromFile(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
