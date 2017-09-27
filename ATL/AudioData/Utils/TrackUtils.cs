@@ -57,7 +57,12 @@ namespace ATL.AudioData
         {
             if ((null == RatingString) || (0 == RatingString.Trim().Length)) return 0;
 
-            // == Rating in the form of stars ==
+            if (Utils.IsNumeric(RatingString)) return ExtractIntRating(Byte.Parse(RatingString));
+
+            // If the field is only one byte long, rating is evaluated numerically
+            if (1 == RatingString.Length) return ExtractIntRating((byte)RatingString[0]);
+
+            // == Rating is stored in the form of stars ==
             Regex regex = new Regex("\\*+");
 
             Match match = regex.Match(RatingString.Trim());
@@ -66,11 +71,6 @@ namespace ATL.AudioData
             {
                 return (ushort)match.Value.Length;
             }
-
-            if (Utils.IsNumeric(RatingString)) return ExtractIntRating(Byte.Parse(RatingString));
-
-            // If the field is only one byte long, rating is evaluated numerically
-            if (1 == RatingString.Length) return ExtractIntRating((byte)RatingString[0]);
 
             return 0;
         }
