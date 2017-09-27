@@ -9,14 +9,6 @@ namespace ATL.test
     public class UtilsTest
     {
         [TestMethod]
-        public void Utils_StripZeroChars()
-        {
-            string s = "abc\0def\0\0";
-
-            Assert.AreEqual(Utils.StripZeroChars(s), "abcdef");
-        }
-
-        [TestMethod]
         public void Utils_StripEndingZeroChars()
         {
             string s = "abc\0def\0\0";
@@ -47,13 +39,6 @@ namespace ATL.test
             resizedImage = Utils.ResizeImage(image, new Size(50, 50), true);
             Assert.AreEqual(50, resizedImage.Width);
             Assert.AreEqual(33, resizedImage.Height);
-        }
-
-        [TestMethod]
-        public void Utils_MD5()
-        {
-            string test = "this is a test string !";
-            Assert.AreEqual("b5a1c8176ec92291ff3595e4104c3759", Utils.GetStrMD5Hash(test) );
         }
 
         [TestMethod]

@@ -216,11 +216,11 @@ namespace ATL.AudioData.IO
             {
                 structureHelper.AddZone(source.Position-ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
-                TagData.Title = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 3, 30));
-                TagData.Artist = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 33, 30));
-                TagData.Album = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 63, 30));
-                TagData.Year = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 93, 4));
-                TagData.Comment = Utils.StripZeroChars(Utils.Latin1Encoding.GetString(data, 97, 28));
+                TagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
+                TagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
+                TagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
+                TagData.Year = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
+                TagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
                 Array.Copy(data, 125, TagData.EndComment, 0, 2);
                 TagData.Genre = data[127];
                 result = true;
@@ -275,7 +275,7 @@ namespace ATL.AudioData.IO
                 Year = tagData.Year;
 				if (TAG_VERSION_1_0 == tagVersion)
 				{
-                    Comment = tagData.Comment + Utils.StripZeroChars(Utils.Latin1Encoding.GetString(tagData.EndComment,0,2));
+                    Comment = tagData.Comment + Utils.Latin1Encoding.GetString(tagData.EndComment, 0, 2).Replace("\0", "");
 				}
 				else
 				{

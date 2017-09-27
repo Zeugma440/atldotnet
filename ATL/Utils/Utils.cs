@@ -118,32 +118,6 @@ namespace Commons
         }
 
         /// <summary>
-        /// Strips the given string from all invalid characters that could prevent it from being a proper file name
-        /// </summary>
-        /// <param name="str">String to sanitize</param>
-        /// <returns>Given string stripped of all characters that are not valid in a file name</returns>
-        public static string SanitizeFileName(string str)
-        {
-            return str.Trim().Trim(Path.GetInvalidFileNameChars());
-        }
-
-        /// <summary>
-        /// Strips the given string from all null '\0' characters (anywhere in the string)
-        /// </summary>
-        /// <param name="iStr">String to process</param>
-        /// <returns>Given string, without any null character</returns>
-        public static string StripZeroChars(string iStr)
-        {
-            //return Regex.Replace(iStr, @"\0", "");  Too expensive
-            StringBuilder sbl = new StringBuilder();
-            for (int i=0;i<iStr.Length;i++)
-            {
-                if (iStr[i] != '\0') sbl.Append(iStr[i]);
-            }
-            return sbl.ToString();
-        }
-
-        /// <summary>
         /// Strips the given string from all ending null '\0' characters
         /// </summary>
         /// <param name="iStr">String to process</param>
@@ -157,51 +131,6 @@ namespace Commons
             return iStr.Substring(0, i);
         }
         
-        /// <summary>
-        /// Indicates if the current environment is running under Mono
-        /// </summary>
-        /// <returns>True if the current environment is running under Mono; false if not</returns>
-        public static bool IsRunningMono()
-        {
-            Type t = Type.GetType("Mono.Runtime");
-            return (t != null);
-        }
-
-        /// <summary>
-        /// Indicates if the current OS is Windows
-        /// </summary>
-        /// <returns>True if the current OS is Windows; false if not</returns>
-        public static bool IsRunningWindows()
-        {
-            PlatformID pid = Environment.OSVersion.Platform;
-            switch (pid)
-            {
-                case PlatformID.Win32NT:
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.WinCE:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if the current OS is Linux/Unix
-        /// </summary>
-        /// <returns>True if the current OS is Linux/Unix; false if not</returns>
-        public static bool IsRunningUnix()
-        {
-            PlatformID pid = Environment.OSVersion.Platform;
-            switch (pid)
-            {
-                case PlatformID.Unix:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         /// <summary>
         /// Transforms the given string to format with a given length
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
@@ -325,34 +254,6 @@ namespace Commons
                 graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
             }
             return newImage;
-        }
-
-        /// <summary>
-        /// Get the MD5 hash of the given string, interpreted as UTF-8
-        /// Returned value is a string representing the MD5 in hex values
-        /// </summary>
-        /// <param name="value">Strinsg to get the MD5 hash from</param>
-        /// <returns>MD5 hash converted to string according to the rules documented in the method description</returns>
-        public static string GetStrMD5Hash(string value)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            foreach (byte b in GetMD5Hash(value)) { sb.Append(b.ToString("x2")); }
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Get the MD5 hash of the given string, interpreted as UTF-8
-        /// </summary>
-        /// <param name="value">String to get the MD5 hash from</param>
-        /// <returns>MD5 hash of the given string</returns>
-        private static byte[] GetMD5Hash(string value)
-        {
-            using (var md5 = MD5.Create())
-            {
-                return md5.ComputeHash(Encoding.UTF8.GetBytes(value));
-            }
         }
 
         /// <summary>

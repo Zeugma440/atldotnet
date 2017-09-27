@@ -218,7 +218,7 @@ namespace ATL.AudioData.IO
             }
         }  
       
-		private String vendorID;
+//		private String vendorID;
 		private VBRData vbrData = new VBRData();
 		private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
@@ -299,7 +299,7 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Reset all variables
-            vendorID = "";
+            //vendorID = "";
 
             vbrData.Reset();
             HeaderFrame.Reset();

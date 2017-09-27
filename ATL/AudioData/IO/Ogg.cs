@@ -112,7 +112,7 @@ namespace ATL.AudioData.IO
         // Ogg page header
         private class OggHeader
         {
-            public char[] ID = new char[4];                                 // Always "OggS"
+            public string ID;                                               // Always "OggS"
             public byte StreamVersion;                           // Stream structure version
             public byte TypeFlag;                                        // Header type flag
             public ulong AbsolutePosition;                      // Absolute granule position
@@ -124,7 +124,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                Array.Clear(ID, 0, ID.Length);
+                ID = "";
                 StreamVersion = 0;
                 TypeFlag = 0;
                 AbsolutePosition = 0;
@@ -136,7 +136,7 @@ namespace ATL.AudioData.IO
 
             public void ReadFromStream(BufferedBinaryReader r)
             {
-                ID = Utils.Latin1Encoding.GetChars(r.ReadBytes(4));
+                ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
                 StreamVersion = r.ReadByte();
                 TypeFlag = r.ReadByte();
                 AbsolutePosition = r.ReadUInt64();
@@ -149,7 +149,7 @@ namespace ATL.AudioData.IO
 
             public void ReadFromStream(BinaryReader r)
             {
-                ID = Utils.Latin1Encoding.GetChars(r.ReadBytes(4));
+                ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
                 StreamVersion = r.ReadByte();
                 TypeFlag = r.ReadByte();
                 AbsolutePosition = r.ReadUInt64();
@@ -190,7 +190,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return ((ID != null) && (4 == ID.Length) && (StreamUtils.ArrEqualsArr(ID, OGG_PAGE_ID.ToCharArray())));
+                return ((ID != null) && ID.Equals(OGG_PAGE_ID));
             }
         }
 
@@ -613,7 +613,7 @@ namespace ATL.AudioData.IO
             // Read global file header
             info.IdentificationHeader.ReadFromStream(source);
 
-            if (StreamUtils.StringEqualsArr(OGG_PAGE_ID, info.IdentificationHeader.ID))
+            if (info.IdentificationHeader.IsValid())
             {
                 source.Seek(sizeInfo.ID3v2Size + info.IdentificationHeader.Segments + 27, SeekOrigin.Begin); // 27 being the size from 'ID' to 'Segments'
 
@@ -681,7 +681,7 @@ namespace ATL.AudioData.IO
                         while (loop)
                         {
                             info.SetupHeaderEnd = source.Position; // When the loop stops, cursor is starting to read a brand new page located after Comment _and_ Setup headers
-                            info.CommentHeader.ID = Utils.Latin1Encoding.GetChars(source.ReadBytes(4));
+                            info.CommentHeader.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
                             info.CommentHeader.StreamVersion = source.ReadByte();
                             info.CommentHeader.TypeFlag = source.ReadByte();
                             // 0 marks a new page
@@ -940,7 +940,7 @@ namespace ATL.AudioData.IO
 
                 OggHeader header = new OggHeader()
                 {
-                    ID = OGG_PAGE_ID.ToCharArray(),
+                    ID = OGG_PAGE_ID,
                     StreamVersion = info.CommentHeader.StreamVersion,
                     TypeFlag = 0,
                     AbsolutePosition = ulong.MaxValue,

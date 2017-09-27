@@ -1138,7 +1138,7 @@ namespace ATL.AudioData.IO
         {
             if (null == iGenre) return "";
 
-            string result = Utils.StripZeroChars(iGenre.Trim());
+            string result = iGenre.Trim().Replace("\0","");
             int genreIndex = -1;
             int openParenthesisIndex = -1;
 

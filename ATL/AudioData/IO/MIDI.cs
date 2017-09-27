@@ -465,25 +465,16 @@ namespace ATL.AudioData.IO
             // Ready to read track data...
             while (source.BaseStream.Position < sizeInfo.FileSize - 4)
             {
-                trigger = new String(StreamUtils.ReadOneByteChars(source, 4));
+                trigger = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                 if (trigger != MIDI_TRACK_HEADER)
                 {
                     // Track header/announced filesize might be corrupted; looking for next header
+                    // TODO - test this behaviour; it looks a tad too complex for what it's supposed to do
                     long initialPos = source.BaseStream.Position - 4;
-                    String window = "";
-                    char c = '\0';
-                    int additionalSize = 0;
-
-                    while ((window != MIDI_TRACK_HEADER) && (source.BaseStream.Position < sizeInfo.FileSize))
-                    {
-                        c = StreamUtils.ReadOneByteChar(source);
-                        additionalSize++;
-                        window += c;
-                        if (window.Length > 4) window = window.Substring(1, 4);
-                    }
-                    long newPos = source.BaseStream.Position;
-                    if (window == MIDI_TRACK_HEADER) newPos = newPos - 4;
+                    source.BaseStream.Seek(-3, SeekOrigin.Current);
+                    StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_TRACK_HEADER));
+                    long newPos = source.BaseStream.Position - 4;
 
                     int newSize = (int)(trackSize + (newPos - initialPos));
                     tracks.RemoveAt(tracks.Count - 1);
@@ -616,7 +607,7 @@ namespace ATL.AudioData.IO
         */
         #endregion
 
-        private MidiTrack parseTrack(byte[] data, int tn)
+        private MidiTrack parseTrack(byte[] data, int trackNumber)
         {
             MidiTrack track = new MidiTrack();
 
@@ -708,7 +699,7 @@ namespace ATL.AudioData.IO
                                 {
                                     case MidiEvents.META_SEQUENCE_NUM: // sequence_number
                                         tmp = data[position + 2];
-                                        if (tmp == 0x00) { num = tn; position += 3; }
+                                        if (tmp == 0x00) { num = trackNumber; position += 3; }
                                         else { num = 1; position += 5; }
 
                                         evt = new MidiEvent(currentTicks, meta, -1, num);
@@ -730,7 +721,7 @@ namespace ATL.AudioData.IO
                                         String type = texttypes[meta - 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("Meta " + type + " has corrupt variable length field (" + len + ") [track: " + tn + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new Exception("Meta " + type + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
 
                                         txt = Encoding.ASCII.GetString(data, position, len);
                                         if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append("/");
@@ -794,7 +785,7 @@ namespace ATL.AudioData.IO
 
                                         // Sets song tempo as last tempo event of 1st track
                                         // according to some MIDI files convention
-                                        if (0 == tn/* && 0 == this.tempo*/)
+                                        if (0 == trackNumber/* && 0 == this.tempo*/)
                                         {
                                             this.tempo = currentTempo;
                                             this.tempoMsgNum = track.events.Count - 1;
@@ -841,7 +832,7 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_SEQUENCER_DATA: // Sequencer specific data
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("SeqSpec has corrupt variable length field (" + len + ") [track: " + tn + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new Exception("SeqSpec has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
                                             //String str = Encoding.ASCII.GetString(data, position + 3, len); //data.=' '.sprintf("%02x",(byte)($data[$p+3+$i]));
@@ -858,7 +849,7 @@ namespace ATL.AudioData.IO
                                         byte metacode = data[position + 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + tn + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new Exception("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
                                             String str = Encoding.ASCII.GetString(data, position + 3, len); //sprintf("%02x",(byte)($data[$p+3+$i]));
@@ -876,7 +867,7 @@ namespace ATL.AudioData.IO
                             case MidiEvents.EVT_SYSEX: // SysEx
                                 position += 1;
                                 len = readVarLen(ref data, ref position);
-                                if ((len + position) > trackLen) throw new Exception("SysEx has corrupt variable length field (" + len + ") [track: " + tn + " dt: " + currentDelta + " p: " + position + "]");
+                                if ((len + position) > trackLen) throw new Exception("SysEx has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + " p: " + position + "]");
                                 {
                                     //String str = "f0" + Encoding.ASCII.GetString(data, position + 2, len); //str+=' '.sprintf("%02x",(byte)(data[p+2+i]));
                                     evt = new MidiEvent(currentTicks, eventTypeHigh, -1, currentTempo);

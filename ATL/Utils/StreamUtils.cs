@@ -38,7 +38,7 @@ namespace ATL
 		/// <param name="a">First array to be tested</param>
 		/// <param name="b">Second array to be tested</param>
 		/// <returns>True if both arrays have the same contents; false if not</returns>
-		public static bool ArrEqualsArr(char[] a, char[] b)
+		private static bool ArrEqualsArr(char[] a, char[] b)
 		{			
 			if (b.Length != a.Length) return false;
 			for (int i=0; i<b.Length; i++)
@@ -91,85 +91,6 @@ namespace ATL
 			}
 
 			return result;
-		}
-
-		/// <summary>
-		/// Reads one one-byte char from the provided source
-		/// </summary>
-		/// <param name="r">Source to read from</param>
-		/// <returns>Chars read from the source</returns>
-		public static char ReadOneByteChar(BinaryReader r)
-		{
-			return (char)r.ReadByte();
-		}
-
-        /// <summary>
-        /// Reads one one-byte char from the provided source
-        /// </summary>
-        /// <param name="r">Source to read from</param>
-        /// <returns>Chars read from the source</returns>
-        public static char ReadOneByteChar(Stream r)
-        {
-            return (char)r.ReadByte();
-        }
-
-        /// <summary>
-        /// Copies a given number of bytes from a stream to another
-        /// </summary>
-        /// <param name="mTo">Target stream</param>
-        /// <param name="mFrom">Source stream</param>
-        /// <param name="length">Number of bytes to be copied</param>
-        [Obsolete("use CopyStream")]
-        public static void CopyStreamFrom(Stream mTo, Stream mFrom, long length)
-		{
-            BinaryWriter w = new BinaryWriter(mTo);
-            BinaryReader r = new BinaryReader(mFrom);
-            CopyStreamFrom(w, r, length);
-		}
-
-        /// <summary>
-        /// Writes a given number of bytes from a stream to a writer
-        /// </summary>
-        /// <param name="mTo">Writer to be used</param>
-        /// <param name="mFrom">Source stream</param>
-        /// <param name="length">Number of bytes to be copied</param>
-        [Obsolete("use CopyStream")]
-        public static void CopyStreamFrom(BinaryWriter w, Stream mFrom, long length)
-		{
-            BinaryReader r = new BinaryReader(mFrom);
-            CopyStreamFrom(w, r, length);
-		}
-
-        /// <summary>
-        /// Writes a given number of bytes from a reader to a stream
-        /// </summary>
-        /// <param name="mTo">Target stream</param>
-        /// <param name="r">Reader to be used</param>
-        /// <param name="length">Number of bytes to be copied</param>
-        [Obsolete("use CopyStream")]
-        public static void CopyStreamFrom(Stream mTo, BinaryReader r, long length)
-		{
-            BinaryWriter w = new BinaryWriter(mTo);
-            CopyStreamFrom(w, r, length);
-		}
-
-		/// <summary>
-		/// Writes a given number of bytes from a reader to a writer
-		/// </summary>
-		/// <param name="mTo">Writer to be used</param>
-		/// <param name="r">Reader to be used</param>
-		/// <param name="length">Number of bytes to be copied</param>
-        [Obsolete("use CopyStream")]
-		public static void CopyStreamFrom(BinaryWriter w, BinaryReader r, long length)
-		{			
-			long effectiveLength;
-			long initialPosition;
-
-			initialPosition = r.BaseStream.Position;
-			if (0 == length) effectiveLength = r.BaseStream.Length; else effectiveLength = length;
-
-			while (r.BaseStream.Position < initialPosition+effectiveLength && r.BaseStream.Position < r.BaseStream.Length)
-				w.Write(r.ReadBytes(BUFFERSIZE));
 		}
 
         /// <summary>
@@ -419,17 +340,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes
-        /// </summary>
-        /// <param name="value">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static uint DecodeBEUInt24(byte[] data)
-        {
-            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
-            return (uint)((data[0] << 16) | (data[1] << 8) | (data[2] << 0));
-        }
-
-        /// <summary>
         /// Decodes a signed Big-Endian 24-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
@@ -439,6 +349,32 @@ namespace ATL
             if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
             return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
         }
+
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <param name="offset">Offset to read value from (default : 0)</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
+        {
+            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size=" + (value.Length - offset) + " bytes");
+            return (uint)(value[offset] << 16 | value[offset + 1] << 8 | value[offset + 2]);
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt24(uint value)
+        {
+            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than " + 0x00FFFFFF + "; actual value=" + value);
+
+            // Output has to be big-endian
+            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
 
         /// <summary>
         /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
@@ -595,37 +531,7 @@ namespace ATL
 
             s.Write(convertedData, 0, convertedData.Length);
         }
-
-        /// <summary>
-        /// Reads a null-terminated String from the given BinaryReader
-        /// Returns with the BinaryReader positioned after the last null-character(s)
-        /// </summary>
-        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
-        /// <param name="encoding">Encoding based on ID3v2.4 conventions (see below)</param>
-        /// <returns>Read value</returns>
-        ///  $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
-        ///  $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
-        ///   strings in the same frame SHALL have the same byteorder.
-        ///  Terminated with $00 00.
-        ///  $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
-        ///  Terminated with $00 00.
-        ///  $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
-        [Obsolete("use ReadNullTerminatedString(BinaryReader, Encoding)")]
-        public static String ReadNullTerminatedString(BinaryReader r, int encoding)
-        {
-            return ReadNullTerminatedString(r, GetEncodingFromID3v2Encoding(encoding));
-        }
-
-        [Obsolete("marked for deletion; belongs to ID3v2")]
-        public static Encoding GetEncodingFromID3v2Encoding(int encoding)
-        {
-            if (0 == encoding) return Encoding.GetEncoding("ISO-8859-1"); // aka ISO Latin-1
-            else if (1 == encoding) return Encoding.Unicode;
-            else if (2 == encoding) return Encoding.BigEndianUnicode;
-            else if (3 == encoding) return Encoding.UTF8;
-            else return Encoding.Default;
-        }
-
+        
         /// <summary>
         /// Reads a null-terminated String from the given BinaryReader, according to the given Encoding
         /// Returns with the BinaryReader positioned after the last null-character(s)
@@ -821,30 +727,6 @@ namespace ATL
             return result;
         }
 
-        /// <summary>
-        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
-        /// </summary>
-        /// <param name="value">Array of bytes to read value from</param>
-        /// <param name="offset">Offset to read value from (default : 0)</param>
-        /// <returns>Decoded value</returns>
-        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
-        {
-            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size="+(value.Length-offset)+" bytes");
-            return (uint)value[offset] << 16 | (uint)value[offset + 1] << 8 | (uint)value[offset + 2];
-        }
-
-        /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
-        /// </summary>
-        /// <param name="value">Value to be encoded</param>
-        /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeBEUInt24(uint value)
-        {
-            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than "+0x00FFFFFF+"; actual value="+value);
-            
-            // Output has to be big-endian
-            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
-        }
 
         /// <summary>
         /// Finds a byte sequence within a stream
