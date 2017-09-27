@@ -101,7 +101,8 @@
     <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\empty.it" />
     <None Include="Resources\IT\it.it" />
-    <None Include="Resources\MPC\mpc.mpc" />
+    <None Include="Resources\MPC\SV8.mpc" />
+    <None Include="Resources\MPC\SV7.mpc" />
     <None Include="Resources\OFR\BlackBird.ofr" />
     <None Include="Resources\OGG\bigPicture.ogg" />
     <None Include="Resources\OGG\empty.ogg" />

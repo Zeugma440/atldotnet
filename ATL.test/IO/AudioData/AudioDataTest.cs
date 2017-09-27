@@ -84,7 +84,8 @@ namespace ATL.test
         [TestMethod]
         public void Audio_MPC()
         {
-            testGenericAudio("MPC/mpc.mpc", 8, 127, 44100, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("MPC/SV8.mpc", 8, 127, 44100, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("MPC/SV7.mpc", 8, 131, 44100, true, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]
