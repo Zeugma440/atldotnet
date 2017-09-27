@@ -15,10 +15,10 @@ namespace ATL.AudioData
         public const int TAG_UNKNOWN = 99;  // Whenever tag types have to be used out of context
 
         // Count of the types defined above, excluding unknown type
-        public const int TAG_TYPE_COUNT = 4;
+        public static int TAG_TYPE_COUNT = 4;
 
-		// Defines the default reading priority of the metadata
-		private int[] tagPriority = new int[TAG_TYPE_COUNT] { TAG_ID3V2, TAG_APE, TAG_NATIVE, TAG_ID3V1 };
+        // Defines the default reading priority of the metadata
+        private int[] tagPriority;
 
 		// Defines whether the next created metadatareaders should use cross-tag reading
 		private bool m_enableCrossReading = true;
@@ -54,7 +54,12 @@ namespace ATL.AudioData
             if (null == theFactory)
 			{
 				theFactory = new MetaDataIOFactory();
-			}
+                theFactory.tagPriority = new int[TAG_TYPE_COUNT];
+                theFactory.tagPriority[0] = TAG_ID3V2;
+                theFactory.tagPriority[1] = TAG_APE;
+                theFactory.tagPriority[2] = TAG_NATIVE;
+                theFactory.tagPriority[3] = TAG_ID3V1;
+            }
 
 			return theFactory;
 		}
