@@ -185,7 +185,7 @@ namespace ATL.Logging
 		/// Gets all the logged items 
 		/// </summary>
 		/// <returns>List of all the logged items</returns>
-		public ArrayList GetAllItems()
+		public IList<LogItem> GetAllItems()
 		{
 			return GetAllItems(0x0000000F);
 		}
@@ -196,9 +196,9 @@ namespace ATL.Logging
 		/// </summary>
 		/// <param name="levelMask">Logging level mask</param>
 		/// <returns>List of the matching logged items</returns>
-		public ArrayList GetAllItems(int levelMask)
+		public IList<LogItem> GetAllItems(int levelMask)
 		{
-			ArrayList result = new ArrayList();
+            IList<LogItem> result = new List<LogItem>();
 
             lock (masterLog)
             {

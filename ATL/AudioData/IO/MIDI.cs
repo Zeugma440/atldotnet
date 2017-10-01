@@ -414,7 +414,7 @@ namespace ATL.AudioData.IO
             byte[] header;
             string trigger;
 
-            ArrayList trackStrings = new ArrayList();
+            IList<string> trackStrings = new List<string>();
             IList<MidiTrack> tracks = new List<MidiTrack>();
 
             resetData();
