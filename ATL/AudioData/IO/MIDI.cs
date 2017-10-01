@@ -469,27 +469,15 @@ namespace ATL.AudioData.IO
 
                 if (trigger != MIDI_TRACK_HEADER)
                 {
-                    // Track header/announced filesize might be corrupted; looking for next header
-                    // TODO - test this behaviour; it looks a tad too complex for what it's supposed to do
-                    long initialPos = source.BaseStream.Position - 4;
                     source.BaseStream.Seek(-3, SeekOrigin.Current);
-                    StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_TRACK_HEADER));
-                    long newPos = source.BaseStream.Position - 4;
-
-                    int newSize = (int)(trackSize + (newPos - initialPos));
-                    tracks.RemoveAt(tracks.Count - 1);
-
-                    source.BaseStream.Seek(-newSize, SeekOrigin.Current);
-                    tracks.Add(parseTrack(source.ReadBytes(newSize), nbTrack - 1));
+                    if (!StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_TRACK_HEADER))) break;
                 }
-                else
-                {
-                    // trackSize is stored in big endian -> needs inverting
-                    trackSize = StreamUtils.ReverseInt32(source.ReadInt32());
 
-                    tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
-                    nbTrack++;
-                }
+                // trackSize is stored in big endian -> needs inverting
+                trackSize = StreamUtils.ReverseInt32(source.ReadInt32());
+
+                tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
+                nbTrack++;
             }
 
             this.tracks = tracks;

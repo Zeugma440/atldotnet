@@ -116,7 +116,10 @@ namespace ATL.test
         [TestMethod]
         public void Audio_Midi()
         {
+            testGenericAudio("MID/ataezou - I (HEART) RUEAMATASU.mid", 66, 0, 0, false, AudioDataIOFactory.CF_SEQ);
+            testGenericAudio("MID/TRANSIT1.MID", 105, 0, 0, false, AudioDataIOFactory.CF_SEQ);
             testGenericAudio("MID/ROQ.MID", 504, 0, 0, false, AudioDataIOFactory.CF_SEQ);
+            testGenericAudio("MID/yoru-uta.mid", 251, 0, 0, false, AudioDataIOFactory.CF_SEQ); // This one has a track header position issue
         }
 
         [TestMethod]
