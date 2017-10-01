@@ -16,6 +16,16 @@ namespace Commons
         public int NumColorsInPalette = 0;
     }
 
+    /*
+     * Helper methods for reading basic image properties without System.Drawing
+     * This class has been created to reach .NET Core 2.0 compatibility
+     * 
+     * Implementation notes :
+     * 
+     *  - If a TIFF file has multiple images, only the properties of the 1st image will be read
+     *  - BMPs with color palettes are not supported
+     * 
+     */
     public static class ImageUtils
     {
         public static BinaryReader BinaryReader { get; private set; }
@@ -160,6 +170,70 @@ namespace Commons
 
                 switch (format)
                 {
+                    case (ImageFormat.Tiff):
+                        bool isBigEndian = (0x4D == r.ReadByte());
+                        s.Seek(3, SeekOrigin.Current); // Skip the rest of the signature
+                        long IFDOffset = readInt32(r, isBigEndian);
+
+                        s.Seek(IFDOffset, SeekOrigin.Begin);
+
+                        int nbIFDEntries = readInt16(r, isBigEndian);
+
+                        long initialPos = s.Position;
+                        int IFDtag, IFDFieldType, IFDNbValues, IFDValue;
+                        int photometricInterpretation = 0;
+                        int bitsPerSample = 0;
+                        int samplesPerPixel = 0;
+
+                        for (int i=0; i<nbIFDEntries; i++)
+                        {
+                            IFDtag = readInt16(r, isBigEndian);
+                            IFDFieldType = readInt16(r, isBigEndian);
+                            IFDNbValues = readInt32(r, isBigEndian);
+                            IFDValue = readInt32(r, isBigEndian);
+
+                            switch (IFDtag)
+                            {
+                                // Common properties
+                                case (0x0100):
+                                    props.Width = IFDValue;
+                                    break;
+                                case (0x0101):
+                                    props.Height = IFDValue;
+                                    break;
+
+                                // Specific properties
+                                case (0x0106):                  // PhotometricInterpretation
+                                    photometricInterpretation = IFDValue;
+                                    if (IFDValue < 2) props.ColorDepth = 1;         // Bilevel image
+                                    else if (2 == IFDValue) props.ColorDepth = 24;  // RGB full color image
+                                    // NB : A value of 3 would indicate a palette-color image, but has no effect here
+                                    break;
+                                case (0x0102):                  // BitsPerSample
+                                    bitsPerSample = IFDValue;
+                                    break;
+                                case (0x0115):                  // SamplesPerPixel
+                                    samplesPerPixel = IFDValue;
+                                    break;
+                            }
+                        }
+
+                        if (photometricInterpretation < 2) // Bilevel
+                        {
+                            props.ColorDepth = bitsPerSample;
+                        }
+                        else if (2 == photometricInterpretation) // RGB
+                        {
+                            props.ColorDepth = 8 * samplesPerPixel;
+                        }
+                        else if (3 == photometricInterpretation) // Palette
+                        {
+                            props.ColorDepth = 8 * samplesPerPixel;
+                            props.NumColorsInPalette = bitsPerSample;
+                        }
+
+
+                        break;
                     case (ImageFormat.Gif):
                         byte[] GraphicControlExtensionBlockSignature = new byte[2] { 0x21, 0xf9 };
 
@@ -178,15 +252,15 @@ namespace Commons
                         }
                         
                         /*
-                         * v89a means that the first image block follows the first graphic control extension block
-                         * (which can in turn be located after an application extension block if the GIF is animated)
+                         * v89a means that the first image block should follow the first graphic control extension block
+                         * (which may in turn be located after an application extension block if the GIF is animated)
                          * 
-                         * => The simplest way to get to the image block is to look for the graphic control extension block
-                         * and to skip it
+                         * => The simplest way to get to the 1st image block is to look for the 1st 
+                         * graphic control extension block, and to skip it
                          */
                         if ("89a".Equals(version))
                         {
-                            long initialPos = s.Position;
+                            initialPos = s.Position;
                             if (StreamUtils.FindSequence(s, GraphicControlExtensionBlockSignature))
                             {
                                 s.Seek(6, SeekOrigin.Current);
@@ -302,7 +376,7 @@ namespace Commons
                         {
                             // Skip frame length
                             s.Seek(2, SeekOrigin.Current);
-                            byte bitsPerSample = r.ReadByte();
+                            bitsPerSample = r.ReadByte();
                             s.Read(shortData, 0, 2);
                             props.Height = StreamUtils.DecodeBEUInt16(shortData);
                             s.Read(shortData, 0, 2);
@@ -341,6 +415,32 @@ namespace Commons
             }
 
             return 0;
+        }
+
+        // =========== HELPERS FOR TIFF FILES
+
+        private static short readInt16(BinaryReader r, bool isBigEndian)
+        {
+            if (isBigEndian)
+            {
+                return StreamUtils.DecodeBEInt16(r.ReadBytes(2));
+            }
+            else
+            {
+                return r.ReadInt16();
+            }
+        }
+
+        private static int readInt32(BinaryReader r, bool isBigEndian)
+        {
+            if (isBigEndian)
+            {
+                return StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            }
+            else
+            {
+                return r.ReadInt32();
+            }
         }
 
     }

@@ -81,5 +81,33 @@ namespace ATL.test
             Assert.AreEqual(256, props.NumColorsInPalette);
             Assert.AreEqual(24, props.ColorDepth);
         }
+
+        [TestMethod]
+        public void ImgUtils_LoadTiff()
+        {
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bilevel.tif");
+            ImageProperties props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(1728, props.Width);
+            Assert.AreEqual(2376, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(1, props.ColorDepth);
+
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/rgb.tif");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(124, props.Width);
+            Assert.AreEqual(124, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(24, props.ColorDepth);
+
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/palette.tif");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(2147, props.Width);
+            Assert.AreEqual(1027, props.Height);
+            Assert.AreEqual(8, props.NumColorsInPalette);
+            Assert.AreEqual(8, props.ColorDepth);
+        }
     }
 }
