@@ -2,6 +2,8 @@
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace ATL.benchmark
 {
@@ -19,12 +21,13 @@ namespace ATL.benchmark
         [Benchmark]
         public void mem_ATL()
         {
-//            BufferedBinaryReader.BUFFER_SIZE = mode;
+            //            BufferedBinaryReader.BUFFER_SIZE = mode;
+            IList<TagData.PictureInfo> pictures;
 
             if (File.Exists(path))
             {
                 Track t = new Track(path);
-                t.GetEmbeddedPictures();
+                pictures = t.EmbeddedPictures;
             }
             else if (Directory.Exists(path))
             {

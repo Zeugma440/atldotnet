@@ -161,15 +161,17 @@ namespace ATL.benchmark
 
         private void performMassRead()
         {
+            IList<TagData.PictureInfo> pictures;
+
             // Mass-read resulting files
-            foreach(string s in tempFiles)
+            foreach (string s in tempFiles)
             {
                 //Track theTrack = new Track(getNewLocation(i)); // Old call still leads to old code
 
                 //new AudioDataManager( AudioDataIOFactory.GetInstance().GetDataReader(s) ).ReadFromFile(); // Does not load any picture
 
                 Track t = new Track(s);
-                t.GetEmbeddedPictures();
+                pictures = t.EmbeddedPictures;
             }
         }
     }

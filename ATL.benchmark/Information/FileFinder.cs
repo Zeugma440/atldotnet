@@ -62,6 +62,7 @@ namespace ATL.benchmark
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
             string[] files = Directory.GetFiles(folder);
+            IList<TagData.PictureInfo> pictures;
 
             Track t;
 
@@ -70,7 +71,7 @@ namespace ATL.benchmark
                 if (isFormatSupported(file))
                 {
                     t = new Track(file);
-                    if (fetchPicture) t.GetEmbeddedPictures();
+                    if (fetchPicture) pictures = t.EmbeddedPictures;
                     if (display)
                     {
                         Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")"));

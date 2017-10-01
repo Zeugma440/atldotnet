@@ -7,15 +7,13 @@ using System.IO;
 namespace ATL
 {
 	/// <summary>
-	/// Track description
+	/// High-level class for audio file manipulation
 	/// </summary>
 	public class Track
 	{
 		public Track() {}
 
-        // TODO create a constructor that directly loads pictures instead of opening the file two times
-
-        public Track(String iPath)
+        public Track(string iPath)
         {
             Path = iPath;
             Update();
@@ -45,23 +43,34 @@ namespace ATL
         public int DiscNumber;
         public int Rating;
         public IDictionary<string, string> AdditionalFields;
-        public IList<TagData.PictureInfo> PictureTokens;
+        public IList<TagData.PictureInfo> PictureTokens = null;
 
-        
-        // TODO make all embedded pictures available (not only the first one found)
+        private IList<TagData.PictureInfo> embeddedPictures = null;
 
-        public IList<TagData.PictureInfo> GetEmbeddedPictures()
+
+        // ========== METHODS
+
+        public IList<TagData.PictureInfo> EmbeddedPictures
         {
-            IList<TagData.PictureInfo> result = new List<TagData.PictureInfo>();
+            get
+            {
+                if (null == embeddedPictures)
+                {
+                    embeddedPictures = new List<TagData.PictureInfo>();
 
-            //TODO
+                    Update(new TagData.PictureStreamHandlerDelegate(readBinaryImageData));
+                }
 
-            return result;
+                return embeddedPictures;
+            }
         }
 
         protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            //coverArtBinary = s.GetBuffer();
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
+            picInfo.PictureData = s.ToArray();
+
+            embeddedPictures.Add(picInfo);
         }
 
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
@@ -69,39 +78,46 @@ namespace ATL
             // TODO when tag is not available, customize by naming options // tracks (...)
             AudioFileIO theReader = new AudioFileIO(Path, pictureStreamHandler);
 
-            // Per convention, the presence of a pictureStreamHandler
-            // indicates that we only want coverArt updated
-            if (null == pictureStreamHandler)
+            Title = theReader.Title;
+            if ("" == Title || null == Title)
             {
-                Title = theReader.Title;
-                if ("" == Title || null == Title)
-                {
-                    Title = System.IO.Path.GetFileNameWithoutExtension(Path);
-                }
-                Artist = Utils.ProtectValue(theReader.Artist);
-                Composer = Utils.ProtectValue(theReader.Composer);
-                Comment = Utils.ProtectValue(theReader.Comment);
-                Genre = Utils.ProtectValue(theReader.Genre);
-                OriginalArtist = Utils.ProtectValue(theReader.OriginalArtist);
-                OriginalAlbum = Utils.ProtectValue(theReader.OriginalAlbum);
-                Description = Utils.ProtectValue(theReader.GeneralDescription);
-                Copyright = Utils.ProtectValue(theReader.Copyright);
-                Publisher = Utils.ProtectValue(theReader.Publisher);
-                AlbumArtist = Utils.ProtectValue(theReader.AlbumArtist);
-                Conductor = Utils.ProtectValue(theReader.Conductor);
-                AdditionalFields = theReader.AdditionalFields;
-                Year = theReader.IntYear;
-                Album = theReader.Album;
-                TrackNumber = theReader.Track;
-                DiscNumber = theReader.Disc;
-                Bitrate = theReader.IntBitRate;
-                CodecFamily = theReader.CodecFamily;
-                Duration = theReader.IntDuration;
-                Rating = theReader.Rating;
-                IsVBR = theReader.IsVBR;
-                SampleRate = theReader.SampleRate;
-                PictureTokens = new List<TagData.PictureInfo>(theReader.PictureTokens);
+                Title = System.IO.Path.GetFileNameWithoutExtension(Path); // TODO - this should be an option, as returned value is not really read from the tag
             }
+            Artist = Utils.ProtectValue(theReader.Artist);
+            Composer = Utils.ProtectValue(theReader.Composer);
+            Comment = Utils.ProtectValue(theReader.Comment);
+            Genre = Utils.ProtectValue(theReader.Genre);
+            OriginalArtist = Utils.ProtectValue(theReader.OriginalArtist);
+            OriginalAlbum = Utils.ProtectValue(theReader.OriginalAlbum);
+            Description = Utils.ProtectValue(theReader.GeneralDescription);
+            Copyright = Utils.ProtectValue(theReader.Copyright);
+            Publisher = Utils.ProtectValue(theReader.Publisher);
+            AlbumArtist = Utils.ProtectValue(theReader.AlbumArtist);
+            Conductor = Utils.ProtectValue(theReader.Conductor);
+            AdditionalFields = theReader.AdditionalFields;
+            Year = theReader.IntYear;
+            Album = theReader.Album;
+            TrackNumber = theReader.Track;
+            DiscNumber = theReader.Disc;
+            Bitrate = theReader.IntBitRate;
+            CodecFamily = theReader.CodecFamily;
+            Duration = theReader.IntDuration;
+            Rating = theReader.Rating;
+            IsVBR = theReader.IsVBR;
+            SampleRate = theReader.SampleRate;
+            PictureTokens = new List<TagData.PictureInfo>(theReader.PictureTokens);
+
+            if (null == pictureStreamHandler && embeddedPictures != null)
+            {
+                embeddedPictures.Clear();
+                embeddedPictures = null;
+            }
+        }
+
+        public void Save()
+        {
+            
+
         }
 	}
 }

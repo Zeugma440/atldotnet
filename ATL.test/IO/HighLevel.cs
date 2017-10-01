@@ -7,6 +7,9 @@ namespace ATL.test.IO
     [TestClass]
     public class HighLevel
     {
+        // TODO test access to native tag on MP4 file
+
+
         [TestMethod]
         public void TagIO_R_Single_ID3v1()
         {
@@ -17,7 +20,6 @@ namespace ATL.test.IO
             MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V2, 2);  // Should not be read, since behaviour is single tag reading
             /* end set options */
 
-            // TODO SWITCH OLD CODE TO NEW CODE
             Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
@@ -34,13 +36,19 @@ namespace ATL.test.IO
             MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V2, 2);  // Should be used for the Year field (valuated on ID3v2)
             /* end set options */
 
-            // TODO SWITCH OLD CODE TO NEW CODE
             Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.mp3");
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(1984, theTrack.Year); // Empty on the ID3v1 tag => cross-reading should read it on ID3v2
         }
 
-        // TODO test access to native tag on MP4 file
+        [TestMethod]
+        public void TagIO_R_MultiplePictures()
+        {
+            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg");
+
+            // Check if all embedded pictures are accessible from Track
+            Assert.AreEqual(3, theTrack.EmbeddedPictures.Count);
+        }
     }
 }
