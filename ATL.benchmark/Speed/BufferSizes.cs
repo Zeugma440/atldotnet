@@ -169,7 +169,7 @@ namespace ATL.benchmark
                 //new AudioDataManager( AudioDataIOFactory.GetInstance().GetDataReader(s) ).ReadFromFile(); // Does not load any picture
 
                 Track t = new Track(s);
-                t.GetEmbeddedPictures();
+                t.GetEmbeddedPicture();
             }
         }
     }

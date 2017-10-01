@@ -2,6 +2,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using System.Drawing;
+using System.Collections.Generic;
+using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {

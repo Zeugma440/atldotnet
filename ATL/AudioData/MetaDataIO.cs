@@ -1,6 +1,7 @@
 ﻿using Commons;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
@@ -367,32 +368,32 @@ namespace ATL.AudioData.IO
 
         protected void addPictureToken(TagData.PIC_TYPE picType)
         {
-            pictureTokens.Add( new TagData.PictureInfo(ImageFormat.Undefined, picType) );
+            pictureTokens.Add( new TagData.PictureInfo(null, picType) );
         }
 
         protected void addPictureToken(int tagType, byte nativePicCode)
         {
-            pictureTokens.Add(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode) );
+            pictureTokens.Add(new TagData.PictureInfo(null, tagType, nativePicCode) );
         }
 
         protected void addPictureToken(int tagType, string nativePicCode)
         {
-            pictureTokens.Add(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            pictureTokens.Add(new TagData.PictureInfo(null, tagType, nativePicCode));
         }
 
         protected int takePicturePosition(TagData.PIC_TYPE picType)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, picType));
+            return takePicturePosition(new TagData.PictureInfo(null, picType));
         }
 
         protected int takePicturePosition(int tagType, byte nativePicCode)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new TagData.PictureInfo(null, tagType, nativePicCode));
         }
 
         protected int takePicturePosition(int tagType, string nativePicCode)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new TagData.PictureInfo(null, tagType, nativePicCode));
         }
 
         protected int takePicturePosition(TagData.PictureInfo picInfo)

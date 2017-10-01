@@ -70,7 +70,7 @@ namespace ATL.benchmark
                 if (isFormatSupported(file))
                 {
                     t = new Track(file);
-                    if (fetchPicture) t.GetEmbeddedPictures();
+                    if (fetchPicture) t.GetEmbeddedPicture();
                     if (display)
                     {
                         Console.WriteLine(t.Path + "......." + Commons.Utils.FormatTime(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")"));

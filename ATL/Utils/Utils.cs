@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Security;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Security.Cryptography;
 
 namespace Commons
@@ -143,6 +146,105 @@ namespace Commons
             return result;
         }
 
+        /// <summary>
+        /// Returns the mime-type of the given .NET image format
+        /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// </summary>
+        /// <param name="imageFormat">Image format whose mime-type to obtain</param>
+        /// <returns>mime-type of the given image format</returns>
+        public static string GetMimeTypeFromImageFormat(System.Drawing.Imaging.ImageFormat imageFormat)
+        {
+            string result = "image/";
+
+            if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg))
+            {
+                result += "jpeg";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Gif))
+            {
+                result += "gif";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Png))
+            {
+                result += "png";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Bmp))
+            {
+                result += "bmp";
+            }
+            else if (imageFormat.Equals(System.Drawing.Imaging.ImageFormat.Tiff))
+            {
+                result += "tiff";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the .NET image format of the given mime-type
+        /// NB1 : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// NB2 : This function does not verify the syntax of the mime-type (e.g. "image/XXX"), and only focuses on the presence of specific substrings (e.g. "gif")
+        /// </summary>
+        /// <param name="mimeType">Mime-type whose ImageFormat to obtain</param>
+        /// <returns>ImageFormat of the given mime-type (default : JPEG)</returns>
+        public static ImageFormat GetImageFormatFromMimeType(string mimeType)
+        {
+            ImageFormat result = ImageFormat.Jpeg;
+
+            if (mimeType.Contains("gif"))
+            {
+                result = ImageFormat.Gif;
+            }
+            else if (mimeType.Contains("png"))
+            {
+                result = ImageFormat.Png;
+            }
+            else if (mimeType.Contains("bmp"))
+            {
+                result = ImageFormat.Bmp;
+            }
+            else if (mimeType.Contains("tiff"))
+            {
+                result = ImageFormat.Tiff;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Resizes the given image to the given dimensions
+        /// </summary>
+        /// <param name="image">Image to resize</param>
+        /// <param name="size">Target dimensions</param>
+        /// <param name="preserveAspectRatio">True if the resized image has to keep the same aspect ratio as the given image; false if not (optional; default value = true)</param>
+        /// <returns>Resized image</returns>
+        public static Image ResizeImage(Image image, Size size, bool preserveAspectRatio = true)
+        {
+            int newWidth;
+            int newHeight;
+            if (preserveAspectRatio)
+            {
+                int originalWidth = image.Width;
+                int originalHeight = image.Height;
+                float percentWidth = (float)size.Width / originalWidth;
+                float percentHeight = (float)size.Height / originalHeight;
+                float percent = percentHeight < percentWidth ? percentHeight : percentWidth;
+                newWidth = Convert.ToInt32( Math.Round(originalWidth * percent, 0) );
+                newHeight = Convert.ToInt32( Math.Round(originalHeight * percent, 0) );
+            }
+            else
+            {
+                newWidth = size.Width;
+                newHeight = size.Height;
+            }
+            Image newImage = new Bitmap(newWidth, newHeight);
+            using (Graphics graphicsHandle = Graphics.FromImage(newImage))
+            {
+                graphicsHandle.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
+            }
+            return newImage;
+        }
 
         /// <summary>
         /// Coverts given string value to boolean.
@@ -217,6 +319,24 @@ namespace Commons
             System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
             return Utils.Latin1Encoding.GetBytes(dataChar);
+        }
+
+        /// <summary>
+        /// Detects image format from the given signature
+        /// </summary>
+        /// <param name="header">Binary signature; must be at least 3-bytes long</param>
+        /// <returns>Detected image format corresponding to the given signature; null if no match is found</returns>
+        public static ImageFormat GetImageFormatFromPictureHeader(byte[] header)
+        {
+            if (header.Length < 3) throw new FormatException("Header length must be at least 3");
+
+            if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
+            else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
+            else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
+            else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
+            else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
+            else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
+            else return null;
         }
 
         /// <summary>

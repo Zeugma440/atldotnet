@@ -1,6 +1,7 @@
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
@@ -221,7 +222,7 @@ namespace ATL.AudioData.IO
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
                         String description = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); 
-                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
+                        ImageFormat imgFormat = Utils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
 
                         MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
                         StreamUtils.CopyStream(SourceFile.BaseStream, mem, frameDataSize - description.Length - 1);
@@ -374,7 +375,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }

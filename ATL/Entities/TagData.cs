@@ -2,6 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using HashDepot;
 
