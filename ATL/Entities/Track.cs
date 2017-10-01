@@ -2,8 +2,6 @@ using ATL.AudioData;
 using Commons;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 
 namespace ATL
@@ -49,36 +47,21 @@ namespace ATL
         public IDictionary<string, string> AdditionalFields;
         public IList<TagData.PictureInfo> PictureTokens;
 
-        protected Image coverArt = null;
-        protected byte[] coverArtBinary = null;
-
         
         // TODO make all embedded pictures available (not only the first one found)
 
-        public Image GetEmbeddedPicture(bool loadIntoDotNetImage = true)
+        public IList<TagData.PictureInfo> GetEmbeddedPictures()
         {
-            if (null == coverArt)
-            {
-                if (loadIntoDotNetImage) Update(new TagData.PictureStreamHandlerDelegate(this.readImageData));
-                else Update(new TagData.PictureStreamHandlerDelegate(this.readBinaryImageData));
-            }
-            
-            return coverArt;
-        }
+            IList<TagData.PictureInfo> result = new List<TagData.PictureInfo>();
 
-        protected void readImageDataOld(ref MemoryStream s)
-        {
-            coverArt = Image.FromStream(s);
-        }
+            //TODO
 
-        protected void readImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            coverArt = Image.FromStream(s);
+            return result;
         }
 
         protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            coverArtBinary = s.GetBuffer();
+            //coverArtBinary = s.GetBuffer();
         }
 
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)

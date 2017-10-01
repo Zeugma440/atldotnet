@@ -1,13 +1,8 @@
 ﻿using ATL.AudioData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ATL.test.IO.MetaData
 {
@@ -33,7 +28,7 @@ namespace ATL.test.IO.MetaData
 
         protected IList<KeyValuePair<TagData.PIC_TYPE, PictureInfo>> pictures = new List<KeyValuePair<TagData.PIC_TYPE, PictureInfo>>();
 
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
+        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, Commons.ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
             pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
         }
@@ -151,8 +146,8 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
 
@@ -186,7 +181,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 

@@ -4,7 +4,6 @@ using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
 using Commons;
-using System.Drawing.Imaging;
 
 namespace ATL.AudioData.IO
 {
@@ -474,7 +473,7 @@ namespace ATL.AudioData.IO
 
                         MemoryStream mem = new MemoryStream(picSize);
                         StreamUtils.CopyStream(source.BaseStream, mem, picSize);
-                        readTagParams.PictureStreamHandler(ref mem, picType, Utils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
+                        readTagParams.PictureStreamHandler(ref mem, picType, ImageUtils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
                         mem.Close();
                     }
                     setMeta = false;
@@ -813,7 +812,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture && picInfo.PictureData.Length + 50 <= ushort.MaxValue)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
                     counter++;
                 }
             }
@@ -915,7 +914,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture && picInfo.PictureData.Length + 50 > ushort.MaxValue)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
                         counter++;
                     }
                 }

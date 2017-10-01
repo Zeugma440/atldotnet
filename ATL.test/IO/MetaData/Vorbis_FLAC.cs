@@ -4,7 +4,6 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -172,8 +171,8 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+"pic1.jpg");
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+ "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
 
@@ -207,7 +206,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -260,11 +259,11 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0B);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "pic2.jpg");
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0B);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
             theTag.Pictures.Add(picInfo);
 
 
@@ -315,7 +314,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 

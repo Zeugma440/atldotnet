@@ -1,7 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Commons;
-using System.Drawing;
-using System;
 
 namespace ATL.test
 {
@@ -14,22 +12,6 @@ namespace ATL.test
             string s = "abc\0def\0\0";
 
             Assert.AreEqual(Utils.StripEndingZeroChars(s), "abc\0def");
-        }
-
-        [TestMethod]
-        public void Utils_ResizePic()
-        {
-            Image image = Image.FromFile(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
-            Assert.AreEqual(900, image.Width);
-            Assert.AreEqual(600, image.Height);
-
-            Image resizedImage = Utils.ResizeImage(image, new Size(50, 50), false);
-            Assert.AreEqual(50, resizedImage.Width);
-            Assert.AreEqual(50, resizedImage.Height);
-
-            resizedImage = Utils.ResizeImage(image, new Size(50, 50), true);
-            Assert.AreEqual(50, resizedImage.Width);
-            Assert.AreEqual(33, resizedImage.Height);
         }
 
         [TestMethod]

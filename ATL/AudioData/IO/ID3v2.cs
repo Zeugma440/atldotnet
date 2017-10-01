@@ -1,12 +1,9 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Commons;
-using System.Drawing;
 using ATL.Logging;
-using System.Drawing.Imaging;
 
 namespace ATL.AudioData.IO
 {
@@ -580,7 +577,7 @@ namespace ATL.AudioData.IO
                             if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
                             // Mime-type
                             String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                            imgFormat = Utils.GetImageFormatFromMimeType(mimeType);
+                            imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
                         }
 
                         byte picCode = source.ReadByte();
@@ -861,7 +858,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
                     nbFrames++;
                 }
             }
@@ -998,9 +995,6 @@ namespace ATL.AudioData.IO
             long finalFramePosRaw;
             int dataSizeModifier = 0;
 
-            // Picture operations management
-            Image picture = null;
-
             // Unsynchronization management
             BinaryWriter w;
             MemoryStream s = null;
@@ -1051,38 +1045,41 @@ namespace ATL.AudioData.IO
                 {
                     if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions; switching to JPEG");
-
-                        picture = Image.FromStream(new MemoryStream(pictureData));
-
-                        mimeType = "image/jpeg";
-                        picFormat = ImageFormat.Jpeg;
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions");
                     }
                 }
 
                 // Force picture dimensions if a size restriction is enabled
                 if (tagHeader.PictureSizeRestriction > 0)
                 {
-                    if ( (256 == tagHeader.PictureSizeRestriction) && ((picture.Height > 256) || (picture.Width > 256))) // 256x256 or less
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ picture.Width + "x" + picture.Height +") does not respect ID3v2 restrictions (256x256 or less); resizing");
+                    ImageProperties props = ImageUtils.GetImageProperties(pictureData);
 
+                    if ( (256 == tagHeader.PictureSizeRestriction) && ((props.Height > 256) || (props.Width > 256))) // 256x256 or less
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (256x256 or less)");
+
+                        /*
                         picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
+                        */
                     }
-                    else if ((64 == tagHeader.PictureSizeRestriction) && ((picture.Height > 64) || (picture.Width > 64))) // 64x64 or less
+                    else if ((64 == tagHeader.PictureSizeRestriction) && ((props.Height > 64) || (props.Width > 64))) // 64x64 or less
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (64x64 or less); resizing");
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (64x64 or less)");
 
+                        /*
                         picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
+                        */
                     }
-                    else if ((63 == tagHeader.PictureSizeRestriction) && ((picture.Height != 64) && (picture.Width != 64))) // exactly 64x64
+                    else if ((63 == tagHeader.PictureSizeRestriction) && ((props.Height != 64) && (props.Width != 64))) // exactly 64x64
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + picture.Width + "x" + picture.Height + ") does not respect ID3v2 restrictions (exactly 64x64); resizing");
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (exactly 64x64)");
 
+                        /*
                         picture = Image.FromStream(new MemoryStream(pictureData));
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), false);
+                        */
                     }
                 }
             }
@@ -1096,13 +1093,7 @@ namespace ATL.AudioData.IO
             if (picDescription.Length > 0) w.Write(picDescription); // Picture description
             w.Write('\0'); // Description should be null-terminated
 
-            if (picture != null) // Picture has been somehow modified when checking against extended header restrictions
-            {
-                picture.Save(w.BaseStream, picFormat);
-            } else
-            {
-                w.Write(pictureData);
-            }
+            w.Write(pictureData);
 
             finalFramePosRaw = w.BaseStream.Position;
 
