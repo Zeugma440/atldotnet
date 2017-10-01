@@ -158,6 +158,8 @@
     <Content Include="Resources\MP3\ID3v2.2 UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
+    <Content Include="Resources\_Images\pic1.bmp" />
+    <Content Include="Resources\_Images\pic1.gif" />
     <Content Include="Resources\_Images\pic1.jpg" />
     <Content Include="Resources\_Images\pic1.png" />
     <Content Include="Resources\_Images\pic2.jpg" />

@@ -27,6 +27,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadJpeg()
         {
+            // THis one has multiple image data segments; never figured out why
             byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
@@ -35,6 +36,7 @@ namespace ATL.test
             Assert.AreEqual(0, props.NumColorsInPalette);
             Assert.AreEqual(24, props.ColorDepth);
 
+            // This one is plain and simple
             data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
             props = ImageUtils.GetImageProperties(data);
 
@@ -54,6 +56,30 @@ namespace ATL.test
             Assert.AreEqual(168, props.Height);
             Assert.AreEqual(15, props.NumColorsInPalette);
             Assert.AreEqual(8, props.ColorDepth);
+        }
+
+        [TestMethod]
+        public void ImgUtils_LoadBmp()
+        {
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.bmp");
+            ImageProperties props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(175, props.Width);
+            Assert.AreEqual(168, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(8, props.ColorDepth);
+        }
+
+        [TestMethod]
+        public void ImgUtils_LoadGif()
+        {
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+            ImageProperties props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(175, props.Width);
+            Assert.AreEqual(168, props.Height);
+            Assert.AreEqual(256, props.NumColorsInPalette);
+            Assert.AreEqual(24, props.ColorDepth);
         }
     }
 }

@@ -160,6 +160,81 @@ namespace Commons
 
                 switch (format)
                 {
+                    case (ImageFormat.Gif):
+                        byte[] GraphicControlExtensionBlockSignature = new byte[2] { 0x21, 0xf9 };
+
+                        props.ColorDepth = 24; // 1 byte for each component
+
+                        s.Seek(3, SeekOrigin.Current); // Skip GIF signature
+
+                        string version = Utils.Latin1Encoding.GetString(r.ReadBytes(3));
+
+                        s.Seek(4, SeekOrigin.Current); // Skip logical screen descriptors
+
+                        byte globalPaletteUse = r.ReadByte();
+                        if (((globalPaletteUse & 0x80) >> 7) > 0) // File uses a global color palette
+                        {
+                            props.NumColorsInPalette = 2 << (globalPaletteUse & 0x07);
+                        }
+                        
+                        /*
+                         * v89a means that the first image block follows the first graphic control extension block
+                         * (which can in turn be located after an application extension block if the GIF is animated)
+                         * 
+                         * => The simplest way to get to the image block is to look for the graphic control extension block
+                         * and to skip it
+                         */
+                        if ("89a".Equals(version))
+                        {
+                            long initialPos = s.Position;
+                            if (StreamUtils.FindSequence(s, GraphicControlExtensionBlockSignature))
+                            {
+                                s.Seek(6, SeekOrigin.Current);
+                            } else
+                            {
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid v89a GIF file; no graphic control extension block found");
+                                // GIF is malformed; trying to find the image block directly
+                                s.Seek(initialPos, SeekOrigin.Begin);
+                                if (StreamUtils.FindSequence(s, new byte[1] { 0x2c }))
+                                {
+                                    s.Seek(-1, SeekOrigin.Current);
+                                }
+                            }
+                        }
+
+                        // At this point, we should be at the very beginning of the first image block
+                        if (0x2c == r.ReadByte())
+                        {
+                            s.Seek(4, SeekOrigin.Current); // Skip image position descriptors
+                            props.Width = r.ReadInt16();
+                            props.Height = r.ReadInt16();
+                            
+                            // No global palette is set => try and find information in the local palette of the 1st image block
+                            if (0 == props.NumColorsInPalette)
+                            {
+                                props.NumColorsInPalette = (int)Math.Pow(2, ((globalPaletteUse & 0x0F) << 4) + 1);
+                            }
+                        } else
+                        {
+                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Error parsing GIF file; image block not found");
+                        }
+
+                        break;
+
+                    case (ImageFormat.Bmp):
+
+                        // Skip useless information
+                        s.Seek(18, SeekOrigin.Begin);
+
+                        props.Width = r.ReadInt32();
+                        props.Height = r.ReadInt32();
+                        s.Seek(2, SeekOrigin.Current); // Planes
+                        props.ColorDepth = r.ReadInt16();
+
+                        // No support for BMP color palettes, as they seem to be exotic (and ATL has no use of this information)
+
+                        break;
+
                     case (ImageFormat.Png):
                         byte[] intData = new byte[4];
                         byte[] IHDRChunkSignature = Utils.Latin1Encoding.GetBytes("IHDR");
@@ -235,46 +310,6 @@ namespace Commons
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
                         }
-
-                        /*
-                        // Skip JPEG signature
-                        s.Seek(2, SeekOrigin.Current);
-
-                        s.Read(frameMarker, 0, 2);
-                        // Skip the APP0 field
-                        if (0xFF == frameMarker[0] && 0xE0 == frameMarker[1])
-                        {
-                            frameLength = r.ReadInt16();
-                            s.Seek(frameLength, SeekOrigin.Current);
-                        }
-
-                        // Skip APPn fields, if existing
-                        s.Read(frameMarker, 0, 2);
-                        while (0xFF == frameMarker[0] && 0xE1 <= frameMarker[1] && 0xEF >= frameMarker[1] )
-                        {
-                            frameLength = r.ReadInt16();
-                            s.Seek(frameLength, SeekOrigin.Current);
-                            s.Read(frameMarker, 0, 2);
-                        }
-
-                        // Skip DQT frames
-                        while (0xFF == frameMarker[0] && 0xDB == frameMarker[1])
-                        {
-                            frameLength = r.ReadInt16();
-                            s.Seek(frameLength + 1, SeekOrigin.Current);
-                            s.Read(frameMarker, 0, 2);
-                        }
-
-                        // Read SOF0 frame (at last...)
-                        if (0xFF == frameMarker[0] && 0xC0 == frameMarker[1])
-                        {
-                            frameLength = r.ReadInt16();
-                            byte bitsPerSample = r.ReadByte();
-                            props.Height = r.ReadInt16();
-                            props.Width = r.ReadInt16();
-                            byte nbComponents = r.ReadByte();
-                            props.ColorDepth = bitsPerSample * nbComponents;
-                        }*/
 
                         break;
                 }
