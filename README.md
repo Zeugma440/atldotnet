@@ -57,7 +57,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
-The ATL library runs on .NET 3.0+ / Mono 2.0+
+The ATL library runs on .NET Framework 3.0+ / Mono 2.0+ / .NET Core 2.0+ / .NET Standard 2.0+
 
 ATL unit tests run on .NET 4.5+
 
@@ -124,7 +124,6 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 ## What is the roadmap of ATL.NET ?
 
 * Better support of ID3v2 tags with multiple Comments (each having a specific comment description, which is currently not supported)
-* Compatibility with .NET Core (some emulation of System.Drawing needed here and there)
 * Support for __more video game-specific music formats__ (.GYM, .VGM)
 * Connectors to __other library file formats__ (iTunes)
 
