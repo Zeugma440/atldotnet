@@ -3,7 +3,6 @@ using System.IO;
 using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
-using System.Drawing.Imaging;
 using Commons;
 
 namespace ATL.AudioData.IO
@@ -678,8 +677,8 @@ namespace ATL.AudioData.IO
                         if (readTagParams.PictureStreamHandler != null)
                         {
                             // Peek the next 3 bytes to know the picture type
-                            ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(Source.ReadBytes(3));
-                            if (null == imgFormat) imgFormat = ImageFormat.Png;
+                            ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(Source.ReadBytes(3));
+                            if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
                             Source.BaseStream.Seek(-3, SeekOrigin.Current);
 
                             MemoryStream mem = new MemoryStream((int)metadataSize - 16);

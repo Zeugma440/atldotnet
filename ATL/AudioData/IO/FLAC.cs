@@ -631,7 +631,7 @@ namespace ATL.AudioData.IO
                 w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
                 dataPos = w.BaseStream.Position;
-                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, Utils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
+                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
 
                 finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

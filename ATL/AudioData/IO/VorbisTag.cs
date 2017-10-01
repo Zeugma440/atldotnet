@@ -1,8 +1,6 @@
 ﻿using Commons;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
@@ -196,7 +194,7 @@ namespace ATL.AudioData.IO
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
                 int picturePosition = takePicturePosition(TagData.PIC_TYPE.Generic);
-                TagData.PictureInfo picInfo = new TagData.PictureInfo(null, TagData.PIC_TYPE.Generic, picturePosition);
+                TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Undefined, TagData.PIC_TYPE.Generic, picturePosition);
 
                 if (readTagParams.PictureStreamHandler != null)
                 {
@@ -214,8 +212,8 @@ namespace ATL.AudioData.IO
                         mem.Seek(0, SeekOrigin.Begin);
                         byte[] imgHeader = new byte[3];
                         mem.Read(imgHeader, 0, 3);
-                        ImageFormat imgFormat = Utils.GetImageFormatFromPictureHeader(imgHeader);
-                        if (null == imgFormat) imgFormat = ImageFormat.Png;
+                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(imgHeader);
+                        if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
                         mem.Seek(0, SeekOrigin.Begin);
 
                         readTagParams.PictureStreamHandler(ref mem, TagData.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
@@ -254,7 +252,7 @@ namespace ATL.AudioData.IO
                     StreamUtils.CopyStream(s, picMem, block.picDataLength);
 
                     picMem.Seek(0, SeekOrigin.Begin);
-                    readTagParams.PictureStreamHandler(ref picMem, block.picType, Utils.GetImageFormatFromMimeType(block.mimeType), getImplementedTagType(), block.nativePicCode, picturePosition);
+                    readTagParams.PictureStreamHandler(ref picMem, block.picType, ImageUtils.GetImageFormatFromMimeType(block.mimeType), getImplementedTagType(), block.nativePicCode, picturePosition);
 
                     if (!tagExists) tagExists = true;
                 }
@@ -425,7 +423,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, Utils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
                         nbFrames++;
                     }
                 }
@@ -485,22 +483,12 @@ namespace ATL.AudioData.IO
             picW.Write(StreamUtils.ReverseInt32(picDescription.Length));
             picW.Write(Encoding.UTF8.GetBytes(picDescription));
 
-            // TODO - write custom code to parse picture binary data instead of instanciating a .NET Image
-            // in order to reach .NET Core compatibility
-            using (Image img = (Image)((new ImageConverter()).ConvertFrom(pictureData)))
-            {
-                picW.Write(StreamUtils.ReverseInt32(img.Width));
-                picW.Write(StreamUtils.ReverseInt32(img.Height));
-                picW.Write(StreamUtils.ReverseInt32(Image.GetPixelFormatSize(img.PixelFormat)));    // Color depth
-                if (picFormat.Equals(ImageFormat.Gif))
-                {
-                    picW.Write(StreamUtils.ReverseInt32(img.Palette.Entries.Length));                   // Color num
-                }
-                else
-                {
-                    picW.Write((int)0);
-                }
-            }
+            ImageProperties props = ImageUtils.GetImageProperties(pictureData);
+
+            picW.Write(StreamUtils.ReverseInt32(props.Width));
+            picW.Write(StreamUtils.ReverseInt32(props.Height));
+            picW.Write(StreamUtils.ReverseInt32(props.ColorDepth));
+            picW.Write(StreamUtils.ReverseInt32(props.NumColorsInPalette));    // Color num
 
             picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
             picW.Write(pictureData);
