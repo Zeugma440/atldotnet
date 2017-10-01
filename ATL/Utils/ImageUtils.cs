@@ -9,6 +9,7 @@ namespace Commons
 
     public class ImageProperties
     {
+        public ImageFormat Format = ImageFormat.Undefined;
         public int Width = 0;
         public int Height = 0;
         public int ColorDepth = 0;
@@ -150,6 +151,7 @@ namespace Commons
             if (format.Equals(ImageFormat.Unsupported)) return props;
 
             props.NumColorsInPalette = 0;
+            props.Format = format;
 
             using (MemoryStream s = new MemoryStream(imageData))
             using (BinaryReader r = new BinaryReader(s))

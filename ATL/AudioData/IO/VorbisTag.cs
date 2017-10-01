@@ -488,7 +488,13 @@ namespace ATL.AudioData.IO
             picW.Write(StreamUtils.ReverseInt32(props.Width));
             picW.Write(StreamUtils.ReverseInt32(props.Height));
             picW.Write(StreamUtils.ReverseInt32(props.ColorDepth));
-            picW.Write(StreamUtils.ReverseInt32(props.NumColorsInPalette));    // Color num
+            if (props.Format.Equals(ImageFormat.Gif))
+            {
+                picW.Write(StreamUtils.ReverseInt32(props.NumColorsInPalette));    // Color num
+            } else
+            {
+                picW.Write((int)0);
+            }
 
             picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
             picW.Write(pictureData);
