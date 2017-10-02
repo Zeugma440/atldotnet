@@ -1,4 +1,4 @@
-# Audio Tools Library (ATL) for .NET
+# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20core-2.0-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.0-lightgrey.svg)
 
 ## Status / master branch
 
