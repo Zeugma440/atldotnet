@@ -1061,7 +1061,7 @@ namespace ATL.AudioData.IO
         // Specific implementation for conservation of non-WM/xxx fields
         public override bool Remove(BinaryWriter w)
         {
-            if (ASF_keepNonWMFieldsWhenRemovingTag)
+            if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = new TagData();
 

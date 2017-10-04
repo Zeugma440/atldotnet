@@ -773,7 +773,7 @@ namespace ATL.AudioData.IO
             tagSize = (int)(finalTagPos - tagSizePos - 4);
             w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (tagSize/1024 > tagHeader.TagSizeRestrictionKB)
                 {
@@ -804,7 +804,7 @@ namespace ATL.AudioData.IO
                 if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
                 if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
 
-                if (ID3v2_useExtendedHeaderRestrictions)
+                if (Settings.ID3v2_useExtendedHeaderRestrictions)
                 {
                     // Force UTF-8 if encoding restriction is enabled and current encoding is not among authorized types
                     // TODO : make target format customizable (UTF-8 or ISO-8859-1)
@@ -863,7 +863,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (nbFrames > tagHeader.TagFramesRestriction)
                 {
@@ -899,7 +899,7 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (text.Length > tagHeader.TextFieldSizeRestriction)
                 {
@@ -1037,7 +1037,7 @@ namespace ATL.AudioData.IO
             w.Write(encodeID3v2CharEncoding(tagEncoding));
 
             // Application of ID3v2 extended header restrictions
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 // Force JPEG if encoding restriction is enabled and mime-type is not among authorized types
                 // TODO : make target format customizable (JPEG or PNG)
