@@ -54,6 +54,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CatalogDataReaders\CUETest.cs" />
+    <Compile Include="ArrayLogger.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
@@ -150,7 +151,6 @@
     <Content Include="Resources\MP3\01 - Title Screen.mp3" />
     <Content Include="Resources\MP3\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\MP3\APE.mp3" />
-    <Content Include="Resources\MP3\empty - Copie.mp3" />
     <Content Include="Resources\MP3\empty.mp3" />
     <Content Include="Resources\MP3\id3v1.mp3" />
     <Content Include="Resources\MP3\ID3v2.2 3 pictures.mp3" />
@@ -158,6 +158,7 @@
     <Content Include="Resources\MP3\ID3v2.2 UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />
     <Content Include="Resources\_Images\rgb.tif" />
