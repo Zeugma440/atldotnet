@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     ///     1. Extended header tags
     /// 
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
-    ///     implementation of decoding extended header data is still theoretical
+    ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
     ///     
     ///     2. Comment description
     ///     
