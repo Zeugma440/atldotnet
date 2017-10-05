@@ -232,6 +232,33 @@ namespace ATL.test.IO.MetaData
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
                 theTag.Pictures.Add(picInfo);
 
+                // Insert a gif picture while tag restrictions specify that pictures should be either jpeg or png
+                picInfo = new TagData.PictureInfo(Commons.ImageFormat.Gif, TagData.PIC_TYPE.Back);
+                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+                theTag.Pictures.Add(picInfo);
+
+                // Insert 20 garbage fields to raise the number of field above maximum required fields (30)
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA01", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA02", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA03", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA04", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA05", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA06", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA07", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA08", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA09", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA10", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA11", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA12", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA13", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA14", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA15", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA16", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA17", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA18", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA19", "aaa"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA20", "aaa"));
+
 
                 // Add the new tag and check that it has been indeed added with all the correct information
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
@@ -245,6 +272,7 @@ namespace ATL.test.IO.MetaData
             bool isAlertTagSize = false;
             bool isAlertNbFrames = false;
             bool isAlertPicDimension = false;
+            bool isAlertPicType = false;
 
             foreach (Logging.Log.LogItem logItem in logger.items)
             {
@@ -252,12 +280,14 @@ namespace ATL.test.IO.MetaData
                 if (logItem.Message.StartsWith("Tag is too large")) isAlertTagSize = true;
                 if (logItem.Message.StartsWith("Tag has too many frames")) isAlertNbFrames = true;
                 if (logItem.Message.EndsWith("does not respect ID3v2 restrictions (exactly 64x64)")) isAlertPicDimension = true;
+                if (logItem.Message.EndsWith("does not respect ID3v2 restrictions (jpeg or png required)")) isAlertPicType = true;
             }
 
             Assert.IsTrue(isAlertFieldLength);
             Assert.IsTrue(isAlertTagSize);
-            //Assert.IsTrue(isAlertNbFrames);
+            Assert.IsTrue(isAlertNbFrames);
             Assert.IsTrue(isAlertPicDimension);
+            Assert.IsTrue(isAlertPicType);
 
         }
 
