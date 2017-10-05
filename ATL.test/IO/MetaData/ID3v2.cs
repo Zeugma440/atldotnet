@@ -274,7 +274,7 @@ namespace ATL.test.IO.MetaData
             bool isAlertPicDimension = false;
             bool isAlertPicType = false;
 
-            foreach (Logging.Log.LogItem logItem in logger.items)
+            foreach (Logging.Log.LogItem logItem in logger.Items)
             {
                 if (logItem.Message.Contains("is longer than authorized")) isAlertFieldLength = true;
                 if (logItem.Message.StartsWith("Tag is too large")) isAlertTagSize = true;
