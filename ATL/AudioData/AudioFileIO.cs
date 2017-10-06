@@ -13,9 +13,10 @@ namespace ATL.AudioData
 	/// </summary>
 	public class AudioFileIO : IMetaDataIO, IAudioDataIO
     {
-        private IAudioDataIO audioData;                     // Audio data reader used for this file
-        private IMetaDataIO metaData;                       // Metadata reader used for this file
-        private string thePath;                             // Path of this file
+        private readonly string thePath;                             // Path of this file
+        private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
+        private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
+        private readonly AudioDataManager audioManager;
 
         // ------------------------------------------------------------------------------------------
 
@@ -30,7 +31,7 @@ namespace ATL.AudioData
             thePath = path;
 
             audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
-            AudioDataManager audioManager = new AudioDataManager(audioData);
+            audioManager = new AudioDataManager(audioData);
             found = audioManager.ReadFromFile(pictureStreamHandler);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
@@ -45,6 +46,16 @@ namespace ATL.AudioData
 
             if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
+
+        public void Save(TagData data)
+        {
+            foreach (int meta in audioManager.getAvailableMetas())
+            {
+                audioManager.UpdateTagInFile(data, meta);
+            }
+        }
+
+        // ============ FIELD ACCESSORS
 
         private string processString(string value)
         {

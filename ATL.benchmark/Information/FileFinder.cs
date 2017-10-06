@@ -31,11 +31,12 @@ namespace ATL.benchmark
             return result;
         }
 
-        public void FF_RecursiveExplore()
+        public void FF_RecursiveExplore(string dirName, string filter)
         {
-            //String dirName = "E:/Music/XXX";
-            string dirName = "E:/temp/id3v2";
-            string filter = "*.mp3";
+            /*String dirName = "E:/Music/XXX";
+            string dirName = "E:/temp/";
+            string filter = "*.mid";
+            */
 
             DirectoryInfo dirInfo = new DirectoryInfo(dirName);
 

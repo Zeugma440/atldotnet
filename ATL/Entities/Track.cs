@@ -19,7 +19,7 @@ namespace ATL
             Update();
         }
 
-		public string Path;		
+		public string Path;
 		public string Title;
 		public string Artist;
         public string Composer;
@@ -46,6 +46,7 @@ namespace ATL
         public IList<TagData.PictureInfo> PictureTokens = null;
 
         private IList<TagData.PictureInfo> embeddedPictures = null;
+        private AudioFileIO fileIO;
 
 
         // ========== METHODS
@@ -54,15 +55,20 @@ namespace ATL
         {
             get
             {
-                if (null == embeddedPictures)
-                {
-                    embeddedPictures = new List<TagData.PictureInfo>();
-
-                    Update(new TagData.PictureStreamHandlerDelegate(readBinaryImageData));
-                }
-
-                return embeddedPictures;
+                return getEmbeddedPictures();
             }
+        }
+
+        private IList<TagData.PictureInfo> getEmbeddedPictures()
+        {
+            if (null == embeddedPictures)
+            {
+                embeddedPictures = new List<TagData.PictureInfo>();
+
+                Update(new TagData.PictureStreamHandlerDelegate(readBinaryImageData));
+            }
+
+            return embeddedPictures;
         }
 
         protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
@@ -76,36 +82,36 @@ namespace ATL
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
             // TODO when tag is not available, customize by naming options // tracks (...)
-            AudioFileIO theReader = new AudioFileIO(Path, pictureStreamHandler);
+            fileIO = new AudioFileIO(Path, pictureStreamHandler);
 
-            Title = theReader.Title;
+            Title = fileIO.Title;
             if ("" == Title || null == Title)
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path); // TODO - this should be an option, as returned value is not really read from the tag
             }
-            Artist = Utils.ProtectValue(theReader.Artist);
-            Composer = Utils.ProtectValue(theReader.Composer);
-            Comment = Utils.ProtectValue(theReader.Comment);
-            Genre = Utils.ProtectValue(theReader.Genre);
-            OriginalArtist = Utils.ProtectValue(theReader.OriginalArtist);
-            OriginalAlbum = Utils.ProtectValue(theReader.OriginalAlbum);
-            Description = Utils.ProtectValue(theReader.GeneralDescription);
-            Copyright = Utils.ProtectValue(theReader.Copyright);
-            Publisher = Utils.ProtectValue(theReader.Publisher);
-            AlbumArtist = Utils.ProtectValue(theReader.AlbumArtist);
-            Conductor = Utils.ProtectValue(theReader.Conductor);
-            AdditionalFields = theReader.AdditionalFields;
-            Year = theReader.IntYear;
-            Album = theReader.Album;
-            TrackNumber = theReader.Track;
-            DiscNumber = theReader.Disc;
-            Bitrate = theReader.IntBitRate;
-            CodecFamily = theReader.CodecFamily;
-            Duration = theReader.IntDuration;
-            Rating = theReader.Rating;
-            IsVBR = theReader.IsVBR;
-            SampleRate = theReader.SampleRate;
-            PictureTokens = new List<TagData.PictureInfo>(theReader.PictureTokens);
+            Artist = Utils.ProtectValue(fileIO.Artist);
+            Composer = Utils.ProtectValue(fileIO.Composer);
+            Comment = Utils.ProtectValue(fileIO.Comment);
+            Genre = Utils.ProtectValue(fileIO.Genre);
+            OriginalArtist = Utils.ProtectValue(fileIO.OriginalArtist);
+            OriginalAlbum = Utils.ProtectValue(fileIO.OriginalAlbum);
+            Description = Utils.ProtectValue(fileIO.GeneralDescription);
+            Copyright = Utils.ProtectValue(fileIO.Copyright);
+            Publisher = Utils.ProtectValue(fileIO.Publisher);
+            AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
+            Conductor = Utils.ProtectValue(fileIO.Conductor);
+            AdditionalFields = fileIO.AdditionalFields;
+            Year = fileIO.IntYear;
+            Album = fileIO.Album;
+            TrackNumber = fileIO.Track;
+            DiscNumber = fileIO.Disc;
+            Bitrate = fileIO.IntBitRate;
+            CodecFamily = fileIO.CodecFamily;
+            Duration = fileIO.IntDuration;
+            Rating = fileIO.Rating;
+            IsVBR = fileIO.IsVBR;
+            SampleRate = fileIO.SampleRate;
+            PictureTokens = new List<TagData.PictureInfo>(fileIO.PictureTokens);
 
             if (null == pictureStreamHandler && embeddedPictures != null)
             {
@@ -114,9 +120,40 @@ namespace ATL
             }
         }
 
+        private TagData toTagData()
+        {
+            TagData result = new TagData();
+
+            result.Title = Title;
+            result.Artist = Artist;
+            result.Composer = Composer;
+            result.Comment = Comment;
+            result.Genre = Genre;
+            result.OriginalArtist = OriginalArtist;
+            result.OriginalAlbum = OriginalAlbum;
+            result.GeneralDescription = Description;
+            result.Copyright = Copyright;
+            result.Publisher = Publisher;
+            result.AlbumArtist = AlbumArtist;
+            result.Conductor = Conductor;
+            result.RecordingYear = Year.ToString();
+            result.Album = Album;
+            result.TrackNumber = TrackNumber.ToString();
+            result.DiscNumber = DiscNumber.ToString();
+            result.Rating = Rating.ToString();
+            result.Pictures = embeddedPictures;
+
+            foreach (string s in AdditionalFields.Keys)
+            {
+                //result.AdditionalFields.Add(new TagData.MetaFieldInfo())
+            }
+
+            return result;
+        }
+
         public void Save()
         {
-            
+            if (null == embeddedPictures) getEmbeddedPictures();
 
         }
 	}

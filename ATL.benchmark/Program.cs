@@ -28,6 +28,8 @@ namespace ATL.benchmark
             //readAt(@"E:\temp\ogg\lastHeaderInvalidTypeFlag.OGG");
 
             //compareInfo(@"E:\Music\VGM");
+
+            browseFor(@"E:\temp\", "*.it");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
@@ -54,8 +56,17 @@ namespace ATL.benchmark
             }
 
 //            Console.WriteLine("end");
-//            Console.ReadLine();
+            Console.ReadLine();
         }
-        
+
+        static private void browseFor(string rootDir, string filter)
+        {
+            FileFinder ff = new FileFinder();
+
+            ff.FF_RecursiveExplore(rootDir, filter);
+
+            Console.ReadLine();
+        }
+
     }
 }

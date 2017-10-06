@@ -104,6 +104,18 @@ namespace ATL.AudioData
             } else return false;
         }
 
+        public IList<int> getAvailableMetas()
+        {
+            IList<int> result = new List<int>();
+
+            if (hasMeta(MetaDataIOFactory.TAG_ID3V1)) result.Add(MetaDataIOFactory.TAG_ID3V1);
+            if (hasMeta(MetaDataIOFactory.TAG_ID3V2)) result.Add(MetaDataIOFactory.TAG_ID3V2);
+            if (hasMeta(MetaDataIOFactory.TAG_APE)) result.Add(MetaDataIOFactory.TAG_APE);
+            if (hasMeta(MetaDataIOFactory.TAG_NATIVE)) result.Add(MetaDataIOFactory.TAG_NATIVE);
+
+            return result;
+        }
+
         public IMetaDataIO getMeta(int tagType)
         {
             if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1))
