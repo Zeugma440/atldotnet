@@ -34,9 +34,10 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void Audio_MP3_VBR()
+        public void Audio_MP3()
         {
-            testGenericAudio("MP3/01 - Title Screen.mp3", 4, 129, 44100, true, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("MP3/01 - Title Screen.mp3", 4, 129, 44100, true, AudioDataIOFactory.CF_LOSSY); // VBR
+            testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 0, 192, 44100, false, AudioDataIOFactory.CF_LOSSY); // Malpositioned header
         }
 
         [TestMethod]
