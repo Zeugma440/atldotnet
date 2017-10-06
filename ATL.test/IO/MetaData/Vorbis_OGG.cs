@@ -165,28 +165,28 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
-            MetaDataIO.SetEnablePadding(true);
+            Settings.EnablePadding = true;
 
             try
             {
                 tagIO_RW_VorbisOGG_Existing(notEmptyFile, 2);
             } finally
             {
-                MetaDataIO.SetEnablePadding(false);
+                Settings.EnablePadding = false;
             }
         }
 
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
-            MetaDataIO.SetEnablePadding(true);
+            Settings.EnablePadding = true;
 
             try
             {
                 tagIO_RW_VorbisOGG_Existing("OGG/bigPicture.ogg", 3);
             } finally
             {
-                MetaDataIO.SetEnablePadding(false);
+                Settings.EnablePadding = false;
             }
         }
 

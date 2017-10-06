@@ -366,7 +366,7 @@ namespace ATL.AudioData.IO
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
             // NB : Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
-            if (enablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
+            if (Settings.EnablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);

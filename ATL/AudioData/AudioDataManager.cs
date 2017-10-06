@@ -11,16 +11,17 @@ namespace ATL.AudioData
     /// </summary>
     public class AudioDataManager
     {
-        // Optimal settings according to performance test
+        // Settings to use when opening any FileStream
+        // NB : These settings are optimal according to performance tests on the dev environment
         public static int bufferSize = 2048;
         public static FileOptions fileOptions = FileOptions.RandomAccess;
 
-        public static void ChangeFileOptions(FileOptions options)
+        public static void SetFileOptions(FileOptions options)
         {
             fileOptions = options;
         }
 
-        public static void ChangeBufferSize(int bufSize)
+        public static void SetBufferSize(int bufSize)
         {
             bufferSize = bufSize;
         }

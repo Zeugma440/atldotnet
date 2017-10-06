@@ -205,13 +205,13 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            MetaDataIO.SetASFKeepNonWMFieldWhenRemoving(true);
+            Settings.ASF_keepNonWMFieldsWhenRemovingTag = true;
             try
             {
                 Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
             } finally
             {
-                MetaDataIO.SetASFKeepNonWMFieldWhenRemoving(false);
+                Settings.ASF_keepNonWMFieldsWhenRemovingTag = false;
             }
 
             Assert.IsTrue(theFile.ReadFromFile());

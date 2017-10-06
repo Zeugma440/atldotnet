@@ -12,33 +12,12 @@ namespace ATL.AudioData.IO
     /// </summary>
     public abstract class MetaDataIO : IMetaDataIO
     {
-        // ------ OPTIONS -----------------------------------------------------
-
-        // TODO - move all options below to a general ATL option class
-        // General properties
-        protected static bool ID3v2_useExtendedHeaderRestrictions = false;
-        protected static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
-        protected static bool enablePadding = false;                        // Used by OGG container
-        
-        // Used by APE tag
-        public static string internalValueSeparator = "˵"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
-        public static string displayValueSeparator = ";";
-        public static string internalLineSeparator = "˶"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
-        public static string displayLineSeparator = "/";
-
-        public static void SetID3v2ExtendedHeaderRestrictionsUsage(bool b) { ID3v2_useExtendedHeaderRestrictions = b; }
-        public static void SetASFKeepNonWMFieldWhenRemoving(bool b) { ASF_keepNonWMFieldsWhenRemovingTag = b; }
-        public static void SetEnablePadding(bool b) { enablePadding = b; }
-        public static void SetValueSeparator(string s) { displayValueSeparator = s; }
-        public static void SetLineSeparator(string s) { displayLineSeparator = s; }
-
-
         // ------ CONSTS -----------------------------------------------------
 
         // Default tag offset
-        protected const int TO_EOF = 0;     // End Of File
-        protected const int TO_BOF = 1;     // Beginning Of File
-        protected const int TO_BUILTIN = 2; // Built-in location (e.g. MP4)
+        protected const int TO_EOF = 0;     // Tag offset is at End Of File
+        protected const int TO_BOF = 1;     // Tag offset is at Beginning Of File
+        protected const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
 
 
         // ------ INNER CLASSES -----------------------------------------------------

@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     ///     1. Extended header tags
     /// 
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
-    ///     implementation of decoding extended header data is still theoretical
+    ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
     ///     
     ///     2. Comment description
     ///     
@@ -773,7 +773,7 @@ namespace ATL.AudioData.IO
             tagSize = (int)(finalTagPos - tagSizePos - 4);
             w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (tagSize/1024 > tagHeader.TagSizeRestrictionKB)
                 {
@@ -804,7 +804,7 @@ namespace ATL.AudioData.IO
                 if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
                 if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
 
-                if (ID3v2_useExtendedHeaderRestrictions)
+                if (Settings.ID3v2_useExtendedHeaderRestrictions)
                 {
                     // Force UTF-8 if encoding restriction is enabled and current encoding is not among authorized types
                     // TODO : make target format customizable (UTF-8 or ISO-8859-1)
@@ -863,7 +863,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (nbFrames > tagHeader.TagFramesRestriction)
                 {
@@ -899,7 +899,7 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (text.Length > tagHeader.TextFieldSizeRestriction)
                 {
@@ -1037,7 +1037,7 @@ namespace ATL.AudioData.IO
             w.Write(encodeID3v2CharEncoding(tagEncoding));
 
             // Application of ID3v2 extended header restrictions
-            if (ID3v2_useExtendedHeaderRestrictions)
+            if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 // Force JPEG if encoding restriction is enabled and mime-type is not among authorized types
                 // TODO : make target format customizable (JPEG or PNG)
@@ -1045,7 +1045,7 @@ namespace ATL.AudioData.IO
                 {
                     if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions");
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions (jpeg or png required)");
                     }
                 }
 
@@ -1063,7 +1063,7 @@ namespace ATL.AudioData.IO
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
                         */
                     }
-                    else if ((64 == tagHeader.PictureSizeRestriction) && ((props.Height > 64) || (props.Width > 64))) // 64x64 or less
+                    else if ((63 == tagHeader.PictureSizeRestriction) && ((props.Height > 64) || (props.Width > 64))) // 64x64 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (64x64 or less)");
 
@@ -1072,7 +1072,7 @@ namespace ATL.AudioData.IO
                         picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
                         */
                     }
-                    else if ((63 == tagHeader.PictureSizeRestriction) && ((props.Height != 64) && (props.Width != 64))) // exactly 64x64
+                    else if ((64 == tagHeader.PictureSizeRestriction) && ((props.Height != 64) && (props.Width != 64))) // exactly 64x64
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (exactly 64x64)");
 
@@ -1279,29 +1279,34 @@ namespace ATL.AudioData.IO
 
         // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0xex" becomes "0xff 0x00 0xex"; every "0xff 0x00" becomes "0xff 0x00 0x00"
-        private static void encodeUnsynchronizedStreamTo(Stream mFrom, BinaryWriter w)
+        private static void encodeUnsynchronizedStreamTo(Stream from, BinaryWriter to)
         {
-            // TODO PERF : profile using BinaryReader.ReadByte & BinaryWriter.Write(byte) vs. Stream.ReadByte & Stream.WriteByte
-
-            BinaryReader r = new BinaryReader(mFrom); // This reader shouldn't be closed at the end of the function, else the stream closes as well and becomes inaccessible
+            /* TODO PERF : profile I/O speed using
+             * 
+             *   BinaryReader.readByte vs. BufferedBinaryReader.readByte vs. Stream.Read
+             *   BinaryWriter.Write vs. Stream.WriteByte
+             */
             
-            long initialPosition;
-            byte b1,b2;
+            byte[] data = new byte[2];
+            long streamLength = from.Length;
+            long position = from.Position;
 
-            initialPosition = r.BaseStream.Position;
+            from.Read(data, 0, 1);
+            position++;
 
-            b1 = r.ReadByte();
-            while (r.BaseStream.Position < initialPosition + r.BaseStream.Length && r.BaseStream.Position < r.BaseStream.Length)
+            while (position < streamLength)
             {
-                b2 = r.ReadByte();
-                w.Write(b1);
-                if (0xFF == b1 && ( (0x00 == b2) || (0xE0 == (b2 & 0xE0))))
+                from.Read(data, 1, 1);
+                position++;
+
+                to.Write(data[0]);
+                if (0xFF == data[0] && ( (0x00 == data[1]) || (0xE0 == (data[1] & 0xE0))))
                 {
-                    w.Write((byte)0);
+                    to.Write((byte)0);
                 }
-                b1 = b2;
+                data[0] = data[1];
             }
-            w.Write(b1);
+            to.Write(data[0]);
         }
 
         /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
