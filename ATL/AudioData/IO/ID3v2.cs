@@ -32,27 +32,8 @@ namespace ATL.AudioData.IO
         public const byte TAG_VERSION_2_3 = 3;             // Code for ID3v2.3.x tag
         public const byte TAG_VERSION_2_4 = 4;             // Code for ID3v2.4.x tag
 
-        private String FEncoder;
-        private String FLanguage;
-        private String FLink;
-
         private TagInfo tagHeader;
 
-        public String Encoder // Encoder
-        {
-            get { return this.FEncoder; }
-            set { FEncoder = value; }
-        }
-        public String Language // Language
-        {
-            get { return this.FLanguage; }
-            set { FLanguage = value; }
-        }
-        public String Link // URL link
-        {
-            get { return this.FLink; }
-            set { FLink = value; }
-        }
 
         // ID3v2 tag ID
         private const String ID3V2_ID = "ID3";
