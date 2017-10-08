@@ -468,7 +468,7 @@ namespace ATL.AudioData.IO
 
             flags = source.ReadUInt16();
 
-            useSamplesAsInstruments = !((flags & 0x2) > 0);
+            useSamplesAsInstruments = !((flags & 0x04) > 0);
 
             special = source.ReadUInt16();
 

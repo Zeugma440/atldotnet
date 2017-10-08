@@ -112,6 +112,7 @@ namespace ATL.test
         {
             testGenericAudio("IT/empty.it", 476, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
             testGenericAudio("IT/it.it", 42, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("IT/hasInstruments.it", 68, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]
