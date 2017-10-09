@@ -103,6 +103,8 @@
     <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\empty.it" />
     <None Include="Resources\IT\it.it" />
+    <None Include="Resources\MP3\mp1Layer1.mp1" />
+    <None Include="Resources\MP3\mp1Layer2.mp1" />
     <None Include="Resources\MPC\SV8.mpc" />
     <None Include="Resources\MPC\SV7.mpc" />
     <None Include="Resources\OFR\BlackBird.ofr" />
@@ -161,6 +163,8 @@
     <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
+    <Content Include="Resources\MP3\mp2Layer1.mp2" />
+    <Content Include="Resources\MP3\mp2Layer2.mp2" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />
     <Content Include="Resources\_Images\rgb.tif" />

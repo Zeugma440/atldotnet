@@ -38,6 +38,10 @@ namespace ATL.test
         {
             testGenericAudio("MP3/01 - Title Screen.mp3", 4, 129, 44100, true, AudioDataIOFactory.CF_LOSSY); // VBR
             testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 0, 192, 44100, false, AudioDataIOFactory.CF_LOSSY); // Malpositioned header
+            testGenericAudio("MP3/mp1Layer1.mp1", 1, 384, 44100, false, AudioDataIOFactory.CF_LOSSY); // MPEG1 Layer 1
+            testGenericAudio("MP3/mp1Layer2.mp1", 1, 384, 44100, false, AudioDataIOFactory.CF_LOSSY); // MPEG1 Layer 2
+            testGenericAudio("MP3/mp2Layer1.mp2", 1, 128, 22050, false, AudioDataIOFactory.CF_LOSSY); // MPEG2 Layer 1
+            testGenericAudio("MP3/mp2Layer2.mp2", 1, 160, 24000, false, AudioDataIOFactory.CF_LOSSY); // MPEG2 Layer 2
         }
 
         [TestMethod]
