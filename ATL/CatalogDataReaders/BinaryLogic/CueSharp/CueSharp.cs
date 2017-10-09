@@ -556,6 +556,7 @@ namespace CueSharp
             return newArray;
         }
 
+        
         /// <summary>
         /// Add a track to the current cuesheet.
         /// </summary>
@@ -567,6 +568,7 @@ namespace CueSharp
             m_Tracks[m_Tracks.Length - 1] = new Track(tracknumber, datatype);
         }
 
+        /*
         /// <summary>
         /// Add a track to the current cuesheet
         /// </summary>
@@ -730,19 +732,20 @@ namespace CueSharp
 
             return output.ToString();
         }
-
+        */
         #endregion
+
 
         //TODO: Fix calculation bugs; currently generates erroneous IDs.
         #region CalculateDiscIDs
         //For complete CDDB/freedb discID calculation, see:
         //http://www.freedb.org/modules.php?name=Sections&sop=viewarticle&artid=6
-
+/*
         public string CalculateCDDBdiscID()
         {
             int i, t = 0, n = 0;
 
-            /* For backward compatibility this algorithm must not change */
+            // For backward compatibility this algorithm must not change
 
             i = 0;
 
@@ -770,7 +773,7 @@ namespace CueSharp
         {
             int ret;
 
-            /* For backward compatibility this algorithm must not change */
+            // For backward compatibility this algorithm must not change
 
             ret = 0;
 
@@ -782,11 +785,10 @@ namespace CueSharp
 
             return (ret);
         }
-
+        */
         #endregion CalculateDiscIDS
 
-
-    }   
+    }
 
     /// <summary>
     ///DCP - Digital copy permitted
@@ -1301,6 +1303,7 @@ namespace CueSharp
             return true;
         }
 
+        /*
         public override string ToString()
         {
             StringBuilder output = new StringBuilder();
@@ -1371,6 +1374,7 @@ namespace CueSharp
 
             return output.ToString();
         }
+        */
 
         #endregion Methods
     }
