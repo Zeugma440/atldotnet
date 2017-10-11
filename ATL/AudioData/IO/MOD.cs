@@ -460,7 +460,7 @@ namespace ATL.AudioData.IO
 
             foreach (Sample aSample in FSamples)
             {
-                if (aSample.Name.Length > 0) comment.Append(aSample.Name).Append("/");
+                if (aSample.Name.Length > 0) comment.Append(aSample.Name).Append(Settings.InternalValueSeparator);
             }
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 

@@ -712,7 +712,7 @@ namespace ATL.AudioData.IO
                                         if ((len + position) > trackLen) throw new Exception("Meta " + type + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
 
                                         txt = Encoding.ASCII.GetString(data, position, len);
-                                        if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append("/");
+                                        if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append(Settings.InternalValueSeparator);
                                         else if (MidiEvents.META_COPYRIGHT == meta) tagData.IntegrateValue(TagData.TAG_FIELD_COPYRIGHT, txt);
 
                                         evt = new MidiEvent(currentTicks, meta, -1, meta - 1);

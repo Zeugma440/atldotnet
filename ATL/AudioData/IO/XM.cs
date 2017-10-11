@@ -460,7 +460,7 @@ namespace ATL.AudioData.IO
 
             foreach (Instrument i in FInstruments)
             {
-                if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append("/");
+                if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
             }
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 

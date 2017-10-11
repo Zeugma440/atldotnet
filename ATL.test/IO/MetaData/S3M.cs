@@ -23,9 +23,11 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
+            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, "/");
+
             // Supported fields
             Assert.AreEqual("Unreal ][ / PM", theFile.NativeTag.Title);
-            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", theFile.NativeTag.Comment);
+            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", comment);
         }
 
         [TestMethod]
@@ -133,8 +135,10 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
+            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, "/");
+
             // Supported fields
-            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", theFile.NativeTag.Comment);
+            Assert.AreEqual("By Purple Motion of/Future Crew 1993/Big thanx to Skaven / FC", comment);
         }
     }
 }

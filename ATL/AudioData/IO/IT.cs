@@ -555,7 +555,7 @@ namespace ATL.AudioData.IO
                 // NB : Whatever the value of useSamplesAsInstruments, FInstruments contain the right data
                 foreach (Instrument i in instruments)
                 {
-                    if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append("/");
+                    if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
                 }
                 if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
                 commentStr = comment.ToString();

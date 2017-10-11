@@ -365,7 +365,7 @@ namespace ATL.AudioData.IO
                         }
                         else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
-                            if (comment.Length > 0) comment.Append(Settings.InternalLineSeparator);
+                            if (comment.Length > 0) comment.Append(Settings.InternalValueSeparator);
                             comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
                             tagExists = true;
                         }
@@ -393,7 +393,7 @@ namespace ATL.AudioData.IO
                                 // Only read general purpose comments, not those linked to a marker
                                 if (0 == markerId)
                                 {
-                                    if (comment.Length > 0) comment.Append(Settings.InternalLineSeparator);
+                                    if (comment.Length > 0) comment.Append(Settings.InternalValueSeparator);
                                     comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(comLength)));
                                 }
                                 else
