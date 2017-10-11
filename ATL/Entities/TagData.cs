@@ -33,7 +33,7 @@ namespace ATL
 
             public byte[] PictureData;                      // Binary picture data
 
-            public bool MarkedForDeletion = false;          // Marked for deletion flag
+            public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
 
             // ---------------- CONSTRUCTORS
 
@@ -123,13 +123,13 @@ namespace ATL
         {
             public int TagType;                             // Tag type where the picture originates from
             public string NativeFieldCode;                  // Native field code according to TagType convention
-            public ushort StreamNumber;                     // Index of the stream the field is attached to
+            public ushort StreamNumber;                     // Index of the stream the field is attached to (if applicable, i.e. for multi-stream files)
             public string Language;                         // Language the value is written in
 
             public string Value;                            // Field value
             public string Zone;                             // File zone where the value is supposed to appear (ASF format I'm looking at you...)
 
-            public bool MarkedForDeletion = false;          // Marked for deletion flag
+            public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
 
             // ---------------- CONSTRUCTORS
 

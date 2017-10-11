@@ -266,6 +266,23 @@ namespace ATL.AudioData
         {
             get { return audioData.Duration; }
         }
+        /// <summary>
+        /// Metadata size (bytes)
+        /// </summary>
+        public int Size
+        {
+            get { return metaData.Size; }
+        }
+        public IDictionary<string, string> AdditionalFields
+        {
+            get
+            {
+                return metaData.AdditionalFields;
+            }
+        }
+
+
+
 
         public bool HasNativeMeta()
         {
@@ -275,22 +292,6 @@ namespace ATL.AudioData
         public bool IsMetaSupported(int metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);
-        }
-
-
-        // AudioFileReader aims at simplifying standard interfaces
-        // => the below methods are not implemented
-        public int Size
-        {
-            get { return metaData.Size; }
-        }
-
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                return metaData.AdditionalFields;
-            }
         }
 
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
@@ -303,6 +304,9 @@ namespace ATL.AudioData
             return metaData.Write(r, w, tag);
         }
 
+
+        // AudioFileReader aims at simplifying standard interfaces
+        // => the below methods are not implemented
 
         // TODO - make interfaces more modular to clean the mess below
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
