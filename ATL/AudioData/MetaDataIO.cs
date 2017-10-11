@@ -27,12 +27,29 @@ namespace ATL.AudioData.IO
         /// </summary>
         public class ReadTagParams
         {
+            /// <summary>
+            /// Handler to call when reading embedded picture binary data. If the handler is null, embedded pictures binary data will _not_ be read.
+            /// </summary>
             public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
+
+            /// <summary>
+            /// True : read metadata; False : do not read metadata (only "physical" audio data)
+            /// </summary>
+            public bool ReadTag = true;
+
+            /// <summary>
+            /// True : read all metadata frames; False : only read metadata frames that match IMetaDataIO public properties (="supported" metadata)
+            /// </summary>
             public bool ReadAllMetaFrames = false;
 
-            public bool ReadTag = true;
+            /// <summary>
+            /// True : read all data that will be useful for writing; False : only read metadata values
+            /// </summary>
             public bool PrepareForWriting = false;
 
+            /// <summary>
+            /// File offset to start reading metadata from (bytes)
+            /// </summary>
             public long offset = 0;
 
             public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
