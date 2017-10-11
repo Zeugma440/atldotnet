@@ -225,41 +225,42 @@ namespace ATL.AudioData.IO
         private readonly String filePath;
 
 
-        public FrameHeader Frame // Frame header data
-        {
-            get { return this.HeaderFrame; }
-        }
-        public String Version // MPEG version name
-        {
-            get { return this.getVersion(); }
-        }
-        public String Layer // MPEG layer name
-        {
-            get { return this.getLayer(); }
-        }
-        public String ChannelMode // Channel mode name
-        {
-            get { return this.getChannelMode(); }
-        }
-        public String Emphasis // Emphasis name
-        {
-            get { return this.getEmphasis(); }
-        }
-        public long Frames // Total number of frames
-        {
-            get { return this.getFrames(); }
-        }
-
         /* Unused for now
-        public byte EncoderID // Guessed encoder ID
-        {
-            get { return this.getEncoderID(); }
-        }
-        public String Encoder // Guessed encoder name
-        {
-            get { return this.getEncoder(); }
-        }
-        */
+
+public FrameHeader Frame // Frame header data
+{
+    get { return this.HeaderFrame; }
+}
+public String Version // MPEG version name
+{
+    get { return this.getVersion(); }
+}
+public String Layer // MPEG layer name
+{
+    get { return this.getLayer(); }
+}
+public String ChannelMode // Channel mode name
+{
+    get { return this.getChannelMode(); }
+}
+public String Emphasis // Emphasis name
+{
+    get { return this.getEmphasis(); }
+}
+public long Frames // Total number of frames
+{
+    get { return this.getFrames(); }
+}
+
+public byte EncoderID // Guessed encoder ID
+{
+    get { return this.getEncoderID(); }
+}
+public String Encoder // Guessed encoder name
+{
+    get { return this.getEncoder(); }
+}
+*/
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -268,10 +269,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.vbrData; }
 		}	
-        public bool Valid // True if MPEG file valid
-        {
-            get { return this.getValid(); }
-        }
         public bool IsVBR
 		{
 			get { return this.vbrData.Found; }
@@ -298,9 +295,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            // Reset all variables
-            //vendorID = "";
-
             vbrData.Reset();
             HeaderFrame.Reset();
         }
@@ -382,7 +376,23 @@ namespace ATL.AudioData.IO
 			else return 0;
 		}
 
-		private static int getFrameSize(FrameHeader Frame)
+        private double getBitRate()
+        {
+            // Get bit rate, calculate average bit rate if VBR header found
+            if ((vbrData.Found) && (vbrData.Frames > 0))
+                return Math.Round(((double)vbrData.Bytes / vbrData.Frames - getPadding(HeaderFrame)) *
+                    (double)getSampleRate(HeaderFrame) / getCoefficient(HeaderFrame));
+            else
+                return getBitRate(HeaderFrame) * 1000;
+        }
+
+        private ushort getSampleRate()
+        {
+            // Get sample rate
+            return getSampleRate(HeaderFrame);
+        }
+
+        private static int getFrameSize(FrameHeader Frame)
 		{
 			ushort Coefficient;
 			ushort BitRate;
@@ -501,7 +511,22 @@ namespace ATL.AudioData.IO
 			else return 13;
 		}
 
-		private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR, SizeInfo sizeInfo)
+        private double getDuration()
+        {
+            // Calculate song duration
+            if (HeaderFrame.Found)
+                if ((vbrData.Found) && (vbrData.Frames > 0))
+                    return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 / getSampleRate(HeaderFrame);
+                else
+                {
+                    long MPEGSize = sizeInfo.FileSize - sizeInfo.TotalTagSize;
+                    return (MPEGSize/* - HeaderFrame.Position*/) / getBitRate(HeaderFrame) / 1000.0 * 8;
+                }
+            else
+                return 0;
+        }
+
+        private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR, SizeInfo sizeInfo)
 		{
 			byte[] headerData = new byte[4];  
 			FrameHeader result = new FrameHeader();
@@ -626,6 +651,8 @@ namespace ATL.AudioData.IO
 		}
         */
 
+/* Unused for now
+
 		private String getVersion()
 		{
 			// Get MPEG version name
@@ -636,22 +663,6 @@ namespace ATL.AudioData.IO
 		{
 			// Get MPEG layer name
 			return MPEG_LAYER[HeaderFrame.LayerID];
-		}
-
-		private double getBitRate()
-		{
-			// Get bit rate, calculate average bit rate if VBR header found
-			if ((vbrData.Found) && (vbrData.Frames > 0))
-				return Math.Round(((double)vbrData.Bytes / vbrData.Frames - getPadding(HeaderFrame)) *
-					(double)getSampleRate(HeaderFrame) / getCoefficient(HeaderFrame));
-			else
-				return getBitRate(HeaderFrame) * 1000;
-		}
-
-		private ushort getSampleRate()
-		{
-			// Get sample rate
-			return getSampleRate(HeaderFrame);
 		}
 
 		private String getChannelMode()
@@ -678,23 +689,6 @@ namespace ATL.AudioData.IO
 			}
 		}
 
-		private double getDuration()
-		{
-			// Calculate song duration
-			if (HeaderFrame.Found)
-				if ((vbrData.Found) && (vbrData.Frames > 0))
-					return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 / getSampleRate(HeaderFrame);
-				else
-				{
-                    long MPEGSize = sizeInfo.FileSize - sizeInfo.TotalTagSize;
-                    return (MPEGSize/* - HeaderFrame.Position*/) / getBitRate(HeaderFrame) / 1000.0 * 8;
-				}
-			else
-				return 0;
-		}
-
-        /* Unused
-         * 
 		private byte getVBREncoderID()
 		{
 			// Guess VBR encoder and get ID
@@ -780,7 +774,7 @@ namespace ATL.AudioData.IO
 					VendorID[6] +
 					VendorID[7];
 			return result;
-		}*/
+		}
 
 		private bool getValid()
 		{
@@ -790,7 +784,7 @@ namespace ATL.AudioData.IO
 				(getBitRate() >= MIN_MPEG_BIT_RATE) &&
 				(getBitRate() <= MAX_MPEG_BIT_RATE) &&
 				(getDuration() >= MIN_ALLOWED_DURATION));
-		}
+		}*/
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
