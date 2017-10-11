@@ -174,33 +174,9 @@ namespace ATL.AudioData.IO
 		};
 		#endregion
 			
-		// Real structure of ID3v1 tag
-		private class TagRecord
-		{
-			public String Header = "";                // Tag header - must be "TAG"
-            public String Title = "";
-            public String Artist = "";
-            public String Album = "";
-            public String Year = "";
-            public String Comment = "";
-            public byte[] EndComment = new byte[2];
-			public byte Genre;
-
-			public void Reset()
-			{
-                Header = "";
-                Title = "";
-                Album = "";
-                Artist = "";
-                Year = "";
-                Comment = "";
-				Genre = DEFAULT_GENRE;
-			}
-		}
-
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(BufferedBinaryReader source, TagRecord TagData)
+        private bool ReadTag(BufferedBinaryReader source)
         {
             bool result = false;
 
@@ -211,18 +187,34 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[ID3V1_TAG_SIZE];
             source.Read(data, 0, ID3V1_TAG_SIZE);
 
-            TagData.Header = Utils.Latin1Encoding.GetString(data, 0, 3);
-            if (ID3V1_ID == TagData.Header)
+            string header = Utils.Latin1Encoding.GetString(data, 0, 3);
+            if (header.Equals(ID3V1_ID))
             {
+                byte[] endComment = new byte[2];
                 structureHelper.AddZone(source.Position-ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
-                TagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
-                TagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
-                TagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
-                TagData.Year = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
-                TagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
-                Array.Copy(data, 125, TagData.EndComment, 0, 2);
-                TagData.Genre = data[127];
+                tagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
+                tagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
+                tagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
+                tagData.RecordingYear = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
+                tagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
+
+                Array.Copy(data, 125, endComment, 0, 2);
+                tagVersion = GetTagVersion(endComment);
+
+                // Fill properties using tag data
+                if (TAG_VERSION_1_0 == tagVersion)
+                {
+                    Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+                }
+                else
+                {
+                    Comment = tagData.Comment;
+                    Track = endComment[1];
+                }
+
+                tagData.Genre = (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "";
+
                 result = true;
             }
 
@@ -232,12 +224,12 @@ namespace ATL.AudioData.IO
 
 		// ---------------------------------------------------------------------------
 
-		private static byte GetTagVersion(TagRecord TagData)
+		private static byte GetTagVersion(byte[] endComment)
 		{
 			byte result = TAG_VERSION_1_0;
 			// Terms for ID3v1.1
-            if (((0 == TagData.EndComment[0]) && (0 != TagData.EndComment[1])) ||
-                ((32 == TagData.EndComment[0]) && (32 != TagData.EndComment[1])))
+            if (((0 == endComment[0]) && (0 != endComment[1])) ||
+                ((32 == endComment[0]) && (32 != endComment[1])))
 				result = TAG_VERSION_1_1;
 
 			return result;
@@ -252,37 +244,18 @@ namespace ATL.AudioData.IO
 
         public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
-			TagRecord tagData = new TagRecord();
-
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 
 			// Reset and load tag data from file to variable
 			ResetData();
             tagVersion = TAG_VERSION_1_0;
 
-            bool result = ReadTag(reader, tagData);
+            bool result = ReadTag(reader);
 
 			// Process data if loaded successfuly
 			if (result)
 			{
 				tagExists = true;
-				tagVersion = GetTagVersion(tagData);
-
-				// Fill properties using tag data
-                Title = tagData.Title;
-                Artist = tagData.Artist;
-                Album = tagData.Album;
-                Year = tagData.Year;
-				if (TAG_VERSION_1_0 == tagVersion)
-				{
-                    Comment = tagData.Comment + Utils.Latin1Encoding.GetString(tagData.EndComment, 0, 2).Replace("\0", "");
-				}
-				else
-				{
-                    Comment = tagData.Comment;
-					Track = tagData.EndComment[1];
-				}
-                Genre = (tagData.Genre < MAX_MUSIC_GENRES) ? MusicGenre[tagData.Genre] : "";
 			}
             else
             {
