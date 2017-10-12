@@ -5,9 +5,6 @@ build_script:
 test_script:
  - .\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe" -targetargs:"/noisolation /category:!mass /testcontainer:"".\ATL.test\bin\Debug\ATL.test.dll" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
 after_test:
- - appveyor PushArtifact "coverage.xml"
  - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
  - pip install codecov
  - codecov -f "coverage.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
- - ps : $wc = New-Object 'System.Net.WebClient'
- - ps : $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path coverage.xml))
