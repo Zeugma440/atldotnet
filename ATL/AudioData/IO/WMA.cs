@@ -794,7 +794,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone)) )
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone)) )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     counter++;
@@ -891,7 +891,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     if ( (ZONE_EXTENDED_HEADER_METADATA.Equals(fieldInfo.Zone) && !isExtendedMetaLibrary) || (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(fieldInfo.Zone) && isExtendedMetaLibrary) )
                     {

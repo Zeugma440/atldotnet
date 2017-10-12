@@ -443,7 +443,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals("utf8")) // utf8 already written
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals("utf8")) // utf8 already written
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     result++;

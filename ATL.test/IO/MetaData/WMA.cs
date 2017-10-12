@@ -314,7 +314,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
-            // Source : tag-free MP3
+            // Source : tag-free file
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
 

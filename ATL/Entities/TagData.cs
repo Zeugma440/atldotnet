@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using HashDepot;
+using ATL.AudioData;
 
 namespace ATL
 {
@@ -26,7 +27,7 @@ namespace ATL
             public int Position;                            // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
 
             public int TagType;                             // Tag type where the picture originates from
-            public int NativePicCode;                       // Native picture code according to TagType convention (byte : e.g. ID3v2)
+            public int NativePicCode;                       // Native picture code according to TagType convention (numeric : e.g. ID3v2)
             public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
 
             // TODO - add a description field
@@ -172,6 +173,18 @@ namespace ATL
                 return this.ToStringWithoutZone().Equals(((MetaFieldInfo)obj).ToStringWithoutZone());
             }
 
+            public bool EqualsApproximate(MetaFieldInfo obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+
+                bool result = (MetaDataIOFactory.TAG_ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode));
+                if (obj.StreamNumber > 0) result = result && (obj.StreamNumber == this.StreamNumber);
+                if (obj.Language.Length > 0) result = result && obj.Language.Equals(this.Language);
+
+                return result;
+            }
+
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
@@ -198,7 +211,7 @@ namespace ATL
         public const byte TAG_FIELD_TRACK_NUMBER            = 10;
         public const byte TAG_FIELD_DISC_NUMBER             = 11;
         public const byte TAG_FIELD_RATING                  = 12;
-        public const byte TAG_FIELD_PICTURE_DATA            = 13; // TODO ? - Differentiate front, back, CD
+//        public const byte TAG_FIELD_PICTURE_DATA            = 13;  Managed through Pictures field
         public const byte TAG_FIELD_ORIGINAL_ARTIST         = 14;
         public const byte TAG_FIELD_ORIGINAL_ALBUM          = 15;
         public const byte TAG_FIELD_COPYRIGHT               = 16;
@@ -241,6 +254,7 @@ namespace ATL
         {
             switch (key)
             {
+                // Textual fields
                 case TAG_FIELD_GENERAL_DESCRIPTION:     GeneralDescription = value; break;
                 case TAG_FIELD_TITLE:                   Title = value; break;
                 case TAG_FIELD_ARTIST:                  Artist= value; break;
@@ -248,19 +262,19 @@ namespace ATL
                 case TAG_FIELD_COMMENT:                 Comment = value; break;
                 case TAG_FIELD_GENRE:                   Genre = value; break;
                 case TAG_FIELD_ALBUM:                   Album = value; break;
-                case TAG_FIELD_RECORDING_DATE:          RecordingDate = value; break;
-                case TAG_FIELD_RECORDING_YEAR:          RecordingYear = value; break;
-                case TAG_FIELD_RECORDING_DAYMONTH:      RecordingDayMonth = value; break;
-                case TAG_FIELD_TRACK_NUMBER:            TrackNumber = value; break;
-                case TAG_FIELD_DISC_NUMBER:             DiscNumber = value; break;
-                case TAG_FIELD_RATING:                  Rating = value; break;
-                    // Picture data integration has a specific routine
                 case TAG_FIELD_ORIGINAL_ARTIST:         OriginalArtist = value; break;
                 case TAG_FIELD_ORIGINAL_ALBUM:          OriginalAlbum = value; break;
                 case TAG_FIELD_COPYRIGHT:               Copyright = value; break;
                 case TAG_FIELD_ALBUM_ARTIST:            AlbumArtist = value; break;
                 case TAG_FIELD_PUBLISHER:               Publisher = value; break;
                 case TAG_FIELD_CONDUCTOR:               Conductor = value; break;
+                // Numeric fields (a value at zero mean nothing has been valued -> field should be empty)
+                case TAG_FIELD_RECORDING_DATE:          RecordingDate = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_YEAR:          RecordingYear = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_DAYMONTH:      RecordingDayMonth = emptyIfZero(value); break;
+                case TAG_FIELD_TRACK_NUMBER:            TrackNumber = emptyIfZero(value); break;
+                case TAG_FIELD_DISC_NUMBER:             DiscNumber = emptyIfZero(value); break;
+                case TAG_FIELD_RATING:                  Rating = emptyIfZero(value); break;
             }
         }
 
@@ -276,31 +290,34 @@ namespace ATL
             }
 
             // Pictures
-            foreach (PictureInfo newPicInfo in data.Pictures)
+            if (data.Pictures != null)
             {
-                // New PictureInfo picture type already exists in current TagData
-                if (picturePositions.ContainsKey(newPicInfo))
+                foreach (PictureInfo newPicInfo in data.Pictures)
                 {
-                    // New PictureInfo is a demand for deletion
-                    if (newPicInfo.MarkedForDeletion)
+                    // New PictureInfo picture type already exists in current TagData
+                    if (picturePositions.ContainsKey(newPicInfo))
                     {
-                        foreach (PictureInfo picInfo in Pictures)
+                        // New PictureInfo is a demand for deletion
+                        if (newPicInfo.MarkedForDeletion)
                         {
-                            if (picInfo.ToString().Equals(newPicInfo.ToString()))
+                            foreach (PictureInfo picInfo in Pictures)
                             {
-                                picInfo.MarkedForDeletion = true;
+                                if (picInfo.ToString().Equals(newPicInfo.ToString()))
+                                {
+                                    picInfo.MarkedForDeletion = true;
+                                }
                             }
                         }
+                        else // New PictureInfo is a X-th picture of the same type
+                        {
+                            newPicInfo.Position = picturePositions[newPicInfo] + 1;
+                            Pictures.Add(newPicInfo);
+                        }
                     }
-                    else // New PictureInfo is a X-th picture of the same type
+                    else // New PictureInfo picture type does not exist in current TagData
                     {
-                        newPicInfo.Position = picturePositions[newPicInfo] + 1;
                         Pictures.Add(newPicInfo);
                     }
-                }
-                else // New PictureInfo picture type does not exist in current TagData
-                {
-                    Pictures.Add(newPicInfo);
                 }
             }
 
@@ -311,12 +328,15 @@ namespace ATL
                 found = false;
                 foreach (MetaFieldInfo metaInfo in AdditionalFields)
                 {
-                    if (metaInfo.EqualsWithoutZone(newMetaInfo)) // New MetaFieldInfo field type+streamNumber+language already exists in current TagData
+                    // New MetaFieldInfo tag type+field code+streamNumber+language already exists in current TagData
+                    // or new MetaFieldInfo mimics an existing field (added or edited through simplified interface)
+                    if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo)) 
                     {
                         if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
                         else
                         {
                             found = true;
+                            metaInfo.Value = newMetaInfo.Value;
                             break;
                         }
                     }
@@ -326,9 +346,9 @@ namespace ATL
                 {
                     AdditionalFields.Add(newMetaInfo);
                 }
-                else // New MetaFieldInfo is a X-th field of the same type+streamNumber+language : unsupported
+                else if (!found) // Cannot delete a field that has not been found
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field type "+newMetaInfo.NativeFieldCode+" already exists for tag type "+newMetaInfo.TagType+ " on current TagData");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code "+newMetaInfo.NativeFieldCode+" cannot be deleted because it has not been found on current TagData.");
                 }
             }
         }
@@ -365,6 +385,15 @@ namespace ATL
         private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
         {
             if (data != null) map[id] = data;
+        }
+
+        private string emptyIfZero(string s)
+        {
+            string result = s;
+
+            if (s != null && s.Equals("0")) result = "";
+
+            return result;
         }
 
         private IDictionary<PictureInfo,int> generatePicturePositions()

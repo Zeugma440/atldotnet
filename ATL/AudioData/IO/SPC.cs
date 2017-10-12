@@ -585,7 +585,7 @@ namespace ATL.AudioData.IO
                 // Other textual fields
                 foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
-                    if (fieldInfo.TagType.Equals(getImplementedTagType()) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER)  && fieldInfo.Value.Length > 0)
+                    if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER)  && fieldInfo.Value.Length > 0)
                     {
                         writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), fieldInfo.Value);
                         result++;

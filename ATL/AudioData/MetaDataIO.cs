@@ -63,12 +63,11 @@ namespace ATL.AudioData.IO
 
         protected bool tagExists;
         protected int tagVersion;
-
         protected TagData tagData;
-
-        private IList<KeyValuePair<string, int>> picturePositions;
         protected IList<TagData.PictureInfo> pictureTokens;
 
+        private IList<KeyValuePair<string, int>> picturePositions;
+        
         internal FileStructureHelper structureHelper;
 
         protected IMetaDataEmbedder embedder;
@@ -459,22 +458,25 @@ namespace ATL.AudioData.IO
             long cumulativeDelta = 0;
             bool result = true;
 
-            // Contraint-check on non-supported values
+            // Constraint-check on non-supported values
             if (FieldCodeFixedLength > 0)
             {
-                foreach (TagData.PictureInfo picInfo in tag.Pictures)
+                if (tag.Pictures != null)
                 {
-                    if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
+                    foreach (TagData.PictureInfo picInfo in tag.Pictures)
                     {
-                        if ( (-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength) )
+                        if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
                         {
-                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                            if ((-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength))
+                            {
+                                throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                            }
                         }
                     }
                 }
                 foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
-                    if (fieldInfo.TagType.Equals(getImplementedTagType()))
+                    if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TAG_ANY == fieldInfo.TagType)
                     {
                         if (Utils.ProtectValue(fieldInfo.NativeFieldCode).Length != FieldCodeFixedLength)
                         {
@@ -515,7 +517,7 @@ namespace ATL.AudioData.IO
 
             TagData dataToWrite;
             dataToWrite = tagData;
-            dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+            dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
 
             foreach (Zone zone in Zones)
             {

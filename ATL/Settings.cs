@@ -12,6 +12,8 @@ namespace ATL
         public static readonly string InternalValueSeparator = "˵"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
         public static string DisplayValueSeparator = ";";
 
+        public static bool ReadAllMetaFrames = true; // If true, default Track behaviour reads all metadata frames, including those not described by IMetaDataIO
+
         // Tag editing preferences : what tagging systems to use when audio file has no metadata ?
         // NB1 : If more than one item, _all_ of them will be written
         // NB2 : If Native tagging is not indicated here, it will _not_ be used

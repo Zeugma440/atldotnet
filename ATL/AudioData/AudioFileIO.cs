@@ -24,7 +24,7 @@ namespace ATL.AudioData
         /// Constructor
         /// </summary>
         /// <param name="path">Path of the file to be parsed</param>
-        public AudioFileIO(string path, TagData.PictureStreamHandlerDelegate pictureStreamHandler)
+        public AudioFileIO(string path, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;
@@ -32,14 +32,14 @@ namespace ATL.AudioData
 
             audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
             audioManager = new AudioDataManager(audioData);
-            found = audioManager.ReadFromFile(pictureStreamHandler);
+            found = audioManager.ReadFromFile(pictureStreamHandler, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
                 audioManager = new AudioDataManager(audioData);
-                found = audioManager.ReadFromFile(pictureStreamHandler);
+                found = audioManager.ReadFromFile(pictureStreamHandler, readAllMetaFrames);
             }
 
             metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
@@ -49,9 +49,37 @@ namespace ATL.AudioData
 
         public void Save(TagData data)
         {
-            foreach (int meta in audioManager.getAvailableMetas())
+            IList<int> availableMetas = audioManager.getAvailableMetas();
+
+            if (0 == availableMetas.Count)
+            {
+                foreach (int i in Settings.DefaultTagsWhenNoMetadata)
+                {
+                    availableMetas.Add(i);
+                }
+            }
+
+            foreach (int meta in availableMetas)
             {
                 audioManager.UpdateTagInFile(data, meta);
+            }
+        }
+
+        public void Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        {
+            IList<int> metasToRemove;
+
+            if (MetaDataIOFactory.TAG_ANY == tagType)
+            {
+                metasToRemove = audioManager.getAvailableMetas();
+            } else
+            {
+                metasToRemove = new List<int>() { tagType };
+            }
+
+            foreach(int meta in metasToRemove)
+            {
+                audioManager.RemoveTagFromFile(meta);
             }
         }
 

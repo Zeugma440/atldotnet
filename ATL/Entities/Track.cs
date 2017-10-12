@@ -43,6 +43,7 @@ namespace ATL
         public int DiscNumber;
         public int Rating;
         public IDictionary<string, string> AdditionalFields;
+        private ICollection<string> InitialAdditionalFields; // Initial fields, to track removed ones
         public IList<TagData.PictureInfo> PictureTokens = null;
 
         private IList<TagData.PictureInfo> embeddedPictures = null;
@@ -82,7 +83,7 @@ namespace ATL
         protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
         {
             // TODO when tag is not available, customize by naming options // tracks (...)
-            fileIO = new AudioFileIO(Path, pictureStreamHandler);
+            fileIO = new AudioFileIO(Path, pictureStreamHandler, Settings.ReadAllMetaFrames);
 
             Title = fileIO.Title;
             if ("" == Title || null == Title)
@@ -100,7 +101,8 @@ namespace ATL
             Publisher = Utils.ProtectValue(fileIO.Publisher);
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
-            AdditionalFields = fileIO.AdditionalFields;
+            AdditionalFields = fileIO.AdditionalFields; // ???
+            InitialAdditionalFields = fileIO.AdditionalFields.Keys;
             Year = fileIO.IntYear;
             Album = fileIO.Album;
             TrackNumber = fileIO.Track;
@@ -145,7 +147,18 @@ namespace ATL
 
             foreach (string s in AdditionalFields.Keys)
             {
-                //result.AdditionalFields.Add(new TagData.MetaFieldInfo())
+                result.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
+            }
+
+            // Detect and mark deleted Additional fields
+            foreach (string s in InitialAdditionalFields)
+            {
+                if (!AdditionalFields.ContainsKey(s))
+                {
+                    TagData.MetaFieldInfo metaField = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, "");
+                    metaField.MarkedForDeletion = true;
+                    result.AdditionalFields.Add(metaField);
+                }
             }
 
             return result;
@@ -153,8 +166,14 @@ namespace ATL
 
         public void Save()
         {
-            if (null == embeddedPictures) getEmbeddedPictures();
-
+            fileIO.Save(toTagData());
+            Update();
         }
-	}
+
+        public void Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        {
+            fileIO.Remove(tagType);
+            Update();
+        }
+    }
 }
