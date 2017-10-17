@@ -123,6 +123,7 @@
     <None Include="Resources\TTA\BlackBird.tta" />
     <None Include="Resources\VQF\empty.vqf" />
     <None Include="Resources\VQF\vqf.vqf" />
+    <None Include="Resources\WV\lossyv440.wv" />
     <None Include="Resources\XM\empty.xm" />
     <None Include="Resources\XM\xm.xm" />
     <None Include="Resources\_Cuesheet\duck hunt.cue" />

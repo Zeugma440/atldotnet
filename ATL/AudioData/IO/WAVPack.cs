@@ -13,7 +13,6 @@ namespace ATL.AudioData.IO
 		private int formatTag;
 		private int version;
 		private int channels;
-		private int sampleRate;
 		private int bits;
 	
 		private string encoder;
@@ -22,15 +21,17 @@ namespace ATL.AudioData.IO
 		private long samples;
 		private long bSamples;
 
+        private int sampleRate;
         private double bitrate;
         private double duration;
         private bool isValid;
+        private int codecFamily;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
 
-
+        /*
         public int FormatTag
 		{
 			get  { return formatTag; }
@@ -67,6 +68,7 @@ namespace ATL.AudioData.IO
         {
             get { return getChannelMode(); }
         }
+        */
 
 
         private class wavpack_header3
@@ -195,7 +197,7 @@ namespace ATL.AudioData.IO
         }
         public int CodecFamily
         {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
+            get { return codecFamily; }
         }
         public bool AllowsParsableMetadata
         {
@@ -230,6 +232,7 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
             isValid = false;
+            codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
             tagSize = 0;
 			formatTag = 0;
@@ -343,11 +346,13 @@ namespace ATL.AudioData.IO
 				if (8 == (wvh4.flags & 8) )  // hybrid flag
 				{
 					encoder = "hybrid lossy";
+                    codecFamily = AudioDataIOFactory.CF_LOSSY;
 				}
 				else
 				{ //if (2 == (wvh4.flags & 2) )  {  // lossless flag
 					encoder = "lossless";
-				}
+                    codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+                }
 
 				/*
 					if ((wvh4.flags & 0x20) > 0)  // MODE_HIGH
@@ -475,8 +480,10 @@ namespace ATL.AudioData.IO
 							channels = 2 - (wvh3.flags & 1);  // mono flag
 							samples = wvh3.total_samples;
 
-							// Encoder guess
-							if (wvh3.bits > 0)
+                            codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+
+                            // Encoder guess
+                            if (wvh3.bits > 0)
 							{
 								if ( (wvh3.flags & NEW_HIGH_FLAG_v3) > 0 )
 								{
@@ -484,11 +491,12 @@ namespace ATL.AudioData.IO
 									if ( (wvh3.flags & WVC_FLAG_v3) > 0 )
 									{
 										encoder += " lossless";
-									} 
+                                    } 
 									else 
 									{
-										encoder += " lossy";                 					
-									}
+										encoder += " lossy";
+                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+                                    }
                  			
 									if ((wvh3.flags & EXTREME_DECORR_v3) > 0) 
 										encoder = encoder + " (high)";
@@ -498,11 +506,14 @@ namespace ATL.AudioData.IO
 									if ( (wvh3.flags & (HIGH_FLAG_v3 | FAST_FLAG_v3)) == 0 )
 									{
 										encoder = ( wvh3.bits + 3 ).ToString() + "-bit lossy";
-									} 
+                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+                                    } 
 									else 
 									{
 										encoder = ( wvh3.bits + 3 ).ToString() + "-bit lossy";
-										if ( (wvh3.flags & HIGH_FLAG_v3) > 0 )
+                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+
+                                        if ( (wvh3.flags & HIGH_FLAG_v3) > 0 )
 										{
 											encoder += " high";
 										} 
@@ -515,7 +526,7 @@ namespace ATL.AudioData.IO
 							} 
 							else 
 							{
-								if ( (wvh3.flags & HIGH_FLAG_v3) == 0 )  
+                                if ( (wvh3.flags & HIGH_FLAG_v3) == 0 )  
 								{
 									encoder = "lossless (fast mode)";
 								} 
