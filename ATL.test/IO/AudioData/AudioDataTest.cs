@@ -25,12 +25,6 @@ namespace ATL.test
             Assert.AreEqual(samplerate, theReader.SampleRate);
             Assert.AreEqual(theReader.IsVBR, isVbr);
             Assert.AreEqual(codecFamily, theReader.CodecFamily);
-
-            System.Console.WriteLine(theReader.Duration);
-            System.Console.WriteLine(theReader.BitRate);
-            System.Console.WriteLine(theReader.SampleRate);
-            System.Console.WriteLine(theReader.IsVBR);
-            System.Console.WriteLine(codecFamily == theReader.CodecFamily);
         }
 
         [TestMethod]
