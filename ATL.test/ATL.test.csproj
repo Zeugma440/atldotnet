@@ -123,6 +123,8 @@
     <None Include="Resources\TTA\BlackBird.tta" />
     <None Include="Resources\VQF\empty.vqf" />
     <None Include="Resources\VQF\vqf.vqf" />
+    <None Include="Resources\WV\losslessv3.WV" />
+    <None Include="Resources\WV\lossyv3.WV" />
     <None Include="Resources\WV\lossyv440.wv" />
     <None Include="Resources\XM\empty.xm" />
     <None Include="Resources\XM\xm.xm" />
@@ -178,7 +180,7 @@
     <Content Include="Resources\WMA\empty_full.wma" />
     <Content Include="Resources\WMA\empty_non-WMFields.wma" />
     <Content Include="Resources\WMA\wma.wma" />
-    <Content Include="Resources\WV\BlackBird.wv" />
+    <Content Include="Resources\WV\losslessv4.wv" />
     <Content Include="Resources\_Playlists\local.MID" />
     <Content Include="Resources\_Playlists\playlist.asx" />
     <Content Include="Resources\_Playlists\playlist.pls" />

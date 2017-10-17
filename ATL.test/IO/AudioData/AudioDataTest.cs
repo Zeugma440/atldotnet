@@ -184,8 +184,10 @@ namespace ATL.test
         [TestMethod]
         public void Audio_WV()
         {
+            testGenericAudio("WV/losslessv3.wv", 8, 659, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("WV/lossyv3.wv", 8, 342, 44100, false, AudioDataIOFactory.CF_LOSSY);
             testGenericAudio("WV/lossyv440.wv", 8, 206, 44100, false, AudioDataIOFactory.CF_LOSSY);
-            testGenericAudio("WV/BlackBird.wv", 6, 645, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("WV/losslessv4.wv", 6, 645, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         [TestMethod]

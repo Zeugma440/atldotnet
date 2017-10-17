@@ -414,7 +414,7 @@ namespace ATL.AudioData.IO
 			chunk.size = r.ReadUInt32();
 			wavchunk = r.ReadChars(4);
   
-			if ( StreamUtils.StringEqualsArr("WAVE",wavchunk) ) return result;
+			if (!StreamUtils.StringEqualsArr("WAVE",wavchunk) ) return result;
 
 			// start looking for chunks
 			chunk.Reset();
