@@ -15,7 +15,8 @@ namespace ATL.test.IO
         public void TagIO_R_Single_ID3v1()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            int[] tagPriorityDefault = MetaDataIOFactory.GetInstance().TagPriority;
+            int[] tagPriorityDefault = new int[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = false;                            // default behaviour anyway
@@ -42,7 +43,8 @@ namespace ATL.test.IO
         public void TagIO_R_Multi()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            int[] tagPriorityDefault = MetaDataIOFactory.GetInstance().TagPriority;
+            int[] tagPriorityDefault = new int[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = true;
@@ -138,11 +140,15 @@ namespace ATL.test.IO
                 string testFileLocation = TestUtils.GetTempTestFile(resource);
                 Track theTrack = new Track(testFileLocation);
 
+                System.Console.WriteLine("artist1 : " + theTrack.Artist);
+
                 string initialArtist = theTrack.Artist;
                 theTrack.Artist = "Hey ho";
                 theTrack.Save();
 
                 theTrack = new Track(testFileLocation);
+
+                System.Console.WriteLine("artist2 : " + theTrack.Artist);
 
                 theTrack.Artist = initialArtist;
                 theTrack.Save();

@@ -150,7 +150,7 @@ namespace ATL
                 result.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
             }
 
-            // Detect and mark deleted Additional fields
+            // Detect and tag deleted Additional fields
             foreach (string s in InitialAdditionalFields)
             {
                 if (!AdditionalFields.ContainsKey(s))

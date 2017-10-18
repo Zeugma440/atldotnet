@@ -30,7 +30,7 @@ namespace ATL.test
             int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
             string bareFileName = fileName.Substring(lastSeparatorPos+1, fileName.Length - lastSeparatorPos - 1);
             if (!Directory.Exists(GetResourceLocationRoot()+"tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
-            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToLongTimeString().Replace(":", ".") + extension;
+            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToString("HH.mm.ss.fff") + extension;
 
             // Create writable a working copy
             File.Copy(GetResourceLocationRoot() + fileName, result, true);
