@@ -95,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\APE\ape.ape" />
+    <None Include="Resources\APE\v394.ape" />
     <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\DSF\dsf.dsf" />
     <None Include="Resources\DSF\empty.dsf" />
@@ -102,6 +103,7 @@
     <None Include="Resources\FLAC\empty.flac" />
     <None Include="Resources\FLAC\flac.flac" />
     <None Include="Resources\IT\empty.it" />
+    <None Include="Resources\IT\hasInstruments.it" />
     <None Include="Resources\IT\it.it" />
     <None Include="Resources\MP3\mp1Layer1.mp1" />
     <None Include="Resources\MP3\mp1Layer2.mp1" />

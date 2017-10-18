@@ -133,6 +133,7 @@ namespace ATL.test
         public void Audio_Ape()
         {
             testGenericAudio("APE/ape.ape", 8, 652, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("APE/v394.ape", 8, 599, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
