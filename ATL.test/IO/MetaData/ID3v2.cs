@@ -262,6 +262,9 @@ namespace ATL.test.IO.MetaData
 
                 // Add the new tag and check that it has been indeed added with all the correct information
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
             }
             finally
             {
@@ -288,7 +291,6 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(isAlertNbFrames);
             Assert.IsTrue(isAlertPicDimension);
             Assert.IsTrue(isAlertPicType);
-
         }
 
         [TestMethod]
