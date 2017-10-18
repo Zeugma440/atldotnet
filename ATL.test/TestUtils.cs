@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -38,6 +39,31 @@ namespace ATL.test
             fileInfo.IsReadOnly = false;
 
             return result;
+        }
+
+        public static string CopyFileAndReplace(string location, string placeholder, string replacement)
+        {
+            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
+            replacements.Add(new KeyValuePair<string, string>(placeholder, replacement));
+            return CopyFileAndReplace(location, replacements);
+        }
+
+        public static string CopyFileAndReplace(string location, IList<KeyValuePair<string, string>> replacements)
+        {
+            string testFileLocation = location.Substring(0, location.LastIndexOf('.')) + "_test" + location.Substring(location.LastIndexOf('.'), location.Length - location.LastIndexOf('.'));
+            string replacedLine;
+
+            using (StreamWriter s = File.CreateText(testFileLocation))
+            {
+                foreach (string line in File.ReadLines(location))
+                {
+                    replacedLine = line;
+                    foreach (KeyValuePair<string, string> kvp in replacements) replacedLine = replacedLine.Replace(kvp.Key, kvp.Value);
+                    s.WriteLine(replacedLine);
+                }
+            }
+
+            return testFileLocation;
         }
 
         public static string GetFileMD5Hash(string filename)

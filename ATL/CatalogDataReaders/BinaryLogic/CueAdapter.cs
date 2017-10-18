@@ -65,7 +65,12 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 				{
 					if (CueSharp.DataType.AUDIO == aTrack.TrackDataType)
 					{
-                        String trackPath = System.IO.Path.GetDirectoryName(m_path) + System.IO.Path.DirectorySeparatorChar + aTrack.DataFile.Filename;
+                        string trackPath = aTrack.DataFile.Filename;
+                        if (!System.IO.Path.IsPathRooted(trackPath))
+                        {
+                            trackPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(m_path), trackPath);
+                        }
+
                         // Avoids scanning N times the same track (e.g. livesets)
                         if (null == physicalTrack || physicalTrack.Path != trackPath)
                         {

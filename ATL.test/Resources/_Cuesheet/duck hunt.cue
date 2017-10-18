@@ -2,7 +2,7 @@ REM GENRE Game
 REM DATE 1984
 PERFORMER "Nintendo Sound Team"
 TITLE "Duck Hunt"
-FILE "Nintendo Sound Team - Duck Hunt.wav" WAVE
+FILE "$PATH/WAV/duck hunt.wav" WAVE
   TRACK 01 AUDIO
     TITLE "Title Screen"
     INDEX 01 00:00:00
