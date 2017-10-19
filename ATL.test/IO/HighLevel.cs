@@ -140,15 +140,11 @@ namespace ATL.test.IO
                 string testFileLocation = TestUtils.GetTempTestFile(resource);
                 Track theTrack = new Track(testFileLocation);
 
-                System.Console.WriteLine("artist1 : " + theTrack.Artist);
-
                 string initialArtist = theTrack.Artist;
                 theTrack.Artist = "Hey ho";
                 theTrack.Save();
 
                 theTrack = new Track(testFileLocation);
-
-                System.Console.WriteLine("artist2 : " + theTrack.Artist);
 
                 theTrack.Artist = initialArtist;
                 theTrack.Save();

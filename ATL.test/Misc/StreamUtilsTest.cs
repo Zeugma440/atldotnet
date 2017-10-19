@@ -85,22 +85,20 @@ namespace ATL.test
         [TestMethod]
         public void StreamUtils_FindSequence()
         {
-            string sequence1 = "<ASX VERSION";
-            string sequence2 = "<TITLE>";
-            string sequence3 = "$PATH/MID";
+            string sequence1 = "ftypmp42";
+            string sequence2 = "trak";
+            string sequence3 = "jstsd";
 
-            using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read))
+            using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "AAC/mp4.m4a", FileMode.Open, FileAccess.Read))
             {
-                System.Console.WriteLine("filesize : " + fs.Length);
-
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1)));
                 Assert.AreEqual(12, fs.Position);
 
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2)));
-                Assert.AreEqual(31, fs.Position);
+                Assert.AreEqual(156, fs.Position);
 
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence3)));
-                Assert.AreEqual(261, fs.Position);
+                Assert.AreEqual(416, fs.Position);
 
                 fs.Seek(20, SeekOrigin.Begin);
 
