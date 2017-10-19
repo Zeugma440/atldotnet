@@ -86,19 +86,25 @@ namespace ATL.test
         public void StreamUtils_FindSequence()
         {
             string sequence1 = "<ASX VERSION";
-            string sequence2 = "$PATH/MID";
+            string sequence2 = "<TITLE>";
+            string sequence3 = "$PATH/MID";
 
             using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", FileMode.Open, FileAccess.Read))
             {
+                System.Console.WriteLine("filesize : " + fs.Length);
+
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1)));
                 Assert.AreEqual(12, fs.Position);
 
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2)));
+                Assert.AreEqual(31, fs.Position);
+
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence3)));
                 Assert.AreEqual(261, fs.Position);
 
                 fs.Seek(20, SeekOrigin.Begin);
 
-                Assert.AreEqual(false, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence2), 100));
+                Assert.AreEqual(false, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence3), 100));
             }
         }
 
