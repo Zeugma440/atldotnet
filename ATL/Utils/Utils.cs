@@ -14,6 +14,7 @@ namespace Commons
     public static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+        public static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
 
 
         /// <summary>

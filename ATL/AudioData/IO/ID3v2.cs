@@ -539,7 +539,7 @@ namespace ATL.AudioData.IO
 
                         // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
-                        if (1 == encodingCode) strData = strData.Replace("\uFEFF", "");
+                        if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
                     }
                     else
                     {
@@ -660,7 +660,7 @@ namespace ATL.AudioData.IO
             {
                 foreach (TagData.MetaFieldInfo comm in comments)
                 {
-                    string code = comm.NativeFieldCode.Trim().ToLower();
+                    string code = comm.NativeFieldCode.Trim().ToLower().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
                     if (code.Length > 0) // Processed as an additional field
                     {
                         if (!code.Equals("comment") && !code.Equals("no description") && !code.Equals("description"))
@@ -670,7 +670,8 @@ namespace ATL.AudioData.IO
                         }
                     }
 
-                    setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                    if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                    else setMetaField("COM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                 }
             }
 
