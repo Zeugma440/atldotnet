@@ -114,8 +114,9 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 * Detected fields
 	* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-	* Metadata (from tags) : Title, Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures
-
+	* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures
+	* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
+	
 * Supported playlists formats : ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
 
 * Supported Cuesheets formats : CUE
