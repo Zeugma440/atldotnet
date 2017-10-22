@@ -390,13 +390,13 @@ namespace ATL.AudioData.IO
                         while (!endReached)
                         {
                             source.Read(data, 0, PADDING_BUFFER_SIZE);
-                            for (int i=0;i< PADDING_BUFFER_SIZE; i++)
+                            for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
                             {
                                 if (data[i] > 0)
                                 {
                                     tag.ActualEnd = initialPos + read + i;
                                     endReached = true;
-                                    return;
+                                    break;
                                 }
                             }
                             if (!endReached) read += PADDING_BUFFER_SIZE;
@@ -410,6 +410,8 @@ namespace ATL.AudioData.IO
                         break;
                     }
                 }
+
+                if (tag.ActualEnd > -1) break;
 
                 // Frame size measures number of bytes between end of flag and end of payload
                 /* Frame size encoding conventions
@@ -448,7 +450,6 @@ namespace ATL.AudioData.IO
                     if (null == comments) comments = new List<TagData.MetaFieldInfo>();
 
                     comment = new TagData.MetaFieldInfo(getImplementedTagType(), "");
-                    comments.Add(comment);
 
                     // Skip langage ID
                     //source.Seek(3, SeekOrigin.Current);
@@ -456,7 +457,7 @@ namespace ATL.AudioData.IO
 
                     BOMProperties contentDescriptionBOM = new BOMProperties();
                     // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
-                    if ( tagVersion > TAG_VERSION_2_2 && (1 == encodingCode) )
+                    if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                     {
                         contentDescriptionBOM = readBOM(source);
                     }
@@ -500,7 +501,7 @@ namespace ATL.AudioData.IO
                         dataSize = dataSize - bom.Size;
                     }
                 }
-                
+
                 // If encoding > 3, we might have caught an actual character, which means there is no encoding flag => switch to default encoding
                 if (encodingCode > 3)
                 {
@@ -518,7 +519,7 @@ namespace ATL.AudioData.IO
                     string strData;
 
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if ("POP".Equals(Frame.ID.Substring(0,3)))
+                    if ("POP".Equals(Frame.ID.Substring(0, 3)))
                     {
                         /*
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
@@ -526,7 +527,7 @@ namespace ATL.AudioData.IO
                          */
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
-                    else if ("TXX".Equals(Frame.ID.Substring(0,3)))
+                    else if ("TXX".Equals(Frame.ID.Substring(0, 3)))
                     {
                         // Read frame data and set tag item if frame supported
                         byte[] bData = source.ReadBytes((int)dataSize);
@@ -553,7 +554,24 @@ namespace ATL.AudioData.IO
                     }
                     else // We're in a Comment field => store value in Comment
                     {
-                        comment.Value = strData;
+                        bool found = false;
+
+                        // Comment of the same field if already exists
+                        foreach (TagData.MetaFieldInfo com in comments)
+                        {
+                            if (com.NativeFieldCode.Equals(comment.NativeFieldCode))
+                            {
+                                com.Value += Settings.InternalValueSeparator + strData;
+                                found = true;
+                            }
+                        }
+
+                        // Else brand new comment
+                        if (!found)
+                        {
+                            comment.Value = strData;
+                            comments.Add(comment);
+                        }
                     }
 
                     if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
@@ -590,7 +608,7 @@ namespace ATL.AudioData.IO
                         int picturePosition;
                         if (picType.Equals(TagData.PIC_TYPE.Unsupported))
                         {
-                            addPictureToken(MetaDataIOFactory.TAG_ID3V2,picCode);
+                            addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
                             picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
                         }
                         else
@@ -642,14 +660,17 @@ namespace ATL.AudioData.IO
             {
                 foreach (TagData.MetaFieldInfo comm in comments)
                 {
-                    if (comm.NativeFieldCode.Trim().Length > 0) // Processed as an additional field
+                    string code = comm.NativeFieldCode.Trim().ToLower();
+                    if (code.Length > 0) // Processed as an additional field
                     {
-                        setMetaField(comm.NativeFieldCode, comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                        if (!code.Equals("comment") && !code.Equals("no description") && !code.Equals("description"))
+                        {
+                            setMetaField(comm.NativeFieldCode, comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                            continue;
+                        }
                     }
-                    else // No description => "real" comment
-                    {
-                        setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
-                    }
+
+                    setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                 }
             }
 
@@ -682,11 +703,13 @@ namespace ATL.AudioData.IO
                             }
                             if (!endReached) read += PADDING_BUFFER_SIZE;
                         }
-                    } else
+                    }
+                    else
                     {
                         tag.ActualEnd = streamPos;
                     }
-                } else
+                }
+                else
                 {
                     tag.ActualEnd = streamPos;
                 }
