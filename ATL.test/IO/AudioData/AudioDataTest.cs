@@ -141,6 +141,8 @@ namespace ATL.test
         {
             testGenericAudio("S3M/empty.s3m", 127, 0, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
             testGenericAudio("S3M/s3m.s3m", 405, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV);
+            testGenericAudio("S3M/s3m2.s3m", 10, 2, 0, false, AudioDataIOFactory.CF_SEQ_WAV); // This one contains extra instructions
+            testGenericAudio("S3M/s3m3.s3m", 475, 1, 0, false, AudioDataIOFactory.CF_SEQ_WAV); // This one contains yet other extra instructions
         }
 
         [TestMethod]

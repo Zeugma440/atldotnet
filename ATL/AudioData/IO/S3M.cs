@@ -300,20 +300,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private byte detectNbSamples(BinaryReader source)
-        {
-            byte result = 31;
-            long position = source.BaseStream.Position;
-
-            source.BaseStream.Seek(1080, SeekOrigin.Begin);
-
-            formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
-
-            source.BaseStream.Seek(position, SeekOrigin.Begin);
-
-            return result;
-        }
-
         private String getTrackerName(ushort trackerVersion)
         {
             String result = "";

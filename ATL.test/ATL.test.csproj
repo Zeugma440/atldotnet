@@ -119,6 +119,8 @@
     <None Include="Resources\PSF\psf.psf" />
     <None Include="Resources\S3M\empty.s3m" />
     <None Include="Resources\S3M\s3m.s3m" />
+    <None Include="Resources\S3M\s3m2.s3m" />
+    <None Include="Resources\S3M\s3m3.s3m" />
     <None Include="Resources\SPC\empty.spc" />
     <None Include="Resources\SPC\spc.spc" />
     <None Include="Resources\TAK\003 BlackBird.tak" />

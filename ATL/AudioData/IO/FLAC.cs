@@ -73,7 +73,7 @@ namespace ATL.AudioData.IO
 		private byte bitsPerSample;
 		private long samples;
 
-
+/* Unused for now
 		public byte Channels // Number of channels
 		{
 			get { return channels; }
@@ -98,7 +98,7 @@ namespace ATL.AudioData.IO
         {
             get { return getChannelMode(); }
         }
-
+*/
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -368,6 +368,8 @@ namespace ATL.AudioData.IO
 			}
 		}
 
+/* Unused for now
+
 		//   Get compression ratio
 		private double getCompressionRatio()
 		{
@@ -400,6 +402,8 @@ namespace ATL.AudioData.IO
 			}
 			return result;
 		}
+
+*/
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {

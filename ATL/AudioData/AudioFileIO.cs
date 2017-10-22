@@ -44,7 +44,7 @@ namespace ATL.AudioData
 
             metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
 
-            if (audioData.AllowsParsableMetadata && metaData is DummyTag) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+            if (metaData is DummyTag && audioData.AllowsParsableMetadata) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
         public void Save(TagData data)
