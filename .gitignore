@@ -177,3 +177,5 @@ $RECYCLE.BIN/
 /ATL/nuget_pack.bat
 *.nupkg
 *.nuspec
+/ATL.test/Resources/MP3/Folder.jpg
+/ATL.test/Resources/MP3/AlbumArtSmall.jpg

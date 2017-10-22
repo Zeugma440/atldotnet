@@ -524,6 +524,10 @@ namespace ATL.AudioData.IO
                         string[] tabS = strData.Split('\0');
                         Frame.ID = tabS[0];
                         strData = tabS[1];
+
+                        // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
+                        // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
+                        if (1 == encodingCode) strData = strData.Replace("\uFEFF", "");
                     }
                     else
                     {
