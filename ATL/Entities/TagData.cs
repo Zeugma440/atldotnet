@@ -33,11 +33,28 @@ namespace ATL
             // TODO - add a description field
 
             public byte[] PictureData;                      // Binary picture data
+            public uint PictureHash;                        // Hash of binary picture data
 
             public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
+            public int Flag;                                // Freeform value to be used by other parts of the library
 
             // ---------------- CONSTRUCTORS
 
+            public PictureInfo(PictureInfo picInfo)
+            {
+                this.PicType = picInfo.PicType;
+                this.NativeFormat = picInfo.NativeFormat;
+                this.Position = picInfo.Position;
+                this.TagType = picInfo.TagType;
+                this.NativePicCode = picInfo.NativePicCode;
+                this.NativePicCodeStr = picInfo.NativePicCodeStr;
+                if (picInfo.PictureData != null)
+                {
+                    this.PictureData = new byte[picInfo.PictureData.Length];
+                    picInfo.PictureData.CopyTo(this.PictureData, 0);
+                }
+                this.MarkedForDeletion = picInfo.MarkedForDeletion;
+            }
             public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
             {
                 PicType = picType; NativeFormat = nativeFormat; TagType = tagType; Position = position;

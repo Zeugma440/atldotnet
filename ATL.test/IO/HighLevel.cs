@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using System.Drawing;
 
 namespace ATL.test.IO
 {
@@ -109,7 +110,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void TagIO_RW_UpdateTagAdditionalField()
+        public void TagIO_RW_AddRemoveTagAdditionalField()
         {
             string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
@@ -123,6 +124,100 @@ namespace ATL.test.IO
             Assert.AreEqual(1, theTrack.AdditionalFields.Count); // TENC should have been removed
             Assert.IsTrue(theTrack.AdditionalFields.ContainsKey("ABCD"));
             Assert.AreEqual("efgh", theTrack.AdditionalFields["ABCD"]);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateTagAdditionalField()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.AdditionalFields["TENC"] = "update test";
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(1, theTrack.AdditionalFields.Count);
+            Assert.IsTrue(theTrack.AdditionalFields.ContainsKey("TENC"));
+            Assert.AreEqual("update test", theTrack.AdditionalFields["TENC"]);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_AddRemoveTagPictures()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.EmbeddedPictures.RemoveAt(1); // Remove Conductor; Front Cover remains
+
+            // Add CD
+            TagData.PictureInfo newPicture = new TagData.PictureInfo(Commons.ImageFormat.Gif, TagData.PIC_TYPE.CD);
+            newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+            theTrack.EmbeddedPictures.Add(newPicture);
+
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, CD
+
+            bool foundFront = false;
+            bool foundCD = false;
+
+            foreach (TagData.PictureInfo pic in theTrack.EmbeddedPictures)
+            {
+                if (pic.PicType.Equals(TagData.PIC_TYPE.Front)) foundFront = true;
+                if (pic.PicType.Equals(TagData.PIC_TYPE.CD)) foundCD = true;
+            }
+
+            Assert.IsTrue(foundFront);
+            Assert.IsTrue(foundCD);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateTagPictures()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            // Update Front picture
+            TagData.PictureInfo newPicture = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.Front);
+            newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            theTrack.EmbeddedPictures.Add(newPicture);
+
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, Conductor
+
+            bool foundFront = false;
+            bool foundConductor = false;
+
+            foreach (TagData.PictureInfo pic in theTrack.EmbeddedPictures)
+            {
+                if (pic.PicType.Equals(TagData.PIC_TYPE.Front))
+                {
+                    foundFront = true;
+                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Width, 900);
+                    Assert.AreEqual(picture.Height, 290);
+                }
+                if (pic.PicType.Equals(TagData.PIC_TYPE.Unsupported)) foundConductor = true;
+            }
+
+            Assert.IsTrue(foundFront);
+            Assert.IsTrue(foundConductor);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
