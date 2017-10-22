@@ -16,6 +16,14 @@ namespace ATL
 	public class TagData
 	{
         public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
+        public enum ORIGIN
+        {
+            Unknown = 0,            // Not valued
+            UnmappedStandard = 1,   // Unmapped standard field (e.g. ID3v2 "Mood" field TMOO)
+            Comment = 2,            // Comment field with extended property parsed as field code (e.g. ID3v2 COMM)
+            CustomStandard = 3,     // Custom field through standard "custom" field (e.g. ID3v2 TXXX)
+            Custom = 4              // Custom non-standard field (i.e. any other fancy value written regardless of standard)
+        };
 
         // TODO - test memory usage with alternate signature using byte[], which could be simpler than current MemoryStream-based implementations
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
@@ -147,6 +155,8 @@ namespace ATL
             public string Value;                            // Field value
             public string Zone;                             // File zone where the value is supposed to appear (ASF format I'm looking at you...)
 
+            public ORIGIN Origin = ORIGIN.Unknown;          // Origin of field
+
             public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
 
             // ---------------- CONSTRUCTORS
@@ -158,7 +168,7 @@ namespace ATL
 
             public MetaFieldInfo(MetaFieldInfo info)
             {
-                TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone;
+                TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone; Origin = info.Origin;
             }
 
             // ---------------- OVERRIDES FOR DICTIONARY STORING

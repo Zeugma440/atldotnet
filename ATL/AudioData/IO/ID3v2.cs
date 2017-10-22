@@ -310,7 +310,7 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        private void setMetaField(String ID, String Data, TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
             ID = ID.ToUpper();
@@ -354,15 +354,18 @@ namespace ATL.AudioData.IO
             const int PADDING_BUFFER_SIZE = 512;
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
+            Encoding frameEncoding;
+
             long dataSize;
             long dataPosition;
-            string strData;
-            Encoding frameEncoding;
             long streamPos;
             long initialTagPos = source.Position;
             long streamLength = source.Length;
             int tagSize = getTagSize(tag, false);
             tag.ActualEnd = -1;
+
+            IList<TagData.MetaFieldInfo> comments = null;
+            TagData.MetaFieldInfo comment = null;
 
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
             streamPos = source.Position;
@@ -371,6 +374,7 @@ namespace ATL.AudioData.IO
             {
                 // Read frame header and check frame ID
                 Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                comment = null;
 
                 if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
                 {
@@ -441,9 +445,14 @@ namespace ATL.AudioData.IO
                 if ("COM".Equals(Frame.ID.Substring(0, 3)))
                 {
                     long initialPos = source.Position;
+                    if (null == comments) comments = new List<TagData.MetaFieldInfo>();
+
+                    comment = new TagData.MetaFieldInfo(getImplementedTagType(), "");
+                    comments.Add(comment);
 
                     // Skip langage ID
-                    source.Seek(3, SeekOrigin.Current);
+                    //source.Seek(3, SeekOrigin.Current);
+                    comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
 
                     BOMProperties contentDescriptionBOM = new BOMProperties();
                     // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
@@ -455,7 +464,7 @@ namespace ATL.AudioData.IO
                     if (contentDescriptionBOM.Size <= 3)
                     {
                         // Skip content description
-                        StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                        comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
                     }
                     else
                     {
@@ -506,6 +515,8 @@ namespace ATL.AudioData.IO
                 dataPosition = source.Position;
                 if ((dataSize > 0) && (dataSize < 500))
                 {
+                    string strData;
+
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
                     if ("POP".Equals(Frame.ID.Substring(0,3)))
                     {
@@ -536,7 +547,14 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
                     }
 
-                    setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                    if (null == comment) // We're in a non-Comment field => directly store value
+                    {
+                        setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                    }
+                    else // We're in a Comment field => store value in Comment
+                    {
+                        comment.Value = strData;
+                    }
 
                     if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
@@ -613,6 +631,28 @@ namespace ATL.AudioData.IO
 
                 streamPos = source.Position;
             } // End frames loop
+
+            /* Store all comments
+             * 
+             * - The only comment with a blank description field is a real "Comment"
+             * - Other comments are treated as additional fields, with their description field as their field code
+             * 
+            */
+            if (comments != null && comments.Count > 0)
+            {
+                foreach (TagData.MetaFieldInfo comm in comments)
+                {
+                    if (comm.NativeFieldCode.Trim().Length > 0) // Processed as an additional field
+                    {
+                        setMetaField(comm.NativeFieldCode, comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                    }
+                    else // No description => "real" comment
+                    {
+                        setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                    }
+                }
+            }
+
 
             if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {
