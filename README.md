@@ -124,8 +124,8 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Better support of ID3v2 tags with multiple Comments (each having a specific comment description, which is currently not supported)
 * Support for __more video game-specific music formats__ (.GYM, .VGM)
+* Support for ID3v2 Chapters (other standards might follow)
 * Connectors to __other library file formats__ (iTunes)
 
 
