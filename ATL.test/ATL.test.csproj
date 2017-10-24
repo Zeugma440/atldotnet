@@ -170,6 +170,7 @@
     <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
+    <Content Include="Resources\MP3\iTunNorm-iTunPgap.mp3" />
     <Content Include="Resources\MP3\mp2Layer1.mp2" />
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
     <Content Include="Resources\_Images\palette.tif" />

@@ -43,9 +43,13 @@ namespace ATL.AudioData.IO
         private static ICollection<string> standardFrames_v23;
         private static ICollection<string> standardFrames_v24;
 
+        // Field codes that need to be persisted in a COMMENT field
+        private static ICollection<string> commentsFields;
+
         // Mapping between ID3v2 field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping_v22;
         private static IDictionary<string, byte> frameMapping_v23_24;
+
 
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
@@ -177,6 +181,8 @@ namespace ATL.AudioData.IO
             standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
             standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4","TPOS","TPUB","TRCK","TRDA","TRSN","TRSO","TSIZ","TSRC","TSSE","TYER","TXXX","UFID","USER","USLT","WCOM","WCOP","WOAF","WOAR","WOAS","WORS","WPAY","WPUB","WXXX" };
             standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX" };
+
+            commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
             // Note on date field identifiers
             //
@@ -313,7 +319,7 @@ namespace ATL.AudioData.IO
         private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
-            ID = ID.ToUpper();
+            if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (Tag.Version > TAG_VERSION_2_2)
@@ -892,7 +898,7 @@ namespace ATL.AudioData.IO
             {
                 if (( fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding, fieldInfo.Language);
                     nbFrames++;
                 }
             }
@@ -923,13 +929,15 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, String frameCode, String text, Encoding tagEncoding)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "eng")
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
             long finalFramePos;
             long frameOffset;
             int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+
+            bool isCommentCode = false;
 
             bool writeFieldValue = true;
             bool writeFieldEncoding = true;
@@ -958,11 +966,18 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            frameCode = frameCode.ToUpper();
+
+           if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
             actualFrameCode = frameCode;
 
+            // If frame is only supported through Comment field, it has to be added through COMM frame
+            if (commentsFields.Contains(frameCode))
+            {
+                frameCode = "COMM";
+                isCommentCode = true;
+            }
             // If frame is not standard, it has to be added through TXXX frame ("user-defined text information frame")
-            if (!standardFrames_v24.Contains(frameCode))
+            else if (!standardFrames_v24.Contains(frameCode))
             {
                 frameCode = "TXXX";
             }
@@ -984,10 +999,17 @@ namespace ATL.AudioData.IO
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
+
                 // Language ID (ISO-639-2)
-                w.Write("eng".ToCharArray()); // TODO : handle this field dynamically
-                                              // Short content description
-                w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
+                if (language != null && language.Length > 3) language = language.Substring(0, 3);
+                w.Write(language.ToCharArray());
+
+                // Short content description
+                if (isCommentCode)
+                {
+                    w.Write(actualFrameCode.ToCharArray());
+                }
+                w.Write('\0');
 
                 writeFieldEncoding = false;
             }

@@ -4,6 +4,7 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.test.IO.MetaData
 {
@@ -569,6 +570,65 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(1, found);
 
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_CommentFields()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/iTunNORM-iTunPGAP.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(4, theFile.ID3v2.AdditionalFields.Count);
+
+            int found = 0;
+            foreach (KeyValuePair<string,string> field in theFile.ID3v2.AdditionalFields)
+            {
+                if (field.Key.Equals("iTunNORM"))
+                {
+                    Assert.AreEqual(" 00000099 000000A2 000002F0 000002F4 0000002E 0000002E 00002E6E 00002C5C 00000017 00000017", field.Value); // Why an empty space at the beginning ?!
+                    found++;
+                }
+                else if (field.Key.Equals("iTunPGAP"))
+                {
+                    Assert.AreEqual("1", field.Value);
+                    found++;
+                }
+            }
+            Assert.AreEqual(2, found);
+
+
+            // Check if they are persisted as comment fields when editing the tag
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            // For this we need to open the file in binary mode and check that the two fields belong to a comment field
+            byte[] readBytes = new byte[4];
+            byte[] expected = Utils.Latin1Encoding.GetBytes("COMM");
+
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunNORM")));
+                fs.Seek(-19, SeekOrigin.Current);
+                fs.Read(readBytes, 0, 4);
+                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunPGAP")));
+                fs.Seek(-19, SeekOrigin.Current);
+                fs.Read(readBytes, 0, 4);
+                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+            }
 
             // Get rid of the working copy
             File.Delete(testFileLocation);

@@ -19,10 +19,11 @@ namespace ATL
         public enum ORIGIN
         {
             Unknown = 0,            // Not valued
-            UnmappedStandard = 1,   // Unmapped standard field (e.g. ID3v2 "Mood" field TMOO)
-            Comment = 2,            // Comment field with extended property parsed as field code (e.g. ID3v2 COMM)
-            CustomStandard = 3,     // Custom field through standard "custom" field (e.g. ID3v2 TXXX)
-            Custom = 4              // Custom non-standard field (i.e. any other fancy value written regardless of standard)
+            Standard = 1,           // Standard field
+            UnmappedStandard = 2,   // Unmapped standard field (e.g. ID3v2 "Mood" field TMOO)
+            Comment = 3,            // Comment field with extended property parsed as field code (e.g. ID3v2 COMM)
+            CustomStandard = 4,     // Custom field through standard "custom" field (e.g. ID3v2 TXXX)
+            Custom = 5              // Custom non-standard field (i.e. any other fancy value written regardless of standard)
         };
 
         // TODO - test memory usage with alternate signature using byte[], which could be simpler than current MemoryStream-based implementations
