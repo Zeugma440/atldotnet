@@ -581,7 +581,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/iTunNORM-iTunPGAP.mp3");
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -626,6 +626,92 @@ namespace ATL.test.IO.MetaData
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunPGAP")));
                 fs.Seek(-19, SeekOrigin.Current);
+                fs.Read(readBytes, 0, 4);
+                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_FieldCodev22Tov24()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing unsupported fields : RVA & TBP
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual("1997", theFile.ID3v2.Year);
+
+            int found = 0;
+            string rvaValue = "";
+            string tbpValue = "";
+            foreach (KeyValuePair<string, string> field in theFile.ID3v2.AdditionalFields)
+            {
+                if (field.Key.Equals("RVA"))
+                {
+                    rvaValue = field.Value;
+                    found++;
+                }
+                else if (field.Key.Equals("TBP"))
+                {
+                    tbpValue = field.Value;
+                    found++;
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Check if they are persisted with proper ID3v2.4 field codes when editing the tag
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+
+            // 1/ Check if values are the same
+            found = 0;
+            foreach (KeyValuePair<string, string> field in theFile.ID3v2.AdditionalFields)
+            {
+                if (field.Key.Equals("RVA2"))
+                {
+                    Assert.AreEqual(rvaValue, field.Value);
+                    found++;
+                }
+                else if (field.Key.Equals("TBPM"))
+                {
+                    Assert.AreEqual(tbpValue, field.Value);
+                    found++;
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            Assert.AreEqual("1997", theFile.ID3v2.Year);
+
+
+            // 2/ Check if they are indeed persisted as "classic" ID3v2 fields, and not as sub-codes inside a TXXX field
+            byte[] readBytes = new byte[4];
+            byte[] expected = Utils.Latin1Encoding.GetBytes("TXXX");
+
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("RVA2")));
+                fs.Seek(-15, SeekOrigin.Current);
+                fs.Read(readBytes, 0, 4);
+                Assert.IsFalse(StreamUtils.ArrEqualsArr(expected, readBytes));
+
+                fs.Seek(0, SeekOrigin.Begin);
+
+
+                expected = Utils.Latin1Encoding.GetBytes("TDRC");
+
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("1997")));
+                fs.Seek(-15, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
             }

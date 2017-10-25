@@ -167,10 +167,10 @@
     <Content Include="Resources\MP3\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\MP3\ID3v2.2 ANSI charset only.mp3" />
     <Content Include="Resources\MP3\ID3v2.2 UTF16.mp3" />
+    <Content Include="Resources\MP3\id3v2.2_iTunNORM-iTunPGAP.mp3" />
     <Content Include="Resources\MP3\id3v2.3_UTF16.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
-    <Content Include="Resources\MP3\iTunNorm-iTunPgap.mp3" />
     <Content Include="Resources\MP3\mp2Layer1.mp2" />
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
     <Content Include="Resources\_Images\palette.tif" />

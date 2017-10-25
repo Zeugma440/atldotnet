@@ -48,7 +48,12 @@ namespace ATL.AudioData.IO
 
         // Mapping between ID3v2 field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping_v22;
-        private static IDictionary<string, byte> frameMapping_v23_24;
+        private static IDictionary<string, byte> frameMapping_v23;
+        private static IDictionary<string, byte> frameMapping_v24;
+
+        // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions
+        private static IDictionary<string, string> frameMapping_v22_4;
+        private static IDictionary<string, string> frameMapping_v23_4;
 
 
         // Max. tag size for saving
@@ -189,7 +194,7 @@ namespace ATL.AudioData.IO
             // Original release date
             //   ID3v2.0 : TOR (year only)
             //   ID3v2.3 : TORY (year only)
-            //   ID3v2.4 : TDOR (timestamp according to spec; actual content may vary)
+            //   ID3v2.4 : TDOR (timestamp according to spec)
             //
             // Release date
             //   ID3v2.0 : no standard
@@ -197,9 +202,9 @@ namespace ATL.AudioData.IO
             //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
             //
             // Recording date <== de facto standard behind the "date" field on most taggers
-            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM)
-            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM)
-            //   ID3v2.4 : TDRC (timestamp according to spec; actual content may vary)
+            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+            //   ID3v2.4 : TDRC (timestamp)
 
             // Mapping between standard ATL fields and ID3v2.2 identifiers
             frameMapping_v22 = new Dictionary<string, byte>
@@ -216,6 +221,7 @@ namespace ATL.AudioData.IO
                 { "TPA", TagData.TAG_FIELD_DISC_NUMBER },
                 { "TYE", TagData.TAG_FIELD_RECORDING_YEAR },
                 { "TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "TIM", TagData.TAG_FIELD_RECORDING_TIME },
                 { "COM", TagData.TAG_FIELD_COMMENT },
                 { "TCM", TagData.TAG_FIELD_COMPOSER },
                 { "POP", TagData.TAG_FIELD_RATING },
@@ -224,8 +230,89 @@ namespace ATL.AudioData.IO
                 { "TPB", TagData.TAG_FIELD_PUBLISHER }
             };
 
-            // Mapping between standard fields and ID3v2.3+ identifiers
-            frameMapping_v23_24 = new Dictionary<string, byte>
+            frameMapping_v22_4 = new Dictionary<string, string>
+            {
+                { "BUF", "RBUF" },
+                { "CNT", "PCNT" },
+                { "CRA", "AENC" },
+                // Encrypted meta frame / CRM has been droppped
+                { "ETC", "ETCO" },
+                { "EQU", "EQU2" },
+                { "GEO", "GEOB" },
+                { "IPL", "TIPL" },
+                { "LNK", "LINK" },
+                { "MCI", "MCDI" },
+                { "MLL", "MLLT" },
+                { "REV", "RVRB" },
+                { "RVA", "RVA2" },
+                { "SLT", "SYLT" },
+                { "STC", "SYTC" },
+                { "TBP", "TBPM" },
+                { "TDY", "TDLY" },
+                { "TEN", "TENC" },
+                { "TFT", "TFLT" },
+                { "TKE", "TKEY" },
+                { "TLA", "TLAN" },
+                { "TLE", "TLEN" },
+                { "TMT", "TMED" },
+                { "TOF", "TOFN" },
+                { "TOL", "TOLY" },
+                { "TP4", "TPE4" },
+                { "TPA", "TPOS" },
+                { "TRC", "TSRC" },
+                //{ "TRD", "" }, equivalent to find
+                // TSI / Size has been dropped
+                { "TSS", "TSSE" },
+                { "TT3", "TIT3" },
+                { "TXT", "TEXT" },
+                { "TXX", "TXXX" },
+                { "UFI", "UFID" },
+                { "ULT", "USLT" },
+                { "WAF", "WOAF" },
+                { "WAR", "WOAR" },
+                { "WAS", "WOAS" },
+                { "WCM", "WCOM" },
+                { "WCP", "WCOP" },
+                { "WPB", "WPUB" },
+                { "WXX", "WXXX" }
+                // TYE, TDA and TIM are converted on the fly when writing
+        };
+
+            frameMapping_v23_4 = new Dictionary<string, string>
+            {
+                { "EQUA", "EQU2" },
+                { "IPLS", "TIPL" },
+                { "RVAD", "RVA2" },
+                { "TORY", "TDOR" } // yyyy is a valid timestamp
+                // TYER, TDAT and TIME are converted on the fly when writing
+            };
+
+            // Mapping between standard fields and ID3v2.3 identifiers
+            frameMapping_v23 = new Dictionary<string, byte>
+            {
+                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TIT2", TagData.TAG_FIELD_TITLE },
+                { "TPE1", TagData.TAG_FIELD_ARTIST },
+                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TALB", TagData.TAG_FIELD_ALBUM },
+                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER },
+                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "TIME", TagData.TAG_FIELD_RECORDING_TIME },
+                { "COMM", TagData.TAG_FIELD_COMMENT },
+                { "TCOM", TagData.TAG_FIELD_COMPOSER },
+                { "POPM", TagData.TAG_FIELD_RATING },
+                { "TCON", TagData.TAG_FIELD_GENRE },
+                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER }
+            };
+
+            // Mapping between standard fields and ID3v2.4 identifiers
+            frameMapping_v24 = new Dictionary<string, byte>
             {
                 { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
                 { "TIT2", TagData.TAG_FIELD_TITLE },
@@ -238,8 +325,6 @@ namespace ATL.AudioData.IO
                 { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
                 { "TPOS", TagData.TAG_FIELD_DISC_NUMBER },
                 { "TDRC", TagData.TAG_FIELD_RECORDING_DATE },
-                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
                 { "COMM", TagData.TAG_FIELD_COMMENT },
                 { "TCOM", TagData.TAG_FIELD_COMPOSER },
                 { "POPM", TagData.TAG_FIELD_RATING },
@@ -322,12 +407,11 @@ namespace ATL.AudioData.IO
             if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
 
             // Finds the ATL field identifier according to the ID3v2 version
-            if (Tag.Version > TAG_VERSION_2_2)
+            switch (Tag.Version)
             {
-                if (frameMapping_v23_24.ContainsKey(ID)) supportedMetaId = frameMapping_v23_24[ID];
-            } else
-            {
-                if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID];
+                case TAG_VERSION_2_2: if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID]; break;
+                case TAG_VERSION_2_3: if (frameMapping_v23.ContainsKey(ID)) supportedMetaId = frameMapping_v23[ID]; break;
+                case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
             }
 
             TagData.MetaFieldInfo fieldInfo;
@@ -855,7 +939,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.ExtendedHeaderSize,4));
                 w.Write((byte)1); // Number of flag bytes; always 1 according to spec
                 w.Write(tagHeader.ExtendedFlags);
-                // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is
+                // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
                 if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
                 if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
 
@@ -875,30 +959,76 @@ namespace ATL.AudioData.IO
 
             // === ID3v2 FRAMES ===
             IDictionary<byte, String> map = tag.ToMap();
+            string recordingYear = "";
+            string recordingDayMonth = "";
+            string recordingTime = "";
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    foreach (string s in frameMapping_v23_24.Keys)
+                    // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
+                    //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+                    //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+                    //   ID3v2.4 : TDRC (timestamp)
+                    if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
                     {
-                        if (frameType == frameMapping_v23_24[s])
+                        recordingYear = map[frameType];
+                    }
+                    else if (TagData.TAG_FIELD_RECORDING_DAYMONTH == frameType)
+                    {
+                        recordingDayMonth = map[frameType];
+                    }
+                    else if (TagData.TAG_FIELD_RECORDING_TIME == frameType)
+                    {
+                        recordingTime = map[frameType];
+                    }
+                    else
+                    {
+                        foreach (string s in frameMapping_v24.Keys)
                         {
-                            writeTextFrame(w, s, map[frameType], tagEncoding);
-                            nbFrames++;
-                            break;
+                            if (frameType == frameMapping_v24[s])
+                            {
+                                writeTextFrame(w, s, map[frameType], tagEncoding);
+                                nbFrames++;
+                                break;
+                            }
                         }
                     }
                 }
             }
 
+            // Finally write recording date if recording day-month and/or year have been provided
+            if (4 == recordingYear.Length && Utils.IsNumeric(recordingYear))
+            {
+                StringBuilder recordingTimestamp = new StringBuilder(recordingYear);
+                if (4 == recordingDayMonth.Length && Utils.IsNumeric(recordingDayMonth)) recordingTimestamp.Append("-" ).Append(recordingDayMonth.Substring(2, 2)).Append("-").Append(recordingDayMonth.Substring(0, 2));
+                if (4 == recordingTime.Length && Utils.IsNumeric(recordingTime)) recordingTimestamp.Append("T").Append(recordingTime.Substring(0, 2)).Append(":").Append(recordingTime.Substring(2, 2));
+
+                writeTextFrame(w, "TDRC", recordingTimestamp.ToString(), tagEncoding);
+                nbFrames++;
+            }
+
             // Other textual fields
+            string fieldCode;
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if (( fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value, tagEncoding, fieldInfo.Language);
+                    fieldCode = fieldInfo.NativeFieldCode;
+
+                    // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
+                    if (TAG_VERSION_2_2 == tagVersion)
+                    {
+                        if (frameMapping_v22_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_4[fieldCode];
+                    }
+                    else if (TAG_VERSION_2_3 == tagVersion)
+                    {
+                        if (frameMapping_v23_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v23_4[fieldCode];
+                    }
+
+                    writeTextFrame(w, fieldCode, fieldInfo.Value, tagEncoding, fieldInfo.Language);
                     nbFrames++;
                 }
             }
@@ -967,7 +1097,7 @@ namespace ATL.AudioData.IO
             }
 
 
-           if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
+            if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
             actualFrameCode = frameCode;
 
             // If frame is only supported through Comment field, it has to be added through COMM frame
