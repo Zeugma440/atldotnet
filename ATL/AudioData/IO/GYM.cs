@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using System.Collections;
 using ATL.Logging;
-using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Text;
@@ -12,7 +10,11 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Genesis YM2612 files manipulation (extensions : .GYM)
     /// 
-    /// NB : GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
+    /// Implementation notes
+    /// 
+    ///     1/ Looping : I have yet to find a GYM file that actually contains a loop.
+    ///     Most archives I found so far are direct recording of game audio instructions
+    ///     that actually repeat the same pattern twice (looping data is not used at all)
     /// </summary>
     class GYM : MetaDataIO, IAudioDataIO
 	{
@@ -20,7 +22,7 @@ namespace ATL.AudioData.IO
 
         private const int GYM_HEADER_SIZE = 428;
 
-        private static uint LOOP_COUNT_DEFAULT = 1;          // Default loop count
+        private static uint LOOP_COUNT_DEFAULT = 1;         // Default loop count
         private static uint FADEOUT_DURATION_DEFAULT = 0;   // Default fadeout duration, in seconds
         private static uint PLAYBACK_RATE_DEFAULT = 60;     // Default playback rate if no preference set (Hz)
 
