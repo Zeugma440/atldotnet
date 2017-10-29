@@ -126,6 +126,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 * Support for __more video game-specific music formats__ (.GYM, .VGM)
 * Support for ID3v2 Chapters (other standards might follow)
+* Support for compressed streams (e.g. gzipped VGMs or powerpacker'd MODs)
 * Connectors to __other library file formats__ (iTunes)
 
 
