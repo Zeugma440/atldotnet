@@ -317,11 +317,11 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readInstruments(ref BinaryReader source, IList<ushort> instrumentPointers)
+        private void readInstruments(BufferedBinaryReader source, IList<ushort> instrumentPointers)
         {
             foreach (ushort pos in instrumentPointers)
             {
-                source.BaseStream.Seek(pos << 4, SeekOrigin.Begin);
+                source.Seek(pos << 4, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
                 instrument.Type = source.ReadByte();
                 instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
@@ -329,17 +329,17 @@ namespace ATL.AudioData.IO
 
                 if (instrument.Type > 0) // Same offsets for PCM and AdLib display names
                 {
-                    source.BaseStream.Seek(35, SeekOrigin.Current);
+                    source.Seek(35, SeekOrigin.Current);
                     instrument.DisplayName = StreamUtils.ReadNullTerminatedStringFixed(source, Encoding.ASCII, 28);
                     instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
-                    source.BaseStream.Seek(4, SeekOrigin.Current);
+                    source.Seek(4, SeekOrigin.Current);
                 }
 
                 FInstruments.Add(instrument);
             }
         }
 
-        private void readPatterns(ref BinaryReader source, IList<ushort> patternPointers)
+        private void readPatterns(BufferedBinaryReader source, IList<ushort> patternPointers)
         {
             byte rowNum;
             byte what;
@@ -350,10 +350,10 @@ namespace ATL.AudioData.IO
             {
                 aPattern = new List<IList<S3MEvent>>();
 
-                source.BaseStream.Seek(pos << 4, SeekOrigin.Begin);
+                source.Seek(pos << 4, SeekOrigin.Begin);
                 aRow = new List<S3MEvent>();
                 rowNum = 0;
-                source.BaseStream.Seek(2, SeekOrigin.Current); // patternSize
+                source.Seek(2, SeekOrigin.Current); // patternSize
 
                 do
                 {
@@ -364,8 +364,8 @@ namespace ATL.AudioData.IO
                         S3MEvent theEvent = new S3MEvent();
                         theEvent.Channel = what & 0x1F;
 
-                        if ((what & 0x20) > 0) source.BaseStream.Seek(2, SeekOrigin.Current); // Note & Instrument
-                        if ((what & 0x40) > 0) source.BaseStream.Seek(1, SeekOrigin.Current); // Volume
+                        if ((what & 0x20) > 0) source.Seek(2, SeekOrigin.Current); // Note & Instrument
+                        if ((what & 0x40) > 0) source.Seek(1, SeekOrigin.Current); // Volume
                         if ((what & 0x80) > 0)
                         {
                             theEvent.Command = source.ReadByte();
@@ -401,7 +401,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -418,6 +418,7 @@ namespace ATL.AudioData.IO
             IList<ushort> instrumentPointers = new List<ushort>();
 
             resetData();
+            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
 
             // Title = first 28 chars
             string title = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 28);
@@ -426,7 +427,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
-            source.BaseStream.Seek(4, SeekOrigin.Current);
+            source.Seek(4, SeekOrigin.Current);
 
             nbOrders = source.ReadUInt16();
             nbInstruments = source.ReadUInt16();
@@ -437,24 +438,24 @@ namespace ATL.AudioData.IO
 
             trackerName = getTrackerName(trackerVersion);
 
-            source.BaseStream.Seek(2, SeekOrigin.Current); // sampleType (16b)
+            source.Seek(2, SeekOrigin.Current); // sampleType (16b)
             if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
                 result = false;
                 throw new Exception("Invalid S3M file (file signature mismatch)");
             }
-            source.BaseStream.Seek(1, SeekOrigin.Current); // globalVolume (8b)
+            source.Seek(1, SeekOrigin.Current); // globalVolume (8b)
 
             tagExists = true;
 
             initialSpeed = source.ReadByte();
             initialTempo = source.ReadByte();
 
-            source.BaseStream.Seek(1, SeekOrigin.Current); // masterVolume (8b)
-            source.BaseStream.Seek(1, SeekOrigin.Current); // ultraClickRemoval (8b)
-            source.BaseStream.Seek(1, SeekOrigin.Current); // defaultPan (8b)
-            source.BaseStream.Seek(8, SeekOrigin.Current); // defaultPan (64b)
-            source.BaseStream.Seek(2, SeekOrigin.Current); // ptrSpecial (16b)
+            source.Seek(1, SeekOrigin.Current); // masterVolume (8b)
+            source.Seek(1, SeekOrigin.Current); // ultraClickRemoval (8b)
+            source.Seek(1, SeekOrigin.Current); // defaultPan (8b)
+            source.Seek(8, SeekOrigin.Current); // defaultPan (64b)
+            source.Seek(2, SeekOrigin.Current); // ptrSpecial (16b)
 
             // Channel table
             for (int i = 0; i < 32; i++)
@@ -481,8 +482,8 @@ namespace ATL.AudioData.IO
                 patternPointers.Add(source.ReadUInt16());
             }
 
-            readInstruments(ref source, instrumentPointers);
-            readPatterns(ref source, patternPointers);
+            readInstruments(source, instrumentPointers);
+            readPatterns(source, patternPointers);
 
 
             // == Computing track properties

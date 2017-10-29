@@ -14,7 +14,6 @@ namespace ATL.AudioData.IO
     class IT : MetaDataIO, IAudioDataIO
     {
         private const string IT_SIGNATURE = "IMPM";
-        private const string PACKED_SIGNATURE = "PK";
 
         private const string ZONE_TITLE = "title";
 
@@ -286,18 +285,18 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readSamples(ref BinaryReader source, IList<UInt32> samplePointers)
+        private void readSamples(BufferedBinaryReader source, IList<UInt32> samplePointers)
         {
             foreach (UInt32 pos in samplePointers)
             {
-                source.BaseStream.Seek(pos, SeekOrigin.Begin);
+                source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
 
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Signature
+                source.Seek(4, SeekOrigin.Current); // Signature
                 instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
                 instrument.FileName = instrument.FileName.Replace("\0", "");
 
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Data not relevant for ATL
+                source.Seek(4, SeekOrigin.Current); // Data not relevant for ATL
 
                 instrument.DisplayName = StreamUtils.ReadNullTerminatedStringFixed(source, Utils.Latin1Encoding, 26);
                 instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
@@ -306,18 +305,18 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstruments(ref BinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstruments(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
         {
             foreach (UInt32 pos in instrumentPointers)
             {
-                source.BaseStream.Seek(pos, SeekOrigin.Begin);
+                source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
 
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Signature
+                source.Seek(4, SeekOrigin.Current); // Signature
                 instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
                 instrument.FileName = instrument.FileName.Replace("\0", "");
 
-                source.BaseStream.Seek(16, SeekOrigin.Current); // Data not relevant for ATL
+                source.Seek(16, SeekOrigin.Current); // Data not relevant for ATL
 
                 instrument.DisplayName = StreamUtils.ReadNullTerminatedStringFixed(source, Utils.Latin1Encoding, 26);
                 instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
@@ -326,13 +325,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstrumentsOld(ref BinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstrumentsOld(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
         {
             // The fileName and displayName fields have the same offset in the new and old format
-            readInstruments(ref source, instrumentPointers);
+            readInstruments(source, instrumentPointers);
         }
 
-        private void readPatterns(ref BinaryReader source, IList<UInt32> patternPointers)
+        private void readPatterns(BufferedBinaryReader source, IList<UInt32> patternPointers)
         {
             ushort nbRows;
             byte rowNum;
@@ -347,12 +346,12 @@ namespace ATL.AudioData.IO
                 aPattern = new List<IList<Event>>();
                 if (pos > 0)
                 {
-                    source.BaseStream.Seek(pos, SeekOrigin.Begin);
+                    source.Seek(pos, SeekOrigin.Begin);
                     aRow = new List<Event>();
                     rowNum = 0;
-                    source.BaseStream.Seek(2, SeekOrigin.Current); // patternSize
+                    source.Seek(2, SeekOrigin.Current); // patternSize
                     nbRows = source.ReadUInt16();
-                    source.BaseStream.Seek(4, SeekOrigin.Current); // unused data
+                    source.Seek(4, SeekOrigin.Current); // unused data
 
                     do
                     {
@@ -376,9 +375,9 @@ namespace ATL.AudioData.IO
                                 maskVariable = 0;
                             }
 
-                            if ((maskVariable & 1) > 0) source.BaseStream.Seek(1, SeekOrigin.Current); // Note
-                            if ((maskVariable & 2) > 0) source.BaseStream.Seek(1, SeekOrigin.Current); // Instrument
-                            if ((maskVariable & 4) > 0) source.BaseStream.Seek(1, SeekOrigin.Current); // Volume/panning
+                            if ((maskVariable & 1) > 0) source.Seek(1, SeekOrigin.Current); // Note
+                            if ((maskVariable & 2) > 0) source.Seek(1, SeekOrigin.Current); // Instrument
+                            if ((maskVariable & 4) > 0) source.Seek(1, SeekOrigin.Current); // Volume/panning
                             if ((maskVariable & 8) > 0)
                             {
                                 theEvent.Command = source.ReadByte();
@@ -415,7 +414,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -440,6 +439,8 @@ namespace ATL.AudioData.IO
             IList<UInt32> samplePointers = new List<UInt32>();
 
             resetData();
+            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
+
 
             if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
@@ -456,7 +457,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(4, 26, new byte[26] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
-            source.BaseStream.Seek(2, SeekOrigin.Current); // Pattern row highlight information
+            source.Seek(2, SeekOrigin.Current); // Pattern row highlight information
 
             nbOrders = source.ReadUInt16();
             nbInstruments = source.ReadUInt16();
@@ -472,23 +473,18 @@ namespace ATL.AudioData.IO
 
             special = source.ReadUInt16();
 
-//            trackerName = "Impulse tracker"; // TODO use TrackerVersion to add version
+            //            trackerName = "Impulse tracker"; // TODO use TrackerVersion to add version
 
-            source.BaseStream.Seek(1, SeekOrigin.Current); // globalVolume (8b)
-            source.BaseStream.Seek(1, SeekOrigin.Current); // masterVolume (8b)
+            source.Seek(2, SeekOrigin.Current); // globalVolume (8b), masterVolume (8b)
 
             initialSpeed = source.ReadByte();
             initialTempo = source.ReadByte();
 
-            source.BaseStream.Seek(1, SeekOrigin.Current); // panningSeparation (8b)
-            source.BaseStream.Seek(1, SeekOrigin.Current); // pitchWheelDepth (8b)
+            source.Seek(2, SeekOrigin.Current); // panningSeparation (8b), pitchWheelDepth (8b)
 
             messageLength = source.ReadUInt16();
             messageOffset = source.ReadUInt32();
-            source.BaseStream.Seek(4, SeekOrigin.Current); // reserved (32b)
-
-            source.BaseStream.Seek(64, SeekOrigin.Current); // channel Pan
-            source.BaseStream.Seek(64, SeekOrigin.Current); // channel Vol
+            source.Seek(132, SeekOrigin.Current); // reserved (32b), channel Pan (64B), channel Vol (64B)
 
             // Orders table
             for (int i = 0; i < nbOrders; i++)
@@ -514,27 +510,27 @@ namespace ATL.AudioData.IO
                 patternPointers.Add(source.ReadUInt32());
             }
 
-            if ( (!useSamplesAsInstruments) && (instrumentPointers.Count > 0) )
+            if ((!useSamplesAsInstruments) && (instrumentPointers.Count > 0))
             {
                 if (trackerVersionCompatibility < 0x200)
                 {
-                    readInstrumentsOld(ref source, instrumentPointers);
+                    readInstrumentsOld(source, instrumentPointers);
                 }
                 else
                 {
-                    readInstruments(ref source, instrumentPointers);
+                    readInstruments(source, instrumentPointers);
                 }
             }
             else
             {
-                readSamples(ref source, samplePointers);
+                readSamples(source, samplePointers);
             }
-            readPatterns(ref source, patternPointers);
+            readPatterns(source, patternPointers);
 
             // IT Message
             if ((special & 0x1) > 0)
             {
-                source.BaseStream.Seek(messageOffset, SeekOrigin.Begin);
+                source.Seek(messageOffset, SeekOrigin.Begin);
                 //message = new String( StreamUtils.ReadOneByteChars(source, messageLength) );
                 message = StreamUtils.ReadNullTerminatedStringFixed(source, Utils.Latin1Encoding, messageLength);
             }
@@ -576,7 +572,7 @@ namespace ATL.AudioData.IO
                 string title = tag.Title;
                 if (title.Length > 26) title = title.Substring(0, 26);
                 else if (title.Length < 26) title = Utils.BuildStrictLengthString(title, 26, '\0');
-                w.Write( Utils.Latin1Encoding.GetBytes(title) );
+                w.Write(Utils.Latin1Encoding.GetBytes(title));
                 result = 1;
             }
 

@@ -276,7 +276,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readInstruments(ref BinaryReader source, int nbInstruments)
+        private void readInstruments(BufferedBinaryReader source, int nbInstruments)
         {
             uint instrumentHeaderSize;
             ushort nbSamples;
@@ -289,9 +289,9 @@ namespace ATL.AudioData.IO
                 instrumentHeaderSize = source.ReadUInt32();
                 instrument.DisplayName = Utils.Latin1Encoding.GetString(source.ReadBytes(22)).Trim();
                 instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
-                source.BaseStream.Seek(1, SeekOrigin.Current); // Instrument type; useless according to documentation
+                source.Seek(1, SeekOrigin.Current); // Instrument type; useless according to documentation
                 nbSamples = source.ReadUInt16();
-                source.BaseStream.Seek(instrumentHeaderSize - 29, SeekOrigin.Current);
+                source.Seek(instrumentHeaderSize - 29, SeekOrigin.Current);
 
                 if (nbSamples > 0)
                 {
@@ -299,11 +299,11 @@ namespace ATL.AudioData.IO
                     for (int j = 0; j < nbSamples; j++) // Sample headers
                     {
                         sampleSizes.Add(source.ReadUInt32());
-                        source.BaseStream.Seek(36, SeekOrigin.Current);
+                        source.Seek(36, SeekOrigin.Current);
                     }
                     for (int j = 0; j < nbSamples; j++) // Sample data
                     {
-                        source.BaseStream.Seek(sampleSizes[j], SeekOrigin.Current);
+                        source.Seek(sampleSizes[j], SeekOrigin.Current);
                     }
                 }
 
@@ -311,7 +311,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readPatterns(ref BinaryReader source, int nbPatterns)
+        private void readPatterns(BufferedBinaryReader source, int nbPatterns)
         {
             byte firstByte;
             IList<Event> aRow;
@@ -326,7 +326,7 @@ namespace ATL.AudioData.IO
                 aPattern = new List<IList<Event>>();
                 
                 headerLength = source.ReadUInt32();
-                source.BaseStream.Seek(1, SeekOrigin.Current); // Packing type
+                source.Seek(1, SeekOrigin.Current); // Packing type
                 nbRows = source.ReadUInt16();
 
                 packedDataSize = source.ReadUInt16();
@@ -345,16 +345,16 @@ namespace ATL.AudioData.IO
                             firstByte = source.ReadByte();
                             if ((firstByte & 0x80) > 0) // Most Significant Byte (MSB) is set => packed data layout
                             {
-                                if ((firstByte & 0x1) > 0) source.BaseStream.Seek(1,SeekOrigin.Current); // Note
-                                if ((firstByte & 0x2) > 0) source.BaseStream.Seek(1,SeekOrigin.Current); // Instrument
-                                if ((firstByte & 0x4) > 0) source.BaseStream.Seek(1,SeekOrigin.Current); // Volume
+                                if ((firstByte & 0x1) > 0) source.Seek(1,SeekOrigin.Current); // Note
+                                if ((firstByte & 0x2) > 0) source.Seek(1,SeekOrigin.Current); // Instrument
+                                if ((firstByte & 0x4) > 0) source.Seek(1,SeekOrigin.Current); // Volume
                                 if ((firstByte & 0x8) > 0) e.Command = source.ReadByte();                // Effect type
                                 if ((firstByte & 0x10) > 0) e.Info = source.ReadByte();                  // Effect param
 
                             } else { // No MSB set => standard data layout
                                 // firstByte is the Note
-                                source.BaseStream.Seek(1,SeekOrigin.Current); // Instrument
-                                source.BaseStream.Seek(1,SeekOrigin.Current); // Volume
+                                source.Seek(1,SeekOrigin.Current); // Instrument
+                                source.Seek(1,SeekOrigin.Current); // Volume
                                 e.Command = source.ReadByte();
                                 e.Info = source.ReadByte();
                             }
@@ -385,7 +385,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -400,6 +400,7 @@ namespace ATL.AudioData.IO
             StringBuilder comment = new StringBuilder("");
 
             resetData();
+            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
 
             // File format signature
             if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(17))))
@@ -433,13 +434,13 @@ namespace ATL.AudioData.IO
             headerSize = source.ReadUInt32(); // Calculated FROM THIS OFFSET, not from the beginning of the file
             songLength = source.ReadUInt16();
 
-            source.BaseStream.Seek(2, SeekOrigin.Current); // Restart position
+            source.Seek(2, SeekOrigin.Current); // Restart position
 
             nbChannels = (byte)Math.Min(source.ReadUInt16(),(ushort)0xFF);
             nbPatterns = source.ReadUInt16();
             nbInstruments = source.ReadUInt16();
 
-            source.BaseStream.Seek(2, SeekOrigin.Current); // Flags for frequency tables; useless for ATL
+            source.Seek(2, SeekOrigin.Current); // Flags for frequency tables; useless for ATL
 
             initialSpeed = source.ReadUInt16();
             initialTempo = source.ReadUInt16();
@@ -447,11 +448,11 @@ namespace ATL.AudioData.IO
             // Pattern table
             for (int i = 0; i < (headerSize - 20); i++) // 20 being the number of bytes read since the header size marker
             {
-                if (i < songLength) FPatternTable.Add(source.ReadByte()); else source.BaseStream.Seek(1, SeekOrigin.Current);
+                if (i < songLength) FPatternTable.Add(source.ReadByte()); else source.Seek(1, SeekOrigin.Current);
             }
 
-            readPatterns(ref source, nbPatterns);
-            readInstruments(ref source, nbInstruments);
+            readPatterns(source, nbPatterns);
+            readInstruments(source, nbInstruments);
 
             
             // == Computing track properties
