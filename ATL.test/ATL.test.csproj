@@ -104,6 +104,7 @@
     <None Include="Resources\DTS\dts.dts" />
     <None Include="Resources\FLAC\empty.flac" />
     <None Include="Resources\FLAC\flac.flac" />
+    <None Include="Resources\GYM\empty.gym" />
     <None Include="Resources\GYM\gym.gym" />
     <None Include="Resources\IT\empty.it" />
     <None Include="Resources\IT\hasInstruments.it" />
@@ -128,6 +129,7 @@
     <None Include="Resources\SPC\spc.spc" />
     <None Include="Resources\TAK\003 BlackBird.tak" />
     <None Include="Resources\TTA\BlackBird.tta" />
+    <None Include="Resources\VGM\empty.vgm" />
     <None Include="Resources\VGM\vgm.vgm" />
     <None Include="Resources\VGM\vgz.vgz" />
     <None Include="Resources\VQF\empty.vqf" />
