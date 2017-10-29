@@ -88,6 +88,7 @@ Direct Stream Digital | .DSD, .DSF |  | R/W |  |
 Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
+Genesis YM2612 | .GYM |  |  |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (1)
 Monkey's Audio | .APE | R/W | R/W | R/W | 
@@ -103,6 +104,7 @@ Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
 True Audio|.TTA|R/W|R/W|R/W| |
 TwinVQ|.VQF| | | |R/W|
 PCM (uncompressed audio)|.WAV|R/W| | | |
+Video Game Music (SEGA systems sound files) | .VGM |  |  |  | R/W
 WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
@@ -124,9 +126,8 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for __more video game-specific music formats__ (.GYM, .VGM)
 * Support for ID3v2 Chapters (other standards might follow)
-* Support for compressed streams (e.g. gzipped VGMs or powerpacker'd MODs)
+* Support for compressed streams (e.g. gzipped VGMs / GYMs, powerpacker'd MODs)
 * Connectors to __other library file formats__ (iTunes)
 
 
