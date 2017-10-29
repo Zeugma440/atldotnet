@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.IO;
 using CueSharp;
 using System.Collections.Generic;
 using Commons;
@@ -48,6 +46,22 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             }
 		}
 
+        public String Comments
+        {
+            get
+            {
+                if (null == m_cueParser) m_cueParser = new CueSheet(m_path);
+
+                string result = "";
+                foreach (string aComm in m_cueParser.Comments)
+                {
+                    if (result.Length > 0) result += Settings.InternalValueSeparator;
+                    result += aComm;
+                }
+                return result;
+            }
+        }
+
         public IList<ATL.Track> Tracks
 		{
 			get
@@ -86,8 +100,9 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         cueTrack.Title = Utils.ProtectValue(aTrack.Title);
                         if (0 == cueTrack.Title.Length) cueTrack.Title = physicalTrack.Title;
                         cueTrack.Comment = "";
-						foreach (String aComm in aTrack.Comments)
+						foreach (string aComm in aTrack.Comments)
 						{
+                            if (cueTrack.Comment.Length > 0) cueTrack.Comment += Settings.InternalValueSeparator;
 							cueTrack.Comment += aComm;
 						}
                         if (0 == cueTrack.Comment.Length) cueTrack.Comment = physicalTrack.Comment;

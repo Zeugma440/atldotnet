@@ -12,7 +12,7 @@ namespace ATL.CatalogDataReaders
         /// <summary>
         /// Absolute path of the container file
         /// </summary>
-        String Path
+        string Path
         {
             get;
             set;
@@ -21,7 +21,7 @@ namespace ATL.CatalogDataReaders
         /// <summary>
         /// Title of the container
         /// </summary>
-		String Title
+		string Title
 		{
 			get;
 		}
@@ -29,10 +29,18 @@ namespace ATL.CatalogDataReaders
         /// <summary>
         /// Artist of the container
         /// </summary>
-		String Artist
+		string Artist
 		{
 			get;
 		}
+
+        /// <summary>
+        /// Comments of the container
+        /// </summary>
+		string Comments
+        {
+            get;
+        }
 
         /// <summary>
         /// List of the tracks described in the container

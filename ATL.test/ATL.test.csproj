@@ -139,7 +139,8 @@
     <None Include="Resources\WV\lossyv440.wv" />
     <None Include="Resources\XM\empty.xm" />
     <None Include="Resources\XM\xm.xm" />
-    <None Include="Resources\_Cuesheet\duck hunt.cue" />
+    <None Include="Resources\_Cuesheet\cue.cue" />
+    <None Include="Resources\_Cuesheet\cue2.cue" />
     <None Include="Resources\_Playlists\playlist.b4s" />
     <None Include="Resources\_Playlists\playlist.fpl" />
     <None Include="Resources\_Playlists\playlist.smil" />

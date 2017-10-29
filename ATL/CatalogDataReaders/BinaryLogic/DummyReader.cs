@@ -30,6 +30,11 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             get { return ""; }
         }
 
+        public string Comments
+        {
+            get { return ""; }
+        }
+
         public IList<Track> Tracks
         {
             get { return new List<Track>(); }
