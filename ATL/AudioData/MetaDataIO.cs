@@ -203,7 +203,7 @@ namespace ATL.AudioData.IO
         {
             get // TODO - TEST EXTENSIVELY
             {
-                DateTime result;
+                DateTime result = DateTime.MinValue;
                 if (!DateTime.TryParse(tagData.RecordingDate, out result)) // First try with a proper Recording date field
                 {
                     bool success = false;

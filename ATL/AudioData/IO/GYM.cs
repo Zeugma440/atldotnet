@@ -1,0 +1,310 @@
+using System;
+using System.IO;
+using System.Collections;
+using ATL.Logging;
+using System.Collections.Generic;
+using static ATL.AudioData.AudioDataManager;
+using Commons;
+using System.Text;
+
+namespace ATL.AudioData.IO
+{
+	/// <summary>
+    /// Class for Video Game Music files (Master System, Game Gear, SG1000, Genesis) manipulation (extensions : .VGM)
+    /// According to file format v1.70
+    /// 
+    /// NB : GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
+	/// </summary>
+	class GYM : MetaDataIO, IAudioDataIO
+	{
+        private const string VGM_SIGNATURE = "Vgm ";
+        private const string GD3_SIGNATURE = "Gd3 ";
+
+        private const int VGM_HEADER_SIZE = 256;
+
+        private static int LOOP_COUNT_DEFAULT = 1;          // Default loop count
+        private static int FADEOUT_DURATION_DEFAULT = 10;   // Default fadeout duration, in seconds
+
+        // Standard fields
+        private int version;
+        private int sampleRate;
+        private double bitrate;
+        private double duration;
+        private bool isValid;
+
+        private int gd3TagOffset;
+
+        private SizeInfo sizeInfo;
+        private readonly string filePath;
+
+
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+
+        // AudioDataIO
+        public int SampleRate // Sample rate (hz)
+		{
+			get { return sampleRate; }
+		}	
+        public bool IsVBR
+		{
+			get { return false; }
+		}
+		public int CodecFamily
+		{
+			get { return AudioDataIOFactory.CF_SEQ_WAV; }
+		}
+        public bool AllowsParsableMetadata
+        {
+            get { return true; }
+        }
+        public string FileName
+        {
+            get { return filePath; }
+        }
+        public double BitRate
+        {
+            get { return bitrate / 1000.0; }
+        }
+        public double Duration
+        {
+            get { return duration; }
+        }
+        public bool HasNativeMeta()
+        {
+            return true;
+        }
+        public bool IsMetaSupported(int metaDataType)
+        {
+            return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+        }
+
+        // IMetaDataIO
+        protected override int getDefaultTagOffset()
+        {
+            return TO_BUILTIN;
+        }
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_NATIVE;
+        }
+
+        
+        // ---------- CONSTRUCTORS & INITIALIZERS
+
+        private void resetData()
+        {
+            // Reset variables
+            sampleRate = 44100; // Default value for all VGM files, according to v1.70 spec 
+            bitrate = 0;
+            duration = 0;
+            version = 0;
+
+            gd3TagOffset = 0;
+
+            ResetData();
+        }
+
+        public GYM(string filePath)
+        {
+            this.filePath = filePath;
+            resetData();
+        }
+
+
+		// === PRIVATE METHODS ===
+
+		private bool readHeader(BinaryReader source, ReadTagParams readTagParams)
+		{
+            source.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            int nbSamples, loopNbSamples;
+            int nbLoops = LOOP_COUNT_DEFAULT;
+
+            long initialPosition = source.BaseStream.Position;
+            byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
+            if (VGM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(headerSignature)))
+			{
+				source.BaseStream.Seek(4,SeekOrigin.Current); // EOF offset
+                version = source.ReadInt32();
+                source.BaseStream.Seek(8, SeekOrigin.Current); // Clocks
+                gd3TagOffset = source.ReadInt32();
+
+                if (/*gd3TagOffset > 0 && */readTagParams.PrepareForWriting)
+                {
+                    structureHelper.AddZone(gd3TagOffset, (int)sizeInfo.FileSize - gd3TagOffset);
+                    structureHelper.AddIndex(source.BaseStream.Position - 4, gd3TagOffset);
+                }
+
+                nbSamples = source.ReadInt32();
+
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Loop offset
+
+                loopNbSamples = source.ReadInt32();
+
+                if (version >= 0x00000160)
+                {
+                    source.BaseStream.Seek(0x7E, SeekOrigin.Begin);
+                    nbLoops -= source.ReadSByte();                  // Loop base
+                }
+                if (version >= 0x00000151)
+                {
+                    source.BaseStream.Seek(0x7F, SeekOrigin.Begin);
+                    nbLoops = nbLoops * source.ReadByte();          // Loop modifier
+                }
+
+                duration = (nbSamples / sampleRate) + (nbLoops * (loopNbSamples / sampleRate)) + FADEOUT_DURATION_DEFAULT;
+                bitrate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / duration;
+
+                return true;
+			}
+			else if (headerSignature[0] == 0x1f && headerSignature[1] == 0x8b) // File is GZIP-compressed
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported yet");
+                return false;
+            }
+            else
+			{
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Not a VGM file");
+                return false;
+			}
+		}
+
+        private void readGd3Tag(BinaryReader source, int offset)
+        {
+            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            string str;
+
+            if (GD3_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GD3_SIGNATURE.Length))))
+            {
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Version number
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Length
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
+                tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, str);
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (japanese)
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (english)
+                tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM,  str);
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (japanese)
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // System name (english)
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "SYSTEM", str));
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // System name (japanese)
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "SYSTEM_J", str));
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (english)
+                tagData.IntegrateValue(TagData.TAG_FIELD_ARTIST, str);
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (japanese)
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "AUTHOR_J", str));
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Release date
+                tagData.IntegrateValue(TagData.TAG_FIELD_RECORDING_DATE, str);
+
+                StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Dumper
+                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
+
+                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Notes
+                tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, str);
+            }
+            else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Not a GD3 footer");
+            }
+        }
+
+        // === PUBLIC METHODS ===
+
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        {
+            this.sizeInfo = sizeInfo;
+
+            return read(source, readTagParams);
+        }
+
+        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            return read(source, readTagParams);
+        }
+
+        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            bool result = true;
+
+            resetData();
+
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            isValid = readHeader(source, readTagParams);
+
+            if (isValid && gd3TagOffset > 0)
+            {
+                readGd3Tag(source, gd3TagOffset);
+            }
+
+            return result;
+		}
+
+        // Write GD3 tag
+        protected override int write(TagData tag, BinaryWriter w, string zone)
+        {
+            int result = 0;
+            long sizePos;
+            Encoding unicodeEncoder = Encoding.Unicode;
+
+            w.Write(Utils.Latin1Encoding.GetBytes(GD3_SIGNATURE));
+            w.Write(0x00010000); // Version number
+
+            sizePos = w.BaseStream.Position;
+            w.Write((int)0);
+
+            w.Write(unicodeEncoder.GetBytes(tag.Title));
+            w.Write("\0\0"); // Strings must be null-terminated
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["TITLE_J"]));
+            w.Write("\0\0");
+
+            w.Write(unicodeEncoder.GetBytes(tag.Album));
+            w.Write("\0\0"); // Strings must be null-terminated
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["GAME_J"]));
+            w.Write("\0\0");
+
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["SYSTEM"]));
+            w.Write("\0\0"); // Strings must be null-terminated
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["SYSTEM_J"]));
+            w.Write("\0\0");
+
+            w.Write(unicodeEncoder.GetBytes(tag.Artist));
+            w.Write("\0\0"); // Strings must be null-terminated
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["AUTHOR_J"]));
+            w.Write("\0\0");
+
+            string dateStr = "";
+            if (Date != DateTime.MinValue) dateStr = Date.ToString("yyyy/MM/dd");
+            else if (tag.RecordingYear != null && tag.RecordingYear.Length == 4)
+            {
+                dateStr = tag.RecordingYear;
+                if (tag.RecordingDayMonth != null && tag.RecordingDayMonth.Length >= 4)
+                {
+                    dateStr += "/" + tag.RecordingDayMonth.Substring(tag.RecordingDayMonth.Length - 2, 2) + "/" + tag.RecordingDayMonth.Substring(0, 2);
+                }
+            }
+
+            w.Write(unicodeEncoder.GetBytes(dateStr));
+            w.Write("\0\0"); // Strings must be null-terminated
+
+            w.Write(unicodeEncoder.GetBytes(AdditionalFields["DUMPER"]));
+            w.Write("\0\0"); // Strings must be null-terminated
+
+            w.Write(unicodeEncoder.GetBytes(tag.Comment));
+            w.Write("\0\0"); // Strings must be null-terminated
+
+            int size = (int)(w.BaseStream.Position - sizePos);
+            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+            w.Write(size);
+
+            return result;
+        }
+    }
+
+}

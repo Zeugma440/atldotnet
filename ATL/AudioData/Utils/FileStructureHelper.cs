@@ -27,7 +27,8 @@ namespace ATL.AudioData
             // Header types
             public const byte TYPE_COUNTER = 0;  // Counter : counts the underlying number of frames
             public const byte TYPE_SIZE = 1;     // Size : documents the size of a given frame / group of frames
-            public const byte TYPE_INDEX = 2;    // Index : documents the offset (position of 1st byte) of a given frame
+            public const byte TYPE_INDEX = 2;    // Index (absolute) : documents the offset (position of 1st byte) of a given frame
+            public const byte TYPE_RINDEX = 3;   // Index (relative) : documents the offset (position of 1st byte) of a given frame, relative to the header's position
 
             /// <summary>
             /// Header type (allowed values are TYPE_XXX within FrameHeader class)
@@ -38,7 +39,7 @@ namespace ATL.AudioData
             /// </summary>
             public long Position;
             /// <summary>
-            /// Current value of the header (counter : number of frames / size : frame size / index : frame index)
+            /// Current value of the header (counter : number of frames / size : frame size / index : frame index (absolute) / rindex : frame index (relative to header position))
             /// </summary>
             public object Value;
             /// <summary>
@@ -227,9 +228,9 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new Index-type header using the given fields and attach it to the zone of given name
         /// </summary>
-        public void AddIndex(long position, object value, string zone = DEFAULT_ZONE_NAME)
+        public void AddIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME)
         {
-            addZoneHeader(zone, FrameHeader.TYPE_INDEX, position, value, isLittleEndian);
+            addZoneHeader(zone, relative? FrameHeader.TYPE_RINDEX : FrameHeader.TYPE_INDEX, position, value, isLittleEndian);
         }
 
         /// <summary>
@@ -384,16 +385,23 @@ namespace ATL.AudioData
 
                         w.Write(value);
                     }
-                    else if (FrameHeader.TYPE_INDEX == header.Type)
+                    else if (FrameHeader.TYPE_INDEX == header.Type || FrameHeader.TYPE_RINDEX == header.Type)
                     {
-                        w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
+                        long headerPosition = header.Position + offsetCorrection;
+                        w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
                         value = null;
+
+                        long headerOffsetCorrection = (FrameHeader.TYPE_RINDEX == header.Type) ? headerPosition : 0;
 
                         if (action != ACTION_DELETE)
                         {
                             if (header.Value is long)
                             {
-                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetCorrection);
+                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetCorrection - headerOffsetCorrection);
+                            }
+                            else if (header.Value is int)
+                            {
+                                value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetCorrection - headerOffsetCorrection));
                             }
 
                             if (!header.IsLittleEndian) Array.Reverse(value);
@@ -403,6 +411,10 @@ namespace ATL.AudioData
                             if (header.Value is long)
                             {
                                 value = BitConverter.GetBytes((long)0);
+                            }
+                            else if (header.Value is int)
+                            {
+                                value = BitConverter.GetBytes((int)0);
                             }
                         }
 

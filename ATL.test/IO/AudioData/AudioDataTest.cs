@@ -216,5 +216,12 @@ namespace ATL.test
         {
             testGenericAudio("AIF/aifc_tagged.aif", 3, 128, 8000, false, AudioDataIOFactory.CF_LOSSY);
         }
+
+        [TestMethod]
+        public void Audio_VGM()
+        {
+            testGenericAudio("VGM/vgm.vgm", 86, 1, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
+            // VGZ not supported yet
+        }
     }
 }

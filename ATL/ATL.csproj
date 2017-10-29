@@ -89,6 +89,8 @@
     <Compile Include="AudioData\IO\OptimFROG.cs" />
     <Compile Include="AudioData\IO\PSF.cs" />
     <Compile Include="AudioData\IO\S3M.cs" />
+    <Compile Include="AudioData\IO\GYM.cs" />
+    <Compile Include="AudioData\IO\VGM.cs" />
     <Compile Include="AudioData\IO\SPC.cs" />
     <Compile Include="AudioData\IO\TAK.cs" />
     <Compile Include="AudioData\IO\TTA.cs" />

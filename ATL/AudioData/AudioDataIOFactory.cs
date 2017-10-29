@@ -14,7 +14,7 @@ namespace ATL.AudioData
 		public const int CF_SEQ_WAV		= 2; // Sequenced with embedded sound library
 		public const int CF_SEQ			= 3; // Sequenced with codec or hardware-dependent sound library
 
-		public static int NB_CODEC_FAMILIES = 4;
+        public static int NB_CODEC_FAMILIES = 4;
 
         public const int MAX_ALTERNATES = 10;   // Max number of alternate formats having the same file extension
 
@@ -46,8 +46,10 @@ namespace ATL.AudioData
         public const int CID_XM         = 21;
         public const int CID_IT         = 22;
         public const int CID_AIFF       = 23;
+        public const int CID_VGM        = 24;
+        public const int CID_GYM        = 25;
 
-        public const int NB_CODECS = 24;
+        public const int NB_CODECS = 26;
 
 		// ------------------------------------------------------------------------------------------
 		
@@ -212,6 +214,17 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".aifc");
                 tempFmt.AddExtension(".snd");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Video Game Music");
+                tempFmt.ID = CID_VGM;
+                tempFmt.AddExtension(".vgm");
+                tempFmt.AddExtension(".vgz");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("Genesis YM2612");
+                tempFmt.ID = CID_GYM;
+                tempFmt.AddExtension(".gym");
+                theFactory.addFormat(tempFmt);
             }
 
 			return theFactory;
@@ -302,6 +315,12 @@ namespace ATL.AudioData
                     break;
                 case CID_AIFF:
                     theDataReader = new IO.AIFF(path);
+                    break;
+                case CID_VGM:
+                    theDataReader = new IO.VGM(path);
+                    break;
+                case CID_GYM:
+                    theDataReader = new IO.GYM(path);
                     break;
                 default:
 					theDataReader = new IO.DummyReader(path);

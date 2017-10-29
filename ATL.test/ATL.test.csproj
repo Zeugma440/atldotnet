@@ -59,6 +59,7 @@
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
     <Compile Include="IO\MetaData\AIF.cs" />
+    <Compile Include="IO\MetaData\VGM.cs" />
     <Compile Include="IO\MetaData\VQF.cs" />
     <Compile Include="IO\MetaData\S3M.cs" />
     <Compile Include="IO\MetaData\PSF.cs" />
@@ -102,6 +103,7 @@
     <None Include="Resources\DTS\dts.dts" />
     <None Include="Resources\FLAC\empty.flac" />
     <None Include="Resources\FLAC\flac.flac" />
+    <None Include="Resources\GYM\gym.gym" />
     <None Include="Resources\IT\empty.it" />
     <None Include="Resources\IT\hasInstruments.it" />
     <None Include="Resources\IT\it.it" />
@@ -125,6 +127,8 @@
     <None Include="Resources\SPC\spc.spc" />
     <None Include="Resources\TAK\003 BlackBird.tak" />
     <None Include="Resources\TTA\BlackBird.tta" />
+    <None Include="Resources\VGM\vgm.vgm" />
+    <None Include="Resources\VGM\vgz.vgz" />
     <None Include="Resources\VQF\empty.vqf" />
     <None Include="Resources\VQF\vqf.vqf" />
     <None Include="Resources\WV\losslessv3.WV" />
