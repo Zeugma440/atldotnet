@@ -59,6 +59,7 @@
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
     <Compile Include="IO\MetaData\AIF.cs" />
+    <Compile Include="IO\MetaData\GYM.cs" />
     <Compile Include="IO\MetaData\VGM.cs" />
     <Compile Include="IO\MetaData\VQF.cs" />
     <Compile Include="IO\MetaData\S3M.cs" />

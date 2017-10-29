@@ -24,6 +24,7 @@ namespace ATL.AudioData.IO
 
         private static int LOOP_COUNT_DEFAULT = 1;          // Default loop count
         private static int FADEOUT_DURATION_DEFAULT = 10;   // Default fadeout duration, in seconds
+        private static int RECORDING_RATE_DEFAULT = 60;      // Default playback rate for v1.00 files
 
         // Standard fields
         private int version;
@@ -115,10 +116,9 @@ namespace ATL.AudioData.IO
 
 		private bool readHeader(BinaryReader source, ReadTagParams readTagParams)
 		{
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
-
             int nbSamples, loopNbSamples;
             int nbLoops = LOOP_COUNT_DEFAULT;
+            int recordingRate = RECORDING_RATE_DEFAULT;
 
             long initialPosition = source.BaseStream.Position;
             byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
@@ -147,7 +147,10 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Loop offset
 
                 loopNbSamples = source.ReadInt32();
-
+                if (version >= 0x00000101)
+                {
+                    recordingRate = source.ReadInt32();
+                }
                 if (version >= 0x00000160)
                 {
                     source.BaseStream.Seek(0x7E, SeekOrigin.Begin);
@@ -159,8 +162,14 @@ namespace ATL.AudioData.IO
                     nbLoops = nbLoops * source.ReadByte();          // Loop modifier
                 }
 
-                duration = (nbSamples / sampleRate) + (nbLoops * (loopNbSamples / sampleRate)) + FADEOUT_DURATION_DEFAULT;
-                bitrate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / duration;
+                duration = (nbSamples / sampleRate) + (nbLoops * (loopNbSamples / sampleRate));
+                if (Settings.GYM_VGM_playbackRate > 0)
+                {
+                    duration = duration * (Settings.GYM_VGM_playbackRate / (double)recordingRate);
+                }
+                if (nbLoops > 0) duration += FADEOUT_DURATION_DEFAULT;
+
+                bitrate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
 
                 return true;
 			}
@@ -241,7 +250,7 @@ namespace ATL.AudioData.IO
 
             resetData();
 
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.BaseStream.Seek(0, SeekOrigin.Begin);
 
             isValid = readHeader(source, readTagParams);
 

@@ -33,16 +33,16 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class VGM : MetaIOTest
+    public class GYM : MetaIOTest
     {
-        public VGM()
+        public GYM()
         {
-            emptyFile = "VGM/empty.vgm";
-            notEmptyFile = "VGM/vgm.vgm";
+            emptyFile = "GYM/empty.gym";
+            notEmptyFile = "GYM/gym.gym";
         }
 
         [TestMethod]
-        public void TagIO_R_VGM_simple()
+        public void TagIO_R_GYM_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -53,7 +53,7 @@ namespace ATL.test.IO.MetaData
         }
         
         [TestMethod]
-        public void TagIO_RW_VGM_Empty()
+        public void TagIO_RW_GYM_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -67,15 +67,14 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
+            // Assert.IsFalse(theFile.NativeTag.Exists); Tag data is embedded in GYM header => can never be nonexistent
 
             // Construct a new tag
             TagData theTag = new TagData();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
-            theTag.Artist = "Artist";
+            theTag.Copyright = "Artist";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
@@ -87,9 +86,8 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual("Test !!", theFile.NativeTag.Title);
             Assert.AreEqual("Album", theFile.NativeTag.Album);
-            Assert.AreEqual("Artist", theFile.NativeTag.Artist);
+            Assert.AreEqual("Artist", theFile.NativeTag.Copyright);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
@@ -97,7 +95,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
+            // Assert.IsFalse(theFile.NativeTag.Exists); Tag data is embedded in GYM header => can never be nonexistent
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -116,7 +114,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void tagIO_RW_VGM_Existing()
+        public void tagIO_RW_GYM_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -129,7 +127,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagData theTag = new TagData();
-            theTag.RecordingYear = "1999";
+            theTag.Copyright = "1999";
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -140,7 +138,7 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional supported field
             theTag = new TagData();
-            theTag.RecordingYear = "1992";
+            theTag.Copyright = "1990 Sega";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
@@ -163,7 +161,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(AudioDataManager theFile, string yearStr = "1992")
+        private void readExistingTagsOnFile(AudioDataManager theFile, string copyStr = "1990 Sega")
         {
             pictures.Clear();
             Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
@@ -172,27 +170,17 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("Jungle", theFile.NativeTag.Title);
-            Assert.AreEqual("Taz-Mania", theFile.NativeTag.Album);
-            Assert.AreEqual("Satoshi Namekawa, Kouichi Shimamura, Takashi Masuzaki", theFile.NativeTag.Artist);
-            Assert.AreEqual("", theFile.NativeTag.Comment);
-            Assert.AreEqual(yearStr, theFile.NativeTag.Year);
+            Assert.AreEqual("The Source of Evilness", theFile.NativeTag.Title);
+            Assert.AreEqual("Arrow Flash", theFile.NativeTag.Album);
+            Assert.AreEqual("Last Stage Music", theFile.NativeTag.Comment);
+            Assert.AreEqual(copyStr, theFile.NativeTag.Copyright);
 
             // Unsupported fields
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TITLE_J"));
-            Assert.AreEqual("", theFile.NativeTag.AdditionalFields["TITLE_J"]);
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("GAME_J"));
-            Assert.AreEqual("", theFile.NativeTag.AdditionalFields["GAME_J"]);
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("AUTHOR_J"));
-            Assert.AreEqual("", theFile.NativeTag.AdditionalFields["AUTHOR_J"]);
-
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("SYSTEM"));
-            Assert.AreEqual("Sega Master System", theFile.NativeTag.AdditionalFields["SYSTEM"]);
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("SYSTEM_J"));
-            Assert.AreEqual("セガマスターシステム", theFile.NativeTag.AdditionalFields["SYSTEM_J"]);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("EMULATOR"));
+            Assert.AreEqual("Magasis", theFile.NativeTag.AdditionalFields["EMULATOR"]); // Is there a mapping between that and actual system names ?
 
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("DUMPER"));
-            Assert.AreEqual("Zeugma440", theFile.NativeTag.AdditionalFields["DUMPER"]);
+            Assert.AreEqual("Guy", theFile.NativeTag.AdditionalFields["DUMPER"]);
         }
     }
 }

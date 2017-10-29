@@ -7,7 +7,10 @@ namespace ATL
         // General properties
         public static bool ID3v2_useExtendedHeaderRestrictions = false;
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
-        public static bool EnablePadding = false;                        // Used by OGG container; could be used by ID3v2 in the future
+
+        public static int GYM_VGM_playbackRate = 0;                     // Playback rate (Hz) [0 = adjust to song properties]
+
+        public static bool EnablePadding = false;                       // Used by OGG container; could be used by ID3v2 in the future
 
         public static readonly string InternalValueSeparator = "˵"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
         public static string DisplayValueSeparator = ";";

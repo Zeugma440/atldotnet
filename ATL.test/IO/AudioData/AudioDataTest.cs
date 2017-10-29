@@ -223,5 +223,11 @@ namespace ATL.test
             testGenericAudio("VGM/vgm.vgm", 86, 1, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
             // VGZ not supported yet
         }
+
+        [TestMethod]
+        public void Audio_GYM()
+        {
+            testGenericAudio("GYM/gym.gym", 73, 37, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
+        }
     }
 }
