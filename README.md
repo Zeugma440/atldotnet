@@ -50,7 +50,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
 
-* ATL supports __more audio formats than TagLib, including video game audio formats (SPC, PSF)__
+* ATL supports __more audio formats than TagLib, including video game audio formats (SPC, PSF, VGM, GYM)__
 
 * ATL supports __Playlists and Cuesheets__
 
