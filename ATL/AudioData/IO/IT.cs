@@ -445,7 +445,7 @@ namespace ATL.AudioData.IO
             if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
                 result = false;
-                throw new Exception(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)");
+                throw new Exception(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
             }
 
             tagExists = true;

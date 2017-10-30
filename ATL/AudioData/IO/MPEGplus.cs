@@ -71,7 +71,7 @@ namespace ATL.AudioData.IO
         }
 
 
-
+/* Unused for now
         public byte ChannelModeID // Channel mode code
 		{
 			get { return this.channelModeID; }
@@ -104,7 +104,7 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.encoder; }
 		}
-
+*/
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -257,12 +257,18 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-		private static int getSampleRate(HeaderRecord Header)
+        /* Get samplerate from header
+            Note: this is the same byte where profile is stored
+        */
+        private static int getSampleRate(HeaderRecord header)
 		{
-			/* get samplerate from header
-			   note: this is the same byte where profile is stored
-			*/
-			return MPP_SAMPLERATES[Header.ByteArray[10] & 3];
+            if (getStreamVersion(header) > 50)
+            {
+                return MPP_SAMPLERATES[header.ByteArray[10] & 3];
+            } else
+            {
+                return 44100; // Fixed to 44.1 Khz before SV5
+            }
 		}
 
 		private static String getEncoder(HeaderRecord Header)
@@ -374,27 +380,29 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
-		private String getChannelMode()
-		{
-			return MPP_MODE[channelModeID];
-		}
+        /* Unused for now
+                private String getChannelMode()
+                {
+                    return MPP_MODE[channelModeID];
+                }
 
-		private String getProfile()
-		{
-			return MPP_PROFILE[profileID];
-		}
+                private String getProfile()
+                {
+                    return MPP_PROFILE[profileID];
+                }
 
-		private double getDuration()
+                private bool isCorrupted()
+                {
+                    // Check for file corruption
+                    return ( (bitrate < 3) || (bitrate > 480) );
+                }
+        */
+
+        private double getDuration()
 		{
 			// Calculate duration time
 			if (sampleRate > 0) return (frameCount * 1152.0 / sampleRate);
 			else return 0;
-		}
-
-		private bool isCorrupted()
-		{
-			// Check for file corruption
-			return ( (bitrate < 3) || (bitrate > 480) );
 		}
 
 

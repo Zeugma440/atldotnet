@@ -111,6 +111,8 @@
     <None Include="Resources\IT\it.it" />
     <None Include="Resources\MP3\mp1Layer1.mp1" />
     <None Include="Resources\MP3\mp1Layer2.mp1" />
+    <None Include="Resources\MPC\SV4.mp+" />
+    <None Include="Resources\MPC\SV5.mp+" />
     <None Include="Resources\MPC\SV8.mpc" />
     <None Include="Resources\MPC\SV7.mpc" />
     <None Include="Resources\OFR\BlackBird.ofr" />
