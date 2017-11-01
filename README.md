@@ -126,7 +126,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for ID3v2 Chapters (other standards might follow)
+* Support for ID3v2, Vorbis and MP4 Chapters
 * Support for compressed streams (e.g. gzipped VGMs / GYMs, powerpacker'd MODs)
 * Connectors to __other library file formats__ (iTunes)
 
