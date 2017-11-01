@@ -176,8 +176,8 @@ namespace ATL.AudioData.IO
         static ID3v2()
         {
             standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
-            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4","TPOS","TPUB","TRCK","TRDA","TRSN","TRSO","TSIZ","TSRC","TSSE","TYER","TXXX","UFID","USER","USLT","WCOM","WCOP","WOAF","WOAR","WOAS","WORS","WPAY","WPUB","WXXX" };
-            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX" };
+            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP" };
+            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP" };
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
@@ -377,8 +377,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // ---------------------------------------------------------------------------
-
         private int getTagSize(TagInfo Tag, bool includeFooter = true)
         {
             // Get total tag size
@@ -391,9 +389,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // ---------------------------------------------------------------------------
-
-        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames, string language = "")
         {
             byte supportedMetaId = 255;
             if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
@@ -406,22 +402,14 @@ namespace ATL.AudioData.IO
                 case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
             }
 
-            TagData.MetaFieldInfo fieldInfo;
             // If ID has been mapped with an ATL field, store it in the dedicated place...
             if (supportedMetaId < 255)
             {
-                if (TagData.TAG_FIELD_GENRE == supportedMetaId)
-                {
-                    tagData.IntegrateValue(supportedMetaId, extractGenreFromID3v2Code(Data));
-                }
-                else
-                {
-                    tagData.IntegrateValue(supportedMetaId, Data);
-                }
+                tagData.IntegrateValue(supportedMetaId, Data);
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data);
+                TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data, 0, language);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -438,7 +426,7 @@ namespace ATL.AudioData.IO
             byte encodingCode;
             Encoding frameEncoding;
 
-            long dataSize;
+            int dataSize;
             long dataPosition;
             long streamPos;
             long initialTagPos = source.Position;
@@ -449,14 +437,19 @@ namespace ATL.AudioData.IO
             IList<TagData.MetaFieldInfo> comments = null;
             TagData.MetaFieldInfo comment = null;
 
+            IList<TagData.ChapterInfo> chapters = null;
+            TagData.ChapterInfo chapter = null;
+
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
             streamPos = source.Position;
 
             while ((streamPos - offset < tagSize) && (streamPos < streamLength))
             {
+                comment = null;
+                chapter = null;
+
                 // Read frame header and check frame ID
                 Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                comment = null;
 
                 if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
                 {
@@ -533,8 +526,7 @@ namespace ATL.AudioData.IO
 
                     comment = new TagData.MetaFieldInfo(getImplementedTagType(), "");
 
-                    // Skip langage ID
-                    //source.Seek(3, SeekOrigin.Current);
+                    // Langage ID
                     comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
 
                     BOMProperties contentDescriptionBOM = new BOMProperties();
@@ -557,7 +549,7 @@ namespace ATL.AudioData.IO
                         source.Seek(initialPos + 3, SeekOrigin.Begin);
                     }
 
-                    dataSize = dataSize - (source.Position - initialPos);
+                    dataSize = dataSize - (int)(source.Position - initialPos);
                 }
 
                 // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
@@ -596,73 +588,95 @@ namespace ATL.AudioData.IO
                 // == READ ACTUAL FRAME DATA
 
                 dataPosition = source.Position;
-                if ((dataSize > 0) && (dataSize < 500))
+
+                if (dataSize > 0)
                 {
-                    string strData;
-
-                    // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if ("POP".Equals(Frame.ID.Substring(0, 3)))
+                    if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
                     {
-                        /*
-                         * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
-                         * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
-                         */
-                        strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
-                    }
-                    else if ("TXX".Equals(Frame.ID.Substring(0, 3)))
-                    {
-                        // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes((int)dataSize);
-                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+                        string strData;
+                        string shortFrameId = Frame.ID.Substring(0, 3);
 
-                        string[] tabS = strData.Split('\0');
-                        Frame.ID = tabS[0];
-                        strData = tabS[1];
-
-                        // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
-                        // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
-                        if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
-                    }
-                    else
-                    {
-                        // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes((int)dataSize);
-                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
-                    }
-
-                    if (null == comment) // We're in a non-Comment field => directly store value
-                    {
-                        setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
-                    }
-                    else // We're in a Comment field => store value in Comment
-                    {
-                        bool found = false;
-
-                        // Comment of the same field if already exists
-                        foreach (TagData.MetaFieldInfo com in comments)
+                        // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
+                        if ("POP".Equals(shortFrameId))
                         {
-                            if (com.NativeFieldCode.Equals(comment.NativeFieldCode))
+                            /*
+                             * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
+                             * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
+                             */
+                            strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
+                        }
+                        else if ("TXX".Equals(shortFrameId))
+                        {
+                            // Read frame data and set tag item if frame supported
+                            byte[] bData = source.ReadBytes(dataSize);
+                            strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+
+                            string[] tabS = strData.Split('\0');
+                            Frame.ID = tabS[0];
+                            strData = tabS[1];
+
+                            // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
+                            // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
+                            if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                        }
+                        else if ("CHA".Equals(shortFrameId)) // Chapters
+                        {
+                            if (null == chapters) chapters = new List<TagData.ChapterInfo>();
+                            chapter = new TagData.ChapterInfo();
+
+                            chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                            chapter.StartTime = source.ReadUInt32();
+                            chapter.EndTime = source.ReadUInt32();
+
+                            chapter.StartOffset = source.ReadUInt32();
+                            chapter.EndOffset = source.ReadUInt32();
+                            chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
+
+
+
+                            strData = "";
+                        }
+                        else
+                        {
+                            // Read frame data and set tag item if frame supported
+                            byte[] bData = source.ReadBytes(dataSize);
+                            strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+
+                            // Parse GENRE frame
+                            if ("TCO".Equals(shortFrameId)) strData = extractGenreFromID3v2Code(strData);
+                        }
+
+                        if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
+                        {
+                            setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        }
+                        else if (comment != null) // We're in a Comment field => store value in temp Comment structure
+                        {
+                            bool found = false;
+
+                            // Comment of the same field if already exists
+                            foreach (TagData.MetaFieldInfo com in comments)
                             {
-                                com.Value += Settings.InternalValueSeparator + strData;
-                                found = true;
+                                if (com.NativeFieldCode.Equals(comment.NativeFieldCode))
+                                {
+                                    com.Value += Settings.InternalValueSeparator + strData;
+                                    found = true;
+                                }
+                            }
+
+                            // Else brand new comment
+                            if (!found)
+                            {
+                                comment.Value = strData;
+                                comments.Add(comment);
                             }
                         }
 
-                        // Else brand new comment
-                        if (!found)
-                        {
-                            comment.Value = strData;
-                            comments.Add(comment);
-                        }
+                        if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                     }
-
-                    if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
-                }
-                else if (dataSize > 0) // Size > 500 => Probably an embedded picture
-                {
-                    long position = source.Position;
-                    if ("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))
+                    else // Picture frame
                     {
+                        long position = source.Position;
                         ImageFormat imgFormat;
                         if (TAG_VERSION_2_2 == tagVersion)
                         {
@@ -706,7 +720,7 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PictureStreamHandler != null)
                         {
-                            int picSize = (int)(dataSize - (source.Position - position));
+                            int picSize = dataSize - (int)(source.Position - position);
                             MemoryStream mem = new MemoryStream(picSize);
 
                             if (tag.UsesUnsynchronisation)
@@ -724,8 +738,8 @@ namespace ATL.AudioData.IO
 
                             mem.Close();
                         }
-                    }
-                } // End picture frame
+                    } // Picture frame
+                } // Data size > 0
 
                 source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
 
@@ -734,27 +748,35 @@ namespace ATL.AudioData.IO
 
             /* Store all comments
              * 
-             * - The only comment with a blank description field is a real "Comment"
+             * - The only comment with a blank or bland description field is a "classic" Comment
              * - Other comments are treated as additional fields, with their description field as their field code
-             * 
             */
             if (comments != null && comments.Count > 0)
             {
                 foreach (TagData.MetaFieldInfo comm in comments)
                 {
-                    string code = comm.NativeFieldCode.Trim().ToLower().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
-                    if (code.Length > 0) // Processed as an additional field
+                    string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
+                    if (commentDescription.Length > 0) 
                     {
-                        if (!code.Equals("comment") && !code.Equals("no description") && !code.Equals("description"))
+                        if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                         {
-                            setMetaField(comm.NativeFieldCode, comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                            // Processed as an additional field
+                            setMetaField(commentDescription, comm.Value, tag, readTagParams.ReadAllMetaFrames, comm.Language);
                             continue;
                         }
                     }
 
+                    // Processed as a "classic" Comment
                     if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                     else setMetaField("COM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                 }
+            }
+
+            /* Store all chapters
+            */
+            if (chapters != null && chapters.Count > 0)
+            {
+                tagData.Chapters = chapters;
             }
 
 
@@ -1051,7 +1073,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "eng")
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "")
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos;
@@ -1123,7 +1145,7 @@ namespace ATL.AudioData.IO
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
 
                 // Language ID (ISO-639-2)
-                if (language != null && language.Length > 3) language = language.Substring(0, 3);
+                if (language != null) language = Utils.BuildStrictLengthString(language, 3, '\0');
                 w.Write(language.ToCharArray());
 
                 // Short content description

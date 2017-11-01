@@ -619,13 +619,13 @@ namespace ATL.test.IO.MetaData
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
             {
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunNORM")));
-                fs.Seek(-19, SeekOrigin.Current);
+                fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
 
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunPGAP")));
-                fs.Seek(-19, SeekOrigin.Current);
+                fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
             }

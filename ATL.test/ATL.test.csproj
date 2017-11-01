@@ -151,6 +151,7 @@
   <ItemGroup>
     <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
     <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
+    <Content Include="Resources\AAC\chapters.m4v" />
     <Content Include="Resources\AAC\empty.m4a" />
     <Content Include="Resources\AAC\latmMcp0_CBR88_8s.aac" />
     <Content Include="Resources\AAC\latmMcp1_CBR88_8s.aac" />
@@ -171,6 +172,7 @@
     <Content Include="Resources\MP3\01 - Title Screen.mp3" />
     <Content Include="Resources\MP3\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\MP3\APE.mp3" />
+    <Content Include="Resources\MP3\chapters.mp3" />
     <Content Include="Resources\MP3\empty.mp3" />
     <Content Include="Resources\MP3\headerPatternIsNotHeader.mp3" />
     <Content Include="Resources\MP3\id3v1.mp3" />

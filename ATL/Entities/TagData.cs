@@ -109,7 +109,8 @@ namespace ATL
             public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
             public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativePicCode = -1; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
 
-            // ---------------- OVERRIDES FOR DICTIONARY STORING
+
+            // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
 
             public override string ToString()
             {
@@ -172,7 +173,7 @@ namespace ATL
                 TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone; Origin = info.Origin;
             }
 
-            // ---------------- OVERRIDES FOR DICTIONARY STORING
+            // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
 
             public string ToStringWithoutZone()
             {
@@ -226,6 +227,33 @@ namespace ATL
             }
         }
 
+        public class ChapterInfo
+        {
+            public uint StartTime = 0;   // Start time (ms)
+            public uint EndTime = 0;     // End time (ms)
+            public uint StartOffset = 0; // Start offset (bytes)
+            public uint EndOffset = 0;   // End offset (bytes)
+            public bool UseOffset = false;     // True if StartOffset / EndOffset are usable, false if not
+
+            public string UniqueID = ""; // Specific to ID3v2
+
+            public string Title = "";
+            public string Subtitle = "";
+            public string Url = "";
+            // TODO - support chapter embedded pictures
+
+
+            // ---------------- CONSTRUCTORS
+
+            public ChapterInfo() { }
+
+            public ChapterInfo(ChapterInfo chapter)
+            {
+                StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Url = chapter.Url;
+            }
+        }
+
+
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;
@@ -268,6 +296,10 @@ namespace ATL
         public string Publisher = null;
         public string Conductor = null;
 
+        // The whole chapter list is processed as a whole
+        public IList<ChapterInfo> Chapters = null;
+
+        // Each entry is processed as a metadata field on its own
         public IList<PictureInfo> Pictures;
         public IList<MetaFieldInfo> AdditionalFields;
 
@@ -374,9 +406,28 @@ namespace ATL
                 {
                     AdditionalFields.Add(newMetaInfo);
                 }
-                else if (!found) // Cannot delete a field that has not been found
+                else if (newMetaInfo.MarkedForDeletion && !found) // Cannot delete a field that has not been found
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code "+newMetaInfo.NativeFieldCode+" cannot be deleted because it has not been found on current TagData.");
+                }
+            }
+
+            // Chapters, processed as a whole
+            if (data.Chapters != null)
+            {
+                // Sending an existing but empty chapter list counts as a "marked for deletion"
+                if (Chapters != null)
+                {
+                    Chapters.Clear();
+                }
+                else
+                {
+                    Chapters = new List<ChapterInfo>();
+                }
+
+                foreach(ChapterInfo chapter in data.Chapters)
+                {
+                    Chapters.Add(new ChapterInfo(chapter));
                 }
             }
         }
