@@ -44,7 +44,6 @@ namespace ATL.AudioData.IO
         private byte initialSpeed;
         private byte initialTempo;
 
-        private String formatTag;
         private byte nbChannels;
         private String trackerName;
 
@@ -149,7 +148,6 @@ namespace ATL.AudioData.IO
             FPatterns = new List<IList<IList<S3MEvent>>>();
             FInstruments = new List<Instrument>();
 
-            formatTag = "";
             trackerName = "";
             nbChannels = 0;
 

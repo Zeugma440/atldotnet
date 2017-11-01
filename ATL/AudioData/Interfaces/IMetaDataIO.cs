@@ -159,6 +159,13 @@ namespace ATL.AudioData
         {
             get;
         }
+        /// <summary>
+        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// </summary>
+        IList<ChapterInfo> Chapters
+        {
+            get;
+        }
 
         /// <summary>
         /// Set metadata to be written using the given embedder

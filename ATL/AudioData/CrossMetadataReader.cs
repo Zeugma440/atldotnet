@@ -363,6 +363,29 @@ namespace ATL.AudioData
             }
         }
 
+        /// <summary>
+        /// Chapters
+        /// </summary>
+        public IList<ChapterInfo> Chapters
+        {
+            get
+            {
+                IList<ChapterInfo> chapters = new List<ChapterInfo>();
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.Chapters != null && reader.Chapters.Count > 0)
+                    {
+                        foreach(ChapterInfo chapter in reader.Chapters)
+                        {
+                            chapters.Add(new ChapterInfo(chapter));
+                        }
+                        break;
+                    }
+                }
+                return chapters;
+            }
+        }
+
         public int Size
         {
             get

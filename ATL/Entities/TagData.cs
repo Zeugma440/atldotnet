@@ -227,33 +227,6 @@ namespace ATL
             }
         }
 
-        public class ChapterInfo
-        {
-            public uint StartTime = 0;   // Start time (ms)
-            public uint EndTime = 0;     // End time (ms)
-            public uint StartOffset = 0; // Start offset (bytes)
-            public uint EndOffset = 0;   // End offset (bytes)
-            public bool UseOffset = false;     // True if StartOffset / EndOffset are usable, false if not
-
-            public string UniqueID = ""; // Specific to ID3v2
-
-            public string Title = "";
-            public string Subtitle = "";
-            public string Url = "";
-            // TODO - support chapter embedded pictures
-
-
-            // ---------------- CONSTRUCTORS
-
-            public ChapterInfo() { }
-
-            public ChapterInfo(ChapterInfo chapter)
-            {
-                StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Url = chapter.Url;
-            }
-        }
-
-
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;

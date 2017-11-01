@@ -721,6 +721,110 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_Chapters()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(9, theFile.ID3v2.Chapters.Count);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "Intro";
+            ch.Url = "chapter url\0https://auphonic.com/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 15000;
+            ch.Title = "Creating a new production";
+            ch.Url = "chapter url\0https://auphonic.com/engine/upload/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 22000;
+            ch.Title = "Sound analysis";
+            ch.Url = "";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 34000;
+            ch.Title = "Adaptive leveler";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23leveler";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 45000;
+            ch.Title = "Global loudness normalization";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23loudnorm";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 60000;
+            ch.Title = "Audio restoration algorithms";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23denoise";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 76000;
+            ch.Title = "Output file formats";
+            ch.Url = "chapter url\0http://auphonic.com/blog/5/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 94000;
+            ch.Title = "External services";
+            ch.Url = "chapter url\0http://auphonic.com/blog/16/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111500;
+            ch.Title = "Get a free account!";
+            ch.Url = "chapter url\0https://auphonic.com/accounts/register";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            int found = 0;
+            foreach (ChapterInfo chapter in theFile.ID3v2.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chapter.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chapter.StartTime, expectedChaps[chapter.StartTime].StartTime);
+                    Assert.AreEqual(chapter.Title, expectedChaps[chapter.StartTime].Title);
+                    Assert.AreEqual(chapter.Url, expectedChaps[chapter.StartTime].Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chapter.StartTime);
+                }
+            }
+            Assert.AreEqual(9, found);
+
+            
+            // Modify elements -- TODO
+            
+
+            // Check if they are persisted properly -- TODO
+            /*
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            */
+            
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_ID3V1);

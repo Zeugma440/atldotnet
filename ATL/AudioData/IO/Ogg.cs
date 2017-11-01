@@ -495,6 +495,14 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).AdditionalFields;
             }
         }
+
+        public IList<ChapterInfo> Chapters
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Chapters;
+            }
+        }
         #endregion
 
         public bool IsMetaSupported(int metaDataType)

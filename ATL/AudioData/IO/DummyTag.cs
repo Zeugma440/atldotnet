@@ -107,6 +107,11 @@ namespace ATL.AudioData.IO
             get { return new Dictionary<string, string>();  }
         }
 
+        public IList<ChapterInfo> Chapters
+        {
+            get { return new List<ChapterInfo>(); }
+        }
+
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return true;

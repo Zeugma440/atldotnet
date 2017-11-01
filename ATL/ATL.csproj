@@ -110,6 +110,7 @@
     <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
+    <Compile Include="Entities\ChapterInfo.cs" />
     <Compile Include="Entities\Format.cs" />
     <Compile Include="Entities\TagData.cs" />
     <Compile Include="Entities\Track.cs" />

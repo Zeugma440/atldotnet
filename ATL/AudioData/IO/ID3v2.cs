@@ -426,8 +426,7 @@ namespace ATL.AudioData.IO
             TagInfo tag,
             ReadTagParams readTagParams,
             ref IList<TagData.MetaFieldInfo> comments,
-            ref IList<TagData.ChapterInfo> chapters,
-            ref long streamPos,
+            ref IList<ChapterInfo> chapters,
             bool inChapter = false)
         {
             FrameHeader Frame = new FrameHeader();
@@ -438,7 +437,7 @@ namespace ATL.AudioData.IO
 
             long initialTagPos = source.Position;
 
-            TagData.ChapterInfo chapter = null;
+            ChapterInfo chapter = null;
             TagData.MetaFieldInfo comment = null;
 
 
@@ -475,7 +474,6 @@ namespace ATL.AudioData.IO
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
                     source.Seek(initialTagPos - tag.HeaderEnd + getTagSize(tag, false), SeekOrigin.Begin);
-                    streamPos = source.Position;
                     return false;
                 }
             }
@@ -615,25 +613,25 @@ namespace ATL.AudioData.IO
                     }
                     else if ("CHA".Equals(shortFrameId)) // Chapters
                     {
-                        if (null == chapters) chapters = new List<TagData.ChapterInfo>();
-                        chapter = new TagData.ChapterInfo();
+                        if (null == chapters) chapters = new List<ChapterInfo>();
+                        chapter = new ChapterInfo();
+                        chapters.Add(chapter);
 
                         long initPos = source.Position;
                         chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-                        chapter.StartTime = source.ReadUInt32();
-                        chapter.EndTime = source.ReadUInt32();
+                        chapter.StartTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.EndTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
-                        chapter.StartOffset = source.ReadUInt32();
-                        chapter.EndOffset = source.ReadUInt32();
+                        chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
 
                         long remainingData = dataSize - (source.Position - initPos);
                         while (remainingData > 0)
                         {
-                            if (!readFrame(source, tag, readTagParams, ref comments, ref chapters, ref streamPos, true)) break;
-
-                            streamPos = source.Position;
-                        } // End frames loop
+                            if (!readFrame(source, tag, readTagParams, ref comments, ref chapters, true)) break;
+                            remainingData = dataSize - (source.Position - initPos);
+                        } // End chapter frames loop
 
                         strData = "";
                     }
@@ -649,7 +647,17 @@ namespace ATL.AudioData.IO
 
                     if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        if (!inChapter) setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        else
+                        {
+                            chapter = chapters[chapters.Count - 1];
+                            switch (Frame.ID)
+                            {
+                                case "TIT2": chapter.Title = strData; break;
+                                case "TIT3": chapter.Subtitle = strData; break;
+                                case "WXXX": chapter.Url = strData; break;
+                            }
+                        }
                     }
                     else if (comment != null) // We're in a Comment field => store value in temp Comment structure
                     {
@@ -757,14 +765,14 @@ namespace ATL.AudioData.IO
             tag.ActualEnd = -1;
 
             IList<TagData.MetaFieldInfo> comments = new List<TagData.MetaFieldInfo>();
-            IList<TagData.ChapterInfo> chapters = new List<TagData.ChapterInfo>();
+            IList<ChapterInfo> chapters = new List<ChapterInfo>();
 
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
             streamPos = source.Position;
 
             while ((streamPos - offset < tagSize) && (streamPos < streamLength))
             {
-                if (!readFrame(source, tag, readTagParams, ref comments, ref chapters, ref streamPos)) break;
+                if (!readFrame(source, tag, readTagParams, ref comments, ref chapters)) break;
 
                 streamPos = source.Position;
             }
