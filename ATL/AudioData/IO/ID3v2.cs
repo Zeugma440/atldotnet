@@ -16,14 +16,6 @@ namespace ATL.AudioData.IO
     /// 
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
     ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
-    ///     
-    ///     2. Comment description
-    ///     
-    ///     Currently, only the last COMM field is read (and rewritten).
-    ///     However, there can be as many COMM fields as long as their language ID and description are different
-    ///     Some taggers even seem to use COMM + description the same way as the XXX field (e.g. : COMM_eng_Catalog Number_CTL0992)
-    ///     
-    ///     ATL does not support multiple COMM fields yet
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
