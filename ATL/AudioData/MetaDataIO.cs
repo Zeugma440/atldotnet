@@ -353,9 +353,12 @@ namespace ATL.AudioData.IO
             {
                 IList<ChapterInfo> result = new List<ChapterInfo>();
 
-                foreach (ChapterInfo chapter in tagData.Chapters)
+                if (tagData.Chapters != null)
                 {
-                    result.Add(new ChapterInfo(chapter));
+                    foreach (ChapterInfo chapter in tagData.Chapters)
+                    {
+                        result.Add(new ChapterInfo(chapter));
+                    }
                 }
 
                 return result;

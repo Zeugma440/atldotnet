@@ -811,7 +811,11 @@ public String Encoder // Guessed encoder name
 */
 			result = HeaderFrame.Found;
 
-            if (!result) resetData();
+            if (!result)
+            {
+                resetData();
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Could not detect MPEG Audio header starting @ "+sizeInfo.ID3v2Size);
+            }
 	
 			return result;
 		}

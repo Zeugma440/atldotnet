@@ -619,11 +619,12 @@ namespace ATL.AudioData.IO
 
                         long initPos = source.Position;
                         chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+
                         chapter.StartTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.EndTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-
                         chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+
                         chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
 
                         long remainingData = dataSize - (source.Position - initPos);
@@ -1055,6 +1056,12 @@ namespace ATL.AudioData.IO
                 nbFrames++;
             }
 
+            // Chapters
+            if (Chapters.Count > 0)
+            {
+                writeChapters(w, Chapters, tagEncoding);
+            }
+
             // Other textual fields
             string fieldCode;
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
@@ -1104,12 +1111,83 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "")
+        private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
+        {
+            long frameSizePos, finalFramePos, frameOffset;
+            int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+
+            BinaryWriter w;
+            MemoryStream s = null;
+
+            if (tagHeader.UsesUnsynchronisation)
+            {
+                s = new MemoryStream(Size);
+                w = new BinaryWriter(s, tagEncoding);
+                frameOffset = writer.BaseStream.Position;
+            }
+            else
+            {
+                w = writer;
+                frameOffset = 0;
+            }
+
+            foreach (ChapterInfo chapter in Chapters)
+            {
+                w.Write(Utils.Latin1Encoding.GetBytes("CHAP"));
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+
+                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
+                ushort flags = 0;
+                if (tagHeader.UsesUnsynchronisation)
+                {
+                    flags = 2;
+                }
+                w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+                // Encoding according to ID3v2 specs
+                w.Write(encodeID3v2CharEncoding(tagEncoding));
+
+                w.Write(Encoding.UTF8.GetBytes(chapter.UniqueID));
+                w.Write('\0');
+
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndTime));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartOffset));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndOffset));
+
+                if (chapter.Title != null && chapter.Title.Length > 0)
+                {
+                    writeTextFrame(w, "TIT2", chapter.Title, tagEncoding, "", true);
+                }
+                if (chapter.Subtitle != null && chapter.Subtitle.Length > 0)
+                {
+                    writeTextFrame(w, "TIT3", chapter.Subtitle, tagEncoding, "", true);
+                }
+                if (chapter.Url != null && chapter.Url.Length > 0)
+                {
+                    writeTextFrame(w, "WXXX", chapter.Url, tagEncoding, "", true);
+                }
+
+                // Go back to frame size location to write its actual size 
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+            if (tagHeader.UsesUnsynchronisation)
+            {
+                s.Seek(0, SeekOrigin.Begin);
+                encodeUnsynchronizedStreamTo(s, writer);
+                w.Close();
+            }
+        }
+
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", bool isInsideUnsynch = false)
         {
             string actualFrameCode; // Used for writing TXXX frames
-            long frameSizePos;
-            long finalFramePos;
-            long frameOffset;
+            long frameSizePos, finalFramePos, frameOffset;
             int frameHeaderSize = 6; // 4-byte size + 2-byte flags
 
             bool isCommentCode = false;
@@ -1121,7 +1199,7 @@ namespace ATL.AudioData.IO
             BinaryWriter w;
             MemoryStream s = null;
 
-            if (tagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
@@ -1167,10 +1245,12 @@ namespace ATL.AudioData.IO
             {
                 flags = 2;
             }
-            w.Write(StreamUtils.ReverseUInt16(flags));
+            w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+            string shortCode = frameCode.Substring(0, 3);
 
             // Comments frame specifics
-            if (frameCode.Substring(0, 3).Equals("COM"))
+            if (shortCode.Equals("COM"))
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
@@ -1188,7 +1268,7 @@ namespace ATL.AudioData.IO
 
                 writeFieldEncoding = false;
             }
-            else if (frameCode.Substring(0,3).Equals("POP")) // Rating frame specifics
+            else if (shortCode.Equals("POP")) // Rating frame specifics
             {
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
@@ -1199,7 +1279,7 @@ namespace ATL.AudioData.IO
 
                 writeFieldValue = false;
             }
-            else if (frameCode.Substring(0, 3).Equals("TXX")) // User-defined text frame specifics
+            else if (shortCode.Equals("TXX")) // User-defined text frame specifics
             {
                 if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
                 w.Write(actualFrameCode.ToCharArray());
@@ -1217,7 +1297,7 @@ namespace ATL.AudioData.IO
             }
 
 
-            if (tagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);

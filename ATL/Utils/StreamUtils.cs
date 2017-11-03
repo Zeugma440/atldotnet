@@ -299,6 +299,17 @@ namespace ATL
         }
 
         /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt32(uint value)
+        {
+            // Output has to be big-endian
+            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
+        /// <summary>
         /// Decodes a signed Big-Endian 32-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
@@ -345,7 +356,6 @@ namespace ATL
             return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
-
         /// <summary>
         /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
         /// </summary>
@@ -355,6 +365,19 @@ namespace ATL
         {
             if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt16(ushort value)
+        {
+            if (value > 0x0000FFFF) throw new InvalidDataException("Value should not be higher than " + 0x0000FFFF + "; actual value=" + value);
+
+            // Output has to be big-endian
+            return new byte[2] { (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>

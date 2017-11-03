@@ -793,32 +793,82 @@ namespace ATL.test.IO.MetaData
             expectedChaps.Add(ch.StartTime, ch);
 
             int found = 0;
-            foreach (ChapterInfo chapter in theFile.ID3v2.Chapters)
+            foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
             {
-                if (expectedChaps.ContainsKey(chapter.StartTime))
+                if (expectedChaps.ContainsKey(chap.StartTime))
                 {
                     found++;
-                    Assert.AreEqual(chapter.StartTime, expectedChaps[chapter.StartTime].StartTime);
-                    Assert.AreEqual(chapter.Title, expectedChaps[chapter.StartTime].Title);
-                    Assert.AreEqual(chapter.Url, expectedChaps[chapter.StartTime].Url);
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
                 }
                 else
                 {
-                    System.Console.WriteLine(chapter.StartTime);
+                    System.Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(9, found);
 
-            
-            // Modify elements -- TODO
-            
 
-            // Check if they are persisted properly -- TODO
-            /*
+            // Modify elements
             TagData theTag = new TagData();
+            theTag.Chapters = new List<ChapterInfo>();
+            expectedChaps.Clear();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.StartOffset = 456;
+            ch.EndTime = 789;
+            ch.EndOffset = 101112;
+            ch.Title = "aaa";
+            ch.Subtitle = "bbb";
+            ch.Url = "ccc\0ddd";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.StartOffset = 4560;
+            ch.EndTime = 7890;
+            ch.EndOffset = 1011120;
+            ch.Title = "aaa0";
+            ch.Subtitle = "bbb0";
+            ch.Url = "ccc\0ddd0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
-            */
-            
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(2, theFile.ID3v2.Chapters.Count);
+
+            // Check if values are the same
+            found = 0;
+            foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.EndTime, expectedChaps[chap.StartTime].EndTime);
+                    Assert.AreEqual(chap.StartOffset, expectedChaps[chap.StartTime].StartOffset);
+                    Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
