@@ -385,6 +385,149 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_RW_VorbisOGG_Chapters()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : OGG with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(9, theFile.NativeTag.Chapters.Count);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "Intro";
+            ch.Url = "https://auphonic.com/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 15000;
+            ch.Title = "Creating a new production";
+            ch.Url = "https://auphonic.com/engine/upload/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 22000;
+            ch.Title = "Sound analysis";
+            ch.Url = "";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 34000;
+            ch.Title = "Adaptive leveler";
+            ch.Url = "https://auphonic.com/audio_examples#leveler";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 45000;
+            ch.Title = "Global loudness normalization";
+            ch.Url = "https://auphonic.com/audio_examples#loudnorm";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 60000;
+            ch.Title = "Audio restoration algorithms";
+            ch.Url = "https://auphonic.com/audio_examples#denoise";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 76000;
+            ch.Title = "Output file formats";
+            ch.Url = "http://auphonic.com/blog/5/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 94000;
+            ch.Title = "External services";
+            ch.Url = "http://auphonic.com/blog/16/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111500;
+            ch.Title = "Get a free account!";
+            ch.Url = "https://auphonic.com/accounts/register";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
+                    Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
+                    Assert.AreEqual(expectedChaps[chap.StartTime].Url, chap.Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(9, found);
+
+
+            // Modify elements
+            TagData theTag = new TagData();
+            theTag.Chapters = new List<ChapterInfo>();
+            expectedChaps.Clear();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.Title = "aaa";
+            ch.Url = "ddd";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.Title = "aaa0";
+            ch.Url = "ddd0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+            // Check if values are the same
+            found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+
         // No cohabitation here since other tags are not supported in OGG files
 
 

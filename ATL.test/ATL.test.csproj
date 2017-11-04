@@ -117,6 +117,7 @@
     <None Include="Resources\MPC\SV7.mpc" />
     <None Include="Resources\OFR\BlackBird.ofr" />
     <None Include="Resources\OGG\bigPicture.ogg" />
+    <None Include="Resources\OGG\chapters.ogg" />
     <None Include="Resources\OGG\empty.ogg" />
     <None Include="Resources\OGG\ogg.ogg" />
     <None Include="Resources\OPUS\01_2_32.opus" />

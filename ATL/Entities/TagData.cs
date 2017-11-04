@@ -177,12 +177,12 @@ namespace ATL
 
             public string ToStringWithoutZone()
             {
-                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0') + Language;
+                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language;
             }
 
             public override string ToString()
             {
-                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0') + Language + Zone;
+                return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(),5,'0', false) + Language + Zone;
             }
 
             public override int GetHashCode()

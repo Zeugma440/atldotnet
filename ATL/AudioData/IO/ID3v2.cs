@@ -827,7 +827,7 @@ namespace ATL.AudioData.IO
             */
             if (chapters != null && chapters.Count > 0)
             {
-                tagData.Chapters = chapters;
+                tagData.Chapters = chapters; // TODO - directly use tagData.Chapter instead of chapters local struct
             }
 
 

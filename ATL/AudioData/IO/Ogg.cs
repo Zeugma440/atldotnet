@@ -566,7 +566,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting read operation"); // Throw exception ?
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found while looking for total samples; aborting read operation"); // Throw exception ?
                     return 0;
                 }
 
