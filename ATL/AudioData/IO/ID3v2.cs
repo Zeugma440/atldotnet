@@ -46,6 +46,9 @@ namespace ATL.AudioData.IO
         // Field codes that need to be persisted in a COMMENT field
         private static ICollection<string> commentsFields;
 
+        // Fields where text encoding descriptor byte is not required
+        private static ICollection<string> noTextEncodingFields;
+
         // Mapping between ID3v2 field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping_v22;
         private static IDictionary<string, byte> frameMapping_v23;
@@ -191,6 +194,8 @@ namespace ATL.AudioData.IO
             standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
+
+            noTextEncodingFields = new List<string>() { "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
             // Note on date field identifiers
             //
@@ -510,8 +515,14 @@ namespace ATL.AudioData.IO
                 dataSize = dataSize - 4;
             }
 
-            dataSize = dataSize - 1; // Minus encoding byte
-            encodingCode = source.ReadByte();
+            if (!noTextEncodingFields.Contains(Frame.ID))
+            {
+                dataSize = dataSize - 1; // Minus encoding byte
+                encodingCode = source.ReadByte();
+            } else
+            {
+                encodingCode = 0; // Latin-1; default according to spec
+            }
             frameEncoding = decodeID3v2CharEncoding(encodingCode);
 
             // COMM fields contain :
@@ -1252,8 +1263,8 @@ namespace ATL.AudioData.IO
 
             bool isCommentCode = false;
 
-            bool writeFieldValue = true;
-            bool writeFieldEncoding = true;
+            bool writeValue = true;
+            bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
             bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
 
             BinaryWriter w;
@@ -1326,7 +1337,7 @@ namespace ATL.AudioData.IO
                 }
                 w.Write('\0');
 
-                writeFieldEncoding = false;
+                writeTextEncoding = false;
             }
             else if (shortCode.Equals("POP")) // Rating frame specifics
             {
@@ -1337,21 +1348,21 @@ namespace ATL.AudioData.IO
                 // Play count
                 w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
 
-                writeFieldValue = false;
+                writeValue = false;
             }
             else if (shortCode.Equals("TXX")) // User-defined text frame specifics
             {
-                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
                 w.Write(actualFrameCode.ToCharArray());
                 w.Write('\0');
 
-                writeFieldEncoding = false;
+                writeTextEncoding = false;
                 writeNullTermination = true;
             }
 
-            if (writeFieldValue)
+            if (writeValue)
             {
-                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
                 w.Write(text.ToCharArray());
                 if (writeNullTermination) w.Write('\0');
             }

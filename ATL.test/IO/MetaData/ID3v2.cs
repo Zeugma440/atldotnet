@@ -879,6 +879,49 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_UrlFrames()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
+            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+
+            // Check if URLs are persisted properly, i.e. without encoding byte
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+
+            // 1/ Check value through ATL
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
+            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+
+            // 2/ Check absence of encoding field in the file itself
+            byte[] readBytes = new byte[4];
+            byte[] expected = Utils.Latin1Encoding.GetBytes("WPUB");
+
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("WPUB")));
+                fs.Seek(6, SeekOrigin.Current);
+                Assert.IsTrue(fs.ReadByte() > 10); // i.e. byte is not a 'text encoding descriptor'
+            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_ID3V1);
