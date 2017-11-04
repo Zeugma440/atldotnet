@@ -16,6 +16,14 @@ namespace ATL.AudioData.IO
     /// 
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
     ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
+    ///     
+    ///     2. Hierarchical table of contents (CTOC)
+    ///     
+    ///     ID3v2 chapters specification allows multiple CTOC frames in the tag, in order to describe a multiple-level table of contents.
+    ///     (see informal standard  id3v2-chapters-1.0.html)
+    ///     
+    ///     This feature is currently not supported. If any CTOC is detected while reading, ATL will "blindly" write a flat CTOC containing
+    ///     all chapters. Any hierarchical table of contents will be lost while rewriting.
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -179,8 +187,8 @@ namespace ATL.AudioData.IO
         static ID3v2()
         {
             standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
-            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP" };
-            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP" };
+            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
@@ -1070,6 +1078,8 @@ namespace ATL.AudioData.IO
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
 
+                    if (fieldCode.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
+
                     // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
                     if (TAG_VERSION_2_2 == tagVersion)
                     {
@@ -1113,6 +1123,7 @@ namespace ATL.AudioData.IO
 
         private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
+            Random randomGenerator = null;
             long frameSizePos, finalFramePos, frameOffset;
             int frameHeaderSize = 6; // 4-byte size + 2-byte flags
 
@@ -1131,7 +1142,56 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            foreach (ChapterInfo chapter in Chapters)
+            // Write a "flat" table of contents, if any CTOC is present in tag
+            // NB : Hierarchical table of contents is not supported; see implementation notes in the header
+            if (AdditionalFields.ContainsKey("CTOC"))
+            {
+                w.Write(Utils.Latin1Encoding.GetBytes("CTOC"));
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+
+                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
+                ushort flags = 0;
+                if (tagHeader.UsesUnsynchronisation)
+                {
+                    flags = 2;
+                }
+                w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+                // Default unique toc ID
+                w.Write(Utils.Latin1Encoding.GetBytes("toc"));
+                w.Write('\0');
+
+                // CTOC flags : no parents; chapters are in order
+                w.Write((byte)3);
+
+
+                // Entry count
+                w.Write((byte)chapters.Count);
+
+                for (int i=0; i < chapters.Count; i++)
+                {
+                    // Generate a chapter ID if none has been given
+                    if (0 == chapters[i].UniqueID.Length)
+                    {
+                        if (null == randomGenerator) randomGenerator = new Random();
+                        chapters[i].UniqueID = randomGenerator.Next().ToString();
+                    }
+                    w.Write(Encoding.UTF8.GetBytes(chapters[i].UniqueID));
+                    w.Write('\0');
+                }
+
+                // CTOC description not supported
+
+                // Go back to frame size location to write its actual size 
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+            // Write individual chapters
+            foreach (ChapterInfo chapter in chapters)
             {
                 w.Write(Utils.Latin1Encoding.GetBytes("CHAP"));
                 frameSizePos = w.BaseStream.Position;
