@@ -52,6 +52,8 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __more audio formats than TagLib, including video game audio formats (SPC, PSF, VGM, GYM)__
 
+* ATL supports __chapters__ natively
+
 * ATL supports __Playlists and Cuesheets__
 
 
@@ -63,7 +65,7 @@ ATL unit tests run on .NET Framework 4.5+
 
 The library and its tests have been maintained on Visual Studio Express 2012, 2015 and 2017 Community
 
-Please refer to the [Code snippets section of the Documentation](Usage-_-Code-snippets) for quick usage
+Please refer to the [Code snippets section of the Documentation](3.-Usage-_-Code-snippets) for quick usage
 
 
 ## What kind of data can ATL actually read ? From which formats ?
@@ -116,7 +118,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 * Detected fields
 	* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-	* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures
+	* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
 	* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
 	
 * Supported playlists formats : ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
@@ -126,7 +128,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for ID3v2, Vorbis and MP4 Chapters
+* Support for MP4 Quicktime and Nero Chapters
 * Support for compressed streams (e.g. gzipped VGMs / GYMs, powerpacker'd MODs)
 * Connectors to __other library file formats__ (iTunes)
 
