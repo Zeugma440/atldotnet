@@ -299,6 +299,17 @@ namespace ATL
         }
 
         /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 64-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt64(ulong value)
+        {
+            // Output has to be big-endian
+            return new byte[8] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
+        }
+
+        /// <summary>
         /// Decodes an unsigned Big-Endian 32-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
@@ -321,7 +332,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian 32-bits integer
+        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 32-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
         /// <returns>Encoded array of bytes</returns>
@@ -340,6 +351,17 @@ namespace ATL
         {
             if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEInt32(int value)
+        {
+            // Output has to be big-endian
+            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>

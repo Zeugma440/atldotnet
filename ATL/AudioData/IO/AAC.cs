@@ -8,7 +8,7 @@ using Commons;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Advanced Audio Coding files manipulation (extensions : .AAC, .MP4, .M4A)
+    /// Class for Advanced Audio Coding files manipulation (extensions : .AAC, .MP4, .M4A, .M4V)
     /// 
     /// Implementation notes
     /// 
@@ -28,11 +28,10 @@ namespace ATL.AudioData.IO
     {
 
         // Header type codes
-
         public const byte AAC_HEADER_TYPE_UNKNOWN = 0;                       // Unknown
         public const byte AAC_HEADER_TYPE_ADIF = 1;                          // ADIF
         public const byte AAC_HEADER_TYPE_ADTS = 2;                          // ADTS
-        public const byte AAC_HEADER_TYPE_MP4 = 3;                          // MP4
+        public const byte AAC_HEADER_TYPE_MP4 = 3;                           // MP4
 
         // Header type names
         public static readonly string[] AAC_HEADER_TYPE = { "Unknown", "ADIF", "ADTS" };
@@ -70,6 +69,7 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
+        private const string ZONE_MP4_NEROCHAPTERS = "neroChapters";
 
         private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameClasses_mp4; // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
@@ -485,7 +485,11 @@ namespace ATL.AudioData.IO
             }
 
             moovPosition = Source.BaseStream.Position;
-            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
+                structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
+            }
 
             // === Physical data header
             if (0 == lookForMP4Atom(Source.BaseStream, "mvhd"))
@@ -625,6 +629,7 @@ namespace ATL.AudioData.IO
                 {
                     if (4 == nbBytes) value = StreamUtils.ReverseUInt32( Source.ReadUInt32() ); else value = StreamUtils.ReverseUInt64( Source.ReadUInt64() );
                     structureHelper.AddSize(Source.BaseStream.Position - nbBytes, value);
+                    structureHelper.AddSize(Source.BaseStream.Position - nbBytes, value, ZONE_MP4_NEROCHAPTERS);
                 }
             }
 
@@ -636,13 +641,18 @@ namespace ATL.AudioData.IO
                 return;
             }
             udtaPosition = Source.BaseStream.Position;
-            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
+                structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
+            }
 
             // Look for Nero chapters
-            if (lookForMP4Atom(Source.BaseStream, "chpl") > 0)
+            int32Data = lookForMP4Atom(Source.BaseStream, "chpl");
+            if (int32Data > 0)
             {
                 tagExists = true;
-                // TODO - position zone and size for chapter writing
+                structureHelper.AddZone(Source.BaseStream.Position - 8, (int)int32Data, new byte[0], ZONE_MP4_NEROCHAPTERS);
 
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                 Source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
@@ -666,6 +676,9 @@ namespace ATL.AudioData.IO
                         chapter.Title = Encoding.UTF8.GetString(Source.ReadBytes(stringSize));
                     }
                 }
+            } else
+            {
+                structureHelper.AddZone(Source.BaseStream.Position, 0, new byte[0], ZONE_MP4_NEROCHAPTERS);
             }
 
             Source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
@@ -944,30 +957,37 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            int result;
             long tagSizePos;
             uint tagSize;
+            int result = 0;
 
-            // ============
-            // == HEADER ==
-            // ============
-            // Keep position in mind to calculate final size and come back here to write it
-            tagSizePos = w.BaseStream.Position;
-            w.Write(CORE_SIGNATURE);
+            if (FileStructureHelper.DEFAULT_ZONE_NAME.Equals(zone))
+            {
+                // ============
+                // == HEADER ==
+                // ============
+                // Keep position in mind to calculate final size and come back here to write it
+                tagSizePos = w.BaseStream.Position;
+                w.Write(CORE_SIGNATURE);
 
-            // ============
-            // == FRAMES ==
-            // ============
-            long dataPos = w.BaseStream.Position;
-            result = writeFrames(tag, w);
+                // ============
+                // == FRAMES ==
+                // ============
+                long dataPos = w.BaseStream.Position;
+                result = writeFrames(tag, w);
 
-            // Record final size of tag into "tag size" field of header
-            long finalTagPos = w.BaseStream.Position;
-            w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
-            tagSize = Convert.ToUInt32(finalTagPos - tagSizePos);
-            w.Write( StreamUtils.ReverseUInt32(tagSize));
-            w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
-
+                // Record final size of tag into "tag size" field of header
+                long finalTagPos = w.BaseStream.Position;
+                w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
+                tagSize = Convert.ToUInt32(finalTagPos - tagSizePos);
+                w.Write(StreamUtils.ReverseUInt32(tagSize));
+                w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
+            }
+            else if (ZONE_MP4_NEROCHAPTERS.Equals(zone)) // Nero chapters
+            {
+                result = writeNeroChapters(w, Chapters);
+            }
+                
             return result;
         }
 
@@ -1028,10 +1048,7 @@ namespace ATL.AudioData.IO
 
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
-            long frameSizePos1;
-            long frameSizePos2;
-            long finalFramePos;
-
+            long frameSizePos1, frameSizePos2, finalFramePos;
             int frameFlags = 0;
 
             // == METADATA HEADER ==
@@ -1147,6 +1164,43 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
             writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        private int writeNeroChapters(BinaryWriter w, IList<ChapterInfo> chapters)
+        {
+            int result = 0;
+            long frameSizePos, finalFramePos;
+
+            if (chapters != null && chapters.Count > 0)
+            {
+                result = chapters.Count;
+
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0); // To be rewritten at the end of the method
+                w.Write(Utils.Latin1Encoding.GetBytes("chpl"));
+
+                w.Write(new byte[5] { 1, 0, 0, 0, 0 }); // Version, flags and reserved byte
+                w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+
+                byte[] strData;
+                byte strDataLength;
+
+                foreach(ChapterInfo chapter in chapters)
+                {
+                    w.Write(StreamUtils.EncodeBEUInt64(chapter.StartTime*10000));
+                    strData = Encoding.UTF8.GetBytes(chapter.Title);
+                    strDataLength = (byte)Math.Min(255, strData.Length);
+                    w.Write(strDataLength);
+                    w.Write(strData, 0, strDataLength);
+                }
+                
+                // Go back to frame size locations to write their actual size 
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
+            }
+
+            return result;
         }
     }
 }

@@ -406,7 +406,7 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(4, found);
 
-            /*
+            
             // Modify elements
             TagData theTag = new TagData();
             theTag.Chapters = new List<ChapterInfo>();
@@ -451,7 +451,7 @@ namespace ATL.test.IO.MetaData
                 }
             }
             Assert.AreEqual(2, found);
-            */
+            
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
