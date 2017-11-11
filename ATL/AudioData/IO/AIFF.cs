@@ -229,7 +229,7 @@ namespace ATL.AudioData.IO
                 // Chunk ID
                 header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
                 // Chunk size
-                header.Size = StreamUtils.ReverseInt32(source.ReadInt32());
+                header.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             }
             else
             {
@@ -287,7 +287,7 @@ namespace ATL.AudioData.IO
             {
                 // Container chunk size
                 long containerChunkPos = source.BaseStream.Position;
-                int containerChunkSize = StreamUtils.ReverseInt32(source.ReadInt32());
+                int containerChunkSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
 
                 if (containerChunkPos + containerChunkSize + 4 != source.BaseStream.Length)
                 {
@@ -316,9 +316,9 @@ namespace ATL.AudioData.IO
 
                         if (header.ID.Equals(CHUNKTYPE_COMMON))
                         {
-                            channels = (uint)StreamUtils.ReverseInt16(source.ReadInt16());
-                            numSampleFrames = StreamUtils.ReverseUInt32(source.ReadUInt32());
-                            sampleSize = (uint)StreamUtils.ReverseInt16(source.ReadInt16());   // This sample size is for uncompressed data only
+                            channels = (uint)StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                            numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                            sampleSize = (uint)StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
                             byte[] byteArray = source.ReadBytes(10);
                             Array.Reverse(byteArray);
                             double aSampleRate = StreamUtils.ExtendedToDouble(byteArray);
@@ -379,16 +379,16 @@ namespace ATL.AudioData.IO
                             */
                             tagExists = true;
 
-                            ushort numComs = StreamUtils.ReverseUInt16(source.ReadUInt16());
+                            ushort numComs = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                             for (int i = 0; i < numComs; i++)
                             {
                                 // Timestamp
                                 source.BaseStream.Seek(4, SeekOrigin.Current);
                                 // Marker ID
-                                short markerId = StreamUtils.ReverseInt16(source.ReadInt16());
+                                short markerId = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
                                 // Comments length
-                                ushort comLength = StreamUtils.ReverseUInt16(source.ReadUInt16());
+                                ushort comLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                                 // Only read general purpose comments, not those linked to a marker
                                 if (0 == markerId)
@@ -472,7 +472,7 @@ namespace ATL.AudioData.IO
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.ReverseInt32((int)strBytes.Length));
+                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
                     result++;
                 }
@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.ReverseInt32((int)strBytes.Length));
+                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
                     result++;
                 }
@@ -506,7 +506,7 @@ namespace ATL.AudioData.IO
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.ReverseInt32((int)strBytes.Length));
+                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
                     result++;
                 }
@@ -521,7 +521,7 @@ namespace ATL.AudioData.IO
         public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
-            w.Write(StreamUtils.ReverseInt32((int)tagSize));
+            w.Write(StreamUtils.EncodeBEInt32((int)tagSize));
         }
     }
 }
