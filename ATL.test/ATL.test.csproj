@@ -152,7 +152,8 @@
   <ItemGroup>
     <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
     <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
-    <Content Include="Resources\AAC\chapters.m4v" />
+    <Content Include="Resources\AAC\chapters_NERO.mp4" />
+    <Content Include="Resources\AAC\chapters_QT.m4v" />
     <Content Include="Resources\AAC\empty.m4a" />
     <Content Include="Resources\AAC\latmMcp0_CBR88_8s.aac" />
     <Content Include="Resources\AAC\latmMcp1_CBR88_8s.aac" />

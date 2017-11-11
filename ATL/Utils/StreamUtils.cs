@@ -288,6 +288,17 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decodes a signed Big-Endian 64-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static long DecodeBEInt64(byte[] data)
+        {
+            if (data.Length != 8) throw new InvalidDataException("data should be 8 bytes long; found" + data.Length + " bytes");
+            return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
+        }
+
+        /// <summary>
         /// Decodes an unsigned Big-Endian 32-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>

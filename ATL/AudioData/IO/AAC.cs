@@ -464,12 +464,16 @@ namespace ATL.AudioData.IO
             long atomPosition;
             string atomHeader;
 
+            byte[] data32 = new byte[4];
+            byte[] data64 = new byte[8];
+
             if (readTagParams.PrepareForWriting) structureHelper.Clear(); // TODO - Clearing should be handled in calling classes, especially for RemoveTag
 
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
-            atomSize = StreamUtils.ReverseUInt32(Source.ReadUInt32());
+            Source.BaseStream.Read(data32,0,4);
+            atomSize = StreamUtils.DecodeBEUInt32(data32);
             Source.BaseStream.Seek(atomSize - 4, SeekOrigin.Current);
 
             // MOOV atom
@@ -631,17 +635,46 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "udta atom could not be found; aborting read");
                 return;
             }
-            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
             udtaPosition = Source.BaseStream.Position;
+            if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
 
             // Look for Nero chapters
             if (lookForMP4Atom(Source.BaseStream, "chpl") > 0)
             {
+                tagExists = true;
+                // TODO - position zone and size for chapter writing
 
+                Source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+                Source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
+                Source.BaseStream.Read(data32, 0, 4);
+                uint chapterCount = StreamUtils.DecodeBEUInt32(data32);
+
+                if (chapterCount > 0)
+                {
+                    if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
+                    byte stringSize;
+                    ChapterInfo chapter;
+
+                    for (int i = 0; i < chapterCount; i++)
+                    {
+                        chapter = new ChapterInfo();
+                        tagData.Chapters.Add(chapter);
+
+                        Source.BaseStream.Read(data64, 0, 8);
+                        chapter.StartTime = (uint)Math.Round( StreamUtils.DecodeBEInt64(data64) / 10000.0 );
+                        stringSize = Source.ReadByte();
+                        chapter.Title = Encoding.UTF8.GetString(Source.ReadBytes(stringSize));
+                    }
+                }
             }
 
             Source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(Source.BaseStream, "meta");
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "meta atom could not be found");
+                return;
+            }
             if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
