@@ -299,6 +299,17 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decodes an unsigned Little-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeUInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
+        }
+
+        /// <summary>
         /// Encodes the given value into an array of bytes as a Big-Endian 32-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
@@ -318,6 +329,17 @@ namespace ATL
         {
             if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+        }
+
+        /// <summary>
+        /// Decodes a signed Little-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static int DecodeInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (int)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
         /// <summary>

@@ -454,6 +454,8 @@ namespace ATL.AudioData.IO
             uint metadataSize = 0;
             byte dataClass = 0;
 
+            long moovPosition, udtaPosition;
+
             ushort int16Data = 0;
             uint int32Data = 0;
 
@@ -471,11 +473,22 @@ namespace ATL.AudioData.IO
             Source.BaseStream.Seek(atomSize - 4, SeekOrigin.Current);
 
             // MOOV atom
-            atomSize = lookForMP4Atom(Source, "moov"); // === Physical data
-            long moovPosition = Source.BaseStream.Position;
+            atomSize = lookForMP4Atom(Source.BaseStream, "moov"); // === Physical data
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "moov atom could not be found; aborting read");
+                return;
+            }
+
+            moovPosition = Source.BaseStream.Position;
             if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
 
-            lookForMP4Atom(Source, "mvhd"); // === Physical data
+            // === Physical data header
+            if (0 == lookForMP4Atom(Source.BaseStream, "mvhd"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mvhd atom could not be found; aborting read");
+                return;
+            }
             byte version = Source.ReadByte();
             Source.BaseStream.Seek(3, SeekOrigin.Current); // 3-byte flags
             if (1 == version) Source.BaseStream.Seek(16, SeekOrigin.Current); else Source.BaseStream.Seek(8, SeekOrigin.Current);
@@ -486,15 +499,36 @@ namespace ATL.AudioData.IO
             duration = timeLengthPerSec * 1.0 / timeScale;
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+
             // TODO : handle files with multiple trak Atoms (loop through them)
-            lookForMP4Atom(Source, "trak");
-            lookForMP4Atom(Source, "mdia");
-            lookForMP4Atom(Source, "minf");
-            lookForMP4Atom(Source, "stbl");
+            if (0 == lookForMP4Atom(Source.BaseStream, "trak"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "trak atom could not be found; aborting read");
+                return;
+            }
+            if (0 == lookForMP4Atom(Source.BaseStream, "mdia"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia atom could not be found; aborting read");
+                return;
+            }
+            if (0 == lookForMP4Atom(Source.BaseStream, "minf"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "minf atom could not be found; aborting read");
+                return;
+            }
+            if (0 == lookForMP4Atom(Source.BaseStream, "stbl"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stbl atom could not be found; aborting read");
+                return;
+            }
             long stblPosition = Source.BaseStream.Position;
 
             // Look for sample rate
-            lookForMP4Atom(Source, "stsd");
+            if (0 == lookForMP4Atom(Source.BaseStream, "stsd"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsd atom could not be found; aborting read");
+                return;
+            }
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
             uint nbDescriptions = StreamUtils.ReverseUInt32(Source.ReadUInt32());
 
@@ -524,7 +558,11 @@ namespace ATL.AudioData.IO
 
             // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
             Source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
-            lookForMP4Atom(Source, "stsz");
+            if (0 == lookForMP4Atom(Source.BaseStream, "stsz"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsz atom could not be found; aborting read");
+                return;
+            }
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
             int blocByteSizeForAll = StreamUtils.ReverseInt32(Source.ReadInt32());
             if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
@@ -560,15 +598,22 @@ namespace ATL.AudioData.IO
                 byte nbBytes = 0;
                 uint nbChunkOffsets = 0;
                 object value;
-                try
+
+                // Chunk offsets
+                if (lookForMP4Atom(Source.BaseStream, "stco") > 0)
                 {
-                    lookForMP4Atom(Source, "stco"); // Chunk offsets
                     nbBytes = 4;
-                } catch (Exception)
+                } else
                 {
                     Source.BaseStream.Seek(atomPosition, SeekOrigin.Begin);
-                    lookForMP4Atom(Source, "co64");
-                    nbBytes = 8;
+                    if (lookForMP4Atom(Source.BaseStream, "co64") > 0)
+                    {
+                        nbBytes = 8;
+                    } else
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, not co64 atoms could not be found; aborting read");
+                        return;
+                    }
                 }
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // Flags
                 nbChunkOffsets = StreamUtils.ReverseUInt32( Source.ReadUInt32() );
@@ -580,16 +625,35 @@ namespace ATL.AudioData.IO
             }
 
             Source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-            atomSize = lookForMP4Atom(Source, "udta");
+            atomSize = lookForMP4Atom(Source.BaseStream, "udta");
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "udta atom could not be found; aborting read");
+                return;
+            }
             if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
-            atomSize = lookForMP4Atom(Source, "meta");
+            udtaPosition = Source.BaseStream.Position;
+
+            // Look for Nero chapters
+            if (lookForMP4Atom(Source.BaseStream, "chpl") > 0)
+            {
+
+            }
+
+            Source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
+            atomSize = lookForMP4Atom(Source.BaseStream, "meta");
             if (readTagParams.PrepareForWriting) structureHelper.AddSize(Source.BaseStream.Position - 8, atomSize);
             Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
             if (readTagParams.ReadTag)
             {
                 atomPosition = Source.BaseStream.Position;
-                atomSize = lookForMP4Atom(Source, "hdlr"); // Metadata handler
+                atomSize = lookForMP4Atom(Source.BaseStream, "hdlr"); // Metadata handler
+                if (0 == atomSize)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "hdlr atom could not be found; aborting read");
+                    return;
+                }
                 long hdlrPosition = Source.BaseStream.Position - 8;
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                 Source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
@@ -606,7 +670,12 @@ namespace ATL.AudioData.IO
                 }
                 Source.BaseStream.Seek(atomSize+ hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
 
-                iListSize = lookForMP4Atom(Source, "ilst"); // === Metadata list
+                iListSize = lookForMP4Atom(Source.BaseStream, "ilst"); // === Metadata list
+                if (0 == iListSize)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ilst atom could not be found; aborting read");
+                    return;
+                }
                 structureHelper.AddZone(Source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
 
                 if (8 == Size) // Core minimal size
@@ -626,11 +695,21 @@ namespace ATL.AudioData.IO
 
                     if ("----".Equals(atomHeader)) // Custom text metadata
                     {
-                        metadataSize = lookForMP4Atom(Source, "mean"); // "issuer" of the field
+                        metadataSize = lookForMP4Atom(Source.BaseStream, "mean"); // "issuer" of the field
+                        if (0 == metadataSize)
+                        {
+                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mean atom could not be found; aborting read");
+                            return;
+                        }
                         Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                         atomHeader += ":" + Utils.Latin1Encoding.GetString(Source.ReadBytes((int)metadataSize - 8 - 4));
 
-                        metadataSize = lookForMP4Atom(Source, "name"); // field type
+                        metadataSize = lookForMP4Atom(Source.BaseStream, "name"); // field type
+                        if (0 == metadataSize)
+                        {
+                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "name atom could not be found; aborting read");
+                            return;
+                        }
                         Source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                         atomHeader += ":" + Utils.Latin1Encoding.GetString(Source.ReadBytes((int)metadataSize - 8 - 4));
                     }
@@ -639,7 +718,12 @@ namespace ATL.AudioData.IO
                     // (e.g. multiple embedded pictures)
                     if (!"data".Equals(atomHeader))
                     {
-                        metadataSize = lookForMP4Atom(Source, "data");
+                        metadataSize = lookForMP4Atom(Source.BaseStream, "data");
+                        if (0 == metadataSize)
+                        {
+                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "data atom could not be found; aborting read");
+                            return;
+                        }
                         atomPosition = Source.BaseStream.Position - 8;
                     } else
                     {
@@ -727,7 +811,12 @@ namespace ATL.AudioData.IO
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
             Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            uint mdatSize = lookForMP4Atom(Source, "mdat"); // === Audio binary data
+            uint mdatSize = lookForMP4Atom(Source.BaseStream, "mdat"); // === Audio binary data
+            if (0 == mdatSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
+                return;
+            }
             bitrate = (int)Math.Round(mdatSize * 8 / duration, 0);
         }
 
@@ -755,28 +844,37 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // Looks for the atom segment starting with the given key, at the current atom level
-        // Returns with Source positioned right after the atom header, on the 1st byte of data
-        // Returned value is the raw size of the atom (including the already-read 8-byte header)
-        //
-        // Warning : stream must be positioned at the end of a previous atom before being called
-        private uint lookForMP4Atom(BinaryReader Source, string atomKey)
+        /// <summary>
+        /// Looks for the atom segment starting with the given key, at the current atom level
+        /// Returns with Source positioned right after the atom header, on the 1st byte of data
+        /// 
+        /// Warning : stream must be positioned at the end of a previous atom before being called
+        /// </summary>
+        /// <param name="Source">Source to read from</param>
+        /// <param name="atomKey">Atom key to look for (e.g. "udta")</param>
+        /// <returns>If atom found : raw size of the atom (including the already-read 8-byte header);
+        /// If atom not found : 0</returns>
+        private uint lookForMP4Atom(Stream Source, string atomKey)
         {
             uint atomSize = 0;
             string atomHeader;
             bool first = true;
             int iterations = 0;
+            byte[] data = new byte[4];
 
             do
             {
-                if (!first) Source.BaseStream.Seek(atomSize - 8, SeekOrigin.Current);
-                atomSize = StreamUtils.ReverseUInt32(Source.ReadUInt32());
-                atomHeader = Utils.Latin1Encoding.GetString(Source.ReadBytes(4));
-                if (first) first = false;
-                if (++iterations > 100) throw new Exception(atomKey + " atom could not be found");
-            } while (!atomKey.Equals(atomHeader) && Source.BaseStream.Position + atomSize - 16 < Source.BaseStream.Length);
+                if (!first) Source.Seek(atomSize - 8, SeekOrigin.Current);
+                Source.Read(data, 0, 4);
+                atomSize = StreamUtils.DecodeBEUInt32(data);
+                Source.Read(data, 0, 4);
+                atomHeader = Utils.Latin1Encoding.GetString(data);
 
-            if (Source.BaseStream.Position + atomSize - 16 > Source.BaseStream.Length) throw new Exception(atomKey + " atom could not be found");
+                if (first) first = false;
+                if (++iterations > 100) return 0;
+            } while (!atomKey.Equals(atomHeader) && Source.Position + atomSize - 16 < Source.Length);
+
+            if (Source.Position + atomSize - 16 > Source.Length) return 0;
 
             return atomSize;
         }
