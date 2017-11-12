@@ -229,65 +229,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an Int64 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static ulong ReverseUInt64(ulong n)
-        {
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-            byte b4;
-            byte b5;
-            byte b6;
-            byte b7;
-
-            b0 = (byte) ((n & 0x00000000000000FF) >> 0);
-            b1 = (byte) ((n & 0x000000000000FF00) >> 8);
-            b2 = (byte) ((n & 0x0000000000FF0000) >> 16);
-            b3 = (byte) ((n & 0x00000000FF000000) >> 24);
-            b4 = (byte) ((n & 0x000000FF00000000) >> 32);
-            b5 = (byte) ((n & 0x0000FF0000000000) >> 40);
-            b6 = (byte) ((n & 0x00FF000000000000) >> 48);
-            b7 = (byte) ((n & 0xFF00000000000000) >> 56);
-
-            return (ulong)((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0));
-        }
-
-        public static long ReverseInt64(long n)
-        {
-            /*
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-            byte b4;
-            byte b5;
-            byte b6;
-            byte b7;
-
-            b0 = (byte)((n & 0x00000000000000FF) >> 0);
-            b1 = (byte)((n & 0x000000000000FF00) >> 8);
-            b2 = (byte)((n & 0x0000000000FF0000) >> 16);
-            b3 = (byte)((n & 0x00000000FF000000) >> 24);
-            b4 = (byte)((n & 0x000000FF00000000) >> 32);
-            b5 = (byte)((n & 0x0000FF0000000000) >> 40);
-            b6 = (byte)((n & 0x00FF000000000000) >> 48);
-            b7 = (byte)((n & 0xFF00000000000000) >> 56); // <-- type incompatibility issue there
-
-            return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
-            */
-
-            // Above code does not work due to 0xFF00000000000000 not being an unsigned long
-            // Below code does work but is 3 times slower
-            byte[] binary = BitConverter.GetBytes(n);
-            Array.Reverse(binary);
-            return BitConverter.ToInt64(binary, 0);
-        }
-
-        /// <summary>
         /// Decodes a signed Big-Endian 64-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
@@ -501,22 +442,6 @@ namespace ATL
             b1 = (byte)((n & 0xFF00) >> 8);
 
             return (ushort)((b0 << 8) | (b1 << 0));
-        }
-
-        /// <summary>
-        /// Switches the format of a signed Int16 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static short ReverseInt16(short n)
-        {
-            byte b0;
-            byte b1;
-
-            b0 = (byte)((n & 0x00FF) >> 0);
-            b1 = (byte)((n & 0xFF00) >> 8);
-
-            return (short)((b0 << 8) | (b1 << 0));
         }
 
         /// <summary>

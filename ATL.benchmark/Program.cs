@@ -25,18 +25,19 @@ namespace ATL.benchmark
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
 
-            //readAt(@"E:\temp\ogg\lastHeaderInvalidTypeFlag.OGG");
+            readAt(@"E:\temp\aac\mp4\chapters\chapters_QT.m4a");
 
             //compareInfo(@"E:\Music\VGM");
 
-            browseFor(@"E:\temp\", "*.it");
+            //browseFor(@"E:\temp\", "*.it");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
         {
             FileFinder ff = new FileFinder();
+            ConsoleLogger log = new ConsoleLogger();
 
-//            Console.WriteLine(filePath);
+            //            Console.WriteLine(filePath);
 
             if (File.Exists(filePath))
             {

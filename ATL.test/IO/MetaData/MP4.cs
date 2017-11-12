@@ -458,6 +458,111 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Chapters_QT()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("AAC/chapters_QT.m4v");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(4, theFile.NativeTag.Chapters.Count);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "Chapter One";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1139;
+            ch.Title = "Chapter 2";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 2728;
+            ch.Title = "Chapter 003";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 3269;
+            ch.Title = "Chapter 四";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(4, found);
+
+/*
+            // Modify elements
+            TagData theTag = new TagData();
+            theTag.Chapters = new List<ChapterInfo>();
+            expectedChaps.Clear();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.Title = "aaa";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.Title = "aaa0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+            // Check if values are the same
+            found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+*/
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
