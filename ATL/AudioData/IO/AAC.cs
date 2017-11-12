@@ -721,8 +721,9 @@ namespace ATL.AudioData.IO
                     source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                     int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
 
-                    uint chunkIndex, samplesPerChunk;
+                    uint samplesPerChunk;
                     int cumulatedSampleIndex = 0;
+                    uint chunkIndex = 0;
                     uint previousChunkIndex = 0;
                     uint previousSamplesPerChunk = 0;
                     bool first = true;
@@ -741,7 +742,7 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            for (uint j = previousChunkIndex; j <= chunkIndex; j++)
+                            for (uint j = previousChunkIndex; j < chunkIndex; j++)
                             {
                                 for (int k = 0; k < previousSamplesPerChunk; k++)
                                 {
@@ -757,6 +758,16 @@ namespace ATL.AudioData.IO
 
                         previousChunkIndex = chunkIndex;
                         previousSamplesPerChunk = samplesPerChunk;
+                    }
+
+                    for (int k = 0; k < previousSamplesPerChunk; k++)
+                    {
+                        if (cumulatedSampleIndex < chapterTrackSamples.Count)
+                        {
+                            chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = previousChunkIndex;
+                            chapterTrackSamples[cumulatedSampleIndex].RelativePositionWithinChunk = k;
+                            cumulatedSampleIndex++;
+                        }
                     }
 
                     // Assign chunk index of previous sample to samples that have not been tagged
