@@ -75,7 +75,6 @@ namespace ATL.AudioData.IO
             public double Duration;
             public uint Size;
             public uint ChunkIndex;                     // 1-based index
-            public int RelativePositionWithinChunk;     // 0-based index
             public long ChunkOffset;
             public long RelativeOffset;
         }
@@ -571,8 +570,9 @@ namespace ATL.AudioData.IO
                 trakPosition = source.BaseStream.Position - 8;
 
                 // Look for "chap" atom to detect QT chapters for current track
-                if (lookForMP4Atom(source.BaseStream, "tref") > 0)
+                if (lookForMP4Atom(source.BaseStream, "tref") > 0 && null == chapterTrackIndexes)
                 {
+                    bool parsePreviousTracks = false;
                     uint chapSize = lookForMP4Atom(source.BaseStream, "chap");
                     if (chapSize > 8)
                     {
@@ -583,6 +583,25 @@ namespace ATL.AudioData.IO
                             thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
                         }
                         chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
+
+                        foreach (int i in thisTrackIndexes)
+                        {
+                            if (i < currentTrakIndex)
+                            {
+                                parsePreviousTracks = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // If current track has declared a chapter track located at a previous index, come back to read it
+                    if (parsePreviousTracks)
+                    {
+                        source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+
+                        trakSize = lookForMP4Atom(source.BaseStream, "trak");
+                        currentTrakIndex = 1;
+                        trakPosition = source.BaseStream.Position - 8;
                     }
                 }
 
@@ -749,7 +768,6 @@ namespace ATL.AudioData.IO
                                     if (cumulatedSampleIndex < chapterTrackSamples.Count)
                                     {
                                         chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = j;
-                                        chapterTrackSamples[cumulatedSampleIndex].RelativePositionWithinChunk = k;
                                         cumulatedSampleIndex++;
                                     }
                                 }
@@ -760,21 +778,19 @@ namespace ATL.AudioData.IO
                         previousSamplesPerChunk = samplesPerChunk;
                     }
 
-                    for (int k = 0; k < previousSamplesPerChunk; k++)
+                    int remainingChunks = (int)Math.Ceiling((chapterTrackSamples.Count - cumulatedSampleIndex) * 1.0 / previousSamplesPerChunk);
+                    // Fill the rest of the in-memory table with the last pattern
+                    for (int j = 0; j < remainingChunks; j++)
                     {
-                        if (cumulatedSampleIndex < chapterTrackSamples.Count)
+                        for (int k = 0; k < previousSamplesPerChunk; k++)
                         {
-                            chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = previousChunkIndex;
-                            chapterTrackSamples[cumulatedSampleIndex].RelativePositionWithinChunk = k;
-                            cumulatedSampleIndex++;
+                            if (cumulatedSampleIndex < chapterTrackSamples.Count)
+                            {
+                                chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = chunkIndex;
+                                cumulatedSampleIndex++;
+                            }
                         }
-                    }
-
-                    // Assign chunk index of previous sample to samples that have not been tagged
-                    chunkIndex = uint.MaxValue;
-                    for (int i = 0; i<chapterTrackSamples.Count; i++)
-                    {
-                        if (0 == chapterTrackSamples[i].ChunkIndex) chapterTrackSamples[i].ChunkIndex = chunkIndex; else chunkIndex = chapterTrackSamples[i].ChunkIndex;
+                        chunkIndex++;
                     }
                 }
 
