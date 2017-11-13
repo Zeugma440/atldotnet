@@ -34,7 +34,7 @@ namespace ATL.benchmark
 
             for (long i = 0; i< max; i++)
             {
-                StreamUtils.ReverseUInt64(test);
+                // StreamUtils.ReverseUInt64(test); METHOD 1
             }
             ticksNow = System.DateTime.Now.Ticks;
 
@@ -45,7 +45,7 @@ namespace ATL.benchmark
 
             for (long i = 0; i < max; i++)
             {
-                StreamUtils.ReverseInt64(test2);
+                // StreamUtils.ReverseInt64(test2); METHOD 2
             }
             ticksNow = System.DateTime.Now.Ticks;
 

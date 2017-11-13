@@ -347,6 +347,24 @@ namespace ATL.AudioData.IO
             get { return this.pictureTokens; }
         }
 
+        public IList<ChapterInfo> Chapters
+        {
+            get
+            {
+                IList<ChapterInfo> result = new List<ChapterInfo>();
+
+                if (tagData.Chapters != null)
+                {
+                    foreach (ChapterInfo chapter in tagData.Chapters)
+                    {
+                        result.Add(new ChapterInfo(chapter));
+                    }
+                }
+
+                return result;
+            }
+        }
+
         public virtual byte FieldCodeFixedLength
         {
             get { return 0; }

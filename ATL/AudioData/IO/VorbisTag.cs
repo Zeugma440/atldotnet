@@ -121,6 +121,53 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        static private uint parseTimecodeToMs(int chapIndex, string timeCode)
+        {
+            uint result = 0;
+            DateTime dateTime = new DateTime();
+            bool valid = false;
+
+            if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
+            {
+                valid = true;
+                result = (uint)dateTime.Millisecond;
+                result += (uint)dateTime.Second * 1000;
+                result += (uint)dateTime.Minute * 60 * 1000;
+                result += (uint)dateTime.Hour * 60 * 60 * 1000;
+            }
+            else // Handle mm:ss and mm:ss.ddd
+            {
+                uint hours = 0;
+                uint minutes = 0;
+                uint seconds = 0;
+                uint milliseconds = 0;
+
+                if (timeCode.Contains(":"))
+                {
+                    valid = true;
+                    string[] parts = timeCode.Split(':');
+                    if (parts[parts.Length - 1].Contains("."))
+                    {
+                        string[] subPart = parts[parts.Length - 1].Split('.');
+                        parts[parts.Length - 1] = subPart[0];
+                        milliseconds = uint.Parse(subPart[1]);
+                    }
+                    if (parts.Length >= 2) seconds = uint.Parse(parts[parts.Length - 1]);
+                    if (parts.Length >= 3) minutes = uint.Parse(parts[parts.Length - 2]);
+                    if (parts.Length >= 4) hours = uint.Parse(parts[parts.Length - 3]);
+
+                    result = milliseconds;
+                    result += seconds * 1000;
+                    result += minutes * 60 * 1000;
+                    result += hours * 60 * 60 * 1000;
+                }
+            }
+
+            if (!valid) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Incorrect timecode for chapter " + chapIndex + " : " + timeCode);
+
+            return result;
+        }
+
         private void setMetaField(string FieldName, string FieldValue, bool readAllMetaFrames)
         {
             byte supportedMetaId = 255;
@@ -143,6 +190,33 @@ namespace ATL.AudioData.IO
                     tagData.AdditionalFields.Remove(fieldInfo);
                 }
                 tagData.AdditionalFields.Add(fieldInfo);
+            }
+        }
+
+        private void setChapter(string fieldName, string fieldValue)
+        {
+            if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
+
+            // Capture numeric sequence within field name
+            // NB : Handled this way to retrieve badly formatted chapter indexes (e.g. CHAPTER2, CHAPTER02NAME...)
+            int i = 7;
+            while (i < fieldName.Length && char.IsDigit(fieldName[i])) i++;
+            int chapterIndex = int.Parse(fieldName.Substring(7, i - 7));
+
+            // Ensure there is a slot to record the chapter
+            while (tagData.Chapters.Count < chapterIndex) tagData.Chapters.Add(new ChapterInfo());
+
+            if (fieldName.EndsWith("NAME",StringComparison.OrdinalIgnoreCase)) // Chapter name
+            {
+                tagData.Chapters[chapterIndex - 1].Title = fieldValue;
+            }
+            else if (fieldName.EndsWith("URL", StringComparison.OrdinalIgnoreCase)) // Chapter url
+            {
+                tagData.Chapters[chapterIndex - 1].Url = fieldValue;
+            }
+            else // Chapter start time
+            {
+                tagData.Chapters[chapterIndex - 1].StartTime = parseTimecodeToMs(chapterIndex, fieldValue);
             }
         }
 
@@ -294,7 +368,16 @@ namespace ATL.AudioData.IO
                     int strIndex = strData.IndexOf('=');
                     if (strIndex > -1 && strIndex < strData.Length)
                     {
-                        setMetaField(strData.Substring(0, strIndex), strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
+                        string fieldId = strData.Substring(0, strIndex);
+
+                        if (fieldId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
+                        {
+                            setChapter(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim());
+                        }
+                        else // Standard textual field
+                        {
+                            setMetaField(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
+                        }
                     }
                     else if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                     {
@@ -400,6 +483,12 @@ namespace ATL.AudioData.IO
                 }
             }
 
+            // Chapters
+            if (Chapters.Count > 0)
+            {
+                writeChapters(w, Chapters);
+            }
+
             // Other textual fields
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
@@ -430,6 +519,19 @@ namespace ATL.AudioData.IO
             }
 
             return nbFrames;
+        }
+
+        private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
+        {
+            String chapterIndex;
+
+            for (int i=0; i<chapters.Count; i++)
+            {
+                chapterIndex = Utils.BuildStrictLengthString((i + 1).ToString(), 3, '0', false);
+                writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.FormatTime_ms(chapters[i].StartTime));
+                if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "NAME", chapters[i].Title);
+                if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "URL", chapters[i].Url);
+            }
         }
 
         private void writeTextFrame(BinaryWriter writer, String frameCode, String text)

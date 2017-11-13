@@ -43,6 +43,7 @@ namespace ATL
         public int DiscNumber;
         public int Rating;
         public IList<TagData.PictureInfo> PictureTokens = null;
+        public IList<ChapterInfo> Chapters;
 
         public IDictionary<string, string> AdditionalFields;
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
@@ -121,6 +122,8 @@ namespace ATL
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
 
+            Chapters = fileIO.Chapters;
+
             AdditionalFields = fileIO.AdditionalFields;
             initialAdditionalFields = fileIO.AdditionalFields.Keys;
 
@@ -156,6 +159,15 @@ namespace ATL
             result.TrackNumber = TrackNumber.ToString();
             result.DiscNumber = DiscNumber.ToString();
             result.Rating = Rating.ToString();
+
+            if (Chapters.Count > 0)
+            {
+                result.Chapters = new List<ChapterInfo>();
+                foreach (ChapterInfo chapter in Chapters)
+                {
+                    result.Chapters.Add(new ChapterInfo(chapter));
+                }
+            }
 
             foreach (string s in AdditionalFields.Keys)
             {

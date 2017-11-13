@@ -17,13 +17,13 @@ namespace ATL.AudioData.IO
     ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
     ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
     ///     
-    ///     2. Comment description
+    ///     2. Hierarchical table of contents (CTOC)
     ///     
-    ///     Currently, only the last COMM field is read (and rewritten).
-    ///     However, there can be as many COMM fields as long as their language ID and description are different
-    ///     Some taggers even seem to use COMM + description the same way as the XXX field (e.g. : COMM_eng_Catalog Number_CTL0992)
+    ///     ID3v2 chapters specification allows multiple CTOC frames in the tag, in order to describe a multiple-level table of contents.
+    ///     (see informal standard  id3v2-chapters-1.0.html)
     ///     
-    ///     ATL does not support multiple COMM fields yet
+    ///     This feature is currently not supported. If any CTOC is detected while reading, ATL will "blindly" write a flat CTOC containing
+    ///     all chapters. Any hierarchical table of contents will be lost while rewriting.
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -46,6 +46,9 @@ namespace ATL.AudioData.IO
         // Field codes that need to be persisted in a COMMENT field
         private static ICollection<string> commentsFields;
 
+        // Fields where text encoding descriptor byte is not required
+        private static ICollection<string> noTextEncodingFields;
+
         // Mapping between ID3v2 field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping_v22;
         private static IDictionary<string, byte> frameMapping_v23;
@@ -58,6 +61,9 @@ namespace ATL.AudioData.IO
 
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
+        
+        // Buffer size to use to parse through padding frames
+        private const int PADDING_BUFFER_SIZE = 512;
 
         // Frame header (universal)
         private class FrameHeader
@@ -184,10 +190,12 @@ namespace ATL.AudioData.IO
         static ID3v2()
         {
             standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
-            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4","TPOS","TPUB","TRCK","TRDA","TRSN","TRSO","TSIZ","TSRC","TSSE","TYER","TXXX","UFID","USER","USLT","WCOM","WCOP","WOAF","WOAR","WOAS","WORS","WPAY","WPUB","WXXX" };
-            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX" };
+            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
+
+            noTextEncodingFields = new List<string>() { "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
             // Note on date field identifiers
             //
@@ -385,8 +393,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // ---------------------------------------------------------------------------
-
         private int getTagSize(TagInfo Tag, bool includeFooter = true)
         {
             // Get total tag size
@@ -399,9 +405,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // ---------------------------------------------------------------------------
-
-        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames)
+        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames, string language = "")
         {
             byte supportedMetaId = 255;
             if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
@@ -414,22 +418,14 @@ namespace ATL.AudioData.IO
                 case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
             }
 
-            TagData.MetaFieldInfo fieldInfo;
             // If ID has been mapped with an ATL field, store it in the dedicated place...
             if (supportedMetaId < 255)
             {
-                if (TagData.TAG_FIELD_GENRE == supportedMetaId)
-                {
-                    tagData.IntegrateValue(supportedMetaId, extractGenreFromID3v2Code(Data));
-                }
-                else
-                {
-                    tagData.IntegrateValue(supportedMetaId, Data);
-                }
+                tagData.IntegrateValue(supportedMetaId, Data);
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
             {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data);
+                TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data, 0, language);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
@@ -438,178 +434,181 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // Get information from frames (universal)
-        private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
+        private bool readFrame(
+            BufferedBinaryReader source,
+            TagInfo tag,
+            ReadTagParams readTagParams,
+            ref IList<TagData.MetaFieldInfo> comments,
+            ref IList<ChapterInfo> chapters,
+            bool inChapter = false)
         {
-            const int PADDING_BUFFER_SIZE = 512;
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
             Encoding frameEncoding;
-
-            long dataSize;
+            int dataSize;
             long dataPosition;
-            long streamPos;
-            long initialTagPos = source.Position;
-            long streamLength = source.Length;
-            int tagSize = getTagSize(tag, false);
-            tag.ActualEnd = -1;
 
-            IList<TagData.MetaFieldInfo> comments = null;
+            long initialTagPos = source.Position;
+
+            ChapterInfo chapter = null;
             TagData.MetaFieldInfo comment = null;
 
-            source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
-            streamPos = source.Position;
 
-            while ((streamPos - offset < tagSize) && (streamPos < streamLength))
+            // Read frame header and check frame ID
+            Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+
+            if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
             {
-                // Read frame header and check frame ID
-                Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                comment = null;
-
-                if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
+                // We might be at the beginning of a padding frame
+                if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                 {
-                    // We might be at the beginning of a padding frame
-                    if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
-                    {
-                        // Read until there's something else than zeroes
-                        byte[] data = new byte[PADDING_BUFFER_SIZE];
-                        bool endReached = false;
-                        long initialPos = source.Position;
-                        int read = 0;
+                    // Read until there's something else than zeroes
+                    byte[] data = new byte[PADDING_BUFFER_SIZE];
+                    bool endReached = false;
+                    long initialPos = source.Position;
+                    int read = 0;
 
-                        while (!endReached)
+                    while (!endReached)
+                    {
+                        source.Read(data, 0, PADDING_BUFFER_SIZE);
+                        for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
                         {
-                            source.Read(data, 0, PADDING_BUFFER_SIZE);
-                            for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
+                            if (data[i] > 0)
                             {
-                                if (data[i] > 0)
-                                {
-                                    tag.ActualEnd = initialPos + read + i;
-                                    endReached = true;
-                                    break;
-                                }
+                                tag.ActualEnd = initialPos + read + i;
+                                endReached = true;
+                                break;
                             }
-                            if (!endReached) read += PADDING_BUFFER_SIZE;
                         }
-                    }
-                    else // If not, we're in the wrong place
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
-                        source.Seek(initialTagPos - tag.HeaderEnd + tagSize, SeekOrigin.Begin);
-                        streamPos = source.Position;
-                        break;
+                        if (!endReached) read += PADDING_BUFFER_SIZE;
                     }
                 }
-
-                if (tag.ActualEnd > -1) break;
-
-                // Frame size measures number of bytes between end of flag and end of payload
-                /* Frame size encoding conventions
-                    ID3v2.2 : 3 byte
-                    ID3v2.3 : 4 byte
-                    ID3v2.4 : synch-safe Int32
-                */
-                if (TAG_VERSION_2_2 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
-                else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                else if (TAG_VERSION_2_4 == tagVersion) Frame.Size = StreamUtils.DecodeSynchSafeInt32(source.ReadBytes(4));
-
-                if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
-                else Frame.Flags = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
-
-                dataSize = Frame.Size;
-
-                // Skips data size indicator if signaled by the flag
-                if ((Frame.Flags & 1) > 0)
+                else // If not, we're in the wrong place
                 {
-                    source.Seek(4, SeekOrigin.Current);
-                    dataSize = dataSize - 4;
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
+                    source.Seek(initialTagPos - tag.HeaderEnd + getTagSize(tag, false), SeekOrigin.Begin);
+                    return false;
                 }
+            }
 
+            if (tag.ActualEnd > -1) return false;
+
+            // Frame size measures number of bytes between end of flag and end of payload
+            /* Frame size encoding conventions
+                ID3v2.2 : 3 byte
+                ID3v2.3 : 4 byte
+                ID3v2.4 : synch-safe Int32
+            */
+            if (TAG_VERSION_2_2 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
+            else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            else if (TAG_VERSION_2_4 == tagVersion) Frame.Size = StreamUtils.DecodeSynchSafeInt32(source.ReadBytes(4));
+
+            if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
+            else Frame.Flags = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+
+            dataSize = Frame.Size;
+
+            // Skips data size indicator if signaled by the flag
+            if ((Frame.Flags & 1) > 0)
+            {
+                source.Seek(4, SeekOrigin.Current);
+                dataSize = dataSize - 4;
+            }
+
+            if (!noTextEncodingFields.Contains(Frame.ID))
+            {
                 dataSize = dataSize - 1; // Minus encoding byte
                 encodingCode = source.ReadByte();
-                frameEncoding = decodeID3v2CharEncoding(encodingCode);
+            } else
+            {
+                encodingCode = 0; // Latin-1; default according to spec
+            }
+            frameEncoding = decodeID3v2CharEncoding(encodingCode);
 
-                // COMM fields contain :
-                //   a 3-byte langage ID
-                //   a "short content description", as an encoded null-terminated string
-                //   the actual comment, as an encoded, null-terminated string
-                // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
-                if ("COM".Equals(Frame.ID.Substring(0, 3)))
-                {
-                    long initialPos = source.Position;
-                    if (null == comments) comments = new List<TagData.MetaFieldInfo>();
+            // COMM fields contain :
+            //   a 3-byte langage ID
+            //   a "short content description", as an encoded null-terminated string
+            //   the actual comment, as an encoded, null-terminated string
+            // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
+            if ("COM".Equals(Frame.ID.Substring(0, 3)))
+            {
+                long initialPos = source.Position;
+                if (null == comments) comments = new List<TagData.MetaFieldInfo>();
 
-                    comment = new TagData.MetaFieldInfo(getImplementedTagType(), "");
+                comment = new TagData.MetaFieldInfo(getImplementedTagType(), "");
 
-                    // Skip langage ID
-                    //source.Seek(3, SeekOrigin.Current);
-                    comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+                // Langage ID
+                comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
 
-                    BOMProperties contentDescriptionBOM = new BOMProperties();
-                    // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
-                    if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
-                    {
-                        contentDescriptionBOM = readBOM(source);
-                    }
-
-                    if (contentDescriptionBOM.Size <= 3)
-                    {
-                        // Skip content description
-                        comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-                    }
-                    else
-                    {
-                        // If content description BOM > 3 bytes, there might not be any BOM
-                        // for content description, and the algorithm might have bumped into
-                        // the comment BOM => backtrack just after langage tag
-                        source.Seek(initialPos + 3, SeekOrigin.Begin);
-                    }
-
-                    dataSize = dataSize - (source.Position - initialPos);
-                }
-
-                // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
-                // http://en.wikipedia.org/wiki/Byte_order_mark
-                //    3-byte BOM : FF 00 FE
-                //    2-byte BOM : FE FF (UTF-16 Big Endian)
-                //    2-byte BOM : FF FE (UTF-16 Little Endian)
-                //    Other variants...
+                BOMProperties contentDescriptionBOM = new BOMProperties();
+                // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
                 if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                 {
-                    long initialPos = source.Position;
-                    BOMProperties bom = readBOM(source);
-
-                    // A BOM has been read, but it lies outside the current frame
-                    // => Backtrack and directly read data without BOM
-                    if (bom.Size > dataSize)
-                    {
-                        source.Seek(initialPos, SeekOrigin.Begin);
-                    }
-                    else
-                    {
-                        frameEncoding = bom.Encoding;
-                        dataSize = dataSize - bom.Size;
-                    }
+                    contentDescriptionBOM = readBOM(source);
                 }
 
-                // If encoding > 3, we might have caught an actual character, which means there is no encoding flag => switch to default encoding
-                if (encodingCode > 3)
+                if (contentDescriptionBOM.Size <= 3)
                 {
-                    frameEncoding = decodeID3v2CharEncoding(0);
-                    source.Seek(-1, SeekOrigin.Current);
-                    dataSize++;
+                    // Skip content description
+                    comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                }
+                else
+                {
+                    // If content description BOM > 3 bytes, there might not be any BOM
+                    // for content description, and the algorithm might have bumped into
+                    // the comment BOM => backtrack just after langage tag
+                    source.Seek(initialPos + 3, SeekOrigin.Begin);
                 }
 
+                dataSize = dataSize - (int)(source.Position - initialPos);
+            }
 
-                // == READ ACTUAL FRAME DATA
+            // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
+            // http://en.wikipedia.org/wiki/Byte_order_mark
+            //    3-byte BOM : FF 00 FE
+            //    2-byte BOM : FE FF (UTF-16 Big Endian)
+            //    2-byte BOM : FF FE (UTF-16 Little Endian)
+            //    Other variants...
+            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            {
+                long initialPos = source.Position;
+                BOMProperties bom = readBOM(source);
 
-                dataPosition = source.Position;
-                if ((dataSize > 0) && (dataSize < 500))
+                // A BOM has been read, but it lies outside the current frame
+                // => Backtrack and directly read data without BOM
+                if (bom.Size > dataSize)
+                {
+                    source.Seek(initialPos, SeekOrigin.Begin);
+                }
+                else
+                {
+                    frameEncoding = bom.Encoding;
+                    dataSize = dataSize - bom.Size;
+                }
+            }
+
+            // If encoding > 3, we might have caught an actual character, which means there is no encoding flag => switch to default encoding
+            if (encodingCode > 3)
+            {
+                frameEncoding = decodeID3v2CharEncoding(0);
+                source.Seek(-1, SeekOrigin.Current);
+                dataSize++;
+            }
+
+
+            // == READ ACTUAL FRAME DATA
+
+            dataPosition = source.Position;
+
+            if (dataSize > 0)
+            {
+                if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
                 {
                     string strData;
+                    string shortFrameId = Frame.ID.Substring(0, 3);
 
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if ("POP".Equals(Frame.ID.Substring(0, 3)))
+                    if ("POP".Equals(shortFrameId))
                     {
                         /*
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
@@ -617,10 +616,10 @@ namespace ATL.AudioData.IO
                          */
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
-                    else if ("TXX".Equals(Frame.ID.Substring(0, 3)))
+                    else if ("TXX".Equals(shortFrameId))
                     {
                         // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes((int)dataSize);
+                        byte[] bData = source.ReadBytes(dataSize);
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         string[] tabS = strData.Split('\0');
@@ -631,18 +630,56 @@ namespace ATL.AudioData.IO
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
                         if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
                     }
+                    else if ("CHA".Equals(shortFrameId)) // Chapters
+                    {
+                        if (null == chapters) chapters = new List<ChapterInfo>();
+                        chapter = new ChapterInfo();
+                        chapters.Add(chapter);
+
+                        long initPos = source.Position;
+                        chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+
+                        chapter.StartTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.EndTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+
+                        chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
+
+                        long remainingData = dataSize - (source.Position - initPos);
+                        while (remainingData > 0)
+                        {
+                            if (!readFrame(source, tag, readTagParams, ref comments, ref chapters, true)) break;
+                            remainingData = dataSize - (source.Position - initPos);
+                        } // End chapter frames loop
+
+                        strData = "";
+                    }
                     else
                     {
                         // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes((int)dataSize);
+                        byte[] bData = source.ReadBytes(dataSize);
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+
+                        // Parse GENRE frame
+                        if ("TCO".Equals(shortFrameId)) strData = extractGenreFromID3v2Code(strData);
                     }
 
-                    if (null == comment) // We're in a non-Comment field => directly store value
+                    if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        if (!inChapter) setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        else
+                        {
+                            chapter = chapters[chapters.Count - 1];
+                            switch (Frame.ID)
+                            {
+                                case "TIT2": chapter.Title = strData; break;
+                                case "TIT3": chapter.Subtitle = strData; break;
+                                case "WXXX": chapter.Url = strData; break;
+                            }
+                        }
                     }
-                    else // We're in a Comment field => store value in Comment
+                    else if (comment != null) // We're in a Comment field => store value in temp Comment structure
                     {
                         bool found = false;
 
@@ -666,103 +703,131 @@ namespace ATL.AudioData.IO
 
                     if (TAG_VERSION_2_2 == tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
                 }
-                else if (dataSize > 0) // Size > 500 => Probably an embedded picture
+                else // Picture frame
                 {
                     long position = source.Position;
-                    if ("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))
+                    ImageFormat imgFormat;
+                    if (TAG_VERSION_2_2 == tagVersion)
                     {
-                        ImageFormat imgFormat;
-                        if (TAG_VERSION_2_2 == tagVersion)
-                        {
-                            // Image format
-                            string imageFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(3)).ToUpper();
+                        // Image format
+                        string imageFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(3)).ToUpper();
 
-                            if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
-                            else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
-                            else if ("GIF".Equals(imageFormat)) imgFormat = ImageFormat.Gif;
-                            else imgFormat = ImageFormat.Jpeg;
-                        }
-                        else
-                        {
-                            // mime-type always coded in ASCII
-                            if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
-                            // Mime-type
-                            String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                            imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
-                        }
-
-                        byte picCode = source.ReadByte();
-                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                        TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
-
-                        int picturePosition;
-                        if (picType.Equals(TagData.PIC_TYPE.Unsupported))
-                        {
-                            addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
-                            picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
-                        }
-                        else
-                        {
-                            addPictureToken(picType);
-                            picturePosition = takePicturePosition(picType);
-                        }
-
-                        // Image description (unused)
-                        // Description can be coded with another convention
-                        if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
-                        StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-
-                        if (readTagParams.PictureStreamHandler != null)
-                        {
-                            int picSize = (int)(dataSize - (source.Position - position));
-                            MemoryStream mem = new MemoryStream(picSize);
-
-                            if (tag.UsesUnsynchronisation)
-                            {
-                                decodeUnsynchronizedStreamTo(source, mem, picSize);
-                            }
-                            else
-                            {
-                                StreamUtils.CopyStream(source, mem, picSize);
-                            }
-
-                            mem.Seek(0, SeekOrigin.Begin);
-
-                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
-
-                            mem.Close();
-                        }
+                        if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
+                        else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
+                        else if ("GIF".Equals(imageFormat)) imgFormat = ImageFormat.Gif;
+                        else imgFormat = ImageFormat.Jpeg;
                     }
-                } // End picture frame
+                    else
+                    {
+                        // mime-type always coded in ASCII
+                        if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
+                        // Mime-type
+                        String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+                        imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
+                    }
 
-                source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                    byte picCode = source.ReadByte();
+                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                    TagData.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+
+                    int picturePosition;
+                    if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                    {
+                        addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
+                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
+                    }
+                    else
+                    {
+                        addPictureToken(picType);
+                        picturePosition = takePicturePosition(picType);
+                    }
+
+                    // Image description (unused)
+                    // Description can be coded with another convention
+                    if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
+                    StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+
+                    if (readTagParams.PictureStreamHandler != null)
+                    {
+                        int picSize = dataSize - (int)(source.Position - position);
+                        MemoryStream mem = new MemoryStream(picSize);
+
+                        if (tag.UsesUnsynchronisation)
+                        {
+                            decodeUnsynchronizedStreamTo(source, mem, picSize);
+                        }
+                        else
+                        {
+                            StreamUtils.CopyStream(source, mem, picSize);
+                        }
+
+                        mem.Seek(0, SeekOrigin.Begin);
+
+                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
+
+                        mem.Close();
+                    }
+                } // Picture frame
+            } // Data size > 0
+
+            source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+
+            return true;
+        }
+
+        // Get information from frames (universal)
+        private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
+        {
+            long streamPos;
+            long streamLength = source.Length;
+            int tagSize = getTagSize(tag, false);
+
+            tag.ActualEnd = -1;
+
+            IList<TagData.MetaFieldInfo> comments = new List<TagData.MetaFieldInfo>();
+            IList<ChapterInfo> chapters = new List<ChapterInfo>();
+
+            source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
+            streamPos = source.Position;
+
+            while ((streamPos - offset < tagSize) && (streamPos < streamLength))
+            {
+                if (!readFrame(source, tag, readTagParams, ref comments, ref chapters)) break;
 
                 streamPos = source.Position;
-            } // End frames loop
+            }
 
             /* Store all comments
              * 
-             * - The only comment with a blank description field is a real "Comment"
+             * - The only comment with a blank or bland description field is a "classic" Comment
              * - Other comments are treated as additional fields, with their description field as their field code
-             * 
             */
             if (comments != null && comments.Count > 0)
             {
                 foreach (TagData.MetaFieldInfo comm in comments)
                 {
-                    string code = comm.NativeFieldCode.Trim().ToLower().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
-                    if (code.Length > 0) // Processed as an additional field
+                    string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
+                    if (commentDescription.Length > 0) 
                     {
-                        if (!code.Equals("comment") && !code.Equals("no description") && !code.Equals("description"))
+                        if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                         {
-                            setMetaField(comm.NativeFieldCode, comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                            // Processed as an additional field
+                            setMetaField(commentDescription, comm.Value, tag, readTagParams.ReadAllMetaFrames, comm.Language);
                             continue;
                         }
                     }
 
+                    // Processed as a "classic" Comment
                     if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                     else setMetaField("COM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
                 }
+            }
+
+            /* Store all chapters
+            */
+            if (chapters != null && chapters.Count > 0)
+            {
+                tagData.Chapters = chapters; // TODO - directly use tagData.Chapter instead of chapters local struct
             }
 
 
@@ -1010,6 +1075,12 @@ namespace ATL.AudioData.IO
                 nbFrames++;
             }
 
+            // Chapters
+            if (Chapters.Count > 0)
+            {
+                writeChapters(w, Chapters, tagEncoding);
+            }
+
             // Other textual fields
             string fieldCode;
             foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
@@ -1017,6 +1088,8 @@ namespace ATL.AudioData.IO
                 if (( fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
+
+                    if (fieldCode.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
 
                     // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
                     if (TAG_VERSION_2_2 == tagVersion)
@@ -1059,24 +1132,145 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "eng")
+        private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
-            string actualFrameCode; // Used for writing TXXX frames
-            long frameSizePos;
-            long finalFramePos;
-            long frameOffset;
+            Random randomGenerator = null;
+            long frameSizePos, finalFramePos, frameOffset;
             int frameHeaderSize = 6; // 4-byte size + 2-byte flags
-
-            bool isCommentCode = false;
-
-            bool writeFieldValue = true;
-            bool writeFieldEncoding = true;
-            bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
 
             BinaryWriter w;
             MemoryStream s = null;
 
             if (tagHeader.UsesUnsynchronisation)
+            {
+                s = new MemoryStream(Size);
+                w = new BinaryWriter(s, tagEncoding);
+                frameOffset = writer.BaseStream.Position;
+            }
+            else
+            {
+                w = writer;
+                frameOffset = 0;
+            }
+
+            // Write a "flat" table of contents, if any CTOC is present in tag
+            // NB : Hierarchical table of contents is not supported; see implementation notes in the header
+            if (AdditionalFields.ContainsKey("CTOC"))
+            {
+                w.Write(Utils.Latin1Encoding.GetBytes("CTOC"));
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+
+                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
+                ushort flags = 0;
+                if (tagHeader.UsesUnsynchronisation)
+                {
+                    flags = 2;
+                }
+                w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+                // Default unique toc ID
+                w.Write(Utils.Latin1Encoding.GetBytes("toc"));
+                w.Write('\0');
+
+                // CTOC flags : no parents; chapters are in order
+                w.Write((byte)3);
+
+
+                // Entry count
+                w.Write((byte)chapters.Count);
+
+                for (int i=0; i < chapters.Count; i++)
+                {
+                    // Generate a chapter ID if none has been given
+                    if (0 == chapters[i].UniqueID.Length)
+                    {
+                        if (null == randomGenerator) randomGenerator = new Random();
+                        chapters[i].UniqueID = randomGenerator.Next().ToString();
+                    }
+                    w.Write(Encoding.UTF8.GetBytes(chapters[i].UniqueID));
+                    w.Write('\0');
+                }
+
+                // CTOC description not supported
+
+                // Go back to frame size location to write its actual size 
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+            // Write individual chapters
+            foreach (ChapterInfo chapter in chapters)
+            {
+                w.Write(Utils.Latin1Encoding.GetBytes("CHAP"));
+                frameSizePos = w.BaseStream.Position;
+                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+
+                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
+                ushort flags = 0;
+                if (tagHeader.UsesUnsynchronisation)
+                {
+                    flags = 2;
+                }
+                w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+                // Encoding according to ID3v2 specs
+                w.Write(encodeID3v2CharEncoding(tagEncoding));
+
+                w.Write(Encoding.UTF8.GetBytes(chapter.UniqueID));
+                w.Write('\0');
+
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndTime));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartOffset));
+                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndOffset));
+
+                if (chapter.Title != null && chapter.Title.Length > 0)
+                {
+                    writeTextFrame(w, "TIT2", chapter.Title, tagEncoding, "", true);
+                }
+                if (chapter.Subtitle != null && chapter.Subtitle.Length > 0)
+                {
+                    writeTextFrame(w, "TIT3", chapter.Subtitle, tagEncoding, "", true);
+                }
+                if (chapter.Url != null && chapter.Url.Length > 0)
+                {
+                    writeTextFrame(w, "WXXX", chapter.Url, tagEncoding, "", true);
+                }
+
+                // Go back to frame size location to write its actual size 
+                finalFramePos = w.BaseStream.Position;
+                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            }
+
+            if (tagHeader.UsesUnsynchronisation)
+            {
+                s.Seek(0, SeekOrigin.Begin);
+                encodeUnsynchronizedStreamTo(s, writer);
+                w.Close();
+            }
+        }
+
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", bool isInsideUnsynch = false)
+        {
+            string actualFrameCode; // Used for writing TXXX frames
+            long frameSizePos, finalFramePos, frameOffset;
+            int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+
+            bool isCommentCode = false;
+
+            bool writeValue = true;
+            bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
+            bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
+
+            BinaryWriter w;
+            MemoryStream s = null;
+
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
@@ -1122,16 +1316,18 @@ namespace ATL.AudioData.IO
             {
                 flags = 2;
             }
-            w.Write(StreamUtils.ReverseUInt16(flags));
+            w.Write(StreamUtils.EncodeBEUInt16(flags));
+
+            string shortCode = frameCode.Substring(0, 3);
 
             // Comments frame specifics
-            if (frameCode.Substring(0, 3).Equals("COM"))
+            if (shortCode.Equals("COM"))
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
 
                 // Language ID (ISO-639-2)
-                if (language != null && language.Length > 3) language = language.Substring(0, 3);
+                if (language != null) language = Utils.BuildStrictLengthString(language, 3, '\0');
                 w.Write(language.ToCharArray());
 
                 // Short content description
@@ -1141,9 +1337,9 @@ namespace ATL.AudioData.IO
                 }
                 w.Write('\0');
 
-                writeFieldEncoding = false;
+                writeTextEncoding = false;
             }
-            else if (frameCode.Substring(0,3).Equals("POP")) // Rating frame specifics
+            else if (shortCode.Equals("POP")) // Rating frame specifics
             {
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
@@ -1152,27 +1348,27 @@ namespace ATL.AudioData.IO
                 // Play count
                 w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
 
-                writeFieldValue = false;
+                writeValue = false;
             }
-            else if (frameCode.Substring(0, 3).Equals("TXX")) // User-defined text frame specifics
+            else if (shortCode.Equals("TXX")) // User-defined text frame specifics
             {
-                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
                 w.Write(actualFrameCode.ToCharArray());
                 w.Write('\0');
 
-                writeFieldEncoding = false;
+                writeTextEncoding = false;
                 writeNullTermination = true;
             }
 
-            if (writeFieldValue)
+            if (writeValue)
             {
-                if (writeFieldEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
                 w.Write(text.ToCharArray());
                 if (writeNullTermination) w.Write('\0');
             }
 
 
-            if (tagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);

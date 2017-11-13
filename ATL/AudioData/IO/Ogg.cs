@@ -495,6 +495,14 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).AdditionalFields;
             }
         }
+
+        public IList<ChapterInfo> Chapters
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Chapters;
+            }
+        }
         #endregion
 
         public bool IsMetaSupported(int metaDataType)
@@ -558,7 +566,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found; aborting read operation"); // Throw exception ?
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid OGG header found while looking for total samples; aborting read operation"); // Throw exception ?
                     return 0;
                 }
 

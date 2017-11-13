@@ -308,6 +308,13 @@ namespace ATL.AudioData
                 return metaData.AdditionalFields;
             }
         }
+        public IList<ChapterInfo> Chapters
+        {
+            get
+            {
+                return metaData.Chapters;
+            }
+        }
 
 
 

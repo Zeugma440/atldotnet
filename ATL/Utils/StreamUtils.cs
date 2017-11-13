@@ -229,62 +229,25 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an Int64 between big endian and little endian
+        /// Decodes a signed Big-Endian 64-bit integer from the given array of bytes
         /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static ulong ReverseUInt64(ulong n)
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static long DecodeBEInt64(byte[] data)
         {
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-            byte b4;
-            byte b5;
-            byte b6;
-            byte b7;
-
-            b0 = (byte) ((n & 0x00000000000000FF) >> 0);
-            b1 = (byte) ((n & 0x000000000000FF00) >> 8);
-            b2 = (byte) ((n & 0x0000000000FF0000) >> 16);
-            b3 = (byte) ((n & 0x00000000FF000000) >> 24);
-            b4 = (byte) ((n & 0x000000FF00000000) >> 32);
-            b5 = (byte) ((n & 0x0000FF0000000000) >> 40);
-            b6 = (byte) ((n & 0x00FF000000000000) >> 48);
-            b7 = (byte) ((n & 0xFF00000000000000) >> 56);
-
-            return (ulong)((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0));
+            if (data.Length != 8) throw new InvalidDataException("data should be 8 bytes long; found" + data.Length + " bytes");
+            return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
         }
 
-        public static long ReverseInt64(long n)
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 64-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt64(ulong value)
         {
-            /*
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-            byte b4;
-            byte b5;
-            byte b6;
-            byte b7;
-
-            b0 = (byte)((n & 0x00000000000000FF) >> 0);
-            b1 = (byte)((n & 0x000000000000FF00) >> 8);
-            b2 = (byte)((n & 0x0000000000FF0000) >> 16);
-            b3 = (byte)((n & 0x00000000FF000000) >> 24);
-            b4 = (byte)((n & 0x000000FF00000000) >> 32);
-            b5 = (byte)((n & 0x0000FF0000000000) >> 40);
-            b6 = (byte)((n & 0x00FF000000000000) >> 48);
-            b7 = (byte)((n & 0xFF00000000000000) >> 56); // <-- type incompatibility issue there
-
-            return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | (b7 << 0);
-            */
-
-            // Above code does not work due to 0xFF00000000000000 not being an unsigned long
-            // Below code does work but is 3 times slower
-            byte[] binary = BitConverter.GetBytes(n);
-            Array.Reverse(binary);
-            return BitConverter.ToInt64(binary, 0);
+            // Output has to be big-endian
+            return new byte[8] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
         }
 
         /// <summary>
@@ -299,6 +262,28 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decodes an unsigned Little-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeUInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt32(uint value)
+        {
+            // Output has to be big-endian
+            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
+        /// <summary>
         /// Decodes a signed Big-Endian 32-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
@@ -307,6 +292,28 @@ namespace ATL
         {
             if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEInt32(int value)
+        {
+            // Output has to be big-endian
+            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
+        /// <summary>
+        /// Decodes a signed Little-Endian 32-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static int DecodeInt32(byte[] data)
+        {
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            return (int)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
         /// <summary>
@@ -345,7 +352,6 @@ namespace ATL
             return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
-
         /// <summary>
         /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
         /// </summary>
@@ -355,6 +361,19 @@ namespace ATL
         {
             if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt16(ushort value)
+        {
+            if (value > 0x0000FFFF) throw new InvalidDataException("Value should not be higher than " + 0x0000FFFF + "; actual value=" + value);
+
+            // Output has to be big-endian
+            return new byte[2] { (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -423,22 +442,6 @@ namespace ATL
             b1 = (byte)((n & 0xFF00) >> 8);
 
             return (ushort)((b0 << 8) | (b1 << 0));
-        }
-
-        /// <summary>
-        /// Switches the format of a signed Int16 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static short ReverseInt16(short n)
-        {
-            byte b0;
-            byte b1;
-
-            b0 = (byte)((n & 0x00FF) >> 0);
-            b1 = (byte)((n & 0xFF00) >> 8);
-
-            return (short)((b0 << 8) | (b1 << 0));
         }
 
         /// <summary>

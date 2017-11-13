@@ -619,13 +619,13 @@ namespace ATL.test.IO.MetaData
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
             {
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunNORM")));
-                fs.Seek(-19, SeekOrigin.Current);
+                fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
 
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunPGAP")));
-                fs.Seek(-19, SeekOrigin.Current);
+                fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
             }
@@ -719,6 +719,207 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_Chapters()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(9, theFile.ID3v2.Chapters.Count);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "Intro";
+            ch.Url = "chapter url\0https://auphonic.com/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 15000;
+            ch.Title = "Creating a new production";
+            ch.Url = "chapter url\0https://auphonic.com/engine/upload/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 22000;
+            ch.Title = "Sound analysis";
+            ch.Url = "";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 34000;
+            ch.Title = "Adaptive leveler";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23leveler";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 45000;
+            ch.Title = "Global loudness normalization";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23loudnorm";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 60000;
+            ch.Title = "Audio restoration algorithms";
+            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23denoise";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 76000;
+            ch.Title = "Output file formats";
+            ch.Url = "chapter url\0http://auphonic.com/blog/5/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 94000;
+            ch.Title = "External services";
+            ch.Url = "chapter url\0http://auphonic.com/blog/16/";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111500;
+            ch.Title = "Get a free account!";
+            ch.Url = "chapter url\0https://auphonic.com/accounts/register";
+            expectedChaps.Add(ch.StartTime, ch);
+
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(9, found);
+
+
+            // Modify elements
+            TagData theTag = new TagData();
+            theTag.Chapters = new List<ChapterInfo>();
+            expectedChaps.Clear();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.StartOffset = 456;
+            ch.EndTime = 789;
+            ch.EndOffset = 101112;
+            ch.UniqueID = "";
+            ch.Title = "aaa";
+            ch.Subtitle = "bbb";
+            ch.Url = "ccc\0ddd";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.StartOffset = 4560;
+            ch.EndTime = 7890;
+            ch.EndOffset = 1011120;
+            ch.UniqueID = "002";
+            ch.Title = "aaa0";
+            ch.Subtitle = "bbb0";
+            ch.Url = "ccc\0ddd0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(2, theFile.ID3v2.Chapters.Count);
+
+            // Check if values are the same
+            found = 0;
+            foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    if (1 == found) Assert.AreNotEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID); // ID of first chapter was empty; ATL has generated a random ID for it
+                    else Assert.AreEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID);
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.EndTime, expectedChaps[chap.StartTime].EndTime);
+                    Assert.AreEqual(chap.StartOffset, expectedChaps[chap.StartTime].StartOffset);
+                    Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_UrlFrames()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
+            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+
+            // Check if URLs are persisted properly, i.e. without encoding byte
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(null, true));
+
+            // 1/ Check value through ATL
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
+            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+
+            // 2/ Check absence of encoding field in the file itself
+            byte[] readBytes = new byte[4];
+            byte[] expected = Utils.Latin1Encoding.GetBytes("WPUB");
+
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("WPUB")));
+                fs.Seek(6, SeekOrigin.Current);
+                Assert.IsTrue(fs.ReadByte() > 10); // i.e. byte is not a 'text encoding descriptor'
+            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
 
         [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
