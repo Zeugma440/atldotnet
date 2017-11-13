@@ -128,9 +128,9 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for MP4 Quicktime and Nero Chapters
 * Support for compressed streams (e.g. gzipped VGMs / GYMs, powerpacker'd MODs)
-* Connectors to __other library file formats__ (iTunes)
+* Support for other audiofile  formats : Speex, Theora, Audible
+* Connectors to __other library file formats__ (e.g. iTunes)
 
 
 ## Does ATL.NET include code authored by other people ?
