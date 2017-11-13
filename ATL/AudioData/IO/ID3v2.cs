@@ -235,7 +235,7 @@ namespace ATL.AudioData.IO
                 { "BUF", "RBUF" },
                 { "CNT", "PCNT" },
                 { "CRA", "AENC" },
-                // Encrypted meta frame / CRM has been droppped
+                // CRM / Encrypted meta frame field has been droppped
                 { "ETC", "ETCO" },
                 { "EQU", "EQU2" },
                 { "GEO", "GEOB" },
@@ -260,8 +260,8 @@ namespace ATL.AudioData.IO
                 { "TP4", "TPE4" },
                 { "TPA", "TPOS" },
                 { "TRC", "TSRC" },
-                //{ "TRD", "" }, equivalent to find
-                // TSI / Size has been dropped
+                //{ "TRD", "" } no direct equivalent
+                // TSI / Size field has been dropped
                 { "TSS", "TSSE" },
                 { "TT3", "TIT3" },
                 { "TXT", "TEXT" },
