@@ -860,7 +860,8 @@ namespace ATL.AudioData.IO
                     atomPosition = source.BaseStream.Position;
                     byte nbBytes = 0;
                     uint nbChunkOffsets = 0;
-                    object value;
+                    object valueObj;
+                    long valueLong;
 
                     // Chunk offsets
                     if (lookForMP4Atom(source.BaseStream, "stco") > 0)
@@ -880,40 +881,42 @@ namespace ATL.AudioData.IO
                             return;
                         }
                     }
+
                     source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                     nbChunkOffsets = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                    long valueAlt;
+
                     for (int i = 0; i < nbChunkOffsets; i++)
                     {
                         if (4 == nbBytes)
                         {
                             source.Read(data32, 0, 4);
-                            valueAlt = StreamUtils.DecodeBEUInt32(data32);
-                            value = (uint)valueAlt;
+                            valueLong = StreamUtils.DecodeBEUInt32(data32);
+                            valueObj = (uint)valueLong;
 
                         }
                         else
                         {
                             source.Read(data64, 0, 8);
-                            valueAlt = StreamUtils.DecodeBEInt64(data64);
-                            value = valueAlt;
+                            valueLong = StreamUtils.DecodeBEInt64(data64);
+                            valueObj = valueLong;
                         }
 
-                        if (isCurrentTrackFirstChapterTrack)
+                        if (isCurrentTrackFirstChapterTrack) // Use the offsets to find position for QT chapter titles
                         {
                             for (int j = 0; j < chapterTrackSamples.Count; j++)
                             {
                                 if (chapterTrackSamples[j].ChunkIndex == i + 1)
                                 {
-                                    chapterTrackSamples[j].ChunkOffset = valueAlt;
+                                    chapterTrackSamples[j].ChunkOffset = valueLong;
                                 }
                             }
                         }
                         
-                        // TODO - Document : Should they really be a size-type header, or an absolute index-type header ?
-                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, value);
-                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, value, ZONE_MP4_NEROCHAPTERS); 
-                    }
+                        // A size-type header is used here instead of an absolute index-type header because size variation has to be recorded, and not zone position
+                        // (those chunks do not even point to metadata zones but to the physical media stream)
+                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj);
+                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS); 
+                    } // Chunk offsets
                 }
 
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
