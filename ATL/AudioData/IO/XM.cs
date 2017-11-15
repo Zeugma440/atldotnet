@@ -380,12 +380,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -400,17 +395,17 @@ namespace ATL.AudioData.IO
             StringBuilder comment = new StringBuilder("");
 
             resetData();
-            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
 
             // File format signature
-            if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(17))))
+            if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(17))))
             {
                 result = false;
                 throw new Exception("Invalid XM file (file signature String mismatch)");
             }
 
             // Title = chars 17 to 37 (length 20)
-            string title = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 20);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
@@ -418,7 +413,7 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
 
             // File format signature
-            if (!0x1a.Equals(source.ReadByte()))
+            if (!0x1a.Equals(bSource.ReadByte()))
             {
                 result = false;
                 throw new Exception("Invalid XM file (file signature ID mismatch)");
@@ -426,33 +421,33 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
 
-            trackerName = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 20).Trim();
+            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20).Trim();
 
-            trackerVersion = source.ReadUInt16(); // hi-byte major and low-byte minor
+            trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
             trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);
 
-            headerSize = source.ReadUInt32(); // Calculated FROM THIS OFFSET, not from the beginning of the file
-            songLength = source.ReadUInt16();
+            headerSize = bSource.ReadUInt32(); // Calculated FROM THIS OFFSET, not from the beginning of the file
+            songLength = bSource.ReadUInt16();
 
-            source.Seek(2, SeekOrigin.Current); // Restart position
+            bSource.Seek(2, SeekOrigin.Current); // Restart position
 
-            nbChannels = (byte)Math.Min(source.ReadUInt16(),(ushort)0xFF);
-            nbPatterns = source.ReadUInt16();
-            nbInstruments = source.ReadUInt16();
+            nbChannels = (byte)Math.Min(bSource.ReadUInt16(),(ushort)0xFF);
+            nbPatterns = bSource.ReadUInt16();
+            nbInstruments = bSource.ReadUInt16();
 
-            source.Seek(2, SeekOrigin.Current); // Flags for frequency tables; useless for ATL
+            bSource.Seek(2, SeekOrigin.Current); // Flags for frequency tables; useless for ATL
 
-            initialSpeed = source.ReadUInt16();
-            initialTempo = source.ReadUInt16();
+            initialSpeed = bSource.ReadUInt16();
+            initialTempo = bSource.ReadUInt16();
 
             // Pattern table
             for (int i = 0; i < (headerSize - 20); i++) // 20 being the number of bytes read since the header size marker
             {
-                if (i < songLength) FPatternTable.Add(source.ReadByte()); else source.Seek(1, SeekOrigin.Current);
+                if (i < songLength) FPatternTable.Add(bSource.ReadByte()); else bSource.Seek(1, SeekOrigin.Current);
             }
 
-            readPatterns(source, nbPatterns);
-            readInstruments(source, nbInstruments);
+            readPatterns(bSource, nbPatterns);
+            readInstruments(bSource, nbInstruments);
 
             
             // == Computing track properties

@@ -216,12 +216,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
             BufferedBinaryReader bufferedSource = new BufferedBinaryReader(source.BaseStream); // Optimize parsing speed

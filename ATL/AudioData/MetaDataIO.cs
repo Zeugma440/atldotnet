@@ -436,7 +436,7 @@ namespace ATL.AudioData.IO
 
         // ------ ABSTRACT METHODS -----------------------------------------------------
 
-        abstract public bool Read(BinaryReader Source, ReadTagParams readTagParams);
+        abstract protected bool read(BinaryReader source, ReadTagParams readTagParams);
 
         abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
@@ -467,6 +467,13 @@ namespace ATL.AudioData.IO
         public void Clear()
         {
             ResetData();
+        }
+
+        public bool Read(BinaryReader Source, ReadTagParams readTagParams)
+        {
+            if (readTagParams.PrepareForWriting) structureHelper.Clear();
+
+            return read(Source, readTagParams);
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
@@ -519,7 +526,7 @@ namespace ATL.AudioData.IO
                 readTagParams.offset = embedder.HasEmbeddedID3v2;
             }
 
-            this.Read(r, readTagParams);
+            this.read(r, readTagParams);
 
             if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
             {

@@ -394,12 +394,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -416,72 +411,72 @@ namespace ATL.AudioData.IO
             IList<ushort> instrumentPointers = new List<ushort>();
 
             resetData();
-            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
 
             // Title = first 28 chars
-            string title = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 28);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 28);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
-            source.Seek(4, SeekOrigin.Current);
+            bSource.Seek(4, SeekOrigin.Current);
 
-            nbOrders = source.ReadUInt16();
-            nbInstruments = source.ReadUInt16();
-            nbPatterns = source.ReadUInt16();
+            nbOrders = bSource.ReadUInt16();
+            nbInstruments = bSource.ReadUInt16();
+            nbPatterns = bSource.ReadUInt16();
 
-            flags = source.ReadUInt16();
-            trackerVersion = source.ReadUInt16();
+            flags = bSource.ReadUInt16();
+            trackerVersion = bSource.ReadUInt16();
 
             trackerName = getTrackerName(trackerVersion);
 
-            source.Seek(2, SeekOrigin.Current); // sampleType (16b)
-            if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            bSource.Seek(2, SeekOrigin.Current); // sampleType (16b)
+            if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
             {
                 result = false;
                 throw new Exception("Invalid S3M file (file signature mismatch)");
             }
-            source.Seek(1, SeekOrigin.Current); // globalVolume (8b)
+            bSource.Seek(1, SeekOrigin.Current); // globalVolume (8b)
 
             tagExists = true;
 
-            initialSpeed = source.ReadByte();
-            initialTempo = source.ReadByte();
+            initialSpeed = bSource.ReadByte();
+            initialTempo = bSource.ReadByte();
 
-            source.Seek(1, SeekOrigin.Current); // masterVolume (8b)
-            source.Seek(1, SeekOrigin.Current); // ultraClickRemoval (8b)
-            source.Seek(1, SeekOrigin.Current); // defaultPan (8b)
-            source.Seek(8, SeekOrigin.Current); // defaultPan (64b)
-            source.Seek(2, SeekOrigin.Current); // ptrSpecial (16b)
+            bSource.Seek(1, SeekOrigin.Current); // masterVolume (8b)
+            bSource.Seek(1, SeekOrigin.Current); // ultraClickRemoval (8b)
+            bSource.Seek(1, SeekOrigin.Current); // defaultPan (8b)
+            bSource.Seek(8, SeekOrigin.Current); // defaultPan (64b)
+            bSource.Seek(2, SeekOrigin.Current); // ptrSpecial (16b)
 
             // Channel table
             for (int i = 0; i < 32; i++)
             {
-                FChannelTable.Add(source.ReadByte());
+                FChannelTable.Add(bSource.ReadByte());
                 if (FChannelTable[FChannelTable.Count - 1] < 30) nbChannels++;
             }
 
             // Pattern table
             for (int i = 0; i < nbOrders; i++)
             {
-                FPatternTable.Add(source.ReadByte());
+                FPatternTable.Add(bSource.ReadByte());
             }
 
             // Instruments pointers
             for (int i = 0; i < nbInstruments; i++)
             {
-                instrumentPointers.Add(source.ReadUInt16());
+                instrumentPointers.Add(bSource.ReadUInt16());
             }
 
             // Patterns pointers
             for (int i = 0; i < nbPatterns; i++)
             {
-                patternPointers.Add(source.ReadUInt16());
+                patternPointers.Add(bSource.ReadUInt16());
             }
 
-            readInstruments(source, instrumentPointers);
-            readPatterns(source, patternPointers);
+            readInstruments(bSource, instrumentPointers);
+            readPatterns(bSource, patternPointers);
 
 
             // == Computing track properties

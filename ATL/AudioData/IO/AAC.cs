@@ -509,11 +509,8 @@ namespace ATL.AudioData.IO
             IDictionary<int,IList<int>> chapterTrackIndexes = null; // Key is track index (1-based); lists are chapter tracks indexes (1-based)
             IList<MP4Sample> chapterTrackSamples = null;
 
-
-            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // TODO - Clearing should be handled in calling classes, especially for RemoveTag
-
             
-            // TODO - try and cache the whole tree structure to optimize browsing through nodes
+            // TODO PERF - try and cache the whole tree structure to optimize browsing through nodes
 
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -1233,12 +1230,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader Source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(Source, readTagParams);
-        }
-
-        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
 

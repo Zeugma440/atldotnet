@@ -339,29 +339,24 @@ namespace ATL.AudioData
             return metaData.Write(r, w, tag);
         }
 
-
-        // AudioFileReader aims at simplifying standard interfaces
-        // => the below methods are not implemented
-
-        // TODO - make interfaces more modular to clean the mess below
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            throw new NotImplementedException();
+            return audioData.Read(source, sizeInfo, readTagParams);
         }
 
         public bool Remove(BinaryWriter w)
         {
-            throw new NotImplementedException();
+            return metaData.Remove(w);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
-            throw new NotImplementedException();
+            metaData.SetEmbedder(embedder);
         }
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            metaData.Clear();
         }
     }
 

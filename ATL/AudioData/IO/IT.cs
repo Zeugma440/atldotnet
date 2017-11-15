@@ -409,12 +409,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source_, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -439,10 +434,10 @@ namespace ATL.AudioData.IO
             IList<UInt32> samplePointers = new List<UInt32>();
 
             resetData();
-            BufferedBinaryReader source = new BufferedBinaryReader(source_.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
 
 
-            if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
             {
                 result = false;
                 throw new Exception(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
@@ -451,88 +446,88 @@ namespace ATL.AudioData.IO
             tagExists = true;
 
             // Title = max first 26 chars after file signature; null-terminated
-            string title = StreamUtils.ReadNullTerminatedStringFixed(source, Utils.Latin1Encoding, 26);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Utils.Latin1Encoding, 26);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(4, 26, new byte[26] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
-            source.Seek(2, SeekOrigin.Current); // Pattern row highlight information
+            bSource.Seek(2, SeekOrigin.Current); // Pattern row highlight information
 
-            nbOrders = source.ReadUInt16();
-            nbInstruments = source.ReadUInt16();
-            nbSamples = source.ReadUInt16();
-            nbPatterns = source.ReadUInt16();
+            nbOrders = bSource.ReadUInt16();
+            nbInstruments = bSource.ReadUInt16();
+            nbSamples = bSource.ReadUInt16();
+            nbPatterns = bSource.ReadUInt16();
 
-            trackerVersion = source.ReadUInt16();
-            trackerVersionCompatibility = source.ReadUInt16();
+            trackerVersion = bSource.ReadUInt16();
+            trackerVersionCompatibility = bSource.ReadUInt16();
 
-            flags = source.ReadUInt16();
+            flags = bSource.ReadUInt16();
 
             useSamplesAsInstruments = !((flags & 0x04) > 0);
 
-            special = source.ReadUInt16();
+            special = bSource.ReadUInt16();
 
             //            trackerName = "Impulse tracker"; // TODO use TrackerVersion to add version
 
-            source.Seek(2, SeekOrigin.Current); // globalVolume (8b), masterVolume (8b)
+            bSource.Seek(2, SeekOrigin.Current); // globalVolume (8b), masterVolume (8b)
 
-            initialSpeed = source.ReadByte();
-            initialTempo = source.ReadByte();
+            initialSpeed = bSource.ReadByte();
+            initialTempo = bSource.ReadByte();
 
-            source.Seek(2, SeekOrigin.Current); // panningSeparation (8b), pitchWheelDepth (8b)
+            bSource.Seek(2, SeekOrigin.Current); // panningSeparation (8b), pitchWheelDepth (8b)
 
-            messageLength = source.ReadUInt16();
-            messageOffset = source.ReadUInt32();
-            source.Seek(132, SeekOrigin.Current); // reserved (32b), channel Pan (64B), channel Vol (64B)
+            messageLength = bSource.ReadUInt16();
+            messageOffset = bSource.ReadUInt32();
+            bSource.Seek(132, SeekOrigin.Current); // reserved (32b), channel Pan (64B), channel Vol (64B)
 
             // Orders table
             for (int i = 0; i < nbOrders; i++)
             {
-                patternTable.Add(source.ReadByte());
+                patternTable.Add(bSource.ReadByte());
             }
 
             // Instruments pointers
             for (int i = 0; i < nbInstruments; i++)
             {
-                instrumentPointers.Add(source.ReadUInt32());
+                instrumentPointers.Add(bSource.ReadUInt32());
             }
 
             // Samples pointers
             for (int i = 0; i < nbSamples; i++)
             {
-                samplePointers.Add(source.ReadUInt32());
+                samplePointers.Add(bSource.ReadUInt32());
             }
 
             // Patterns pointers
             for (int i = 0; i < nbPatterns; i++)
             {
-                patternPointers.Add(source.ReadUInt32());
+                patternPointers.Add(bSource.ReadUInt32());
             }
 
             if ((!useSamplesAsInstruments) && (instrumentPointers.Count > 0))
             {
                 if (trackerVersionCompatibility < 0x200)
                 {
-                    readInstrumentsOld(source, instrumentPointers);
+                    readInstrumentsOld(bSource, instrumentPointers);
                 }
                 else
                 {
-                    readInstruments(source, instrumentPointers);
+                    readInstruments(bSource, instrumentPointers);
                 }
             }
             else
             {
-                readSamples(source, samplePointers);
+                readSamples(bSource, samplePointers);
             }
-            readPatterns(source, patternPointers);
+            readPatterns(bSource, patternPointers);
 
             // IT Message
             if ((special & 0x1) > 0)
             {
-                source.Seek(messageOffset, SeekOrigin.Begin);
+                bSource.Seek(messageOffset, SeekOrigin.Begin);
                 //message = new String( StreamUtils.ReadOneByteChars(source, messageLength) );
-                message = StreamUtils.ReadNullTerminatedStringFixed(source, Utils.Latin1Encoding, messageLength);
+                message = StreamUtils.ReadNullTerminatedStringFixed(bSource, Utils.Latin1Encoding, messageLength);
             }
 
 

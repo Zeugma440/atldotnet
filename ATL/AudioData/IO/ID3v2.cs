@@ -874,7 +874,7 @@ namespace ATL.AudioData.IO
 
         // ********************** Public functions & voids **********************
 
-        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             return Read(source, readTagParams.offset, readTagParams);
         }

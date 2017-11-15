@@ -242,7 +242,7 @@ namespace ATL.AudioData.IO
 			ResetData();
 		}
 
-        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 

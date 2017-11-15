@@ -417,15 +417,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeInfo;
 
-            return read(source, readTagParams);
+            return Read(source, readTagParams);
         }
 
         public bool Read(BinaryReader source, ReadTagParams readTagParams)
-        {
-            return read(source, readTagParams);
-        }
-
-        private bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -540,7 +535,7 @@ namespace ATL.AudioData.IO
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(null, true);
             readTagParams.PrepareForWriting = true;
-            read(r, readTagParams);
+            Read(r, readTagParams);
 
             // Rewrite vorbis tag zone
             foreach (Zone zone in zones)

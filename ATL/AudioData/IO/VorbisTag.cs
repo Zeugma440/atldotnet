@@ -337,7 +337,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public override bool Read(BinaryReader Source, ReadTagParams readTagParams)
+        protected override bool read(BinaryReader Source, ReadTagParams readTagParams)
         {
             int size;
             string strData;
