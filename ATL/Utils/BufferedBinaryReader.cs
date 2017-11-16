@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 
 // Initial inspiration go to Jackson Dunstan for his article (http://jacksondunstan.com/articles/3568)
 
-// TODO - integrate StreamUtils methods to work with embedded buffer
-
 namespace ATL
 {
     /// <summary>
@@ -15,13 +13,14 @@ namespace ATL
     /// 
     /// NB2 : The interface of this class is designed to be called exactly like a BinaryReader in order to facilitate swapping in classes that use BinaryReader
     /// However, is does _not_ give access to BaseStream, in order to keep control on buffer and cursor positions.
+    /// 
+    /// NB3 : This class implements Stream in order to be reusable in methods that take Stream as an input
     /// </summary>
-    public class BufferedBinaryReader : IDisposable
+    public class BufferedBinaryReader : Stream, IDisposable
     {
         private const int DEFAULT_BUFFER_SIZE = 512;
 
         private readonly Stream stream;
-        private readonly byte[] buffer;
         private readonly int bufferDefaultSize;
         private readonly long streamSize;
 
@@ -32,21 +31,28 @@ namespace ATL
          *                    bufferOffset     cursorPosition          streamPosition
          *                    (absolute)       (relative to buffer)    (absolute)
          */
+        private byte[] buffer;
         private long bufferOffset;
         private int cursorPosition; // NB : cursorPosition can be > bufferSize in certain cases when BufferedBinaryReader has to read a chunk of data larger than bufferSize
         private long streamPosition;
         private int bufferSize; // NB : bufferSize can be < DEFAULT_BUFFER_SIZE when bufferOffset nears the end of the stream (not enough remaining bytes to fill the whole buffer space)
 
-        public long Position
+        public override long Position
         {
             get { return bufferOffset + cursorPosition; }
             set { Seek(value, SeekOrigin.Begin); }
         }
 
-        public long Length
+        public override long Length
         {
             get { return streamSize; }
         }
+
+        public override bool CanRead => throw new NotImplementedException();
+
+        public override bool CanSeek => throw new NotImplementedException();
+
+        public override bool CanWrite => throw new NotImplementedException();
 
         public BufferedBinaryReader(Stream stream)
         {
@@ -95,7 +101,7 @@ namespace ATL
             }
         }
 
-        public void Seek(long offset, SeekOrigin origin)
+        public override long Seek(long offset, SeekOrigin origin)
         {
             long delta = 0; // Distance between absolute cursor position and specified position in bytes
 
@@ -109,7 +115,7 @@ namespace ATL
                 delta = (streamSize + offset) - Position;
             }
 
-            if (0 == delta) return;
+            if (0 == delta) return Position;
             else if (delta < 0)
             {
                 // If cursor is still within buffer, jump within buffer
@@ -131,9 +137,10 @@ namespace ATL
                 stream.Position = streamPosition;
                 fillBuffer();
             }
+            return Position;
         }
 
-        public int Read([In, Out] byte[] buffer, int offset, int count)
+        public override int Read([In, Out] byte[] buffer, int offset, int count)
         {
             // Bytes to read are all already buffered
             if (count <= bufferSize - cursorPosition)
@@ -176,7 +183,7 @@ namespace ATL
             return buffer;
         }
 
-        public byte ReadByte()
+        public new byte ReadByte()
         {
             prepareBuffer(1);
             byte val = buffer[cursorPosition];
@@ -232,9 +239,27 @@ namespace ATL
             return val;
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
+            Flush();
             stream.Close();
+        }
+
+        public override void Flush()
+        {
+            buffer = null;
+        }
+
+        // This class is a reader helper only
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        // This class is a reader helper only
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
         }
     }
 }
