@@ -152,7 +152,7 @@ namespace ATL.AudioData.IO
 
                 if (packedSize > 0)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported yet"); // TODO
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported yet"); // TODO support GZIP-compressed files
                     return false;
                 }
 

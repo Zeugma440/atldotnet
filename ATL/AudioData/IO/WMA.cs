@@ -543,7 +543,6 @@ namespace ATL.AudioData.IO
             long countPosition, sizePosition1, sizePosition2;
             bool result = false;
 
-            if (readTagParams.PrepareForWriting) structureHelper.Clear(); // TODO - Clearing should be handled in calling classes, especially for RemoveTag
             if (languages != null) languages.Clear();
 
             fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
