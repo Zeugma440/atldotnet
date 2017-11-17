@@ -48,11 +48,20 @@ namespace ATL
             get { return streamSize; }
         }
 
-        public override bool CanRead => throw new NotImplementedException();
+        public override bool CanRead
+        {
+            get { return true; }
+        }
 
-        public override bool CanSeek => throw new NotImplementedException();
+        public override bool CanSeek
+        {
+            get { return true; }
+        }
 
-        public override bool CanWrite => throw new NotImplementedException();
+        public override bool CanWrite
+        {
+            get { return false; }
+        }
 
         public BufferedBinaryReader(Stream stream)
         {
