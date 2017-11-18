@@ -83,13 +83,15 @@ namespace ATL.AudioData.IO
         private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameClasses_mp4; // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
 
+        /* Useless for now
         private int FTotalFrames;
-        private byte FHeaderTypeID;
         private byte FMPEGVersionID;
         private byte FProfileID;
-        private byte FChannels;
-        private byte FBitrateTypeID;
+        */
 
+        private byte channels;
+        private byte headerTypeID;
+        private byte bitrateTypeID;
         private double bitrate;
         private double duration;
         private int sampleRate;
@@ -97,7 +99,7 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
 
-
+        /* Useless for now
         public byte HeaderTypeID // Header type code
         {
             get { return this.FHeaderTypeID; }
@@ -134,6 +136,7 @@ namespace ATL.AudioData.IO
         {
             get { return this.getBitRateType(); }
         }
+        */
         public bool Valid // true if data valid
         {
             get { return this.isValid(); }
@@ -145,7 +148,7 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public bool IsVBR
         {
-            get { return (AAC_BITRATE_TYPE_VBR == FBitrateTypeID); }
+            get { return (AAC_BITRATE_TYPE_VBR == bitrateTypeID); }
         }
         public int CodecFamily
         {
@@ -203,12 +206,15 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            FHeaderTypeID = AAC_HEADER_TYPE_UNKNOWN;
+            /* useless for now
             FMPEGVersionID = AAC_MPEG_VERSION_UNKNOWN;
             FProfileID = AAC_PROFILE_UNKNOWN;
             FChannels = 0;
-            FBitrateTypeID = AAC_BITRATE_TYPE_UNKNOWN;
             FTotalFrames = 0;
+            */
+
+            headerTypeID = AAC_HEADER_TYPE_UNKNOWN;
+            bitrateTypeID = AAC_BITRATE_TYPE_UNKNOWN;
 
             bitrate = 0;
             sampleRate = 0;
@@ -270,7 +276,8 @@ namespace ATL.AudioData.IO
             if (!frameClasses_mp4.ContainsKey(frameCode)) frameClasses_mp4.Add(frameCode, frameClass);
         }
 
-        // ---------------------------------------------------------------------------
+        
+        /* Useless for now
 
         // Get header type name
         private string getHeaderType()
@@ -278,15 +285,11 @@ namespace ATL.AudioData.IO
             return AAC_HEADER_TYPE[FHeaderTypeID];
         }
 
-        // ---------------------------------------------------------------------------
-
         // Get MPEG version name
         private string getMPEGVersion()
         {
             return AAC_MPEG_VERSION[FMPEGVersionID];
         }
-
-        // ---------------------------------------------------------------------------
 
         // Get profile name
         private string getProfile()
@@ -294,20 +297,17 @@ namespace ATL.AudioData.IO
             return AAC_PROFILE[FProfileID];
         }
 
-        // ---------------------------------------------------------------------------
-
         // Get bit rate type name
         private string getBitRateType()
         {
-            return AAC_BITRATE_TYPE[FBitrateTypeID];
+            return AAC_BITRATE_TYPE[bitrateTypeID];
         }
-
-        // ---------------------------------------------------------------------------
+        */
 
         // Calculate duration time
         private double getDuration()
         {
-            if (FHeaderTypeID == AAC_HEADER_TYPE_MP4)
+            if (headerTypeID == AAC_HEADER_TYPE_MP4)
             {
                 return duration;
             }
@@ -320,16 +320,12 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // ---------------------------------------------------------------------------
-
         // Check for file correctness
         private bool isValid()
         {
-            return ((FHeaderTypeID != AAC_HEADER_TYPE_UNKNOWN) &&
-                (FChannels > 0) && (sampleRate > 0) && (bitrate > 0));
+            return ((headerTypeID != AAC_HEADER_TYPE_UNKNOWN) &&
+                (channels > 0) && (sampleRate > 0) && (bitrate > 0));
         }
-
-        // ---------------------------------------------------------------------------
 
         // Get header type of the file
         private byte recognizeHeaderType(BinaryReader Source)
@@ -362,8 +358,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // ---------------------------------------------------------------------------
-
         // Read ADIF header data
         private void readADIF(BinaryReader Source)
         {
@@ -372,49 +366,50 @@ namespace ATL.AudioData.IO
             Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
             if (0 == StreamUtils.ReadBits(Source, Position, 1)) Position += 3;
             else Position += 75;
-            if (0 == StreamUtils.ReadBits(Source, Position, 1)) FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
-            else FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
+            if (0 == StreamUtils.ReadBits(Source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            else bitrateTypeID = AAC_BITRATE_TYPE_VBR;
 
             Position++;
 
             bitrate = (int)StreamUtils.ReadBits(Source, Position, 23);
 
-            if (AAC_BITRATE_TYPE_CBR == FBitrateTypeID) Position += 51;
+            if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) Position += 51;
             else Position += 31;
 
+            /* Useless for now
             FMPEGVersionID = AAC_MPEG_VERSION_4;
             FProfileID = (byte)(StreamUtils.ReadBits(Source, Position, 2) + 1);
+            */
             Position += 2;
 
             sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, Position, 4)];
             Position += 4;
-            FChannels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            FChannels += (byte)StreamUtils.ReadBits(Source, Position, 2);
+            channels += (byte)StreamUtils.ReadBits(Source, Position, 2);
         }
-
-        // ---------------------------------------------------------------------------
 
         // Read ADTS header data
         private void readADTS(BinaryReader Source)
         {
-            int Frames = 0;
-            int TotalSize = 0;
-            int Position;
+            int frames = 0;
+            int totalSize = 0;
+            int position;
 
             do
             {
-                Frames++;
-                Position = (int)(sizeInfo.ID3v2Size + TotalSize) * 8;
+                frames++;
+                position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
-                if (StreamUtils.ReadBits(Source, Position, 12) != 0xFFF) break;
+                if (StreamUtils.ReadBits(Source, position, 12) != 0xFFF) break;
 
-                Position += 12;
+                position += 12;
 
+                /* Useless for now
                 if (0 == StreamUtils.ReadBits(Source, Position, 1))
                     FMPEGVersionID = AAC_MPEG_VERSION_4;
                 else
@@ -423,30 +418,34 @@ namespace ATL.AudioData.IO
                 Position += 4;
                 FProfileID = (byte)(StreamUtils.ReadBits(Source, Position, 2) + 1);
                 Position += 2;
+                */
+                position += 6; // <-- this line to be deleted when the block above is decommented
 
-                sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, Position, 4)];
-                Position += 5;
+                sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, position, 4)];
+                position += 5;
 
-                FChannels = (byte)StreamUtils.ReadBits(Source, Position, 3);
+                channels = (byte)StreamUtils.ReadBits(Source, position, 3);
 
 //                if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
 //                    Position += 9;
 //                else
-                    Position += 7;
+                    position += 7;
 
-                TotalSize += (int)StreamUtils.ReadBits(Source, Position, 13);
-                Position += 13;
+                totalSize += (int)StreamUtils.ReadBits(Source, position, 13);
+                position += 13;
 
-                if (0x7FF == StreamUtils.ReadBits(Source, Position, 11))
-                    FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
+                if (0x7FF == StreamUtils.ReadBits(Source, position, 11))
+                    bitrateTypeID = AAC_BITRATE_TYPE_VBR;
                 else
-                    FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+                    bitrateTypeID = AAC_BITRATE_TYPE_CBR;
 
-                if (AAC_BITRATE_TYPE_CBR == FBitrateTypeID) break;
+                if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) break;
             }
-            while (Source.BaseStream.Length > sizeInfo.ID3v2Size + TotalSize);
+            while (Source.BaseStream.Length > sizeInfo.ID3v2Size + totalSize);
+            /* Useless for now
             FTotalFrames = Frames;
-            bitrate = (int)Math.Round(8 * TotalSize / 1024.0 / Frames * sampleRate);
+            */
+            bitrate = (int)Math.Round(8 * totalSize / 1024.0 / frames * sampleRate);
         }
 
         private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTrackSamples)
@@ -685,7 +684,7 @@ namespace ATL.AudioData.IO
 
                         source.BaseStream.Seek(10, SeekOrigin.Current); // Not useful here
 
-                        FChannels = (byte)StreamUtils.ReverseUInt16(source.ReadUInt16()); // Audio channels
+                        channels = (byte)StreamUtils.ReverseUInt16(source.ReadUInt16()); // Audio channels
 
                         source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
                         source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime stuff
@@ -818,16 +817,16 @@ namespace ATL.AudioData.IO
 
                     if ((min * 1.01) < max)
                     {
-                        FBitrateTypeID = AAC_BITRATE_TYPE_VBR;
+                        bitrateTypeID = AAC_BITRATE_TYPE_VBR;
                     }
                     else
                     {
-                        FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+                        bitrateTypeID = AAC_BITRATE_TYPE_CBR;
                     }
                 }
                 else
                 {
-                    FBitrateTypeID = AAC_BITRATE_TYPE_CBR;
+                    bitrateTypeID = AAC_BITRATE_TYPE_CBR;
                     if (isCurrentTrackFirstChapterTrack) for (int i = 0; i < chapterTrackSamples.Count; i++) chapterTrackSamples[i].Size = blocByteSizeForAll;
                 }
 
@@ -1238,11 +1237,11 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             ResetData();
-            FHeaderTypeID = recognizeHeaderType(source);
+            headerTypeID = recognizeHeaderType(source);
             // Read header data
-            if (AAC_HEADER_TYPE_ADIF == FHeaderTypeID) readADIF(source);
-            else if (AAC_HEADER_TYPE_ADTS == FHeaderTypeID) readADTS(source);
-            else if (AAC_HEADER_TYPE_MP4 == FHeaderTypeID) readMP4(source,readTagParams);
+            if (AAC_HEADER_TYPE_ADIF == headerTypeID) readADIF(source);
+            else if (AAC_HEADER_TYPE_ADTS == headerTypeID) readADTS(source);
+            else if (AAC_HEADER_TYPE_MP4 == headerTypeID) readMP4(source,readTagParams);
 
             result = true;
 
