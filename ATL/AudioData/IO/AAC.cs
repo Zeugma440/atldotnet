@@ -20,6 +20,8 @@ namespace ATL.AudioData.IO
     ///     2. LATM and LOAS/LATM support is missing
     ///     
     ///     3. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
+    ///     
+    ///     4. Quicktime chapters are read, but not written
     /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
