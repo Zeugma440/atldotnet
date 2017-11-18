@@ -21,7 +21,7 @@ namespace ATL.AudioData.IO
     ///     
     ///     3. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
     ///     
-    ///     4. Quicktime chapters are read, but not written
+    ///     
     /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
@@ -201,6 +201,15 @@ namespace ATL.AudioData.IO
         protected override bool IsLittleEndian
         {
             get { return false; }
+        }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping_mp4.ContainsKey(ID)) supportedMetaId = frameMapping_mp4[ID];
+
+            return supportedMetaId;
         }
 
 
@@ -1164,30 +1173,6 @@ namespace ATL.AudioData.IO
                 return;
             }
             bitrate = (int)Math.Round(mdatSize * 8 / duration, 0);
-        }
-
-        private void setMetaField(string ID, string Data, bool readAllMetaFrames)
-        {
-            byte supportedMetaId = 255;
-
-            // Finds the ATL field identifier
-            if (frameMapping_mp4.ContainsKey(ID)) supportedMetaId = frameMapping_mp4[ID];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, Data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
         }
 
         /// <summary>

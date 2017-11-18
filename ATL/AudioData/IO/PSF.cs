@@ -98,6 +98,15 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TAG_NATIVE;
         }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping.ContainsKey(ID.ToLower())) supportedMetaId = frameMapping[ID.ToLower()];
+
+            return supportedMetaId;
+        }
 
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
@@ -191,33 +200,6 @@ namespace ATL.AudioData.IO
 				return false;
 			}
 		}
-
-        private void setMetaField(string ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, string language = "")
-        {
-            byte supportedMetaId = 255;
-
-            // Finds the ATL field identifier
-            if (frameMapping.ContainsKey(ID.ToLower())) supportedMetaId = frameMapping[ID.ToLower()];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                if (ID.Length > 0)
-                {
-                    fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language);
-                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
-                    {
-                        tagData.AdditionalFields.Remove(fieldInfo);
-                    }
-                    tagData.AdditionalFields.Add(fieldInfo);
-                }
-            }
-        }
 
         private string readPSFLine(Stream source, Encoding encoding)
 		{

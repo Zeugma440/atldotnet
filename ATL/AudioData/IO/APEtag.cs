@@ -106,6 +106,17 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_APE;
         }
 
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+            ID = ID.Replace("\0", "").ToUpper();
+
+            // Finds the ATL field identifier according to the APE version
+            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+
+            return supportedMetaId;
+        }
+
         // ********************* Auxiliary functions & voids ********************
 
         private bool readFooter(BinaryReader SourceFile, TagInfo Tag)
@@ -141,33 +152,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void setMetaField(string FieldName, string FieldValue, TagInfo Tag, bool readAllMetaFrames)
-        {
-            byte supportedMetaId = 255;
-            FieldName = FieldName.Replace("\0", "").ToUpper();
-
-            // Finds the ATL field identifier according to the APE version
-            if (frameMapping.ContainsKey(FieldName)) supportedMetaId = frameMapping[FieldName];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, FieldValue);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), FieldName, FieldValue);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in APE
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
-        }
-
-        // ---------------------------------------------------------------------------
-
         private void readFrames(BinaryReader SourceFile, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
@@ -196,7 +180,7 @@ namespace ATL.AudioData.IO
                      */
                     strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize)));
                     strValue = strValue.Replace("\0", Settings.InternalValueSeparator).Trim();
-                    setMetaField(frameName.Trim(), strValue, Tag, readTagParams.ReadAllMetaFrames);
+                    setMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
@@ -249,8 +233,6 @@ namespace ATL.AudioData.IO
             else if (TagData.PIC_TYPE.CD.Equals(picCode)) return "Cover Art (Media)";
             else return "Cover Art (Other)";
         }
-
-        // ---------------------------------------------------------------------------
 
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {

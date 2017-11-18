@@ -95,6 +95,17 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+            ID = ID.ToUpper();
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+
+            return supportedMetaId;
+        }
+
 
         // ---------- SPECIFIC MEMBERS
 
@@ -166,31 +177,6 @@ namespace ATL.AudioData.IO
             if (!valid) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Incorrect timecode for chapter " + chapIndex + " : " + timeCode);
 
             return result;
-        }
-
-        private void setMetaField(string FieldName, string FieldValue, bool readAllMetaFrames)
-        {
-            byte supportedMetaId = 255;
-            FieldName = FieldName.ToUpper();
-
-            // Finds the ATL field identifier according to the APE version
-            if (frameMapping.ContainsKey(FieldName)) supportedMetaId = frameMapping[FieldName];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, FieldValue);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), FieldName, FieldValue);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in APE
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
         }
 
         private void setChapter(string fieldName, string fieldValue)

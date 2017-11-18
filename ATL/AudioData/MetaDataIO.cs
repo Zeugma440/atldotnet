@@ -444,8 +444,15 @@ namespace ATL.AudioData.IO
 
         abstract protected int getImplementedTagType();
 
+        abstract protected byte getFrameMapping(string zone, string ID, byte tagVersion);
+
 
         // ------ COMMON METHODS -----------------------------------------------------
+
+        public void SetEmbedder(IMetaDataEmbedder embedder)
+        {
+            this.embedder = embedder;
+        }
 
         protected void ResetData()
         {
@@ -459,9 +466,28 @@ namespace ATL.AudioData.IO
             structureHelper = new FileStructureHelper(IsLittleEndian);
         }
 
-        public void SetEmbedder(IMetaDataEmbedder embedder)
+        protected void setMetaField(string ID, string Data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
-            this.embedder = embedder;
+            // Finds the ATL field identifier according to the ID3v2 version
+            byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
+
+            // If ID has been mapped with an ATL field, store it in the dedicated place...
+            if (supportedMetaID < 255)
+            {
+                tagData.IntegrateValue(supportedMetaID, Data);
+            }
+            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
+            {
+                if (ID.Length > 0)
+                {
+                    TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data, streamNumber, language, zone);
+                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicate fields from existing
+                    {
+                        tagData.AdditionalFields.Remove(fieldInfo);
+                    }
+                    tagData.AdditionalFields.Add(fieldInfo);
+                }
+            }
         }
 
         public void Clear()

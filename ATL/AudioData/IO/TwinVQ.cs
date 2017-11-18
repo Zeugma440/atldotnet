@@ -50,10 +50,20 @@ namespace ATL.AudioData.IO
 		public bool Corrupted // True if file corrupted
 		{
 			get { return this.isCorrupted(); }
-		}	
+		}
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
 
-		// TwinVQ chunk header
-		private class ChunkHeader
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+
+            return supportedMetaId;
+        }
+
+
+        // TwinVQ chunk header
+        private class ChunkHeader
 		{
             public string ID;
 			public uint Size;                                            // Chunk size
@@ -241,30 +251,6 @@ namespace ATL.AudioData.IO
 				((byte)(Chunk.ID[3]) < 32) ||
 				"DSIZ".Equals(Chunk.ID) );
 		}
-
-        private void setMetaField(string frameCode, string data, bool readAllMetaFrames, ushort streamNumber = 0, string language = "")
-        {
-            byte supportedMetaId = 255;
-
-            // Finds the ATL field identifier
-            if (frameMapping.ContainsKey(frameCode)) supportedMetaId = frameMapping[frameCode];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), frameCode, data, streamNumber, language);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
-        }
 
         private bool readTag(BinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
 		{ 

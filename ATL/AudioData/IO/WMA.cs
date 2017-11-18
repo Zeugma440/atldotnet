@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string filePath;
 
-
+/* Unused for now
         public bool IsStreamed
         {
             get { return true; }
@@ -107,7 +107,7 @@ namespace ATL.AudioData.IO
         {
             get { return this.getChannelMode(); }
         }
-
+*/
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -141,6 +141,15 @@ namespace ATL.AudioData.IO
         public bool HasNativeMeta()
         {
             return true;
+        }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+
+            return supportedMetaId;
         }
 
 
@@ -314,11 +323,11 @@ namespace ATL.AudioData.IO
                     // Set corresponding tag field if supported
                     switch (i)
                     {
-                        case 0: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/TITLE", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 1: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/AUTHOR", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 2: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/COPYRIGHT", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 3: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/DESCRIPTION", fieldValue, readTagParams.ReadAllMetaFrames); break;
-                        case 4: setMetaField(ZONE_CONTENT_DESCRIPTION, "WM/RATING", fieldValue, readTagParams.ReadAllMetaFrames); break;
+                        case 0: setMetaField("WM/TITLE", fieldValue, readTagParams.ReadAllMetaFrames, ZONE_CONTENT_DESCRIPTION); break;
+                        case 1: setMetaField("WM/AUTHOR", fieldValue, readTagParams.ReadAllMetaFrames, ZONE_CONTENT_DESCRIPTION); break;
+                        case 2: setMetaField("WM/COPYRIGHT", fieldValue, readTagParams.ReadAllMetaFrames, ZONE_CONTENT_DESCRIPTION); break;
+                        case 3: setMetaField("WM/DESCRIPTION", fieldValue, readTagParams.ReadAllMetaFrames, ZONE_CONTENT_DESCRIPTION); break;
+                        case 4: setMetaField("WM/RATING", fieldValue, readTagParams.ReadAllMetaFrames, ZONE_CONTENT_DESCRIPTION); break;
                     }
                 }
             }
@@ -505,31 +514,7 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
             }
 
-            if (setMeta) setMetaField(zoneCode, fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, streamNumber, decodeLanguage(source.BaseStream,languageIndex));
-        }
-
-        private void setMetaField(string zone, string ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, string language = "")
-        {
-            byte supportedMetaId = 255;
-
-            // Finds the ATL field identifier
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
+            if (setMeta) setMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source.BaseStream,languageIndex));
         }
 
 		private bool readData(BinaryReader source, ReadTagParams readTagParams)

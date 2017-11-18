@@ -142,6 +142,18 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TAG_NATIVE;
         }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+            byte ID_b = Byte.Parse(ID);
+
+            // Finds the ATL field identifier
+            if (ZONE_EXTENDED.Equals(zone) && extendedFrameMapping.ContainsKey(ID_b)) supportedMetaId = extendedFrameMapping[ID_b];
+            else if (ZONE_HEADER.Equals(zone) && headerFrameMapping.ContainsKey(ID_b)) supportedMetaId = headerFrameMapping[ID_b];
+
+            return supportedMetaId;
+        }
+
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
@@ -274,39 +286,14 @@ namespace ATL.AudioData.IO
 			}
 		}
 
-        private void setMetaField(string zone, byte ID, string data, bool readAllMetaFrames, ushort streamNumber = 0, string language = "")
-        {
-            byte supportedMetaId = 255;
-
-            // Finds the ATL field identifier
-            if (ZONE_EXTENDED.Equals(zone) && extendedFrameMapping.ContainsKey(ID)) supportedMetaId = extendedFrameMapping[ID];
-            else if (ZONE_HEADER.Equals(zone) && headerFrameMapping.ContainsKey(ID)) supportedMetaId = headerFrameMapping[ID];
-
-            TagData.MetaFieldInfo fieldInfo;
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID.ToString(), data, streamNumber, language, zone);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
-        }
-
         private void readHeaderTags(BinaryReader source, ref SPCHeader header, ReadTagParams readTagParams)
 		{
             long initialPosition = source.BaseStream.Position;
 
-            setMetaField(ZONE_HEADER, HEADER_TITLE, Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0","").Trim(), readTagParams.ReadAllMetaFrames);
-            setMetaField(ZONE_HEADER, HEADER_ALBUM, Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
-            setMetaField(ZONE_HEADER, HEADER_DUMPERNAME, Utils.Latin1Encoding.GetString(source.ReadBytes(16)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
-            setMetaField(ZONE_HEADER, HEADER_COMMENT, Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
+            setMetaField(HEADER_TITLE.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0","").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            setMetaField(HEADER_ALBUM.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            setMetaField(HEADER_DUMPERNAME.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(16)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            setMetaField(HEADER_COMMENT.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             byte[] date, song, fade;
 
@@ -368,23 +355,23 @@ namespace ATL.AudioData.IO
 				if (songVal > 959) songVal = 959;
 
 				source.BaseStream.Seek(-1,SeekOrigin.Current); // We're one byte ahead
-                setMetaField(ZONE_HEADER, HEADER_FADE, Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames);
+                setMetaField(HEADER_FADE.ToString(), Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             }
 			else
 			{
                 fadeVal = TrackUtils.ExtractTrackNumber(Utils.Latin1Encoding.GetString(fade));
                 songVal = TrackUtils.ExtractTrackNumber(Utils.Latin1Encoding.GetString(song));
 
-                setMetaField(ZONE_HEADER, HEADER_FADE, Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames);
+                setMetaField(HEADER_FADE.ToString(), Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             }
 
-            setMetaField(ZONE_HEADER, HEADER_DUMPDATE, Utils.Latin1Encoding.GetString(date), readTagParams.ReadAllMetaFrames);
-            setMetaField(ZONE_HEADER, HEADER_SONGLENGTH, Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames);
+            setMetaField(HEADER_DUMPDATE.ToString(), Utils.Latin1Encoding.GetString(date), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            setMetaField(HEADER_SONGLENGTH.ToString(), Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
             if (songVal > 0) duration = Math.Round((double)fadeVal / 1000) + songVal;
 
-            setMetaField(ZONE_HEADER, HEADER_ARTIST, Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames);
+            setMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             header.Size += source.BaseStream.Position - initialPosition;
 
             if (readTagParams.PrepareForWriting)
@@ -468,7 +455,7 @@ namespace ATL.AudioData.IO
                     else if (XID6_END == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
                     else if (XID6_FADE == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
 
-                    setMetaField(ZONE_EXTENDED, ID, strData, readTagParams.ReadAllMetaFrames);
+                    setMetaField(ID.ToString(), strData, readTagParams.ReadAllMetaFrames, ZONE_EXTENDED);
                 }
 
                 if (ticks > 0) duration = Math.Round((double)ticks / XID6_TICKSSEC);

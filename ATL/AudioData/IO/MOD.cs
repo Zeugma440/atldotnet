@@ -102,6 +102,10 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TAG_NATIVE;
         }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            throw new NotImplementedException();
+        }
 
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===

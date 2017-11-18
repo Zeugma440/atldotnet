@@ -347,6 +347,24 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            byte supportedMetaId = 255;
+
+            if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
+
+            // Finds the ATL field identifier according to the ID3v2 version
+            switch (tagVersion)
+            {
+                case TAG_VERSION_2_2: if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID]; break;
+                case TAG_VERSION_2_3: if (frameMapping_v23.ContainsKey(ID)) supportedMetaId = frameMapping_v23[ID]; break;
+                case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
+            }
+
+            return supportedMetaId;
+        }
+
+
         private bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
         {
             bool result = true;
@@ -403,35 +421,6 @@ namespace ATL.AudioData.IO
             if (result > Tag.FileSize) result = 0;
 
             return result;
-        }
-
-        private void setMetaField(string ID, string Data, byte tagVersion, bool readAllMetaFrames, string language = "")
-        {
-            byte supportedMetaId = 255;
-            if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
-
-            // Finds the ATL field identifier according to the ID3v2 version
-            switch (tagVersion)
-            {
-                case TAG_VERSION_2_2: if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID]; break;
-                case TAG_VERSION_2_3: if (frameMapping_v23.ContainsKey(ID)) supportedMetaId = frameMapping_v23[ID]; break;
-                case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
-            }
-
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
-            if (supportedMetaId < 255)
-            {
-                tagData.IntegrateValue(supportedMetaId, Data);
-            }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
-            {
-                TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data, 0, language);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Replace current value, since there can be no duplicate fields in ID3v2
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
-            }
         }
 
         private bool readFrame(
@@ -667,7 +656,7 @@ namespace ATL.AudioData.IO
 
                     if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        if (!inChapter) setMetaField(Frame.ID, strData, tag.Version, readTagParams.ReadAllMetaFrames);
+                        if (!inChapter) setMetaField(Frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                         else
                         {
                             chapter = chapters[chapters.Count - 1];
@@ -812,14 +801,14 @@ namespace ATL.AudioData.IO
                         if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                         {
                             // Processed as an additional field
-                            setMetaField(commentDescription, comm.Value, tag.Version, readTagParams.ReadAllMetaFrames, comm.Language);
+                            setMetaField(commentDescription, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, 0, comm.Language);
                             continue;
                         }
                     }
 
                     // Processed as a "classic" Comment
-                    if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag.Version, readTagParams.ReadAllMetaFrames);
-                    else setMetaField("COM", comm.Value, tag.Version, readTagParams.ReadAllMetaFrames);
+                    if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
+                    else setMetaField("COM", comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                 }
             }
 

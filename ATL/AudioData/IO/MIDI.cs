@@ -24,7 +24,6 @@ it appears that Winamp uses "intelligent" parsing, which ends the song whith the
 
 using System;
 using System.IO;
-using System.Collections;
 using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
@@ -327,6 +326,10 @@ namespace ATL.AudioData.IO
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_NATIVE;
+        }
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            throw new NotImplementedException();
         }
 
 

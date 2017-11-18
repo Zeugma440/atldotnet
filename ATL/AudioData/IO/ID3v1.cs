@@ -221,9 +221,6 @@ namespace ATL.AudioData.IO
             return result;
 		}
 
-
-		// ---------------------------------------------------------------------------
-
 		private static byte GetTagVersion(byte[] endComment)
 		{
 			byte result = TAG_VERSION_1_0;
@@ -314,6 +311,11 @@ namespace ATL.AudioData.IO
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_ID3V1;
+        }
+
+        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        {
+            throw new NotImplementedException();
         }
     }
 }
