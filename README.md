@@ -52,7 +52,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __more audio formats than TagLib, including video game audio formats (SPC, PSF, VGM, GYM)__
 
-* ATL supports __chapters__ natively
+* ATL supports __[chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)__ natively
 
 * ATL supports __Playlists and Cuesheets__
 
@@ -65,7 +65,7 @@ ATL unit tests run on .NET Framework 4.5+
 
 The library and its tests have been maintained on Visual Studio Express 2012, 2015 and 2017 Community
 
-Please refer to the [Code snippets section of the Documentation](3.-Usage-_-Code-snippets) for quick usage
+Please refer to the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets) for quick usage
 
 
 ## What kind of data can ATL actually read ? From which formats ?
