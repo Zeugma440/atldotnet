@@ -405,13 +405,13 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void setMetaField(string ID, string Data, TagInfo Tag, bool readAllMetaFrames, string language = "")
+        private void setMetaField(string ID, string Data, byte tagVersion, bool readAllMetaFrames, string language = "")
         {
             byte supportedMetaId = 255;
             if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
 
             // Finds the ATL field identifier according to the ID3v2 version
-            switch (Tag.Version)
+            switch (tagVersion)
             {
                 case TAG_VERSION_2_2: if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID]; break;
                 case TAG_VERSION_2_3: if (frameMapping_v23.ContainsKey(ID)) supportedMetaId = frameMapping_v23[ID]; break;
@@ -667,7 +667,7 @@ namespace ATL.AudioData.IO
 
                     if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        if (!inChapter) setMetaField(Frame.ID, strData, tag, readTagParams.ReadAllMetaFrames);
+                        if (!inChapter) setMetaField(Frame.ID, strData, tag.Version, readTagParams.ReadAllMetaFrames);
                         else
                         {
                             chapter = chapters[chapters.Count - 1];
@@ -812,14 +812,14 @@ namespace ATL.AudioData.IO
                         if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                         {
                             // Processed as an additional field
-                            setMetaField(commentDescription, comm.Value, tag, readTagParams.ReadAllMetaFrames, comm.Language);
+                            setMetaField(commentDescription, comm.Value, tag.Version, readTagParams.ReadAllMetaFrames, comm.Language);
                             continue;
                         }
                     }
 
                     // Processed as a "classic" Comment
-                    if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
-                    else setMetaField("COM", comm.Value, tag, readTagParams.ReadAllMetaFrames);
+                    if (tagVersion > TAG_VERSION_2_2) setMetaField("COMM", comm.Value, tag.Version, readTagParams.ReadAllMetaFrames);
+                    else setMetaField("COM", comm.Value, tag.Version, readTagParams.ReadAllMetaFrames);
                 }
             }
 
