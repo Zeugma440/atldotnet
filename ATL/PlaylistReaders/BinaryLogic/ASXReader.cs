@@ -16,49 +16,48 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
         public override void GetFiles(FileStream fs, IList<String> result)
         {
-            XmlTextReader source = new XmlTextReader(fs);
-
             // The following flags indicate if the parser is currently reading
             // the content of the corresponding tag
             bool inPlaylist = false;
             bool inTrack = false;
 
-            while (source.Read())
+            using (XmlTextReader source = new XmlTextReader(fs))
             {
-                switch (source.NodeType)
+                while (source.Read())
                 {
-                    case XmlNodeType.Element: // Element start
-                        if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inPlaylist = true;
-                        }
-                        else if (inPlaylist && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTrack = true;
-                        }
-                        else if (inTrack && source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase))
-                        {
-                            result.Add(getResourceLocation(source));
-                        }
-                        break;
+                    switch (source.NodeType)
+                    {
+                        case XmlNodeType.Element: // Element start
+                            if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inPlaylist = true;
+                            }
+                            else if (inPlaylist && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTrack = true;
+                            }
+                            else if (inTrack && source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase))
+                            {
+                                result.Add(getResourceLocation(source));
+                            }
+                            break;
 
-//                    case XmlNodeType.Text:
-//                        break;
+                        //                    case XmlNodeType.Text:
+                        //                        break;
 
-                    case XmlNodeType.EndElement: // Element end
-                        if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inPlaylist = false;
-                        }
-                        else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTrack = false;
-                        }
-                        break;
+                        case XmlNodeType.EndElement: // Element end
+                            if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inPlaylist = false;
+                            }
+                            else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTrack = false;
+                            }
+                            break;
+                    }
                 }
             }
-
-            source.Close();
         }
 
         private String getResourceLocation(XmlTextReader source)

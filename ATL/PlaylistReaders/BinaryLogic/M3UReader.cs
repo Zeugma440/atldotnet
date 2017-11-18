@@ -28,24 +28,23 @@ namespace ATL.PlaylistReaders.BinaryLogic
 				encoding = StreamUtils.GetEncodingFromFileBOM(fs);
 			}
 
-			source = new StreamReader(fs,encoding);
-
-			String s = source.ReadLine();
-			while (s != null)
-			{
-				// If the read line isn't a metadata, it's a file path
-				if ((s.Length > 0) && (s[0] != '#'))
-				{
-					if ( !System.IO.Path.IsPathRooted(s) )
-					{
-						s = System.IO.Path.GetDirectoryName(FFileName) + System.IO.Path.DirectorySeparatorChar + s;
-					}
-					result.Add(System.IO.Path.GetFullPath(s));
-				}
-				s = source.ReadLine();
-			}
-
-            if (source != null) source.Close();
+            using (source = new StreamReader(fs, encoding))
+            {
+                String s = source.ReadLine();
+                while (s != null)
+                {
+                    // If the read line isn't a metadata, it's a file path
+                    if ((s.Length > 0) && (s[0] != '#'))
+                    {
+                        if (!System.IO.Path.IsPathRooted(s))
+                        {
+                            s = System.IO.Path.GetDirectoryName(FFileName) + System.IO.Path.DirectorySeparatorChar + s;
+                        }
+                        result.Add(System.IO.Path.GetFullPath(s));
+                    }
+                    s = source.ReadLine();
+                }
+            }
 		}
 	}
 }

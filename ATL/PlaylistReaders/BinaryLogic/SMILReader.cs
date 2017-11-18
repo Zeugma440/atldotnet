@@ -15,32 +15,32 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
         public override void GetFiles(FileStream fs, IList<String> result)
         {
-            XmlTextReader source = new XmlTextReader(fs);
-
-            while (source.Read())
+            using (XmlTextReader source = new XmlTextReader(fs))
             {
-                switch (source.NodeType)
+                while (source.Read())
                 {
-                    case XmlNodeType.Element: // Element start
-                        if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase))
-                        {
-                            result.Add(getResourceLocation(source));
-                        }
-                        else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
-                        {
-                            result.Add(getResourceLocation(source));
-                        }
-                        break;
+                    switch (source.NodeType)
+                    {
+                        case XmlNodeType.Element: // Element start
+                            if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase))
+                            {
+                                result.Add(getResourceLocation(source));
+                            }
+                            else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
+                            {
+                                result.Add(getResourceLocation(source));
+                            }
+                            break;
 
-//                    case XmlNodeType.Text:
-//                        break;
+                            //                    case XmlNodeType.Text:
+                            //                        break;
 
-//                    case XmlNodeType.EndElement: // Element end
-//                        break;
+                            //                    case XmlNodeType.EndElement: // Element end
+                            //                        break;
+                    }
                 }
-            }
 
-            source.Close();
+            }
         }
 
         // Most SMIL sample playlists store resource location with a relative path

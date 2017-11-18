@@ -105,6 +105,7 @@
     <Compile Include="AudioData\Utils\CRC.cs" />
     <Compile Include="AudioData\Utils\FileStructureHelper.cs" />
     <Compile Include="AudioData\Utils\TrackUtils.cs" />
+    <Compile Include="CatalogDataReaders\BinaryLogic\Cue.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueAdapter.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />

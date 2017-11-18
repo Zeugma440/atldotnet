@@ -16,7 +16,6 @@ namespace ATL.PlaylistReaders.BinaryLogic
         public override void GetFiles(FileStream fs, IList<String> result)
         {
             Uri uri;
-            XmlTextReader source = new XmlTextReader(fs);
 
             // The following flags indicate if the parser is currently reading
             // the content of the corresponding tag
@@ -26,93 +25,94 @@ namespace ATL.PlaylistReaders.BinaryLogic
             bool inLocation = false;
             bool inImage = false;
 
-            while (source.Read())
+            using (XmlTextReader source = new XmlTextReader(fs))
             {
-                switch (source.NodeType)
+                while (source.Read())
                 {
-                    case XmlNodeType.Element: // Element start
-                        if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inPlaylist = true;
-                        }
-                        else if (inPlaylist && source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTracklist = true;
-                        }
-                        else if (inTracklist && source.Name.Equals("track", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTrack = true;
-                        }
-                        else if (inTrack && source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inLocation = true;
-                        }
-                        else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inImage = true;
-                        }
-                        break;
-
-                    case XmlNodeType.Text:
-                        if (inLocation || inImage)
-                        {
-                            try
+                    switch (source.NodeType)
+                    {
+                        case XmlNodeType.Element: // Element start
+                            if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
                             {
-                                uri = new Uri(source.Value);
-                                if (uri.IsFile)
+                                inPlaylist = true;
+                            }
+                            else if (inPlaylist && source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTracklist = true;
+                            }
+                            else if (inTracklist && source.Name.Equals("track", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTrack = true;
+                            }
+                            else if (inTrack && source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inLocation = true;
+                            }
+                            else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inImage = true;
+                            }
+                            break;
+
+                        case XmlNodeType.Text:
+                            if (inLocation || inImage)
+                            {
+                                try
                                 {
-                                    if (inLocation)
+                                    uri = new Uri(source.Value);
+                                    if (uri.IsFile)
                                     {
-                                        if (!System.IO.Path.IsPathRooted(uri.LocalPath))
+                                        if (inLocation)
                                         {
-                                            result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
+                                            if (!System.IO.Path.IsPathRooted(uri.LocalPath))
+                                            {
+                                                result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
+                                            }
+                                            else
+                                            {
+                                                result.Add(uri.LocalPath);
+                                            }
                                         }
-                                        else
-                                        {
-                                            result.Add(uri.LocalPath);
-                                        }
+                                        //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
+                                        //TODO fetch track picture from playlists info ?
                                     }
-                                    //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
-                                    //TODO fetch track picture from playlists info ?
+                                    else // other protocols (e.g. HTTP, SMB)
+                                    {
+                                        //TODO
+                                    }
                                 }
-                                else // other protocols (e.g. HTTP, SMB)
+                                catch (UriFormatException)
                                 {
-                                    //TODO
+                                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
                                 }
                             }
-                            catch (UriFormatException)
+                            break;
+
+                        case XmlNodeType.EndElement: // Element end
+                            if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
                             {
-                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
+                                inPlaylist = false;
                             }
-                        }
-                        break;
-
-                    case XmlNodeType.EndElement: // Element end
-                        if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inPlaylist = false;
-                        }
-                        else if (source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTracklist = false;
-                        }
-                        else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inTrack = false;
-                        }
-                        else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inLocation = false;
-                        }
-                        else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
-                        {
-                            inImage = false;
-                        }
-                        break;
-                }
-            }
-
-            source.Close();
+                            else if (source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTracklist = false;
+                            }
+                            else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTrack = false;
+                            }
+                            else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inLocation = false;
+                            }
+                            else if (inTrack && source.Name.Equals("image", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inImage = false;
+                            }
+                            break;
+                    } // switch
+                } // while
+            } // using
         }
     }
 }

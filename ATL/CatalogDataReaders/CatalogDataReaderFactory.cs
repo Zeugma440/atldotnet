@@ -39,7 +39,7 @@ namespace ATL.CatalogDataReaders
 
             if (formats != null && formats.Count > alternate)
             {
-                result = GetCatalogDataReader(formats[alternate].ID);
+                result = GetCatalogDataReader(formats[alternate].ID, path);
             }
             else
             {
@@ -50,13 +50,13 @@ namespace ATL.CatalogDataReaders
             return result;
         }
 
-        private ICatalogDataReader GetCatalogDataReader(int formatId)
+        private ICatalogDataReader GetCatalogDataReader(int formatId, string path = "")
         {
             ICatalogDataReader theReader = null;
 
             if (CR_CUE == formatId)
             {
-				theReader = new BinaryLogic.CueAdapter();
+                theReader = new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
 			}
 
             if (null == theReader) theReader = new BinaryLogic.DummyReader();
