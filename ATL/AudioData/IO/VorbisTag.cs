@@ -132,53 +132,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        static private uint parseTimecodeToMs(int chapIndex, string timeCode)
-        {
-            uint result = 0;
-            DateTime dateTime = new DateTime();
-            bool valid = false;
-
-            if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
-            {
-                valid = true;
-                result = (uint)dateTime.Millisecond;
-                result += (uint)dateTime.Second * 1000;
-                result += (uint)dateTime.Minute * 60 * 1000;
-                result += (uint)dateTime.Hour * 60 * 60 * 1000;
-            }
-            else // Handle mm:ss and mm:ss.ddd
-            {
-                uint hours = 0;
-                uint minutes = 0;
-                uint seconds = 0;
-                uint milliseconds = 0;
-
-                if (timeCode.Contains(":"))
-                {
-                    valid = true;
-                    string[] parts = timeCode.Split(':');
-                    if (parts[parts.Length - 1].Contains("."))
-                    {
-                        string[] subPart = parts[parts.Length - 1].Split('.');
-                        parts[parts.Length - 1] = subPart[0];
-                        milliseconds = uint.Parse(subPart[1]);
-                    }
-                    if (parts.Length >= 2) seconds = uint.Parse(parts[parts.Length - 1]);
-                    if (parts.Length >= 3) minutes = uint.Parse(parts[parts.Length - 2]);
-                    if (parts.Length >= 4) hours = uint.Parse(parts[parts.Length - 3]);
-
-                    result = milliseconds;
-                    result += seconds * 1000;
-                    result += minutes * 60 * 1000;
-                    result += hours * 60 * 60 * 1000;
-                }
-            }
-
-            if (!valid) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Incorrect timecode for chapter " + chapIndex + " : " + timeCode);
-
-            return result;
-        }
-
         private void setChapter(string fieldName, string fieldValue)
         {
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
@@ -202,7 +155,15 @@ namespace ATL.AudioData.IO
             }
             else // Chapter start time
             {
-                tagData.Chapters[chapterIndex - 1].StartTime = parseTimecodeToMs(chapterIndex, fieldValue);
+                int result = Utils.DecodeTimecodeToMs(chapterIndex, fieldValue);
+                if (-1 == result)
+                {
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + chapterIndex + " : " + fieldValue);
+                }
+                else
+                {
+                    tagData.Chapters[chapterIndex - 1].StartTime = (uint)result;
+                }
             }
         }
 
@@ -514,7 +475,7 @@ namespace ATL.AudioData.IO
             for (int i=0; i<chapters.Count; i++)
             {
                 chapterIndex = Utils.BuildStrictLengthString((i + 1).ToString(), 3, '0', false);
-                writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.FormatTime_ms(chapters[i].StartTime));
+                writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.EncodeTimecode_ms(chapters[i].StartTime));
                 if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "NAME", chapters[i].Title);
                 if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "URL", chapters[i].Url);
             }

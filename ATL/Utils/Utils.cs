@@ -43,11 +43,11 @@ namespace Commons
         /// </summary>
         /// <param name="milliseconds">Duration to format (in milliseconds)</param>
         /// <returns>Formatted duration according to the abovementioned convention</returns>
-        public static String FormatTime_ms(long milliseconds)
+        public static string EncodeTimecode_ms(long milliseconds)
         {
             long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
 
-            return FormatTime(seconds) + "." + (milliseconds - seconds * 1000);
+            return EncodeTimecode_s(seconds) + "." + (milliseconds - seconds * 1000);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Commons
         /// </summary>
         /// <param name="seconds">Duration to format (in seconds)</param>
         /// <returns>Formatted duration according to the abovementioned convention</returns>
-        public static String FormatTime(long seconds)
+        public static string EncodeTimecode_s(long seconds)
         {
             int h;
             long m;
@@ -98,6 +98,54 @@ namespace Commons
                     return mStr + ":" + sStr;
                 }
             }
+        }
+
+        // TODO Doc
+        static public int DecodeTimecodeToMs(int chapIndex, string timeCode)
+        {
+            int result = -1;
+            DateTime dateTime = new DateTime();
+            bool valid = false;
+
+            if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
+            {
+                valid = true;
+                result = dateTime.Millisecond;
+                result += dateTime.Second * 1000;
+                result += dateTime.Minute * 60 * 1000;
+                result += dateTime.Hour * 60 * 60 * 1000;
+            }
+            else // Handle mm:ss and mm:ss.ddd
+            {
+                int hours = 0;
+                int minutes = 0;
+                int seconds = 0;
+                int milliseconds = 0;
+
+                if (timeCode.Contains(":"))
+                {
+                    valid = true;
+                    string[] parts = timeCode.Split(':');
+                    if (parts[parts.Length - 1].Contains("."))
+                    {
+                        string[] subPart = parts[parts.Length - 1].Split('.');
+                        parts[parts.Length - 1] = subPart[0];
+                        milliseconds = int.Parse(subPart[1]);
+                    }
+                    if (parts.Length >= 2) seconds = int.Parse(parts[parts.Length - 1]);
+                    if (parts.Length >= 3) minutes = int.Parse(parts[parts.Length - 2]);
+                    if (parts.Length >= 4) hours = int.Parse(parts[parts.Length - 3]);
+
+                    result = milliseconds;
+                    result += seconds * 1000;
+                    result += minutes * 60 * 1000;
+                    result += hours * 60 * 60 * 1000;
+                }
+            }
+
+            if (!valid) result = -1;
+
+            return result;
         }
 
         /// <summary>

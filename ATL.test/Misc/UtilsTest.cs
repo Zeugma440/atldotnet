@@ -18,13 +18,13 @@ namespace ATL.test
         public void Utils_FormatTime()
         {
             // Display s and ms
-            Assert.AreEqual("00:02.2", Utils.FormatTime_ms(2*1000+2));
+            Assert.AreEqual("00:02.2", Utils.EncodeTimecode_ms(2*1000+2));
             // Display m, s and ms
-            Assert.AreEqual("01:02.2", Utils.FormatTime_ms(62 * 1000 + 2));
+            Assert.AreEqual("01:02.2", Utils.EncodeTimecode_ms(62 * 1000 + 2));
             // Display h, m, s and ms
-            Assert.AreEqual("01:01:00.0", Utils.FormatTime_ms(60 * 60 * 1000 + 60 * 1000));
+            Assert.AreEqual("01:01:00.0", Utils.EncodeTimecode_ms(60 * 60 * 1000 + 60 * 1000));
             // Display d, h, m, s and ms
-            Assert.AreEqual("2d 01:01:00.0", Utils.FormatTime_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000));
+            Assert.AreEqual("2d 01:01:00.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000));
         }
 
     }

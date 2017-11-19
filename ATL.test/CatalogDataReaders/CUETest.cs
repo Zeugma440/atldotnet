@@ -16,14 +16,16 @@ namespace ATL.test
             {
                 ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(testFileLocation);
 
-               Assert.IsNotInstanceOfType(theReader, typeof(CatalogDataReaders.BinaryLogic.DummyReader));
-               Assert.AreEqual("Nintendo Sound Team", theReader.Artist);
-               Assert.AreEqual("Duck Hunt", theReader.Title);
-               Assert.AreEqual("GENRE Game"+Settings.InternalValueSeparator+"DATE 1984", theReader.Comments);
+                Assert.IsNotInstanceOfType(theReader, typeof(CatalogDataReaders.BinaryLogic.DummyReader));
+                Assert.AreEqual("Nintendo Sound Team", theReader.Artist);
+                Assert.AreEqual("Duck Hunt", theReader.Title);
+                Assert.AreEqual("GENRE Game" + Settings.InternalValueSeparator + "DATE 1984", theReader.Comments);
 
                 Assert.AreEqual(2, theReader.Tracks.Count);
-               Assert.AreEqual("Title Screen", theReader.Tracks[0].Title);
-               Assert.AreEqual("Title Screen (reprise)", theReader.Tracks[1].Title);
+                Assert.AreEqual("Title Screen", theReader.Tracks[0].Title);
+                Assert.AreEqual("Title Screen (reprise)", theReader.Tracks[1].Title);
+
+                // TODO TEST DURATION
             }
             finally
             {
@@ -53,6 +55,8 @@ namespace ATL.test
                 Assert.AreEqual("She's My Baby", theReader.Tracks[1].Title);
                 Assert.AreEqual("Faithless", theReader.Tracks[1].Artist);
                 Assert.AreEqual("comment21" + Settings.InternalValueSeparator + "comment22", theReader.Tracks[1].Comment);
+
+                // TODO TEST DURATION
             }
             finally
             {
