@@ -44,9 +44,6 @@ namespace ATL.test.IO.MetaData
      * 
      * Individual picture removal (from index > 1)
      * 
-     * Extended ID3v2 header compliance cases incl. limit cases
-     * 
-     * 
      * TECHNICAL
      * 
      * Add a standard unsupported field => persisted as standard field in tag

@@ -1,5 +1,4 @@
 ﻿using ATL.AudioData;
-using Commons;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Drawing;
@@ -82,7 +81,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.UpdateTagInFile(theTag1, tagType1));
             Assert.IsTrue(theFile.UpdateTagInFile(theTag2, tagType2));
 
-            // This also tests if physical data can still be read (i.e. MP4 structure has not been scrambled by the apparition of the non-native tag)
+            // This also tests if physical data can still be read (e.g. native tag has not been scrambled by the apparition of a non-native tag)
             Assert.IsTrue(theFile.ReadFromFile());
 
             meta1 = theFile.getMeta(tagType1);

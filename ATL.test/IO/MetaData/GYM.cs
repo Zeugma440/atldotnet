@@ -21,17 +21,6 @@ namespace ATL.test.IO.MetaData
      *  Conservation of unsupported tag field after tag editing
      *
      */
-
-    /*
-     * TODO
-     * 
-     * FUNCTIONAL
-     * 
-     * Test multiplicity of field names
-     * 
-    */
-
-
     [TestClass]
     public class GYM : MetaIOTest
     {

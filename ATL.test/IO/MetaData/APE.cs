@@ -1,10 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
-using System.IO;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -54,7 +50,6 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_APE() // My deepest apologies for this dubious method name
         {
-            // Source : file with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 

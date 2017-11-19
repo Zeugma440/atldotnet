@@ -512,7 +512,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(4, found);
 
 /*
-            // Modify elements
+            // Modify elements -- not supported yet
             TagData theTag = new TagData();
             theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();

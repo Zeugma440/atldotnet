@@ -33,29 +33,6 @@ namespace ATL.test.IO.MetaData
      *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
      *
      */
-
-    /*
-     * TODO
-     * 
-     * FUNCTIONAL
-     * 
-     * Individual picture removal (from index > 1)
-     * 
-     * Extended ID3v2 header compliance cases incl. limit cases
-     * 
-     * 
-     * TECHNICAL
-     * 
-     * Add a standard unsupported field => persisted as standard field in tag
-     * Add a non-standard unsupported field => persisted as TXXX field
-     * Exact picture data conservation after tag editing
-     * 
-     * Encode unsynchronized data
-     * Decode unsynchronized data
-     * 
-    */
-
-
     [TestClass]
     public class ID3v2_DSF : MetaIOTest
     {
