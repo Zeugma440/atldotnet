@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 
 namespace ATL
 {
@@ -16,6 +17,8 @@ namespace ATL
         public static string DisplayValueSeparator = ";";
 
         public static bool ReadAllMetaFrames = true; // If true, default Track behaviour reads all metadata frames, including those not described by IMetaDataIO
+
+        public static Encoding DefaultTextEncoding = Encoding.UTF8;
 
         // Tag editing preferences : what tagging systems to use when audio file has no metadata ?
         // NB1 : If more than one item, _all_ of them will be written

@@ -577,7 +577,7 @@ namespace ATL.AudioData.IO
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8)) // TODO make default UTF-8 encoding customizable
+                using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                 {
                     if (write(dataToWrite, msw, zone.Name) > 0)
                     {

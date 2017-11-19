@@ -544,7 +544,7 @@ namespace ATL.AudioData.IO
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8)) // TODO make default UTF-8 encoding customizable
+                using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                 {
                     if (zone.Name.Equals(ZONE_VORBISTAG)) writtenFields = writeVorbisTag(msw, tag, 1 == zone.Flag);
                     else if (zone.Name.Equals(ZONE_PICTURE))

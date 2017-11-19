@@ -985,7 +985,7 @@ namespace ATL.AudioData.IO
         {
             int nbFrames = 0;
             bool doWritePicture;
-            Encoding tagEncoding = Encoding.UTF8; // TODO make this customizable
+            Encoding tagEncoding = Settings.DefaultTextEncoding;
 
             // Rewrites extended header as is
             if (tagHeader.HasExtendedHeader)
@@ -999,13 +999,12 @@ namespace ATL.AudioData.IO
 
                 if (Settings.ID3v2_useExtendedHeaderRestrictions)
                 {
-                    // Force UTF-8 if encoding restriction is enabled and current encoding is not among authorized types
-                    // TODO : make target format customizable (UTF-8 or ISO-8859-1)
+                    // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
                     if (tagHeader.HasTextEncodingRestriction)
                     {
                         if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
                         {
-                            tagEncoding = Encoding.UTF8;
+                            tagEncoding = Settings.DefaultTextEncoding;
                         }
                     }
                 }

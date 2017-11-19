@@ -80,7 +80,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
                             }
                             else // other protocols (e.g. HTTP, SMB)
                             {
-                                //TODO
+                                //TODO other protocols
                             }
                         }
                         catch (UriFormatException)
