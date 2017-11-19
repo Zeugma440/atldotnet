@@ -166,8 +166,10 @@
     <Content Include="Resources\AIF\aiff_empty.aif" />
     <Content Include="Resources\AIF\empty.aif" />
     <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
+    <Content Include="Resources\MID\memory.mid" />
     <Content Include="Resources\MID\ROQ.MID" />
     <Content Include="Resources\MID\TRANSIT1.MID" />
+    <Content Include="Resources\MID\villg.mid" />
     <Content Include="Resources\MID\yoru-uta.mid" />
     <Content Include="Resources\MOD\empty.mod" />
     <Content Include="Resources\MOD\mod.mod" />
