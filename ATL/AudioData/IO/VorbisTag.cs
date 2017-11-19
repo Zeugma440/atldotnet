@@ -155,7 +155,7 @@ namespace ATL.AudioData.IO
             }
             else // Chapter start time
             {
-                int result = Utils.DecodeTimecodeToMs(chapterIndex, fieldValue);
+                int result = Utils.DecodeTimecodeToMs(fieldValue);
                 if (-1 == result)
                 {
                     Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + chapterIndex + " : " + fieldValue);

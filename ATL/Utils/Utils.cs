@@ -101,7 +101,7 @@ namespace Commons
         }
 
         // TODO Doc
-        static public int DecodeTimecodeToMs(int chapIndex, string timeCode)
+        static public int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
             DateTime dateTime = new DateTime();
