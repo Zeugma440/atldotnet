@@ -1,4 +1,5 @@
 ﻿using ATL.AudioData;
+using Commons;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,21 +9,30 @@ namespace ATL.test.IO.MetaData
 {
     /* TODO generic tests to add
      *   - Correct update of tagData within the IMetaDataIO just after an Update/Remove (by comparing with the same TagData obtained with Read)
+     *   - Individual picture removal (from index > 1)
+     *   - Exact picture binary data conservation after tag editing
     */
     public class MetaIOTest
     {
         protected class PictureInfo
         {
             public Image Picture;
-            public string NativeCodeStr;
-            public int NativeCodeInt;
+            public TagData.PictureInfo info;
 
-            public PictureInfo(Image picture, object code)
+            public PictureInfo(Image picture, Commons.ImageFormat imgFormat, object code)
             {
                 Picture = picture;
-                if (code is string) NativeCodeStr = (string)code;
-                if (code is byte) NativeCodeInt = (byte)code;
-                if (code is int) NativeCodeInt = (int)code;
+                info = new TagData.PictureInfo(imgFormat, MetaDataIOFactory.TAG_ANY, code);
+            }
+
+            // Retrocompatibility with old interface
+            public int PictureCodeInt
+            {
+                get { return info.NativePicCode;  }
+            }
+            public string PictureCodeStr
+            {
+                get { return info.NativePicCodeStr; }
             }
         }
 
@@ -30,13 +40,14 @@ namespace ATL.test.IO.MetaData
 
         protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, Commons.ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), picCode)));
+            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), imgFormat, picCode)));
         }
 
 
         protected string emptyFile;
         protected string notEmptyFile;
         protected int tagType;
+        protected IList<byte> unsupportedFields = new List<byte>();
 
         protected void test_RW_Cohabitation(int tagType1, int tagType2, bool canMeta1NotExist = true)
         {
@@ -164,7 +175,14 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.Key.Equals(TagData.PIC_TYPE.CD))
                 {
-                    Assert.AreEqual(pic.Value.NativeCodeInt, 0x06);
+                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                    {
+                        Assert.AreEqual("Cover Art (Media)", pic.Value.info.NativePicCodeStr);
+                    }
+                    else // ID3v2 convention
+                    {
+                        Assert.AreEqual(0x06, pic.Value.info.NativePicCode);
+                    }
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
@@ -247,7 +265,7 @@ namespace ATL.test.IO.MetaData
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
-            theTag.Publisher = "Z Corp.";
+            if (!unsupportedFields.Contains(TagData.TAG_FIELD_PUBLISHER)) theTag.Publisher = "Z Corp.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
@@ -270,7 +288,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", meta.Composer);
             Assert.AreEqual("父", meta.Copyright);
             Assert.AreEqual("John Johnson Jr.", meta.Conductor);
-            Assert.AreEqual("Z Corp.", meta.Publisher);
+            if (!unsupportedFields.Contains(TagData.TAG_FIELD_PUBLISHER)) Assert.AreEqual("Z Corp.", meta.Publisher);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -298,6 +316,127 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(originalMD5, testMD5);
                 }
             }
+
+            // Get rid of the working copy
+            if (deleteTempFile) File.Delete(testFileLocation);
+        }
+
+        public void test_RW_Unsupported_Empty(string fileName, bool deleteTempFile = true)
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : totally metadata-free file
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.GetTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            // Check that it is indeed tag-free
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsFalse(meta.Exists);
+
+
+            // Add new unsupported fields
+            TagData theTag = new TagData();
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST2", "This is another test 父"));
+
+            // Add new unsupported pictures
+            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+            theTag.Pictures.Add(picInfo);
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Ho");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            theTag.Pictures.Add(picInfo);
+
+
+            theFile.UpdateTagInFile(theTag, tagType);
+
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(2, meta.AdditionalFields.Count);
+
+            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST"));
+            Assert.AreEqual("This is a test 父", meta.AdditionalFields["TEST"]);
+
+            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", meta.AdditionalFields["TEST2"]);
+
+            Assert.AreEqual(2, pictures.Count);
+            byte found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Hey"))
+                {
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 600);
+                    Assert.AreEqual(picture.Width, 900);
+                    found++;
+                }
+                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
+                {
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 290);
+                    Assert.AreEqual(picture.Width, 900);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(2, found);
+
+            // Remove the additional unsupported field
+            theTag = new TagData();
+            TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(tagType, "TEST");
+            fieldInfo.MarkedForDeletion = true;
+            theTag.AdditionalFields.Add(fieldInfo);
+
+            // Remove additional picture
+            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
+            picInfo.MarkedForDeletion = true;
+            theTag.Pictures.Add(picInfo);
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            pictures.Clear();
+            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            // Additional removed field
+            Assert.AreEqual(1, meta.AdditionalFields.Count);
+            Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST2"));
+            Assert.AreEqual("This is another test 父", meta.AdditionalFields["TEST2"]);
+
+            // Pictures
+            Assert.AreEqual(1, pictures.Count);
+
+            found = 0;
+
+            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            {
+                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
+                {
+                    Image picture = pic.Value.Picture;
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Assert.AreEqual(picture.Height, 290);
+                    Assert.AreEqual(picture.Width, 900);
+                    found++;
+                }
+            }
+
+            Assert.AreEqual(1, found);
 
             // Get rid of the working copy
             if (deleteTempFile) File.Delete(testFileLocation);
@@ -337,18 +476,31 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                 {
-                    Assert.AreEqual(0x03, pic.Value.NativeCodeInt);
+                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                    {
+                        Assert.AreEqual("Cover Art (Front)", pic.Value.info.NativePicCodeStr);
+                    }
+                    else // ID3v2 convention
+                    {
+                        Assert.AreEqual(0x03, pic.Value.info.NativePicCode);
+                    }
                     picture = pic.Value.Picture;
-                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                    Assert.AreEqual(Commons.ImageFormat.Jpeg, pic.Value.info.NativeFormat);
                     Assert.AreEqual(150, picture.Height);
                     Assert.AreEqual(150, picture.Width);
                     nbFound++;
                 }
                 else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                 {
-                    Assert.AreEqual(0x02, pic.Value.NativeCodeInt);
+                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                    {
+                        Assert.AreEqual("Cover Art (Icon)", pic.Value.info.NativePicCodeStr);
+                    }
+                    else // ID3v2 convention
+                    {
+                        Assert.AreEqual(0x02, pic.Value.info.NativePicCode);
+                    }
                     picture = pic.Value.Picture;
-                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
                     Assert.AreEqual(168, picture.Height);
                     Assert.AreEqual(175, picture.Width);
                     nbFound++;

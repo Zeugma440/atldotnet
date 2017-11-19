@@ -9,9 +9,6 @@ namespace ATL.test.IO
     [TestClass]
     public class HighLevel
     {
-        // TODO test access to native tag on MP4 file
-
-
         [TestMethod]
         public void TagIO_R_Single_ID3v1()
         {
@@ -73,7 +70,7 @@ namespace ATL.test.IO
         {
             Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg");
 
-            // Check if all embedded pictures are accessible from Track
+            // Check if _all_ embedded pictures are accessible from Track
             Assert.AreEqual(3, theTrack.EmbeddedPictures.Count);
         }
 

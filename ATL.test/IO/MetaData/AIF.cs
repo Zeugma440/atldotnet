@@ -1,10 +1,6 @@
-﻿ using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -14,26 +10,13 @@ namespace ATL.test.IO.MetaData
      *  1. Single metadata fields
      *                                Read  | Add   | Remove
      *  Supported textual field     |   x   |  x    | x
-     *  Unsupported textual field   |   x   |  x    | x
      *  
      *  2. General behaviour
      *  
      *  Whole tag removal
-     *  
      *  Conservation of unmodified tag items after tag editing
-     *  Conservation of unsupported tag field after tag editing
      *
      */
-
-    /*
-     * TODO
-     * 
-     * FUNCTIONAL
-     * 
-     * Test multiplicity of field names
-     * 
-    */
-
 
     [TestClass]
     public class AIF : MetaIOTest
@@ -119,7 +102,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : file with existing tag incl. unsupported field (dumper)
+            // Source : file with existing tag
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
