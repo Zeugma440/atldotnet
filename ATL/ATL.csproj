@@ -107,8 +107,6 @@
     <Compile Include="AudioData\Utils\TrackUtils.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\Cue.cs" />
     <Compile Include="CatalogDataReaders\BinaryLogic\DummyReader.cs" />
-    <Compile Include="CatalogDataReaders\BinaryLogic\CueAdapter.cs" />
-    <Compile Include="CatalogDataReaders\BinaryLogic\CueSharp\CueSharp.cs" />
     <Compile Include="CatalogDataReaders\ICatalogDataReader.cs" />
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\ChapterInfo.cs" />

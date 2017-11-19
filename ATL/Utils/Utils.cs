@@ -115,7 +115,7 @@ namespace Commons
                 result += dateTime.Minute * 60 * 1000;
                 result += dateTime.Hour * 60 * 60 * 1000;
             }
-            else // Handle mm:ss and mm:ss.ddd
+            else // Handle mm:ss, hh:mm:ss and mm:ss.ddd
             {
                 int hours = 0;
                 int minutes = 0;

@@ -9,13 +9,13 @@ FILE "$PATH/MP3/01 - Title Screen.mp3" MP3
 	REM comment11
 	REM comment12
     TITLE "Reverence"
-    PERFORMER "Faithless"
+    PERFORMER "Faithless1"
     PREGAP 00:01:00
     INDEX 01 00:00:00
   TRACK 02 AUDIO
     TITLE "She's My Baby"
-    PERFORMER "Faithless"
     INDEX 01 06:42:00
+	POSTGAP 00:01:01
 	REM comment21
 	REM comment22
   TRACK 03 AUDIO
