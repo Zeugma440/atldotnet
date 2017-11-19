@@ -124,6 +124,7 @@ namespace ATL.test
             testGenericAudio("MID/yoru-uta.mid", 251, 0, 0, false, AudioDataIOFactory.CF_SEQ); // This one has a track header position issue
             testGenericAudio("MID/memory.mid", 301, 0, 0, false, AudioDataIOFactory.CF_SEQ); // This one has 'sequencer data' and 'smpte offset' events
             testGenericAudio("MID/villg.mid", 100, 0, 0, false, AudioDataIOFactory.CF_SEQ); // This one has 'channel prefix', 'poly pressure' and 'channel pressure' events
+            testGenericAudio("MID/chron.mid", 324, 0, 0, false, AudioDataIOFactory.CF_SEQ); // This one has 'program change repeat' and 'channel pressure repeat' events
         }
 
         [TestMethod]
