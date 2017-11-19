@@ -140,5 +140,3 @@ ATL.NET is based on :
 * Audio Tools Library 2.3  by Jurgen Faul, Mattias Dahlberg, Gambit, MaDah and Erik Stenborg (code ported from Pascal to C# and refactored)
 
 * MIDI class 1.5 by Valentin Schmidt & Michael Mlivoncic (code ported from PHP to C# and refactored)
-
-* CueSharp 0.5 by Wyatt O'Day (original C# class wrapped in CatalogDataReaders)
