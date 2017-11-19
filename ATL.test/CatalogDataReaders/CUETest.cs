@@ -59,8 +59,6 @@ namespace ATL.test
                 Assert.AreEqual("Faithless", theReader.Tracks[1].Artist);
                 Assert.AreEqual(253, theReader.Tracks[1].Duration);
                 Assert.AreEqual("comment21" + Settings.InternalValueSeparator + "comment22", theReader.Tracks[1].Comment);
-
-                // TODO TEST DURATION
             }
             finally
             {
