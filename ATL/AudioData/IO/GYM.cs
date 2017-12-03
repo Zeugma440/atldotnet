@@ -244,18 +244,17 @@ namespace ATL.AudioData.IO
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 6;
-            string str;
 
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Title, 32, '\0')));
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Album, 32, '\0')));
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Copyright, 32, '\0')));
-            str = "";
+            w.Write(Utils.BuildStrictLengthStringBytes(tag.Title, 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag.Album, 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag.Copyright, 32, 0, Encoding.UTF8));
+            string str = "";
             if (AdditionalFields.ContainsKey("EMULATOR")) str = AdditionalFields["EMULATOR"];
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(str, 32, '\0')));
+            w.Write(Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
             str = "";
             if (AdditionalFields.ContainsKey("DUMPER")) str = AdditionalFields["DUMPER"];
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(str, 32, '\0')));
-            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Comment, 256, '\0')));
+            w.Write(Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag.Comment, 256, 0, Encoding.UTF8));
 
             return result;
         }

@@ -3,20 +3,6 @@ using ATL.AudioData;
 
 namespace ATL.test.IO.MetaData
 {
-    /*
-     * IMPLEMENTED USE CASES
-     *  
-     *  1. Single metadata fields
-     *                                Read  | Add   | Remove
-     *  Supported textual field     |   x   |  x    | x
-     *  
-     *  2. General behaviour
-     *  
-     *  Whole tag removal
-     *  Conservation of unmodified tag items after tag editing
-     *
-     */
-
     [TestClass]
     public class AIF : MetaIOTest
     {

@@ -187,6 +187,37 @@ namespace Commons
             return result;
         }
 
+        public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
+        {
+            byte[] result;
+
+            byte[] data = encoding.GetBytes(value);
+            while (data.Length > targetLength)
+            {
+                value = value.Remove(value.Length - 1);
+                data = encoding.GetBytes(value);
+            }
+
+            if (data.Length < targetLength)
+            {
+                result = new byte[targetLength];
+                if (padRight)
+                {
+                    Array.Copy(data, result, data.Length);
+                    for (int i = data.Length; i < result.Length; i++) result[i] = paddingByte;
+                }
+                else
+                {
+                    Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
+                    for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
+                }
+            } else
+            {
+                result = data;
+            }
+
+            return result;
+        }
 
         /// <summary>
         /// Coverts given string value to boolean.

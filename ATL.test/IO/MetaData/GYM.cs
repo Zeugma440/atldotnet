@@ -1,26 +1,10 @@
-﻿ using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using System.Collections.Generic;
 
 namespace ATL.test.IO.MetaData
 {
-    /*
-     * IMPLEMENTED USE CASES
-     *  
-     *  1. Single metadata fields
-     *                                Read  | Add   | Remove
-     *  Supported textual field     |   x   |  x    | x
-     *  Unsupported textual field   |   x   |  x    | x
-     *  
-     *  2. General behaviour
-     *  
-     *  Whole tag removal
-     *  
-     *  Conservation of unmodified tag items after tag editing
-     *  Conservation of unsupported tag field after tag editing
-     *
-     */
     [TestClass]
     public class GYM : MetaIOTest
     {
@@ -28,6 +12,21 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "GYM/empty.gym";
             notEmptyFile = "GYM/gym.gym";
+            tagType = MetaDataIOFactory.TAG_NATIVE;
+
+            canMetaNotExist = false;
+
+            // Initialize specific test data
+            testData = new TagData();
+
+            testData.Title = "The Source of Evilness";
+            testData.Album = "Arrow Flash";
+            testData.Comment = "Last Stage Music";
+            testData.Copyright = "1990 Sega";
+
+            testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
+            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "EMULATOR", "Magasis"));
+            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "DUMPER", "Guy"));
         }
 
         [TestMethod]
@@ -44,6 +43,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_GYM_Empty()
         {
+            test_RW_Empty(emptyFile, true, true, true);
+            /*
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : totally metadata-free SPC
@@ -100,11 +101,14 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
+            */
         }
 
         [TestMethod]
         public void tagIO_RW_GYM_Existing()
         {
+            test_RW_Existing(notEmptyFile, 0, true, true);
+            /*
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported field (dumper)
@@ -148,8 +152,9 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
+            */
         }
-
+        /*
         private void readExistingTagsOnFile(AudioDataManager theFile, string copyStr = "1990 Sega")
         {
             pictures.Clear();
@@ -171,5 +176,6 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("DUMPER"));
             Assert.AreEqual("Guy", theFile.NativeTag.AdditionalFields["DUMPER"]);
         }
+        */
     }
 }

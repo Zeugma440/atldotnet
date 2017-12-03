@@ -79,12 +79,11 @@ namespace ATL.test.IO.MetaData
         protected string notEmptyFile;
         protected int tagType;
         protected TagData testData;
-        protected bool supportsInternationalChars;
+        protected bool supportsInternationalChars = true;
+        protected bool canMetaNotExist = true;
 
         public MetaIOTest()
         {
-            supportsInternationalChars = true;
-
             // Initialize default test data
             testData = new TagData();
 
@@ -326,7 +325,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.getMeta(tagType));
-            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+            if (canMetaNotExist) Assert.IsFalse(theFile.getMeta(tagType).Exists);
 
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
@@ -380,7 +379,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.getMeta(tagType));
-            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+            if (canMetaNotExist) Assert.IsFalse(theFile.getMeta(tagType).Exists);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -418,7 +417,7 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsNotNull(theFile.getMeta(tagType));
             IMetaDataIO meta = theFile.getMeta(tagType);
-            Assert.IsFalse(meta.Exists);
+            if (canMetaNotExist) Assert.IsFalse(meta.Exists);
 
 
             bool handleUnsupportedFields = (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0);

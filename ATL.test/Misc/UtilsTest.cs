@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Commons;
+using System.Text;
 
 namespace ATL.test
 {
@@ -25,6 +26,29 @@ namespace ATL.test
             Assert.AreEqual("01:01:00.0", Utils.EncodeTimecode_ms(60 * 60 * 1000 + 60 * 1000));
             // Display d, h, m, s and ms
             Assert.AreEqual("2d 01:01:00.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000));
+        }
+
+        [TestMethod]
+        public void Utils_StrictLengthStringBytes()
+        {
+            byte[] data;
+            byte[] testData;
+
+            testData = new byte[] { 32, 32, 0, 0 };
+            data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
+            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+
+            testData = new byte[] { 0, 0, 32, 32 };
+            data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8, false);
+            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+
+            testData = new byte[] { 231, 136, 182, 0 };
+            data = Utils.BuildStrictLengthStringBytes("父父", 4, 0, Encoding.UTF8);
+            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+
+            testData = new byte[] { 0, 231, 136, 182 };
+            data = Utils.BuildStrictLengthStringBytes("父父", 4, 0, Encoding.UTF8, false);
+            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
         }
 
     }
