@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
+using System.Collections.Generic;
 
 namespace ATL.test.IO.MetaData
 {
@@ -43,7 +44,26 @@ namespace ATL.test.IO.MetaData
             notEmptyFile = "MP3/APE.mp3";
             tagType = MetaDataIOFactory.TAG_APE;
 
-            unsupportedFields.Add(TagData.TAG_FIELD_PUBLISHER);
+            // Initialize specific test data (Publisher and Description fields not supported in APE tag)
+            testData = new TagData();
+
+            testData.Title = "Title";
+            testData.Album = "父";
+            testData.Artist = "Artist";
+            testData.AlbumArtist = "Bob";
+            testData.Comment = "Test!";
+            testData.RecordingYear = "2017";
+            testData.RecordingDate = ""; // Empty string means "supported, but not valued in test sample"
+            testData.Genre = "Test";
+            testData.Rating = "0";
+            testData.TrackNumber = "22";
+            testData.Composer = "Me";
+            testData.Conductor = "";
+            testData.DiscNumber = "2";
+            testData.Copyright = "";
+
+            testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
+            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
         }
 
 
