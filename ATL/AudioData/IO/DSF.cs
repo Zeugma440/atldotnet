@@ -147,7 +147,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(0, SeekOrigin.Begin);
             if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
 			{
-				source.BaseStream.Seek(16, SeekOrigin.Current); // Boring stuff
+				source.BaseStream.Seek(16, SeekOrigin.Current); // Chunk size and file size
                 id3v2Offset = source.ReadInt64();
 
                 if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
@@ -184,6 +184,7 @@ namespace ATL.AudioData.IO
                     if (readTagParams.PrepareForWriting)
                     {
                         id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.BaseStream.Length - id3v2Offset));
+                        id3v2StructureHelper.AddSize(12, source.BaseStream.Length);
                         id3v2StructureHelper.AddIndex(20, id3v2Offset);
                     }
                 }
@@ -195,6 +196,7 @@ namespace ATL.AudioData.IO
                     {
                         // Add EOF zone for future tag writing
                         id3v2StructureHelper.AddZone(source.BaseStream.Length, 0);
+                        id3v2StructureHelper.AddSize(12, source.BaseStream.Length);
                         id3v2StructureHelper.AddIndex(20, source.BaseStream.Length);
                     }
                 }
