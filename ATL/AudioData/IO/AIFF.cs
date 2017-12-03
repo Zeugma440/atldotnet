@@ -347,7 +347,7 @@ namespace ATL.AudioData.IO
 
                             setMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
+                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION)) // Deprecated; see specs : "Use of this chunk is discouraged within FORM AIFC"
                         {
                             if (comment.Length > 0) comment.Append(Settings.InternalValueSeparator);
                             comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
