@@ -627,7 +627,7 @@ namespace ATL.test.IO.MetaData
                         }
                     }
                 }
-                Assert.AreEqual(2, nbFound);
+                Assert.AreEqual(testData.Pictures.Count, nbFound);
             }
         }
 
