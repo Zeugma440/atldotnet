@@ -13,8 +13,8 @@ namespace ATL
 
         public static bool EnablePadding = false;                       // Used by OGG container; could be used by ID3v2 in the future
 
-        public static readonly string InternalValueSeparator = "˵"; // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
-        public static string DisplayValueSeparator = ";";
+        public static readonly char InternalValueSeparator = '˵';       // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
+        public static char DisplayValueSeparator = ';';
 
         public static bool ReadAllMetaFrames = true; // If true, default Track behaviour reads all metadata frames, including those not described by IMetaDataIO
 

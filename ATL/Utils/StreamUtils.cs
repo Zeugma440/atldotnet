@@ -217,7 +217,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static long DecodeBEInt64(byte[] data)
         {
-            if (data.Length != 8) throw new InvalidDataException("data should be 8 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 8) throw new InvalidDataException("data should be 8 bytes long; found " + data.Length + " bytes");
             return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
         }
 
@@ -239,7 +239,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
             return (uint)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0));
         }
 
@@ -250,7 +250,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeUInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
             return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
@@ -272,7 +272,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
         }
 
@@ -294,7 +294,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
             return (int)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
@@ -305,7 +305,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt24(byte[] data)
         {
-            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found " + data.Length + " bytes");
             return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
         }
 
@@ -341,7 +341,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ushort DecodeBEUInt16(byte[] data)
         {
-            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found " + data.Length + " bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
         }
 
@@ -352,10 +352,19 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeBEUInt16(ushort value)
         {
-            if (value > 0x0000FFFF) throw new InvalidDataException("Value should not be higher than " + 0x0000FFFF + "; actual value=" + value);
-
             // Output has to be big-endian
-            return new byte[2] { (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEInt16(short value)
+        {
+            // Output has to be big-endian
+            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
         }
 
         /// <summary>
@@ -365,7 +374,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static short DecodeBEInt16(byte[] data)
         {
-            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found" + data.Length + " bytes");
+            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found " + data.Length + " bytes");
             return (short)((data[0] << 8) | (data[1] << 0));
         }
 

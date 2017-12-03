@@ -1,38 +1,9 @@
 ﻿ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
-using System.IO;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
 
 namespace ATL.test.IO.MetaData
 {
-    /*
-     * IMPLEMENTED USE CASES
-     *  
-     *  1. Single metadata fields
-     *                                Read  | Add   | Remove
-     *  Supported textual field     |   x   |  x    | x
-     *  Unsupported textual field   |   x   |  x    | x
-     *  Supported picture           |   x   |  x    | x
-     *  Unsupported picture         |   x   |  x    | x
-     *  
-     *  2. General behaviour
-     *  
-     *  Whole tag removal
-     *  
-     *  Conservation of unmodified tag items after tag editing
-     *  Conservation of unsupported tag field after tag editing
-     *  Conservation of supported pictures after tag editing
-     *  Conservation of unsupported pictures after tag editing
-     *  
-     *  3. Specific behaviour
-     *  
-     *  Remove single supported picture (from normalized type and index)
-     *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
-     *
-     */
     [TestClass]
     public class ID3v2_AIF : MetaIOTest
     {

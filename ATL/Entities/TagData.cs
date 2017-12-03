@@ -159,6 +159,8 @@ namespace ATL
 
             public ORIGIN Origin = ORIGIN.Unknown;          // Origin of field
 
+            public object SpecificData;                     // Attached data specific to the native format (e.g. AIFx Timestamp and Marker ID)
+
             public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
 
             // ---------------- CONSTRUCTORS

@@ -23,7 +23,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, "/");
+            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("God I'm Bored-Part 2", theFile.NativeTag.Title);
@@ -135,7 +135,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, "/");
+            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("Gameboy/NES Samples by:/virt/Original NES 8-bit:/Koji Kondo/Tracked by:/Mathew Valente [TSSF]/Super Mario Brothers 2/Overworld", comment);

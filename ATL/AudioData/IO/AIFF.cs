@@ -11,7 +11,14 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Audio Interchange File Format files manipulation (extension : .AIF, .AIFF, .AIFC)
     /// 
-    /// NB : This class does not implement embedded MIDI data detection nor parsing
+    /// Implementation notes
+    /// 
+    ///  1/ Annotations being somehow deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead"),
+    ///  any data read from an ANNO chunk will be written as a COMT chunk when updating the file (ANNO chunks will be deleted in the process).
+    /// 
+    ///  2/ Embedded MIDI detection, parsing and writing is not supported
+    ///  
+    ///  3/ Instrument detection, parsing and writing is not supported
     /// </summary>
 	class AIFF : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
@@ -35,9 +42,18 @@ namespace ATL.AudioData.IO
         private const string CHUNKTYPE_ANNOTATION   = "ANNO"; // Use in discouraged by specs in favour of COMT
         private const string CHUNKTYPE_ID3TAG       = "ID3 ";
 
+        // AIFx timestamp are defined as "the number of seconds since January 1, 1904"
+        private static DateTime timestampBase = new DateTime(1904, 1, 1);
+
+        public class CommentData
+        {
+            public uint Timestamp;
+            public short MarkerId;
+        }
+
         private struct ChunkHeader
         {
-            public String ID;
+            public string ID;
             public int Size;
         }
 
@@ -47,8 +63,8 @@ namespace ATL.AudioData.IO
         private uint sampleSize;
         private uint numSampleFrames;
 
-        private String format;
-        private String compression;
+        private string format;
+        private string compression;
         private byte versionID;
 
         private int sampleRate;
@@ -283,13 +299,17 @@ namespace ATL.AudioData.IO
                 {
                     isValid = true;
 
-                    StringBuilder comment = new StringBuilder("");
+                    StringBuilder commentStr = new StringBuilder("");
                     long soundChunkPosition = 0;
                     long soundChunkSize = 0; // Header size included
                     bool nameFound = false;
                     bool authorFound = false;
                     bool copyrightFound = false;
+                    bool commentsFound = false;
                     long limit = Math.Min(containerChunkPos + containerChunkSize + 4, source.BaseStream.Length);
+
+                    int annotationIndex = 0;
+                    int commentIndex = 0;
 
                     while (source.BaseStream.Position < limit)
                     {
@@ -347,42 +367,45 @@ namespace ATL.AudioData.IO
 
                             setMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION)) // Deprecated; see specs : "Use of this chunk is discouraged within FORM AIFC"
+                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
-                            if (comment.Length > 0) comment.Append(Settings.InternalValueSeparator);
-                            comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
+                            annotationIndex++;
+                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + annotationIndex);
+                            structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + annotationIndex);
+
+                            if (commentStr.Length > 0) commentStr.Append(Settings.InternalValueSeparator);
+                            commentStr.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
                             tagExists = true;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
-                            /*
-                             * TODO - Support writing AIFx comments, including timestamp
-                             * 
-                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID);
-                            id3v2.structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
-                            */
+                            commentIndex++;
+                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID+commentIndex);
+                            structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID+commentIndex);
+
                             tagExists = true;
+                            commentsFound = true;
 
                             ushort numComs = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                             for (int i = 0; i < numComs; i++)
                             {
-                                // Timestamp
-                                source.BaseStream.Seek(4, SeekOrigin.Current);
-                                // Marker ID
-                                short markerId = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                                CommentData cmtData = new CommentData();
+                                cmtData.Timestamp = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                                cmtData.MarkerId = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+
                                 // Comments length
                                 ushort comLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                                TagData.MetaFieldInfo comment = new TagData.MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex);
+                                comment.Value = Utils.Latin1Encoding.GetString(source.ReadBytes(comLength));
+                                comment.SpecificData = cmtData;
+                                tagData.AdditionalFields.Add(comment);
 
                                 // Only read general purpose comments, not those linked to a marker
-                                if (0 == markerId)
+                                if (0 == cmtData.MarkerId)
                                 {
-                                    if (comment.Length > 0) comment.Append(Settings.InternalValueSeparator);
-                                    comment.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(comLength)));
-                                }
-                                else
-                                {
-                                    source.BaseStream.Seek(comLength, SeekOrigin.Current);
+                                    if (commentStr.Length > 0) commentStr.Append(Settings.InternalValueSeparator);
+                                    commentStr.Append(comment.Value);
                                 }
                             }
                         }
@@ -400,7 +423,7 @@ namespace ATL.AudioData.IO
                         if (header.ID.Equals(CHUNKTYPE_SOUND) && header.Size % 2 > 0) source.BaseStream.Position += 1; // Sound chunk size must be even
                     }
 
-                    tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString().Replace("\0"," ").Trim());
+                    tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, commentStr.ToString().Replace("\0"," ").Trim());
 
                     if (-1 == id3v2Offset)
                     {
@@ -430,6 +453,11 @@ namespace ATL.AudioData.IO
                         {
                             structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COPYRIGHT);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COPYRIGHT);
+                        }
+                        if (!commentsFound)
+                        {
+                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COMMENTS);
+                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COMMENTS);
                         }
                     }
 
@@ -495,17 +523,98 @@ namespace ATL.AudioData.IO
                     result++;
                 }
             }
-            /*
-            * TODO - Support writing AIFx comments, including timestamp
-            */
+            else if (zone.StartsWith(CHUNKTYPE_ANNOTATION))
+            {
+                // Do not write anything, this field is deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead")
+            }
+            else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
+            {
+                bool applicable = tag.Comment.Length > 0;
+                if (!applicable && tag.AdditionalFields.Count > 0)
+                {
+                    foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                    {
+                        applicable = (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS));
+                        if (applicable) break;
+                    }
+                }
+
+                if (applicable)
+                {
+                    ushort numComments = 0;
+                    w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
+                    long sizePos = w.BaseStream.Position;
+                    w.Write((int)0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
+                    w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
+
+                    // First write generic comments (those linked to the Comment field)
+                    string[] comments = tag.Comment.Split(Settings.InternalValueSeparator);
+                    foreach (string s in comments)
+                    {
+                        writeCommentChunk(w, null, s);
+                        numComments++;
+                    }
+
+                    // Then write comments linked to a Marker ID
+                    if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
+                    {
+                        foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                        {
+                            if (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS))
+                            {
+                                if (((CommentData)fieldInfo.SpecificData).MarkerId != 0)
+                                {
+                                    writeCommentChunk(w, fieldInfo);
+                                    numComments++;
+                                }
+                            }
+                        }
+                    }
+
+
+                    long dataEndPos = w.BaseStream.Position;
+
+                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                    w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
+                    w.Write(StreamUtils.EncodeBEUInt16(numComments));
+
+                    result++;
+                }
+            }
 
             return result;
+        }
+
+        private void writeCommentChunk(BinaryWriter w, TagData.MetaFieldInfo info, string comment = "")
+        {
+            byte[] commentData = null;
+
+            if (null == info) // Plain string
+            {
+                w.Write(StreamUtils.EncodeBEUInt32(encodeTimestamp(DateTime.Now)));
+                w.Write((short)0);
+                commentData = Utils.Latin1Encoding.GetBytes(comment);
+            } else
+            {
+                w.Write(StreamUtils.EncodeBEUInt32(((CommentData)info.SpecificData).Timestamp));
+                w.Write(StreamUtils.EncodeBEInt16(((CommentData)info.SpecificData).MarkerId));
+                commentData = Utils.Latin1Encoding.GetBytes(info.Value);
+            }
+
+            w.Write(StreamUtils.EncodeBEUInt16((ushort)commentData.Length));
+            w.Write(commentData);
         }
 
         public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
             w.Write(StreamUtils.EncodeBEInt32((int)tagSize));
+        }
+
+        // AIFx timestamps are "the number of seconds since January 1, 1904"
+        private static uint encodeTimestamp(DateTime when)
+        {
+            return (uint)Math.Round( (when.Ticks - timestampBase.Ticks) * 1.0 / TimeSpan.TicksPerSecond );
         }
     }
 }

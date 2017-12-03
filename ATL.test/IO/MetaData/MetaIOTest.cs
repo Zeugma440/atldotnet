@@ -6,6 +6,36 @@ using System.IO;
 
 namespace ATL.test.IO.MetaData
 {
+    /*
+     * IMPLEMENTED USE CASES
+     *  
+     *  1. Single metadata fields
+     *                                Read  | Add   | Remove
+     *  Supported textual field     |   x   |  x    | x
+     *  Unsupported textual field   |   x   |  x    | x
+     *  Supported picture           |   x   |  x    | x
+     *  Unsupported picture         |   x   |  x    | x
+     *  
+     *  2. General behaviour
+     *  
+     *  Whole tag removal
+     *  
+     *  Conservation of unmodified tag items after tag editing
+     *  Conservation of unsupported tag field after tag editing
+     *  Conservation of supported pictures after tag editing
+     *  Conservation of unsupported pictures after tag editing
+     *  
+     *  3. Specific behaviour
+     *  
+     *  Remove single supported picture (from normalized type and index)
+     *  Remove single unsupported picture (with multiple pictures; checking if removing pic 2 correctly keeps pics 1 and 3)
+     *  
+     *  4. Technical
+     *  
+     *  Cohabitation with ID3v2 and ID3v1
+     *
+     */
+
     /* TODO generic tests to add
      *   - Correct update of tagData within the IMetaDataIO just after an Update/Remove (by comparing with the same TagData obtained with Read)
      *   - Individual picture removal (from index > 1)
@@ -15,13 +45,15 @@ namespace ATL.test.IO.MetaData
     {
         protected class PictureInfo
         {
-            public Image Picture;
             public TagData.PictureInfo info;
+            public Image Picture;
 
-            public PictureInfo(Image picture, Commons.ImageFormat imgFormat, object code)
+            public PictureInfo(byte[] pictureData, Commons.ImageFormat imgFormat, object code)
             {
-                Picture = picture;
                 info = new TagData.PictureInfo(imgFormat, MetaDataIOFactory.TAG_ANY, code);
+                info.PictureData = pictureData;
+                info.PictureHash = HashDepot.Fnv1a.Hash32(info.PictureData);
+                Picture = Image.FromStream(new MemoryStream(pictureData));
             }
 
             // Retrocompatibility with old interface
@@ -39,18 +71,20 @@ namespace ATL.test.IO.MetaData
 
         protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, Commons.ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(Image.FromStream(s), imgFormat, picCode)));
+            pictures.Add(new KeyValuePair<TagData.PIC_TYPE, PictureInfo>(picType, new PictureInfo(s.ToArray(), imgFormat, picCode)));
         }
 
 
         protected string emptyFile;
         protected string notEmptyFile;
         protected int tagType;
-        protected IList<byte> unsupportedFields = new List<byte>();
         protected TagData testData;
+        protected bool supportsInternationalChars;
 
         public MetaIOTest()
         {
+            supportsInternationalChars = true;
+
             // Initialize default test data
             testData = new TagData();
 
@@ -73,6 +107,19 @@ namespace ATL.test.IO.MetaData
 
             testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
             testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
+
+            testData.Pictures = new List<TagData.PictureInfo>();
+            TagData.PictureInfo pic = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            pic.PictureData = data;
+            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
+            testData.Pictures.Add(pic);
+
+            pic = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x02);
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            pic.PictureData = data;
+            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
+            testData.Pictures.Add(pic);
         }
 
         protected void test_RW_Cohabitation(int tagType1, int tagType2, bool canMeta1NotExist = true)
@@ -181,8 +228,11 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagData theTag = new TagData();
-            theTag.Conductor = "John Jackman";
-            testData.Conductor = "John Jackman";
+            // TODO - test behaviour on _all_ supported fields
+            // TODO - test exotic charsets if supported by tagging standard
+            theTag.Title = "Hoho";
+            string initialTestTitleValue = testData.Title;
+            testData.Title = "Hoho";
 
             TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
@@ -194,34 +244,37 @@ namespace ATL.test.IO.MetaData
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
-            int nbFound = 0;
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            if (testData.Pictures != null && testData.Pictures.Count > 0)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.CD))
+                int nbFound = 0;
+                foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
                 {
-                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                    if (pic.Key.Equals(TagData.PIC_TYPE.CD))
                     {
-                        Assert.AreEqual("Cover Art (Media)", pic.Value.info.NativePicCodeStr);
+                        if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                        {
+                            Assert.AreEqual("Cover Art (Media)", pic.Value.info.NativePicCodeStr);
+                        }
+                        else // ID3v2 convention
+                        {
+                            Assert.AreEqual(0x06, pic.Value.info.NativePicCode);
+                        }
+                        Image picture = pic.Value.Picture;
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 600);
+                        Assert.AreEqual(picture.Width, 900);
+                        nbFound++;
+                        break;
                     }
-                    else // ID3v2 convention
-                    {
-                        Assert.AreEqual(0x06, pic.Value.info.NativePicCode);
-                    }
-                    Image picture = pic.Value.Picture;
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
-                    nbFound++;
-                    break;
                 }
-            }
 
-            Assert.AreEqual(1, nbFound);
+                Assert.AreEqual(1, nbFound);
+            }
 
             // Remove the additional supported field
             theTag = new TagData();
-            theTag.Conductor = "";
-            testData.Conductor = "";
+            theTag.Title = initialTestTitleValue;
+            testData.Title = initialTestTitleValue;
 
             // Remove additional picture
             picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
@@ -275,6 +328,8 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.getMeta(tagType));
             Assert.IsFalse(theFile.getMeta(tagType).Exists);
 
+            char internationalChar = supportsInternationalChars ? '父' : '!';
+
             // Construct a new tag
             TagData theTag = new TagData();
             if (testData.Title != null) theTag.Title = "Test !!";
@@ -289,7 +344,7 @@ namespace ATL.test.IO.MetaData
             if (testData.TrackNumber != null) theTag.TrackNumber = "01/01";
             if (testData.DiscNumber != null) theTag.DiscNumber = "2";
             if (testData.Composer != null) theTag.Composer = "Me";
-            if (testData.Copyright != null) theTag.Copyright = "父";
+            if (testData.Copyright != null) theTag.Copyright = "a"+ internationalChar + "a";
             if (testData.Conductor != null) theTag.Conductor = "John Johnson Jr.";
             if (testData.Publisher != null) theTag.Publisher = "Z Corp.";
             if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description";
@@ -314,7 +369,7 @@ namespace ATL.test.IO.MetaData
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
             if (testData.DiscNumber != null) Assert.AreEqual(2, meta.Disc);
             if (testData.Composer != null) Assert.AreEqual("Me", meta.Composer);
-            if (testData.Copyright != null) Assert.AreEqual("父", meta.Copyright);
+            if (testData.Copyright != null) Assert.AreEqual("a" + internationalChar + "a", meta.Copyright);
             if (testData.Conductor != null) Assert.AreEqual("John Johnson Jr.", meta.Conductor);
             if (testData.Publisher != null) Assert.AreEqual("Z Corp.", meta.Publisher);
             if (testData.GeneralDescription != null) Assert.AreEqual("Description", meta.GeneralDescription);
@@ -366,23 +421,31 @@ namespace ATL.test.IO.MetaData
             Assert.IsFalse(meta.Exists);
 
 
-            // Add new unsupported fields
             bool handleUnsupportedFields = (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0);
+            bool handleUnsupportedPictures = (testData.Pictures != null && testData.Pictures.Count > 0);
+            char internationalChar = supportsInternationalChars ? '父' : '!';
+
+            // Add new unsupported fields
             TagData theTag = new TagData();
             if (handleUnsupportedFields)
             {
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST", "This is a test 父"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST2", "This is another test 父"));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST", "This is a test " + internationalChar));
+                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(tagType, "TEST2", "This is another test " + internationalChar));
             }
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
-            theTag.Pictures.Add(picInfo);
-            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Ho");
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
-            theTag.Pictures.Add(picInfo);
+            TagData.PictureInfo picInfo = null;
+            byte found = 0;
 
+            if (handleUnsupportedPictures)
+            {
+                picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
+                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+                theTag.Pictures.Add(picInfo);
+                picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Ho");
+                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+                theTag.Pictures.Add(picInfo);
+            }
 
             theFile.UpdateTagInFile(theTag, tagType);
 
@@ -397,36 +460,39 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(2, meta.AdditionalFields.Count);
 
                 Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST"));
-                Assert.AreEqual("This is a test 父", meta.AdditionalFields["TEST"]);
+                Assert.AreEqual("This is a test " + internationalChar, meta.AdditionalFields["TEST"]);
 
                 Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST2"));
-                Assert.AreEqual("This is another test 父", meta.AdditionalFields["TEST2"]);
+                Assert.AreEqual("This is another test " + internationalChar, meta.AdditionalFields["TEST2"]);
             }
 
-            Assert.AreEqual(2, pictures.Count);
-            byte found = 0;
-
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            if (handleUnsupportedPictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Hey"))
-                {
-                    Image picture = pic.Value.Picture;
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
-                    found++;
-                }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
-                {
-                    Image picture = pic.Value.Picture;
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
-                    found++;
-                }
-            }
+                Assert.AreEqual(2, pictures.Count);
+                found = 0;
 
-            Assert.AreEqual(2, found);
+                foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+                {
+                    if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Hey"))
+                    {
+                        Image picture = pic.Value.Picture;
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 600);
+                        Assert.AreEqual(picture.Width, 900);
+                        found++;
+                    }
+                    else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
+                    {
+                        Image picture = pic.Value.Picture;
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 290);
+                        Assert.AreEqual(picture.Width, 900);
+                        found++;
+                    }
+                }
+
+                Assert.AreEqual(2, found);
+            }
 
             // Remove the additional unsupported field
             if (handleUnsupportedFields)
@@ -438,9 +504,12 @@ namespace ATL.test.IO.MetaData
             }
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
-            picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
+            if (handleUnsupportedPictures)
+            {
+                picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, tagType, "Hey");
+                picInfo.MarkedForDeletion = true;
+                theTag.Pictures.Add(picInfo);
+            }
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
@@ -457,27 +526,30 @@ namespace ATL.test.IO.MetaData
                 // Additional removed field
                 Assert.AreEqual(1, meta.AdditionalFields.Count);
                 Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TEST2"));
-                Assert.AreEqual("This is another test 父", meta.AdditionalFields["TEST2"]);
+                Assert.AreEqual("This is another test " + internationalChar, meta.AdditionalFields["TEST2"]);
             }
 
             // Pictures
-            Assert.AreEqual(1, pictures.Count);
-
-            found = 0;
-
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            if (handleUnsupportedPictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
-                {
-                    Image picture = pic.Value.Picture;
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
-                    found++;
-                }
-            }
+                Assert.AreEqual(1, pictures.Count);
 
-            Assert.AreEqual(1, found);
+                found = 0;
+
+                foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+                {
+                    if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCodeStr.Equals("Ho"))
+                    {
+                        Image picture = pic.Value.Picture;
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(picture.Height, 290);
+                        Assert.AreEqual(picture.Width, 900);
+                        found++;
+                    }
+                }
+
+                Assert.AreEqual(1, found);
+            }
 
             // Get rid of the working copy
             if (deleteTempFile) File.Delete(testFileLocation);
@@ -521,45 +593,57 @@ namespace ATL.test.IO.MetaData
             }
 
             // Pictures
-            Assert.AreEqual(nbPictures, pictures.Count);
-
-            byte nbFound = 0;
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            if (testData.Pictures != null && testData.Pictures.Count > 0)
             {
-                Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
+                Assert.AreEqual(nbPictures, pictures.Count);
+
+                byte nbFound = 0;
+                foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
                 {
-                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                    foreach (TagData.PictureInfo testPicInfo in testData.Pictures)
                     {
-                        Assert.AreEqual("Cover Art (Front)", pic.Value.info.NativePicCodeStr);
+                        if (   pic.Value.info.NativePicCode.Equals(testPicInfo.NativePicCode)
+                            || (pic.Value.info.NativePicCodeStr != null && pic.Value.info.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr))
+                           )
+                        {
+                            nbFound++;
+                            Assert.AreEqual(testPicInfo.PictureHash, pic.Value.info.PictureHash);
+                        }
                     }
-                    else // ID3v2 convention
-                    {
-                        Assert.AreEqual(0x03, pic.Value.info.NativePicCode);
-                    }
-                    picture = pic.Value.Picture;
-                    Assert.AreEqual(Commons.ImageFormat.Jpeg, pic.Value.info.NativeFormat);
-                    Assert.AreEqual(150, picture.Height);
-                    Assert.AreEqual(150, picture.Width);
-                    nbFound++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
-                {
-                    if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                /*
+                    if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
                     {
-                        Assert.AreEqual("Cover Art (Icon)", pic.Value.info.NativePicCodeStr);
+                        if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                        {
+                            Assert.AreEqual("Cover Art (Front)", pic.Value.info.NativePicCodeStr);
+                        }
+                        else // ID3v2 convention
+                        {
+                            Assert.AreEqual(0x03, pic.Value.info.NativePicCode);
+                        }
+                        
+                        nbFound++;
                     }
-                    else // ID3v2 convention
+                    else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture
                     {
-                        Assert.AreEqual(0x02, pic.Value.info.NativePicCode);
+                        if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                        {
+                            Assert.AreEqual("Cover Art (Icon)", pic.Value.info.NativePicCodeStr);
+                        }
+                        else // ID3v2 convention
+                        {
+                            Assert.AreEqual(0x02, pic.Value.info.NativePicCode);
+                        }
+                        picture = pic.Value.Picture;
+                        Assert.AreEqual(168, picture.Height);
+                        Assert.AreEqual(175, picture.Width);
+                        nbFound++;
                     }
-                    picture = pic.Value.Picture;
-                    Assert.AreEqual(168, picture.Height);
-                    Assert.AreEqual(175, picture.Width);
-                    nbFound++;
                 }
+                */
+                Assert.AreEqual(2, nbFound);
             }
-            Assert.AreEqual(2, nbFound);
         }
 
     }
