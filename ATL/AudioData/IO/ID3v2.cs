@@ -195,7 +195,7 @@ namespace ATL.AudioData.IO
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
-            noTextEncodingFields = new List<string>() { "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
+            noTextEncodingFields = new List<string>() { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
             // Note on date field identifiers
             //
