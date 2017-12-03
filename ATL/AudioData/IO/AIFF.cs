@@ -285,6 +285,7 @@ namespace ATL.AudioData.IO
 
                     StringBuilder comment = new StringBuilder("");
                     long soundChunkPosition = 0;
+                    long soundChunkSize = 0; // Header size included
                     bool nameFound = false;
                     bool authorFound = false;
                     bool copyrightFound = false;
@@ -332,6 +333,7 @@ namespace ATL.AudioData.IO
                         else if (header.ID.Equals(CHUNKTYPE_SOUND))
                         {
                             soundChunkPosition = source.BaseStream.Position - 8;
+                            soundChunkSize = header.Size + 8;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR) || header.ID.Equals(CHUNKTYPE_COPYRIGHT))
                         {
@@ -406,7 +408,7 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting)
                         {
-                            id3v2StructureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_ID3TAG);
+                            id3v2StructureHelper.AddZone(soundChunkPosition + soundChunkSize, 0, CHUNKTYPE_ID3TAG);
                             id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
                     }
