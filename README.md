@@ -88,7 +88,7 @@ Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
 Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
 Dolby Digital | .AC3 |  |  | R/W | 
-Extended Module | .XM |  |  |  | R (2)
+Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Genesis YM2612 | .GYM |  |  |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
