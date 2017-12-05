@@ -760,7 +760,6 @@ namespace ATL.AudioData.IO
                         {
                             PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
                             picInfo.PictureData = mem.ToArray();
-                            picInfo.ComputePicHash();
                             chapters[chapters.Count - 1].Picture = picInfo;
                         }
                         

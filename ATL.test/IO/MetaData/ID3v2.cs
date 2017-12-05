@@ -9,9 +9,7 @@ using Commons;
 namespace ATL.test.IO.MetaData
 {
     /*
-     * TODO
-     * 
-     * TECHNICAL
+     * TODO TECHNICAL TESTS
      * 
      * Add a standard unsupported field => persisted as standard field in tag
      * Add a non-standard unsupported field => persisted as TXXX field
@@ -467,7 +465,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(this.readPictureData, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -479,6 +477,10 @@ namespace ATL.test.IO.MetaData
             ch.StartTime = 0;
             ch.Title = "Intro";
             ch.Url = "chapter url\0https://auphonic.com/";
+            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg");
+            ch.Picture.PictureData = data;
+            ch.Picture.ComputePicHash();
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
@@ -538,6 +540,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Picture != null)
+                    {
+                        Assert.IsNotNull(chap.Picture);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.PictureHash, chap.Picture.ComputePicHash());
+                    }
                 }
                 else
                 {

@@ -126,9 +126,10 @@ namespace ATL
             return this.ToString().Equals(obj.ToString());
         }
 
-        public void ComputePicHash()
+        public uint ComputePicHash()
         {
             PictureHash = Fnv1a.Hash32(PictureData);
+            return PictureHash;
         }
     }
 }

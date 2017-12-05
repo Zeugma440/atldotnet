@@ -177,6 +177,7 @@
     <Content Include="Resources\MP3\01 - Title Screen.mp3" />
     <Content Include="Resources\MP3\01 - Title Screen_pic.mp3" />
     <Content Include="Resources\MP3\APE.mp3" />
+    <Content Include="Resources\MP3\chapterImage1.jpg" />
     <Content Include="Resources\MP3\chapters.mp3" />
     <Content Include="Resources\MP3\empty.mp3" />
     <Content Include="Resources\MP3\headerPatternIsNotHeader.mp3" />
