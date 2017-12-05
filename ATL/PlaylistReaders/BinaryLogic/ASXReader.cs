@@ -1,15 +1,15 @@
 using ATL.Logging;
-using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ATL.PlaylistReaders.BinaryLogic
 {
     /// <summary>
     /// ASX playlist reader
+    /// 
+    /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
     public class ASXReader : PlaylistReader
     {
@@ -77,10 +77,6 @@ namespace ATL.PlaylistReaders.BinaryLogic
                             if (uri.IsFile)
                             {
                                 result = uri.LocalPath;
-                            }
-                            else // other protocols (e.g. HTTP, SMB)
-                            {
-                                //TODO other protocols
                             }
                         }
                         catch (UriFormatException)

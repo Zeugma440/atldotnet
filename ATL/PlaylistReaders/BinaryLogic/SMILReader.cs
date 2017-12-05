@@ -8,7 +8,10 @@ namespace ATL.PlaylistReaders.BinaryLogic
 {
     /// <summary>
     /// SMIL playlist reader
-    /// NB : Very basic implementation that lists every single audio file in the playlist
+    /// 
+    /// This is a very basic implementation that lists every single audio file in the playlist
+    /// 
+    /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
     public class SMILReader : PlaylistReader
     {
@@ -64,10 +67,6 @@ namespace ATL.PlaylistReaders.BinaryLogic
                                 if (uri.IsFile)
                                 {
                                     result = uri.LocalPath;
-                                }
-                                else // other protocols (e.g. HTTP, SMB)
-                                {
-                                    //TODO other protocols
                                 }
                             }
                             catch (UriFormatException)

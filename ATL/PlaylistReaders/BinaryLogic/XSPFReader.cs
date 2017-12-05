@@ -2,13 +2,14 @@ using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ATL.PlaylistReaders.BinaryLogic
 {
     /// <summary>
     /// XSPF (spiff) playlist reader
+    /// 
+    /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
     public class XSPFReader : PlaylistReader
     {
@@ -75,10 +76,6 @@ namespace ATL.PlaylistReaders.BinaryLogic
                                         }
                                         //else if (inImage) result.Add(System.IO.Path.GetFullPath(uri.LocalPath));
                                         //TODO fetch track picture from playlists info ?
-                                    }
-                                    else // other protocols (e.g. HTTP, SMB)
-                                    {
-                                        //TODO other protocols
                                     }
                                 }
                                 catch (UriFormatException)
