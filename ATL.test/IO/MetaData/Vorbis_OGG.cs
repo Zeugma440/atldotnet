@@ -205,7 +205,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+ "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -219,9 +219,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
             int nbFound = 0;
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.CD))
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.CD))
                 {
                     Assert.AreEqual(pic.Value.info.NativePicCode, 0x06);
                     Image picture = pic.Value.Picture;
@@ -239,7 +239,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.CD);
+            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -284,14 +284,14 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
-            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0B);
+            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0B);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -314,9 +314,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, pictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0A))
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0A))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -324,7 +324,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0B))
+                else if (pic.Key.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -338,12 +338,12 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -366,9 +366,9 @@ namespace ATL.test.IO.MetaData
 
             found = 0;
 
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
-                if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0B))
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.Value.info.NativePicCode.Equals(0x0B))
                 {
                     Image picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -559,10 +559,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(nbPictures, pictures.Count);
 
             int nbFound = 0;
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
                 Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Front)) // Supported picture
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Front)) // Supported picture
                 {
                     Assert.AreEqual(pic.Value.info.NativePicCode, 0x03);
                     picture = pic.Value.Picture;
@@ -571,7 +571,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 150);
                     nbFound++;
                 }
-                else if (pic.Key.Equals(TagData.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
+                else if (pic.Key.Equals(PictureInfo.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
                 {
                     Assert.AreEqual(pic.Value.info.NativePicCode, 0x02);
                     picture = pic.Value.Picture;

@@ -273,7 +273,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
             get
             {
@@ -622,13 +622,13 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writePictures(BinaryWriter w, IList<TagData.PictureInfo> pictures, bool isLast)
+        private int writePictures(BinaryWriter w, IList<PictureInfo> pictures, bool isLast)
         {
             int result = 0;
             long sizePos, dataPos, finalPos;
             byte blockType;
 
-            foreach (TagData.PictureInfo picture in pictures)
+            foreach (PictureInfo picture in pictures)
             {
                 blockType = META_PICTURE;
                 if (isLast) blockType = (byte)(blockType & 0x80);
@@ -638,7 +638,7 @@ namespace ATL.AudioData.IO
                 w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
                 dataPos = w.BaseStream.Position;
-                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
+                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
 
                 finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

@@ -32,8 +32,8 @@ namespace ATL.test.IO.MetaData
             testData.DiscNumber = "2";
             testData.Copyright = "";
 
-            testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
-            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
         }
 
 

@@ -460,10 +460,10 @@ namespace ATL.AudioData.IO
                 {
                     byte picCode = source.ReadByte();
                     // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                    TagData.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
+                    PictureInfo.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
 
                     int picturePosition;
-                    if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                    if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
                         addPictureToken(MetaDataIOFactory.TAG_NATIVE, picCode);
                         picturePosition = takePicturePosition(MetaDataIOFactory.TAG_NATIVE, picCode);
@@ -771,7 +771,7 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone)) )
                 {
@@ -781,17 +781,17 @@ namespace ATL.AudioData.IO
             }
 
             // Picture fields
-            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                 if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
                 if (doWritePicture && picInfo.PictureData.Length + 50 <= ushort.MaxValue)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
                     counter++;
                 }
             }
@@ -868,7 +868,7 @@ namespace ATL.AudioData.IO
             // Supported textual fields : all current supported fields are located in extended content description frame
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
@@ -883,17 +883,17 @@ namespace ATL.AudioData.IO
             // Picture fields (exclusively written in Metadata Library Object zone)
             if (isExtendedMetaLibrary)
             {
-                foreach (TagData.PictureInfo picInfo in tag.Pictures)
+                foreach (PictureInfo picInfo in tag.Pictures)
                 {
                     // Picture has either to be supported, or to come from the right tag standard
-                    doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                    doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                     if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                     // It also has not to be marked for deletion
                     doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
                     if (doWritePicture && picInfo.PictureData.Length + 50 > ushort.MaxValue)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
                         counter++;
                     }
                 }
@@ -1049,11 +1049,11 @@ namespace ATL.AudioData.IO
                     tag.IntegrateValue(b, "");
                 }
 
-                foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
+                foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
                 {
                     if (fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/"))
                     {
-                        TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
+                        MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                         emptyFieldInfo.MarkedForDeletion = true;
                         tag.AdditionalFields.Add(emptyFieldInfo);
                     }

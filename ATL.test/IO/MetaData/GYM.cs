@@ -23,9 +23,9 @@ namespace ATL.test.IO.MetaData
             testData.Comment = "Last Stage Music";
             testData.Copyright = "1990 Sega";
 
-            testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
-            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "EMULATOR", "Magasis"));
-            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "DUMPER", "Guy"));
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "EMULATOR", "Magasis"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "DUMPER", "Guy"));
         }
 
         [TestMethod]

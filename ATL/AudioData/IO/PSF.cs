@@ -418,7 +418,7 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals("utf8")) // utf8 already written
                 {
@@ -466,12 +466,12 @@ namespace ATL.AudioData.IO
             }
 
             string fieldCode;
-            foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
+            foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 fieldCode = fieldInfo.NativeFieldCode.ToLower();
                 if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode) )
                 {
-                    TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
+                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;
                     tag.AdditionalFields.Add(emptyFieldInfo);
                 }

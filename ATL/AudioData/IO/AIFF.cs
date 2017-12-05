@@ -396,7 +396,7 @@ namespace ATL.AudioData.IO
 
                                 // Comments length
                                 ushort comLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
-                                TagData.MetaFieldInfo comment = new TagData.MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex);
+                                MetaFieldInfo comment = new MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex);
                                 comment.Value = Utils.Latin1Encoding.GetString(source.ReadBytes(comLength));
                                 comment.SpecificData = cmtData;
                                 tagData.AdditionalFields.Add(comment);
@@ -532,7 +532,7 @@ namespace ATL.AudioData.IO
                 bool applicable = tag.Comment.Length > 0;
                 if (!applicable && tag.AdditionalFields.Count > 0)
                 {
-                    foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                    foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                     {
                         applicable = (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS));
                         if (applicable) break;
@@ -558,7 +558,7 @@ namespace ATL.AudioData.IO
                     // Then write comments linked to a Marker ID
                     if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
                     {
-                        foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                        foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                         {
                             if (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS))
                             {
@@ -585,7 +585,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeCommentChunk(BinaryWriter w, TagData.MetaFieldInfo info, string comment = "")
+        private void writeCommentChunk(BinaryWriter w, MetaFieldInfo info, string comment = "")
         {
             byte[] commentData = null;
 

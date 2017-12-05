@@ -323,11 +323,11 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
             get
             {
-                IList<TagData.PictureInfo> pictures = new List<TagData.PictureInfo>();
+                IList<PictureInfo> pictures = new List<PictureInfo>();
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     if (reader.PictureTokens.Count > 0)

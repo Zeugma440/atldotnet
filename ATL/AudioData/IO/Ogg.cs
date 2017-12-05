@@ -472,7 +472,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
             get
             {

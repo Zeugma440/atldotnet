@@ -64,7 +64,7 @@ namespace ATL.AudioData.IO
         protected bool tagExists;
         protected int tagVersion;
         protected TagData tagData;
-        protected IList<TagData.PictureInfo> pictureTokens;
+        protected IList<PictureInfo> pictureTokens;
 
         private IList<KeyValuePair<string, int>> picturePositions;
         
@@ -295,8 +295,8 @@ namespace ATL.AudioData.IO
             get {
                 IDictionary<string, string> result = new Dictionary<string, string>();
 
-                IList<TagData.MetaFieldInfo> additionalFields = GetAdditionalFields(0);
-                foreach (TagData.MetaFieldInfo fieldInfo in additionalFields)
+                IList<MetaFieldInfo> additionalFields = GetAdditionalFields(0);
+                foreach (MetaFieldInfo fieldInfo in additionalFields)
                 {
                     if (!result.ContainsKey(fieldInfo.NativeFieldCode)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
                 }
@@ -305,11 +305,11 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public IList<TagData.MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
+        public IList<MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
         {
-            IList<TagData.MetaFieldInfo> result = new List<TagData.MetaFieldInfo>();
+            IList<MetaFieldInfo> result = new List<MetaFieldInfo>();
 
-            foreach (TagData.MetaFieldInfo fieldInfo in tagData.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tagData.AdditionalFields)
             {
                 if (
                     getImplementedTagType().Equals(fieldInfo.TagType)
@@ -324,15 +324,15 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public IList<TagData.PictureInfo> Pictures
+        public IList<PictureInfo> Pictures
         {
             get
             {
-                IList<TagData.PictureInfo> result = new List<TagData.PictureInfo>();
+                IList<PictureInfo> result = new List<PictureInfo>();
 
-                foreach (TagData.PictureInfo picInfo in tagData.Pictures)
+                foreach (PictureInfo picInfo in tagData.Pictures)
                 {
-                    if ( !picInfo.MarkedForDeletion && ( !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType()) ) ) ) result.Add(picInfo);
+                    if ( !picInfo.MarkedForDeletion && ( !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType()) ) ) ) result.Add(picInfo);
                 }
 
                 return result;
@@ -342,7 +342,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Each positioned flag indicates the presence of an embedded picture
         /// </summary>
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
             get { return this.pictureTokens; }
         }
@@ -378,37 +378,37 @@ namespace ATL.AudioData.IO
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
 
-        protected void addPictureToken(TagData.PIC_TYPE picType)
+        protected void addPictureToken(PictureInfo.PIC_TYPE picType)
         {
-            pictureTokens.Add( new TagData.PictureInfo(ImageFormat.Undefined, picType) );
+            pictureTokens.Add( new PictureInfo(ImageFormat.Undefined, picType) );
         }
 
         protected void addPictureToken(int tagType, byte nativePicCode)
         {
-            pictureTokens.Add(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode) );
+            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode) );
         }
 
         protected void addPictureToken(int tagType, string nativePicCode)
         {
-            pictureTokens.Add(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
         }
 
-        protected int takePicturePosition(TagData.PIC_TYPE picType)
+        protected int takePicturePosition(PictureInfo.PIC_TYPE picType)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, picType));
+            return takePicturePosition(new PictureInfo(ImageFormat.Undefined, picType));
         }
 
         protected int takePicturePosition(int tagType, byte nativePicCode)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
         }
 
         protected int takePicturePosition(int tagType, string nativePicCode)
         {
-            return takePicturePosition(new TagData.PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
         }
 
-        protected int takePicturePosition(TagData.PictureInfo picInfo)
+        protected int takePicturePosition(PictureInfo picInfo)
         {
             string picId = picInfo.ToString();
             bool found = false;
@@ -461,7 +461,7 @@ namespace ATL.AudioData.IO
 
             // TODO -- shouldn't below instructions be Clear calls instead of new instanciations for smoother performance ? GC sure has a lot of work right now...
             tagData = new TagData();
-            pictureTokens = new List<TagData.PictureInfo>();
+            pictureTokens = new List<PictureInfo>();
             picturePositions = new List<KeyValuePair<string, int>>();
             structureHelper = new FileStructureHelper(IsLittleEndian);
         }
@@ -480,7 +480,7 @@ namespace ATL.AudioData.IO
             {
                 if (ID.Length > 0)
                 {
-                    TagData.MetaFieldInfo fieldInfo = new TagData.MetaFieldInfo(getImplementedTagType(), ID, Data, streamNumber, language, zone);
+                    MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, Data, streamNumber, language, zone);
                     if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicate fields from existing
                     {
                         tagData.AdditionalFields.Remove(fieldInfo);
@@ -514,9 +514,9 @@ namespace ATL.AudioData.IO
             {
                 if (tag.Pictures != null)
                 {
-                    foreach (TagData.PictureInfo picInfo in tag.Pictures)
+                    foreach (PictureInfo picInfo in tag.Pictures)
                     {
-                        if (TagData.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
+                        if (PictureInfo.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
                         {
                             if ((-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength))
                             {
@@ -525,7 +525,7 @@ namespace ATL.AudioData.IO
                         }
                     }
                 }
-                foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
                     if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TAG_ANY == fieldInfo.TagType)
                     {
@@ -704,9 +704,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected void readPictureData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
+        protected void readPictureData(ref MemoryStream s, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
+            PictureInfo picInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
             picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
 
             tagData.Pictures.Add(picInfo);

@@ -27,7 +27,7 @@ namespace ATL.AudioData.IO
         // Reference : https://xiph.org/flac/format.html#metadata_block_picture
         public class VorbisMetaDataBlockPicture
         {
-            public TagData.PIC_TYPE picType;
+            public PictureInfo.PIC_TYPE picType;
             public int nativePicCode;
             public string mimeType;
             public string description;
@@ -214,8 +214,8 @@ namespace ATL.AudioData.IO
             }
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
-                int picturePosition = takePicturePosition(TagData.PIC_TYPE.Generic);
-                TagData.PictureInfo picInfo = new TagData.PictureInfo(ImageFormat.Undefined, TagData.PIC_TYPE.Generic, picturePosition);
+                int picturePosition = takePicturePosition(PictureInfo.PIC_TYPE.Generic);
+                PictureInfo picInfo = new PictureInfo(ImageFormat.Undefined, PictureInfo.PIC_TYPE.Generic, picturePosition);
 
                 if (readTagParams.PictureStreamHandler != null)
                 {
@@ -237,7 +237,7 @@ namespace ATL.AudioData.IO
                         if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
                         mem.Seek(0, SeekOrigin.Begin);
 
-                        readTagParams.PictureStreamHandler(ref mem, TagData.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
+                        readTagParams.PictureStreamHandler(ref mem, PictureInfo.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
                     }
                     finally
                     {
@@ -253,7 +253,7 @@ namespace ATL.AudioData.IO
             long initPosition = s.Position;
             VorbisMetaDataBlockPicture block = ReadMetadataBlockPicture(s);
 
-            if (block.picType.Equals(TagData.PIC_TYPE.Unsupported))
+            if (block.picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
             {
                 addPictureToken(getImplementedTagType(), (byte)block.nativePicCode);
                 picturePosition = takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode);
@@ -437,7 +437,7 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
@@ -449,17 +449,17 @@ namespace ATL.AudioData.IO
             // Picture fields
             if (writePicturesWithMetadata)
             {
-                foreach (TagData.PictureInfo picInfo in tag.Pictures)
+                foreach (PictureInfo picInfo in tag.Pictures)
                 {
                     // Picture has either to be supported, or to come from the right tag standard
-                    doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                    doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                     if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                     // It also has not to be marked for deletion
                     doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
                     if (doWritePicture)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
                         nbFrames++;
                     }
                 }
@@ -558,11 +558,11 @@ namespace ATL.AudioData.IO
                 tag.IntegrateValue(b, "");
             }
 
-            foreach (TagData.MetaFieldInfo fieldInfo in GetAdditionalFields())
+            foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
-                    TagData.MetaFieldInfo emptyFieldInfo = new TagData.MetaFieldInfo(fieldInfo);
+                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;
                     tag.AdditionalFields.Add(emptyFieldInfo);
                 }

@@ -185,9 +185,9 @@ namespace ATL.AudioData.IO
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
                     int picturePosition;
-                    TagData.PIC_TYPE picType = decodeAPEPictureType(frameName);
+                    PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
 
-                    if (picType.Equals(TagData.PIC_TYPE.Unsupported))
+                    if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
                         addPictureToken(getImplementedTagType(), frameName);
                         picturePosition = takePicturePosition(getImplementedTagType(), frameName);
@@ -217,20 +217,20 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private static TagData.PIC_TYPE decodeAPEPictureType(string picCode)
+        private static PictureInfo.PIC_TYPE decodeAPEPictureType(string picCode)
         {
             picCode = picCode.Trim().ToUpper();
-            if ("COVER ART (FRONT)".Equals(picCode)) return TagData.PIC_TYPE.Front;
-            else if ("COVER ART (BACK)".Equals(picCode)) return TagData.PIC_TYPE.Back;
-            else if ("COVER ART (MEDIA)".Equals(picCode)) return TagData.PIC_TYPE.CD;
-            else return TagData.PIC_TYPE.Unsupported;
+            if ("COVER ART (FRONT)".Equals(picCode)) return PictureInfo.PIC_TYPE.Front;
+            else if ("COVER ART (BACK)".Equals(picCode)) return PictureInfo.PIC_TYPE.Back;
+            else if ("COVER ART (MEDIA)".Equals(picCode)) return PictureInfo.PIC_TYPE.CD;
+            else return PictureInfo.PIC_TYPE.Unsupported;
         }
 
-        private static string encodeAPEPictureType(TagData.PIC_TYPE picCode)
+        private static string encodeAPEPictureType(PictureInfo.PIC_TYPE picCode)
         {
-            if (TagData.PIC_TYPE.Front.Equals(picCode)) return "Cover Art (Front)";
-            else if (TagData.PIC_TYPE.Back.Equals(picCode)) return "Cover Art (Back)";
-            else if (TagData.PIC_TYPE.CD.Equals(picCode)) return "Cover Art (Media)";
+            if (PictureInfo.PIC_TYPE.Front.Equals(picCode)) return "Cover Art (Front)";
+            else if (PictureInfo.PIC_TYPE.Back.Equals(picCode)) return "Cover Art (Back)";
+            else if (PictureInfo.PIC_TYPE.CD.Equals(picCode)) return "Cover Art (Media)";
             else return "Cover Art (Other)";
         }
 
@@ -346,17 +346,17 @@ namespace ATL.AudioData.IO
             int nbFrames = 0;
 
             // Picture fields (first before textual fields, since APE tag is located on the footer)
-            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                 if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
                     nbFrames++;
                 }
             }
@@ -381,7 +381,7 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {

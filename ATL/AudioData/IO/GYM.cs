@@ -145,9 +145,9 @@ namespace ATL.AudioData.IO
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.IntegrateValue(TagData.TAG_FIELD_COPYRIGHT, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "EMULATOR", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "EMULATOR", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(256))).Trim();
                 tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, str);
 

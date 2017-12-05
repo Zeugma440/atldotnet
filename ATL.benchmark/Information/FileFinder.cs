@@ -63,7 +63,7 @@ namespace ATL.benchmark
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
             string[] files = Directory.GetFiles(folder);
-            IList<TagData.PictureInfo> pictures;
+            IList<PictureInfo> pictures;
 
             Track t;
 

@@ -161,7 +161,7 @@ namespace ATL.benchmark
 
         private void performMassRead()
         {
-            IList<TagData.PictureInfo> pictures;
+            IList<PictureInfo> pictures;
 
             // Mass-read resulting files
             foreach (string s in tempFiles)

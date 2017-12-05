@@ -42,21 +42,21 @@ namespace ATL
 		public int TrackNumber;
         public int DiscNumber;
         public int Rating;
-        public IList<TagData.PictureInfo> PictureTokens = null;
+        public IList<PictureInfo> PictureTokens = null;
         public IList<ChapterInfo> Chapters;
 
         public IDictionary<string, string> AdditionalFields;
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
 
-        private IList<TagData.PictureInfo> embeddedPictures = null;
-        private ICollection<TagData.PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
+        private IList<PictureInfo> embeddedPictures = null;
+        private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
         private AudioFileIO fileIO;
 
 
         // ========== METHODS
 
-        public IList<TagData.PictureInfo> EmbeddedPictures
+        public IList<PictureInfo> EmbeddedPictures
         {
             get
             {
@@ -64,12 +64,12 @@ namespace ATL
             }
         }
 
-        private IList<TagData.PictureInfo> getEmbeddedPictures()
+        private IList<PictureInfo> getEmbeddedPictures()
         {
             if (null == embeddedPictures)
             {
-                embeddedPictures = new List<TagData.PictureInfo>();
-                initialEmbeddedPictures = new List<TagData.PictureInfo>();
+                embeddedPictures = new List<PictureInfo>();
+                initialEmbeddedPictures = new List<PictureInfo>();
 
                 Update(new TagData.PictureStreamHandlerDelegate(readBinaryImageData));
             }
@@ -77,13 +77,13 @@ namespace ATL
             return embeddedPictures;
         }
 
-        protected void readBinaryImageData(ref MemoryStream s, TagData.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
+        protected void readBinaryImageData(ref MemoryStream s, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
         {
-            TagData.PictureInfo picInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
+            PictureInfo picInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
             picInfo.PictureData = s.ToArray();
 
             // Initial pic info, without picture data
-            TagData.PictureInfo initialPicInfo = new TagData.PictureInfo(imgFormat, picType, originalTag, picCode, position);
+            PictureInfo initialPicInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
             initialPicInfo.PictureHash = HashDepot.Fnv1a.Hash32(picInfo.PictureData);
 
             embeddedPictures.Add(picInfo);
@@ -127,7 +127,7 @@ namespace ATL
             AdditionalFields = fileIO.AdditionalFields;
             initialAdditionalFields = fileIO.AdditionalFields.Keys;
 
-            PictureTokens = new List<TagData.PictureInfo>(fileIO.PictureTokens);
+            PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
 
             if (null == pictureStreamHandler && embeddedPictures != null)
             {
@@ -171,7 +171,7 @@ namespace ATL
 
             foreach (string s in AdditionalFields.Keys)
             {
-                result.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
+                result.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
             }
 
             // Detect and tag deleted Additional fields (=those which were in initialAdditionalFields and do not appear in AdditionalFields anymore)
@@ -179,29 +179,29 @@ namespace ATL
             {
                 if (!AdditionalFields.ContainsKey(s))
                 {
-                    TagData.MetaFieldInfo metaFieldToDelete = new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, "");
+                    MetaFieldInfo metaFieldToDelete = new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, "");
                     metaFieldToDelete.MarkedForDeletion = true;
                     result.AdditionalFields.Add(metaFieldToDelete);
                 }
             }
 
-            result.Pictures = new List<TagData.PictureInfo>();
-            if (embeddedPictures != null) foreach (TagData.PictureInfo targetPic in embeddedPictures) targetPic.Flag = 0;
+            result.Pictures = new List<PictureInfo>();
+            if (embeddedPictures != null) foreach (PictureInfo targetPic in embeddedPictures) targetPic.Flag = 0;
 
             if (initialEmbeddedPictures != null)
             {
-                foreach (TagData.PictureInfo picInfo in initialEmbeddedPictures)
+                foreach (PictureInfo picInfo in initialEmbeddedPictures)
                 {
                     // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
                     if (!embeddedPictures.Contains(picInfo))
                     {
-                        TagData.PictureInfo picToDelete = new TagData.PictureInfo(picInfo);
+                        PictureInfo picToDelete = new PictureInfo(picInfo);
                         picToDelete.MarkedForDeletion = true;
                         result.Pictures.Add(picToDelete);
                     }
                     else // Only add new additions (pictures identical to initial list will be kept, and do not have to make it to the list, or else a duplicate will be created)
                     {
-                        foreach (TagData.PictureInfo targetPic in embeddedPictures)
+                        foreach (PictureInfo targetPic in embeddedPictures)
                         {
                             if (targetPic.Equals(picInfo))
                             {
@@ -213,7 +213,7 @@ namespace ATL
                                     // A new picture content has been defined for an existing location
                                     result.Pictures.Add(targetPic);
 
-                                    TagData.PictureInfo picToDelete = new TagData.PictureInfo(picInfo);
+                                    PictureInfo picToDelete = new PictureInfo(picInfo);
                                     picToDelete.MarkedForDeletion = true;
                                     result.Pictures.Add(picToDelete);
                                 }
@@ -226,7 +226,7 @@ namespace ATL
 
                 if (embeddedPictures != null)
                 {
-                    foreach (TagData.PictureInfo targetPic in embeddedPictures)
+                    foreach (PictureInfo targetPic in embeddedPictures)
                     {
                         if (0 == targetPic.Flag) // Entirely new pictures without equivalent in initialEmbeddedPictures
                         {

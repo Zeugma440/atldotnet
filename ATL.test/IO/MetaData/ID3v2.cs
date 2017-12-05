@@ -47,17 +47,17 @@ namespace ATL.test.IO.MetaData
             testData.Copyright = "";
             testData.GeneralDescription = "";
 
-            testData.AdditionalFields = new List<TagData.MetaFieldInfo>();
-            testData.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "MOOD", "xxx"));
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "MOOD", "xxx"));
 
-            testData.Pictures = new List<TagData.PictureInfo>();
-            TagData.PictureInfo pic = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
+            testData.Pictures = new List<PictureInfo>();
+            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
             byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             pic.PictureData = data;
             pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
             testData.Pictures.Add(pic);
 
-            pic = new TagData.PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x09);
+            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x09);
             data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             pic.PictureData = data;
             pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
@@ -92,10 +92,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(1, pictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
                 Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -137,10 +137,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(1, pictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
                 Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -171,10 +171,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(3, pictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<TagData.PIC_TYPE, PictureInfo> pic in pictures)
+            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
             {
                 Image picture;
-                if (pic.Key.Equals(TagData.PIC_TYPE.Generic)) // Supported picture
+                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
                     picture = pic.Value.Picture;
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
@@ -228,36 +228,36 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
 
                 // Insert a large picture while tag restrictions specify that pictures shouldn't be larger than 64x64pixels AND tag size shouldn't be larger than 4 KB
-                TagData.PictureInfo picInfo = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.Back);
+                PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
                 theTag.Pictures.Add(picInfo);
 
                 // Insert a gif picture while tag restrictions specify that pictures should be either jpeg or png
-                picInfo = new TagData.PictureInfo(Commons.ImageFormat.Gif, TagData.PIC_TYPE.Back);
+                picInfo = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.Back);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
                 theTag.Pictures.Add(picInfo);
 
                 // Insert 20 garbage fields to raise the number of field above maximum required fields (30)
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA01", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA02", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA03", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA04", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA05", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA06", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA07", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA08", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA09", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA10", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA11", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA12", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA13", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA14", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA15", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA16", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA17", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA18", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA19", "aaa"));
-                theTag.AdditionalFields.Add(new TagData.MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA20", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA01", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA02", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA03", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA04", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA05", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA06", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA07", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA08", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA09", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA10", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA11", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA12", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA13", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA14", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA15", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA16", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA17", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA18", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA19", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA20", "aaa"));
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information

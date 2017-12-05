@@ -154,7 +154,7 @@ namespace ATL.test.IO
             theTrack.EmbeddedPictures.RemoveAt(1); // Remove Conductor; Front Cover remains
 
             // Add CD
-            TagData.PictureInfo newPicture = new TagData.PictureInfo(Commons.ImageFormat.Gif, TagData.PIC_TYPE.CD);
+            PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.CD);
             newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
             theTrack.EmbeddedPictures.Add(newPicture);
 
@@ -167,10 +167,10 @@ namespace ATL.test.IO
             bool foundFront = false;
             bool foundCD = false;
 
-            foreach (TagData.PictureInfo pic in theTrack.EmbeddedPictures)
+            foreach (PictureInfo pic in theTrack.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(TagData.PIC_TYPE.Front)) foundFront = true;
-                if (pic.PicType.Equals(TagData.PIC_TYPE.CD)) foundCD = true;
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front)) foundFront = true;
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD)) foundCD = true;
             }
 
             Assert.IsTrue(foundFront);
@@ -187,7 +187,7 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
 
             // Update Front picture
-            TagData.PictureInfo newPicture = new TagData.PictureInfo(Commons.ImageFormat.Jpeg, TagData.PIC_TYPE.Front);
+            PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Front);
             newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
             theTrack.EmbeddedPictures.Add(newPicture);
 
@@ -200,9 +200,9 @@ namespace ATL.test.IO
             bool foundFront = false;
             bool foundConductor = false;
 
-            foreach (TagData.PictureInfo pic in theTrack.EmbeddedPictures)
+            foreach (PictureInfo pic in theTrack.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(TagData.PIC_TYPE.Front))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front))
                 {
                     foundFront = true;
                     Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
@@ -210,7 +210,7 @@ namespace ATL.test.IO
                     Assert.AreEqual(picture.Width, 900);
                     Assert.AreEqual(picture.Height, 290);
                 }
-                if (pic.PicType.Equals(TagData.PIC_TYPE.Unsupported)) foundConductor = true;
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)) foundConductor = true;
             }
 
             Assert.IsTrue(foundFront);

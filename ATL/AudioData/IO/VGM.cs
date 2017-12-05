@@ -200,28 +200,28 @@ namespace ATL.AudioData.IO
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
                 tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (japanese)
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (english)
                 tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM,  str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (japanese)
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // System name (english)
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "SYSTEM", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "SYSTEM", str));
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // System name (japanese)
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "SYSTEM_J", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "SYSTEM_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (english)
                 tagData.IntegrateValue(TagData.TAG_FIELD_ARTIST, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (japanese)
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "AUTHOR_J", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "AUTHOR_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Release date
                 tagData.IntegrateValue(TagData.TAG_FIELD_RECORDING_DATE, str);
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Dumper
-                tagData.AdditionalFields.Add(new TagData.MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
+                tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Notes
                 tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, str);

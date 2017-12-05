@@ -22,7 +22,7 @@ namespace ATL.benchmark
         public void mem_ATL()
         {
             //            BufferedBinaryReader.BUFFER_SIZE = mode;
-            IList<TagData.PictureInfo> pictures;
+            IList<PictureInfo> pictures;
 
             if (File.Exists(path))
             {

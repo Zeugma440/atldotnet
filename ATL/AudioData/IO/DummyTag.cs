@@ -62,9 +62,9 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
-            get { return new List<TagData.PictureInfo>(); }
+            get { return new List<PictureInfo>(); }
         }
 
         public string Copyright

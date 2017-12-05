@@ -1107,7 +1107,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                     {
-                        TagData.PIC_TYPE picType = TagData.PIC_TYPE.Generic;
+                        PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
 
                         int picturePosition;
                         addPictureToken(picType);
@@ -1296,7 +1296,7 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (TagData.MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
@@ -1307,10 +1307,10 @@ namespace ATL.AudioData.IO
 
             // Picture fields
             bool firstPic = true;
-            foreach (TagData.PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(TagData.PIC_TYPE.Unsupported);
+                doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                 if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);

@@ -138,10 +138,10 @@ namespace ATL.AudioData
 
         /// <summary>
         /// List of picture IDs stored in the tag
-        ///     TagData.PIC_TYPE : internal, normalized picture type
+        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
         ///     byte : native picture code (useful when exploiting the UNSUPPORTED picture type)
         /// </summary>
-        IList<TagData.PictureInfo> PictureTokens
+        IList<PictureInfo> PictureTokens
         {
             get;
         }

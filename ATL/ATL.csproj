@@ -111,6 +111,8 @@
     <Compile Include="CatalogDataReaders\CatalogDataReaderFactory.cs" />
     <Compile Include="Entities\ChapterInfo.cs" />
     <Compile Include="Entities\Format.cs" />
+    <Compile Include="Entities\MetaFieldInfo.cs" />
+    <Compile Include="Entities\PictureInfo.cs" />
     <Compile Include="Entities\TagData.cs" />
     <Compile Include="Entities\Track.cs" />
     <Compile Include="Settings.cs" />

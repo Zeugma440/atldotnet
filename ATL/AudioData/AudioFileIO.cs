@@ -178,7 +178,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Flag indicating the presence of embedded pictures
         /// </summary>
-        public IList<TagData.PictureInfo> PictureTokens
+        public IList<PictureInfo> PictureTokens
         {
             get { return metaData.PictureTokens; }
         }
