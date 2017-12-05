@@ -139,16 +139,6 @@ namespace ATL.AudioData.IO
 			public uint dwavgbytespersec;
 			public ushort wblockalign;
 			public ushort wbitspersample;
-		
-			public void Reset()
-			{
-				wformattag = 0;
-				wchannels = 0;
-				dwsamplespersec = 0;
-				dwavgbytespersec = 0;
-				wblockalign = 0;
-				wbitspersample = 0;
-			}
 		}
 
 		private class riff_chunk
@@ -254,6 +244,8 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
+            /* unused for now
+             * 
         public String getChannelMode()
 		{
 			switch( channels )
@@ -271,6 +263,7 @@ namespace ATL.AudioData.IO
             else
                 return 0;
         }
+        */
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
