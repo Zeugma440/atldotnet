@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
@@ -568,6 +568,10 @@ namespace ATL.test.IO.MetaData
             ch.Title = "aaa";
             ch.Subtitle = "bbb";
             ch.Url = "ccc\0ddd";
+            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            ch.Picture.PictureData = data;
+            ch.Picture.ComputePicHash();
 
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
@@ -588,7 +592,7 @@ namespace ATL.test.IO.MetaData
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(readPictureData, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -610,6 +614,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
                     Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Picture != null)
+                    {
+                        Assert.IsNotNull(chap.Picture);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.PictureHash, chap.Picture.ComputePicHash());
+                    }
                 }
                 else
                 {

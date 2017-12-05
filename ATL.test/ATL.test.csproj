@@ -193,6 +193,7 @@
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />
+    <Content Include="Resources\_Images\pic1.jpeg" />
     <Content Include="Resources\_Images\rgb.tif" />
     <Content Include="Resources\_Images\pic1.bmp" />
     <Content Include="Resources\_Images\pic1.gif" />

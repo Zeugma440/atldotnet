@@ -1236,6 +1236,10 @@ namespace ATL.AudioData.IO
                 {
                     writeTextFrame(w, "WXXX", chapter.Url, tagEncoding, "", true);
                 }
+                if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
+                {
+                    writePictureFrame(w, chapter.Picture.PictureData, chapter.Picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), "", tagEncoding, true);
+                }
 
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
@@ -1379,7 +1383,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding, bool isInsideUnsynch = false)
         {
             // Binary tag writing management
             long frameOffset;
@@ -1394,7 +1398,7 @@ namespace ATL.AudioData.IO
             MemoryStream s = null;
 
 
-            if (tagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
@@ -1491,7 +1495,7 @@ namespace ATL.AudioData.IO
 
             finalFramePosRaw = w.BaseStream.Position;
 
-            if (tagHeader.UsesUnsynchronisation)
+            if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);
