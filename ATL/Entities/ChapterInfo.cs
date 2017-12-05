@@ -13,6 +13,7 @@
         public string Title = "";
         public string Subtitle = "";
         public string Url = "";
+        public PictureInfo Picture = null;
 
 
         // ---------------- CONSTRUCTORS
@@ -22,6 +23,8 @@
         public ChapterInfo(ChapterInfo chapter)
         {
             StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Subtitle = chapter.Subtitle; Url = chapter.Url; UniqueID = chapter.UniqueID;
+
+            if (chapter.Picture != null) Picture = new PictureInfo(chapter.Picture);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace ATL.test.IO.MetaData
             {
                 info = new PictureInfo(imgFormat, MetaDataIOFactory.TAG_ANY, code);
                 info.PictureData = pictureData;
-                info.PictureHash = HashDepot.Fnv1a.Hash32(info.PictureData);
+                info.ComputePicHash();
                 Picture = Image.FromStream(new MemoryStream(pictureData));
             }
 
@@ -111,13 +111,13 @@ namespace ATL.test.IO.MetaData
             PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
             byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             pic.PictureData = data;
-            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
+            pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
             pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x02);
             data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             pic.PictureData = data;
-            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
+            pic.ComputePicHash();
             testData.Pictures.Add(pic);
         }
 

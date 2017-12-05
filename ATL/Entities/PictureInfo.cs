@@ -39,7 +39,9 @@ namespace ATL
                 this.PictureData = new byte[picInfo.PictureData.Length];
                 picInfo.PictureData.CopyTo(this.PictureData, 0);
             }
+            this.PictureHash = picInfo.PictureHash;
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
+            this.Flag = picInfo.Flag;
         }
         public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
         {
@@ -122,6 +124,11 @@ namespace ATL
 
             // Call the implementation from IEquatable
             return this.ToString().Equals(obj.ToString());
+        }
+
+        public void ComputePicHash()
+        {
+            PictureHash = Fnv1a.Hash32(PictureData);
         }
     }
 }

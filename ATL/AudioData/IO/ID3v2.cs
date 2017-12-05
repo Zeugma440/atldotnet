@@ -719,20 +719,23 @@ namespace ATL.AudioData.IO
                     // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
                     PictureInfo.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
-                    int picturePosition;
-                    if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
+                    int picturePosition = 0;
+                    if (!inChapter)
                     {
-                        addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
-                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
-                    }
-                    else
-                    {
-                        addPictureToken(picType);
-                        picturePosition = takePicturePosition(picType);
+                        if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
+                        {
+                            addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
+                            picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
+                        }
+                        else
+                        {
+                            addPictureToken(picType);
+                            picturePosition = takePicturePosition(picType);
+                        }
                     }
 
                     // Image description (unused)
-                    // Description can be coded with another convention
+                    // Description may be coded with another convention
                     if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                     StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
@@ -752,8 +755,15 @@ namespace ATL.AudioData.IO
 
                         mem.Seek(0, SeekOrigin.Begin);
 
-                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_ID3V2, picCode, picturePosition);
-
+                        if (!inChapter) readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, getImplementedTagType(), picCode, picturePosition);
+                        else
+                        {
+                            PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
+                            picInfo.PictureData = mem.ToArray();
+                            picInfo.ComputePicHash();
+                            chapters[chapters.Count - 1].Picture = picInfo;
+                        }
+                        
                         mem.Close();
                     }
                 } // Picture frame
