@@ -272,7 +272,6 @@ namespace ATL.AudioData.IO
                                     result += loopDuration * (theEvent.Info & 0xF);
                                     isInsideLoop = false;
                                 }
-                                // TODO implement other extended effects
                             }
                         }
 

@@ -96,9 +96,9 @@ namespace ATL
             fileIO = new AudioFileIO(Path, pictureStreamHandler, Settings.ReadAllMetaFrames);
 
             Title = fileIO.Title;
-            if ("" == Title || null == Title)
+            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) )
             {
-                Title = System.IO.Path.GetFileNameWithoutExtension(Path); // TODO - this should be an option, as returned value is not really read from the tag
+                Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
             Artist = Utils.ProtectValue(fileIO.Artist);
             Composer = Utils.ProtectValue(fileIO.Composer);

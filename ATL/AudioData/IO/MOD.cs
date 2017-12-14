@@ -292,7 +292,6 @@ namespace ATL.AudioData.IO
                                     result += loopDuration * arg2;
                                     isInsideLoop = false;
                                 }
-                                // TODO implement other extended effects
                             }
                         }
                         if (positionJump || patternBreak) break;

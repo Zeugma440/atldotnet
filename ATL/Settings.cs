@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace ATL
 {
     public static class Settings
     {
-        // General properties
         public static bool ID3v2_useExtendedHeaderRestrictions = false;
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 
@@ -24,5 +22,7 @@ namespace ATL
         // NB1 : If more than one item, _all_ of them will be written
         // NB2 : If Native tagging is not indicated here, it will _not_ be used
         public static int[] DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_ID3V2, AudioData.MetaDataIOFactory.TAG_NATIVE };
+
+        public static bool UseFileNameWhenNoTitle = true;               // If true, file name (without the extension) will go to the Title field if metadata contains no title
     }
 }
