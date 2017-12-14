@@ -482,7 +482,7 @@ namespace ATL.AudioData.IO
                             if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_PICTURE, position - 4, (int)blockLength+4, new byte[0], (byte)(isLast ? 1 : 0)));
                             vorbisTag.ReadPicture(source.BaseStream, readTagParams);
                         }
-                        // TODO : APPLICATION and CUESHEET blocks
+                        // TODO : support for CUESHEET block
 
                         if (blockType < 7)
                         {

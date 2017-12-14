@@ -428,7 +428,6 @@ namespace ATL.AudioData.IO
             TagInfo tag,
             ReadTagParams readTagParams,
             ref IList<MetaFieldInfo> comments,
-            ref IList<ChapterInfo> chapters,
             bool inChapter = false)
         {
             FrameHeader Frame = new FrameHeader();
@@ -621,9 +620,9 @@ namespace ATL.AudioData.IO
                     }
                     else if ("CHA".Equals(shortFrameId)) // Chapters
                     {
-                        if (null == chapters) chapters = new List<ChapterInfo>();
+                        if (null == tagData.Chapters) tagData.Chapters= new List<ChapterInfo>();
                         chapter = new ChapterInfo();
-                        chapters.Add(chapter);
+                        tagData.Chapters.Add(chapter);
 
                         long initPos = source.Position;
                         chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
@@ -638,7 +637,7 @@ namespace ATL.AudioData.IO
                         long remainingData = dataSize - (source.Position - initPos);
                         while (remainingData > 0)
                         {
-                            if (!readFrame(source, tag, readTagParams, ref comments, ref chapters, true)) break;
+                            if (!readFrame(source, tag, readTagParams, ref comments, true)) break;
                             remainingData = dataSize - (source.Position - initPos);
                         } // End chapter frames loop
 
@@ -659,7 +658,7 @@ namespace ATL.AudioData.IO
                         if (!inChapter) setMetaField(Frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                         else
                         {
-                            chapter = chapters[chapters.Count - 1];
+                            chapter = tagData.Chapters[tagData.Chapters.Count - 1];
                             switch (Frame.ID)
                             {
                                 case "TIT2": chapter.Title = strData; break;
@@ -760,7 +759,7 @@ namespace ATL.AudioData.IO
                         {
                             PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
                             picInfo.PictureData = mem.ToArray();
-                            chapters[chapters.Count - 1].Picture = picInfo;
+                            tagData.Chapters[tagData.Chapters.Count - 1].Picture = picInfo;
                         }
                         
                         mem.Close();
@@ -783,14 +782,13 @@ namespace ATL.AudioData.IO
             tag.ActualEnd = -1;
 
             IList<MetaFieldInfo> comments = new List<MetaFieldInfo>();
-            IList<ChapterInfo> chapters = new List<ChapterInfo>();
 
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
             streamPos = source.Position;
 
             while ((streamPos - offset < tagSize) && (streamPos < streamLength))
             {
-                if (!readFrame(source, tag, readTagParams, ref comments, ref chapters)) break;
+                if (!readFrame(source, tag, readTagParams, ref comments)) break;
 
                 streamPos = source.Position;
             }
@@ -820,14 +818,6 @@ namespace ATL.AudioData.IO
                     else setMetaField("COM", comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                 }
             }
-
-            /* Store all chapters
-            */
-            if (chapters != null && chapters.Count > 0)
-            {
-                tagData.Chapters = chapters; // TODO - directly use tagData.Chapter instead of chapters local struct
-            }
-
 
             if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {

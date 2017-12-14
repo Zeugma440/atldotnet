@@ -24,7 +24,6 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
-        private bool isValid;
         private int codecFamily;
 
         private SizeInfo sizeInfo;
@@ -221,7 +220,6 @@ namespace ATL.AudioData.IO
 		{
             duration = 0;
             bitrate = 0;
-            isValid = false;
             codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
             tagSize = 0;
@@ -319,7 +317,6 @@ namespace ATL.AudioData.IO
 			if ( StreamUtils.StringEqualsArr("wvpk",wvh4.ckID) )  // wavpack header found  -- TODO handle exceptions better
 			{
 				result = true;
-				isValid = true;
 				version = (wvh4.version >> 8);
 				channels = (int)(2 - (wvh4.flags & 4));  // mono flag
 
@@ -434,7 +431,6 @@ namespace ATL.AudioData.IO
 
 						hasfmt = true;
 						result = true;
-						isValid = true;
 						formatTag = fmt.wformattag;
 						channels = fmt.wchannels;
 						sampleRate = (int)fmt.dwsamplespersec;
@@ -468,7 +464,6 @@ namespace ATL.AudioData.IO
 						if ( StreamUtils.StringEqualsArr("wvpk",wvh3.ckID) )  // wavpack header found
 						{
 							result = true;
-							isValid = true;
 							version = wvh3.version;
 							channels = 2 - (wvh3.flags & 1);  // mono flag
 							samples = wvh3.total_samples;
