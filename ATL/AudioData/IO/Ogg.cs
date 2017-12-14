@@ -507,7 +507,7 @@ namespace ATL.AudioData.IO
 
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // TODO - check why not ID3v2 since its presence is expected by the parser
+            return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files
         }
         public bool HasNativeMeta()
         {
@@ -615,7 +615,7 @@ namespace ATL.AudioData.IO
             bool result = false;
             bool isValidHeader = false;
 
-            // Check for ID3v2
+            // Check for ID3v2 (NB : this case should not even exist since OGG has its own native tagging system, and is not deemed compatible with ID3v2 according to the ID3 FAQ)
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // Read global file header
