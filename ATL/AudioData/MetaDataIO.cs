@@ -459,11 +459,10 @@ namespace ATL.AudioData.IO
             tagExists = false;
             tagVersion = 0;
 
-            // TODO -- shouldn't below instructions be Clear calls instead of new instanciations for smoother performance ? GC sure has a lot of work right now...
-            tagData = new TagData();
-            pictureTokens = new List<PictureInfo>();
-            picturePositions = new List<KeyValuePair<string, int>>();
-            structureHelper = new FileStructureHelper(IsLittleEndian);
+            if (null == tagData) tagData = new TagData(); else tagData.Clear();
+            if (null == pictureTokens) pictureTokens = new List<PictureInfo>(); else pictureTokens.Clear();
+            if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
+            if (null == structureHelper) structureHelper = new FileStructureHelper(IsLittleEndian); else structureHelper.Clear();
         }
 
         protected void setMetaField(string ID, string Data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")

@@ -157,6 +157,7 @@ namespace ATL.AudioData
                 }
                 zones.Clear();
             }
+            dynamicOffsetCorrection.Clear();
         }
 
         /// <summary>

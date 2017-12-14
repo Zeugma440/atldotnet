@@ -256,7 +256,7 @@ namespace ATL.AudioData
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
             {
-                if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version
+                if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
                 {
                     if (iD3v2.Read(source, readTagParams)) sizeInfo.TagSizes.Add(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
                 }

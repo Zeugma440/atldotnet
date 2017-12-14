@@ -223,6 +223,33 @@ namespace ATL
             return result;
         }
 
+        public void Clear()
+        {
+            Pictures.Clear();
+            AdditionalFields.Clear();
+            if (Chapters != null) Chapters.Clear();
+
+            GeneralDescription = null;
+            Title = null;
+            Artist = null;
+            OriginalArtist = null;
+            Composer = null;
+            Comment = null;
+            Genre = null;
+            Album = null;
+            OriginalAlbum = null;
+            RecordingYear = null;
+            RecordingDayMonth = null;
+            RecordingDate = null;
+            TrackNumber = null;
+            DiscNumber = null;
+            Rating = null;
+            Copyright = null;
+            AlbumArtist = null;
+            Publisher = null;
+            Conductor = null;
+        }
+
         private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
         {
             if (data != null) map[id] = data;

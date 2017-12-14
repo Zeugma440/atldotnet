@@ -925,8 +925,6 @@ namespace ATL.AudioData.IO
 
 
         // Writes tag info using ID3v2.4 conventions
-        // TODO much later : support ID3v2.3- conventions
-
         internal int writeInternal(TagData tag, BinaryWriter w, string zone)
         {
             return write(tag, w, zone);
