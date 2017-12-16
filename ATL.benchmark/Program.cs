@@ -14,6 +14,8 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
+            BenchmarkRunner.Run<PictureReading>();
+
             //BenchmarkRunner.Run<Misc>();
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
@@ -26,7 +28,7 @@ namespace ATL.benchmark
 
 
             //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
-            readAt(@"E:\temp\aac\mp4\chapters\chapters_QT.m4a");
+            //readAt(@"E:\temp\aac\mp4\chapters\chapters_QT.m4a");
 
             //compareInfo(@"E:\Music\VGM");
 
