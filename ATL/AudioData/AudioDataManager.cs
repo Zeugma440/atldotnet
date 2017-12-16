@@ -137,7 +137,8 @@ namespace ATL.AudioData
             else return new DummyTag();
         }
 
-        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false)
+        [Obsolete]
+        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -151,6 +152,33 @@ namespace ATL.AudioData
                 using (BinaryReader source = new BinaryReader(fs))
                 {
                     result = read(source, pictureStreamHandler, readAllMetaFrames);
+                }
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine(e.Message);
+                System.Console.WriteLine(e.StackTrace);
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
+                result = false;
+            }
+
+            return result;
+        }
+
+        public bool ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)
+        {
+            bool result = false;
+            LogDelegator.GetLocateDelegate()(fileName);
+
+            resetData();
+
+            try
+            {
+                // Open file, read first block of data and search for a frame		  
+                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
+                using (BinaryReader source = new BinaryReader(fs))
+                {
+                    result = read(source, readEmbeddedPictures, readAllMetaFrames);
                 }
             }
             catch (Exception e)
@@ -183,7 +211,7 @@ namespace ATL.AudioData
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         if (audioDataIO is IMetaDataEmbedder)
                         {
-                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(null, false);
+                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
                             readTagParams.PrepareForWriting = true;
 
                             audioDataIO.Read(r, sizeInfo, readTagParams);
@@ -218,7 +246,7 @@ namespace ATL.AudioData
                 using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
                 using (BinaryReader reader = new BinaryReader(fs))
                 {
-                    result = read(reader,null,false,true);
+                    result = read(reader,false,false,true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
@@ -241,14 +269,32 @@ namespace ATL.AudioData
             return result;
         }
 
+        private bool read(BinaryReader source, bool readEmbeddedPictures = false, bool readAllMetaFrames = false, bool prepareForWriting = false)
+        {
+            sizeInfo.ResetData();
+
+            sizeInfo.FileSize = source.BaseStream.Length;
+            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(readEmbeddedPictures, readAllMetaFrames);
+            readTagParams.PrepareForWriting = prepareForWriting;
+
+            return read(source, readTagParams);
+        }
+
+        [Obsolete]
         private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false, bool prepareForWriting = false)
         {
-            bool result = false;
             sizeInfo.ResetData();
 
             sizeInfo.FileSize = source.BaseStream.Length;
             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
             readTagParams.PrepareForWriting = prepareForWriting;
+
+            return read(source, readTagParams);
+        }
+
+        private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            bool result = false;
 
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {

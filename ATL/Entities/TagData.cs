@@ -13,9 +13,9 @@ namespace ATL
 	/// </summary>
 	public class TagData
 	{
-        // TODO - test memory usage with alternate signature using byte[], which could be simpler than current MemoryStream-based implementations
+        [Obsolete]
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
-        
+
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;

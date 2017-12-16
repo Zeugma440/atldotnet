@@ -11,7 +11,7 @@ namespace ATL.AudioData
     /// Rule : The first non-empty field of the most prioritized tag becomes the "cross-detected" field
     /// There is no "field blending" across collections (pictures, additional fields) : the first non-empty collection is kept
 	/// </summary>
-	public class CrossMetadataReader : IMetaDataIO 
+	internal class CrossMetadataReader : IMetaDataIO 
 	{
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
 		private IList<IMetaDataIO> metaReaders = null;
@@ -377,12 +377,35 @@ namespace ATL.AudioData
                     {
                         foreach(ChapterInfo chapter in reader.Chapters)
                         {
-                            chapters.Add(new ChapterInfo(chapter));
+                            chapters.Add(chapter);
                         }
                         break;
                     }
                 }
                 return chapters;
+            }
+        }
+
+        /// <summary>
+        /// Embedded pictures
+        /// </summary>
+        public IList<PictureInfo> EmbeddedPictures
+        {
+            get
+            {
+                IList<PictureInfo> pictures = new List<PictureInfo>();
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.EmbeddedPictures != null && reader.EmbeddedPictures.Count > 0)
+                    {
+                        foreach (PictureInfo picture in reader.EmbeddedPictures)
+                        {
+                            pictures.Add(picture);
+                        }
+                        break;
+                    }
+                }
+                return pictures;
             }
         }
 

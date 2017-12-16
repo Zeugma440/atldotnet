@@ -112,6 +112,11 @@ namespace ATL.AudioData.IO
             get { return new List<ChapterInfo>(); }
         }
 
+        public IList<PictureInfo> EmbeddedPictures
+        {
+            get { return new List<PictureInfo>(); }
+        }
+
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             return true;

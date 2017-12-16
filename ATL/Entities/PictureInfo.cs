@@ -16,7 +16,7 @@ namespace ATL
         public int NativePicCode;                       // Native picture code according to TagType convention (numeric : e.g. ID3v2)
         public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
 
-        // TODO - add a description field
+        public string Description = "";                 // Picture description
 
         public byte[] PictureData;                      // Binary picture data
         public uint PictureHash;                        // Hash of binary picture data
@@ -34,6 +34,7 @@ namespace ATL
             this.TagType = picInfo.TagType;
             this.NativePicCode = picInfo.NativePicCode;
             this.NativePicCodeStr = picInfo.NativePicCodeStr;
+            this.Description = picInfo.Description;
             if (picInfo.PictureData != null)
             {
                 this.PictureData = new byte[picInfo.PictureData.Length];

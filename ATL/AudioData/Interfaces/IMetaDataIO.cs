@@ -167,6 +167,11 @@ namespace ATL.AudioData
             get;
         }
 
+        IList<PictureInfo> EmbeddedPictures
+        {
+            get;
+        }
+
         /// <summary>
         /// Set metadata to be written using the given embedder
         /// </summary>

@@ -21,7 +21,7 @@ namespace ATL.benchmark
 
         private IList<string> tempFiles = new List<string>();
 
-
+        /*
         public void Perf_Method()
         {
             ulong test = 32974337984693648;
@@ -51,6 +51,7 @@ namespace ATL.benchmark
 
             System.Console.WriteLine("ReverseInt64 : " + (ticksNow - ticksBefore) / 10000 + " ms");
         }
+        */
 
         [GlobalSetup]
         public void Setup()

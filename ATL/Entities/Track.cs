@@ -71,7 +71,7 @@ namespace ATL
                 embeddedPictures = new List<PictureInfo>();
                 initialEmbeddedPictures = new List<PictureInfo>();
 
-                Update(new TagData.PictureStreamHandlerDelegate(readBinaryImageData));
+                Update(true);
             }
 
             return embeddedPictures;
@@ -90,10 +90,10 @@ namespace ATL
             initialEmbeddedPictures.Add(initialPicInfo);
         }
 
-        protected void Update(TagData.PictureStreamHandlerDelegate pictureStreamHandler = null)
+        protected void Update(bool readEmbeddedPictures = false)
         {
             // TODO when tag is not available, customize by naming options // tracks (...)
-            fileIO = new AudioFileIO(Path, pictureStreamHandler, Settings.ReadAllMetaFrames);
+            fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames);
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) )
@@ -129,7 +129,17 @@ namespace ATL
 
             PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
 
-            if (null == pictureStreamHandler && embeddedPictures != null)
+            if (readEmbeddedPictures)
+            {
+                foreach(PictureInfo picInfo in fileIO.EmbeddedPictures)
+                {
+                    picInfo.ComputePicHash();
+                    embeddedPictures.Add(picInfo);
+                    initialEmbeddedPictures.Add(picInfo);
+                }
+            }
+
+            if (!readEmbeddedPictures && embeddedPictures != null)
             {
                 embeddedPictures.Clear();
                 initialEmbeddedPictures.Clear();

@@ -304,6 +304,14 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).Chapters;
             }
         }
+
+        public IList<PictureInfo> EmbeddedPictures
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).EmbeddedPictures;
+            }
+        }
         #endregion
 
         public bool IsMetaSupported(int metaDataType)
@@ -533,7 +541,7 @@ namespace ATL.AudioData.IO
             long cumulativeDelta = 0;
 
             // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(null, true);
+            ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
 
@@ -552,7 +560,7 @@ namespace ATL.AudioData.IO
                         if (!pictureBlockFound) // All pictures are written at the position of the 1st picture block
                         {
                             pictureBlockFound = true;
-                            writtenFields = writePictures(msw, vorbisTag.Pictures, 1 == zone.Flag);
+                            writtenFields = writePictures(msw, vorbisTag.EmbeddedPictures, 1 == zone.Flag);
                         } else
                         {
                             writtenFields = 0; // Other picture blocks are erased
@@ -638,7 +646,7 @@ namespace ATL.AudioData.IO
                 w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
                 dataPos = w.BaseStream.Position;
-                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), "");
+                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
 
                 finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

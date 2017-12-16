@@ -736,33 +736,39 @@ namespace ATL.AudioData.IO
                     // Image description (unused)
                     // Description may be coded with another convention
                     if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
-                    StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                    string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
-                    if (readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
                     {
                         int picSize = dataSize - (int)(source.Position - position);
-                        MemoryStream mem = new MemoryStream(picSize);
+
+                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
+                        picInfo.Description = description;
 
                         if (tag.UsesUnsynchronisation)
                         {
-                            decodeUnsynchronizedStreamTo(source, mem, picSize);
+                            picInfo.PictureData = decodeUnsynchronizedStream(source, picSize);
                         }
                         else
                         {
-                            StreamUtils.CopyStream(source, mem, picSize);
+                            picInfo.PictureData = new byte[picSize];
+                            source.Read(picInfo.PictureData, 0, picSize);
                         }
 
-                        mem.Seek(0, SeekOrigin.Begin);
-
-                        if (!inChapter) readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, getImplementedTagType(), picCode, picturePosition);
-                        else
+                        if (!inChapter)
                         {
-                            PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
-                            picInfo.PictureData = mem.ToArray();
+                            tagData.Pictures.Add(picInfo);
+
+                            if (readTagParams.PictureStreamHandler != null)
+                            {
+                                MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                                readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                                mem.Close();
+                            }
+                        } else
+                        {
                             tagData.Chapters[tagData.Chapters.Count - 1].Picture = picInfo;
                         }
-                        
-                        mem.Close();
                     }
                 } // Picture frame
             } // Data size > 0
@@ -1101,7 +1107,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), "", tagEncoding);
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, tagEncoding);
                     nbFrames++;
                 }
             }
@@ -1226,7 +1232,7 @@ namespace ATL.AudioData.IO
                 }
                 if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
                 {
-                    writePictureFrame(w, chapter.Picture.PictureData, chapter.Picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), "", tagEncoding, true);
+                    writePictureFrame(w, chapter.Picture.PictureData, chapter.Picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
                 }
 
                 // Go back to frame size location to write its actual size 
@@ -1618,8 +1624,66 @@ namespace ATL.AudioData.IO
 
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
+        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, long length)
+        {
+            const int BUFFER_SIZE = 8192;
+
+            byte[] result = new byte[length];
+
+            int bytesToRead;
+            bool foundFF = false;
+
+            byte[] readBuffer = new byte[BUFFER_SIZE];
+            byte[] writeBuffer = new byte[BUFFER_SIZE];
+
+            int written;
+            int writtenTotal = 0;
+            int remainingBytes;
+            if (length > 0)
+            {
+                remainingBytes = (int)Math.Min(length, from.Length - from.Position);
+            }
+            else
+            {
+                remainingBytes = (int)(from.Length - from.Position);
+            }
+
+            while (remainingBytes > 0)
+            {
+                written = 0;
+                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+
+                from.Read(readBuffer, 0, bytesToRead);
+
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    if (0xff == readBuffer[i]) foundFF = true;
+                    else if (0x00 == readBuffer[i] && foundFF)
+                    {
+                        foundFF = false;
+                        continue; // i.e. do not write 0x00 to output stream
+                    }
+                    else if (foundFF) foundFF = false;
+
+                    writeBuffer[written++] = readBuffer[i];
+                }
+                Array.Copy(writeBuffer, 0, result, writtenTotal, written);
+                writtenTotal += written;
+
+                remainingBytes -= bytesToRead;
+            }
+
+            Array.Resize(ref result, writtenTotal);
+
+            return result;
+        }
+
         private static void decodeUnsynchronizedStreamTo(BufferedBinaryReader from, Stream to, long length)
         {
+            byte[] data = decodeUnsynchronizedStream(from, length);
+            to.Write(data, 0, data.Length);
+
+            /*
             const int BUFFER_SIZE = 8192;
 
             int bytesToRead;
@@ -1661,6 +1725,7 @@ namespace ATL.AudioData.IO
 
                 remainingBytes -= bytesToRead;
             }
+            */
         }
 
         // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)

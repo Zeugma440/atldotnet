@@ -474,16 +474,25 @@ namespace ATL.AudioData.IO
                         picturePosition = takePicturePosition(picType);
                     }
 
-                    if (readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
                     {
                         int picSize = source.ReadInt32();
                         string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
                         string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
 
-                        MemoryStream mem = new MemoryStream(picSize);
-                        StreamUtils.CopyStream(source.BaseStream, mem, picSize);
-                        readTagParams.PictureStreamHandler(ref mem, picType, ImageUtils.GetImageFormatFromMimeType(mimeType), MetaDataIOFactory.TAG_NATIVE, picCode, picturePosition);
-                        mem.Close();
+                        PictureInfo picInfo = new PictureInfo(ImageUtils.GetImageFormatFromMimeType(mimeType), picType, getImplementedTagType(), picCode, picturePosition);
+                        picInfo.Description = description;
+                        picInfo.PictureData = new byte[picSize];
+                        source.BaseStream.Read(picInfo.PictureData, 0, picSize);
+
+                        tagData.Pictures.Add(picInfo);
+
+                        if (readTagParams.PictureStreamHandler != null)
+                        {
+                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                            mem.Close();
+                        }
                     }
                     setMeta = false;
                 }
@@ -791,7 +800,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture && picInfo.PictureData.Length + 50 <= ushort.MaxValue)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType));
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
                     counter++;
                 }
             }
@@ -893,7 +902,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture && picInfo.PictureData.Length + 50 > ushort.MaxValue)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), true);
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, true);
                         counter++;
                     }
                 }
@@ -979,7 +988,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string description, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             long dataSizePos, dataPos, finalFramePos;
             byte[] nameBytes = Encoding.Unicode.GetBytes("WM/Picture" + '\0');
@@ -1019,7 +1028,7 @@ namespace ATL.AudioData.IO
             writer.Write(pictureData.Length);
 
             writer.Write(Encoding.Unicode.GetBytes(mimeType+'\0'));
-            writer.Write(Encoding.Unicode.GetBytes("" + '\0'));     // Picture description
+            writer.Write(Encoding.Unicode.GetBytes(description + '\0'));     // Picture description
 
             writer.Write(pictureData);
 

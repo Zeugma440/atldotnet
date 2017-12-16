@@ -11,7 +11,7 @@ namespace ATL.AudioData
 	/// It calls AudioReaderFactory and queries AudioDataReader/MetaDataReader to provide physical 
 	/// _and_ meta information about the given file.
 	/// </summary>
-	public class AudioFileIO : IMetaDataIO, IAudioDataIO
+	internal class AudioFileIO : IMetaDataIO, IAudioDataIO
     {
         private readonly string thePath;                             // Path of this file
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
@@ -24,7 +24,7 @@ namespace ATL.AudioData
         /// Constructor
         /// </summary>
         /// <param name="path">Path of the file to be parsed</param>
-        public AudioFileIO(string path, TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
+        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;
@@ -32,14 +32,14 @@ namespace ATL.AudioData
 
             audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
             audioManager = new AudioDataManager(audioData);
-            found = audioManager.ReadFromFile(pictureStreamHandler, readAllMetaFrames);
+            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
                 audioManager = new AudioDataManager(audioData);
-                found = audioManager.ReadFromFile(pictureStreamHandler, readAllMetaFrames);
+                found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
             metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
@@ -301,6 +301,7 @@ namespace ATL.AudioData
         {
             get { return metaData.Size; }
         }
+
         public IDictionary<string, string> AdditionalFields
         {
             get
@@ -308,6 +309,7 @@ namespace ATL.AudioData
                 return metaData.AdditionalFields;
             }
         }
+
         public IList<ChapterInfo> Chapters
         {
             get
@@ -316,8 +318,13 @@ namespace ATL.AudioData
             }
         }
 
-
-
+        public IList<PictureInfo> EmbeddedPictures
+        {
+            get
+            {
+                return metaData.EmbeddedPictures;
+            }
+        }
 
         public bool HasNativeMeta()
         {

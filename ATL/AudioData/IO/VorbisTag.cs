@@ -215,9 +215,9 @@ namespace ATL.AudioData.IO
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
                 int picturePosition = takePicturePosition(PictureInfo.PIC_TYPE.Generic);
-                PictureInfo picInfo = new PictureInfo(ImageFormat.Undefined, PictureInfo.PIC_TYPE.Generic, picturePosition);
+                PictureInfo picInfo = new PictureInfo(ImageFormat.Undefined, PictureInfo.PIC_TYPE.Generic, getImplementedTagType(), 0, picturePosition);
 
-                if (readTagParams.PictureStreamHandler != null)
+                if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
                 {
                     size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
                     // Make sure total size is a multiple of 4
@@ -227,20 +227,17 @@ namespace ATL.AudioData.IO
                     Source.Read(encodedData, 0, size);
 
                     // Read the whole base64-encoded picture binary data
-                    MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
-                    try
-                    {
-                        mem.Seek(0, SeekOrigin.Begin);
-                        byte[] imgHeader = new byte[3];
-                        mem.Read(imgHeader, 0, 3);
-                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(imgHeader);
-                        if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
-                        mem.Seek(0, SeekOrigin.Begin);
+                    picInfo.PictureData = Utils.DecodeFrom64(encodedData);
+                    ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(picInfo.PictureData);
+                    if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
+                    picInfo.NativeFormat = imgFormat;
 
-                        readTagParams.PictureStreamHandler(ref mem, PictureInfo.PIC_TYPE.Generic, imgFormat, getImplementedTagType(), 0, picturePosition);
-                    }
-                    finally
+                    tagData.Pictures.Add(picInfo);
+
+                    if (readTagParams.PictureStreamHandler != null)
                     {
+                        MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                        readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
                         mem.Close();
                     }
                 }
@@ -264,22 +261,24 @@ namespace ATL.AudioData.IO
                 picturePosition = takePicturePosition(block.picType);
             }
 
-            if (readTagParams.PictureStreamHandler != null)
+            if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
             {
-                MemoryStream picMem = new MemoryStream(block.picDataLength);
-                try
-                {
-                    s.Seek(initPosition+block.picDataOffset, SeekOrigin.Begin);
-                    StreamUtils.CopyStream(s, picMem, block.picDataLength);
+                PictureInfo picInfo = new PictureInfo(ImageUtils.GetImageFormatFromMimeType(block.mimeType), block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
+                picInfo.Description = block.description;
+                picInfo.PictureData = new byte[block.picDataLength];
+                s.Seek(initPosition + block.picDataOffset, SeekOrigin.Begin);
+                s.Read(picInfo.PictureData, 0, block.picDataLength);
 
-                    picMem.Seek(0, SeekOrigin.Begin);
-                    readTagParams.PictureStreamHandler(ref picMem, block.picType, ImageUtils.GetImageFormatFromMimeType(block.mimeType), getImplementedTagType(), block.nativePicCode, picturePosition);
+                tagData.Pictures.Add(picInfo);
 
-                    if (!tagExists) tagExists = true;
-                }
-                finally
+                if (!tagExists) tagExists = true;
+
+
+                if (readTagParams.PictureStreamHandler != null)
                 {
-                    picMem.Close();
+                    MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                    readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                    mem.Close();
                 }
             }
         }
@@ -297,9 +296,10 @@ namespace ATL.AudioData.IO
             // Read Vorbis tag
             ResetData();
 
-            if (readTagParams.PrepareForWriting && (null == readTagParams.PictureStreamHandler))
+            /// TODO - check if still useful
+            if (readTagParams.PrepareForWriting && !readTagParams.ReadPictures)
             {
-                readTagParams.PictureStreamHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
+                readTagParams.ReadPictures = true;
             }
 
             initialPos = Source.BaseStream.Position;
@@ -459,7 +459,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), "");
+                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
                         nbFrames++;
                     }
                 }

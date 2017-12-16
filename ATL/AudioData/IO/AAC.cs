@@ -1113,17 +1113,25 @@ namespace ATL.AudioData.IO
                         addPictureToken(picType);
                         picturePosition = takePicturePosition(picType);
 
-                        if (readTagParams.PictureStreamHandler != null)
+                        if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
                         {
                             // Peek the next 3 bytes to know the picture type
                             ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(source.ReadBytes(3));
                             if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
                             source.BaseStream.Seek(-3, SeekOrigin.Current);
 
-                            MemoryStream mem = new MemoryStream((int)metadataSize - 16);
-                            StreamUtils.CopyStream(source.BaseStream, mem, metadataSize - 16);
-                            readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, MetaDataIOFactory.TAG_NATIVE, dataClass, picturePosition);
-                            mem.Close();
+                            PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), dataClass, picturePosition);
+                            picInfo.PictureData = new byte[metadataSize-16];
+                            source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize-16);
+
+                            tagData.Pictures.Add(picInfo);
+
+                            if (readTagParams.PictureStreamHandler != null)
+                            {
+                                MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                                readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                                mem.Close();
+                            }
                         }
                         else
                         {

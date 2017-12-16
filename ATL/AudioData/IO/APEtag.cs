@@ -152,7 +152,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readFrames(BinaryReader SourceFile, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
+        private void readFrames(BinaryReader source, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
             string strValue;
@@ -160,15 +160,15 @@ namespace ATL.AudioData.IO
             long valuePosition;
             int frameFlags;
 
-            SourceFile.BaseStream.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
+            source.BaseStream.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
             // Read all stored fields
             for (int iterator = 0; iterator < Tag.FrameCount; iterator++)
             {
-                frameDataSize = SourceFile.ReadInt32();
-                frameFlags = SourceFile.ReadInt32();
-                frameName = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
+                frameDataSize = source.ReadInt32();
+                frameFlags = source.ReadInt32();
+                frameName = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
-                valuePosition = SourceFile.BaseStream.Position;
+                valuePosition = source.BaseStream.Position;
 
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
@@ -178,7 +178,7 @@ namespace ATL.AudioData.IO
                      * 
                      * => Values have to be splitted
                      */
-                    strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(SourceFile.ReadBytes(frameDataSize)));
+                    strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(frameDataSize)));
                     strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
                     setMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                 }
@@ -198,22 +198,31 @@ namespace ATL.AudioData.IO
                         picturePosition = takePicturePosition(picType);
                     }
 
-                    if (readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
                     {
                         // Description seems to be a null-terminated ANSI string containing 
                         //    * The frame name
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        String description = StreamUtils.ReadNullTerminatedString(SourceFile, Utils.Latin1Encoding); 
+                        String description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); 
                         ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
 
-                        MemoryStream mem = new MemoryStream(frameDataSize - description.Length - 1);
-                        StreamUtils.CopyStream(SourceFile.BaseStream, mem, frameDataSize - description.Length - 1);
-                        readTagParams.PictureStreamHandler(ref mem, picType, imgFormat, getImplementedTagType(), frameName, picturePosition);
-                        mem.Close();
+                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), frameName, picturePosition);
+                        picInfo.Description = description;
+                        picInfo.PictureData = new byte[frameDataSize - description.Length - 1];
+                        source.BaseStream.Read(picInfo.PictureData, 0, frameDataSize - description.Length - 1);
+
+                        tagData.Pictures.Add(picInfo);
+
+                        if (readTagParams.PictureStreamHandler != null)
+                        {
+                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                            mem.Close();
+                        }
                     }
                 }
-                SourceFile.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
+                source.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
             }
         }
 
@@ -356,7 +365,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), "");
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), picInfo.Description);
                     nbFrames++;
                 }
             }

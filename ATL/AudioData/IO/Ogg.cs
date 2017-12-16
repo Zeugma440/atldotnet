@@ -503,6 +503,14 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).Chapters;
             }
         }
+
+        public IList<PictureInfo> EmbeddedPictures
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).EmbeddedPictures;
+            }
+        }
         #endregion
 
         public bool IsMetaSupported(int metaDataType)
@@ -884,7 +892,7 @@ namespace ATL.AudioData.IO
             long nextPageOffset = 0;
 
             // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(null, true);
+            ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
 

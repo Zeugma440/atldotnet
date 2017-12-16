@@ -28,11 +28,6 @@ namespace ATL.AudioData.IO
         public class ReadTagParams
         {
             /// <summary>
-            /// Handler to call when reading embedded picture binary data. If the handler is null, embedded pictures binary data will _not_ be read.
-            /// </summary>
-            public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
-
-            /// <summary>
             /// True : read metadata; False : do not read metadata (only "physical" audio data)
             /// </summary>
             public bool ReadTag = true;
@@ -41,6 +36,16 @@ namespace ATL.AudioData.IO
             /// True : read all metadata frames; False : only read metadata frames that match IMetaDataIO public properties (="supported" metadata)
             /// </summary>
             public bool ReadAllMetaFrames = false;
+
+            /// <summary>
+            /// True : read embedded pictures; False : skip embedded pictures
+            /// </summary>
+            public bool ReadPictures = false;
+
+            /// <summary>
+            /// Handler to call when reading embedded picture binary data. If the handler is null, embedded pictures binary data will _not_ be read.
+            /// </summary>
+            public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
 
             /// <summary>
             /// True : read all data that will be useful for writing; False : only read metadata values
@@ -52,9 +57,15 @@ namespace ATL.AudioData.IO
             /// </summary>
             public long offset = 0;
 
+            [Obsolete]
             public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
             {
                 PictureStreamHandler = pictureStreamHandler; ReadAllMetaFrames = readAllMetaFrames;
+            }
+
+            public ReadTagParams(bool readPictures, bool readAllMetaFrames)
+            {
+                ReadPictures = readPictures; ReadAllMetaFrames = readAllMetaFrames;
             }
         }
 
@@ -324,7 +335,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public IList<PictureInfo> Pictures
+        public IList<PictureInfo> EmbeddedPictures
         {
             get
             {
@@ -540,10 +551,7 @@ namespace ATL.AudioData.IO
             tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
-            TagData.PictureStreamHandlerDelegate pictureHandler;
-            pictureHandler = new TagData.PictureStreamHandlerDelegate(this.readPictureData);
-            
-            ReadTagParams readTagParams = new ReadTagParams(pictureHandler, true);
+            ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
 
             if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
@@ -701,14 +709,6 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-        }
-
-        protected void readPictureData(ref MemoryStream s, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            PictureInfo picInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
-            picInfo.PictureData = StreamUtils.ReadBinaryStream(s);
-
-            tagData.Pictures.Add(picInfo);
         }
     }
 }

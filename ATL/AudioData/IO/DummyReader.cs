@@ -60,10 +60,6 @@ namespace ATL.AudioData.IO
         {
             get { return new DummyTag(); }
         }
-        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
-		{
-			return true;
-		}
         public bool HasNativeMeta()
         {
             return false;
