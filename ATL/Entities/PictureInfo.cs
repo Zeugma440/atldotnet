@@ -26,7 +26,7 @@ namespace ATL
 
         // ---------------- CONSTRUCTORS
 
-        public PictureInfo(PictureInfo picInfo)
+        public PictureInfo(PictureInfo picInfo, bool copyPictureData = true)
         {
             this.PicType = picInfo.PicType;
             this.NativeFormat = picInfo.NativeFormat;
@@ -35,7 +35,7 @@ namespace ATL
             this.NativePicCode = picInfo.NativePicCode;
             this.NativePicCodeStr = picInfo.NativePicCodeStr;
             this.Description = picInfo.Description;
-            if (picInfo.PictureData != null)
+            if (copyPictureData && picInfo.PictureData != null)
             {
                 this.PictureData = new byte[picInfo.PictureData.Length];
                 picInfo.PictureData.CopyTo(this.PictureData, 0);

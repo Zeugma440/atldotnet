@@ -1,6 +1,5 @@
 using ATL.AudioData;
 using Commons;
-using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -77,19 +76,6 @@ namespace ATL
             return embeddedPictures;
         }
 
-        protected void readBinaryImageData(ref MemoryStream s, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            PictureInfo picInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
-            picInfo.PictureData = s.ToArray();
-
-            // Initial pic info, without picture data
-            PictureInfo initialPicInfo = new PictureInfo(imgFormat, picType, originalTag, picCode, position);
-            initialPicInfo.PictureHash = HashDepot.Fnv1a.Hash32(picInfo.PictureData);
-
-            embeddedPictures.Add(picInfo);
-            initialEmbeddedPictures.Add(initialPicInfo);
-        }
-
         protected void Update(bool readEmbeddedPictures = false)
         {
             // TODO when tag is not available, customize by naming options // tracks (...)
@@ -135,7 +121,9 @@ namespace ATL
                 {
                     picInfo.ComputePicHash();
                     embeddedPictures.Add(picInfo);
-                    initialEmbeddedPictures.Add(picInfo);
+
+                    PictureInfo initialPicInfo = new PictureInfo(picInfo, false);
+                    initialEmbeddedPictures.Add(initialPicInfo);
                 }
             }
 
@@ -216,9 +204,9 @@ namespace ATL
                             if (targetPic.Equals(picInfo))
                             {
                                 // Compare picture contents
-                                uint newPictureHash = HashDepot.Fnv1a.Hash32(targetPic.PictureData);
+                                targetPic.ComputePicHash();
 
-                                if (newPictureHash != picInfo.PictureHash)
+                                if (targetPic.PictureHash != picInfo.PictureHash)
                                 {
                                     // A new picture content has been defined for an existing location
                                     result.Pictures.Add(targetPic);
