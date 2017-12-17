@@ -106,7 +106,7 @@ Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
 True Audio|.TTA|R/W|R/W|R/W| |
 TwinVQ|.VQF| | | |R/W|
 PCM (uncompressed audio)|.WAV|R/W| | | |
-Video Game Music (SEGA systems sound files) | .VGM |  |  |  | R/W
+Video Game Music (SEGA systems sound files) | .VGM, .VGZ |  |  |  | R/W
 WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
@@ -128,7 +128,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for compressed streams (e.g. gzipped VGMs / GYMs, powerpacker'd MODs)
+* Support for gzipped GYM files
 * Support for other audiofile  formats : Speex, Theora, Audible
 * Connectors to __other library file formats__ (e.g. iTunes)
 
