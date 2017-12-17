@@ -1624,7 +1624,7 @@ namespace ATL.AudioData.IO
 
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
-        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, long length)
+        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int length)
         {
             const int BUFFER_SIZE = 8192;
 
@@ -1676,56 +1676,6 @@ namespace ATL.AudioData.IO
             Array.Resize(ref result, writtenTotal);
 
             return result;
-        }
-
-        private static void decodeUnsynchronizedStreamTo(BufferedBinaryReader from, Stream to, long length)
-        {
-            byte[] data = decodeUnsynchronizedStream(from, length);
-            to.Write(data, 0, data.Length);
-
-            /*
-            const int BUFFER_SIZE = 8192;
-
-            int bytesToRead;
-            bool foundFF = false;
-
-            byte[] readBuffer = new byte[BUFFER_SIZE];
-            byte[] writeBuffer = new byte[BUFFER_SIZE];
-
-            int written;
-            int remainingBytes;
-            if (length > 0)
-            {
-                remainingBytes = (int)Math.Min(length, from.Length - from.Position);
-            } else
-            {
-                remainingBytes = (int)(from.Length - from.Position);
-            }
-
-            while (remainingBytes > 0)
-            {
-                written = 0;
-                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
-
-                from.Read(readBuffer, 0, bytesToRead);
-
-                for (int i = 0; i < bytesToRead; i++)
-                {
-                    if (0xff == readBuffer[i]) foundFF = true;
-                    else if (0x00 == readBuffer[i] && foundFF)
-                    {
-                        foundFF = false;
-                        continue; // i.e. do not write 0x00 to output stream
-                    }
-                    else if (foundFF) foundFF = false;
-
-                    writeBuffer[written++] = readBuffer[i];
-                }
-                to.Write(writeBuffer, 0, written);
-
-                remainingBytes -= bytesToRead;
-            }
-            */
         }
 
         // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
