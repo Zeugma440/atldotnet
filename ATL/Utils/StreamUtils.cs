@@ -118,36 +118,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Read a given number of bytes from a given stream, starting at current stream position
-        /// i.e. first byte will be read at from.Position, EXCEPT if the stream has already reached its end, in which case reading restarts at its beginning
-        /// </summary>
-        /// <param name="from">Stream to read data from</param>
-        /// <param name="length">Number of bytes to read</param>
-        /// <returns>Bytes read from the stream</returns>
-        public static byte[] ReadBinaryStream(Stream from, long length = 0)
-        {
-            byte[] buffer = new byte[BUFFERSIZE];
-            long bytesToRead;
-            int bufSize;
-            long i = 0;
-
-            if (from.Position == from.Length) from.Seek(0, SeekOrigin.Begin);
-
-            if (0 == length) bytesToRead = from.Length - from.Position; else bytesToRead = Math.Min(from.Length - from.Position, length);
-            byte[] result = new byte[bytesToRead];
-
-            while (i < bytesToRead)
-            {
-                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
-                from.Read(buffer, 0, bufSize);
-                Array.Copy(buffer, 0, result, i, bufSize);
-                i += bufSize;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Remove a portion of bytes within the given stream
         /// </summary>
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
