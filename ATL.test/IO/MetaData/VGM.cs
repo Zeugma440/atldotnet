@@ -165,8 +165,7 @@ namespace ATL.test.IO.MetaData
 
         private void readExistingTagsOnFile(AudioDataManager theFile, string yearStr = "1992")
         {
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);

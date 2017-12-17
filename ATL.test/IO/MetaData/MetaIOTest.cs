@@ -43,39 +43,6 @@ namespace ATL.test.IO.MetaData
     */
     public class MetaIOTest
     {
-        
-        protected class TestPictureInfo
-        {
-            public PictureInfo info;
-            public Image Picture;
-
-            public TestPictureInfo(byte[] pictureData, Commons.ImageFormat imgFormat, object code)
-            {
-                info = new PictureInfo(imgFormat, MetaDataIOFactory.TAG_ANY, code);
-                info.PictureData = pictureData;
-                info.ComputePicHash();
-                Picture = Image.FromStream(new MemoryStream(pictureData));
-            }
-
-            // Retrocompatibility with old interface
-            public int PictureCodeInt
-            {
-                get { return info.NativePicCode;  }
-            }
-            public string PictureCodeStr
-            {
-                get { return info.NativePicCodeStr; }
-            }
-        }
-
-        protected IList<KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo>> pictures = new List<KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo>>();
-
-        protected void readPictureData(ref MemoryStream s, PictureInfo.PIC_TYPE picType, Commons.ImageFormat imgFormat, int originalTag, object picCode, int position)
-        {
-            pictures.Add(new KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo>(picType, new TestPictureInfo(s.ToArray(), imgFormat, picCode)));
-        }
-        
-
         protected string emptyFile;
         protected string notEmptyFile;
         protected int tagType;

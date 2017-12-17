@@ -194,7 +194,7 @@ namespace ATL.test.IO.MetaData
 
             theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
 
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
@@ -217,8 +217,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
@@ -242,8 +241,7 @@ namespace ATL.test.IO.MetaData
 
         private void readExistingTagsOnFile(AudioDataManager theFile, string publisherStr = "Square")
         {
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
