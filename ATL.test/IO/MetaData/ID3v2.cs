@@ -68,8 +68,7 @@ namespace ATL.test.IO.MetaData
             string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 ANSI charset only.mp3";
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
@@ -87,15 +86,15 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
             // Pictures
-            Assert.AreEqual(1, pictures.Count);
+            Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = pic.Value.Picture;
+                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 656);
                     Assert.AreEqual(picture.Width, 552);
@@ -113,8 +112,7 @@ namespace ATL.test.IO.MetaData
             String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 UTF16.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
@@ -132,15 +130,15 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.ID3v2.Disc);
 
             // Pictures
-            Assert.AreEqual(1, pictures.Count);
+            Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = pic.Value.Picture;
+                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 656);
                     Assert.AreEqual(picture.Width, 552);
@@ -158,23 +156,22 @@ namespace ATL.test.IO.MetaData
             String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
 
             // Pictures
-            Assert.AreEqual(3, pictures.Count);
+            Assert.AreEqual(3, theFile.ID3v2.EmbeddedPictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = pic.Value.Picture;
+                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 256);
                     Assert.AreEqual(picture.Width, 256);
@@ -320,7 +317,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -379,7 +376,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -407,7 +404,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             // 1/ Check if values are the same
             found = 0;
@@ -465,7 +462,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(this.readPictureData, true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -592,7 +589,7 @@ namespace ATL.test.IO.MetaData
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
-            Assert.IsTrue(theFile.ReadFromFile(readPictureData, true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -641,7 +638,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
@@ -652,7 +649,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             // 1/ Check value through ATL
             Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));

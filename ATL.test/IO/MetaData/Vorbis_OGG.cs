@@ -395,7 +395,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
@@ -499,7 +499,7 @@ namespace ATL.test.IO.MetaData
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 

@@ -22,7 +22,7 @@ namespace ATL.test.IO.MetaData
 
         private void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);

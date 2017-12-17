@@ -185,11 +185,11 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
             byte nbFound = 0;
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == nbFound))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == nbFound))
                 {
-                    Image picture = pic.Value.Picture;
+                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
                     Assert.AreEqual(picture.Width, 900);
@@ -265,7 +265,7 @@ namespace ATL.test.IO.MetaData
 
             theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
 
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
@@ -278,22 +278,22 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TES2"));
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TES2"]);
 
-            Assert.AreEqual(2, pictures.Count);
+            Assert.AreEqual(2, theFile.NativeTag.EmbeddedPictures.Count);
             byte found = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
                 {
-                    Image picture = pic.Value.Picture;
+                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 600);
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic) && (1==found))  // No custom nor categorized picture type in MP4
+                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1==found))  // No custom nor categorized picture type in MP4
                 {
-                    Image picture = pic.Value.Picture;
+                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 290);
                     Assert.AreEqual(picture.Width, 900);
@@ -317,8 +317,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
@@ -329,15 +328,15 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TES2"]);
 
             // Pictures
-            Assert.AreEqual(1, pictures.Count);
+            Assert.AreEqual(1, theFile.NativeTag.EmbeddedPictures.Count);
 
             found = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic) && (0==found))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0==found))
                 {
-                    Image picture = pic.Value.Picture;
+                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                     Assert.AreEqual(picture.Height, 290);
                     Assert.AreEqual(picture.Width, 900);
@@ -362,7 +361,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
@@ -429,7 +428,7 @@ namespace ATL.test.IO.MetaData
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
@@ -467,7 +466,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 
             // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
@@ -534,7 +533,7 @@ namespace ATL.test.IO.MetaData
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            Assert.IsTrue(theFile.ReadFromFile(null, true));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
@@ -582,8 +581,7 @@ namespace ATL.test.IO.MetaData
 
         private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
         {
-            pictures.Clear();
-            Assert.IsTrue(theFile.ReadFromFile(new TagData.PictureStreamHandlerDelegate(this.readPictureData), true));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
 
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
@@ -600,15 +598,15 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.NativeTag.Disc);
 
             // Pictures
-            Assert.AreEqual(nbPictures, pictures.Count);
+            Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
             byte nbFound = 0;
 
-            foreach (KeyValuePair<PictureInfo.PIC_TYPE, TestPictureInfo> pic in pictures)
+            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 Image picture;
-                if (pic.Key.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == nbFound)) // Supported picture = first picture
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == nbFound)) // Supported picture = first picture
                 {
-                    picture = pic.Value.Picture;
+                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
                     Assert.AreEqual(picture.Height, 168);
                     Assert.AreEqual(picture.Width, 175);
