@@ -71,21 +71,29 @@ namespace ATL
         /// <param name="from">Stream to start copy from</param>
         /// <param name="to">Stream to copy to</param>
         /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the stream)</param>
-        public static void CopyStream(Stream from, Stream to, long length = 0)
+        public static void CopyStream(Stream from, Stream to, int length = 0)
         {
             byte[] data = new byte[BUFFERSIZE];
-            long bytesToRead;
-            int bufSize;
-            long i = 0;
+            int bytesToRead;
+            int totalBytesRead = 0;
 
-            if (0 == length) bytesToRead = from.Length-from.Position; else bytesToRead = Math.Min(from.Length - from.Position,length);
-
-            while (i< bytesToRead)
+            while (true)
             {
-                bufSize = (int)Math.Min(BUFFERSIZE, bytesToRead - i); // Plain dirty cast is used here for performance's sake
-                from.Read(data, 0, bufSize);
-                to.Write(data, 0, bufSize);
-                i += bufSize;
+                if (length > 0)
+                {
+                    if (totalBytesRead + BUFFERSIZE < length) bytesToRead = BUFFERSIZE; else bytesToRead = length - totalBytesRead;
+                }
+                else
+                {
+                    bytesToRead = BUFFERSIZE;
+                }
+                int bytesRead = from.Read(data, 0, bytesToRead);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+                to.Write(data, 0, bytesRead);
+                totalBytesRead += bytesRead;
             }
         }
 

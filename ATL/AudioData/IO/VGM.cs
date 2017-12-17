@@ -4,6 +4,7 @@ using ATL.Logging;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Text;
+using System.IO.Compression;
 
 namespace ATL.AudioData.IO
 {
@@ -175,11 +176,6 @@ namespace ATL.AudioData.IO
 
                 return true;
 			}
-			else if (headerSignature[0] == 0x1f && headerSignature[1] == 0x8b) // File is GZIP-compressed
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported yet");
-                return false;
-            }
             else
 			{
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Not a VGM file");
@@ -249,12 +245,28 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            isValid = readHeader(source, readTagParams);
+            MemoryStream memStream = null;
+            BinaryReader usedSource = source;
+
+            byte[] headerSignature = source.ReadBytes(2);
+            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            if (headerSignature[0] == 0x1f && headerSignature[1] == 0x8b) // File is GZIP-compressed
+            {
+                using (GZipStream gzStream = new GZipStream(source.BaseStream, CompressionMode.Decompress))
+                {
+                    memStream = new MemoryStream();
+                    StreamUtils.CopyStream(gzStream, memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    usedSource = new BinaryReader(memStream);
+                }
+            }
+
+            isValid = readHeader(usedSource, readTagParams);
 
             if (isValid && gd3TagOffset > VGM_HEADER_SIZE)
             {
                 tagExists = true;
-                readGd3Tag(source, gd3TagOffset);
+                readGd3Tag(usedSource, gd3TagOffset);
             }
 
             return result;

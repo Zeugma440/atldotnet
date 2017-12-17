@@ -647,7 +647,7 @@ namespace ATL.AudioData.IO
 
                     if (isTagWritten)
                     {
-                        StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+                        StreamUtils.CopyStream(s, w.BaseStream);
                     } else
                     {
                         if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);

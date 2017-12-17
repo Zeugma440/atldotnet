@@ -1031,7 +1031,7 @@ namespace ATL.AudioData.IO
                 w.BaseStream.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 stream.Seek(0, SeekOrigin.Begin);
 
-                StreamUtils.CopyStream(stream, w.BaseStream, stream.Length);
+                StreamUtils.CopyStream(stream, w.BaseStream);
 
                 nextPageOffset = info.CommentHeaderStart + stream.Length;
             }

@@ -594,7 +594,7 @@ namespace ATL.AudioData.IO
 
                     if (newTagSize > zone.CoreSignature.Length)
                     {
-                        StreamUtils.CopyStream(s, w.BaseStream, s.Length);
+                        StreamUtils.CopyStream(s, w.BaseStream);
                     }
                     else
                     {

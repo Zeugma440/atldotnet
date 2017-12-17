@@ -226,7 +226,7 @@ namespace ATL.test
         public void Audio_VGM()
         {
             testGenericAudio("VGM/vgm.vgm", 86, 1, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
-            // VGZ not supported yet
+            testGenericAudio("VGM/vgz.vgz", 231, 3, 44100, false, AudioDataIOFactory.CF_SEQ_WAV);
         }
 
         [TestMethod]

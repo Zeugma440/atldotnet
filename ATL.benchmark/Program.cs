@@ -14,9 +14,10 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<ATL_TagLib>();
 
-            BenchmarkRunner.Run<PictureReading>();
+            //BenchmarkRunner.Run<PictureReading>();
 
-            //BenchmarkRunner.Run<Misc>();
+            BenchmarkRunner.Run<Misc>();
+
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
 
