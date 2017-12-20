@@ -114,17 +114,15 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 (2) : all sample names appear on the track's Comment field. Track title only is editable.
 
 
-__DETECTED FIELDS __
+__DETECTED FIELDS__
 
-	* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-	* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
-	* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
-
+* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
+* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
+* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
 
 __SUPPORTED PLAYLISTS FORMATS :__ ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
 
-
-__SUPPORTED CUESHEETS FORMATS : __ CUE
+__SUPPORTED CUESHEETS FORMATS :__ CUE
 
 
 ## What is the roadmap of ATL.NET ?
