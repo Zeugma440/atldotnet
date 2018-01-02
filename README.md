@@ -128,7 +128,7 @@ __SUPPORTED CUESHEETS FORMATS :__ CUE
 ## What is the roadmap of ATL.NET ?
 
 * Support for gzipped GYM files
-* Support for other audiofile  formats : Speex, Theora, Audible
+* Support for other audio file formats : Speex, Theora, Audible, Broadcast wave (bwav)
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 
