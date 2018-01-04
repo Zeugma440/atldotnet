@@ -129,6 +129,7 @@ __SUPPORTED CUESHEETS FORMATS :__ CUE
 
 * Support for gzipped GYM files
 * Support for other audio file formats : Speex, Theora, Audible, Broadcast wave (bwav/bwf)
+* More precise rating management (current implementation only supports 1 to 5 stars, without "half-stars")
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 
