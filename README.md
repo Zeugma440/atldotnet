@@ -70,15 +70,13 @@ Please refer to the [Code snippets section of the Documentation](https://github.
 
 ## What kind of data can ATL actually read ? From which formats ?
 
-* Supported audio formats and tagging standards :
+__SUPPORTED AUDIO FORMATS AND TAGGING STANDARDS__
 
 NB1 : Empty cells mean "not applicable for this audio format"
 
 NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, which means any "foreign" character (japanese, chinese, cyrillic...) __will__ be recognized and displayed properly
 
-R= Read
-
-W= Write
+R= Read / W= Write
 
 
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
@@ -116,20 +114,22 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 (2) : all sample names appear on the track's Comment field. Track title only is editable.
 
 
-* Detected fields
-	* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-	* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
-	* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
-	
-* Supported playlists formats : ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+__DETECTED FIELDS__
 
-* Supported Cuesheets formats : CUE
+* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
+* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
+* Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
+
+__SUPPORTED PLAYLISTS FORMATS :__ ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+
+__SUPPORTED CUESHEETS FORMATS :__ CUE
 
 
 ## What is the roadmap of ATL.NET ?
 
 * Support for gzipped GYM files
-* Support for other audiofile  formats : Speex, Theora, Audible
+* Support for other audio file formats : Speex, Theora, Audible, Broadcast wave (bwav/bwf)
+* More precise rating management (current implementation only supports 1 to 5 stars, without "half-stars")
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 
