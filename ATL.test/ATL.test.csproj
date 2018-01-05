@@ -234,11 +234,17 @@
     <Content Include="Resources\_Ratings\musicBee_3.1.6512\musicBee-4.mp3" />
     <Content Include="Resources\_Ratings\musicBee_3.1.6512\musicBee-5.mp3" />
     <Content Include="Resources\_Ratings\windows7\win7-0.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-0.wma" />
     <Content Include="Resources\_Ratings\windows7\win7-1.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-1.wma" />
     <Content Include="Resources\_Ratings\windows7\win7-2.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-2.wma" />
     <Content Include="Resources\_Ratings\windows7\win7-3.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-3.wma" />
     <Content Include="Resources\_Ratings\windows7\win7-4.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-4.wma" />
     <Content Include="Resources\_Ratings\windows7\win7-5.mp3" />
+    <Content Include="Resources\_Ratings\windows7\win7-5.wma" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
