@@ -135,6 +135,52 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// TODO
+        /// </summary>
+        public static int EncodePopularity(string ratingStr, int convention)
+        {
+            double rating = Double.Parse(ratingStr);
+            switch (convention)
+            {
+                case MetaDataIO.RC_ASF:
+
+                    if (rating < 1) return 0;
+                    else if (rating < 2) return 1;
+                    else if (rating < 3) return 25;
+                    else if (rating < 4) return 50;
+                    else if (rating < 5) return 75;
+                    else return 99;
+
+                case MetaDataIO.RC_APE:
+
+                    if (rating < 0.5) return 0;           // Stored as scale of 0..100
+                    else if (rating < 1) return 10;
+                    else if (rating < 1.5) return 20;
+                    else if (rating < 2) return 30;
+                    else if (rating < 2.5) return 40;
+                    else if (rating < 3) return 50;
+                    else if (rating < 3.5) return 60;
+                    else if (rating < 4) return 70;
+                    else if (rating < 4.5) return 80;
+                    else if (rating < 5) return 90;
+                    else return 100;
+
+                default:                // ID3v2 convention
+                    if (rating < 0.5) return 0;
+                    else if (rating < 1) return 13;
+                    else if (rating < 1.5) return 1;
+                    else if (rating < 2) return 54;
+                    else if (rating < 2.5) return 64;
+                    else if (rating < 3) return 118;
+                    else if (rating < 3.5) return 128;
+                    else if (rating < 4) return 186;
+                    else if (rating < 4.5) return 196;
+                    else if (rating < 5) return 242;
+                    else return 255;
+            }
+        }
+
+        /// <summary>
         /// Finds a year (4 consecutive numeric chars) in a string
         /// </summary>
         /// <param name="str">String to search the year into</param>

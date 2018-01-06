@@ -106,6 +106,7 @@ namespace ATL.test.IO.MetaData
             theTag.Genre = "Merengue";
             theTag.TrackNumber = "01/01";
             theTag.DiscNumber = "2";
+            theTag.Rating = "2,5";
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
@@ -127,6 +128,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
             Assert.AreEqual(1, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(2.5/5, theFile.NativeTag.Popularity);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);

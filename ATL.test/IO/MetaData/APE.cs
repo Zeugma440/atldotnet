@@ -93,7 +93,6 @@ namespace ATL.test.IO.MetaData
             assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ape", 1, MetaDataIOFactory.TAG_APE);
         }
 
-
         [TestMethod]
         public void TagIO_RW_APE_ID3v1()
         {

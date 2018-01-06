@@ -427,7 +427,10 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(w, s, map[frameType]);
+                            string value = map[frameType];
+                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
+
+                            writeTextFrame(w, s, value);
                             nbFrames++;
                         }
                         break;

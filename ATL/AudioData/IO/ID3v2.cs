@@ -1338,8 +1338,9 @@ namespace ATL.AudioData.IO
             {
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
-                               // ID3v2 rating : scale 0 to 255
-                w.Write((byte)Math.Max(255, Int32.Parse(text) * 51));
+
+                w.Write((byte)TrackUtils.EncodePopularity(text, ratingConvention));
+
                 // Play count
                 w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
 

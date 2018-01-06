@@ -311,7 +311,7 @@ namespace ATL.test.IO.MetaData
             if (testData.RecordingYear != null) theTag.RecordingYear = "2008";
             if (testData.RecordingDate != null) theTag.RecordingDate = "2008/01/01";
             if (testData.Genre != null) theTag.Genre = "Merengue";
-            if (testData.Rating != null) theTag.Rating = "5";
+            if (testData.Rating != null) theTag.Rating = "2,5";
             if (testData.TrackNumber != null) theTag.TrackNumber = "01/01";
             if (testData.DiscNumber != null) theTag.DiscNumber = "2";
             if (testData.Composer != null) theTag.Composer = "Me";
@@ -336,7 +336,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
             if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual(1, meta.Popularity);
+            if (testData.Rating != null) Assert.AreEqual((float)(2.5/5), meta.Popularity);
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
             if (testData.DiscNumber != null) Assert.AreEqual(2, meta.Disc);
             if (testData.Composer != null) Assert.AreEqual("Me", meta.Composer);

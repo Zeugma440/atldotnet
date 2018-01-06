@@ -203,7 +203,8 @@ namespace ATL.AudioData.IO
             };
 
 
-            frameClasses = new Dictionary<string, ushort>(); // To be populated while reading; all fields above are class 0
+            frameClasses = new Dictionary<string, ushort>(); // To be further populated while reading
+            frameClasses.Add("WM/SharedUserRating", 3);
         }
 
         private void resetData()
@@ -777,7 +778,10 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(w, s, map[frameType]);
+                            string value = map[frameType];
+                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
+
+                            writeTextFrame(w, s, value);
                             counter++;
                         }
                         break;
