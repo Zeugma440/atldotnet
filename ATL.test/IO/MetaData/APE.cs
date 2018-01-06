@@ -66,6 +66,35 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_APE_Rating()
+        {
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.ape", 0, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.ape", 0.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.ape", 1.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.ape", 1.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.ape", 2.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.ape", 2.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.ape", 3.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.ape", 3.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.ape", 4.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.ape", 4.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.ape", 1, MetaDataIOFactory.TAG_APE);
+
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.ape", 0, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.ape", 0.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.ape", 1.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.ape", 1.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.ape", 2.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.ape", 2.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.ape", 3.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.ape", 3.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.ape", 4.0 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.ape", 4.5 / 5, MetaDataIOFactory.TAG_APE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ape", 1, MetaDataIOFactory.TAG_APE);
+        }
+
+
+        [TestMethod]
         public void TagIO_RW_APE_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_APE, MetaDataIOFactory.TAG_ID3V1);

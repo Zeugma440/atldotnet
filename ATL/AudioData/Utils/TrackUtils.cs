@@ -58,7 +58,7 @@ namespace ATL.AudioData
         {
             if ((null == ratingString) || (0 == ratingString.Trim().Length)) return 0;
 
-            if (Utils.IsNumeric(ratingString)) return DecodePopularity(Byte.Parse(ratingString), convention);
+            if (Utils.IsNumeric(ratingString)) return DecodePopularity(Double.Parse(ratingString), convention);
 
             // If the field is only one byte long, rating is evaluated numerically
             if (1 == ratingString.Length) return DecodePopularity((byte)ratingString[0], convention);
@@ -81,7 +81,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="rating">Raw "rating" field in byte form</param>
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
-        public static float DecodePopularity(byte rating, int convention)
+        public static float DecodePopularity(double rating, int convention)
         {
             switch (convention)
             {
@@ -92,6 +92,21 @@ namespace ATL.AudioData
                     else if (rating < 50) return (float)0.4;
                     else if (rating < 75) return (float)0.6;
                     else if (rating < 99) return (float)0.8;
+                    else return 1;
+
+                case MetaDataIO.RC_APE:
+
+                    if (rating < 5.1) return (float)rating/5; // Stored as float
+                    else if (rating < 10) return 0;           // Stored as scale of 0..100
+                    else if (rating < 20) return (float)0.1;
+                    else if (rating < 30) return (float)0.2;
+                    else if (rating < 40) return (float)0.3;
+                    else if (rating < 50) return (float)0.4;
+                    else if (rating < 60) return (float)0.5;
+                    else if (rating < 70) return (float)0.6;
+                    else if (rating < 80) return (float)0.7;
+                    else if (rating < 90) return (float)0.8;
+                    else if (rating < 100) return (float)0.9;
                     else return 1;
 
                 default:                // ID3v2 convention

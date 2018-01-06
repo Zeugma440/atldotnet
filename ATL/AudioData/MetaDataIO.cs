@@ -20,8 +20,9 @@ namespace ATL.AudioData.IO
         protected const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
 
         // Rating conventions
-        public const int RC_ID3v2 = 0;       // ID3v2 convention
-        public const int RC_ASF = 1;         // ASF convention
+        public const int RC_ID3v2 = 0;       // ID3v2 convention (0..255 scale with various tweaks)
+        public const int RC_ASF = 1;         // ASF convention (0..100 scale with 1 being encoded as 1)
+        public const int RC_APE = 2;         // APE convention (proper 0..100 scale)
 
 
         // ------ INNER CLASSES -----------------------------------------------------

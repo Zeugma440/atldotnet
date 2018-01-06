@@ -296,7 +296,7 @@ namespace Commons
 
         /// <summary>
         /// Indicates if the given string is exclusively composed of digital charachers
-        /// NB1 : decimal separator '.' is tolerated
+        /// NB1 : decimal separators '.' and ',' are tolerated
         /// NB2 : whitespaces ' ' are not tolerated
         /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
         /// </summary>
@@ -308,7 +308,7 @@ namespace Commons
 
             for (int i=0; i<s.Length; i++)
             {
-                if (!char.IsDigit(s[i]) && !(s[i] == '.')) return false;
+                if (!char.IsDigit(s[i]) && !(s[i] == '.') && !(s[i] == ',') ) return false;
             }
 
             return true;
