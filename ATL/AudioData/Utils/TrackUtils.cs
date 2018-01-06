@@ -58,7 +58,11 @@ namespace ATL.AudioData
         {
             if ((null == ratingString) || (0 == ratingString.Trim().Length)) return 0;
 
-            if (Utils.IsNumeric(ratingString)) return DecodePopularity(Double.Parse(ratingString), convention);
+            if (Utils.IsNumeric(ratingString))
+            {
+                ratingString = ratingString.Replace(',', '.');
+                return DecodePopularity(Utils.ParseDouble(ratingString), convention);
+            }
 
             // If the field is only one byte long, rating is evaluated numerically
             if (1 == ratingString.Length) return DecodePopularity((byte)ratingString[0], convention);

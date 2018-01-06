@@ -311,7 +311,7 @@ namespace ATL.test.IO.MetaData
             if (testData.RecordingYear != null) theTag.RecordingYear = "2008";
             if (testData.RecordingDate != null) theTag.RecordingDate = "2008/01/01";
             if (testData.Genre != null) theTag.Genre = "Merengue";
-            if (testData.Rating != null) theTag.Rating = "2,5";
+            if (testData.Rating != null) theTag.Rating = 2.5.ToString();
             if (testData.TrackNumber != null) theTag.TrackNumber = "01/01";
             if (testData.DiscNumber != null) theTag.DiscNumber = "2";
             if (testData.Composer != null) theTag.Composer = "Me";

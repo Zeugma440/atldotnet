@@ -100,7 +100,7 @@ namespace ATL.test.IO.MetaData
             theTag.Genre = "Merengue";
             theTag.TrackNumber = "01/01";
             theTag.DiscNumber = "2";
-            theTag.Rating = "2,5";
+            theTag.Rating = 2.5.ToString();
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";

@@ -314,5 +314,24 @@ namespace Commons
             return true;
         }
 
+        /// <summary>
+        /// TODO
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static double ParseDouble(string s)
+        {
+            if (!IsNumeric(s)) return 0;
+
+            string[] parts = s.Split(new Char[] { ',', '.' });
+
+            if (parts.Length > 2) return 0;
+            else if (1 == parts.Length) return Double.Parse(s);
+            else // 2 == parts.Length
+            {
+                double decimalDivisor = Math.Pow(10, parts[1].Length);
+                return Double.Parse(parts[0]) + Double.Parse(parts[1]) / decimalDivisor;
+            }
+        }
     }
 }
