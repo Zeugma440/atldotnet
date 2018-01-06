@@ -526,6 +526,34 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_R_Vorbis_Rating()
+        {
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.ogg", 0, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.ogg", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.ogg", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.ogg", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.ogg", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.ogg", 1, MetaDataIOFactory.TAG_NATIVE);
+
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.ogg", 0, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.ogg", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.ogg", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.ogg", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.ogg", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ogg", 1, MetaDataIOFactory.TAG_NATIVE);
+        }
+
 
         // No cohabitation here since other tags are not supported in OGG files
 

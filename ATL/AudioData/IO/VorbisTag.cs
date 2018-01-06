@@ -95,6 +95,11 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TAG_NATIVE;
         }
 
+        protected override byte ratingConvention
+        {
+            get { return RC_APE; }
+        }
+
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;

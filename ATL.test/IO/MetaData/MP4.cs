@@ -562,6 +562,34 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_MP4_Rating()
+        {
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp4", 0, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp4", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp4", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp4", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp4", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp4", 1, MetaDataIOFactory.TAG_NATIVE);
+
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp4", 0, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp4", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp4", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp4", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp4", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp4", 1, MetaDataIOFactory.TAG_NATIVE);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);

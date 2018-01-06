@@ -202,6 +202,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        protected override byte ratingConvention
+        {
+            get { return RC_APE; }
+        }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;
@@ -254,6 +258,7 @@ namespace ATL.AudioData.IO
                 { "trkn", TagData.TAG_FIELD_TRACK_NUMBER },
                 { "disk", TagData.TAG_FIELD_DISC_NUMBER },
                 { "rtng", TagData.TAG_FIELD_RATING },
+                { "rate", TagData.TAG_FIELD_RATING },
                 { "©wrt", TagData.TAG_FIELD_COMPOSER },
                 { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
                 { "cprt", TagData.TAG_FIELD_COPYRIGHT },
