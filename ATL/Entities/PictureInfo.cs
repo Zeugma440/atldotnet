@@ -8,21 +8,54 @@ namespace ATL
     {
         public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
 
-        public PIC_TYPE PicType;                        // Normalized picture type
-        public ImageFormat NativeFormat;                // Native image format
-        public int Position;                            // Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
+        /// <summary>
+        /// Normalized picture type (see enum)
+        /// </summary>
+        public PIC_TYPE PicType;
+        /// <summary>
+        /// Native image format
+        /// </summary>
+        public ImageFormat NativeFormat;
+        /// <summary>
+        /// Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
+        /// </summary>
+        public int Position;
 
-        public int TagType;                             // Tag type where the picture originates from
-        public int NativePicCode;                       // Native picture code according to TagType convention (numeric : e.g. ID3v2)
-        public string NativePicCodeStr;                 // Native picture code according to TagType convention (string : e.g. APEtag)
+        /// <summary>
+        /// Tag type where the picture originates from (see MetaDataIOFactory)
+        /// </summary>
+        public int TagType;
+        /// <summary>
+        /// Native picture code according to TagType convention (numeric : e.g. ID3v2)
+        /// </summary>
+        public int NativePicCode;
+        /// <summary>
+        /// Native picture code according to TagType convention (string : e.g. APEtag)
+        /// </summary>
+        public string NativePicCodeStr;
 
-        public string Description = "";                 // Picture description
+        /// <summary>
+        /// Picture description
+        /// </summary>
+        public string Description = "";
 
-        public byte[] PictureData;                      // Binary picture data
-        public uint PictureHash;                        // Hash of binary picture data
+        /// <summary>
+        /// Binary picture data
+        /// </summary>
+        public byte[] PictureData;
+        /// <summary>
+        /// Hash of binary picture data
+        /// </summary>
+        public uint PictureHash;
 
-        public bool MarkedForDeletion = false;          // True if the field has to be deleted in the next IMetaDataIO.Write operation
-        public int Flag;                                // Freeform value to be used by other parts of the library
+        /// <summary>
+        /// True if the field has to be deleted in the next IMetaDataIO.Write operation
+        /// </summary>
+        public bool MarkedForDeletion = false;
+        /// <summary>
+        /// Freeform value to be used by other parts of the library
+        /// </summary>
+        public int Flag;
 
         // ---------------- CONSTRUCTORS
 

@@ -1,4 +1,5 @@
 using ATL.AudioData.IO;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -82,7 +83,15 @@ namespace ATL.AudioData
         /// <summary>
         /// Rating of the track, from 1 to 5
         /// </summary>
+        [Obsolete("Use Popularity")]
         ushort Rating
+        {
+            get;
+        }
+        /// <summary>
+        /// Rating of the track, from 0% to 100%
+        /// </summary>
+        float Popularity
         {
             get;
         }
@@ -101,7 +110,7 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// Original album
+        /// Title of the original album
         /// </summary>
         string OriginalAlbum
         {
@@ -139,7 +148,8 @@ namespace ATL.AudioData
         /// <summary>
         /// List of picture IDs stored in the tag
         ///     PictureInfo.PIC_TYPE : internal, normalized picture type
-        ///     byte : native picture code (useful when exploiting the UNSUPPORTED picture type)
+        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
+        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
         /// </summary>
         IList<PictureInfo> PictureTokens
         {
@@ -167,6 +177,10 @@ namespace ATL.AudioData
             get;
         }
 
+        /// <summary>
+        /// List of pictures stored in the tag
+        /// NB : PictureInfo.PictureData (raw binary picture data) is valued
+        /// </summary>
         IList<PictureInfo> EmbeddedPictures
         {
             get;

@@ -92,7 +92,7 @@ namespace ATL.test
         [TestMethod]
         public void Audio_AC3()
         {
-            testGenericAudio("AC3/empty.ac3", 18, 128, 44100, false, AudioDataIOFactory.CF_LOSSY);
+            testGenericAudio("AC3/empty.ac3", 5, 128, 44100, false, AudioDataIOFactory.CF_LOSSY);
         }
 
         [TestMethod]

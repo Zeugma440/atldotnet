@@ -234,9 +234,17 @@ namespace ATL.AudioData
         /// <summary>
         /// Track rating
         /// </summary>
+        [Obsolete("Use popularity")]
         public ushort Rating
         {
             get { return metaData.Rating; }
+        }
+        /// <summary>
+        /// Track rating
+        /// </summary>
+        public float Popularity
+        {
+            get { return metaData.Popularity; }
         }
         /// <summary>
         /// Codec family

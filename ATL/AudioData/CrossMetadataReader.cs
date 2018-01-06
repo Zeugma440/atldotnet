@@ -304,9 +304,6 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Rating
-        /// </summary>
         public ushort Rating
         {
             get
@@ -318,6 +315,19 @@ namespace ATL.AudioData
                     if (rating != 0) break;
                 }
                 return rating;
+            }
+        }
+        public float Popularity
+        {
+            get
+            {
+                float result = 0;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Popularity;
+                    if (result != 0) break;
+                }
+                return result;
             }
         }
         /// <summary>

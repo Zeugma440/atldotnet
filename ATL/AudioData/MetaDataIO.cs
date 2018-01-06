@@ -19,6 +19,10 @@ namespace ATL.AudioData.IO
         protected const int TO_BOF = 1;     // Tag offset is at Beginning Of File
         protected const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
 
+        // Rating conventions
+        public const int RC_ID3v2 = 0;       // ID3v2 convention
+        public const int RC_ASF = 1;         // ASF convention
+
 
         // ------ INNER CLASSES -----------------------------------------------------
 
@@ -188,10 +192,17 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Rating, from 0 to 5
         /// </summary>
+        [Obsolete("Use Popularity")]
         public ushort Rating
         {
-            get { return TrackUtils.ExtractIntRating(tagData.Rating); }
-            set { tagData.Rating = value.ToString(); }
+            get { return (ushort)Math.Round(Popularity * 5); }
+        }
+        /// <summary>
+        /// Rating, from 0 to 100%
+        /// </summary>
+        public float Popularity
+        {
+            get { return TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
         }
         /// <summary>
         /// Release year
@@ -381,9 +392,14 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
 
-        protected virtual bool IsLittleEndian
+        protected virtual bool isLittleEndian
         {
             get { return true; }
+        }
+
+        protected virtual byte ratingConvention
+        {
+            get { return RC_ID3v2; }
         }
 
 
@@ -457,7 +473,6 @@ namespace ATL.AudioData.IO
 
         abstract protected byte getFrameMapping(string zone, string ID, byte tagVersion);
 
-
         // ------ COMMON METHODS -----------------------------------------------------
 
         public void SetEmbedder(IMetaDataEmbedder embedder)
@@ -473,7 +488,7 @@ namespace ATL.AudioData.IO
             if (null == tagData) tagData = new TagData(); else tagData.Clear();
             if (null == pictureTokens) pictureTokens = new List<PictureInfo>(); else pictureTokens.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
-            if (null == structureHelper) structureHelper = new FileStructureHelper(IsLittleEndian); else structureHelper.Clear();
+            if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
         protected void setMetaField(string ID, string Data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")

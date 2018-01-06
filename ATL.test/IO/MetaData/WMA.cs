@@ -429,6 +429,17 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_WMA_Rating()
+        {
+            assumeRatingInFile("_Ratings/windows7/0.wma", 0, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/1.wma", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/2.wma", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/3.wma", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/4.wma", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/5.wma", 1, MetaDataIOFactory.TAG_NATIVE);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WMA_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);

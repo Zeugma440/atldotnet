@@ -58,6 +58,10 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
+        public float Popularity
+        {
+            get { return 0; }
+        }
         public int Size
         {
             get { return 0; }

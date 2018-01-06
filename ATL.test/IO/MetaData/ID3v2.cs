@@ -670,6 +670,40 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_R_ID3v2_Rating()
+        {
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp3", 0.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp3", 1.0/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp3", 1.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp3", 2.0/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp3", 2.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp3", 3.0/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp3", 3.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp3", 4.0/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp3", 4.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+
+            assumeRatingInFile("_Ratings/windows7/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+        }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()

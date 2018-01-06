@@ -23,14 +23,14 @@ namespace ATL.AudioData
 			get;
 		}
 		/// <summary>
-		/// Duration of the file (seconds)
+		/// Duration (seconds)
 		/// </summary>
 		double Duration
 		{
 			get;
 		}
         /// <summary>
-		/// Sample rate of the file (Hz)
+		/// Sample rate (Hz)
 		/// </summary>
 		int SampleRate
         {

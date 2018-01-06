@@ -179,3 +179,7 @@ $RECYCLE.BIN/
 *.nuspec
 /ATL.test/Resources/MP3/Folder.jpg
 /ATL.test/Resources/MP3/AlbumArtSmall.jpg
+/.vs/ATL/v15/Server/sqlite3/storage.ide-wal
+/.vs/ATL/v15/Server/sqlite3/storage.ide-shm
+/.vs/ATL/v15/Server/sqlite3/storage.ide
+/.vs/ATL/v15/Server/sqlite3/db.lock

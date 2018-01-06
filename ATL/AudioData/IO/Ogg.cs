@@ -416,6 +416,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public float Popularity
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Popularity;
+            }
+        }
+
         public string Copyright
         {
             get

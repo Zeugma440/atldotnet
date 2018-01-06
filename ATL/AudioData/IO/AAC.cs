@@ -198,7 +198,7 @@ namespace ATL.AudioData.IO
         {
             get { return 4; }
         }
-        protected override bool IsLittleEndian
+        protected override bool isLittleEndian
         {
             get { return false; }
         }

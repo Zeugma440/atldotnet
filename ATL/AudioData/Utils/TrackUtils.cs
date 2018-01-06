@@ -1,4 +1,5 @@
-﻿using Commons;
+﻿using ATL.AudioData.IO;
+using Commons;
 using System;
 using System.Text.RegularExpressions;
 
@@ -51,25 +52,25 @@ namespace ATL.AudioData
         /// <summary>
         /// Extract rating level from the given string
         /// </summary>
-        /// <param name="RatingString">Raw "rating" field in string form</param>
-        /// <returns>Rating level, in integer form</returns>
-        public static ushort ExtractIntRating(String RatingString)
+        /// <param name="ratingString">Raw "rating" field in string form</param>
+        /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
+        public static float DecodePopularity(string ratingString, int convention)
         {
-            if ((null == RatingString) || (0 == RatingString.Trim().Length)) return 0;
+            if ((null == ratingString) || (0 == ratingString.Trim().Length)) return 0;
 
-            if (Utils.IsNumeric(RatingString)) return ExtractIntRating(Byte.Parse(RatingString));
+            if (Utils.IsNumeric(ratingString)) return DecodePopularity(Byte.Parse(ratingString), convention);
 
             // If the field is only one byte long, rating is evaluated numerically
-            if (1 == RatingString.Length) return ExtractIntRating((byte)RatingString[0]);
+            if (1 == ratingString.Length) return DecodePopularity((byte)ratingString[0], convention);
 
             // == Rating is stored in the form of stars ==
             Regex regex = new Regex("\\*+");
 
-            Match match = regex.Match(RatingString.Trim());
+            Match match = regex.Match(ratingString.Trim());
             // First match is directly returned
             if (match.Success)
             {
-                return (ushort)match.Value.Length;
+                return (float)(match.Value.Length / 5.0);
             }
 
             return 0;
@@ -78,22 +79,44 @@ namespace ATL.AudioData
         /// <summary>
         /// Extract rating level from the given byte
         /// </summary>
-        /// <param name="Rating">Raw "rating" field in byte form</param>
-        /// <returns>Rating level, in integer form</returns>
-        public static ushort ExtractIntRating(byte Rating)
+        /// <param name="rating">Raw "rating" field in byte form</param>
+        /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
+        public static float DecodePopularity(byte rating, int convention)
         {
-            ushort result = Rating;
-
-            // Popularity-meter notation
-            // Compatible with Windows Explorer rating notation
-            if (result > 31)
+            switch (convention)
             {
-                if (result < 96) return 2;
-                else if (result < 160) return 3;
-                else if (result < 224) return 4;
-                else return 5;
+                case MetaDataIO.RC_ASF:
+
+                    if (rating < 1) return 0;
+                    else if (rating < 25) return (float)0.2;
+                    else if (rating < 50) return (float)0.4;
+                    else if (rating < 75) return (float)0.6;
+                    else if (rating < 99) return (float)0.8;
+                    else return 1;
+
+                default:                // ID3v2 convention
+                    if (rating > 10)
+                    {
+                        // De facto conventions (windows explorer, mediaMonkey, musicBee)
+                        if (rating < 54) return (float)0.1;
+                        // 0.2 is value "1"; handled in two blocks
+                        else if (rating < 64) return (float)0.3;
+                        else if (rating < 118) return (float)0.4;
+                        else if (rating < 128) return (float)0.5;
+                        else if (rating < 186) return (float)0.6;
+                        else if (rating < 196) return (float)0.7;
+                        else if (rating < 242) return (float)0.8;
+                        else if (rating < 255) return (float)0.9;
+                        else return 1;
+                    } else if (rating > 5) // Between 5 and 10
+                    {
+                        return (float)(rating / 10.0);
+                    }
+                    else // Between 1 and 5
+                    {
+                        return (float)(rating / 5.0);
+                    }
             }
-            else return result;
         }
 
         /// <summary>

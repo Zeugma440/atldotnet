@@ -1,5 +1,6 @@
 ﻿using ATL.AudioData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -335,7 +336,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
             if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual(5, meta.Rating);
+            if (testData.Rating != null) Assert.AreEqual(1, meta.Popularity);
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
             if (testData.DiscNumber != null) Assert.AreEqual(2, meta.Disc);
             if (testData.Composer != null) Assert.AreEqual("Me", meta.Composer);
@@ -558,7 +559,7 @@ namespace ATL.test.IO.MetaData
             if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
             //if (testData.RecordingDate != null) Assert.AreEqual(testData.RecordingDate, meta.);
             if (testData.Genre != null) Assert.AreEqual(testData.Genre, meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual(testData.Rating, meta.Rating.ToString());
+            if (testData.Rating != null) Assert.AreEqual(testData.Rating, meta.Popularity.ToString());
             if (testData.TrackNumber != null) Assert.AreEqual(testData.TrackNumber, meta.Track.ToString());
             if (testData.Composer != null) Assert.AreEqual(testData.Composer, meta.Composer);
             if (testData.DiscNumber != null) Assert.AreEqual(testData.DiscNumber, meta.Disc.ToString());
@@ -599,6 +600,22 @@ namespace ATL.test.IO.MetaData
                 }
                 Assert.AreEqual(testData.Pictures.Count, nbFound);
             }
+        }
+
+        protected void assumeRatingInFile(string file, double rating, int tagType)
+        {
+            string location = TestUtils.GetResourceLocationRoot() + file;
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            IMetaDataIO meta = theFile.getMeta(tagType);
+
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            //Assert.IsTrue(Math.Abs(rating - meta.Popularity) < 0.01);
+            Assert.AreEqual((float)rating, meta.Popularity);
         }
 
     }

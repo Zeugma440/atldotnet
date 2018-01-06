@@ -162,6 +162,10 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TAG_NATIVE;
         }
+        protected override byte ratingConvention
+        {
+            get { return RC_ASF; }
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -508,7 +512,9 @@ namespace ATL.AudioData.IO
             }
             else if (3 == fieldDataType) // 32-bit unsigned integer
             {
-                fieldValue = (source.ReadUInt32() + 1).ToString(); // TODO - Why the +1 ?? If related to ID3v1 genre index, conversion should be done while getting field name into account
+                uint intValue = source.ReadUInt32();
+                if (fieldName.Equals("WM/GENRE",StringComparison.OrdinalIgnoreCase)) intValue++;
+                fieldValue = intValue.ToString();
             }
             else if (4 == fieldDataType) // 64-bit unsigned integer
             {
@@ -1075,6 +1081,5 @@ namespace ATL.AudioData.IO
                 return base.Remove(w);
             }
         }
-
     }
 }

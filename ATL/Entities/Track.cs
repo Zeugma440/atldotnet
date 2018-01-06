@@ -1,5 +1,6 @@
 using ATL.AudioData;
 using Commons;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -18,43 +19,139 @@ namespace ATL
             Update();
         }
 
-		public string Path;
+        //=== METADATA
+
+        /// <summary>
+        /// Full access path of the underlying file
+        /// </summary>
+        public string Path;
+        /// <summary>
+		/// Title
+		/// </summary>
 		public string Title;
+        /// <summary>
+		/// Artist
+		/// </summary>
 		public string Artist;
+        /// <summary>
+        /// Composer
+        /// </summary>
         public string Composer;
+        /// <summary>
+		/// Comments
+		/// </summary>
 		public string Comment;
+        /// <summary>
+		/// Genre
+		/// </summary>
 		public string Genre;
+        /// <summary>
+		/// Title of the album
+		/// </summary>
 		public string Album;
+        /// <summary>
+        /// Title of the original album
+        /// </summary>
         public string OriginalAlbum;
+        /// <summary>
+        /// Original artist
+        /// </summary>
         public string OriginalArtist;
+        /// <summary>
+        /// Copyright
+        /// </summary>
         public string Copyright;
+        /// <summary>
+        /// General description
+        /// </summary>
         public string Description;
+        /// <summary>
+        /// Publisher
+        /// </summary>
         public string Publisher;
+        /// <summary>
+        /// Album Artist
+        /// </summary>
         public string AlbumArtist;
+        /// <summary>
+        /// Conductor
+        /// </summary>
         public string Conductor;
+        /// <summary>
+		/// Recording Year
+		/// </summary>
         public int Year;
-		public int Bitrate;
-        public double SampleRate;
-        public bool IsVBR;
-		public int CodecFamily;
-		public int Duration;		
-		public int TrackNumber;
+        /// <summary>
+		/// Track number
+		/// </summary>
+        public int TrackNumber;
+        /// <summary>
+		/// Disc number
+		/// </summary>
         public int DiscNumber;
+        /// <summary>
+		/// Rating (1 to 5)
+		/// </summary>
+        [Obsolete("Use Popularity")]
         public int Rating;
+        /// <summary>
+		/// Popularity (0% = 0 stars to 100% = 5 stars)
+        /// e.g. 3.5 stars = 70%
+		/// </summary>
+        public float Popularity;
+        /// <summary>
+        /// List of picture IDs stored in the tag
+        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
+        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
+        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
+        /// </summary>
         public IList<PictureInfo> PictureTokens = null;
+        /// <summary>
+        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// </summary>
         public IList<ChapterInfo> Chapters;
 
+
+        //=== PHYSICAL PROPERTIES
+
+        /// <summary>
+        /// Bitrate (kilobytes per second)
+        /// </summary>
+		public int Bitrate;
+        /// <summary>
+		/// Sample rate (Hz)
+		/// </summary>
+        public double SampleRate;
+        /// <summary>
+        /// Returns true if the bitrate is variable; false if not
+        /// </summary>
+        public bool IsVBR;
+        /// <summary>
+        /// Family of the audio codec (See AudioDataIOFactory)
+        /// 0=Streamed, lossy data
+        /// 1=Streamed, lossless data
+        /// 2=Sequenced with embedded sound library
+        /// 3=Sequenced with codec or hardware-dependent sound library
+        /// </summary>
+		public int CodecFamily;
+        /// <summary>
+		/// Duration (seconds)
+		/// </summary>
+		public int Duration;
+
+        /// <summary>
+        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// </summary>
         public IDictionary<string, string> AdditionalFields;
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
 
         private IList<PictureInfo> embeddedPictures = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
-        private AudioFileIO fileIO;
-
-
-        // ========== METHODS
-
+        /// <summary>
+        /// List of pictures stored in the tag
+        /// NB : PictureInfo.PictureData (raw binary picture data) is valued
+        /// </summary>
         public IList<PictureInfo> EmbeddedPictures
         {
             get
@@ -62,6 +159,11 @@ namespace ATL
                 return getEmbeddedPictures();
             }
         }
+
+        private AudioFileIO fileIO;
+
+
+        // ========== METHODS
 
         private IList<PictureInfo> getEmbeddedPictures()
         {
@@ -105,6 +207,7 @@ namespace ATL
             CodecFamily = fileIO.CodecFamily;
             Duration = fileIO.IntDuration;
             Rating = fileIO.Rating;
+            Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
 
@@ -156,7 +259,7 @@ namespace ATL
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();
             result.DiscNumber = DiscNumber.ToString();
-            result.Rating = Rating.ToString();
+            result.Rating = (Popularity * 5).ToString();
 
             if (Chapters.Count > 0)
             {

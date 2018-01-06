@@ -13,7 +13,7 @@ namespace ATL
 	/// </summary>
 	public class TagData
 	{
-        [Obsolete]
+        [Obsolete("Access picture data directly through the Pictures attribute, after reading a file with ReadTagParams.ReadPictures=true")]
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
