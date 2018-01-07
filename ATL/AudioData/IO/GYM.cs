@@ -13,8 +13,12 @@ namespace ATL.AudioData.IO
     /// Implementation notes
     /// 
     ///     1/ Looping : I have yet to find a GYM file that actually contains a loop.
-    ///     Most archives I found so far are direct recording of game audio instructions
+    ///     All archives I found so far are direct recording of game audio instructions
     ///     that actually repeat the same pattern twice (looping data is not used at all)
+    ///     
+    ///     2/ Gzipped stream : I have yet to find a GYM file that contains gzipped data.
+    ///     => Rather than to make a theoretical implementation, there is no implementation at all.
+    /// 
     /// </summary>
     class GYM : MetaDataIO, IAudioDataIO
 	{
@@ -152,7 +156,7 @@ namespace ATL.AudioData.IO
 
                 if (packedSize > 0)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported yet"); // TODO support GZIP-compressed files
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "GZIP-compressed files are not supported"); // will be as soon as I find a sample to test with
                     return false;
                 }
 

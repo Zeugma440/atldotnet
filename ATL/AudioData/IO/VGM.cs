@@ -12,7 +12,10 @@ namespace ATL.AudioData.IO
     /// Class for Video Game Music files (Master System, Game Gear, SG1000, Genesis) manipulation (extensions : .VGM)
     /// According to file format v1.70
     /// 
-    /// NB : GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
+    /// Implementation notes :
+    ///   1/ GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
+    ///   
+    ///   2/ Gzipped files are currently supported in read-only mode (i.e. ATL cannot write metadata to a GYM file containing gzipped data)
 	/// </summary>
 	class VGM : MetaDataIO, IAudioDataIO
 	{
@@ -248,6 +251,12 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(0, SeekOrigin.Begin);
             if (headerSignature[0] == 0x1f && headerSignature[1] == 0x8b) // File is GZIP-compressed
             {
+                if (readTagParams.PrepareForWriting)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Writing metadata to gzipped VGM files is not supported yet.");
+                    return false;
+                }
+
                 using (GZipStream gzStream = new GZipStream(source.BaseStream, CompressionMode.Decompress))
                 {
                     memStream = new MemoryStream();
