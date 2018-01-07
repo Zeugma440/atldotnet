@@ -139,10 +139,6 @@ namespace ATL.AudioData.IO
             get { return this.getBitRateType(); }
         }
         */
-        public bool Valid // true if data valid
-        {
-            get { return this.isValid(); }
-        }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -330,13 +326,6 @@ namespace ATL.AudioData.IO
                 else
                     return 8.0 * (sizeInfo.FileSize - sizeInfo.ID3v2Size) / bitrate;
             }
-        }
-
-        // Check for file correctness
-        private bool isValid()
-        {
-            return ((headerTypeID != AAC_HEADER_TYPE_UNKNOWN) &&
-                (channels > 0) && (sampleRate > 0) && (bitrate > 0));
         }
 
         // Get header type of the file
