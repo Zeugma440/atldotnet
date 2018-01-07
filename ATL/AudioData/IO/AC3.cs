@@ -26,6 +26,7 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
+        /* Unused for now
         public uint Channels
 		{
 			get { return channels; }
@@ -38,6 +39,7 @@ namespace ATL.AudioData.IO
         {
             get { return getCompressionRatio(); }
         }
+        */
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -101,6 +103,7 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
+        /* Unused for now
         private double getCompressionRatio()
         {
             // Get compression ratio 
@@ -109,6 +112,7 @@ namespace ATL.AudioData.IO
             else
                 return 0;
         }
+        */
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
