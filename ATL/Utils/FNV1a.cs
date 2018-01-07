@@ -26,6 +26,7 @@ namespace HashDepot
             return result;
         }
 
+        /*
         /// <summary>
         /// Calculate 64-bit FNV-1a hash value
         /// </summary>
@@ -43,5 +44,6 @@ namespace HashDepot
             }
             return result;
         }
+        */
     }
 }
