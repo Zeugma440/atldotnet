@@ -180,10 +180,6 @@ namespace ATL.AudioData.IO
         {
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
         }
-        public bool HasNativeMeta()
-        {
-            return true;
-        }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()

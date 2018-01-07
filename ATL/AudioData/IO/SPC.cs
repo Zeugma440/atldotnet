@@ -124,10 +124,6 @@ namespace ATL.AudioData.IO
         {
             get { return duration; }
         }
-        public bool HasNativeMeta()
-        {
-            return true;
-        }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_APE);

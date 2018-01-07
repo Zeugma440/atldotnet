@@ -334,11 +334,6 @@ namespace ATL.AudioData
             }
         }
 
-        public bool HasNativeMeta()
-        {
-            return audioData.HasNativeMeta();
-        }
-
         public bool IsMetaSupported(int metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);

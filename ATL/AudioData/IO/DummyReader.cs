@@ -60,10 +60,6 @@ namespace ATL.AudioData.IO
         {
             get { return new DummyTag(); }
         }
-        public bool HasNativeMeta()
-        {
-            return false;
-        }
         public bool RemoveTagFromFile(int tagType)
         {
             return true;

@@ -66,11 +66,6 @@ namespace ATL.AudioData
         bool IsMetaSupported(int metaDataType);
         
         /// <summary>
-        /// Indicates if file format has a native embedded metadata tagging format (i.e. not ID3v1, ID3v2 nor APEtag - e.g. MP4 atom structure or MOD title)
-        /// </summary>
-        bool HasNativeMeta();
-        
-        /// <summary>
         /// Reads audio data from the given stream.
         /// NB1 : Standard metadata (i.e. ID3v2, ID3v1 and APE) have to be read _before_ calling this method, and their size stored in sizeInfo
         /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller

@@ -324,11 +324,7 @@ namespace ATL.AudioData.IO
 
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE || metaDataType == MetaDataIOFactory.TAG_ID3V2);
-        }
-        public bool HasNativeMeta()
-        {
-            return true; // Native is for VorbisTag
+            return (metaDataType == MetaDataIOFactory.TAG_NATIVE || metaDataType == MetaDataIOFactory.TAG_ID3V2); // Native is for VorbisTag
         }
 
 

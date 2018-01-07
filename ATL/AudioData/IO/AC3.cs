@@ -70,10 +70,6 @@ namespace ATL.AudioData.IO
         {
             get { return (int)this.sampleRate; }
         }
-        public bool HasNativeMeta()
-        {
-            return false;
-        }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE);

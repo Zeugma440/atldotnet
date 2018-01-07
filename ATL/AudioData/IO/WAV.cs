@@ -43,7 +43,7 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-
+        /* Unused for now
         public ushort FormatID // Format type code
 		{
 			get { return this.formatID; }
@@ -76,6 +76,7 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.headerSize; }
 		}	
+        */
   
 
 		private const String DATA_CHUNK = "data";                        // Data chunk ID
@@ -147,10 +148,6 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
-        }
-        public bool HasNativeMeta()
-        {
-            return false;
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -228,6 +225,7 @@ namespace ATL.AudioData.IO
 			return result;
 		}
 
+        /* Unused for now
 		private String getFormat()
 		{
 			// Get format type name
@@ -248,6 +246,7 @@ namespace ATL.AudioData.IO
 			// Get channel mode name
 			return WAV_MODE[channelNumber];
 		}
+        */
 
 		private double getDuration()
 		{
@@ -265,7 +264,7 @@ namespace ATL.AudioData.IO
 
         private double getBitrate()
         {
-            return Math.Round((double)this.bitsPerSample * this.sampleRate * this.ChannelNumber);
+            return Math.Round((double)this.bitsPerSample * this.sampleRate * this.channelNumber);
         }
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

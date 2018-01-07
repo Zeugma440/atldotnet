@@ -315,10 +315,6 @@ public String Encoder // Guessed encoder name
         {
             get { return true; }
         }
-        public bool HasNativeMeta()
-        {
-            return false;
-        }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
