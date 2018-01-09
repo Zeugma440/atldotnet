@@ -117,7 +117,7 @@ Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
 __DETECTED FIELDS__
 
 * Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
-* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, Chapters
+* Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)
 * Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
 
 __SUPPORTED PLAYLISTS FORMATS :__ ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
@@ -127,8 +127,8 @@ __SUPPORTED CUESHEETS FORMATS :__ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for gzipped GYM files
-* Support for other audio file formats : Speex, Theora, Audible, Broadcast wave (bwav/bwf)
+* Support for Broadcast wave metadata
+* Support for other audio file formats : Speex, Theora, Audible
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 
