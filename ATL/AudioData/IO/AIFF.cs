@@ -110,10 +110,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return (compression.Equals(COMPRESSION_NONE)|| compression.Equals(COMPRESSION_NONE_LE)) ?AudioDataIOFactory.CF_LOSSLESS: AudioDataIOFactory.CF_LOSSY; }
 		}
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public string FileName
         {
             get { return filePath; }

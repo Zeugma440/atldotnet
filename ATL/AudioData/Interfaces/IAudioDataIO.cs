@@ -50,13 +50,6 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-        /// <summary>
-        /// Indicates if audio format supports parsable native or standard metadata
-        /// </summary>
-        bool AllowsParsableMetadata
-        {
-            get;
-        }
         
         /// <summary>
         /// Indicated wether the given metadata type is supported

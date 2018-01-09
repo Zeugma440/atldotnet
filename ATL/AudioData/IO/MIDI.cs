@@ -293,10 +293,6 @@ namespace ATL.AudioData.IO
         {
             get { return AudioDataIOFactory.CF_SEQ; }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return true; } // Only true for comments
-        }
         public string FileName
         {
             get { return filePath; }
@@ -311,7 +307,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // Only for comments
         }
 
         // IMetaDataIO

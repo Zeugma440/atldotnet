@@ -61,6 +61,7 @@
     <Compile Include="IO\MetaData\AIF.cs" />
     <Compile Include="IO\MetaData\GYM.cs" />
     <Compile Include="IO\MetaData\VGM.cs" />
+    <Compile Include="IO\MetaData\WAV.cs" />
     <Compile Include="IO\MetaData\VQF.cs" />
     <Compile Include="IO\MetaData\S3M.cs" />
     <Compile Include="IO\MetaData\PSF.cs" />
@@ -246,6 +247,9 @@
     <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
     <Content Include="Resources\MP3\mp2Layer1.mp2" />
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
+    <Content Include="Resources\WAV\broadcastwave_bext_info.wav" />
+    <Content Include="Resources\WAV\broadcastwave_bext_iXML.wav" />
+    <Content Include="Resources\WAV\wav.wav" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />
     <Content Include="Resources\_Images\pic1.jpeg" />
@@ -255,7 +259,6 @@
     <Content Include="Resources\_Images\pic1.jpg" />
     <Content Include="Resources\_Images\pic1.png" />
     <Content Include="Resources\_Images\pic2.jpg" />
-    <Content Include="Resources\WAV\duck hunt.wav" />
     <Content Include="Resources\WMA\empty_full.wma" />
     <Content Include="Resources\WMA\empty_non-WMFields.wma" />
     <Content Include="Resources\WMA\wma.wma" />

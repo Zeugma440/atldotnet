@@ -57,10 +57,6 @@ namespace ATL.AudioData.IO
         {
             get { return (int)sampleRate; }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return false; }
-        }
         public string FileName
         {
             get { return filePath; }

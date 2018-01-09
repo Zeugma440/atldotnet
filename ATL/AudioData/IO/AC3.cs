@@ -13,13 +13,14 @@ namespace ATL.AudioData.IO
 														192, 224, 256, 320, 384, 448, 512, 576, 640 };
  
 		// Private declarations 
+        /* Unused for now
 		private uint channels;
 		private uint bits;
+        */
 		private uint sampleRate;
 
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
@@ -52,10 +53,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return AudioDataIOFactory.CF_LOSSY; }
 		}
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public string FileName
         {
             get { return filePath; }
@@ -86,12 +83,13 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
 		{
+            /*
 			channels = 0;
 			bits = 0;
+            */
 			sampleRate = 0;
             duration = 0;
             bitrate = 0;
-            isValid = false;
 		}
 
 		public AC3(string filePath)
@@ -133,8 +131,6 @@ namespace ATL.AudioData.IO
 				source.BaseStream.Seek(2, SeekOrigin.Current);
 				aByte = source.ReadByte();
 
-                isValid = true;
-
 				switch (aByte & 0xC0)
 				{
 					case 0: sampleRate = 48000; break;
@@ -149,7 +145,8 @@ namespace ATL.AudioData.IO
 
                 source.BaseStream.Seek(1, SeekOrigin.Current);
 				aByte = source.ReadByte();
-
+                
+                /* unused for now
 				switch (aByte & 0xE0)
 				{
 					case 0: channels = 2; break;
@@ -164,6 +161,8 @@ namespace ATL.AudioData.IO
 				}
 
 				bits = 16;
+                */
+
 				duration = sizeInfo.FileSize * 8.0 / bitrate;
 
 				result = true;

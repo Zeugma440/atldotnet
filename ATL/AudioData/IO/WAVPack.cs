@@ -188,10 +188,6 @@ namespace ATL.AudioData.IO
         {
             get { return codecFamily; }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public string FileName
         {
             get { return filePath; }

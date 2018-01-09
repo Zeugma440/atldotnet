@@ -40,10 +40,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return AudioDataIOFactory.CF_LOSSY; }
 		}
-        public bool AllowsParsableMetadata
-        {
-            get { return false; }
-        }
 		public IO.ID3v1 ID3v1
 		{
 			get { return new ID3v1(); }

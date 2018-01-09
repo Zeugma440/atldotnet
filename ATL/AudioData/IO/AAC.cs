@@ -152,10 +152,6 @@ namespace ATL.AudioData.IO
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public double BitRate
         {
             get { return bitrate/1000.0; }

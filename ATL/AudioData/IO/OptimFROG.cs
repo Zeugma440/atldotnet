@@ -109,10 +109,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return AudioDataIOFactory.CF_LOSSLESS; }
 		}
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public string FileName
         {
             get { return filePath; }

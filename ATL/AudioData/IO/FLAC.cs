@@ -131,10 +131,6 @@ namespace ATL.AudioData.IO
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
 
         #region IMetaDataReader
         public string Title

@@ -186,7 +186,7 @@ namespace ATL.test
         [TestMethod]
         public void Audio_WAV()
         {
-            testGenericAudio("WAV/duck hunt.wav", 8, 1411, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("WAV/wav.wav", 8, 1411, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         [TestMethod]

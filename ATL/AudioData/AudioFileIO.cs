@@ -44,7 +44,7 @@ namespace ATL.AudioData
 
             metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
 
-            if (metaData is DummyTag && audioData.AllowsParsableMetadata) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+            if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
         public void Save(TagData data)
@@ -259,13 +259,6 @@ namespace ATL.AudioData
         public bool IsVBR
         {
             get { return audioData.IsVBR; }
-        }
-        /// <summary>
-        /// Indicates whether the audio format allows parsable metadata to exist
-        /// </summary>
-        public bool AllowsParsableMetadata
-        {
-            get { return audioData.AllowsParsableMetadata; }
         }
         /// <summary>
         /// Does the tag exist ?

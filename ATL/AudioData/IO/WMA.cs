@@ -127,10 +127,6 @@ namespace ATL.AudioData.IO
                 return isLossless ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
             }
         }
-        public bool AllowsParsableMetadata
-        {
-            get { return true; }
-        }
         public string FileName { get { return filePath; } }
         public double BitRate { get { return bitrate; } }
         public double Duration { get { return duration; } }
