@@ -195,7 +195,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static long DecodeBEInt64(byte[] data)
         {
-            if (data.Length != 8) throw new InvalidDataException("data should be 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
             return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
         }
 
@@ -217,7 +217,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
             return (uint)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0));
         }
 
@@ -228,7 +228,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeUInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
             return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
@@ -250,7 +250,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
         }
 
@@ -283,7 +283,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt24(byte[] data)
         {
-            if (data.Length != 3) throw new InvalidDataException("data should be 3 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 3) throw new InvalidDataException("Data should be at least 3 bytes long; found " + data.Length + " bytes");
             return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
         }
 
@@ -319,7 +319,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ushort DecodeBEUInt16(byte[] data)
         {
-            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
         }
 
@@ -332,6 +332,17 @@ namespace ATL
         {
             // Output has to be big-endian
             return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Little-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static ushort DecodeUInt16(byte[] data)
+        {
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            return (ushort)((data[0]) | (data[1] << 8));
         }
 
         /// <summary>
@@ -352,7 +363,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static short DecodeBEInt16(byte[] data)
         {
-            if (data.Length != 2) throw new InvalidDataException("data should be 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
             return (short)((data[0] << 8) | (data[1] << 0));
         }
 

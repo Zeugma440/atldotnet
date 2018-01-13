@@ -249,6 +249,7 @@
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
     <Content Include="Resources\WAV\broadcastwave_bext_info.wav" />
     <Content Include="Resources\WAV\broadcastwave_bext_iXML.wav" />
+    <Content Include="Resources\WAV\rifx.wav" />
     <Content Include="Resources\WAV\wav.wav" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />

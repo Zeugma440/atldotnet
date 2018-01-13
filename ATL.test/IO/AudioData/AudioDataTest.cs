@@ -187,6 +187,7 @@ namespace ATL.test
         public void Audio_WAV()
         {
             testGenericAudio("WAV/wav.wav", 8, 1411, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
+            testGenericAudio("WAV/rifx.wav", 0, 2117, 44100, false, AudioDataIOFactory.CF_LOSSLESS);
         }
 
         [TestMethod]
