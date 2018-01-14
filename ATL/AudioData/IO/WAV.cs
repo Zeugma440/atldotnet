@@ -26,8 +26,9 @@ namespace ATL.AudioData.IO
 
         private const string FORMAT_WAVE = "WAVE";
 
-        private const String FORMAT_CHUNK = "fmt ";
-        private const String DATA_CHUNK = "data";
+        private const String CHUNK_FORMAT = "fmt ";
+        private const String CHUNK_FACT = "fact";
+        private const String CHUNK_DATA = "data";
 
 
         // Used with ChannelModeID property
@@ -221,7 +222,7 @@ namespace ATL.AudioData.IO
         private bool readWAV(Stream source)
 		{
 			bool result = true;
-            uint riffChunkSize, formatChunkSize;
+            uint riffChunkSize;
             byte[] data = new byte[4];
 
             source.Seek(0, SeekOrigin.Begin);
@@ -250,46 +251,52 @@ namespace ATL.AudioData.IO
             if (!str.Equals(FORMAT_WAVE)) return false;
 
 
-            // Format chunk
-            source.Read(data, 0, 4);
-            str = Utils.Latin1Encoding.GetString(data);
-            if (!str.Equals(FORMAT_CHUNK)) return false;
+            string subChunkId;
+            uint chunkSize;
+            long chunkDataPos;
 
-            source.Read(data, 0, 4);
-            if (isLittleEndian) formatChunkSize = StreamUtils.DecodeUInt32(data); else formatChunkSize = StreamUtils.DecodeBEUInt32(data);
-
-            source.Seek(2, SeekOrigin.Current); // FormatId
-
-            source.Read(data, 0, 2);
-            if (isLittleEndian) channelNumber = StreamUtils.DecodeUInt16(data); else channelNumber = StreamUtils.DecodeBEUInt16(data);
-            if (channelNumber != WAV_CM_MONO && channelNumber != WAV_CM_STEREO) return false;
-
-            source.Read(data, 0, 4);
-            if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
-
-            source.Read(data, 0, 4);
-            if (isLittleEndian) bytesPerSecond = StreamUtils.DecodeUInt32(data); else bytesPerSecond = StreamUtils.DecodeBEUInt32(data);
-
-            source.Seek(2, SeekOrigin.Current); // BlockAlign
-
-            source.Read(data, 0, 2);
-            if (isLittleEndian) bitsPerSample = StreamUtils.DecodeUInt16(data); else bitsPerSample = StreamUtils.DecodeBEUInt16(data);
-
-
-            // Data chunk -- TODO : write a proper parser that can browse through sub-chunks (e.g. fact)
-            source.Read(data, 0, 4);
-            str = Utils.Latin1Encoding.GetString(data);
-            if (!str.Equals(DATA_CHUNK))
+            // Sub-chunks loop
+            while (source.Position < riffChunkSize + 8)
             {
-                source.Seek(formatChunkSize + 28, SeekOrigin.Begin);
-
+                // Chunk ID
                 source.Read(data, 0, 4);
-                if (isLittleEndian) sampleNumber = StreamUtils.DecodeInt32(data); else sampleNumber = StreamUtils.DecodeBEInt32(data);
+                subChunkId = Utils.Latin1Encoding.GetString(data);
 
-                headerSize = formatChunkSize + 40; 
-            } else
-            {
-                headerSize = 44;
+                // Chunk size
+                source.Read(data, 0, 4);
+                if (isLittleEndian) chunkSize = StreamUtils.DecodeUInt32(data); else chunkSize = StreamUtils.DecodeBEUInt32(data);
+
+                chunkDataPos = source.Position;
+
+                if (subChunkId.Equals(CHUNK_FORMAT))
+                {
+                    source.Seek(2, SeekOrigin.Current); // FormatId
+
+                    source.Read(data, 0, 2);
+                    if (isLittleEndian) channelNumber = StreamUtils.DecodeUInt16(data); else channelNumber = StreamUtils.DecodeBEUInt16(data);
+                    if (channelNumber != WAV_CM_MONO && channelNumber != WAV_CM_STEREO) return false;
+
+                    source.Read(data, 0, 4);
+                    if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
+
+                    source.Read(data, 0, 4);
+                    if (isLittleEndian) bytesPerSecond = StreamUtils.DecodeUInt32(data); else bytesPerSecond = StreamUtils.DecodeBEUInt32(data);
+
+                    source.Seek(2, SeekOrigin.Current); // BlockAlign
+
+                    source.Read(data, 0, 2);
+                    if (isLittleEndian) bitsPerSample = StreamUtils.DecodeUInt16(data); else bitsPerSample = StreamUtils.DecodeBEUInt16(data);
+                }
+                else if (subChunkId.Equals(CHUNK_DATA))
+                {
+                    headerSize = riffChunkSize - chunkSize;
+                }
+                else if (subChunkId.Equals(CHUNK_FACT))
+                {
+                    source.Read(data, 0, 4);
+                    if (isLittleEndian) sampleNumber = StreamUtils.DecodeInt32(data); else sampleNumber = StreamUtils.DecodeBEInt32(data);
+                }
+                source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
             }
 
             return result;
