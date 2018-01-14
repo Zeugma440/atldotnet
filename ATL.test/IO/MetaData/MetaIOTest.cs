@@ -1,6 +1,5 @@
 ﻿using ATL.AudioData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
