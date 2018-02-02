@@ -5,6 +5,7 @@ namespace ATL
     public static class Settings
     {
         public static bool ID3v2_useExtendedHeaderRestrictions = false;
+        public static bool ID3v2_alwaysWriteCTOCFrame = true;           // Always write CTOC frame when metadata contain at least one chapter
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 
         public static int GYM_VGM_playbackRate = 0;                     // Playback rate (Hz) [0 = adjust to song properties]

@@ -458,6 +458,95 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            TagData theTag = new TagData();
+            theTag.Chapters = new List<ChapterInfo>();
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.StartOffset = 456;
+            ch.EndTime = 789;
+            ch.EndOffset = 101112;
+            ch.UniqueID = "";
+            ch.Title = "aaa";
+            ch.Subtitle = "bbb";
+            ch.Url = "ccc\0ddd";
+            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            ch.Picture.PictureData = data;
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.StartOffset = 4560;
+            ch.EndTime = 7890;
+            ch.EndOffset = 1011120;
+            ch.UniqueID = "002";
+            ch.Title = "aaa0";
+            ch.Subtitle = "bbb0";
+            ch.Url = "ccc\0ddd0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(2, theFile.ID3v2.Chapters.Count);
+
+            // Check if values are the same
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    if (1 == found) Assert.AreNotEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID); // ID of first chapter was empty; ATL has generated a random ID for it
+                    else Assert.AreEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID);
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.EndTime, expectedChaps[chap.StartTime].EndTime);
+                    Assert.AreEqual(chap.StartOffset, expectedChaps[chap.StartTime].StartOffset);
+                    Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
+                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Picture != null)
+                    {
+                        Assert.IsNotNull(chap.Picture);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.PictureHash, chap.Picture.ComputePicHash());
+                    }
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_Chapters_Existing()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
 

@@ -1069,7 +1069,7 @@ namespace ATL.AudioData.IO
             // Chapters
             if (Chapters.Count > 0)
             {
-                writeChapters(w, Chapters, tagEncoding);
+                nbFrames += writeChapters(w, Chapters, tagEncoding);
             }
 
             // Other textual fields
@@ -1123,11 +1123,12 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
+        private int writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
             Random randomGenerator = null;
             long frameSizePos, finalFramePos, frameOffset;
             int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+            int result = 0;
 
             BinaryWriter w;
             MemoryStream s = null;
@@ -1146,7 +1147,7 @@ namespace ATL.AudioData.IO
 
             // Write a "flat" table of contents, if any CTOC is present in tag
             // NB : Hierarchical table of contents is not supported; see implementation notes in the header
-            if (AdditionalFields.ContainsKey("CTOC"))
+            if ((Settings.ID3v2_alwaysWriteCTOCFrame && chapters.Count > 0) || AdditionalFields.ContainsKey("CTOC"))
             {
                 w.Write(Utils.Latin1Encoding.GetBytes("CTOC"));
                 frameSizePos = w.BaseStream.Position;
@@ -1190,6 +1191,8 @@ namespace ATL.AudioData.IO
                 w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+                result++;
             }
 
             // Write individual chapters
@@ -1209,6 +1212,13 @@ namespace ATL.AudioData.IO
 
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
+
+                // Generate a chapter ID if none has been given
+                if (0 == chapter.UniqueID.Length)
+                {
+                    if (null == randomGenerator) randomGenerator = new Random();
+                    chapter.UniqueID = randomGenerator.Next().ToString();
+                }
 
                 w.Write(Encoding.UTF8.GetBytes(chapter.UniqueID));
                 w.Write('\0');
@@ -1242,12 +1252,16 @@ namespace ATL.AudioData.IO
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
             }
 
+            result += chapters.Count;
+
             if (tagHeader.UsesUnsynchronisation)
             {
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);
                 w.Close();
             }
+
+            return result;
         }
 
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", bool isInsideUnsynch = false)
