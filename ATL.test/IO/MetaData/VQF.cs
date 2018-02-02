@@ -33,9 +33,9 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class WAV : MetaIOTest
+    public class VQF : MetaIOTest
     {
-        public WAV()
+        public VQF()
         {
             emptyFile = "VQF/empty.vqf";
             notEmptyFile = "VQF/vqf.vqf";

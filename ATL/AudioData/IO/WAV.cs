@@ -26,9 +26,15 @@ namespace ATL.AudioData.IO
 
         private const string FORMAT_WAVE = "WAVE";
 
+        // Standard sub-chunks
         private const String CHUNK_FORMAT = "fmt ";
         private const String CHUNK_FACT = "fact";
         private const String CHUNK_DATA = "data";
+        
+        // Broadcast Wave metadata sub-chunk
+        private const String CHUNK_BEXT = "bext";
+        private const String CHUNK_INFO = "LIST";
+        private const String CHUNK_IXML = "iXML";
 
 
         // Used with ChannelModeID property
@@ -163,7 +169,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1);
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for bext, info and iXML
         }
 
 
@@ -195,6 +201,14 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
+        static WAV()
+        {
+            frameMapping = new Dictionary<string, byte>
+            {
+                { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+            };
+        }
+
         protected void resetData()
         {
             duration = 0;
@@ -208,6 +222,8 @@ namespace ATL.AudioData.IO
             bitsPerSample = 0;
             sampleNumber = 0;
             headerSize = 0;
+
+            ResetData();
         }
 
         public WAV(string filePath)
@@ -219,10 +235,29 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private bool readWAV(Stream source)
+        private void parseBext(Stream source, ReadTagParams readTagParams)
+        {
+            string str;
+            byte[] data = new byte[256];
+
+            // Description
+            source.Read(data, 0, 256);
+            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data).Trim() );
+            if (str.Length > 0) setMetaField(TagData.TAG_FIELD_GENERAL_DESCRIPTION, str);
+
+            // Originator
+            source.Read(data, 0, 32);
+            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data).Trim() );
+            if (str.Length > 0) setMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
+
+            // To be continued
+        }
+
+        private bool readWAV(Stream source, ReadTagParams readTagParams)
 		{
 			bool result = true;
             uint riffChunkSize;
+            long riffChunkSizePos;
             byte[] data = new byte[4];
 
             source.Seek(0, SeekOrigin.Begin);
@@ -242,6 +277,10 @@ namespace ATL.AudioData.IO
                 return false;
             }
 
+            // Force creation of FileStructureHelper with detected endianness
+            structureHelper = new FileStructureHelper(isLittleEndian);
+
+            riffChunkSizePos = source.Position;
             source.Read(data, 0, 4);
             if (isLittleEndian) riffChunkSize = StreamUtils.DecodeUInt32(data); else riffChunkSize = StreamUtils.DecodeBEUInt32(data);
 
@@ -254,12 +293,19 @@ namespace ATL.AudioData.IO
             string subChunkId;
             uint chunkSize;
             long chunkDataPos;
+            bool foundBext = false;
 
             // Sub-chunks loop
             while (source.Position < riffChunkSize + 8)
             {
                 // Chunk ID
                 source.Read(data, 0, 4);
+                if (0 == data[0]) // Sometimes data segment ends with a parasite null byte
+                {
+                    source.Seek(-3, SeekOrigin.Current);
+                    source.Read(data, 0, 4);
+                }
+
                 subChunkId = Utils.Latin1Encoding.GetString(data);
 
                 // Chunk size
@@ -296,7 +342,34 @@ namespace ATL.AudioData.IO
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleNumber = StreamUtils.DecodeInt32(data); else sampleNumber = StreamUtils.DecodeBEInt32(data);
                 }
+                else if (subChunkId.Equals(CHUNK_BEXT))
+                {
+                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+
+                    foundBext = true;
+                    tagExists = true;
+
+                    parseBext(source, readTagParams);
+                }
+                else if (subChunkId.Equals(CHUNK_INFO))
+                {
+                }
+                else if (subChunkId.Equals(CHUNK_IXML))
+                {
+                }
+
                 source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
+            }
+
+            // Add zone placeholders for future tag writing
+            if (readTagParams.PrepareForWriting)
+            {
+                if (!foundBext)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                }
             }
 
             return result;
@@ -354,7 +427,7 @@ namespace ATL.AudioData.IO
         {
             resetData();
   
-			bool result = readWAV(source.BaseStream);
+			bool result = readWAV(source.BaseStream, readTagParams);
 
 			// Process data if loaded and header valid
 			if (result)

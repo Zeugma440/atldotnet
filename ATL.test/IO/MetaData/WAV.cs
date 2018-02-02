@@ -33,27 +33,27 @@ namespace ATL.test.IO.MetaData
 
 
     [TestClass]
-    public class VQF : MetaIOTest
+    public class WAV : MetaIOTest
     {
-        public VQF()
+        public WAV()
         {
-            emptyFile = "VQF/empty.vqf";
-            notEmptyFile = "VQF/vqf.vqf";
+            emptyFile = "WAV/wav.wav";
+            notEmptyFile = "WAV/broadcastwave_bext_info.wav";
         }
 
         [TestMethod]
-        public void TagIO_R_VQF_simple()
+        public void TagIO_R_WAV_BEXT_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
 
-            readExistingTagsOnFile(theFile);
+            readExistingTagsOnFile_bext(theFile);
         }
         
-        [TestMethod]
-        public void TagIO_RW_VQF_Empty()
+//        [TestMethod]
+        public void TagIO_RW_WAV_BEXT_Empty()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -122,8 +122,8 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void tagIO_RW_VQF_Existing()
+//        [TestMethod]
+        public void tagIO_RW_WAV_BEXT_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -142,7 +142,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(theFile, "Squaresoft");
+            readExistingTagsOnFile_bext(theFile, "Squaresoft");
 
             // Remove the additional supported field
             theTag = new TagData();
@@ -151,7 +151,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(theFile);
+            readExistingTagsOnFile_bext(theFile);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -173,8 +173,8 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        [TestMethod]
-        public void TagIO_RW_VQF_Unsupported_Empty()
+//        [TestMethod]
+        public void TagIO_RW_WAV_BEXT_Unsupported_Empty()
         {
             // Source : tag-free file
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
@@ -234,7 +234,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(AudioDataManager theFile, string testCopyright = "Alright")
+        private void readExistingTagsOnFile_bext(AudioDataManager theFile, string testCopyright = "Alright")
         {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -242,18 +242,11 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("Test !!", theFile.NativeTag.Title);
-            Assert.AreEqual("Artist", theFile.NativeTag.Artist);
-            Assert.AreEqual("Bob", theFile.NativeTag.Album);
-            Assert.AreEqual("Rock", theFile.NativeTag.Genre);
-            Assert.AreEqual("this is a comment", theFile.NativeTag.Comment);
-            Assert.AreEqual("2016", theFile.NativeTag.Year);
-            Assert.AreEqual(22, theFile.NativeTag.Track);
-            Assert.AreEqual(testCopyright, theFile.NativeTag.Copyright);
+            Assert.AreEqual("bext.description", theFile.NativeTag.GeneralDescription);
 
-            // Unsupported field (GERR)
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("GERR"));
-            Assert.AreEqual("Bock", theFile.NativeTag.AdditionalFields["GERR"]);
+            // Unsupported fields
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.originator"));
+            Assert.AreEqual("bext.originator", theFile.NativeTag.AdditionalFields["bext.originator"]);
         }
     }
 }
