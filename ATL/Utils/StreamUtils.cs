@@ -189,25 +189,105 @@ namespace ATL
         }
 
         /// <summary>
-        /// Decodes a signed Big-Endian 64-bit integer from the given array of bytes
+        /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
         /// <returns>Decoded value</returns>
-        public static long DecodeBEInt64(byte[] data)
+        public static ushort DecodeBEUInt16(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
-            return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            return (ushort)((data[0] << 8) | (data[1] << 0));
         }
 
         /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 64-bits integer
+        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
         /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeBEUInt64(ulong value)
+        public static byte[] EncodeBEUInt16(ushort value)
         {
             // Output has to be big-endian
-            return new byte[8] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
+            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Little-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static ushort DecodeUInt16(byte[] data)
+        {
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            return (ushort)((data[0]) | (data[1] << 8));
+        }
+
+        /// <summary>
+        /// Decodes an signed Little-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static short DecodeInt16(byte[] data)
+        {
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            return (short)((data[0]) | (data[1] << 8));
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEInt16(short value)
+        {
+            // Output has to be big-endian
+            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+        }
+
+        /// <summary>
+        /// Decodes a signed Big-Endian 16-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static short DecodeBEInt16(byte[] data)
+        {
+            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            return (short)((data[0] << 8) | (data[1] << 0));
+        }
+
+        /// <summary>
+        /// Decodes a signed Big-Endian 24-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static int DecodeBEInt24(byte[] data)
+        {
+            if (data.Length < 3) throw new InvalidDataException("Data should be at least 3 bytes long; found " + data.Length + " bytes");
+            return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
+        }
+
+        /// <summary>
+        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
+        /// </summary>
+        /// <param name="value">Array of bytes to read value from</param>
+        /// <param name="offset">Offset to read value from (default : 0)</param>
+        /// <returns>Decoded value</returns>
+        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
+        {
+            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size=" + (value.Length - offset) + " bytes");
+            return (uint)(value[offset] << 16 | value[offset + 1] << 8 | value[offset + 2]);
+        }
+
+        /// <summary>
+        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt24(uint value)
+        {
+            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than " + 0x00FFFFFF + "; actual value=" + value);
+
+            // Output has to be big-endian
+            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -277,96 +357,37 @@ namespace ATL
         }
 
         /// <summary>
-        /// Decodes a signed Big-Endian 24-bit integer from the given array of bytes
+        /// Decodes an unsigned Little-Endian 64-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
         /// <returns>Decoded value</returns>
-        public static int DecodeBEInt24(byte[] data)
+        public static uint DecodeUInt64(byte[] data)
         {
-            if (data.Length < 3) throw new InvalidDataException("Data should be at least 3 bytes long; found " + data.Length + " bytes");
-            return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
+            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24) | (data[4] << 32) | (data[5] << 40) | (data[6] << 48) | (data[7] << 56));
         }
 
         /// <summary>
-        /// Decodes an unsigned Big-Endian 24-bit integer from the given array of bytes, starting from the given offset
+        /// Decodes a signed Big-Endian 64-bit integer from the given array of bytes
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
-        /// <param name="offset">Offset to read value from (default : 0)</param>
         /// <returns>Decoded value</returns>
-        public static uint DecodeBEUInt24(byte[] value, int offset = 0)
+        public static long DecodeBEInt64(byte[] data)
         {
-            if (value.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size=" + (value.Length - offset) + " bytes");
-            return (uint)(value[offset] << 16 | value[offset + 1] << 8 | value[offset + 2]);
+            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            return (long)((data[0] << 56) | (data[1] << 48) | (data[2] << 40) | (data[3] << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7] << 0));
         }
 
         /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian 24-bits integer
+        /// Encodes the given value into an array of bytes as a Big-Endian unsigned 64-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
         /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeBEUInt24(uint value)
-        {
-            if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than " + 0x00FFFFFF + "; actual value=" + value);
-
-            // Output has to be big-endian
-            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
-        }
-
-        /// <summary>
-        /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
-        /// </summary>
-        /// <param name="value">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static ushort DecodeBEUInt16(byte[] data)
-        {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
-            return (ushort)((data[0] << 8) | (data[1] << 0));
-        }
-
-        /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
-        /// </summary>
-        /// <param name="value">Value to be encoded</param>
-        /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeBEUInt16(ushort value)
+        public static byte[] EncodeBEUInt64(ulong value)
         {
             // Output has to be big-endian
-            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+            return new byte[8] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
         }
-
-        /// <summary>
-        /// Decodes an unsigned Little-Endian 16-bit integer from the given array of bytes
-        /// </summary>
-        /// <param name="value">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static ushort DecodeUInt16(byte[] data)
-        {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
-            return (ushort)((data[0]) | (data[1] << 8));
-        }
-
-        /// <summary>
-        /// Encodes the given value into an array of bytes as a Big-Endian 16-bits integer
-        /// </summary>
-        /// <param name="value">Value to be encoded</param>
-        /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeBEInt16(short value)
-        {
-            // Output has to be big-endian
-            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
-        }
-
-        /// <summary>
-        /// Decodes a signed Big-Endian 16-bit integer from the given array of bytes
-        /// </summary>
-        /// <param name="value">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static short DecodeBEInt16(byte[] data)
-        {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
-            return (short)((data[0] << 8) | (data[1] << 0));
-        }
-
 
         /// <summary>
         /// Switches the format of an unsigned Int32 between big endian and little endian

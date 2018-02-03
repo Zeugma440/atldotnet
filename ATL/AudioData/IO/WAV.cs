@@ -9,6 +9,13 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for PCM (uncompressed audio) files manipulation (extension : .WAV)
+    /// 
+    /// Implementation notes
+    /// 
+    ///     1. BEXT metadata - UMID field
+    ///     
+    ///     UMID field is decoded "as is" using the hex notation. No additional interpretation has been done so far.
+    ///     
     /// </summary>
 	class WAV : MetaDataIO, IAudioDataIO
 	{
@@ -243,14 +250,94 @@ namespace ATL.AudioData.IO
             // Description
             source.Read(data, 0, 256);
             str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data).Trim() );
-            if (str.Length > 0) setMetaField(TagData.TAG_FIELD_GENERAL_DESCRIPTION, str);
+            if (str.Length > 0) setMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
 
             // Originator
             source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data).Trim() );
+            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data, 0, 32).Trim() );
             if (str.Length > 0) setMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
 
-            // To be continued
+            // OriginatorReference
+            source.Read(data, 0, 32);
+            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
+            if (str.Length > 0) setMetaField("bext.originatorReference", str, readTagParams.ReadAllMetaFrames);
+
+            // OriginationDate
+            source.Read(data, 0, 10);
+            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 10).Trim());
+            if (str.Length > 0) setMetaField("bext.originationDate", str, readTagParams.ReadAllMetaFrames);
+
+            // OriginationTime
+            source.Read(data, 0, 8);
+            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 8).Trim());
+            if (str.Length > 0) setMetaField("bext.originationTime", str, readTagParams.ReadAllMetaFrames);
+
+            // TimeReference
+            source.Read(data, 0, 8);
+            long timeReference = StreamUtils.DecodeUInt64(data);
+            setMetaField("bext.timeReference", timeReference.ToString(), readTagParams.ReadAllMetaFrames);
+
+            // BEXT version
+            source.Read(data, 0, 2);
+            int intData = StreamUtils.DecodeUInt16(data);
+            setMetaField("bext.version", intData.ToString(), readTagParams.ReadAllMetaFrames);
+
+            // UMID
+            source.Read(data, 0, 64);
+            str = "";
+
+            int usefulLength = 32; // "basic" UMID
+            if (data[12] > 19) usefulLength = 64; // data[12] gives the size of remaining UMID
+            for (int i = 0; i < usefulLength; i++) str = str + data[i].ToString("X2");
+            
+            setMetaField("bext.UMID", str, readTagParams.ReadAllMetaFrames);
+
+            // LoudnessValue
+            source.Read(data, 0, 2);
+            intData = StreamUtils.DecodeInt16(data);
+            setMetaField("bext.loudnessValue", (intData/100.0).ToString(), readTagParams.ReadAllMetaFrames);
+
+            // LoudnessRange
+            source.Read(data, 0, 2);
+            intData = StreamUtils.DecodeInt16(data);
+            setMetaField("bext.loudnessRange", (intData/100.0).ToString(), readTagParams.ReadAllMetaFrames);
+
+            // MaxTruePeakLevel
+            source.Read(data, 0, 2);
+            intData = StreamUtils.DecodeInt16(data);
+            setMetaField("bext.maxTruePeakLevel", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
+
+            // MaxMomentaryLoudness
+            source.Read(data, 0, 2);
+            intData = StreamUtils.DecodeInt16(data);
+            setMetaField("bext.maxMomentaryLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
+
+            // MaxShortTermLoudness
+            source.Read(data, 0, 2);
+            intData = StreamUtils.DecodeInt16(data);
+            setMetaField("bext.maxShortTermLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
+
+            // Reserved
+            source.Seek(180, SeekOrigin.Current);
+
+            // CodingHistory
+            long initialPos = source.Position;
+            if (StreamUtils.FindSequence(source, new byte[2] { 13, 10 } /* CR LF */ ))
+            {
+                long endPos = source.Position - 2;
+                source.Seek(initialPos, SeekOrigin.Begin);
+
+                if (data.Length < (int)(endPos - initialPos)) data = new byte[(int)(endPos - initialPos)];
+                source.Read(data, 0, (int)(endPos - initialPos));
+
+                str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, (int)(endPos - initialPos)).Trim());
+                if (str.Length > 0) setMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
+            }
+        }
+
+        private void parseInfo(Stream source, ReadTagParams readTagParams)
+        {
+            // TODO
         }
 
         private bool readWAV(Stream source, ReadTagParams readTagParams)
@@ -294,6 +381,7 @@ namespace ATL.AudioData.IO
             uint chunkSize;
             long chunkDataPos;
             bool foundBext = false;
+            bool foundInfo = false;
 
             // Sub-chunks loop
             while (source.Position < riffChunkSize + 8)
@@ -354,6 +442,13 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
+                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+
+                    foundInfo = true;
+                    tagExists = true;
+
+                    parseInfo(source, readTagParams);
                 }
                 else if (subChunkId.Equals(CHUNK_IXML))
                 {
@@ -366,6 +461,11 @@ namespace ATL.AudioData.IO
             if (readTagParams.PrepareForWriting)
             {
                 if (!foundBext)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                }
+                if (!foundInfo)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
