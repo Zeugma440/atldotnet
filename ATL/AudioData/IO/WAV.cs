@@ -107,45 +107,6 @@ namespace ATL.AudioData.IO
 		}	
         */
 
-        /*
-		// WAV file header data
-		private class WAVRecord
-		{
-			// RIFF file header
-			public char[] RIFFHeader = new char[4];               // Must be "RIFF" or "RIFX", though I have yet to find a sample file of the latter
-			public int FileSize;                                // Must be "RealFileSize - 8"
-			public char[] WAVEHeader = new char[4];                         // Must be "WAVE"
-			// Format information
-			public char[] FormatHeader = new char[4];                       // Must be "fmt "
-			public int FormatSize;                                             // Format size
-			public ushort FormatID;                                       // Format type code
-			public ushort ChannelNumber;                                // Number of channels
-			public int SampleRate;                                        // Sample rate (hz)
-			public int BytesPerSecond;                                        // Bytes/second
-			public ushort BlockAlign;                                      // Block alignment
-			public ushort BitsPerSample;                                       // Bits/sample
-			public char[] DataHeader = new char[4];                          // Can be "data"
-			public int SampleNumber;                          // Number of samples (optional)
-
-			public void Reset()
-			{
-				Array.Clear(RIFFHeader,0,RIFFHeader.Length);
-				FileSize = 0;
-				Array.Clear(WAVEHeader,0,WAVEHeader.Length);
-				Array.Clear(FormatHeader,0,FormatHeader.Length);
-				FormatSize = 0;
-				FormatID = 0;
-				ChannelNumber = 0;
-				SampleRate = 0;
-				BytesPerSecond = 0;
-				BlockAlign = 0;
-				BitsPerSample = 0;
-				Array.Clear(DataHeader,0,DataHeader.Length);
-				SampleNumber = 0;
-			}
-		}
-        */
-
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -176,7 +137,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for bext, info and iXML
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_ID3V2 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for bext, info and iXML chunks
         }
 
 
@@ -195,7 +156,7 @@ namespace ATL.AudioData.IO
         {
             byte supportedMetaId = 255;
 
-            // Finds the ATL field identifier according to the ID3v2 version
+            // Finds the ATL field identifier
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
 
             return supportedMetaId;
