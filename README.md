@@ -103,7 +103,7 @@ SPC700 (Super Nintendo Sound files)|.SPC| | | |R/W|
 Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
 True Audio|.TTA|R/W|R/W|R/W| |
 TwinVQ|.VQF| | | |R/W|
-PCM (uncompressed audio)|.WAV|R/W| | | |
+PCM (uncompressed audio)|.WAV|R/W|R/W| | |
 Video Game Music (SEGA systems sound files) | .VGM, .VGZ |  |  |  | R/W
 WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
