@@ -18,15 +18,15 @@ namespace ATL.AudioData.IO
     ///     
     /// </summary>
 	class WAV : MetaDataIO, IAudioDataIO
-	{
-		// Format type names
-		public const String WAV_FORMAT_UNKNOWN = "Unknown";
-		public const String WAV_FORMAT_PCM = "Windows PCM";
-		public const String WAV_FORMAT_ADPCM = "Microsoft ADPCM";
-		public const String WAV_FORMAT_ALAW = "A-LAW";
-		public const String WAV_FORMAT_MULAW = "MU-LAW";
-		public const String WAV_FORMAT_DVI_IMA_ADPCM = "DVI/IMA ADPCM";
-		public const String WAV_FORMAT_MP3 = "MPEG Layer III";
+    {
+        // Format type names
+        public const String WAV_FORMAT_UNKNOWN = "Unknown";
+        public const String WAV_FORMAT_PCM = "Windows PCM";
+        public const String WAV_FORMAT_ADPCM = "Microsoft ADPCM";
+        public const String WAV_FORMAT_ALAW = "A-LAW";
+        public const String WAV_FORMAT_MULAW = "MU-LAW";
+        public const String WAV_FORMAT_DVI_IMA_ADPCM = "DVI/IMA ADPCM";
+        public const String WAV_FORMAT_MP3 = "MPEG Layer III";
 
         private const string HEADER_RIFF = "RIFF";
         private const string HEADER_RIFX = "RIFX";
@@ -37,7 +37,7 @@ namespace ATL.AudioData.IO
         private const String CHUNK_FORMAT = "fmt ";
         private const String CHUNK_FACT = "fact";
         private const String CHUNK_DATA = "data";
-        
+
         // Broadcast Wave metadata sub-chunk
         private const String CHUNK_BEXT = "bext";
         private const String CHUNK_INFO = "LIST";
@@ -46,19 +46,19 @@ namespace ATL.AudioData.IO
 
         // Used with ChannelModeID property
         public const byte WAV_CM_MONO = 1;                     // Index for mono mode
-		public const byte WAV_CM_STEREO = 2;                 // Index for stereo mode
+        public const byte WAV_CM_STEREO = 2;                 // Index for stereo mode
 
-		// Channel mode names
-		public String[] WAV_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
+        // Channel mode names
+        public String[] WAV_MODE = new String[3] { "Unknown", "Mono", "Stereo" };
 
-//		private ushort formatID;
-		private ushort channelNumber;
-		private uint sampleRate;
-		private uint bytesPerSecond;
-//		private ushort blockAlign;
-		private ushort bitsPerSample;
-		private int sampleNumber;
-		private uint headerSize;
+        //		private ushort formatID;
+        private ushort channelNumber;
+        private uint sampleRate;
+        private uint bytesPerSecond;
+        //		private ushort blockAlign;
+        private ushort bitsPerSample;
+        private int sampleNumber;
+        private uint headerSize;
 
         private double bitrate;
         private double duration;
@@ -146,7 +146,7 @@ namespace ATL.AudioData.IO
 		}
         */
 
-        
+
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
@@ -221,11 +221,11 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
 
-//            formatID = 0;
+            //            formatID = 0;
             channelNumber = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
-//            blockAlign = 0;
+            //            blockAlign = 0;
             bitsPerSample = 0;
             sampleNumber = 0;
             headerSize = 0;
@@ -249,12 +249,12 @@ namespace ATL.AudioData.IO
 
             // Description
             source.Read(data, 0, 256);
-            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data).Trim() );
+            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
             if (str.Length > 0) setMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
 
             // Originator
             source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars( Utils.Latin1Encoding.GetString(data, 0, 32).Trim() );
+            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
             if (str.Length > 0) setMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
 
             // OriginatorReference
@@ -289,18 +289,18 @@ namespace ATL.AudioData.IO
             int usefulLength = 32; // "basic" UMID
             if (data[12] > 19) usefulLength = 64; // data[12] gives the size of remaining UMID
             for (int i = 0; i < usefulLength; i++) str = str + data[i].ToString("X2");
-            
+
             setMetaField("bext.UMID", str, readTagParams.ReadAllMetaFrames);
 
             // LoudnessValue
             source.Read(data, 0, 2);
             intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.loudnessValue", (intData/100.0).ToString(), readTagParams.ReadAllMetaFrames);
+            setMetaField("bext.loudnessValue", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // LoudnessRange
             source.Read(data, 0, 2);
             intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.loudnessRange", (intData/100.0).ToString(), readTagParams.ReadAllMetaFrames);
+            setMetaField("bext.loudnessRange", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // MaxTruePeakLevel
             source.Read(data, 0, 2);
@@ -341,8 +341,8 @@ namespace ATL.AudioData.IO
         }
 
         private bool readWAV(Stream source, ReadTagParams readTagParams)
-		{
-			bool result = true;
+        {
+            bool result = true;
             uint riffChunkSize;
             long riffChunkSizePos;
             byte[] data = new byte[4];
@@ -359,7 +359,8 @@ namespace ATL.AudioData.IO
             else if (str.Equals(HEADER_RIFX))
             {
                 _isLittleEndian = false;
-            } else
+            }
+            else
             {
                 return false;
             }
@@ -473,7 +474,7 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-		}
+        }
 
         /* Unused for now
 		private String getFormat()
@@ -498,18 +499,18 @@ namespace ATL.AudioData.IO
 		}
         */
 
-		private double getDuration()
-		{
-			// Get duration
-			double result = 0;
+        private double getDuration()
+        {
+            // Get duration
+            double result = 0;
 
             if ((sampleNumber == 0) && (bytesPerSecond > 0))
-				result = (double)(sizeInfo.FileSize - headerSize - sizeInfo.ID3v1Size) / bytesPerSecond;
-			if ((sampleNumber > 0) && (sampleRate > 0))
-				result = (double)(sampleNumber / sampleRate);
+                result = (double)(sizeInfo.FileSize - headerSize - sizeInfo.ID3v1Size) / bytesPerSecond;
+            if ((sampleNumber > 0) && (sampleRate > 0))
+                result = (double)(sampleNumber / sampleRate);
 
-			return result;
-		}
+            return result;
+        }
 
         private double getBitrate()
         {
@@ -526,21 +527,68 @@ namespace ATL.AudioData.IO
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             resetData();
-  
-			bool result = readWAV(source.BaseStream, readTagParams);
 
-			// Process data if loaded and header valid
-			if (result)
-			{
+            bool result = readWAV(source.BaseStream, readTagParams);
+
+            // Process data if loaded and header valid
+            if (result)
+            {
                 bitrate = getBitrate();
                 duration = getDuration();
-			}
-			return result;
-		}
+            }
+            return result;
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            throw new NotImplementedException();
+            int result = 0;
+
+            if (zone.Equals(CHUNK_BEXT)) result += writeBextChunk(tag, w);
+
+            return result;
         }
+
+        private int writeBextChunk(TagData tag, BinaryWriter w)
+        {
+            w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_BEXT));
+
+            long sizePos = w.BaseStream.Position;
+            w.Write((int)0); // Placeholder for chunk size that will be rewritten at the end of the method
+
+            IDictionary<string, string> additionalFields = AdditionalFields;
+
+            writeFixedFieldStrValue("bext.description", 256, additionalFields, w);
+            writeFixedFieldStrValue("bext.originator", 32, additionalFields, w);
+            writeFixedFieldStrValue("bext.originatorReference", 32, additionalFields, w);
+            writeFixedFieldStrValue("bext.originationDate", 10, additionalFields, w);
+            writeFixedFieldStrValue("bext.originationTime", 8, additionalFields, w);
+
+            // TODO - numeric fields
+
+            long finalPos = w.BaseStream.Position;
+            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+            if (isLittleEndian)
+            {
+                w.Write((int)(finalPos - sizePos - 4));
+            } else
+            {
+                w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
+            }
+
+            return 14;
+        }
+
+        private void writeFixedFieldStrValue(string field, int length, IDictionary<string, string> additionalFields, BinaryWriter w)
+        {
+            if (additionalFields.Keys.Contains(field))
+            {
+                w.Write(Utils.BuildStrictLengthStringBytes(additionalFields[field], length, 0, Utils.Latin1Encoding));
+            }
+            else
+            {
+                w.Write(Utils.BuildStrictLengthString("", length, '\0'));
+            }
+        }
+
     }
 }

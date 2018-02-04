@@ -234,7 +234,7 @@ namespace ATL.test.IO.MetaData
             File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile_bext(AudioDataManager theFile, string testCopyright = "Alright")
+        private void readExistingTagsOnFile_bext(AudioDataManager theFile, string testDescription = "bext.description")
         {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -242,7 +242,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Supported fields
-            Assert.AreEqual("bext.description", theFile.NativeTag.GeneralDescription);
+            Assert.AreEqual(testDescription, theFile.NativeTag.GeneralDescription);
 
             // Unsupported fields
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.originator"));
