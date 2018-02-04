@@ -302,13 +302,13 @@ namespace Commons
         /// </summary>
         /// <param name="s">String to analyze</param>
         /// <returns>True if the string is a digital value; false if not</returns>
-        public static bool IsNumeric(string s)
+        public static bool IsNumeric(string s, bool allowsOnlyIntegers = false)
         {
             if ((null == s) || (0 == s.Length)) return false;
 
             for (int i=0; i<s.Length; i++)
             {
-                if (!char.IsDigit(s[i]) && !(s[i] == '.') && !(s[i] == ',') ) return false;
+                if (!char.IsDigit(s[i]) && ( allowsOnlyIntegers && ((s[i] == '.') || (s[i] == ','))) ) return false;
             }
 
             return true;
