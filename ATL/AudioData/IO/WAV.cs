@@ -141,7 +141,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for embedded ID3v2, bext, info and iXML chunks
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_ID3V2 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for bext, info and iXML chunks
         }
 
 
@@ -212,6 +212,7 @@ namespace ATL.AudioData.IO
             headerSize = 0;
 
             id3v2Offset = -1;
+            id3v2StructureHelper.Clear();
 
             ResetData();
         }
@@ -350,6 +351,7 @@ namespace ATL.AudioData.IO
 
             // Force creation of FileStructureHelper with detected endianness
             structureHelper = new FileStructureHelper(isLittleEndian);
+            id3v2StructureHelper = new FileStructureHelper(isLittleEndian);
 
             riffChunkSizePos = source.Position;
             source.Read(data, 0, 4);
@@ -416,8 +418,8 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_BEXT))
                 {
-                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
                     foundBext = true;
                     tagExists = true;
@@ -426,8 +428,8 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
-                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
                     foundInfo = true;
                     tagExists = true;
@@ -443,8 +445,8 @@ namespace ATL.AudioData.IO
                     id3v2Offset = source.Position;
 
                     // Zone is already added by Id3v2.Read
-                    id3v2StructureHelper.AddZone(id3v2Offset - 8, (int)chunkSize, subChunkId);
-                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+                    id3v2StructureHelper.AddZone(id3v2Offset - 8, (int)(chunkSize + 8), subChunkId);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
                 }
 
                 source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
@@ -456,8 +458,8 @@ namespace ATL.AudioData.IO
 
                 if (readTagParams.PrepareForWriting)
                 {
-                    structureHelper.AddZone(source.Position, 0, CHUNK_ID3);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_ID3);
+                    id3v2StructureHelper.AddZone(source.Position, 0, CHUNK_ID3);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_ID3);
                 }
             }
 
@@ -467,12 +469,12 @@ namespace ATL.AudioData.IO
                 if (!foundBext)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
                 if (!foundInfo)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
             }
 
