@@ -51,5 +51,17 @@ namespace ATL.test
             Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
         }
 
+        [TestMethod]
+        public void Utils_IsNumeric()
+        {
+            Assert.IsTrue(Utils.IsNumeric("123"));
+            Assert.IsTrue(Utils.IsNumeric("123.456"));
+            Assert.IsTrue(Utils.IsNumeric("123,456"));
+
+            Assert.IsTrue(Utils.IsNumeric("123", true));
+            Assert.IsFalse(Utils.IsNumeric("123,456", true));
+            Assert.IsFalse(Utils.IsNumeric("123.456", true));
+        }
+
     }
 }
