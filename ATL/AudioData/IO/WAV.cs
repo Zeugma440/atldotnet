@@ -17,7 +17,7 @@ namespace ATL.AudioData.IO
     ///     UMID field is decoded "as is" using the hex notation. No additional interpretation has been done so far.
     ///     
     /// </summary>
-	class WAV : MetaDataIO, IAudioDataIO
+	class WAV : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
         // Format type names
         public const String WAV_FORMAT_UNKNOWN = "Unknown";
@@ -42,6 +42,7 @@ namespace ATL.AudioData.IO
         private const String CHUNK_BEXT = "bext";
         private const String CHUNK_INFO = "LIST";
         private const String CHUNK_IXML = "iXML";
+        private const String CHUNK_ID3 = "id3 ";
 
 
         // Used with ChannelModeID property
@@ -67,6 +68,9 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         private bool _isLittleEndian;
+
+        private long id3v2Offset;
+        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
 
         private static IDictionary<string, byte> frameMapping; // Mapping between WAV frame codes and ATL frame codes
@@ -167,6 +171,22 @@ namespace ATL.AudioData.IO
             get { return _isLittleEndian; }
         }
 
+
+        // IMetaDataEmbedder
+        public long HasEmbeddedID3v2
+        {
+            get { return id3v2Offset; }
+        }
+        public uint ID3v2EmbeddingHeaderSize
+        {
+            get { return 8; }
+        }
+        public FileStructureHelper.Zone Id3v2Zone
+        {
+            get { return id3v2StructureHelper.GetZone(CHUNK_ID3); }
+        }
+
+
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         static WAV()
@@ -190,6 +210,9 @@ namespace ATL.AudioData.IO
             bitsPerSample = 0;
             sampleNumber = 0;
             headerSize = 0;
+
+            id3v2Offset = -1;
+            id3v2StructureHelper.Clear();
 
             ResetData();
         }
@@ -328,6 +351,7 @@ namespace ATL.AudioData.IO
 
             // Force creation of FileStructureHelper with detected endianness
             structureHelper = new FileStructureHelper(isLittleEndian);
+            id3v2StructureHelper = new FileStructureHelper(isLittleEndian);
 
             riffChunkSizePos = source.Position;
             source.Read(data, 0, 4);
@@ -394,8 +418,8 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_BEXT))
                 {
-                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
                     foundBext = true;
                     tagExists = true;
@@ -404,8 +428,8 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
-                    structureHelper.AddZone(source.Position - 8, (int)chunkSize, subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, subChunkId);
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
                     foundInfo = true;
                     tagExists = true;
@@ -414,9 +438,29 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_IXML))
                 {
+                    // TODO
+                }
+                else if (subChunkId.Equals(CHUNK_ID3))
+                {
+                    id3v2Offset = source.Position;
+
+                    // Zone is already added by Id3v2.Read
+                    id3v2StructureHelper.AddZone(id3v2Offset - 8, (int)(chunkSize + 8), subChunkId);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
                 }
 
                 source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
+            }
+
+            if (-1 == id3v2Offset)
+            {
+                id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
+
+                if (readTagParams.PrepareForWriting)
+                {
+                    id3v2StructureHelper.AddZone(source.Position, 0, CHUNK_ID3);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_ID3);
+                }
             }
 
             // Add zone placeholders for future tag writing
@@ -425,12 +469,12 @@ namespace ATL.AudioData.IO
                 if (!foundBext)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
                 if (!foundInfo)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSizePos, CHUNK_BEXT);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
             }
 
@@ -586,6 +630,19 @@ namespace ATL.AudioData.IO
             else
             {
                 w.Write(Utils.BuildStrictLengthString("", length, '\0'));
+            }
+        }
+
+        public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
+        {
+            w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_ID3));
+            if (isLittleEndian)
+            {
+                w.Write((int)(tagSize));
+            }
+            else
+            {
+                w.Write(StreamUtils.EncodeBEInt32((int)(tagSize)));
             }
         }
 

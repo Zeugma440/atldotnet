@@ -17,7 +17,6 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_AIF_ID3v2()
         {
-            // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
 

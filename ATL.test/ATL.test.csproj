@@ -57,6 +57,7 @@
     <Compile Include="ArrayLogger.cs" />
     <Compile Include="CodeSnippets\CodeSnippets.cs" />
     <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\MetaData\ID3v2_WAV.cs" />
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
     <Compile Include="IO\MetaData\AIF.cs" />
@@ -248,6 +249,7 @@
     <Content Include="Resources\MP3\id3v2.4_UTF8_extendedTag.mp3" />
     <Content Include="Resources\MP3\mp2Layer1.mp2" />
     <Content Include="Resources\MP3\mp2Layer2.mp2" />
+    <Content Include="Resources\WAV\audacityTags.wav" />
     <Content Include="Resources\WAV\broadcastwave_bext_info.wav" />
     <Content Include="Resources\WAV\broadcastwave_bext_iXML.wav" />
     <Content Include="Resources\WAV\rifx.wav" />
