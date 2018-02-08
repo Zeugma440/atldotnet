@@ -252,6 +252,7 @@
     <Content Include="Resources\WAV\broadcastwave_bext_iXML.wav" />
     <Content Include="Resources\WAV\rifx.wav" />
     <Content Include="Resources\WAV\wav.wav" />
+    <Content Include="Resources\WAV\audacityTags.wav" />
     <Content Include="Resources\_Images\palette.tif" />
     <Content Include="Resources\_Images\bilevel.tif" />
     <Content Include="Resources\_Images\pic1.jpeg" />

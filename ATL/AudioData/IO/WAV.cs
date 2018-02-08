@@ -518,14 +518,52 @@ namespace ATL.AudioData.IO
 
             IDictionary<string, string> additionalFields = AdditionalFields;
 
+
+            // Text fields
             writeFixedFieldStrValue("bext.description", 256, additionalFields, w);
             writeFixedFieldStrValue("bext.originator", 32, additionalFields, w);
             writeFixedFieldStrValue("bext.originatorReference", 32, additionalFields, w);
             writeFixedFieldStrValue("bext.originationDate", 10, additionalFields, w);
             writeFixedFieldStrValue("bext.originationTime", 8, additionalFields, w);
 
-            // TODO - numeric fields
 
+            // Numeric fields
+            ulong ulongVal = 0;
+            if (additionalFields.Keys.Contains("bext.timeReference"))
+            {
+                if (Utils.IsNumeric(additionalFields["bext.timeReference"], true))
+                {
+                    ulongVal = ulong.Parse(additionalFields["bext.timeReference"]);
+                }
+            }
+            w.Write(ulongVal);
+
+            ushort ushortVal = 0;
+            if (additionalFields.Keys.Contains("bext.version"))
+            {
+                if (Utils.IsNumeric(additionalFields["bext.version"], true))
+                {
+                    ushortVal = ushort.Parse(additionalFields["bext.version"]);
+                }
+            }
+            w.Write(ushortVal);
+
+            byte[] data = new byte[64];
+            if (additionalFields.Keys.Contains("bext.UMID"))
+            {
+                string fieldValue = additionalFields["bext.UMID"];
+                string hexValue = "";
+
+                for (int i = 0; i < fieldValue.Length / 2; i++)
+                {
+                    hexValue += fieldValue[(2*i)] + fieldValue[(2*i) + 1];
+                }
+            }
+            w.Write(data);
+
+
+
+            // Rewrite chunk size header
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)

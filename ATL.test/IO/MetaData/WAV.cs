@@ -260,15 +260,15 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.UMID"));
             Assert.AreEqual("060A2B3401010101010102101300000000000000000000800000000000000000", theFile.NativeTag.AdditionalFields["bext.UMID"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.loudnessValue"));
-            Assert.AreEqual((123 / 100.0).ToString(), theFile.NativeTag.AdditionalFields["bext.loudnessValue"]);
+            Assert.AreEqual(1.23.ToString(), theFile.NativeTag.AdditionalFields["bext.loudnessValue"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.loudnessRange"));
-            Assert.AreEqual((456 / 100.0).ToString(), theFile.NativeTag.AdditionalFields["bext.loudnessRange"]);
+            Assert.AreEqual(4.56.ToString(), theFile.NativeTag.AdditionalFields["bext.loudnessRange"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.maxTruePeakLevel"));
-            Assert.AreEqual((789 / 100.0).ToString(), theFile.NativeTag.AdditionalFields["bext.maxTruePeakLevel"]);
+            Assert.AreEqual(7.89.ToString(), theFile.NativeTag.AdditionalFields["bext.maxTruePeakLevel"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.maxMomentaryLoudness"));
-            Assert.AreEqual((333 / 100.0).ToString(), theFile.NativeTag.AdditionalFields["bext.maxMomentaryLoudness"]);
+            Assert.AreEqual(3.33.ToString(), theFile.NativeTag.AdditionalFields["bext.maxMomentaryLoudness"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.maxShortTermLoudness"));
-            Assert.AreEqual((-333 / 100.0).ToString(), theFile.NativeTag.AdditionalFields["bext.maxShortTermLoudness"]);
+            Assert.AreEqual((-3.33).ToString(), theFile.NativeTag.AdditionalFields["bext.maxShortTermLoudness"]);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("bext.codingHistory"));
             Assert.AreEqual("A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha", theFile.NativeTag.AdditionalFields["bext.codingHistory"]);
         }
