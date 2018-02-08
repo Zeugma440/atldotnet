@@ -158,7 +158,7 @@ namespace ATL.AudioData
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
 
@@ -185,7 +185,7 @@ namespace ATL.AudioData
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
 
@@ -225,12 +225,12 @@ namespace ATL.AudioData
                 {
                     System.Console.WriteLine(e.Message);
                     System.Console.WriteLine(e.StackTrace);
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                     result = false;
                 }
             } else
             {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported in " + fileName);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
             }
 
             return result;
@@ -262,7 +262,7 @@ namespace ATL.AudioData
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + fileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
 
