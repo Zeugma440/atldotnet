@@ -6,10 +6,10 @@ using ATL.Logging;
 
 namespace ATL.test.CodeSnippets
 {
-    //[TestClass]
+    [TestClass]
     public class CodeSnippets : ILogDevice
     {
-        string audioFilePath = "E:/temp/MP3/test.mp3";
+        string audioFilePath = @"E:\temp\wav\wood - Copie.wav";
         string playlistPath = @"E:\temp\playlist\test.m3u";
         string cuesheetPath = @"E:\temp\cue\test.cue";
 
@@ -141,6 +141,31 @@ namespace ATL.test.CodeSnippets
 	        {
 		        System.Console.WriteLine(chap.Title + "(" + chap.StartTime + ")");
 	        }
+        }
+
+        [TestMethod]
+        public void CS_BroadcastWave()
+        {
+            // Load audio file information into memory
+            Track theTrack = new Track(audioFilePath);
+
+
+            // Display BEXT, LIST INFO and iXML data
+            string originator = "", engineer = "", scene = "";
+            if (theTrack.AdditionalFields.ContainsKey("bext.originator")) originator = theTrack.AdditionalFields["bext.originator"];
+            if (theTrack.AdditionalFields.ContainsKey("info.IENG")) engineer = theTrack.AdditionalFields["info.IENG"];
+            if (theTrack.AdditionalFields.ContainsKey("ixml.SCENE")) scene = theTrack.AdditionalFields["ixml.SCENE"];
+
+            System.Console.WriteLine("Originator : " + originator);
+            System.Console.WriteLine("Engineer : " + engineer);
+            System.Console.WriteLine("Scene : " + scene);
+
+
+            // Modify data
+            theTrack.AdditionalFields["bext.originator"] = "Dave Johnson";
+            theTrack.AdditionalFields["info.IENG"] = "John Jackman";
+            theTrack.AdditionalFields["ixml.SCENE"] = "42";
+            theTrack.Save();
         }
 
         //[TestMethod]
