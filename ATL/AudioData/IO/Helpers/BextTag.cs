@@ -41,7 +41,7 @@ namespace ATL.AudioData.IO
 
             // TimeReference
             source.Read(data, 0, 8);
-            long timeReference = StreamUtils.DecodeUInt64(data);
+            ulong timeReference = StreamUtils.DecodeUInt64(data);
             meta.SetMetaField("bext.timeReference", timeReference.ToString(), readTagParams.ReadAllMetaFrames);
 
             // BEXT version

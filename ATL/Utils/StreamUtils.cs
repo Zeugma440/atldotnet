@@ -361,10 +361,10 @@ namespace ATL
         /// </summary>
         /// <param name="value">Array of bytes to read value from</param>
         /// <returns>Decoded value</returns>
-        public static uint DecodeUInt64(byte[] data)
+        public static ulong DecodeUInt64(byte[] data)
         {
             if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
-            return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24) | (data[4] << 32) | (data[5] << 40) | (data[6] << 48) | (data[7] << 56));
+            return (ulong)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24) | (data[4] << 32) | (data[5] << 40) | (data[6] << 48) | (data[7] << 56));
         }
 
         /// <summary>
