@@ -41,7 +41,7 @@ namespace ATL.AudioData.IO
         // Broadcast Wave metadata sub-chunk
         private const String CHUNK_BEXT = BextTag.CHUNK_BEXT;
         private const String CHUNK_INFO = InfoTag.CHUNK_LIST;
-        private const String CHUNK_IXML = "iXML";
+        private const String CHUNK_IXML = IXmlTag.CHUNK_IXML;
         private const String CHUNK_ID3 = "id3 ";
 
 
@@ -263,6 +263,7 @@ namespace ATL.AudioData.IO
             long chunkDataPos;
             bool foundBext = false;
             bool foundInfo = false;
+            bool foundIXml = false;
 
             // Sub-chunks loop
             while (source.Position < riffChunkSize + 8)
@@ -339,7 +340,13 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_IXML))
                 {
-                    // TODO
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
+
+                    foundIXml = true;
+                    tagExists = true;
+
+                    IXmlTag.FromStream(source, this, readTagParams, chunkSize);
                 }
                 else if (subChunkId.Equals(CHUNK_ID3))
                 {
@@ -376,6 +383,11 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_INFO);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_INFO);
+                }
+                if (!foundIXml)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_IXML);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_IXML);
                 }
             }
 
@@ -451,7 +463,7 @@ namespace ATL.AudioData.IO
 
             if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_INFO) && InfoTag.IsDataEligible(this)) result += InfoTag.ToStream(w, isLittleEndian, this);
-            else if (zone.Equals(CHUNK_IXML)) result += InfoTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
 
             return result;
         }

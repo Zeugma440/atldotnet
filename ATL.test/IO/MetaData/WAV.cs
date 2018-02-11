@@ -9,6 +9,7 @@ namespace ATL.test.IO.MetaData
     {
         private string notEmptyFile_bext = "WAV/broadcastwave_bext.wav";
         private string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
+        private string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
 
         public WAV()
         {
@@ -69,6 +70,19 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ITCH", "info.ITCH"));
         }
 
+        private void initIXmlTestData()
+        {
+            notEmptyFile = notEmptyFile_ixml;
+
+            testData = new TagData();
+
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.PROJECT", "ANewMovie"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SPEED.NOTE", "camera overcranked"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
+        }
+
         [TestMethod]
         public void TagIO_R_WAV_BEXT_simple()
         {
@@ -94,6 +108,18 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_WAV_IXML_simple()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+            initIXmlTestData();
+
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+
+            readExistingTagsOnFile(theFile, 0);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WAV_BEXT_Empty()
         {
             initBextTestData();
@@ -104,6 +130,13 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_INFO_Empty()
         {
             initInfoTestData();
+            test_RW_Empty(emptyFile, true, true, true);
+        }
+
+//        [TestMethod]
+        public void TagIO_RW_WAV_IXML_Empty()
+        {
+            initIXmlTestData();
             test_RW_Empty(emptyFile, true, true, true);
         }
 
@@ -119,6 +152,13 @@ namespace ATL.test.IO.MetaData
         {
             initInfoTestData();
             test_RW_Existing(notEmptyFile, 0, true, true, false); // CRC check impossible because of field order
+        }
+
+//        [TestMethod]
+        public void TagIO_RW_WAV_IXML_Existing()
+        {
+            initIXmlTestData();
+            test_RW_Existing(notEmptyFile, 0, true, true, true);
         }
 
     }
