@@ -67,23 +67,23 @@ namespace ATL.AudioData.IO
             // Title
             string value = Utils.ProtectValue(meta.Title);
             if (0 == value.Length && additionalFields.Keys.Contains("info.INAM")) value = additionalFields["info.INAM"];
-            writeSizeAndNullTerminatedString("INAM", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("INAM", value, w, writtenFields);
             // Artist
             value = Utils.ProtectValue(meta.Artist);
             if (0 == value.Length && additionalFields.Keys.Contains("info.IART")) value = additionalFields["info.IART"];
-            writeSizeAndNullTerminatedString("IART", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("IART", value, w, writtenFields);
             // Copyright
             value = Utils.ProtectValue(meta.Copyright);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
-            writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
             // Genre
             value = Utils.ProtectValue(meta.Genre);
             if (0 == value.Length && additionalFields.Keys.Contains("info.IGNR")) value = additionalFields["info.IGNR"];
-            writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
             // Comment
             value = Utils.ProtectValue(meta.Comment);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICMT")) value = additionalFields["info.ICMT"];
-            writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
 
             string shortKey;
             foreach(string key in additionalFields.Keys)
@@ -93,7 +93,7 @@ namespace ATL.AudioData.IO
                     shortKey = key.Substring(5, key.Length - 5).ToUpper();
                     if (!writtenFields.ContainsKey(key))
                     {
-                        writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
+                        if (additionalFields[key].Length > 0) writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
                     }
                 }
             }
