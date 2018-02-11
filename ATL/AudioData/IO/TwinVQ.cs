@@ -271,7 +271,7 @@ namespace ATL.AudioData.IO
                 tagExists = true; // If something else than mandatory info is stored, we can consider metadata is present
                 data = Encoding.UTF8.GetString(source.ReadBytes((int)chunk.Size)).Trim();
 
-                setMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
+                SetMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
 
                 result = true;
             }

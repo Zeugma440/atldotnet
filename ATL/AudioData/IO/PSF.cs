@@ -259,7 +259,7 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            setMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
+                            SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
                             lastValue = valueStr;
                         }
                         lastKey = keyStr;
@@ -267,7 +267,7 @@ namespace ATL.AudioData.IO
 
 					s = readPSFLine(source.BaseStream, encoding);
 				} // Metadata lines 
-                setMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
+                SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
                 if (!lengthFieldFound) duration = PSF_DEFAULT_DURATION;

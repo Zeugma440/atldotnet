@@ -1083,13 +1083,13 @@ namespace ATL.AudioData.IO
                     if (1 == dataClass) // UTF-8 Text
                     {
                         strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
-                        setMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                        SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                     }
                     else if (21 == dataClass) // uint8
                     {
                         int16Data = source.ReadByte();
                         //                        Source.BaseStream.Seek(atomPosition+metadataSize, SeekOrigin.Begin); // The rest are padding bytes
-                        setMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                        SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
                     }
                     else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                     {
@@ -1131,7 +1131,7 @@ namespace ATL.AudioData.IO
                             source.BaseStream.Seek(2, SeekOrigin.Current);
                             int16Data = StreamUtils.ReverseUInt16(source.ReadUInt16());
                             source.BaseStream.Seek(2, SeekOrigin.Current); // Total number of tracks/discs is on the following 2 bytes; ignored for now
-                            setMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                            SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
                         }
                         else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                         {
@@ -1140,7 +1140,7 @@ namespace ATL.AudioData.IO
                             strData = "";
                             if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
 
-                            setMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                            SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                         }
                         else
                         { // Other unhandled cases

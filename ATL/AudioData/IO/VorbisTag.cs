@@ -328,12 +328,12 @@ namespace ATL.AudioData.IO
                         }
                         else // Standard textual field
                         {
-                            setMetaField(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
+                            SetMetaField(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
                         }
                     }
                     else if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                     {
-                        setMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
+                        SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
                     }
                 }
                 else // 'Large' field = picture

@@ -357,7 +357,7 @@ namespace ATL.AudioData.IO
                             if (header.ID.Equals(CHUNKTYPE_AUTHOR)) authorFound = true;
                             if (header.ID.Equals(CHUNKTYPE_COPYRIGHT)) copyrightFound = true;
 
-                            setMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
+                            SetMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
                         }
                         else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
