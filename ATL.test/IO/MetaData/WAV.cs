@@ -80,6 +80,7 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.PROJECT", "ANewMovie"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SPEED.NOTE", "camera overcranked"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
         }
 
@@ -133,7 +134,7 @@ namespace ATL.test.IO.MetaData
             test_RW_Empty(emptyFile, true, true, true);
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_WAV_IXML_Empty()
         {
             initIXmlTestData();
@@ -154,11 +155,11 @@ namespace ATL.test.IO.MetaData
             test_RW_Existing(notEmptyFile, 0, true, true, false); // CRC check impossible because of field order
         }
 
-//        [TestMethod]
+        [TestMethod]
         public void TagIO_RW_WAV_IXML_Existing()
         {
             initIXmlTestData();
-            test_RW_Existing(notEmptyFile, 0, true, true, true);
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of paraiste end-of-line characters and padding
         }
 
     }

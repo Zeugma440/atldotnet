@@ -90,7 +90,7 @@ namespace ATL.AudioData.IO
             {
                 if (key.StartsWith("info."))
                 {
-                    shortKey = key.Substring(5, key.Length - 5);
+                    shortKey = key.Substring(5, key.Length - 5).ToUpper();
                     if (!writtenFields.ContainsKey(key))
                     {
                         writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);

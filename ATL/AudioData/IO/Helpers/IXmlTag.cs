@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
 
@@ -105,15 +106,65 @@ namespace ATL.AudioData.IO
             w.Write((int)0); // Placeholder for chunk size that will be rewritten at the end of the method
 
 
-            string shortKey;
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.CloseOutput = false;
+            settings.Encoding = Encoding.UTF8;
+
+            XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
+            //writer.Formatting = Formatting.None;
+
+
+            writer.WriteStartDocument();
+            writer.WriteStartElement("BWFXML");
+
+            string[] path;
+            string[] previousPath = null;
+            bool first = true;
+            string subkey;
+
             foreach(string key in additionalFields.Keys)
             {
-                if (key.StartsWith("info."))
+                if (key.StartsWith("ixml."))
                 {
-                    shortKey = key.Substring(5, key.Length - 5);
-//                    writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w);
+                    path = key.Split('.');
+                    if (first)
+                    {
+                        previousPath = path;
+                        first = false;
+                    }
+
+                    // Closes all terminated paths
+                    for (int i = previousPath.Length - 2; i >= 0; i--)
+                    {
+                        if ((path.Length <= i) || (path.Length > i && !path[i].Equals(previousPath[i])))
+                        {
+                            writer.WriteEndElement();
+                        }
+                    }
+
+                    // Opens all new paths
+                    for (int i = 0; i < path.Length - 1; i++)
+                    {
+                        if (previousPath.Length <= i || !path[i].Equals(previousPath[i]))
+                        {
+                            subkey = path[i];
+                            if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
+                            writer.WriteStartElement(subkey.ToUpper());
+                        }
+                    }
+
+                    writer.WriteElementString(path[path.Length - 1], additionalFields[key]);
+
+                    previousPath = path;
                 }
             }
+
+            // Closes all terminated paths
+            for (int i = previousPath.Length - 2; i >= 0; i--)
+            {
+                writer.WriteEndElement();
+            }
+            writer.Close();
 
 
             long finalPos = w.BaseStream.Position;
