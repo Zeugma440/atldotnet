@@ -335,6 +335,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
+                    /*
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
@@ -342,6 +343,7 @@ namespace ATL.AudioData.IO
                     tagExists = true;
 
                     parseInfo(source, readTagParams);
+                    */
                 }
                 else if (subChunkId.Equals(CHUNK_IXML))
                 {
@@ -378,11 +380,13 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
+                /*
                 if (!foundInfo)
                 {
-                    structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
+                    structureHelper.AddZone(source.Position, 0, CHUNK_INFO);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_INFO);
                 }
+                */
             }
 
             return result;
@@ -455,7 +459,7 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (zone.Equals(CHUNK_BEXT)) result += BextTag.ToStream(w, isLittleEndian, AdditionalFields);
+            if (zone.Equals(CHUNK_BEXT)) result += BextTag.ToStream(w, isLittleEndian, this);
 
             return result;
         }

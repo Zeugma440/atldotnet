@@ -296,11 +296,13 @@ namespace Commons
 
         /// <summary>
         /// Indicates if the given string is exclusively composed of digital charachers
-        /// NB1 : decimal separators '.' and ',' are tolerated
+        /// 
+        /// NB1 : decimal separators '.' and ',' are tolerated except if allowsOnlyIntegers argument is set to True
         /// NB2 : whitespaces ' ' are not tolerated
         /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
         /// </summary>
         /// <param name="s">String to analyze</param>
+        /// <param name="allowsOnlyIntegers">Set to True if IsNumeric should reject decimal values; default = false</param>
         /// <returns>True if the string is a digital value; false if not</returns>
         public static bool IsNumeric(string s, bool allowsOnlyIntegers = false)
         {
@@ -315,10 +317,32 @@ namespace Commons
         }
 
         /// <summary>
-        /// TODO
+        /// Indicates if the given string is hexadecimal notation
         /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
+        /// <param name="s">String to analyze</param>
+        /// <returns>True if the string is a hexadecimal notation; false if not</returns>
+        public static bool IsHex(string s)
+        {
+            if ((null == s) || (0 == s.Length)) return false;
+
+            if (s.Length % 2 > 1) return false; // Hex notation always uses two characters for every byte
+
+            char c;
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                c = Char.ToUpper(s[i]);
+                if (!char.IsDigit(c) && c!='A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses the given string into a Double value; returns 0 if parsing fails
+        /// </summary>
+        /// <param name="s">String to be parsed</param>
+        /// <returns>Parsed value; 0 if a parsing issue has been encountered</returns>
         public static double ParseDouble(string s)
         {
             if (!IsNumeric(s)) return 0;

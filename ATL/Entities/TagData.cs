@@ -86,6 +86,14 @@ namespace ATL
             AdditionalFields = new List<MetaFieldInfo>();
         }
 
+        public TagData(TagData tagData)
+        {
+            Pictures = new List<PictureInfo>();
+            AdditionalFields = new List<MetaFieldInfo>();
+
+            IntegrateValues(tagData);
+        }
+
         /// <summary>
         /// Stores a 'classic' metadata value into current TagData object according to its key
         /// 
