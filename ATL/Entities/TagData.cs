@@ -9,14 +9,14 @@ namespace ATL
 	/// <summary>
 	/// Basic metadata fields container
     /// 
-    /// TagData aims at staying a basic, universal container, without any field interpretation logic
+    /// TagData aims at staying a basic, universal container, without any Property accessor layer nor any field interpretation logic
 	/// </summary>
 	public class TagData
 	{
         [Obsolete("Access picture data directly through the Pictures attribute, after reading a file with ReadTagParams.ReadPictures=true")]
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
-        // Field Identifiers
+        // Identifiers for 'classic' fields
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;
@@ -38,7 +38,7 @@ namespace ATL
         public const byte TAG_FIELD_PUBLISHER               = 18;
         public const byte TAG_FIELD_CONDUCTOR               = 19;
 
-        // Field Values
+        // Values for 'classic' fields
         public string GeneralDescription = null;
         public string Title = null;
 		public string Artist = null;
@@ -59,12 +59,25 @@ namespace ATL
         public string Publisher = null;
         public string Conductor = null;
 
-        // The whole chapter list is processed as a whole
+        /// <summary>
+        /// Chapters 
+        /// NB : The whole chapter list is processed as a whole
+        /// </summary>
         public IList<ChapterInfo> Chapters = null;
 
-        // Each entry is processed as a metadata field on its own
+
+        /// <summary>
+        /// Embedded pictures
+        /// NB : Each entry is processed as a metadata field on its own
+        /// </summary>
         public IList<PictureInfo> Pictures;
+
+        /// <summary>
+        /// Additional fields = non-classic fields
+        /// NB : Each entry is processed as a metadata field on its own
+        /// </summary>
         public IList<MetaFieldInfo> AdditionalFields;
+
 
 
         public TagData()
@@ -74,7 +87,9 @@ namespace ATL
         }
 
         /// <summary>
-        /// Stores a metadata value into current TagData object according to its key
+        /// Stores a 'classic' metadata value into current TagData object according to its key
+        /// 
+        /// NB : This method cannot be used to store non-classic fields; use tagData.AdditionalFields instead
         /// </summary>
         /// <param name="key">Identifier describing the metadata to store (see TagData public consts)</param>
         /// <param name="value">Value of the metadata to store</param>
