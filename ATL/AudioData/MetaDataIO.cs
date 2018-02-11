@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
@@ -474,6 +473,7 @@ namespace ATL.AudioData.IO
 
         abstract protected byte getFrameMapping(string zone, string ID, byte tagVersion);
 
+
         // ------ COMMON METHODS -----------------------------------------------------
 
         public void SetEmbedder(IMetaDataEmbedder embedder)
@@ -492,12 +492,12 @@ namespace ATL.AudioData.IO
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
-        protected void setMetaField(string ID, string data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
+        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
-            // Finds the ATL field identifier according to the ID3v2 version
+            // Finds the ATL field identifier
             byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
 
-            // If ID has been mapped with an ATL field, store it in the dedicated place...
+            // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
             if (supportedMetaID < 255)
             {
                 setMetaField(supportedMetaID, data);
@@ -507,7 +507,7 @@ namespace ATL.AudioData.IO
                 if (ID.Length > 0)
                 {
                     MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
-                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicate fields from existing
+                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                     {
                         tagData.AdditionalFields.Remove(fieldInfo);
                     }
@@ -516,7 +516,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected void setMetaField(byte ID, string data)
+        private void setMetaField(byte ID, string data)
         {
             tagData.IntegrateValue(ID, data);
         }

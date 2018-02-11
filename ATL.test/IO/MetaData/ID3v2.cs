@@ -298,7 +298,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Existing()
         {
             // Final size and hash checks NOT POSSIBLE YET mainly due to tag order and padding differences
-            test_RW_Existing(notEmptyFile, 2, false, false);
+            test_RW_Existing(notEmptyFile, 2, true, false, false);
         }
 
         [TestMethod]

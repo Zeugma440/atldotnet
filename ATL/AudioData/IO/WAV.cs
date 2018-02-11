@@ -39,9 +39,9 @@ namespace ATL.AudioData.IO
         private const String CHUNK_DATA = "data";
 
         // Broadcast Wave metadata sub-chunk
-        private const String CHUNK_BEXT = "bext";
-        private const String CHUNK_INFO = "LIST";
-        private const String CHUNK_IXML = "iXML";
+        private const String CHUNK_BEXT = BextTag.CHUNK_BEXT;
+        private const String CHUNK_INFO = InfoTag.CHUNK_LIST;
+        private const String CHUNK_IXML = IXmlTag.CHUNK_IXML;
         private const String CHUNK_ID3 = "id3 ";
 
 
@@ -81,10 +81,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.formatID; }
 		}	
-		public String Format // Format type name
-		{
-			get { return this.getFormat(); }
-		}	
 		public byte ChannelNumber // Number of channels
 		{
 			get { return this.channelNumber; }
@@ -93,22 +89,10 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.getChannelMode(); }
 		}	
-		public byte BitsPerSample // Bits/sample
-        {
-            get { return this.bitsPerSample; }
-        }
-		public uint BytesPerSecond // Bytes/second
-		{
-			get { return this.bytesPerSecond; }
-		}
 		public ushort BlockAlign // Block alignment
 		{
 			get { return this.blockAlign; }
-		}			
-		public ushort HeaderSize // Header size (bytes)
-		{
-			get { return this.headerSize; }
-		}	
+		}
         */
 
 
@@ -194,6 +178,15 @@ namespace ATL.AudioData.IO
             frameMapping = new Dictionary<string, byte>
             {
                 { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "info.INAM", TagData.TAG_FIELD_TITLE },
+                { "info.TITL", TagData.TAG_FIELD_TITLE },
+                { "info.IART", TagData.TAG_FIELD_ARTIST },
+                { "info.ICOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "info.IGNR", TagData.TAG_FIELD_GENRE },
+                { "info.IRTD", TagData.TAG_FIELD_RATING },
+                { "info.YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "info.TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "info.ICMT", TagData.TAG_FIELD_COMMENT }
             };
         }
 
@@ -203,10 +196,10 @@ namespace ATL.AudioData.IO
             bitrate = 0;
 
             //            formatID = 0;
+            //            blockAlign = 0;
             channelNumber = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
-            //            blockAlign = 0;
             bitsPerSample = 0;
             sampleNumber = 0;
             headerSize = 0;
@@ -225,104 +218,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        private void parseBext(Stream source, ReadTagParams readTagParams)
-        {
-            string str;
-            byte[] data = new byte[256];
-
-            // Description
-            source.Read(data, 0, 256);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) setMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
-
-            // Originator
-            source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
-            if (str.Length > 0) setMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
-
-            // OriginatorReference
-            source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
-            if (str.Length > 0) setMetaField("bext.originatorReference", str, readTagParams.ReadAllMetaFrames);
-
-            // OriginationDate
-            source.Read(data, 0, 10);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 10).Trim());
-            if (str.Length > 0) setMetaField("bext.originationDate", str, readTagParams.ReadAllMetaFrames);
-
-            // OriginationTime
-            source.Read(data, 0, 8);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 8).Trim());
-            if (str.Length > 0) setMetaField("bext.originationTime", str, readTagParams.ReadAllMetaFrames);
-
-            // TimeReference
-            source.Read(data, 0, 8);
-            long timeReference = StreamUtils.DecodeUInt64(data);
-            setMetaField("bext.timeReference", timeReference.ToString(), readTagParams.ReadAllMetaFrames);
-
-            // BEXT version
-            source.Read(data, 0, 2);
-            int intData = StreamUtils.DecodeUInt16(data);
-            setMetaField("bext.version", intData.ToString(), readTagParams.ReadAllMetaFrames);
-
-            // UMID
-            source.Read(data, 0, 64);
-            str = "";
-
-            int usefulLength = 32; // "basic" UMID
-            if (data[12] > 19) usefulLength = 64; // data[12] gives the size of remaining UMID
-            for (int i = 0; i < usefulLength; i++) str = str + data[i].ToString("X2");
-
-            setMetaField("bext.UMID", str, readTagParams.ReadAllMetaFrames);
-
-            // LoudnessValue
-            source.Read(data, 0, 2);
-            intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.loudnessValue", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
-
-            // LoudnessRange
-            source.Read(data, 0, 2);
-            intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.loudnessRange", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
-
-            // MaxTruePeakLevel
-            source.Read(data, 0, 2);
-            intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.maxTruePeakLevel", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
-
-            // MaxMomentaryLoudness
-            source.Read(data, 0, 2);
-            intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.maxMomentaryLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
-
-            // MaxShortTermLoudness
-            source.Read(data, 0, 2);
-            intData = StreamUtils.DecodeInt16(data);
-            setMetaField("bext.maxShortTermLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
-
-            // Reserved
-            source.Seek(180, SeekOrigin.Current);
-
-            // CodingHistory
-            long initialPos = source.Position;
-            if (StreamUtils.FindSequence(source, new byte[2] { 13, 10 } /* CR LF */ ))
-            {
-                long endPos = source.Position - 2;
-                source.Seek(initialPos, SeekOrigin.Begin);
-
-                if (data.Length < (int)(endPos - initialPos)) data = new byte[(int)(endPos - initialPos)];
-                source.Read(data, 0, (int)(endPos - initialPos));
-
-                str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, (int)(endPos - initialPos)).Trim());
-                if (str.Length > 0) setMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
-            }
-        }
-
-        private void parseInfo(Stream source, ReadTagParams readTagParams)
-        {
-            // TODO
-        }
 
         private bool readWAV(Stream source, ReadTagParams readTagParams)
         {
@@ -368,6 +263,7 @@ namespace ATL.AudioData.IO
             long chunkDataPos;
             bool foundBext = false;
             bool foundInfo = false;
+            bool foundIXml = false;
 
             // Sub-chunks loop
             while (source.Position < riffChunkSize + 8)
@@ -424,21 +320,33 @@ namespace ATL.AudioData.IO
                     foundBext = true;
                     tagExists = true;
 
-                    parseBext(source, readTagParams);
+                    BextTag.FromStream(source, this, readTagParams);
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
+                {
+                    // Purpose of the list should be INFO
+                    source.Read(data, 0, 4);
+                    string purpose = Utils.Latin1Encoding.GetString(data, 0, 4);
+                    if (purpose.Equals(InfoTag.PURPOSE_INFO))
+                    {
+                        structureHelper.AddZone(source.Position - 12, (int)(chunkSize + 8), subChunkId);
+                        structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
+
+                        foundInfo = true;
+                        tagExists = true;
+
+                        InfoTag.FromStream(source, this, readTagParams, chunkSize);
+                    }
+                }
+                else if (subChunkId.Equals(CHUNK_IXML))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
-                    foundInfo = true;
+                    foundIXml = true;
                     tagExists = true;
 
-                    parseInfo(source, readTagParams);
-                }
-                else if (subChunkId.Equals(CHUNK_IXML))
-                {
-                    // TODO
+                    IXmlTag.FromStream(source, this, readTagParams, chunkSize);
                 }
                 else if (subChunkId.Equals(CHUNK_ID3))
                 {
@@ -473,8 +381,13 @@ namespace ATL.AudioData.IO
                 }
                 if (!foundInfo)
                 {
-                    structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
+                    structureHelper.AddZone(source.Position, 0, CHUNK_INFO);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_INFO);
+                }
+                if (!foundIXml)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_IXML);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_IXML);
                 }
             }
 
@@ -548,89 +461,11 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (zone.Equals(CHUNK_BEXT)) result += writeBextChunk(tag, w);
+            if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_INFO) && InfoTag.IsDataEligible(this)) result += InfoTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
 
             return result;
-        }
-
-        private int writeBextChunk(TagData tag, BinaryWriter w)
-        {
-            w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_BEXT));
-
-            long sizePos = w.BaseStream.Position;
-            w.Write((int)0); // Placeholder for chunk size that will be rewritten at the end of the method
-
-            IDictionary<string, string> additionalFields = AdditionalFields;
-
-
-            // Text fields
-            writeFixedFieldStrValue("bext.description", 256, additionalFields, w);
-            writeFixedFieldStrValue("bext.originator", 32, additionalFields, w);
-            writeFixedFieldStrValue("bext.originatorReference", 32, additionalFields, w);
-            writeFixedFieldStrValue("bext.originationDate", 10, additionalFields, w);
-            writeFixedFieldStrValue("bext.originationTime", 8, additionalFields, w);
-
-
-            // Numeric fields
-            ulong ulongVal = 0;
-            if (additionalFields.Keys.Contains("bext.timeReference"))
-            {
-                if (Utils.IsNumeric(additionalFields["bext.timeReference"], true))
-                {
-                    ulongVal = ulong.Parse(additionalFields["bext.timeReference"]);
-                }
-            }
-            w.Write(ulongVal);
-
-            ushort ushortVal = 0;
-            if (additionalFields.Keys.Contains("bext.version"))
-            {
-                if (Utils.IsNumeric(additionalFields["bext.version"], true))
-                {
-                    ushortVal = ushort.Parse(additionalFields["bext.version"]);
-                }
-            }
-            w.Write(ushortVal);
-
-            byte[] data = new byte[64];
-            if (additionalFields.Keys.Contains("bext.UMID"))
-            {
-                string fieldValue = additionalFields["bext.UMID"];
-                string hexValue = "";
-
-                for (int i = 0; i < fieldValue.Length / 2; i++)
-                {
-                    hexValue += fieldValue[(2*i)] + fieldValue[(2*i) + 1];
-                }
-            }
-            w.Write(data);
-
-
-
-            // Rewrite chunk size header
-            long finalPos = w.BaseStream.Position;
-            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-            if (isLittleEndian)
-            {
-                w.Write((int)(finalPos - sizePos - 4));
-            } else
-            {
-                w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
-            }
-
-            return 14;
-        }
-
-        private void writeFixedFieldStrValue(string field, int length, IDictionary<string, string> additionalFields, BinaryWriter w)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                w.Write(Utils.BuildStrictLengthStringBytes(additionalFields[field], length, 0, Utils.Latin1Encoding));
-            }
-            else
-            {
-                w.Write(Utils.BuildStrictLengthString("", length, '\0'));
-            }
         }
 
         public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)

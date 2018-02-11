@@ -12,6 +12,8 @@ namespace ATL.test.IO.MetaData
             notEmptyFile = "MP3/id3v1.mp3";
             tagType = MetaDataIOFactory.TAG_ID3V1;
 
+            supportsInternationalChars = false;
+
             // Initialize specific test data
             testData = new TagData();
 

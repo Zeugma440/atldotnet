@@ -1,4 +1,5 @@
 ﻿using ATL.AudioData;
+using Commons;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Drawing;
@@ -195,11 +196,24 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagData theTag = new TagData();
-            // TODO - test behaviour on _all_ supported fields
-            // TODO - test exotic charsets if supported by tagging standard
-            theTag.Title = "Hoho";
-            string initialTestTitleValue = testData.Title;
-            testData.Title = "Hoho";
+
+            char internationalChar = supportsInternationalChars ? '父' : '!';
+
+            TagData initialTestData = new TagData(testData);
+            // These two cases cover all tag capabilities
+            if (testData.Title != null) theTag.Title = "Test !!" + internationalChar;
+            else if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description" + internationalChar;
+
+            if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
+            {
+                theTag.AdditionalFields = new List<MetaFieldInfo>();
+                foreach (MetaFieldInfo info in testData.AdditionalFields)
+                {
+                    theTag.AdditionalFields.Add(info);
+                    break; // 1 is enough
+                }
+            }
+            testData = new TagData(theTag);
 
             PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
@@ -242,9 +256,8 @@ namespace ATL.test.IO.MetaData
             }
 
             // Remove the additional supported field
-            theTag = new TagData();
-            theTag.Title = initialTestTitleValue;
-            testData.Title = initialTestTitleValue;
+            theTag = new TagData(initialTestData);
+            testData = new TagData(initialTestData);
 
             // Remove additional picture
             picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
@@ -261,7 +274,6 @@ namespace ATL.test.IO.MetaData
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-
             if (sameSizeAfterEdit || sameBitsAfterEdit)
             {
                 FileInfo originalFileInfo = new FileInfo(location);
@@ -319,10 +331,19 @@ namespace ATL.test.IO.MetaData
             if (testData.Publisher != null) theTag.Publisher = "Z Corp.";
             if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description";
 
+            if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
+            {
+                theTag.AdditionalFields = new List<MetaFieldInfo>();
+                foreach (MetaFieldInfo info in testData.AdditionalFields)
+                {
+                    theTag.AdditionalFields.Add(info);
+                }
+            }
+
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
 
-            Assert.IsTrue(theFile.ReadFromFile());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.IsNotNull(theFile.getMeta(tagType));
             IMetaDataIO meta = theFile.getMeta(tagType);
@@ -343,6 +364,15 @@ namespace ATL.test.IO.MetaData
             if (testData.Conductor != null) Assert.AreEqual("John Johnson Jr.", meta.Conductor);
             if (testData.Publisher != null) Assert.AreEqual("Z Corp.", meta.Publisher);
             if (testData.GeneralDescription != null) Assert.AreEqual("Description", meta.GeneralDescription);
+
+            if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
+            {
+                foreach (MetaFieldInfo info in testData.AdditionalFields)
+                {
+                    Assert.IsTrue(meta.AdditionalFields.ContainsKey(info.NativeFieldCode));
+                    Assert.AreEqual(info.Value, meta.AdditionalFields[info.NativeFieldCode]);
+                }
+            }
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
@@ -558,10 +588,25 @@ namespace ATL.test.IO.MetaData
             if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
             //if (testData.RecordingDate != null) Assert.AreEqual(testData.RecordingDate, meta.);
             if (testData.Genre != null) Assert.AreEqual(testData.Genre, meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual(testData.Rating, meta.Popularity.ToString());
-            if (testData.TrackNumber != null) Assert.AreEqual(testData.TrackNumber, meta.Track.ToString());
+            if (testData.Rating != null)
+            {
+                if (Utils.IsNumeric(testData.Rating))
+                {
+                    float f = float.Parse(testData.Rating);
+                    Assert.AreEqual((f/5.0).ToString(), meta.Popularity.ToString());
+                }
+                else if (0 == testData.Rating.Length)
+                {
+                    Assert.AreEqual("0", meta.Popularity.ToString());
+                }
+                else
+                {
+                    Assert.AreEqual(testData.Rating, meta.Popularity.ToString());
+                }
+            }
+            if (testData.TrackNumber != null) Assert.AreEqual(TrackUtils.ExtractTrackNumber(testData.TrackNumber).ToString(), meta.Track.ToString());
             if (testData.Composer != null) Assert.AreEqual(testData.Composer, meta.Composer);
-            if (testData.DiscNumber != null) Assert.AreEqual(testData.DiscNumber, meta.Disc.ToString());
+            if (testData.DiscNumber != null) Assert.AreEqual(TrackUtils.ExtractTrackNumber(testData.DiscNumber).ToString(), meta.Disc.ToString());
             if (testData.Conductor != null) Assert.AreEqual(testData.Conductor, meta.Conductor);
             if (testData.Publisher != null) Assert.AreEqual(testData.Publisher, meta.Publisher);
             if (testData.Copyright != null) Assert.AreEqual(testData.Copyright, meta.Copyright);

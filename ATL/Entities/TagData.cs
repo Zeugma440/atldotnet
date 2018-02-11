@@ -9,13 +9,14 @@ namespace ATL
 	/// <summary>
 	/// Basic metadata fields container
     /// 
-    /// TODO Document each member
+    /// TagData aims at staying a basic, universal container, without any Property accessor layer nor any field interpretation logic
 	/// </summary>
 	public class TagData
 	{
         [Obsolete("Access picture data directly through the Pictures attribute, after reading a file with ReadTagParams.ReadPictures=true")]
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
+        // Identifiers for 'classic' fields
         public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
         public const byte TAG_FIELD_TITLE                   = 1;
         public const byte TAG_FIELD_ARTIST                  = 2;
@@ -37,7 +38,7 @@ namespace ATL
         public const byte TAG_FIELD_PUBLISHER               = 18;
         public const byte TAG_FIELD_CONDUCTOR               = 19;
 
-
+        // Values for 'classic' fields
         public string GeneralDescription = null;
         public string Title = null;
 		public string Artist = null;
@@ -58,12 +59,25 @@ namespace ATL
         public string Publisher = null;
         public string Conductor = null;
 
-        // The whole chapter list is processed as a whole
+        /// <summary>
+        /// Chapters 
+        /// NB : The whole chapter list is processed as a whole
+        /// </summary>
         public IList<ChapterInfo> Chapters = null;
 
-        // Each entry is processed as a metadata field on its own
+
+        /// <summary>
+        /// Embedded pictures
+        /// NB : Each entry is processed as a metadata field on its own
+        /// </summary>
         public IList<PictureInfo> Pictures;
+
+        /// <summary>
+        /// Additional fields = non-classic fields
+        /// NB : Each entry is processed as a metadata field on its own
+        /// </summary>
         public IList<MetaFieldInfo> AdditionalFields;
+
 
 
         public TagData()
@@ -72,6 +86,21 @@ namespace ATL
             AdditionalFields = new List<MetaFieldInfo>();
         }
 
+        public TagData(TagData tagData)
+        {
+            Pictures = new List<PictureInfo>();
+            AdditionalFields = new List<MetaFieldInfo>();
+
+            IntegrateValues(tagData);
+        }
+
+        /// <summary>
+        /// Stores a 'classic' metadata value into current TagData object according to its key
+        /// 
+        /// NB : This method cannot be used to store non-classic fields; use tagData.AdditionalFields instead
+        /// </summary>
+        /// <param name="key">Identifier describing the metadata to store (see TagData public consts)</param>
+        /// <param name="value">Value of the metadata to store</param>
         public void IntegrateValue(byte key, string value)
         {
             switch (key)
@@ -100,6 +129,10 @@ namespace ATL
             }
         }
 
+        /// <summary>
+        /// Merge given TagData object with current TagData object
+        /// </summary>
+        /// <param name="data">TagData object to merge</param>
         public void IntegrateValues(TagData data)
         {
             IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
@@ -194,6 +227,12 @@ namespace ATL
             }
         }
 
+        /// <summary>
+        /// Converts non-null 'classic' fields values into a properties Map
+        /// 
+        /// NB : Additional fields, pictures and chapters won't be part of the Map
+        /// </summary>
+        /// <returns>Map containing all 'classic' metadata fields</returns>
         public IDictionary<byte,String> ToMap()
         {
             IDictionary<byte, String> result = new Dictionary<byte, String>();
@@ -223,6 +262,9 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Clears all values stored in TagData object
+        /// </summary>
         public void Clear()
         {
             Pictures.Clear();
@@ -250,11 +292,22 @@ namespace ATL
             Conductor = null;
         }
 
+        /// <summary>
+        /// Adds given value to given map if value is not null
+        /// </summary>
+        /// <param name="data">Value to add to the map</param>
+        /// <param name="id">Key to add to the map</param>
+        /// <param name="map">Target map to host given values</param>
         private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
         {
             if (data != null) map[id] = data;
         }
 
+        /// <summary>
+        /// Converts given value to empty string ("") if null or zero ("0")
+        /// </summary>
+        /// <param name="s">Value to convert</param>
+        /// <returns>If null or zero ("0"), empty string (""); else initial value</returns>
         private string emptyIfZero(string s)
         {
             string result = s;
@@ -264,6 +317,12 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Builds a map containing the position of each picture in the Pictures field, based on the PictureInfo.Position fields
+        /// 
+        /// NB : This method does not calculate any position; it just generates the map
+        /// </summary>
+        /// <returns>Map containing the position for each picture</returns>
         private IDictionary<PictureInfo,int> generatePicturePositions()
         {
             IDictionary<PictureInfo, int> result = new Dictionary<PictureInfo, int>();

@@ -77,6 +77,9 @@
     <Compile Include="AudioData\IO\DummyReader.cs" />
     <Compile Include="AudioData\IO\DummyTag.cs" />
     <Compile Include="AudioData\IO\FLAC.cs" />
+    <Compile Include="AudioData\IO\Helpers\IXmlTag.cs" />
+    <Compile Include="AudioData\IO\Helpers\InfoTag.cs" />
+    <Compile Include="AudioData\IO\Helpers\BextTag.cs" />
     <Compile Include="AudioData\IO\ID3v1.cs" />
     <Compile Include="AudioData\IO\ID3v2.cs" />
     <Compile Include="AudioData\IO\IT.cs" />

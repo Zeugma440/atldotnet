@@ -141,6 +141,8 @@ namespace ATL.AudioData
                 tempFmt = new Format("PCM (uncompressed audio)");
                 tempFmt.ID = CID_WAV;
                 tempFmt.AddExtension(".wav");
+                tempFmt.AddExtension(".bwf");
+                tempFmt.AddExtension(".bwav");
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format("Musical Instruments Digital Interface");

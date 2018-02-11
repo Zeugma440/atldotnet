@@ -185,7 +185,7 @@ namespace ATL.AudioData.IO
                      */
                     strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(frameDataSize)));
                     strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
-                    setMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
+                    SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                 }
                 else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
                 {
