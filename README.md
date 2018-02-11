@@ -131,7 +131,7 @@ __SUPPORTED CUESHEETS FORMATS :__ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for Broadcast wave metadata
+* Support for Broadcast wave metadata : aXML and XMP
 * Support for other audio file formats : Speex, Theora, Audible
 * Connectors to __other library file formats__ (e.g. iTunes)
 
