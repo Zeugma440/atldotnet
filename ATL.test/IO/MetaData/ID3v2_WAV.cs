@@ -10,7 +10,7 @@ namespace ATL.test.IO.MetaData
     {
         public ID3v2_WAV()
         {
-            emptyFile = "WAV/broadcastwave_bext_info.wav";
+            emptyFile = "WAV/empty.wav";
             notEmptyFile = "WAV/audacityTags.wav";
             tagType = MetaDataIOFactory.TAG_ID3V2;
 
@@ -35,7 +35,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WAV_ID3v2_Existing()
         {
-            test_RW_Existing(notEmptyFile, 0, false, false); // Not same size after edit because original ID3v2.3 is remplaced by ATL ID3v2.4
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // Not same size after edit because original ID3v2.3 is remplaced by ATL ID3v2.4
         }
 
         [TestMethod]
