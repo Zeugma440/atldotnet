@@ -40,7 +40,7 @@ namespace ATL.AudioData.IO
 
         // Broadcast Wave metadata sub-chunk
         private const String CHUNK_BEXT = BextTag.CHUNK_BEXT;
-        private const String CHUNK_INFO = "LIST";
+        private const String CHUNK_INFO = InfoTag.CHUNK_LIST;
         private const String CHUNK_IXML = "iXML";
         private const String CHUNK_ID3 = "id3 ";
 
@@ -81,10 +81,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.formatID; }
 		}	
-		public String Format // Format type name
-		{
-			get { return this.getFormat(); }
-		}	
 		public byte ChannelNumber // Number of channels
 		{
 			get { return this.channelNumber; }
@@ -93,22 +89,10 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.getChannelMode(); }
 		}	
-		public byte BitsPerSample // Bits/sample
-        {
-            get { return this.bitsPerSample; }
-        }
-		public uint BytesPerSecond // Bytes/second
-		{
-			get { return this.bytesPerSecond; }
-		}
 		public ushort BlockAlign // Block alignment
 		{
 			get { return this.blockAlign; }
-		}			
-		public ushort HeaderSize // Header size (bytes)
-		{
-			get { return this.headerSize; }
-		}	
+		}
         */
 
 
@@ -194,6 +178,15 @@ namespace ATL.AudioData.IO
             frameMapping = new Dictionary<string, byte>
             {
                 { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "info.INAM", TagData.TAG_FIELD_TITLE },
+                { "info.TITL", TagData.TAG_FIELD_TITLE },
+                { "info.IART", TagData.TAG_FIELD_ARTIST },
+                { "info.ICOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "info.IGNR", TagData.TAG_FIELD_GENRE },
+                { "info.IRTD", TagData.TAG_FIELD_RATING },
+                { "info.YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "info.TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "info.ICMT", TagData.TAG_FIELD_COMMENT }
             };
         }
 
@@ -203,10 +196,10 @@ namespace ATL.AudioData.IO
             bitrate = 0;
 
             //            formatID = 0;
+            //            blockAlign = 0;
             channelNumber = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
-            //            blockAlign = 0;
             bitsPerSample = 0;
             sampleNumber = 0;
             headerSize = 0;
@@ -225,11 +218,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        private void parseInfo(Stream source, ReadTagParams readTagParams)
-        {
-            // TODO
-        }
 
         private bool readWAV(Stream source, ReadTagParams readTagParams)
         {
@@ -335,15 +323,19 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
-                    /*
-                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
+                    // Purpose of the list should be INFO
+                    source.Read(data, 0, 4);
+                    string purpose = Utils.Latin1Encoding.GetString(data, 0, 4);
+                    if (purpose.Equals(InfoTag.PURPOSE_INFO))
+                    {
+                        structureHelper.AddZone(source.Position - 12, (int)(chunkSize + 8), subChunkId);
+                        structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
-                    foundInfo = true;
-                    tagExists = true;
+                        foundInfo = true;
+                        tagExists = true;
 
-                    parseInfo(source, readTagParams);
-                    */
+                        InfoTag.FromStream(source, this, readTagParams, chunkSize);
+                    }
                 }
                 else if (subChunkId.Equals(CHUNK_IXML))
                 {
@@ -380,13 +372,11 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_BEXT);
                 }
-                /*
                 if (!foundInfo)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_INFO);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_INFO);
                 }
-                */
             }
 
             return result;
@@ -459,7 +449,9 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (zone.Equals(CHUNK_BEXT)) result += BextTag.ToStream(w, isLittleEndian, this);
+            if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_INFO) && InfoTag.IsDataEligible(this)) result += InfoTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_IXML)) result += InfoTag.ToStream(w, isLittleEndian, this);
 
             return result;
         }

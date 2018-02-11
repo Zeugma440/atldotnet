@@ -104,6 +104,18 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public static bool IsDataEligible(MetaDataIO meta)
+        {
+            if (meta.GeneralDescription.Length > 0) return true;
+
+            foreach (string key in meta.AdditionalFields.Keys)
+            {
+                if (key.StartsWith("bext.")) return true;
+            }
+
+            return false;
+        }
+
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
