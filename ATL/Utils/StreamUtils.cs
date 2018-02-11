@@ -352,7 +352,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeInt32(byte[] data)
         {
-            if (data.Length != 4) throw new InvalidDataException("data should be 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException("data should be at least 4 bytes long; found " + data.Length + " bytes");
             return (int)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
