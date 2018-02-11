@@ -54,6 +54,8 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __[chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)__ natively
 
+* ATL supports BEXT, LIST INFO and iXML metadata in RIFF / WAV files
+
 * ATL supports __Playlists and Cuesheets__
 
 
