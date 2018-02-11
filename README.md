@@ -54,6 +54,8 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __[chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)__ natively
 
+* ATL supports BEXT, LIST INFO and iXML metadata in RIFF / WAV files
+
 * ATL supports __Playlists and Cuesheets__
 
 
@@ -129,7 +131,7 @@ __SUPPORTED CUESHEETS FORMATS :__ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for Broadcast wave metadata
+* Support for Broadcast wave metadata : aXML and XMP
 * Support for other audio file formats : Speex, Theora, Audible
 * Connectors to __other library file formats__ (e.g. iTunes)
 
