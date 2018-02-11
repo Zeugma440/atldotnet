@@ -2,7 +2,6 @@ using ATL.AudioData;
 using Commons;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace ATL
 {
