@@ -103,15 +103,17 @@ SPC700 (Super Nintendo Sound files)|.SPC| | | |R/W|
 Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
 True Audio|.TTA|R/W|R/W|R/W| |
 TwinVQ|.VQF| | | |R/W|
-PCM (uncompressed audio)|.WAV|R/W|R/W| | |
+PCM (uncompressed audio)|.WAV, .BWAV, .BWF|R/W|R/W| |R/W (3)|
 Video Game Music (SEGA systems sound files) | .VGM, .VGZ |  |  |  | R/W
 WavPack|.WV| | |R/W| |
-Windows Media Audio/Advanced Systems Format|.WMA,.ASF| | | |R/W|
+Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 
 (1) : MIDI meta events appear on the track's Comment field
 
-(2) : all sample names appear on the track's Comment field. Track title only is editable.
+(2) : all sample names appear on the track's Comment field. Track title only is editable
+
+(3) : Support for BEXT, LIST INFO and iXML chunks
 
 
 __DETECTED FIELDS__
