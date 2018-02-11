@@ -494,7 +494,7 @@ namespace ATL.AudioData.IO
 
         protected void setMetaField(string ID, string data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
-            // Finds the ATL field identifier according to the ID3v2 version
+            // Finds the ATL field identifier
             byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
 
             // If ID has been mapped with an ATL field, store it in the dedicated place...
@@ -507,7 +507,7 @@ namespace ATL.AudioData.IO
                 if (ID.Length > 0)
                 {
                     MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
-                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicate fields from existing
+                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                     {
                         tagData.AdditionalFields.Remove(fieldInfo);
                     }
