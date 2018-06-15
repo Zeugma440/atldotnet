@@ -1,7 +1,7 @@
 language: csharp
 solution: ATL.sln
 mono:
-  - 2.10.11
+  - 2.10.8
 os:
   - linux
   - osx
