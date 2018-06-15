@@ -21,7 +21,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
             bool inPlaylist = false;
             bool inTrack = false;
 
-            using (XmlTextReader source = new XmlTextReader(fs))
+            using (XmlReader source = XmlReader.Create(fs))
             {
                 while (source.Read())
                 {
@@ -60,7 +60,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
             }
         }
 
-        private String getResourceLocation(XmlTextReader source)
+        private String getResourceLocation(XmlReader source)
         {
             String result = "";
             while (source.MoveToNextAttribute()) // Read the attributes.
