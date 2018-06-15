@@ -1,8 +1,7 @@
 language: csharp
 solution: ATL.sln
+mono:
+  - 2.10.11
 os:
   - linux
   - osx
-
-matrix:
-  - MONO_VER="2.10.11"

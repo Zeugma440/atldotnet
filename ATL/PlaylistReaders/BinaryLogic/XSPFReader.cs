@@ -26,7 +26,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
             bool inLocation = false;
             bool inImage = false;
 
-            using (XmlTextReader source = new XmlTextReader(fs))
+            using (XmlReader source = XmlReader.Create(fs))
             {
                 while (source.Read())
                 {
