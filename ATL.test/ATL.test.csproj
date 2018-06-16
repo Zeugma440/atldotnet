@@ -91,7 +91,6 @@
     <Compile Include="TestUtils.cs" />
     <Compile Include="Misc\StreamUtilsTest.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ATL\ATL.csproj">
       <Project>{27c03311-c017-4e99-8b35-0005102b2dac}</Project>
