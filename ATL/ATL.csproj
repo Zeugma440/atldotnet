@@ -29,6 +29,7 @@ _Bugfixes_
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />
+    <None Remove="msbuild command to package.txt" />
     <Compile Remove="old\**" />
     <EmbeddedResource Remove="old\**" />
     <None Remove="*.bat" />
