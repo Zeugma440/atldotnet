@@ -1,11 +1,8 @@
-# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20core-2.0-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.0-lightgrey.svg)
+# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20core-2.0-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.0-lightgrey.svg) ![Net Framework](https://img.shields.io/badge/.NET%20Framework-2.0-lightgrey.svg)
 
 ## Status / master branch
 
-__Linux and OSX Mono Build__ : [![Build Status](https://travis-ci.org/Zeugma440/atldotnet.svg?branch=master)](https://travis-ci.org/Zeugma440/atldotnet) (powered by Travis CI)
-
-
-__Windows .NET Build__ : [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
+__Build__ : [![Build status](https://ci.appveyor.com/api/projects/status/s4y0e3g6fxncdhi6/branch/master?svg=true)](https://ci.appveyor.com/project/Zeugma440/atldotnet/branch/master) (powered by AppVeyor)
 
 
 __Code coverage__ : [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) (powered by CodeCov)
