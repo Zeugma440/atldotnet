@@ -183,3 +183,5 @@ $RECYCLE.BIN/
 /ATL/old
 /ATL/Properties/PublishProfiles/FolderProfile.pubxml
 /ATL/msbuild command to package.txt
+/ATL/msbuild.lnk
+/ATL/msbuild command to package.bat
