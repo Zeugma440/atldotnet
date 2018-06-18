@@ -238,6 +238,7 @@
     <Content Include="Resources\MP3\chapters.mp3" />
     <Content Include="Resources\MP3\empty.mp3" />
     <Content Include="Resources\MP3\headerPatternIsNotHeader.mp3" />
+    <Content Include="Resources\MP3\hugeAlbumTrackNumber.mp3" />
     <Content Include="Resources\MP3\id3v1.mp3" />
     <Content Include="Resources\MP3\ID3v2.2 3 pictures.mp3" />
     <Content Include="Resources\MP3\ID3v2.2 ANSI charset only.mp3" />
