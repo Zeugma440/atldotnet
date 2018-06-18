@@ -32,7 +32,12 @@ namespace ATL.AudioData
                 if (str.Length == i) break;
             }
 
-            if (i > 0) return ushort.Parse(str.Substring(0, i));
+            if (i > 0)
+            {
+                long number = long.Parse(str.Substring(0, i));
+                if (number > ushort.MaxValue) number = 0;
+                return (ushort)number;
+            }
 
 
             // == If everything above fails...
@@ -44,7 +49,9 @@ namespace ATL.AudioData
             // First match is directly returned
             if (match.Success)
             {
-                return ushort.Parse(match.Value);
+                long number = long.Parse(match.Value);
+                if (number > ushort.MaxValue) number = 0;
+                return (ushort)number;
             }
             return 0;
         }
