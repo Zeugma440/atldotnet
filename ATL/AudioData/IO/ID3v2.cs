@@ -927,7 +927,7 @@ namespace ATL.AudioData.IO
 
         public override byte FieldCodeFixedLength
         {
-            get { return 4; }
+            get { return 0; } // Actually 4 when strictly applying specs, but thanks to TXXX fields, any code is supported
         }
 
 
