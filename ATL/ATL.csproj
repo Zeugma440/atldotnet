@@ -3,18 +3,19 @@
     <TargetFrameworks>net30;netstandard2.0;netcoreapp2.0</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
     <Company />
-    <AssemblyVersion>2.4.1.0</AssemblyVersion>
+    <AssemblyVersion>2.4.2.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
-	<PackageVersion>2.4.1</PackageVersion>
+	<PackageVersion>2.4.2</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>audio metadata tag mp3 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
     <PackageLicenseUrl>https://github.com/Zeugma440/atldotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Zeugma440/atldotnet</PackageProjectUrl>
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
-    <FileVersion>2.4.1.0</FileVersion>
-    <PackageReleaseNotes>Quickfix release : Avoid crashes when parsing a huge album or track number (&gt;65535)</PackageReleaseNotes>
-    <Version>2.4.1</Version>
+    <FileVersion>2.4.2.0</FileVersion>
+    <PackageReleaseNotes>__Quickfix release__
+ID3v2 : Allow saving a field code with more than 4 characters (supported through TXXX extended fields)</PackageReleaseNotes>
+    <Version>2.4.2</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
