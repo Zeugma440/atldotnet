@@ -2,6 +2,7 @@ using ATL.AudioData;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL
 {
@@ -12,18 +13,27 @@ namespace ATL
 	{
 		public Track() {}
 
-        public Track(string iPath)
+        public Track(string Path)
         {
-            Path = iPath;
+            this.Path = Path;
+            stream = null;
+            Update();
+        }
+
+        public Track(Stream stream, String mimeType)
+        {
+            this.stream = stream;
+            this.mimeType = mimeType;
+            Path = "In-memory";
             Update();
         }
 
         //=== METADATA
 
         /// <summary>
-        /// Full access path of the underlying file
+        /// Full ess path of the underlying file
         /// </summary>
-        public string Path;
+        public readonly string Path;
         /// <summary>
 		/// Title
 		/// </summary>
@@ -159,6 +169,14 @@ namespace ATL
             }
         }
 
+        /// <summary>
+        /// Stream used to access in-memory Track contents (alternative to path, which is used to access on-disk Track contents)
+        /// </summary>
+        private readonly Stream stream;
+        /// <summary>
+        /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
+        /// </summary>
+        private readonly String mimeType;
         private AudioFileIO fileIO;
 
 
@@ -180,7 +198,8 @@ namespace ATL
         protected void Update(bool readEmbeddedPictures = false)
         {
             // TODO when tag is not available, customize by naming options // tracks (...)
-            fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames);
+            if (null == stream) fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames);
+            else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames);
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) )

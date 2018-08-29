@@ -4,7 +4,6 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -62,12 +61,19 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_VorbisOGG_simple_OnePager()
+        public void TagIO_R_VorbisOGG_simple_OnePager(Stream stream = null)
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location) );
+            AudioDataManager theFile;
+            if (null == stream)
+            {
+                string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            } else
+            {
+                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+            }
 
             readExistingTagsOnFile(ref theFile);
         }
@@ -78,7 +84,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(location));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(ref theFile, 3);
         }
@@ -91,7 +97,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free OGG
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -197,7 +203,7 @@ namespace ATL.test.IO.MetaData
             // Source : OGG with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -272,7 +278,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free OGG
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
             // Check that it is indeed tag-free
@@ -391,7 +397,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : OGG with existing tag incl. chapters
             String testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetDataReader(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));

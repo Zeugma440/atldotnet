@@ -104,7 +104,7 @@ namespace ATL.test.CodeSnippets
         //[TestMethod]
         public void CS_WriteChapters()
         {
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetDataReader(audioFilePath));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(audioFilePath));
 
             TagData theTag = new TagData();
             theTag.Chapters = new System.Collections.Generic.List<ChapterInfo>();

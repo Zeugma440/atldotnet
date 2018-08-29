@@ -2,6 +2,7 @@
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
+using ATL.test.IO.MetaData;
 
 namespace ATL.test.IO
 {
@@ -258,5 +259,60 @@ namespace ATL.test.IO
                 Settings.EnablePadding = false;
             }
         }
+
+        [TestMethod]
+        public void StreamedIO_R_Audio()
+        {
+            try
+            {
+                string resource = "OGG/ogg.ogg";
+                string location = TestUtils.GetResourceLocationRoot() + resource;
+                string testFileLocation = TestUtils.GetTempTestFile(resource);
+
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Track theTrack = new Track(fs, "audio/ogg");
+
+                    Assert.AreEqual(33, theTrack.Duration);
+                    Assert.AreEqual(69, theTrack.Bitrate);
+                    Assert.AreEqual(22050, theTrack.SampleRate);
+                    Assert.AreEqual(true, theTrack.IsVBR);
+                    Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
+                }
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.EnablePadding = false;
+            }
+        }
+
+
+        [TestMethod]
+        public void StreamedIO_R_Meta()
+        {
+            try
+            {
+                string resource = "OGG/ogg.ogg";
+                string location = TestUtils.GetResourceLocationRoot() + resource;
+                string testFileLocation = TestUtils.GetTempTestFile(resource);
+
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Vorbis_OGG offTest = new Vorbis_OGG();
+                    offTest.TagIO_R_VorbisOGG_simple_OnePager(fs);
+                }
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.EnablePadding = false;
+            }
+        }
+
     }
 }

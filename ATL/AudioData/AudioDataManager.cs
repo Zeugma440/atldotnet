@@ -47,6 +47,7 @@ namespace ATL.AudioData
         private IMetaDataIO nativeTag;
 
         private readonly IAudioDataIO audioDataIO;
+        private readonly Stream stream;
 
         private SizeInfo sizeInfo = new SizeInfo();
 
@@ -77,6 +78,13 @@ namespace ATL.AudioData
         public AudioDataManager(IAudioDataIO audioDataReader)
         {
             this.audioDataIO = audioDataReader;
+            this.stream = null;
+        }
+
+        public AudioDataManager(IAudioDataIO audioDataReader, Stream stream)
+        {
+            this.audioDataIO = audioDataReader;
+            this.stream = stream;
         }
 
 
@@ -147,9 +155,9 @@ namespace ATL.AudioData
 
             try
             {
-                // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
-                using (BinaryReader source = new BinaryReader(fs))
+                // Open file, read first block of data and search for a frame
+                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
+                using (BinaryReader source = new BinaryReader(s))
                 {
                     result = read(source, pictureStreamHandler, readAllMetaFrames);
                 }
@@ -175,8 +183,8 @@ namespace ATL.AudioData
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions))
-                using (BinaryReader source = new BinaryReader(fs))
+                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
+                using (BinaryReader source = new BinaryReader(s))
                 {
                     result = read(source, readEmbeddedPictures, readAllMetaFrames);
                 }

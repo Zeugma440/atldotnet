@@ -13,7 +13,7 @@ namespace ATL.test
             ConsoleLogger log = new ConsoleLogger();
             string theResource = TestUtils.GetResourceLocationRoot() + resource;
 
-            IAudioDataIO theReader = AudioDataIOFactory.GetInstance().GetDataReader(theResource, alternate);
+            IAudioDataIO theReader = AudioDataIOFactory.GetInstance().GetFromPath(theResource, alternate);
 
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioData.IO.DummyReader));
 

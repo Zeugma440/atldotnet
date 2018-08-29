@@ -28,7 +28,7 @@ namespace ATL.PlaylistReaders
 			if (null == theFactory)
 			{
 				theFactory = new PlaylistReaderFactory();
-                theFactory.formatList = new Dictionary<string, IList<Format>>();
+                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("PLS");
                 tempFmt.ID = PL_PLS;

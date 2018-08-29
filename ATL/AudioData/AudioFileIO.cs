@@ -13,7 +13,6 @@ namespace ATL.AudioData
 	/// </summary>
 	internal class AudioFileIO : IMetaDataIO, IAudioDataIO
     {
-        private readonly string thePath;                             // Path of this file
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
         private readonly AudioDataManager audioManager;
@@ -24,21 +23,50 @@ namespace ATL.AudioData
         /// Constructor
         /// </summary>
         /// <param name="path">Path of the file to be parsed</param>
+        /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
+        /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;
-            thePath = path;
 
-            audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
+            audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
             audioManager = new AudioDataManager(audioData);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
-                audioData = AudioDataIOFactory.GetInstance().GetDataReader(path, alternate);
+                audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
                 audioManager = new AudioDataManager(audioData);
+                found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
+            }
+
+            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
+
+            if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="stream">Stream to access in-memory data to be parsed</param>
+        /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
+        /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
+        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false)
+        {
+            byte alternate = 0;
+            bool found = false;
+
+            audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
+            audioManager = new AudioDataManager(audioData, stream);
+            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
+
+            while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
+            {
+                alternate++;
+                audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
+                audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 

@@ -21,7 +21,7 @@ namespace ATL.CatalogDataReaders
 			if (null == theFactory)
 			{
 				theFactory = new CatalogDataReaderFactory();
-                theFactory.formatList = new Dictionary<string, IList<Format>>();
+                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("CUE sheet");
                 tempFmt.ID = CR_CUE;

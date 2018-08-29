@@ -13,8 +13,10 @@ namespace ATL
 		protected string fName;
 		// ID of the format
 		protected int fID;
-		// List of file extensions proper to this format
-		protected IDictionary<string,int> extList;
+        // MIME type of the format
+        protected IDictionary<string, int> mimeList;
+        // List of file extensions proper to this format
+        protected IDictionary<string,int> extList;
 		// true if the format is readable by ATL
 		protected bool fReadable;
 
@@ -30,6 +32,7 @@ namespace ATL
             fName = iName;
 			fReadable = true;
 			extList = new Dictionary<string,int>();
+            mimeList = new Dictionary<string, int>();
         }
 
         protected void copyFrom(Format iFormat)
@@ -38,6 +41,7 @@ namespace ATL
             this.fID = iFormat.fID;
             this.fReadable = iFormat.fReadable;
             this.extList = new Dictionary<string,int>(iFormat.extList);
+            this.mimeList = new Dictionary<string, int>(iFormat.mimeList);
         }
 
 		public String Name
@@ -58,19 +62,37 @@ namespace ATL
 			set { fReadable = value; }
 		}
 
-		#region Code for IEnumerable implementation
+        public ICollection<String> MimeList
+        {
+            get { return mimeList.Keys; }
+        }
 
-		// NB : Same principle as in Collection		
+        #region Code for IEnumerable implementation
 
-		public IEnumerator GetEnumerator() 
+        // NB : Same principle as in Collection		
+
+        public IEnumerator GetEnumerator() 
 		{
 			return extList.Keys.GetEnumerator();
 		}
 
-		#endregion
+        #endregion
 
-		// Adds the extension ext to the extensions list of this Format
-		public void AddExtension(string ext)
+        // Adds the extension ext to the extensions list of this Format
+        public void AddMimeType(string mimeType)
+        {
+            if (!mimeList.ContainsKey(mimeType.ToLower()))
+                mimeList.Add(mimeType.ToLower(), 0);
+        }
+
+        // Tests if the extension ext is a valid extension of the current Format
+        public bool IsValidMimeType(string mimeType)
+        {
+            return mimeList.ContainsKey(mimeType.ToLower());
+        }
+
+        // Adds the extension ext to the extensions list of this Format
+        public void AddExtension(string ext)
 		{
 			if ( !extList.ContainsKey(ext.ToUpper()) )
 				extList.Add(ext.ToUpper(),0);
