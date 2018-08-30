@@ -82,6 +82,8 @@ namespace ATL.AudioData
                 tempFmt.ID = CID_OGG;
                 tempFmt.AddMimeType("audio/ogg");
                 tempFmt.AddMimeType("audio/vorbis");
+                tempFmt.AddMimeType("audio/opus");
+                tempFmt.AddMimeType("audio/ogg;codecs=opus");
                 tempFmt.AddExtension(".ogg");
                 tempFmt.AddExtension(".opus");
                 theFactory.addFormat(tempFmt);
