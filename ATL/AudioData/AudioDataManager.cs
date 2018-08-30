@@ -157,9 +157,14 @@ namespace ATL.AudioData
             {
                 // Open file, read first block of data and search for a frame
                 Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
-                using (BinaryReader source = new BinaryReader(s))
+                BinaryReader source = new BinaryReader(s);
+                try
                 {
                     result = read(source, pictureStreamHandler, readAllMetaFrames);
+                }
+                finally
+                {
+                    if (null == stream) source.Close();
                 }
             }
             catch (Exception e)
@@ -184,9 +189,14 @@ namespace ATL.AudioData
             {
                 // Open file, read first block of data and search for a frame		  
                 Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
-                using (BinaryReader source = new BinaryReader(s))
+                BinaryReader source = new BinaryReader(s);
+                try
                 {
                     result = read(source, readEmbeddedPictures, readAllMetaFrames);
+                }
+                finally
+                {
+                    if (null == stream) source.Close();
                 }
             }
             catch (Exception e)
@@ -212,9 +222,10 @@ namespace ATL.AudioData
                 {
                     theMetaIO = getMeta(tagType);
 
-                    using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
-                    using (BinaryReader r = new BinaryReader(fs))
-                    using (BinaryWriter w = new BinaryWriter(fs))
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions) : stream;
+                    BinaryReader r = new BinaryReader(s);
+                    BinaryWriter w = new BinaryWriter(s);
+                    try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         if (audioDataIO is IMetaDataEmbedder)
@@ -227,6 +238,9 @@ namespace ATL.AudioData
                         }
 
                         result = theMetaIO.Write(r, w, theTag);
+                    } finally
+                    {
+                        if (null == stream) r.Close();
                     }
                 }
                 catch (Exception e)
@@ -251,19 +265,21 @@ namespace ATL.AudioData
 
             try
             {
-                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions))
-                using (BinaryReader reader = new BinaryReader(fs))
+                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions) : stream;
+                BinaryReader reader = new BinaryReader(s);
+                try
                 {
                     result = read(reader,false,false,true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
                     {
-                        using (BinaryWriter writer = new BinaryWriter(fs))
-                        {
-                            metaIO.Remove(writer);
-                        }
+                        BinaryWriter writer = new BinaryWriter(s);
+                        metaIO.Remove(writer);
                     }
+                } finally
+                {
+                    if (null == stream) reader.Close();
                 }
             }
             catch (Exception e)

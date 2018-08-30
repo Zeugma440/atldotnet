@@ -303,6 +303,32 @@ namespace ATL.test.IO
                 {
                     Vorbis_OGG offTest = new Vorbis_OGG();
                     offTest.TagIO_R_VorbisOGG_simple_OnePager(fs);
+                    fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
+                }
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.EnablePadding = false;
+            }
+        }
+
+        [TestMethod]
+        public void StreamedIO_RW_Meta()
+        {
+            try
+            {
+                string resource = "OGG/empty.ogg";
+                string location = TestUtils.GetResourceLocationRoot() + resource;
+                string testFileLocation = TestUtils.GetTempTestFile(resource);
+
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+                {
+                    Vorbis_OGG offTest = new Vorbis_OGG();
+                    offTest.TagIO_RW_VorbisOGG_Empty(fs);
+                    fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
                 }
 
                 // Get rid of the working copy

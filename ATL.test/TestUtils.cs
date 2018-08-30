@@ -68,12 +68,20 @@ namespace ATL.test
 
         public static string GetFileMD5Hash(string filename)
         {
-            using (var md5 = MD5.Create())
+            using (MD5 md5 = MD5.Create())
             {
-                using (var stream = File.OpenRead(filename))
+                using (FileStream stream = File.OpenRead(filename))
                 {
                     return Encoding.Default.GetString(md5.ComputeHash(stream));
                 }
+            }
+        }
+
+        public static string GetStreamMD5Hash(Stream stream)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return Encoding.Default.GetString(md5.ComputeHash(stream));
             }
         }
 

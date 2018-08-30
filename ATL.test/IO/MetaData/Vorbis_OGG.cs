@@ -90,14 +90,31 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_VorbisOGG_Empty()
+        public void TagIO_RW_VorbisOGG_Empty(Stream stream = null)
         {
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : totally metadata-free OGG
-            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile;
+            string location;
+            string testFileLocation;
+            Stream streamCopy;
+
+            if (null == stream)
+            {
+                location = TestUtils.GetResourceLocationRoot() + emptyFile;
+                testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+                streamCopy = null;
+                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            }
+            else
+            {
+                location = "";
+                testFileLocation = "";
+                streamCopy = new MemoryStream();
+                stream.CopyTo(streamCopy);
+                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+            }
 
 
             // Check that it is indeed metadata-free
@@ -154,18 +171,29 @@ namespace ATL.test.IO.MetaData
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
+            if (null == stream)
+            {
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+                string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-            Assert.IsTrue(originalMD5.Equals(testMD5));
+                Assert.IsTrue(originalMD5.Equals(testMD5));
 
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            } else
+            {
+                Assert.AreEqual(stream.Length, streamCopy.Length);
+
+                string originalMD5 = TestUtils.GetStreamMD5Hash(streamCopy);
+                string testMD5 = TestUtils.GetStreamMD5Hash(stream);
+
+                streamCopy.Close();
+            }
         }
 
         [TestMethod]
