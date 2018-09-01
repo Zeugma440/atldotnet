@@ -39,7 +39,7 @@ namespace ATL.test.CodeSnippets
             File.Delete(cuesheetPath);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_ReadingAudioFileText()
         {
             // Load audio file information into memory
@@ -68,7 +68,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_ReadingAudioFilePictures()
         {
             // Load audio file information into memory
@@ -84,7 +84,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_UpdatingMetadataText()
         {
             // Load audio file information into memory
@@ -98,7 +98,7 @@ namespace ATL.test.CodeSnippets
             theTrack.Save();
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_UpdatingMetadataPictures()
         {
             // Load audio file information into memory
@@ -116,7 +116,7 @@ namespace ATL.test.CodeSnippets
             theTrack.Save();
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_WriteChapters()
         {
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(audioFilePath));
@@ -158,7 +158,7 @@ namespace ATL.test.CodeSnippets
 	        }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_BroadcastWave()
         {
             // Load audio file information into memory
@@ -183,7 +183,7 @@ namespace ATL.test.CodeSnippets
             theTrack.Save();
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_ReadingPlaylist()
         {
             IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(playlistPath);
@@ -194,7 +194,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_ReadingCuesheet()
         {
             ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(cuesheetPath);
@@ -208,7 +208,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void CS_ListingSupportedFormats()
         {
             System.Text.StringBuilder filter = new System.Text.StringBuilder("");
@@ -227,7 +227,7 @@ namespace ATL.test.CodeSnippets
             filter.Remove(filter.Length - 1, 1);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("snippets")]
         public void TestSyncMessage()
         {
             messages.Clear();
