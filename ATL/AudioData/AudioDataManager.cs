@@ -240,7 +240,11 @@ namespace ATL.AudioData
                         result = theMetaIO.Write(r, w, theTag);
                     } finally
                     {
-                        if (null == stream) r.Close();
+                        if (null == stream)
+                        {
+                            r.Close();
+                            w.Close();
+                        }
                     }
                 }
                 catch (Exception e)
@@ -267,6 +271,7 @@ namespace ATL.AudioData
             {
                 Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions) : stream;
                 BinaryReader reader = new BinaryReader(s);
+                BinaryWriter writer = null;
                 try
                 {
                     result = read(reader,false,false,true);
@@ -274,12 +279,16 @@ namespace ATL.AudioData
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
                     {
-                        BinaryWriter writer = new BinaryWriter(s);
+                        writer = new BinaryWriter(s);
                         metaIO.Remove(writer);
                     }
                 } finally
                 {
-                    if (null == stream) reader.Close();
+                    if (null == stream)
+                    {
+                        reader.Close();
+                        if (writer != null) writer.Close();
+                    }
                 }
             }
             catch (Exception e)
