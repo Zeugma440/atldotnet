@@ -3,15 +3,17 @@ using ATL.AudioData;
 using ATL.PlaylistReaders;
 using ATL.CatalogDataReaders;
 using ATL.Logging;
+using System.IO;
 
 namespace ATL.test.CodeSnippets
 {
     [TestClass]
     public class CodeSnippets : ILogDevice
     {
-        string audioFilePath = @"E:\temp\wav\wood - Copie.wav";
-        string playlistPath = @"E:\temp\playlist\test.m3u";
-        string cuesheetPath = @"E:\temp\cue\test.cue";
+        string audioFilePath;
+        string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
+        string cuesheetPath = TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue";
+        string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
 
         Log theLog = new Log();
         System.Collections.Generic.IList<Log.LogItem> messages = new System.Collections.Generic.List<Log.LogItem>();
@@ -23,8 +25,19 @@ namespace ATL.test.CodeSnippets
             theLog.Register(this);
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            audioFilePath = TestUtils.GetTempTestFile("MP3/id3v2.3_UTF16.mp3");
+        }
 
-        //[TestMethod]
+        [TestCleanup]
+        public void End()
+        {
+            File.Delete(audioFilePath);
+        }
+
+        [TestMethod]
         public void CS_ReadingAudioFileText()
         {
             // Load audio file information into memory
@@ -53,7 +66,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_ReadingAudioFilePictures()
         {
             // Load audio file information into memory
@@ -69,7 +82,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_UpdatingMetadataText()
         {
             // Load audio file information into memory
@@ -83,7 +96,7 @@ namespace ATL.test.CodeSnippets
             theTrack.Save();
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_UpdatingMetadataPictures()
         {
             // Load audio file information into memory
@@ -94,14 +107,14 @@ namespace ATL.test.CodeSnippets
 
             // Add 'CD' embedded picture
             PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.CD);
-            newPicture.PictureData = System.IO.File.ReadAllBytes("E:/temp/_Images/pic1.gif");
+            newPicture.PictureData = System.IO.File.ReadAllBytes(imagePath);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             // Save modifications on the disc
             theTrack.Save();
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_WriteChapters()
         {
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(audioFilePath));
@@ -168,7 +181,7 @@ namespace ATL.test.CodeSnippets
             theTrack.Save();
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_ReadingPlaylist()
         {
             IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(playlistPath);
@@ -179,7 +192,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_ReadingCuesheet()
         {
             ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(cuesheetPath);
@@ -193,7 +206,7 @@ namespace ATL.test.CodeSnippets
             }
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CS_ListingSupportedFormats()
         {
             System.Text.StringBuilder filter = new System.Text.StringBuilder("");
@@ -212,7 +225,7 @@ namespace ATL.test.CodeSnippets
             filter.Remove(filter.Length - 1, 1);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TestSyncMessage()
         {
             messages.Clear();
