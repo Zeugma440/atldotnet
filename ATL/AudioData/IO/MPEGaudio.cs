@@ -275,7 +275,7 @@ public String Encoder // Guessed encoder name
 		}
         public double BitRate
         {
-            get { return getBitRate() / 1000.0; }
+            get { return getBitRate(); }
         }
         public double Duration
         {
@@ -372,10 +372,14 @@ public String Encoder // Guessed encoder name
         {
             // Get bit rate, calculate average bit rate if VBR header found
             if ((vbrData.Found) && (vbrData.Frames > 0))
-                return Math.Round(((double)vbrData.Bytes / vbrData.Frames - getPadding(HeaderFrame)) *
-                    (double)getSampleRate(HeaderFrame) / getCoefficient(HeaderFrame));
+                return Math.Round(
+                        (
+                            ((double)vbrData.Bytes / vbrData.Frames - getPadding(HeaderFrame)) *
+                            (double)getSampleRate(HeaderFrame) / getCoefficient(HeaderFrame)
+                            ) / 1000.0
+                    );
             else
-                return getBitRate(HeaderFrame) * 1000;
+                return getBitRate(HeaderFrame);
         }
 
         private ushort getSampleRate()
@@ -508,11 +512,11 @@ public String Encoder // Guessed encoder name
             // Calculate song duration
             if (HeaderFrame.Found)
                 if ((vbrData.Found) && (vbrData.Frames > 0))
-                    return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 / getSampleRate(HeaderFrame);
+                    return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 * 1000.0 / getSampleRate(HeaderFrame);
                 else
                 {
                     long MPEGSize = sizeInfo.FileSize - sizeInfo.TotalTagSize;
-                    return (MPEGSize/* - HeaderFrame.Position*/) / getBitRate(HeaderFrame) / 1000.0 * 8;
+                    return (MPEGSize/* - HeaderFrame.Position*/) / getBitRate(HeaderFrame) * 8;
                 }
             else
                 return 0;

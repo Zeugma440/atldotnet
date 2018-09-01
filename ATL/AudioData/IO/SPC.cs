@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Collections;
-using ATL.Logging;
 using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -30,7 +28,7 @@ namespace ATL.AudioData.IO
 
 		private const bool PREFER_BIN = false;
 
-		private const int SPC_DEFAULT_DURATION = 180; // 3 minutes
+		private const int SPC_DEFAULT_DURATION = 180000; // 3 minutes
 
 		// Sub-chunk ID's / Metadata
 		private const byte XID6_SONG =	0x01;						//see ReadMe.Txt for format information
@@ -114,7 +112,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -361,7 +359,7 @@ namespace ATL.AudioData.IO
             SetMetaField(HEADER_SONGLENGTH.ToString(), Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
-            if (songVal > 0) duration = Math.Round((double)fadeVal / 1000) + songVal;
+            if (songVal > 0) duration = Math.Round((double)fadeVal) + songVal;
 
             SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             header.Size += source.BaseStream.Position - initialPosition;

@@ -65,7 +65,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -528,7 +528,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration();
+            duration = calculateDuration() * 1000.0;
 
             string commentStr;
             if (messageLength > 0) // Get Comment from the "IT message" field

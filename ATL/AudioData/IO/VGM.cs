@@ -24,9 +24,9 @@ namespace ATL.AudioData.IO
 
         private const int VGM_HEADER_SIZE = 256;
 
-        private static int LOOP_COUNT_DEFAULT = 1;          // Default loop count
-        private static int FADEOUT_DURATION_DEFAULT = 10;   // Default fadeout duration, in seconds
-        private static int RECORDING_RATE_DEFAULT = 60;      // Default playback rate for v1.00 files
+        private static int LOOP_COUNT_DEFAULT = 1;              // Default loop count
+        private static int FADEOUT_DURATION_DEFAULT = 10000;    // Default fadeout duration, in milliseconds (10s)
+        private static int RECORDING_RATE_DEFAULT = 60;         // Default playback rate for v1.00 files
 
         // Standard fields
         private int version;
@@ -62,7 +62,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -160,7 +160,7 @@ namespace ATL.AudioData.IO
                     nbLoops = nbLoops * source.ReadByte();          // Loop modifier
                 }
 
-                duration = (nbSamples / sampleRate) + (nbLoops * (loopNbSamples / sampleRate));
+                duration = (nbSamples * 1000.0 / sampleRate) + (nbLoops * (loopNbSamples * 1000.0 / sampleRate));
                 if (Settings.GYM_VGM_playbackRate > 0)
                 {
                     duration = duration * (Settings.GYM_VGM_playbackRate / (double)recordingRate);

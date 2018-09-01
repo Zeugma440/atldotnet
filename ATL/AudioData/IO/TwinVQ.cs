@@ -109,7 +109,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -232,7 +232,7 @@ namespace ATL.AudioData.IO
         // Get duration from header
         private double getDuration(HeaderInfo Header)
 		{
-            return Math.Abs(sizeInfo.FileSize - Header.Size - 20) / 125.0 / (double)Header.BitRate;
+            return Math.Abs(sizeInfo.FileSize - Header.Size - 20) * 1000.0 / 125.0 / (double)Header.BitRate;
 		}
 
 		private static bool headerEndReached(ChunkHeader Chunk)
@@ -324,7 +324,7 @@ namespace ATL.AudioData.IO
 				isValid = true;
 				// Fill properties with header data
 				channelModeID = getChannelModeID(Header);
-				bitrate = getBitRate(Header)*1000.0;
+				bitrate = getBitRate(Header);
 				sampleRate = GetSampleRate(Header);
 				duration = getDuration(Header);
 				// Get tag information and fill properties

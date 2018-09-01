@@ -68,7 +68,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -161,7 +161,7 @@ namespace ATL.AudioData.IO
 
                         if (sampleCount > 0)
                         {
-                            duration = (double)sampleCount / sampleRate;
+                            duration = (double)sampleCount * 1000.0 / sampleRate;
                             bitrate = Math.Round(((double)(sizeInfo.FileSize- source.BaseStream.Position)) * 8 / duration); //time to calculate average bitrate
                         }
                     }

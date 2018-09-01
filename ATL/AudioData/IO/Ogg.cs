@@ -808,12 +808,12 @@ namespace ATL.AudioData.IO
 
             if (samples > 0)
                 if (sampleRate > 0)
-                    result = ((double)samples / sampleRate);
+                    result = ((double)samples * 1000.0 / sampleRate);
                 else
                     result = 0;
             else
                 if ((bitRateNominal > 0) && (channelModeID > 0))
-                result = ((double)sizeInfo.FileSize - sizeInfo.ID3v2Size) /
+                result = (1000.0 * (double)sizeInfo.FileSize - sizeInfo.ID3v2Size) /
                     (double)bitRateNominal / channelModeID / 125.0 * 2;
             else
                 result = 0;
@@ -826,7 +826,7 @@ namespace ATL.AudioData.IO
             // Calculate average bit rate
             double result = 0;
 
-            if (getDuration() > 0) result = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / getDuration() / 1000.0;
+            if (getDuration() > 0) result = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / getDuration();
 
             return result;
         }

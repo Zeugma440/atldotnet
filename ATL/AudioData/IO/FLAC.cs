@@ -121,7 +121,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return Math.Round(((double)(sizeInfo.FileSize - audioOffset)) * 8 / Duration / 1000.0); }
+            get { return Math.Round(((double)(sizeInfo.FileSize - audioOffset)) * 8 / Duration); }
         }
         public double Duration
         {
@@ -376,7 +376,7 @@ namespace ATL.AudioData.IO
 		{
 			if ( (isValid()) && (sampleRate > 0) )  
 			{
-				return (double)samples / sampleRate;
+				return (double)samples * 1000.0 / sampleRate;
 			} 
 			else 
 			{

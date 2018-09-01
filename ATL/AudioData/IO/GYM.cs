@@ -65,7 +65,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -229,7 +229,7 @@ namespace ATL.AudioData.IO
 
             if (isValid)
             {
-                duration = calculateDuration(bufferedSource, loopStart, LOOP_COUNT_DEFAULT);
+                duration = calculateDuration(bufferedSource, loopStart, LOOP_COUNT_DEFAULT) * 1000.0;
 
                 bitrate = (sizeInfo.FileSize - GYM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
             }

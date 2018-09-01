@@ -69,7 +69,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -124,7 +124,7 @@ namespace ATL.AudioData.IO
         private double getCompressionRatio()
         {
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channels * bits / 8) + 44) * 100;
+                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channels * bits / 8) + 44) * 100;
             else
                 return 0;
         }
@@ -164,7 +164,7 @@ namespace ATL.AudioData.IO
 
                     ulong sampleCount = source.ReadUInt64();
 
-                    duration = (double)sampleCount / sampleRate;
+                    duration = (double)sampleCount * 1000.0 / sampleRate;
                     bitrate = Math.Round(((double)(sizeInfo.FileSize - source.BaseStream.Position)) * 8 / duration); //time to calculate average bitrate
 
                     result = true;

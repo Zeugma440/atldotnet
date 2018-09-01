@@ -117,7 +117,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -427,12 +427,12 @@ namespace ATL.AudioData.IO
             if ((sampleNumber > 0) && (sampleRate > 0))
                 result = (double)(sampleNumber / sampleRate);
 
-            return result;
+            return result * 1000.0;
         }
 
         private double getBitrate()
         {
-            return Math.Round((double)this.bitsPerSample * this.sampleRate * this.channelNumber);
+            return Math.Round((double)this.bitsPerSample / 1000.0 * this.sampleRate * this.channelNumber);
         }
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

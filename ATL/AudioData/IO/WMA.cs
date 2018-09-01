@@ -568,9 +568,9 @@ namespace ATL.AudioData.IO
                     if (StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID, ID))
                     {
                         source.BaseStream.Seek(40, SeekOrigin.Current);
-                        duration = source.ReadUInt64() / 10000000.0;    // Play duration (100-nanoseconds)
+                        duration = source.ReadUInt64() / 10000.0;       // Play duration (100-nanoseconds)
                         source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
-                        duration -= source.ReadUInt64() / 1000.0;       // Preroll duration (ms)
+                        duration -= source.ReadUInt64();                // Preroll duration (ms)
                     }
                     // Stream properties (mandatory; one per stream)
                     else if (StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID, ID))
@@ -677,7 +677,7 @@ namespace ATL.AudioData.IO
 			{
 				channelModeID = (byte)fileData.Channels;
 				sampleRate = fileData.SampleRate;
-                bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / 1000.0 / duration;
+                bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / duration;
                 isVBR = (WMA_GSM_VBR_ID == fileData.FormatTag);
                 isLossless = (WMA_LOSSLESS_ID == fileData.FormatTag);
             }

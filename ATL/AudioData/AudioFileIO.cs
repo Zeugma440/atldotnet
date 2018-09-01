@@ -317,7 +317,7 @@ namespace ATL.AudioData
             get { return audioData.SampleRate; }
         }
         /// <summary>
-        /// Track duration (seconds)
+        /// Track duration (milliseconds)
         /// </summary>
         public double Duration
         {

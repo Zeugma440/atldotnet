@@ -59,7 +59,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -139,7 +139,7 @@ namespace ATL.AudioData.IO
 					default : sampleRate = 0; break;
 				}
 
-				bitrate = BITRATES[(aByte & 0x3F) >> 1] * 1000;
+				bitrate = BITRATES[(aByte & 0x3F) >> 1];
 
 				aByte = 0;
 

@@ -194,7 +194,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -347,8 +347,8 @@ namespace ATL.AudioData.IO
 					}
 				*/
 
-				duration = (double)wvh4.total_samples / sampleRate;
-				if ( duration > 0 ) bitrate = (sizeInfo.FileSize - tagSize) * 8 / (double)(samples / (double)sampleRate);
+				duration = (double)wvh4.total_samples * 1000.0 / sampleRate;
+				if ( duration > 0 ) bitrate = (sizeInfo.FileSize - tagSize) * 8 / (double)(samples * 1000.0 / (double)sampleRate);
     
 				Array.Clear(EncBuf,0,4096);
 				EncBuf = r.ReadBytes(4096);    
@@ -524,9 +524,9 @@ namespace ATL.AudioData.IO
 								}
 							}
 				
-							if ( sampleRate <= 0)  sampleRate = 44100;
-							duration = (double)wvh3.total_samples / sampleRate;
-							if (duration > 0)  bitrate = 8.0*(sizeInfo.FileSize - tagSize - (double)wvh3.ckSize)/duration;
+							if (sampleRate <= 0)  sampleRate = 44100;
+							duration = (double)wvh3.total_samples * 1000.0 / sampleRate;
+							if (duration > 0)  bitrate = 8.0 * (sizeInfo.FileSize - tagSize - (double)wvh3.ckSize) / duration;
 						}
 						break;
 					} 

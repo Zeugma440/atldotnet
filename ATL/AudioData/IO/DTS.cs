@@ -63,7 +63,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -100,7 +100,7 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channels * bits / 8) + 44) * 100;
+                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channels * bits / 8) + 44) * 100;
             else
                 return 0;
         }
@@ -164,7 +164,7 @@ namespace ATL.AudioData.IO
 				aWord = 0;
 				aWord = (ushort)( specDTS[2] | (specDTS[1] << 8) );
 
-				bitrate = (ushort)BITRATES[(aWord & 0x03E0) >> 5] * 1000;
+				bitrate = (ushort)BITRATES[(aWord & 0x03E0) >> 5];
 
 				aWord = 0;
 				aWord = (ushort)( specDTS[7] | (specDTS[6] << 8) );

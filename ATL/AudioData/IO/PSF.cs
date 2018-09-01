@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
         private const byte LINE_FEED = 0x0A;
         private const byte SPACE = 0x20;
 
-        private const int PSF_DEFAULT_DURATION = 180; // 3 minutes
+        private const int PSF_DEFAULT_DURATION = 180000; // 3 minutes
 
         private int sampleRate;
         private double bitrate;
@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -336,10 +336,10 @@ namespace ATL.AudioData.IO
 				hStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
 			}
 
-			if (dStr != "") result = result + (Int32.Parse(dStr) / 10);
-			if (sStr != "") result = result + (Int32.Parse(sStr));
-			if (mStr != "") result = result + (Int32.Parse(mStr)*60);
-			if (hStr != "") result = result + (Int32.Parse(hStr)*3600);
+			if (dStr != "") result = result + (Int32.Parse(dStr) * 100);
+			if (sStr != "") result = result + (Int32.Parse(sStr) * 1000);
+			if (mStr != "") result = result + (Int32.Parse(mStr) * 60000);
+			if (hStr != "") result = result + (Int32.Parse(hStr) * 3600000);
 			
 			return result;
 		}

@@ -120,7 +120,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -219,7 +219,7 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio 
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channels * bits / 8.0) + 44) * 100;
+                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channels * bits / 8.0) + 44) * 100;
             else
                 return 0;
         }
@@ -330,7 +330,7 @@ namespace ATL.AudioData.IO
                             if (aSampleRate > 0)
                             {
                                 sampleRate = (int)Math.Round(aSampleRate);
-                                duration = (double)numSampleFrames / sampleRate;
+                                duration = (double)numSampleFrames * 1000.0 / sampleRate;
 
                                 if (!compression.Equals(COMPRESSION_NONE)) // Sample size is specific to selected compression method
                                 {

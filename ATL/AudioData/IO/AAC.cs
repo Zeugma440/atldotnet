@@ -320,7 +320,7 @@ namespace ATL.AudioData.IO
                 if (0 == bitrate)
                     return 0;
                 else
-                    return 8.0 * (sizeInfo.FileSize - sizeInfo.ID3v2Size) / bitrate;
+                    return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
             }
         }
 
@@ -439,9 +439,6 @@ namespace ATL.AudioData.IO
                 if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) break;
             }
             while (Source.BaseStream.Length > sizeInfo.ID3v2Size + totalSize);
-            /* Useless for now
-            FTotalFrames = Frames;
-            */
             bitrate = (int)Math.Round(8 * totalSize / 1024.0 / frames * sampleRate);
         }
 
@@ -543,7 +540,7 @@ namespace ATL.AudioData.IO
             globalTimeScale = StreamUtils.ReverseInt32(source.ReadInt32());
             long timeLengthPerSec;
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            duration = timeLengthPerSec * 1.0 / globalTimeScale;
+            duration = timeLengthPerSec * 1000.0 / globalTimeScale;
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
 
@@ -1166,7 +1163,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return;
             }
-            bitrate = (int)Math.Round(mdatSize * 8 / duration, 0);
+            bitrate = (int)Math.Round(mdatSize * 8 / duration * 1000.0, 0);
         }
 
         /// <summary>

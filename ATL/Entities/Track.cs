@@ -144,9 +144,19 @@ namespace ATL
         /// </summary>
 		public int CodecFamily;
         /// <summary>
-		/// Duration (seconds)
+        /// Duration (seconds)
+        /// </summary>
+        public int Duration
+        {
+            get
+            {
+                return (int)Math.Round(DurationMs / 1000.0);
+            }
+        }
+        /// <summary>
+		/// Duration (milliseconds)
 		/// </summary>
-		public int Duration;
+		public double DurationMs;
 
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
@@ -223,7 +233,7 @@ namespace ATL
             DiscNumber = fileIO.Disc;
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
-            Duration = fileIO.IntDuration;
+            DurationMs = fileIO.Duration;
             Rating = fileIO.Rating;
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;

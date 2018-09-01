@@ -75,7 +75,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -142,8 +142,8 @@ namespace ATL.AudioData.IO
 				samplesSize = source.ReadUInt32();
 				cRC32 = source.ReadUInt32();
 
-				bitrate = (double)(sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / ((double)samplesSize / sampleRate);
-				duration = (double)samplesSize / sampleRate;
+				bitrate = (double)(sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / ((double)samplesSize  * 1000.0 / sampleRate);
+				duration = (double)samplesSize * 1000.0 / sampleRate;
 
 				result = true;
 			}

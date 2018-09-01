@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -214,7 +214,7 @@ namespace ATL.AudioData.IO
                         encoder = "";                      // Encoder info is SV7-only
                         
                         // MPC has variable bitrate; only MPC versions < 7 display fixed bitrate
-                        duration = (double)FSampleCount / sampleRate;
+                        duration = (double)FSampleCount * 1000.0 / sampleRate;
                         bitrate = calculateAverageBitrate(duration);
  
                         headerFound = true;
@@ -393,7 +393,7 @@ namespace ATL.AudioData.IO
         private double getDuration()
 		{
 			// Calculate duration time
-			if (sampleRate > 0) return (frameCount * 1152.0 / sampleRate);
+			if (sampleRate > 0) return (frameCount * 1152.0 * 1000.0 / sampleRate);
 			else return 0;
 		}
 

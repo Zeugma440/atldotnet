@@ -115,7 +115,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -193,19 +193,18 @@ namespace ATL.AudioData.IO
 
     */
 
+        // Get number of samples
         private long getSamples()
 		{
-			// Get number of samples
 			return ( ((header.Length >> header.ChannelMode) * 0x00000001) +
 				((header.HiLength >> header.ChannelMode) * 0x00010000) );
 		}
 
-		private double getDuration()
+        // Get song duration
+        private double getDuration()
 		{
-			double nbSamples = (double)getSamples();
-			// Get song duration
 			if (header.SampleRate > 0)
-				return nbSamples / header.SampleRate;
+				return (double)getSamples() * 1000.0 / header.SampleRate;
 			else
 				return 0;
 		}
@@ -217,7 +216,7 @@ namespace ATL.AudioData.IO
 
         private double getBitrate()
         {
-            return ((sizeInfo.FileSize - header.Size - sizeInfo.TotalTagSize) * 8 / (Duration));
+            return ((sizeInfo.FileSize - header.Size - sizeInfo.TotalTagSize) * 8 / Duration);
         }
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

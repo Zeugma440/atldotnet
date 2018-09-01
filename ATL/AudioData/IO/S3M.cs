@@ -75,7 +75,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -477,7 +477,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration();
+            duration = calculateDuration() * 1000.0;
 
             foreach (Instrument i in FInstruments)
             {

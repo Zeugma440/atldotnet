@@ -299,7 +299,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -347,7 +347,7 @@ namespace ATL.AudioData.IO
         private double getDuration()
         {
             long maxTicks = 0;
-            long maxTime = 0;
+            double maxDuration = 0; // Longest duration among all tracks
 
             if (tracks.Count > 0)
             {
@@ -374,12 +374,12 @@ namespace ATL.AudioData.IO
                 }
                 // Make sure the song lasts until the latest event
                 if (maxTicks > lastTempoTicks) currentDuration += (maxTicks - lastTempoTicks) * currentTempo;
-                maxTime = currentDuration;
+                maxDuration = currentDuration;
             }
 
             // For an obscure reason, this algorithm constantly calculates
-            // a duration equals to (actual duration calculated by BASSMIDI - 1 second), hence this ugly "+1"
-            return (maxTime / timebase / 1000000.00) + 1;
+            // a duration equals to (actual duration calculated by BASSMIDI - 1 second), hence this ugly " + 1000"
+            return (maxDuration / timebase / 1000.00) + 1000;
         }
 
         /****************************************************************************

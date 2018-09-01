@@ -19,7 +19,7 @@ namespace ATL.AudioData.IO
 		public const int MONKEY_COMPRESSION_BRAINDEAD  = 6000;  // BrainDead
 	
 		// Compression level names
-		public static readonly String[] MONKEY_COMPRESSION = new String[7] { "Unknown", "Fast", "Normal", "High", "Extra High", "Insane", "BrainDead" };
+		public static readonly string[] MONKEY_COMPRESSION = new string[7] { "Unknown", "Fast", "Normal", "High", "Extra High", "Insane", "BrainDead" };
 
 		// Format flags, only for Monkey's Audio <= 3.97
 		public const byte MONKEY_FLAG_8_BIT          = 1;  // Audio 8-bit
@@ -30,14 +30,14 @@ namespace ATL.AudioData.IO
 		public const byte MONKEY_FLAG_WAV_NOT_STORED = 32; // WAV header not stored
 
 		// Channel mode names
-		public static readonly String[] MONKEY_MODE = new String[3]	{ "Unknown", "Mono", "Stereo" };
+		public static readonly string[] MONKEY_MODE = new string[3]	{ "Unknown", "Mono", "Stereo" };
 	
 
         ApeHeader header = new ApeHeader();				// common header
 
     	// Stuff loaded from the header:
 		private int version;
-		private String versionStr;
+		private string versionStr;
 		private int	channels;
 		private int	sampleRate;
 		private int	bits;
@@ -45,7 +45,7 @@ namespace ATL.AudioData.IO
 		private double peakLevelRatio;
 		private long totalSamples;
 		private int	compressionMode;
-		private String compressionModeStr;
+		private string compressionModeStr;
       
 		// FormatFlags, only used with Monkey's <= 3.97
 		private int formatFlags;
@@ -114,7 +114,7 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.version; }
 		}
-		public String VersionStr
+		public string VersionStr
 		{
 			get { return this.versionStr; }
 		}	
@@ -142,7 +142,7 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.compressionMode; }
 		}	
-		public String CompressionModeStr
+		public string CompressionModeStr
 		{
 			get { return this.compressionModeStr; }
 		}
@@ -184,7 +184,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -395,9 +395,9 @@ namespace ATL.AudioData.IO
 						compressionModeStr = compressionMode.ToString();
 					}
 					// length
-					if (sampleRate>0) duration = ((double)totalSamples / sampleRate);
+					if (sampleRate > 0) duration = ((double)totalSamples * 1000.0 / sampleRate);
 					// average bitrate
-					if (duration > 0) bitrate = 8*(sizeInfo.FileSize - sizeInfo.TotalTagSize) / (duration);
+					if (duration > 0) bitrate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / (duration);
 					// some extra sanity checks
 					isValid   = ((bits>0) && (sampleRate>0) && (totalSamples>0) && (channels>0));
 					result   = isValid;

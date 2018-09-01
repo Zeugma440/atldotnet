@@ -23,7 +23,7 @@ namespace ATL.AudioData
 			get;
 		}
 		/// <summary>
-		/// Duration (seconds)
+		/// Duration (milliseconds)
 		/// </summary>
 		double Duration
 		{

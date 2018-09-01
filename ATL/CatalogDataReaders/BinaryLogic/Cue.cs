@@ -64,7 +64,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             return s.Substring(1, s.Length - 2);
         }
 
-        static private int decodeTimecodeToS(string timeCode)
+        static private int decodeTimecodeToMs(string timeCode)
         {
             int result = -1;
             bool valid = false;
@@ -88,7 +88,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
             if (!valid) result = -1;
 
-            return result;
+            return result * 1000;
         }
 
         private void read()
@@ -200,21 +200,21 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         }
                         else if ( ("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
                         {
-                            if (trackInfo.Length > 0) currentTrack.Duration += decodeTimecodeToS(trackInfo[1]);
+                            if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
                         }
                         else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
                             if (trackInfo.Length > 1)
                             {
-                                int timeOffset = decodeTimecodeToS(trackInfo[2]);
+                                int timeOffset = decodeTimecodeToMs(trackInfo[2]);
 
                                 if (0 == indexRelativePosition && previousTrack != null)
                                 {
-                                    previousTrack.Duration += timeOffset - previousTimeOffset;
+                                    previousTrack.DurationMs += timeOffset - previousTimeOffset;
                                 }
                                 else
                                 {
-                                    currentTrack.Duration += timeOffset - previousTimeOffset;
+                                    currentTrack.DurationMs += timeOffset - previousTimeOffset;
                                 }
                                 previousTimeOffset = timeOffset;
 
@@ -235,7 +235,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                     if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                     if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
                     currentTrack.Album = title;
-                    currentTrack.Duration += physicalTrack.Duration - previousTimeOffset;
+                    currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
 
                     tracks.Add(currentTrack);
                 }

@@ -74,7 +74,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get { return bitrate; }
         }
         public double Duration
         {
@@ -309,7 +309,7 @@ namespace ATL.AudioData.IO
                 }
             } while (currentPattern < nbValidPatterns); // end patterns loop
 
-            return result;
+            return result * 1000.0;
         }
 
         private byte detectNbSamples(BinaryReader source)
