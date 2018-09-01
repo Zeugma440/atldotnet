@@ -16,6 +16,10 @@
     <PackageReleaseNotes>TBD</PackageReleaseNotes>
     <Version>2.4.3</Version>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />
