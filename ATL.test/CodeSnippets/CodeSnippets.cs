@@ -11,8 +11,8 @@ namespace ATL.test.CodeSnippets
     public class CodeSnippets : ILogDevice
     {
         string audioFilePath;
+        string cuesheetPath;
         string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
-        string cuesheetPath = TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue";
         string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
 
         Log theLog = new Log();
@@ -29,12 +29,14 @@ namespace ATL.test.CodeSnippets
         public void Init()
         {
             audioFilePath = TestUtils.GetTempTestFile("MP3/id3v2.3_UTF16.mp3");
+            cuesheetPath = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
         }
 
         [TestCleanup]
         public void End()
         {
             File.Delete(audioFilePath);
+            File.Delete(cuesheetPath);
         }
 
         [TestMethod]
