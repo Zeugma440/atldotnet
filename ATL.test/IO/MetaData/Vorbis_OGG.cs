@@ -61,7 +61,12 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_VorbisOGG_simple_OnePager(Stream stream = null)
+        public void TagIO_R_VorbisOGG_simple_OnePager()
+        {
+            TagIO_R_VorbisOGG_simple_OnePager(null);
+        }
+
+        public void TagIO_R_VorbisOGG_simple_OnePager(Stream stream)
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -90,7 +95,12 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_VorbisOGG_Empty(Stream stream = null)
+        public void TagIO_RW_VorbisOGG_Empty()
+        {
+            TagIO_RW_VorbisOGG_Empty(null);
+        }
+
+        public void TagIO_RW_VorbisOGG_Empty(Stream stream)
         {
             ConsoleLogger log = new ConsoleLogger();
 
