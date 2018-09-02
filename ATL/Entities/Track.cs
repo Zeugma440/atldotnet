@@ -11,8 +11,16 @@ namespace ATL
 	/// </summary>
 	public class Track
 	{
+        /// <summary>
+        /// Basic constructor; does nothing else than instanciating the Track object
+        /// </summary>
 		public Track() {}
 
+        /// <summary>
+        /// Loads the file at the given path
+        /// Only works with local paths; http, ftp and the like do not work.
+        /// </summary>
+        /// <param name="Path">Path of the local file to be loaded</param>
         public Track(string Path)
         {
             this.Path = Path;
@@ -20,6 +28,11 @@ namespace ATL
             Update();
         }
 
+        /// <summary>
+        /// Loads the raw data in the given stream according to the given MIME-type
+        /// </summary>
+        /// <param name="stream">Stream containing the raw data to be loaded</param>
+        /// <param name="mimeType">MIME-type (e.g. "audio/mp3" or file extension (e.g. ".mp3") of the content</param>
         public Track(Stream stream, String mimeType)
         {
             this.stream = stream;
@@ -31,7 +44,7 @@ namespace ATL
         //=== METADATA
 
         /// <summary>
-        /// Full ess path of the underlying file
+        /// Full path of the underlying file
         /// </summary>
         public readonly string Path;
         /// <summary>

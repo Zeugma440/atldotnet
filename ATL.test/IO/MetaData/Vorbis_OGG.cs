@@ -123,7 +123,7 @@ namespace ATL.test.IO.MetaData
                 testFileLocation = "";
                 streamCopy = new MemoryStream();
                 stream.CopyTo(streamCopy);
-                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
             }
 
 

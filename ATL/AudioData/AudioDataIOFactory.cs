@@ -387,7 +387,10 @@ namespace ATL.AudioData
 
         public IAudioDataIO GetFromMimeType(String mimeType, String path, int alternate = 0)
         {
-            IList<Format> formats = getFormatsFromMimeType(mimeType);
+            IList<Format> formats;
+            if (mimeType.StartsWith(".")) formats = getFormatsFromPath(mimeType);
+            else formats = getFormatsFromMimeType(mimeType);
+
             int formatId = NO_FORMAT;
 
             if (formats != null && formats.Count > alternate)

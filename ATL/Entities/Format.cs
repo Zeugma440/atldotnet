@@ -94,14 +94,14 @@ namespace ATL
         // Adds the extension ext to the extensions list of this Format
         public void AddExtension(string ext)
 		{
-			if ( !extList.ContainsKey(ext.ToUpper()) )
-				extList.Add(ext.ToUpper(),0);
+			if ( !extList.ContainsKey(ext.ToLower()) )
+				extList.Add(ext.ToLower(),0);
 		}
 
 		// Tests if the extension ext is a valid extension of the current Format
 		public bool IsValidExtension(string ext)
 		{
-			return extList.ContainsKey(ext.ToUpper());
+			return extList.ContainsKey(ext.ToLower());
 		}
 	}
 }

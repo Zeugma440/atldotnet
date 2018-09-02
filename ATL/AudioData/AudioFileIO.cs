@@ -59,6 +59,7 @@ namespace ATL.AudioData
             bool found = false;
 
             audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
+
             audioManager = new AudioDataManager(audioData, stream);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 

@@ -29,7 +29,7 @@ namespace ATL
         {
             IList<ATL.Format> matchingFormats;
 
-            foreach (String ext in f)
+            foreach (string ext in f)
             {
                 if (!formatListByExt.ContainsKey(ext))
                 {
@@ -44,7 +44,7 @@ namespace ATL
                 }
             }
 
-            foreach (String mimeType in f.MimeList)
+            foreach (string mimeType in f.MimeList)
             {
                 if (!formatListByMime.ContainsKey(mimeType))
                 {
@@ -66,10 +66,10 @@ namespace ATL
         /// <param name="path">Path of the file which format to recognize</param>
         /// <returns>List of the valid formats matching the extension of the given file, 
         /// or null if none recognized or the file does not exist</returns>
-        protected IList<ATL.Format> getFormatsFromPath(String path)
+        protected IList<ATL.Format> getFormatsFromPath(string path)
         {
             IList<ATL.Format> result = null;
-            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToUpper();
+            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower();
 
             if (formatListByExt.ContainsKey(extension))
             {
@@ -89,7 +89,7 @@ namespace ATL
         /// <param name="mimeType">MIME-type to recognize</param>
         /// <returns>List of the valid formats matching the MIME-type of the given file, 
         /// or null if none recognized</returns>
-        protected IList<ATL.Format> getFormatsFromMimeType(String mimeType)
+        protected IList<ATL.Format> getFormatsFromMimeType(string mimeType)
         {
             IList<ATL.Format> result = null;
             string mime = mimeType.ToLower();
