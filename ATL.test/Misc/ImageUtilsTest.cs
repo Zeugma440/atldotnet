@@ -41,12 +41,11 @@ namespace ATL.test
             try
             {
                 ImageUtils.GetImageFormatFromPictureHeader(new byte[2]);
-            } catch (Exception e)
+                Assert.Fail();
+            } catch
             {
                 return;
             }
-
-            Assert.Fail();
         }
 
         [TestMethod]

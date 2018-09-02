@@ -126,7 +126,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void StreamUtils_BE24UintConverters()
+        public void StreamUtils_BEUInt24Converters()
         {
             uint intValue = 0x00873529;
 
@@ -134,6 +134,159 @@ namespace ATL.test
 
             byte[] byteValue = StreamUtils.EncodeBEUInt24(intValue);
             Assert.AreEqual(intValue, StreamUtils.DecodeBEUInt24(byteValue));
+        }
+
+        [TestMethod]
+        public void StreamUtils_BEInt16Converters()
+        {
+            short intValue = 0x3529;
+
+            Assert.AreEqual((short)0x00FF, StreamUtils.DecodeBEInt16(new byte[2] { 0x00, 0xFF }));
+
+            byte[] byteValue = StreamUtils.EncodeBEInt16(intValue);
+            Assert.AreEqual(intValue, StreamUtils.DecodeBEInt16(byteValue));
+        }
+
+        [TestMethod]
+        public void StreamUtils_Exceptions()
+        {
+            Assert.IsFalse(StreamUtils.ArrEqualsArr(new byte[1], new byte[2]));
+            Assert.IsFalse(StreamUtils.StringEqualsArr(".", new char[2]));
+
+            try {
+                StreamUtils.DecodeBEUInt16(new byte[1]);
+                Assert.Fail();
+            } catch { }
+
+            try
+            {
+                StreamUtils.DecodeUInt16(new byte[1]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeInt16(new byte[1]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeBEInt16(new byte[1]);
+                Assert.Fail();
+            }
+            catch { }
+
+
+            try
+            {
+                StreamUtils.DecodeBEInt24(new byte[2]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeBEUInt24(new byte[2]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.EncodeBEUInt24(0x01FFFFFF);
+                Assert.Fail();
+            }
+            catch { }
+
+
+            try
+            {
+                StreamUtils.DecodeBEUInt32(new byte[3]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeUInt32(new byte[3]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeBEInt32(new byte[3]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeInt32(new byte[3]);
+                Assert.Fail();
+            }
+            catch { }
+
+
+            try
+            {
+                StreamUtils.DecodeUInt64(new byte[7]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeBEInt64(new byte[7]);
+                Assert.Fail();
+            }
+            catch { }
+
+
+            try
+            {
+                StreamUtils.DecodeSynchSafeInt(new byte[6]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.DecodeSynchSafeInt32(new byte[6]);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.EncodeSynchSafeInt(1, 0);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.EncodeSynchSafeInt(1, 6);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.ReadBits(new BinaryReader(new MemoryStream()), 0, 0);
+                Assert.Fail();
+            }
+            catch { }
+
+            try
+            {
+                StreamUtils.ReadBits(new BinaryReader(new MemoryStream()), 0, 33);
+                Assert.Fail();
+            }
+            catch { }
         }
     }
 }
