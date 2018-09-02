@@ -3,7 +3,7 @@
     <TargetFrameworks>net30;netstandard2.0;netcoreapp2.0</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
     <Company />
-    <AssemblyVersion>2.5.0.0</AssemblyVersion>
+    <AssemblyVersion>2.6.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
 	<PackageVersion>2.5.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -13,12 +13,8 @@
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
     <FileVersion>2.5.0.0</FileVersion>
-    <PackageReleaseNotes>_Technical_
-* `Track` can now be constructed using a `Stream` that contains your file's raw data. Its MIME-type or file extension has to be provided as well. This is useful when information is _already_ in memory before calling ATL, or if you want to keep control on how the resource is accessed.
-
-_Functional_
-* New attribute `double Track.DurationMs` that provides the duration of the track in milliseconds. `int Track.Duration` is maintained for retrocompatibility's sake.</PackageReleaseNotes>
-    <Version>2.5</Version>
+    <PackageReleaseNotes>TBD</PackageReleaseNotes>
+    <Version>2.6</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
     <DebugType>full</DebugType>
