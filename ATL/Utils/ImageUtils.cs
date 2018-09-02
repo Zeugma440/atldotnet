@@ -180,7 +180,8 @@ namespace Commons
                         int nbIFDEntries = readInt16(r, isBigEndian);
 
                         long initialPos = s.Position;
-                        int IFDtag, IFDFieldType, IFDNbValues, IFDValue;
+                        int IFDtag, IFDFieldType, IFDNbValues, IFDValue32, IFDValue16;
+                        byte[] IFDValueBinary;
                         int photometricInterpretation = 0;
                         int bitsPerSample = 0;
                         int samplesPerPixel = 0;
@@ -190,35 +191,40 @@ namespace Commons
                             IFDtag = readInt16(r, isBigEndian);
                             IFDFieldType = readInt16(r, isBigEndian);
                             IFDNbValues = readInt32(r, isBigEndian);
-                            IFDValue = readInt32(r, isBigEndian);
+                            IFDValueBinary = r.ReadBytes(4);
+                            IFDValue32 = isBigEndian? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
+                            IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
 
                             switch (IFDtag)
                             {
                                 // Common properties
                                 case (0x0100):
-                                    props.Width = IFDValue;
+                                    props.Width = IFDValue32;
+                                    // Specs say "SHORT or LONG" but the implementation actually takes up 4 bytes anyway -> we'll assume it's a SHORT if the last two bytes are null
+                                    if (0 == IFDValueBinary[2] + IFDValueBinary[3]) props.Width = IFDValue16;
                                     break;
                                 case (0x0101):
-                                    props.Height = IFDValue;
+                                    props.Height = IFDValue32;
+                                    if (0 == IFDValueBinary[2] + IFDValueBinary[3]) props.Height = IFDValue16;
                                     break;
 
                                 // Specific properties
                                 case (0x0106):                  // PhotometricInterpretation
-                                    photometricInterpretation = IFDValue;
-                                    if (IFDValue < 2) props.ColorDepth = 1;         // Bilevel image
-                                    else if (2 == IFDValue) props.ColorDepth = 24;  // RGB full color image
+                                    photometricInterpretation = IFDValue32;
+                                    if (IFDValue32 < 2) props.ColorDepth = 1;         // Bilevel or greyscale image
+                                    else if (2 == IFDValue32) props.ColorDepth = 24;  // RGB full color image
                                     // NB : A value of 3 would indicate a palette-color image, but has no effect here
                                     break;
                                 case (0x0102):                  // BitsPerSample
-                                    bitsPerSample = IFDValue;
+                                    bitsPerSample = IFDValue16;
                                     break;
                                 case (0x0115):                  // SamplesPerPixel
-                                    samplesPerPixel = IFDValue;
+                                    samplesPerPixel = IFDValue16;
                                     break;
                             }
                         }
 
-                        if (photometricInterpretation < 2) // Bilevel
+                        if (photometricInterpretation < 2) // Bilevel or greyscale
                         {
                             props.ColorDepth = bitsPerSample;
                         }
@@ -421,26 +427,12 @@ namespace Commons
 
         private static short readInt16(BinaryReader r, bool isBigEndian)
         {
-            if (isBigEndian)
-            {
-                return StreamUtils.DecodeBEInt16(r.ReadBytes(2));
-            }
-            else
-            {
-                return r.ReadInt16();
-            }
+            return isBigEndian ? StreamUtils.DecodeBEInt16(r.ReadBytes(2)) : r.ReadInt16();
         }
 
         private static int readInt32(BinaryReader r, bool isBigEndian)
         {
-            if (isBigEndian)
-            {
-                return StreamUtils.DecodeBEInt32(r.ReadBytes(4));
-            }
-            else
-            {
-                return r.ReadInt32();
-            }
+            return isBigEndian ? StreamUtils.DecodeBEInt32(r.ReadBytes(4)) : r.ReadInt32();
         }
 
     }

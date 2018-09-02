@@ -108,6 +108,14 @@ namespace ATL.test
             Assert.AreEqual(1027, props.Height);
             Assert.AreEqual(8, props.NumColorsInPalette);
             Assert.AreEqual(8, props.ColorDepth);
+
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bigEndian.tif");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(2464, props.Width);
+            Assert.AreEqual(3248, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(1, props.ColorDepth);
         }
     }
 }
