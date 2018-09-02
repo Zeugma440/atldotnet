@@ -591,7 +591,7 @@ namespace ATL.AudioData.IO
 
             switch(type)
             {
-                case 0:
+                case XID6_TVAL:
                     if (frameCode == XID6_TRACK) // Specific case : upper byte is the number 0-99, lower byte is an optional ASCII character
                     {
                         byte trackValue = (byte)Math.Min((ushort)0xFF, TrackUtils.ExtractTrackNumber(text) );
@@ -603,7 +603,7 @@ namespace ATL.AudioData.IO
                         writer.Write(ushort.Parse(text)); // Value is directly written as an ushort into the length field
                     }
                     break; 
-                case 1:
+                case XID6_TSTR:
                     if (text.Length > 255) text = text.Substring(0, 255);
                     else if (text.Length < 3) text = Utils.BuildStrictLengthString(text, 3, ' ');
 
@@ -612,7 +612,7 @@ namespace ATL.AudioData.IO
                     writer.Write(textBinary);
                     writer.Write('\0');
                     break;
-                case 4:
+                case XID6_TINT:
                     writer.Write((ushort)4);
                     writer.Write(Int32.Parse(text));
                     break;

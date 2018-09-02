@@ -1,28 +1,53 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Commons;
+using System;
 
 namespace ATL.test
 {
     [TestClass]
     public class ImageUtilsTest
     {
-/*
+        /*
+                [TestMethod]
+                public void Utils_ResizePic()
+                {
+                    Image image = Image.FromFile(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
+                    Assert.AreEqual(900, image.Width);
+                    Assert.AreEqual(600, image.Height);
+
+                    Image resizedImage = Utils.ResizeImage(image, new Size(50, 50), false);
+                    Assert.AreEqual(50, resizedImage.Width);
+                    Assert.AreEqual(50, resizedImage.Height);
+
+                    resizedImage = Utils.ResizeImage(image, new Size(50, 50), true);
+                    Assert.AreEqual(50, resizedImage.Width);
+                    Assert.AreEqual(33, resizedImage.Height);
+                }
+        */
+
         [TestMethod]
-        public void Utils_ResizePic()
+        public void ImgUtils_MimeAndFormat()
         {
-            Image image = Image.FromFile(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
-            Assert.AreEqual(900, image.Width);
-            Assert.AreEqual(600, image.Height);
-
-            Image resizedImage = Utils.ResizeImage(image, new Size(50, 50), false);
-            Assert.AreEqual(50, resizedImage.Width);
-            Assert.AreEqual(50, resizedImage.Height);
-
-            resizedImage = Utils.ResizeImage(image, new Size(50, 50), true);
-            Assert.AreEqual(50, resizedImage.Width);
-            Assert.AreEqual(33, resizedImage.Height);
+            Assert.IsTrue(ImageFormat.Bmp == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Bmp)));
+            Assert.IsTrue(ImageFormat.Tiff == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Tiff)));
+            Assert.IsTrue(ImageFormat.Png == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Png)));
+            Assert.IsTrue(ImageFormat.Gif == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Gif)));
+            Assert.IsTrue(ImageFormat.Jpeg == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Jpeg)));
         }
-*/
+
+        [TestMethod]
+        public void ImgUtils_FormatFromHeaderException()
+        {
+            try
+            {
+                ImageUtils.GetImageFormatFromPictureHeader(new byte[2]);
+            } catch (Exception e)
+            {
+                return;
+            }
+
+            Assert.Fail();
+        }
 
         [TestMethod]
         public void ImgUtils_LoadJpeg()

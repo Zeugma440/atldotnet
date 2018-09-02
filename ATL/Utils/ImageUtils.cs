@@ -28,8 +28,6 @@ namespace Commons
      */
     public static class ImageUtils
     {
-        public static BinaryReader BinaryReader { get; private set; }
-
         /// <summary>
         /// Returns the mime-type of the given .NET image format
         /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
