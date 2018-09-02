@@ -117,6 +117,7 @@ namespace Commons
             }
             else // Handle mm:ss, hh:mm:ss and mm:ss.ddd
             {
+                int days = 0;
                 int hours = 0;
                 int minutes = 0;
                 int seconds = 0;
@@ -132,14 +133,27 @@ namespace Commons
                         parts[parts.Length - 1] = subPart[0];
                         milliseconds = int.Parse(subPart[1]);
                     }
-                    if (parts.Length >= 2) seconds = int.Parse(parts[parts.Length - 1]);
-                    if (parts.Length >= 3) minutes = int.Parse(parts[parts.Length - 2]);
-                    if (parts.Length >= 4) hours = int.Parse(parts[parts.Length - 3]);
+                    seconds = int.Parse(parts[parts.Length - 1]);
+                    minutes = int.Parse(parts[parts.Length - 2]);
+                    if (parts.Length >= 3)
+                    {
+                        string[] subPart = parts[parts.Length - 3].Split('d');
+                        if (subPart.Length > 1)
+                        {
+                            days = int.Parse(subPart[0].Trim());
+                            hours = int.Parse(subPart[1].Trim());
+                        }
+                        else
+                        {
+                            hours = int.Parse(subPart[0]);
+                        }
+                    }
 
                     result = milliseconds;
                     result += seconds * 1000;
                     result += minutes * 60 * 1000;
                     result += hours * 60 * 60 * 1000;
+                    result += days * 24 * 60 * 60 * 1000;
                 }
             }
 
@@ -308,9 +322,16 @@ namespace Commons
         {
             if ((null == s) || (0 == s.Length)) return false;
 
-            for (int i=0; i<s.Length; i++)
+            for (int i = 0; i < s.Length; i++)
             {
-                if (!char.IsDigit(s[i]) && ( allowsOnlyIntegers && ((s[i] == '.') || (s[i] == ','))) ) return false;
+                if ((s[i] == '.') || (s[i] == ','))
+                {
+                    if (allowsOnlyIntegers) return false;
+                }
+                else
+                {
+                    if (!char.IsDigit(s[i]) && !(s[i] == '-') ) return false;
+                }
             }
 
             return true;
@@ -325,13 +346,13 @@ namespace Commons
         {
             if ((null == s) || (0 == s.Length)) return false;
 
-            if (s.Length % 2 > 1) return false; // Hex notation always uses two characters for every byte
+            if (s.Length % 2 > 0) return false; // Hex notation always uses two characters for every byte
 
             char c;
 
             for (int i = 0; i < s.Length; i++)
             {
-                c = Char.ToUpper(s[i]);
+                c = char.ToUpper(s[i]);
                 if (!char.IsDigit(c) && c!='A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
             }
 
@@ -347,14 +368,16 @@ namespace Commons
         {
             if (!IsNumeric(s)) return 0;
 
-            string[] parts = s.Split(new Char[] { ',', '.' });
+            string[] parts = s.Split(new char[] { ',', '.' });
 
             if (parts.Length > 2) return 0;
-            else if (1 == parts.Length) return Double.Parse(s);
+            else if (1 == parts.Length) return double.Parse(s);
             else // 2 == parts.Length
             {
                 double decimalDivisor = Math.Pow(10, parts[1].Length);
-                return Double.Parse(parts[0]) + Double.Parse(parts[1]) / decimalDivisor;
+                double result = double.Parse(parts[0]);
+                if (result >= 0) return result + double.Parse(parts[1]) / decimalDivisor;
+                else return result - double.Parse(parts[1]) / decimalDivisor;
             }
         }
     }
