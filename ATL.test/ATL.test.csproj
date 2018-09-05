@@ -85,6 +85,7 @@
     <Compile Include="Logging\LoggingTest.cs" />
     <Compile Include="Misc\FileStructureHelperTest.cs" />
     <Compile Include="Misc\ImageUtilsTest.cs" />
+    <Compile Include="Misc\TrackUtilsTest.cs" />
     <Compile Include="Misc\UtilsTest.cs" />
     <Compile Include="PlaylistReaders\PlaylistTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

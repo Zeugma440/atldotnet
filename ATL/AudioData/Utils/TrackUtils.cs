@@ -60,6 +60,7 @@ namespace ATL.AudioData
         /// Extract rating level from the given string
         /// </summary>
         /// <param name="ratingString">Raw "rating" field in string form</param>
+        /// <param name="convention">Tagging convention (see MetaDataIO.RC_XXX constants)</param>
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
         public static float DecodePopularity(string ratingString, int convention)
         {
@@ -74,7 +75,9 @@ namespace ATL.AudioData
             // If the field is only one byte long, rating is evaluated numerically
             if (1 == ratingString.Length) return DecodePopularity((byte)ratingString[0], convention);
 
-            // == Rating is stored in the form of stars ==
+            // Exceptional case : rating is stored in the form of stars
+            // NB : Having just one star is embarassing, since it falls into the "one-byte-long field" case processed above
+            // It won't be interpretated as a star rating, as those are very rare
             Regex regex = new Regex("\\*+");
 
             Match match = regex.Match(ratingString.Trim());
@@ -91,6 +94,7 @@ namespace ATL.AudioData
         /// Extract rating level from the given byte
         /// </summary>
         /// <param name="rating">Raw "rating" field in byte form</param>
+        /// <param name="convention">Tagging convention (see MetaDataIO.RC_XXX constants)</param>
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
         public static float DecodePopularity(double rating, int convention)
         {
@@ -150,7 +154,7 @@ namespace ATL.AudioData
         /// </summary>
         public static int EncodePopularity(string ratingStr, int convention)
         {
-            double rating = Double.Parse(ratingStr);
+            double rating = Utils.ParseDouble(ratingStr);
             switch (convention)
             {
                 case MetaDataIO.RC_ASF:
