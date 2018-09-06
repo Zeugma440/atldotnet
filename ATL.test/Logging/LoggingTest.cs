@@ -18,6 +18,57 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void Log_Categories()
+        {
+            messages.Clear();
+
+            theLog.Debug("debug");
+            theLog.Info("info1");
+            theLog.Info("info2");
+            theLog.Warning("warning1");
+            theLog.Warning("warning2");
+            theLog.Warning("warning3");
+            theLog.Error("error");
+
+            IList<Log.LogItem> msgs = theLog.GetAllItems();
+            Assert.AreEqual(7, msgs.Count);
+            Assert.AreEqual(Log.LV_DEBUG, msgs[0].Level);
+            Assert.AreEqual(Log.LV_INFO, msgs[1].Level);
+            Assert.AreEqual(Log.LV_WARNING, msgs[3].Level);
+            Assert.AreEqual(Log.LV_ERROR, msgs[6].Level);
+
+            msgs = theLog.GetAllItems(Log.LV_DEBUG);
+            Assert.AreEqual(1, msgs.Count);
+            Assert.AreEqual(Log.LV_DEBUG, msgs[0].Level);
+            Assert.AreEqual("debug", msgs[0].Message);
+
+            msgs = theLog.GetAllItems(Log.LV_INFO);
+            Assert.AreEqual(2, msgs.Count);
+            Assert.AreEqual(Log.LV_INFO, msgs[0].Level);
+            Assert.AreEqual("info1", msgs[0].Message);
+            Assert.AreEqual(Log.LV_INFO, msgs[1].Level);
+            Assert.AreEqual("info2", msgs[1].Message);
+
+            msgs = theLog.GetAllItems(Log.LV_WARNING);
+            Assert.AreEqual(3, msgs.Count);
+            Assert.AreEqual(Log.LV_WARNING, msgs[0].Level);
+            Assert.AreEqual("warning1", msgs[0].Message);
+            Assert.AreEqual(Log.LV_WARNING, msgs[1].Level);
+            Assert.AreEqual("warning2", msgs[1].Message);
+            Assert.AreEqual(Log.LV_WARNING, msgs[2].Level);
+            Assert.AreEqual("warning3", msgs[2].Message);
+
+            msgs = theLog.GetAllItems(Log.LV_ERROR);
+            Assert.AreEqual(1, msgs.Count);
+            Assert.AreEqual(Log.LV_ERROR, msgs[0].Level);
+            Assert.AreEqual("error", msgs[0].Message);
+
+            theLog.ClearAll();
+            msgs = theLog.GetAllItems();
+            Assert.AreEqual(0, msgs.Count);
+        }
+
+        [TestMethod]
         public void Log_Sync()
         {
             messages.Clear();
