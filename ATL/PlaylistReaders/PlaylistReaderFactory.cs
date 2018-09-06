@@ -98,20 +98,11 @@ namespace ATL.PlaylistReaders
 
         public IPlaylistReader GetPlaylistReader(string path, int alternate = 0)
         {
-            IList<Format> formats = getFormatsFromPath(path);
-            IPlaylistReader result;
-
-            if (formats.Count > alternate)
-            {
-                result = GetPlaylistReader(formats[alternate].ID);
-            }
-            else
-            {
-                result = GetPlaylistReader(NO_FORMAT);
-            }
-
-            result.Path = path;
-            return result;
+            var formats = getFormatsFromPath(path);
+            var formatId = formats.Count > alternate ? formats[alternate].ID : NO_FORMAT;
+            IPlaylistReader playlistReader = GetPlaylistReader(formatId);
+            playlistReader.Path = path;
+            return playlistReader;
         }
 
         public IPlaylistReader GetPlaylistReader(int formatId)
