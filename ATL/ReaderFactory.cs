@@ -63,19 +63,8 @@ namespace ATL
         /// or null if none recognized or the file does not exist</returns>
         protected IList<ATL.Format> getFormatsFromPath(string path)
         {
-            IList<ATL.Format> result = null;
-            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower();
-
-            if (formatListByExt.ContainsKey(extension))
-            {
-                IList<Format> formats = formatListByExt[extension];
-                if (formats != null && formats.Count > 0)
-                {
-                    result = formats;
-                }
-            }
-
-            return result;
+            var extension = System.IO.Path.GetExtension(path).ToLower();
+            return formatListByExt.ContainsKey(extension) ? formatListByExt[extension] : new List<ATL.Format>();
         }
 
         /// <summary>
