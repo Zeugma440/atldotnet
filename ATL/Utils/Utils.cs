@@ -85,18 +85,12 @@ namespace Commons
 
             if (d > 0)
             {
-                return d + "d " + hStr + ":" + mStr + ":" + sStr;
+                return $"{d}d {hStr}:{mStr}:{ sStr}";
             }
             else
             {
-                if (h > 0)
-                {
-                    return hStr + ":" + mStr + ":" + sStr;
-                }
-                else
-                {
-                    return mStr + ":" + sStr;
-                }
+                return (h > 0) ? $"{hStr}:{mStr}:{sStr}" : $"{mStr}:{sStr}";
+
             }
         }
 
@@ -175,7 +169,7 @@ namespace Commons
 
             return iStr.Substring(0, i);
         }
-        
+
         /// <summary>
         /// Transforms the given string to format with a given length
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
@@ -225,7 +219,8 @@ namespace Commons
                     Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
                     for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
                 }
-            } else
+            }
+            else
             {
                 result = data;
             }
@@ -330,7 +325,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && !(s[i] == '-') ) return false;
+                    if (!char.IsDigit(s[i]) && !(s[i] == '-')) return false;
                 }
             }
 
@@ -353,7 +348,7 @@ namespace Commons
             for (int i = 0; i < s.Length; i++)
             {
                 c = char.ToUpper(s[i]);
-                if (!char.IsDigit(c) && c!='A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
+                if (!char.IsDigit(c) && c != 'A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
             }
 
             return true;
