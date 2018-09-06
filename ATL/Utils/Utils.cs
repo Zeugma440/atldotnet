@@ -246,8 +246,7 @@ namespace Commons
                 if (value.Length > 0)
                 {
                     // Numeric convert
-                    float f;
-                    if (float.TryParse(value, out f))
+                    if (float.TryParse(value, out float f))
                     {
                         return (f != 0);
                     }
