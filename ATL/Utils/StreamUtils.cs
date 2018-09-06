@@ -646,10 +646,9 @@ namespace ATL
         /// <summary>
         /// Finds a byte sequence within a stream
         /// </summary>
-        /// <param name="r">Stream to search into</param>
+        /// <param name="stream">Stream to search into</param>
         /// <param name="sequence">Sequence to find</param>
-        /// <param name="forward">True if the sequence to find has to be looked for after current position; false instead</param>
-        /// <param name="maxDistance">Maximum distance (in bytes) of the sequence to find.
+        /// <param name="limit">Maximum distance (in bytes) of the sequence to find.
         /// Put 0 for an infinite distance</param>
         /// <returns>
         ///     true if the sequence has been found; the stream will be positioned on the 1st byte following the sequence

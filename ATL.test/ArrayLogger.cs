@@ -1,5 +1,6 @@
 ﻿using ATL.Logging;
 using System.Collections.Generic;
+using static ATL.Logging.Log;
 
 namespace ATL.test
 {
@@ -18,6 +19,11 @@ namespace ATL.test
         public void DoLog(Log.LogItem anItem)
         {
             Items.Add(anItem);
+        }
+
+        public IList<LogItem> GetAllItems(int levelMask)
+        {
+            return theLog.GetAllItems(levelMask);
         }
     }
 }

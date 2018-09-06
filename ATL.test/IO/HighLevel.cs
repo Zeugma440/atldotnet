@@ -263,81 +263,60 @@ namespace ATL.test.IO
         [TestMethod]
         public void StreamedIO_R_Audio()
         {
-            try
+            string resource = "OGG/ogg.ogg";
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
+
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                string resource = "OGG/ogg.ogg";
-                string location = TestUtils.GetResourceLocationRoot() + resource;
-                string testFileLocation = TestUtils.GetTempTestFile(resource);
+                Track theTrack = new Track(fs, "audio/ogg");
 
-                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    Track theTrack = new Track(fs, "audio/ogg");
-
-                    Assert.AreEqual(33, theTrack.Duration);
-                    Assert.AreEqual(69, theTrack.Bitrate);
-                    Assert.AreEqual(22050, theTrack.SampleRate);
-                    Assert.AreEqual(true, theTrack.IsVBR);
-                    Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
-                }
-
-                // Get rid of the working copy
-                File.Delete(testFileLocation);
+                Assert.AreEqual(33, theTrack.Duration);
+                Assert.AreEqual(69, theTrack.Bitrate);
+                Assert.AreEqual(22050, theTrack.SampleRate);
+                Assert.AreEqual(true, theTrack.IsVBR);
+                Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
             }
-            finally
-            {
-                Settings.EnablePadding = false;
-            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
 
         [TestMethod]
         public void StreamedIO_R_Meta()
         {
-            try
-            {
-                string resource = "OGG/ogg.ogg";
-                string location = TestUtils.GetResourceLocationRoot() + resource;
-                string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string resource = "OGG/ogg.ogg";
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
 
-                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    Vorbis_OGG offTest = new Vorbis_OGG();
-                    offTest.TagIO_R_VorbisOGG_simple_OnePager(fs);
-                    fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
-                }
-
-                // Get rid of the working copy
-                File.Delete(testFileLocation);
-            }
-            finally
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Settings.EnablePadding = false;
+                Vorbis_OGG offTest = new Vorbis_OGG();
+                offTest.TagIO_R_VorbisOGG_simple_OnePager(fs);
+                fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
             }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void StreamedIO_RW_Meta()
         {
-            try
-            {
-                string resource = "OGG/empty.ogg";
-                string location = TestUtils.GetResourceLocationRoot() + resource;
-                string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string resource = "OGG/empty.ogg";
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
 
-                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
-                {
-                    Vorbis_OGG offTest = new Vorbis_OGG();
-                    offTest.TagIO_RW_VorbisOGG_Empty(fs);
-                    fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
-                }
-
-                // Get rid of the working copy
-                File.Delete(testFileLocation);
-            }
-            finally
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
             {
-                Settings.EnablePadding = false;
+                Vorbis_OGG offTest = new Vorbis_OGG();
+                offTest.TagIO_RW_VorbisOGG_Empty(fs);
+                fs.Seek(0, SeekOrigin.Begin); // Test if stream is still open
             }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
     }
