@@ -19,7 +19,6 @@ namespace ATL
     /// </summary>
     public class Format : IEnumerable
     {
-
         /// <summary>
         ///  Name of the format
         /// </summary>

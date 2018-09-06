@@ -19,17 +19,24 @@ namespace ATL.CatalogDataReaders
 		{
 			if (null == theFactory)
 			{
-				theFactory = new CatalogDataReaderFactory();
-                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
-
-                Format tempFmt = new Format("CUE sheet");
-                tempFmt.ID = CR_CUE;
-                tempFmt.AddExtensions(".cue");
-                theFactory.addFormat(tempFmt);
+                theFactory = new CatalogDataReaderFactory
+                {
+                    formatListByExt = new Dictionary<string, IList<Format>>()
+                };
+                theFactory.addFormat(CueSheetFormat());
 			}
-
 			return theFactory;
 		}
+
+        private static Format CueSheetFormat()
+        {
+            var format = new Format("CUE sheet")
+            {
+                ID = CR_CUE
+            };
+            format.AddExtensions(".cue");
+            return format;
+        }
 
         public ICatalogDataReader GetCatalogDataReader(string path, int alternate = 0)
 		{
