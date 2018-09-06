@@ -31,7 +31,7 @@ namespace ATL.CatalogDataReaders
 			return theFactory;
 		}
 
-        public ICatalogDataReader GetCatalogDataReader(String path, int alternate = 0)
+        public ICatalogDataReader GetCatalogDataReader(string path, int alternate = 0)
 		{
             IList<Format> formats = getFormatsFromPath(path);
             ICatalogDataReader result;
