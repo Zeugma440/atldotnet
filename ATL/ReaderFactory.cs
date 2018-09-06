@@ -75,19 +75,8 @@ namespace ATL
         /// or null if none recognized</returns>
         protected IList<ATL.Format> getFormatsFromMimeType(string mimeType)
         {
-            IList<ATL.Format> result = null;
             string mime = mimeType.ToLower();
-
-            if (formatListByMime.ContainsKey(mime))
-            {
-                IList<Format> formats = formatListByMime[mime];
-                if (formats != null && formats.Count > 0)
-                {
-                    result = formats;
-                }
-            }
-
-            return result;
+            return formatListByMime.ContainsKey(mime) ? formatListByMime[mime] : new List<ATL.Format>();
         }
 
         /// <summary>

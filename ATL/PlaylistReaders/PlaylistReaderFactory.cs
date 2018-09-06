@@ -101,7 +101,7 @@ namespace ATL.PlaylistReaders
             IList<Format> formats = getFormatsFromPath(path);
             IPlaylistReader result;
 
-            if (formats != null && formats.Count > alternate)
+            if (formats.Count > alternate)
             {
                 result = GetPlaylistReader(formats[alternate].ID);
             }

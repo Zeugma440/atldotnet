@@ -36,7 +36,7 @@ namespace ATL.CatalogDataReaders
             IList<Format> formats = getFormatsFromPath(path);
             ICatalogDataReader result;
 
-            if (formats != null && formats.Count > alternate)
+            if (formats.Count > alternate)
             {
                 result = GetCatalogDataReader(formats[alternate].ID, path);
             }

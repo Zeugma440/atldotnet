@@ -236,7 +236,7 @@ namespace ATL.AudioData
             IList<Format> formats = getFormatsFromPath(path);
             int formatId = NO_FORMAT;
 
-            if (formats != null && formats.Count > alternate)
+            if (formats.Count > alternate)
             {
                 formatId = formats[alternate].ID;
             }
@@ -331,7 +331,7 @@ namespace ATL.AudioData
             return theDataReader;
         }
 
-        public IAudioDataIO GetFromMimeType(String mimeType, String path, int alternate = 0)
+        public IAudioDataIO GetFromMimeType(string mimeType, string path, int alternate = 0)
         {
             IList<Format> formats;
             if (mimeType.StartsWith(".")) formats = getFormatsFromPath(mimeType);
@@ -339,7 +339,7 @@ namespace ATL.AudioData
 
             int formatId = NO_FORMAT;
 
-            if (formats != null && formats.Count > alternate)
+            if (formats.Count > alternate)
             {
                 formatId = formats[alternate].ID;
             }
