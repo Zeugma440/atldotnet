@@ -18,8 +18,6 @@ namespace ATL
         // List of all formats supported by this kind of data reader
         // They are indexed by MIME-type to speed up matching
         protected IDictionary<String, IList<ATL.Format>> formatListByMime;
-   
-
 
         /// <summary>
         /// Adds a format to the supported formats
@@ -27,36 +25,36 @@ namespace ATL
         /// <param name="f">Format to be added</param>
         protected void addFormat(Format f)
         {
-            IList<ATL.Format> matchingFormats;
+            addExtensions(f);
+            addMimeType(f);
+        }
 
+        /// <summary>
+        /// Adds format's extensions  
+        /// </summary>
+        /// <param name="f">Format to be added</param>
+        private void addExtensions(Format f)
+        {
             foreach (string ext in f)
             {
                 if (!formatListByExt.ContainsKey(ext))
-                {
-                    matchingFormats = new List<ATL.Format>();
-                    matchingFormats.Add(f);
-                    formatListByExt.Add(ext, matchingFormats);
-                }
-                else
-                {
-                    matchingFormats = formatListByExt[ext];
-                    matchingFormats.Add(f);
-                }
-            }
+                    formatListByExt[ext] = new List<ATL.Format>();
+                formatListByExt[ext].Add(f);
 
+            }
+        }
+        /// <summary>
+        /// Adds MimeTypes of Format
+        /// </summary>
+        /// <param name="f">Format to be addeds</param>
+        private void addMimeType(Format f)
+        {
             foreach (string mimeType in f.MimeList)
             {
                 if (!formatListByMime.ContainsKey(mimeType))
-                {
-                    matchingFormats = new List<ATL.Format>();
-                    matchingFormats.Add(f);
-                    formatListByMime.Add(mimeType, matchingFormats);
-                }
-                else
-                {
-                    matchingFormats = formatListByMime[mimeType];
-                    matchingFormats.Add(f);
-                }
+                    formatListByMime[mimeType] = new List<ATL.Format>();
+
+                formatListByMime[mimeType].Add(f);
             }
         }
 
