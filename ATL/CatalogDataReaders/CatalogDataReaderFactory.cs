@@ -51,16 +51,11 @@ namespace ATL.CatalogDataReaders
 
         private ICatalogDataReader GetCatalogDataReader(int formatId, string path = "")
         {
-            ICatalogDataReader theReader = null;
-
-            if (CR_CUE == formatId)
+            switch (formatId)
             {
-                theReader = new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
-			}
-
-            if (null == theReader) theReader = new BinaryLogic.DummyReader();
-
-			return theReader;
+                case CR_CUE: return new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
+                default: return new BinaryLogic.DummyReader(); 
+            }
 		}
 	}
 }
