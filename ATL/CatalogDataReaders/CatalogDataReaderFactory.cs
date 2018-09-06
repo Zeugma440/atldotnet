@@ -25,7 +25,7 @@ namespace ATL.CatalogDataReaders
 
                 Format tempFmt = new Format("CUE sheet");
                 tempFmt.ID = CR_CUE;
-                tempFmt.AddExtension(".cue");
+                tempFmt.AddExtensions(".cue");
                 theFactory.addFormat(tempFmt);
 			}
 

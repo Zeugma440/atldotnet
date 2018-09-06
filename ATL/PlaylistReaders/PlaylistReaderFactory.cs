@@ -5,78 +5,100 @@ using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders
 {
-	/// <summary>
-	/// Description r¨¦sum¨¦e de PlaylistReaderFactory.
-	/// </summary>
-	public class PlaylistReaderFactory : ReaderFactory
-	{
-		// Defines the supported formats
-		public const int PL_M3U     = 0;
-		public const int PL_PLS     = 1;
-        public const int PL_FPL     = 2;
-        public const int PL_XSPF    = 3;
-        public const int PL_SMIL    = 4;
-        public const int PL_ASX     = 5;
-        public const int PL_B4S     = 6;
+    /// <summary>
+    /// Description r¨¦sum¨¦e de PlaylistReaderFactory.
+    /// </summary>
+    public class PlaylistReaderFactory : ReaderFactory
+    {
+        // The instance of this factory
+        private static PlaylistReaderFactory theFactory = null;
 
-		// The instance of this factory
-		private static PlaylistReaderFactory theFactory = null;
-
-
-		public static PlaylistReaderFactory GetInstance()
-		{
-			if (null == theFactory)
-			{
-				theFactory = new PlaylistReaderFactory();
-                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
-
-                Format tempFmt = new Format("PLS");
-                tempFmt.ID = PL_PLS;
-                tempFmt.AddExtension(".pls");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("M3U");
-                tempFmt.ID = PL_M3U;
-                tempFmt.AddExtension(".m3u");
-                tempFmt.AddExtension(".m3u8");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("FPL (experimental)");
-                tempFmt.ID = PL_FPL;
-                tempFmt.AddExtension(".fpl");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("XSPF (spiff)");
-                tempFmt.ID = PL_XSPF;
-                tempFmt.AddExtension(".xspf");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("SMIL");
-                tempFmt.ID = PL_SMIL;
-                tempFmt.AddExtension(".smil");
-                tempFmt.AddExtension(".smi");
-                tempFmt.AddExtension(".zpl");
-                tempFmt.AddExtension(".wpl");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("ASX");
-                tempFmt.ID = PL_ASX;
-                tempFmt.AddExtension(".asx");
-                tempFmt.AddExtension(".wax");
-                tempFmt.AddExtension(".wvx");
-                theFactory.addFormat(tempFmt);
-
-                tempFmt = new Format("B4S");
-                tempFmt.ID = PL_B4S;
-                tempFmt.AddExtension(".b4s");
-                theFactory.addFormat(tempFmt);
+        public static PlaylistReaderFactory GetInstance()
+        {
+            if (null == theFactory)
+            {
+                theFactory = new PlaylistReaderFactory
+                {
+                    formatListByExt = new Dictionary<string, IList<Format>>()
+                };
+                theFactory.addFormat(PLSFormat());
+                theFactory.addFormat(M3UFormat());
+                theFactory.addFormat(FPLFFormat());
+                theFactory.addFormat(XSPFFormat());
+                theFactory.addFormat(SMILFormat());
+                theFactory.addFormat(ASXFormat());
+                theFactory.addFormat(B4SFormat());
             }
 
-			return theFactory;
-		}
+            return theFactory;
+        }
+
+        private static Format PLSFormat()
+        {
+            Format format = new Format("PLS")
+            {
+                ID = (int)EPlayListFormats.PL_PLS
+            };
+            format.AddExtensions(".pls");
+            return format;
+        }
+        private static Format M3UFormat()
+        {
+            var format = new Format("M3U")
+            {
+                ID = (int)EPlayListFormats.PL_M3U
+            };
+            format.AddExtensions(".m3u", ".m3u8");
+            return format;
+        }
+        private static Format FPLFFormat()
+        {
+            Format format = new Format("FPL (experimental)")
+            {
+                ID = (int)EPlayListFormats.PL_FPL
+            };
+            format.AddExtensions(".fpl");
+            return format;
+        }
+        private static Format XSPFFormat()
+        {
+            Format format = new Format("XSPF(spiff)")
+            {
+                ID = (int)EPlayListFormats.PL_XSPF
+            };
+            format.AddExtensions(".xspf");
+            return format;
+        }
+        private static Format SMILFormat()
+        {
+            var format = new Format("SMIL")
+            {
+                ID = (int)EPlayListFormats.PL_SMIL
+            };
+            format.AddExtensions(".smil", ".smi", ".zpl", ".wpl");
+            return format;
+        }
+        private static Format ASXFormat()
+        {
+            Format format = new Format("ASX")
+            {
+                ID = (int)EPlayListFormats.PL_ASX
+            };
+            format.AddExtensions(".asx", ".wax", ".wvx");
+            return format;
+        }
+        private static Format B4SFormat()
+        {
+            Format format = new Format("B4S")
+            {
+                ID = (int)EPlayListFormats.PL_B4S
+            };
+            format.AddExtensions(".b4s");
+            return format;
+        }
 
         public IPlaylistReader GetPlaylistReader(String path, int alternate = 0)
-		{
+        {
             IList<Format> formats = getFormatsFromPath(path);
             IPlaylistReader result;
 
@@ -95,40 +117,17 @@ namespace ATL.PlaylistReaders
 
         public IPlaylistReader GetPlaylistReader(int formatId)
         {
-            IPlaylistReader theReader = null;
-
-            if (PL_PLS == formatId)
-			{
-				theReader = new PLSReader();
-			}
-            else if (PL_M3U == formatId)
-			{
-				theReader = new M3UReader();
-			}
-            else if (PL_FPL == formatId)
+            switch ((EPlayListFormats)formatId)
             {
-                theReader = new FPLReader();
+                case EPlayListFormats.PL_M3U: return new M3UReader();
+                case EPlayListFormats.PL_PLS: return new PLSReader();
+                case EPlayListFormats.PL_FPL: return new FPLReader();
+                case EPlayListFormats.PL_XSPF: return new XSPFReader();
+                case EPlayListFormats.PL_SMIL: return new SMILReader();
+                case EPlayListFormats.PL_ASX: return new ASXReader();
+                case EPlayListFormats.PL_B4S: return new B4SReader();
+                default: return new DummyReader(); //TODO better to throw Exception.
             }
-            else if (PL_XSPF == formatId)
-            {
-                theReader = new XSPFReader();
-            }
-            else if (PL_SMIL == formatId)
-            {
-                theReader = new SMILReader();
-            }
-            else if (PL_ASX == formatId)
-            {
-                theReader = new ASXReader();
-            }
-            else if (PL_B4S == formatId)
-            {
-                theReader = new B4SReader();
-            }
-
-            if (null == theReader) theReader = new DummyReader();
-
-			return theReader;
-		}
-	}
+        }
+    }
 }
