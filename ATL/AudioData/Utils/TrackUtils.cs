@@ -15,7 +15,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="TrackString">Raw "track" field in string form</param>
         /// <returns>Track number, in integer form; 0 if no track number has been found</returns>
-        public static ushort ExtractTrackNumber(String str)
+        public static ushort ExtractTrackNumber(string str)
         {
             // == Optimizations (Regex are too damn expensive to use them lazily)
 
@@ -200,10 +200,10 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="str">String to search the year into</param>
         /// <returns>Found year in integer form; 0 if no year has been found</returns>
-   		public static int ExtractIntYear(String str)
+   		public static int ExtractIntYear(string str)
 		{
-            String resStr = ExtractStrYear(str);
-            if (0 == resStr.Length) return 0; else return Int32.Parse(resStr);
+            string resStr = ExtractStrYear(str);
+            if (0 == resStr.Length) return 0; else return int.Parse(resStr);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace ATL.AudioData
 		/// </summary>
 		/// <param name="str">String to search the year into</param>
 		/// <returns>Found year in string form; "" if no year has been found</returns>
-		public static String ExtractStrYear(String str)
+		public static string ExtractStrYear(string str)
         {
             // == Optimizations (Regex are too damn expensive to use them lazily)
 

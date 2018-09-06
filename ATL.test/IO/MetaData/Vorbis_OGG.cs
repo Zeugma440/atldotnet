@@ -315,7 +315,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Unsupported_Empty()
         {
             // Source : tag-free OGG
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
@@ -434,7 +434,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
+            string testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible

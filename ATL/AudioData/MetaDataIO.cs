@@ -131,7 +131,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Song/piece title
         /// </summary>
-        public String Title
+        public string Title
         {
             get { return Utils.ProtectValue(tagData.Title); }
             set { tagData.Title = value; }
@@ -139,7 +139,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Artist (Performer)
         /// </summary>
-        public String Artist
+        public string Artist
         {
             get
             {
@@ -152,7 +152,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Album Artist
         /// </summary>
-        public String AlbumArtist
+        public string AlbumArtist
         {
             get { return Utils.ProtectValue(tagData.AlbumArtist); }
             set { tagData.AlbumArtist = value; }
@@ -160,7 +160,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Composer
         /// </summary>
-        public String Composer
+        public string Composer
         {
             get { return Utils.ProtectValue(tagData.Composer); }
             set { tagData.Composer = value; }
@@ -168,7 +168,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Album title
         /// </summary>
-        public String Album
+        public string Album
         {
             get { return Utils.ProtectValue(tagData.Album); }
             set { tagData.Album = value; }
@@ -207,11 +207,11 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Release year
         /// </summary>
-        public String Year
+        public string Year
         {
             get
             {
-                String result;
+                string result;
                 result = TrackUtils.ExtractStrYear(tagData.RecordingYear);
                 if (0 == result.Length) result = TrackUtils.ExtractStrYear(tagData.RecordingDate);
                 return result;
@@ -242,7 +242,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Genre name
         /// </summary>
-        public String Genre
+        public string Genre
         {
             get { return Utils.ProtectValue(tagData.Genre); }
             set { tagData.Genre = value; }
@@ -250,7 +250,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Commment
         /// </summary>
-        public String Comment
+        public string Comment
         {
             get { return Utils.ProtectValue(tagData.Comment); }
             set { tagData.Comment = value; }
@@ -258,7 +258,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Copyright
         /// </summary>
-        public String Copyright
+        public string Copyright
         {
             get { return Utils.ProtectValue(tagData.Copyright); }
             set { tagData.Copyright = value; }
@@ -266,7 +266,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Original artist
         /// </summary>
-        public String OriginalArtist
+        public string OriginalArtist
         {
             get { return Utils.ProtectValue(tagData.OriginalArtist); }
             set { tagData.OriginalArtist = value; }
@@ -274,7 +274,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Original album
         /// </summary>
-        public String OriginalAlbum
+        public string OriginalAlbum
         {
             get { return Utils.ProtectValue(tagData.OriginalAlbum); }
             set { tagData.OriginalAlbum = value; }
@@ -282,7 +282,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// General Description
         /// </summary>
-        public String GeneralDescription
+        public string GeneralDescription
         {
             get { return Utils.ProtectValue(tagData.GeneralDescription); }
             set { tagData.GeneralDescription = value; }
@@ -290,7 +290,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Publisher
         /// </summary>
-        public String Publisher
+        public string Publisher
         {
             get { return Utils.ProtectValue(tagData.Publisher); }
             set { tagData.Publisher = value; }
@@ -298,7 +298,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Conductor
         /// </summary>
-        public String Conductor
+        public string Conductor
         {
             get { return Utils.ProtectValue(tagData.Conductor); }
             set { tagData.Conductor = value; }

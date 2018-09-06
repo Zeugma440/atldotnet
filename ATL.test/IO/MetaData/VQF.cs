@@ -177,7 +177,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VQF_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 

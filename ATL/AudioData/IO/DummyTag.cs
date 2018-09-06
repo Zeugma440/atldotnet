@@ -18,23 +18,23 @@ namespace ATL.AudioData.IO
 		{
 			get { return true; }
 		}
-		public String Title
+		public string Title
 		{
 			get { return ""; }
 		}
-		public String Artist
+		public string Artist
 		{
 			get { return ""; }
 		}
-        public String Composer
+        public string Composer
         {
             get { return ""; }
         }
-		public String Comment
+		public string Comment
 		{
 			get { return ""; }
 		}
-		public String Genre
+		public string Genre
 		{
 			get { return ""; }
 		}
@@ -46,11 +46,11 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
-		public String Year
+		public string Year
 		{
 			get { return ""; }
 		}
-		public String Album
+		public string Album
 		{
 			get { return ""; }
 		}

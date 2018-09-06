@@ -36,7 +36,7 @@ namespace ATL.AudioData.IO
 
 
         // ID3v2 tag ID
-        private const String ID3V2_ID = "ID3";
+        private const string ID3V2_ID = "ID3";
 
         // List of standard fields
         private static ICollection<string> standardFrames_v22;
@@ -633,7 +633,7 @@ namespace ATL.AudioData.IO
                         chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
-                        chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
+                        chapter.UseOffset = (!(chapter.StartOffset == uint.MaxValue));
 
                         long remainingData = dataSize - (source.Position - initPos);
                         while (remainingData > 0)
@@ -711,7 +711,7 @@ namespace ATL.AudioData.IO
                         // mime-type always coded in ASCII
                         if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
                         // Mime-type
-                        String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+                        string mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                         imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
                     }
 
@@ -1015,7 +1015,7 @@ namespace ATL.AudioData.IO
             }
 
             // === ID3v2 FRAMES ===
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
@@ -1321,7 +1321,7 @@ namespace ATL.AudioData.IO
             w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-            UInt16 flags = 0;
+            ushort flags = 0;
             if (tagHeader.UsesUnsynchronisation)
             {
                 flags = 2;
@@ -1431,7 +1431,7 @@ namespace ATL.AudioData.IO
             w.Write('\0');
             w.Write('\0');
             */
-            UInt16 flags = 1;
+            ushort flags = 1;
             if (tagHeader.UsesUnsynchronisation) flags = 3;
             w.Write(StreamUtils.ReverseUInt16(flags));
             dataSizeModifier += 2;
@@ -1533,7 +1533,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="iGenre">String representation of genre according to various ID3v1/v2 conventions</param>
         /// <returns>Genre name</returns>
-        private static String extractGenreFromID3v2Code(String iGenre)
+        private static string extractGenreFromID3v2Code(string iGenre)
         {
             if (null == iGenre) return "";
 

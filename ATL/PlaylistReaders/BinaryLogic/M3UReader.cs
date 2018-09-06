@@ -11,7 +11,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class M3UReader : PlaylistReader
 	{
 
-        public override void GetFiles(FileStream fs, IList<String> result)
+        public override void GetFiles(FileStream fs, IList<string> result)
 		{
 			TextReader source = null;
 
@@ -28,7 +28,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
             using (source = new StreamReader(fs, encoding))
             {
-                String s = source.ReadLine();
+                string s = source.ReadLine();
                 while (s != null)
                 {
                     // If the read line isn't a metadata, it's a file path

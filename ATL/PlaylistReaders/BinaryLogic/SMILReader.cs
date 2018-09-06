@@ -16,7 +16,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class SMILReader : PlaylistReader
     {
 
-        public override void GetFiles(FileStream fs, IList<String> result)
+        public override void GetFiles(FileStream fs, IList<string> result)
         {
             using (XmlReader source = XmlReader.Create(fs))
             {
@@ -47,9 +47,9 @@ namespace ATL.PlaylistReaders.BinaryLogic
         }
 
         // Most SMIL sample playlists store resource location with a relative path
-        private String getResourceLocation(XmlReader source)
+        private string getResourceLocation(XmlReader source)
         {
-            String result = "";
+            string result = "";
             while (source.MoveToNextAttribute()) // Read the attributes.
             {
                 if (source.Name.Equals("src", StringComparison.OrdinalIgnoreCase))

@@ -19,9 +19,9 @@ namespace ATL.AudioData.IO
 
 
         // VBR Vendor ID strings
-        public const String VENDOR_ID_LAME = "LAME";                      // For LAME
-        public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
-        public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
+        public const string VENDOR_ID_LAME = "LAME";                      // For LAME
+        public const string VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
+        public const string VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
         /*
         public static readonly byte[] RIFF_HEADER = new byte[4] { 0x52, 0x49, 0x46, 0x46 }; // 'RIFF'
@@ -79,8 +79,8 @@ namespace ATL.AudioData.IO
     	};
 
 		// VBR header ID for Xing/FhG
-		public const String VBR_ID_XING = "Xing";                       // Xing VBR ID
-		public const String VBR_ID_FHG = "VBRI";                         // FhG VBR ID
+		public const string VBR_ID_XING = "Xing";                       // Xing VBR ID
+		public const string VBR_ID_FHG = "VBRI";                         // FhG VBR ID
 
 		// MPEG version codes
 		public const byte MPEG_VERSION_2_5 = 0;                            // MPEG 2.5
@@ -89,7 +89,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_VERSION_1 = 3;                                // MPEG 1
 
 		// MPEG version names
-		public static readonly String[] MPEG_VERSION = new String[4] {"MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1"};
+		public static readonly string[] MPEG_VERSION = new string[4] {"MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1"};
 
 		// MPEG layer codes
 		public const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
@@ -98,7 +98,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_LAYER_I = 3;                                 // Layer I
 
 		// MPEG layer names
-		public static readonly String[] MPEG_LAYER = new String[4]	{"Layer ?", "Layer III", "Layer II", "Layer I"};
+		public static readonly string[] MPEG_LAYER = new string[4]	{"Layer ?", "Layer III", "Layer II", "Layer I"};
 
 		// Channel mode codes
 		public const byte MPEG_CM_STEREO = 0;                                // Stereo
@@ -108,7 +108,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
 
 		// Channel mode names
-		public static readonly String[] MPEG_CM_MODE = new String[5] {"Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown"};
+		public static readonly string[] MPEG_CM_MODE = new string[5] {"Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown"};
 
 		// Extension mode codes (for Joint Stereo)
 		public const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
@@ -124,7 +124,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
 
 		// Emphasis names
-		public static readonly String[] MPEG_EMPHASIS = new String[4] {"None", "50/15 ms", "Unknown", "CCIT J.17"};
+		public static readonly string[] MPEG_EMPHASIS = new string[4] {"None", "50/15 ms", "Unknown", "CCIT J.17"};
 
 		// Encoder codes
 		public const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
@@ -137,7 +137,7 @@ namespace ATL.AudioData.IO
 		public const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
 
 		// Encoder names
-		public static readonly String[] MPEG_ENCODER = new String[8] {"Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign"};
+		public static readonly string[] MPEG_ENCODER = new string[8] {"Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign"};
 
 		// Xing/FhG VBR header data
 		public class VBRData
@@ -147,7 +147,7 @@ namespace ATL.AudioData.IO
 			public int Frames;                              // Total number of frames
 			public int Bytes;                                // Total number of bytes
 			public byte Scale;                                  // VBR scale (1..100)
-			public String VendorID;                         // Vendor ID (if present)
+			public string VendorID;                         // Vendor ID (if present)
 
             public void Reset()
             {
@@ -222,7 +222,7 @@ namespace ATL.AudioData.IO
 		private VBRData vbrData = new VBRData();
 		private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
-        private readonly String filePath;
+        private readonly string filePath;
 
 
         /* Unused for now

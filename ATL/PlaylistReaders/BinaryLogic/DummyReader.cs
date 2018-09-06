@@ -5,7 +5,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 {
     public class DummyReader : IPlaylistReader
     {
-        String path = "";
+        string path = "";
 
         public string Path
         {

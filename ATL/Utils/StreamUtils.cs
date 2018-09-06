@@ -25,7 +25,7 @@ namespace ATL
 		/// <param name="a">String to be tested</param>
 		/// <param name="b">Char array to be tested</param>
 		/// <returns>True if both contain the same character sequence; false if not</returns>
-		public static bool StringEqualsArr(String a, char[] b)
+		public static bool StringEqualsArr(string a, char[] b)
 		{
             return ArrEqualsArr(a.ToCharArray(), b);
 		}
@@ -492,11 +492,11 @@ namespace ATL
         /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
         /// <param name="encoding">Encoding to use for reading the stream</param>
         /// <returns>Read value</returns>
-        public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
+        public static string ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
             return readNullTerminatedString(r.BaseStream, encoding, 0, false);
         }
-        public static String ReadNullTerminatedString(Stream s, Encoding encoding)
+        public static string ReadNullTerminatedString(Stream s, Encoding encoding)
         {
             return readNullTerminatedString(s, encoding, 0, false);
         }
@@ -509,11 +509,11 @@ namespace ATL
         /// <param name="encoding">Encoding to use for reading the stream</param>
         /// <param name="limit">Maximum number of bytes to read</param>
         /// <returns>Read value</returns>
-        public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
+        public static string ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
         {
             return readNullTerminatedString(r.BaseStream, encoding, limit, true);
         }
-        public static String ReadNullTerminatedStringFixed(BufferedBinaryReader r, Encoding encoding, int limit)
+        public static string ReadNullTerminatedStringFixed(BufferedBinaryReader r, Encoding encoding, int limit)
         {
             return readNullTerminatedString(r, encoding, limit, true);
         }
@@ -526,7 +526,7 @@ namespace ATL
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
         /// <returns>The string read, without the zeroes at its end</returns>
-        private static String readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
+        private static string readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
             byte[] readBytes = new byte[limit > 0 ? limit : 100];
@@ -767,7 +767,7 @@ namespace ATL
 
                     // Out of range - too large
                     if (e > 2047)
-                        return Double.NaN;
+                        return double.NaN;
 
                     // Out of range - too small
                     if (e < 0)
@@ -801,7 +801,7 @@ namespace ATL
                     {
                         // Don't really understand the document about the 
                         // remaining two values, but they're both NaN...
-                        return Double.NaN;
+                        return double.NaN;
                     }
                 }
             }
@@ -816,7 +816,7 @@ namespace ATL
                 else
                 {
                     // Unsupported
-                    return Double.NaN;
+                    return double.NaN;
                 }
             }
         }

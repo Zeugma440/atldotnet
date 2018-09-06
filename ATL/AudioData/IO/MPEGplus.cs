@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
 		private const byte MPP_CM_JOINT_STEREO = 2;   // Index for joint-stereo mode
 
 		// Channel mode names
-		private static readonly string[] MPP_MODE = new String[3] {"Unknown", "Stereo", "Joint Stereo"};
+		private static readonly string[] MPP_MODE = new string[3] {"Unknown", "Stereo", "Joint Stereo"};
         // Sample frequencies
         private static readonly int[] MPP_SAMPLERATES = new int[4] { 44100, 48000, 37800, 32000 };
 
@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
 		private const byte MPP_PROFILE_EXPERIMENTAL = 12;
 
 		// Profile names
-		private static readonly string[] MPP_PROFILE = new String[13]
+		private static readonly string[] MPP_PROFILE = new string[13]
 	    {
 		    "Unknown", "Thumb", "Radio", "Standard", "Xtreme", "Insane", "BrainDead",
 		    "--quality 9", "--quality 10", "--quality 0", "--quality 1", "Telephone", "Experimental"
@@ -53,13 +53,13 @@ namespace ATL.AudioData.IO
 		private int sampleRate;
 		private byte FStreamVersion;
 		private byte profileID;
-		private String encoder;
+		private string encoder;
 
         private double bitrate;
         private double duration;
 
         private SizeInfo sizeInfo;
-        private readonly String filePath;
+        private readonly string filePath;
 
 
         // File header data - for internal use
@@ -181,7 +181,7 @@ namespace ATL.AudioData.IO
 			// If VS8 file, looks for the (mandatory) stream header packet
             if (80 == getStreamVersion(Header))
             {
-                String packetKey = "";
+                string packetKey = "";
                 long packetSize = 0; // Packet size (int only since we are dealing with the header packet)
                 long initialPos;
                 bool headerFound = false;
@@ -262,10 +262,10 @@ namespace ATL.AudioData.IO
             }
 		}
 
-		private static String getEncoder(HeaderRecord Header)
+		private static string getEncoder(HeaderRecord Header)
 		{
 			int EncoderID;
-			String result = "";
+            string result = "";
 
 			EncoderID = Header.ByteArray[10+2+15];   
 			if (0 == EncoderID)

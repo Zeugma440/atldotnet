@@ -25,7 +25,7 @@ namespace Commons
         /// </summary>
         /// <param name="value">String to protect</param>
         /// <returns>Given string if non-null; else empty string</returns>
-        public static String ProtectValue(String value)
+        public static string ProtectValue(string value)
         {
             return (null == value) ? "" : value;
         }
@@ -66,7 +66,7 @@ namespace Commons
         {
             int h;
             long m;
-            String hStr, mStr, sStr;
+            string hStr, mStr, sStr;
             long s;
             int d;
 

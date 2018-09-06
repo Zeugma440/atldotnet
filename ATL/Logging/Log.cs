@@ -64,7 +64,7 @@ namespace ATL.Logging
 		/// Logs the provided message with the LV_DEBUG logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
-		public void Debug(String msg)
+		public void Debug(string msg)
 		{
 			Write(LV_DEBUG,msg);
 		}
@@ -73,7 +73,7 @@ namespace ATL.Logging
 		/// Logs the provided message with the LV_INFO logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
-		public void Info(String msg)
+		public void Info(string msg)
 		{
 			Write(LV_INFO,msg);
 		}
@@ -82,7 +82,7 @@ namespace ATL.Logging
 		/// Logs the provided message with the LV_WARNING logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
-		public void Warning(String msg)
+		public void Warning(string msg)
 		{
 			Write(LV_WARNING,msg);
 		}
@@ -91,7 +91,7 @@ namespace ATL.Logging
 		/// Logs the provided message with the LV_ERROR logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
-		public void Error(String msg)
+		public void Error(string msg)
 		{
 			Write(LV_ERROR,msg);
 		}
@@ -119,7 +119,7 @@ namespace ATL.Logging
         /// <param name="level">Logging level of the new message</param>
         /// <param name="msg">Contents of the new message</param>
         /// <param name="forceDisplay">If true, forces all registered ILogDevices to immediately log the message, even if asynchoronous logging is enabled</param>
-        public void Write(int level, String msg)
+        public void Write(int level, string msg)
         {
             write(level, msg, false);
         }

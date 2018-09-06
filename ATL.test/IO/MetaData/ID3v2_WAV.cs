@@ -26,7 +26,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WAV_ID3v2()
         {
-            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);

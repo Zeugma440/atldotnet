@@ -21,7 +21,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String S3M_SIGNATURE = "SCRM";
+        private const string S3M_SIGNATURE = "SCRM";
         private const byte MAX_ROWS = 64;
 
         // Effects
@@ -44,7 +44,7 @@ namespace ATL.AudioData.IO
         private byte initialTempo;
 
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -105,8 +105,8 @@ namespace ATL.AudioData.IO
         private class Instrument
         {
             public byte Type = 0;
-            public String FileName = "";
-            public String DisplayName = "";
+            public string FileName = "";
+            public string DisplayName = "";
 
             // Other fields not useful for ATL
         }
@@ -293,9 +293,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private String getTrackerName(ushort trackerVersion)
+        private string getTrackerName(ushort trackerVersion)
         {
-            String result = "";
+            string result = "";
 
             switch ((trackerVersion & 0xF000) >> 12)
             {

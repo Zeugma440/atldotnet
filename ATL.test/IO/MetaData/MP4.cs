@@ -69,7 +69,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(ref theFile,1);
@@ -163,7 +163,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
+            string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
             // Add a new supported field and a new supported picture
@@ -239,7 +239,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_Unsupported_Empty()
         {
             // Source : tag-free M4A
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
@@ -358,7 +358,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("AAC/chapters_NERO.mp4");
+            string testFileLocation = TestUtils.GetTempTestFile("AAC/chapters_NERO.mp4");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -463,7 +463,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("AAC/chapters_QT.m4v");
+            string testFileLocation = TestUtils.GetTempTestFile("AAC/chapters_QT.m4v");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible

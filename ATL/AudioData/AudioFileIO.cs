@@ -53,7 +53,7 @@ namespace ATL.AudioData
         /// <param name="stream">Stream to access in-memory data to be parsed</param>
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
-        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false)
+        public AudioFileIO(Stream stream, string mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;

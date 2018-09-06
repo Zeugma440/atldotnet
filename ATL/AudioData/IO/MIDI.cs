@@ -92,7 +92,7 @@ namespace ATL.AudioData.IO
 
             public int Param0 = 0;
             public int Param1 = 0;
-            public String Description;
+            public string Description;
 
             public MidiEvent(long tickOffset, int type, int channel, int param0, int param1 = 0)
             {
@@ -264,8 +264,8 @@ namespace ATL.AudioData.IO
 															  "Gunshot"};
         #endregion
 
-        private const String MIDI_FILE_HEADER = "MThd";
-        private const String MIDI_TRACK_HEADER = "MTrk";
+        private const string MIDI_FILE_HEADER = "MThd";
+        private const string MIDI_TRACK_HEADER = "MTrk";
 
         private const int DEFAULT_TEMPO = 500; // Default MIDI tempo is 120bpm, 500ms per beat
 
@@ -602,7 +602,7 @@ namespace ATL.AudioData.IO
             int len;
             byte tmp;
             byte c;
-            String txt;
+            string txt;
             MidiEvent evt;
 
             int currentTempo = 0;
@@ -694,9 +694,9 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_LYRICS: // Meta Lyrics
                                     case MidiEvents.META_MARKER: // Meta Marker
                                     case MidiEvents.META_CUE: // Meta Cue
-                                        String[] texttypes = new String[7] { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
+                                        string[] texttypes = new string[7] { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
 
-                                        String type = texttypes[meta - 1];
+                                        string type = texttypes[meta - 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
                                         if ((len + position) > trackLen) throw new Exception("Meta " + type + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
@@ -830,7 +830,7 @@ namespace ATL.AudioData.IO
                                         if ((len + position) > trackLen) throw new Exception("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
-                                            String str = Encoding.ASCII.GetString(data, position + 3, len); //sprintf("%02x",(byte)($data[$p+3+$i]));
+                                            string str = Encoding.ASCII.GetString(data, position + 3, len); //sprintf("%02x",(byte)($data[$p+3+$i]));
                                             evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
                                             evt.isMetaEvent = true;
                                             evt.Description = " Meta 0x" + metacode + " " + str;

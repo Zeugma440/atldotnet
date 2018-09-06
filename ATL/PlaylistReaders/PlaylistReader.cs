@@ -7,20 +7,20 @@ namespace ATL.PlaylistReaders
 {
     public abstract class PlaylistReader : IPlaylistReader
 	{
-		protected String FFileName; // Path of the playlist file
+		protected string FFileName; // Path of the playlist file
 
-		public String Path
+		public string Path
 		{
             get { return FFileName; }
             set { FFileName = value; }
 		}
 
 
-        abstract public void GetFiles(FileStream fs, IList<String> result);
+        abstract public void GetFiles(FileStream fs, IList<string> result);
 
-        public IList<String> GetFiles()
+        public IList<string> GetFiles()
 		{
-			IList<String> result = new List<String>();
+			IList<string> result = new List<string>();
 
 			try
 			{

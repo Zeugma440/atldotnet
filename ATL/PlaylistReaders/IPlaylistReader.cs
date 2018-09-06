@@ -11,7 +11,7 @@ namespace ATL.PlaylistReaders
         /// <summary>
         /// Absolute path of the playlist file
         /// </summary>
-        String Path
+        string Path
         {
             get;
             set;
@@ -22,6 +22,6 @@ namespace ATL.PlaylistReaders
         /// NB : The existence of the files is not checked
         /// </summary>
         /// <returns>An array containing all paths</returns>
-        IList<String> GetFiles();
+        IList<string> GetFiles();
 	}
 }

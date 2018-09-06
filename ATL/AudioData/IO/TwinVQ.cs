@@ -18,7 +18,7 @@ namespace ATL.AudioData.IO
 		public const byte TWIN_CM_STEREO = 2;           // Index for stereo mode
 
 		// Channel mode names
-		public static readonly String[] TWIN_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
+		public static readonly string[] TWIN_MODE = new string[3] {"Unknown", "Mono", "Stereo"};
 
         // Twin VQ header ID
         private const string TWIN_ID = "TWIN";
@@ -42,7 +42,7 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.channelModeID; }
 		}
-		public String ChannelMode // Channel mode name
+		public string ChannelMode // Channel mode name
 		{
 			get { return this.getChannelMode(); }
 		}	
@@ -287,7 +287,7 @@ namespace ATL.AudioData.IO
             return result;
 		}
 
-        private String getChannelMode()
+        private string getChannelMode()
 		{
 			return TWIN_MODE[channelModeID];
 		}

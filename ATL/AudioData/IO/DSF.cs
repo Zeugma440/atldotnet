@@ -12,9 +12,9 @@ namespace ATL.AudioData.IO
 	class DSF : IAudioDataIO, IMetaDataEmbedder
     {
         // Headers ID
-        public const String DSD_ID = "DSD ";
-        public const String FMT_ID = "fmt ";
-        public const String DATA_ID = "data";
+        public const string DSD_ID = "DSD ";
+        public const string FMT_ID = "fmt ";
+        public const string DATA_ID = "data";
 
  
 		// Private declarations 

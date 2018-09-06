@@ -13,14 +13,14 @@ namespace ATL.AudioData.IO
         public const int DEFAULT_GENRE = 255;               // Index for default genre
 
         public const int ID3V1_TAG_SIZE = 128;
-        public const String ID3V1_ID = "TAG";
+        public const string ID3V1_ID = "TAG";
 
 		// Used with VersionID property
 		public const byte TAG_VERSION_1_0 = 1;                // Index for ID3v1.0 tag
 		public const byte TAG_VERSION_1_1 = 2;                // Index for ID3v1.1 tag
 
 		#region music genres
-		public static String[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
+		public static string[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
 		{	// Standard genres
 			"Blues",
 			"Classic Rock",
@@ -284,7 +284,7 @@ namespace ATL.AudioData.IO
             
             // ID3v1.1 standard
             w.Write('\0');
-            w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber),Byte.MaxValue));
+            w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber), byte.MaxValue));
 
             byte genre = 0;
             if (tag.Genre != null)

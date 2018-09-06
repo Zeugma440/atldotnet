@@ -14,7 +14,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String XM_SIGNATURE = "Extended Module: ";
+        private const string XM_SIGNATURE = "Extended Module: ";
 
         // Effects (NB : very close to the MOD effect codes)
         private const byte EFFECT_POSITION_JUMP = 0xB;
@@ -37,7 +37,7 @@ namespace ATL.AudioData.IO
         private ushort initialTempo; // BPM
 
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -97,7 +97,7 @@ namespace ATL.AudioData.IO
         private class Instrument
         {
             //public byte Type;  Useful for S3M but not for XM
-            public String DisplayName;
+            public string DisplayName;
 
             // Other fields not useful for ATL
 
@@ -276,7 +276,7 @@ namespace ATL.AudioData.IO
             uint instrumentHeaderSize;
             ushort nbSamples;
 
-            IList<UInt32> sampleSizes = new List<uint>();
+            IList<uint> sampleSizes = new List<uint>();
 
             for (int i = 0; i < nbInstruments; i++)
             {

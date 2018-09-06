@@ -33,7 +33,7 @@ namespace ATL
         /// </summary>
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3" or file extension (e.g. ".mp3") of the content</param>
-        public Track(Stream stream, String mimeType)
+        public Track(Stream stream, string mimeType)
         {
             this.stream = stream;
             this.mimeType = mimeType;
@@ -199,7 +199,7 @@ namespace ATL
         /// <summary>
         /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
         /// </summary>
-        private readonly String mimeType;
+        private readonly string mimeType;
         private AudioFileIO fileIO;
 
 

@@ -22,7 +22,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_EXTENDED_HEADER_METADATA_LIBRARY = "extHeaderMetaLibrary";
 
         // Channel mode names
-        public static String[] WMA_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
+        public static string[] WMA_MODE = new string[3] {"Unknown", "Mono", "Stereo"};
 
 
         // Object IDs
@@ -708,7 +708,7 @@ namespace ATL.AudioData.IO
             string comment = "";
             string rating = ""; // TODO - check if it really should be a string
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -758,7 +758,7 @@ namespace ATL.AudioData.IO
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -873,7 +873,7 @@ namespace ATL.AudioData.IO
             bool doWritePicture;
             ushort counter = 0;
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields : all current supported fields are located in extended content description frame
 

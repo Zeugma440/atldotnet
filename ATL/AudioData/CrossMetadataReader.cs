@@ -51,11 +51,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Title of the track
 		/// </summary>
-		public String Title
+		public string Title
 		{
 			get
 			{
-				String title = "";
+                string title = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					title = reader.Title;
@@ -67,11 +67,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Artist
 		/// </summary>
-		public String Artist
+		public string Artist
 		{
 			get
 			{
-				String artist = "";
+                string artist = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					artist = reader.Artist;
@@ -83,11 +83,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Composer
         /// </summary>
-        public String Composer
+        public string Composer
         {
             get
             {
-                String composer = "";
+                string composer = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     composer = reader.Composer;
@@ -99,11 +99,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Comments
 		/// </summary>
-		public String Comment
+		public string Comment
 		{
 			get
 			{
-				String comment = "";
+                string comment = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					comment = reader.Comment;
@@ -115,11 +115,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Genre
 		/// </summary>
-		public String Genre
+		public string Genre
 		{
 			get
 			{
-				String genre = "";
+                string genre = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					genre = reader.Genre;
@@ -163,11 +163,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Year
 		/// </summary>
-		public String Year
+		public string Year
 		{
 			get
 			{
-				String year = "";
+                string year = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					year = reader.Year;
@@ -179,11 +179,11 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Title of the album
 		/// </summary>
-		public String Album
+		public string Album
 		{
 			get 
 			{
-				String album = "";
+                string album = "";
 				foreach(IMetaDataIO reader in metaReaders)
 				{
 					album = reader.Album;
@@ -195,11 +195,11 @@ namespace ATL.AudioData
         /// <summary>
 		/// Copyright
 		/// </summary>
-		public String Copyright
+		public string Copyright
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Copyright;
@@ -211,11 +211,11 @@ namespace ATL.AudioData
         /// <summary>
 		/// Album Arist
 		/// </summary>
-		public String AlbumArtist
+		public string AlbumArtist
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.AlbumArtist;
@@ -227,11 +227,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Conductor
         /// </summary>
-        public String Conductor
+        public string Conductor
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Conductor;
@@ -243,11 +243,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Publisher
         /// </summary>
-        public String Publisher
+        public string Publisher
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Publisher;
@@ -259,11 +259,11 @@ namespace ATL.AudioData
         /// <summary>
         /// General description
         /// </summary>
-        public String GeneralDescription
+        public string GeneralDescription
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.GeneralDescription;
@@ -275,11 +275,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Original artist
         /// </summary>
-        public String OriginalArtist
+        public string OriginalArtist
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.OriginalArtist;
@@ -291,11 +291,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Original album
         /// </summary>
-        public String OriginalAlbum
+        public string OriginalAlbum
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.OriginalAlbum;

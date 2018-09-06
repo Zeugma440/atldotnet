@@ -35,16 +35,16 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_PATTERN_DELAY = 0xE;
         private const byte EFFECT_INVERT_LOOP   = 0xF;
 
-        private static IDictionary<String, ModFormat> modFormats;
+        private static IDictionary<string, ModFormat> modFormats;
 
 		// Standard fields
         private IList<Sample> FSamples;
         private IList<IList<IList<int>>> FPatterns;
         private IList<byte> FPatternTable;
         private byte nbValidPatterns;
-        private String formatTag;
+        private string formatTag;
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -104,9 +104,9 @@ namespace ATL.AudioData.IO
 
         private class Sample
 		{
-            public String Name;
+            public string Name;
             public int Size;
-            public SByte Finetune;
+            public sbyte Finetune;
             public byte Volume;
 
             public int RepeatOffset;
@@ -126,12 +126,12 @@ namespace ATL.AudioData.IO
 
         private class ModFormat
         {
-            public String Name = "";
-            public String Signature = "";
+            public string Name = "";
+            public string Signature = "";
             public byte NbSamples = 0;
             public byte NbChannels = 0;
 
-            public ModFormat(String name, String sig, byte nbSamples, byte nbChannels)
+            public ModFormat(string name, string sig, byte nbSamples, byte nbChannels)
             {
                 Name = name;
                 Signature = sig;
@@ -344,7 +344,7 @@ namespace ATL.AudioData.IO
             int maxPatterns = -1;
             byte nbSamples = 31;
 
-            String readString;
+            string readString;
             StringBuilder comment = new StringBuilder("");
 
             Sample sample;
