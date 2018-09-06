@@ -109,7 +109,7 @@ namespace ATL.test.CodeSnippets
 
             // Add 'CD' embedded picture
             PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.CD);
-            newPicture.PictureData = System.IO.File.ReadAllBytes(imagePath);
+            newPicture.PictureData = File.ReadAllBytes(imagePath);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             // Save modifications on the disc

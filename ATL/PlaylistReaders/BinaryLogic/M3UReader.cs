@@ -18,7 +18,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 			Encoding encoding = null;
 			if (System.IO.Path.GetExtension(FFileName).ToLower().Equals(".m3u8"))
 			{
-				encoding = System.Text.Encoding.UTF8;
+				encoding = Encoding.UTF8;
 			}
 
 			if (null == encoding)

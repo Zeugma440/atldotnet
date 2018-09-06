@@ -31,7 +31,7 @@ namespace ATL.PlaylistReaders
 			}
 			catch (Exception e) 
 			{
-                System.Console.WriteLine(e.StackTrace);
+                Console.WriteLine(e.StackTrace);
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
 			}
 

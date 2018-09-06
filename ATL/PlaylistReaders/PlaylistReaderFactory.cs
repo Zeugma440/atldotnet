@@ -96,7 +96,7 @@ namespace ATL.PlaylistReaders
             return format;
         }
 
-        public IPlaylistReader GetPlaylistReader(String path, int alternate = 0)
+        public IPlaylistReader GetPlaylistReader(string path, int alternate = 0)
         {
             IList<Format> formats = getFormatsFromPath(path);
             IPlaylistReader result;

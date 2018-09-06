@@ -481,7 +481,7 @@ namespace ATL
             }
 
             // Now reposition the file cursor back to the start of the file
-            file.Seek(0, System.IO.SeekOrigin.Begin);
+            file.Seek(0, SeekOrigin.Begin);
             return result;
         }
 

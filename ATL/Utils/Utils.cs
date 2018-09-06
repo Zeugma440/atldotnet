@@ -280,7 +280,7 @@ namespace Commons
             char[] encodedDataChar = new char[encodedData.Length];
             Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
 
-            return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+            return Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
         }
 
         /// <summary>
@@ -303,9 +303,9 @@ namespace Commons
 
             char[] dataChar = new char[arrayLength];
 
-            System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
+            Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
-            return Utils.Latin1Encoding.GetBytes(dataChar);
+            return Latin1Encoding.GetBytes(dataChar);
         }
 
         /// <summary>

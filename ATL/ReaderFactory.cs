@@ -39,7 +39,6 @@ namespace ATL
                 if (!formatListByExt.ContainsKey(ext))
                     formatListByExt[ext] = new List<ATL.Format>();
                 formatListByExt[ext].Add(f);
-
             }
         }
         /// <summary>
@@ -52,7 +51,6 @@ namespace ATL
             {
                 if (!formatListByMime.ContainsKey(mimeType))
                     formatListByMime[mimeType] = new List<ATL.Format>();
-
                 formatListByMime[mimeType].Add(f);
             }
         }

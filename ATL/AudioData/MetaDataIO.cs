@@ -492,7 +492,7 @@ namespace ATL.AudioData.IO
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
-        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
+        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
             byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
@@ -723,7 +723,7 @@ namespace ATL.AudioData.IO
                         w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, ACTION_DELETE, zone.Name);
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }

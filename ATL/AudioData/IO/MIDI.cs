@@ -428,7 +428,7 @@ namespace ATL.AudioData.IO
                 (header[3] != 6)
                 )
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_ERROR,"Wrong MIDI header");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR,"Wrong MIDI header");
                 return false;
             }
             type = header[5];
@@ -439,7 +439,7 @@ namespace ATL.AudioData.IO
             // 2 - multiple tracks, asynchronous
             if (type > 1)
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
             }
 
             tagExists = true;

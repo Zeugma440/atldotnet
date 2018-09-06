@@ -611,7 +611,7 @@ namespace ATL.AudioData.IO
                 typeFlag = header.TypeFlag;
                 nextPageOffset = header.GetPageLength();
 
-                System.Console.WriteLine(header.AbsolutePosition - lastAbsPosition + ";" + nextPageOffset);
+                Console.WriteLine(header.AbsolutePosition - lastAbsPosition + ";" + nextPageOffset);
                 lastAbsPosition = header.AbsolutePosition;
 
             } while (0 == (typeFlag & 0x04)); // 0x04 marks the last page of the logical bitstream

@@ -368,7 +368,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
             // Title = max first 20 chars; null-terminated
-            string title = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 20);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(source, Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
@@ -382,7 +382,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < nbSamples; i++)
             {
                 sample = new Sample();
-                sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 22).Trim();
+                sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, Encoding.ASCII, 22).Trim();
                 sample.Name = sample.Name.Replace("\0", "");
                 sample.Name = sample.Name.Replace(charOne, "");
                 sample.Size = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;

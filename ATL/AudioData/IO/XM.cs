@@ -400,7 +400,7 @@ namespace ATL.AudioData.IO
             }
 
             // Title = chars 17 to 37 (length 20)
-            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
@@ -416,7 +416,7 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
 
-            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20).Trim();
+            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20).Trim();
 
             trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
             trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);

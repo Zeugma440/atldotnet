@@ -409,7 +409,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
 
             // Title = first 28 chars
-            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 28);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 28);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
