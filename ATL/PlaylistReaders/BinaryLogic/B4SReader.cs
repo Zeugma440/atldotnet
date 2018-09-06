@@ -1,9 +1,6 @@
-using ATL.Logging;
-using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ATL.PlaylistReaders.BinaryLogic

@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using Commons;
 using static ATL.AudioData.FileStructureHelper;
-using System.Text;
 using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO

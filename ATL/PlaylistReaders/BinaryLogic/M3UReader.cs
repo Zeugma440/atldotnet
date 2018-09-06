@@ -1,16 +1,14 @@
 using System;
 using System.IO;
-using System.Collections;
 using System.Text;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders.BinaryLogic
 {
-	/// <summary>
+    /// <summary>
     /// M3U/M3U8 playlist reader
-	/// </summary>
-	public class M3UReader : PlaylistReader
+    /// </summary>
+    public class M3UReader : PlaylistReader
 	{
 
         public override void GetFiles(FileStream fs, IList<String> result)

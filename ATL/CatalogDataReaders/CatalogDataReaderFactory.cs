@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace ATL.CatalogDataReaders
 {
-	/// <summary>
-	/// Factory for Catalog data readers
-	/// </summary>
+    /// <summary>
+    /// Factory for Catalog data readers
+    /// </summary>
     public class CatalogDataReaderFactory : ReaderFactory
 	{
 		// Defines the supported formats

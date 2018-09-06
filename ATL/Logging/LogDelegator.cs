@@ -1,11 +1,9 @@
-using System;
-
 namespace ATL.Logging
 {
-	/// <summary>
+    /// <summary>
     /// This class is the static entry point for all logging operations
-	/// </summary>
-	public class LogDelegator
+    /// </summary>
+    public class LogDelegator
 	{
 		// Declaration of the delegate method signature for logging messages
 		public delegate void LogWriteDelegate( int level, string msg );

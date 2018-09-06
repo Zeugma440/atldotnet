@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using ATL.Logging;
 using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -8,12 +7,12 @@ using System.Text;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
-	/// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+    /// <summary>
+    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
-	/// </summary>
-	class PSF : MetaDataIO, IAudioDataIO
+    /// </summary>
+    class PSF : MetaDataIO, IAudioDataIO
 	{
 		// Format Type Names
 		public const String PSF_FORMAT_UNKNOWN = "Unknown";

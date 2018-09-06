@@ -1,15 +1,14 @@
 using System;
 using System.IO;
 using System.Text;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders.BinaryLogic
 {
-	/// <summary>
+    /// <summary>
     /// PLS playlist reader
-	/// </summary>
-	public class PLSReader : PlaylistReader
+    /// </summary>
+    public class PLSReader : PlaylistReader
 	{
         public override void GetFiles(FileStream fs, IList<String> result)
 		{

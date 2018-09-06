@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using ATL.PlaylistReaders.BinaryLogic;
 using System.Collections.Generic;
 

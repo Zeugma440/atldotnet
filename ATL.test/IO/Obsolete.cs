@@ -2,7 +2,6 @@
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
-using ATL.test.IO.MetaData;
 using System.Collections.Generic;
 
 namespace ATL.test.IO

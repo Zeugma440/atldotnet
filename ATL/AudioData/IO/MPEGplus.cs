@@ -1,4 +1,3 @@
-using ATL.Logging;
 using Commons;
 using System;
 using System.IO;

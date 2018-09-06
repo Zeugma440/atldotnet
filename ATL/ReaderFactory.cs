@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace ATL
@@ -13,11 +12,11 @@ namespace ATL
 
         // List of all formats supported by this kind of data reader
         // They are indexed by file extension to speed up matching
-        protected IDictionary<String, IList<ATL.Format>> formatListByExt;
+        protected IDictionary<string, IList<ATL.Format>> formatListByExt;
 
         // List of all formats supported by this kind of data reader
         // They are indexed by MIME-type to speed up matching
-        protected IDictionary<String, IList<ATL.Format>> formatListByMime;
+        protected IDictionary<string, IList<ATL.Format>> formatListByMime;
 
         /// <summary>
         /// Adds a format to the supported formats

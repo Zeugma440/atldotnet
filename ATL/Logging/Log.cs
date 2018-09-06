@@ -1,14 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace ATL.Logging
 {
-	/// <summary>
-	/// This class handles the logging of the application's messages
-	/// </summary>
-	public class Log
+    /// <summary>
+    /// This class handles the logging of the application's messages
+    /// </summary>
+    public class Log
 	{
 		// Definition of the four levels of logging
 		public const int LV_DEBUG		= 0x00000008;

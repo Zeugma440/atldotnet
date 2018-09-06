@@ -3,8 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
-using System.Collections.Generic;
-using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {

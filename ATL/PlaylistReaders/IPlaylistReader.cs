@@ -1,13 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders
 {
-	/// <summary>
-	/// Reads all file paths registered in a playlist
-	/// </summary>
-	public interface IPlaylistReader
+    /// <summary>
+    /// Reads all file paths registered in a playlist
+    /// </summary>
+    public interface IPlaylistReader
 	{
         /// <summary>
         /// Absolute path of the playlist file

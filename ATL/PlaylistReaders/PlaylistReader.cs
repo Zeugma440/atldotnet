@@ -1,13 +1,11 @@
 using System;
 using System.IO;
-using System.Text;
-using System.Collections;
 using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders
 {
-	public abstract class PlaylistReader : IPlaylistReader
+    public abstract class PlaylistReader : IPlaylistReader
 	{
 		protected String FFileName; // Path of the playlist file
 
