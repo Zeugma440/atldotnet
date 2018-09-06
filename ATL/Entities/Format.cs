@@ -19,16 +19,24 @@ namespace ATL
     /// </summary>
     public class Format : IEnumerable
     {
-        // Name of the format
-        protected string fName;
-        // ID of the format
-        protected int fID;
+
+        /// <summary>
+        ///  Name of the format
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// ID of the format
+        /// </summary>
+        public int ID { get; set; }
+        /// <summary>
+        /// true if the format is readable by ATL
+        /// </summary>
+        public bool Readable { get; set; }
+
         // MIME type of the format
         protected IDictionary<string, int> mimeList;
         // List of file extensions proper to this format
         protected IDictionary<string, int> extList;
-        // true if the format is readable by ATL
-        protected bool fReadable;
 
         public Format() { }
 
@@ -39,40 +47,22 @@ namespace ATL
 
         protected void init(string iName)
         {
-            fName = iName;
-            fReadable = true;
+            Name = iName;
+            Readable = true;
             extList = new Dictionary<string, int>();
             mimeList = new Dictionary<string, int>();
         }
 
         protected void copyFrom(Format iFormat)
         {
-            this.fName = iFormat.fName;
-            this.fID = iFormat.fID;
-            this.fReadable = iFormat.fReadable;
-            this.extList = new Dictionary<string, int>(iFormat.extList);
-            this.mimeList = new Dictionary<string, int>(iFormat.mimeList);
+            Name = iFormat.Name;
+            ID = iFormat.ID;
+            Readable = iFormat.Readable;
+            extList = new Dictionary<string, int>(iFormat.extList);
+            mimeList = new Dictionary<string, int>(iFormat.mimeList);
         }
-
-        public String Name
-        {
-            get { return fName; }
-            set { fName = value; }
-        }
-
-        public int ID
-        {
-            get { return fID; }
-            set { fID = value; }
-        }
-
-        public bool Readable
-        {
-            get { return fReadable; }
-            set { fReadable = value; }
-        }
-
-        public ICollection<String> MimeList
+   
+        public ICollection<string> MimeList
         {
             get { return mimeList.Keys; }
         }
