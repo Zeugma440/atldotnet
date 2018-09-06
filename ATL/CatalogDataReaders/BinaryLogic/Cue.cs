@@ -10,46 +10,22 @@ namespace ATL.CatalogDataReaders.BinaryLogic
     /// </summary>
     public class Cue : ICatalogDataReader
     {
-        private string path = "";
-        private string title = "";
-        private string artist = "";
-        private string comments = "";
+        public string Path { get; set; } = "";
 
-        IList<Track> tracks = new List<Track>();
+        public string Artist { get; private set; } = "";
 
+        public string Comments { get; private set; } = "";
 
-        public string Path
-        {
-            get { return path; }
-            set { path = value; }
-        }
+        public string Title { get; private set; } = "";
 
-        public string Artist
-        {
-            get { return artist; }
-        }
-
-        public string Comments
-        {
-            get { return comments; }
-        }
-
-        public string Title
-        {
-            get { return title; }
-        }
-
-        public IList<Track> Tracks
-        {
-            get { return tracks; }
-        }
+        public IList<Track> Tracks { get; } = new List<Track>();
 
 
         // ----------------------- Constructor
 
         public Cue(string path)
         {
-            this.path = path;
+            Path = path;
             read();
         }
 
@@ -93,7 +69,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
         private void read()
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
+            using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
             using (TextReader source = new StreamReader(fs, System.Text.Encoding.UTF8))
             {
                 string s = source.ReadLine();
@@ -117,16 +93,16 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                     {
                         if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (comments.Length > 0) comments += Settings.InternalValueSeparator;
-                            comments += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                            if (Comments.Length > 0) Comments += Settings.InternalValueSeparator;
+                            Comments += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
                         }
                         else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
-                            artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            Artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                         }
                         else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
-                            title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                         }
                         else if ("FILE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
@@ -137,7 +113,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             // Strip the ending word representing the audio format
                             if (!System.IO.Path.IsPathRooted(audioFilePath))
                             {
-                                audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path), audioFilePath);
+                                audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), audioFilePath);
                             }
                             physicalTrack = new Track(audioFilePath);
                         }
@@ -160,14 +136,14 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                     {
                         if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                            if (0 == currentTrack.Artist.Length) currentTrack.Artist = Artist;
                             if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
                             if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
                             if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                             if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
-                            currentTrack.Album = title;
+                            currentTrack.Album = Title;
 
-                            tracks.Add(currentTrack);
+                            Tracks.Add(currentTrack);
 
                             previousTrack = currentTrack;
                             currentTrack = new Track();
@@ -229,15 +205,15 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
                 if (currentTrack != null)
                 {
-                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = Artist;
                     if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
                     if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
                     if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                     if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
-                    currentTrack.Album = title;
+                    currentTrack.Album = Title;
                     currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
 
-                    tracks.Add(currentTrack);
+                    Tracks.Add(currentTrack);
                 }
             } // using
 
