@@ -9,6 +9,20 @@ namespace ATL.test
     public class PlaylistTest
     {
         [TestMethod]
+        public void PL_TestCommon()
+        {
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
+
+            Assert.AreEqual(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u", theReader.Path);
+
+            try
+            {
+                theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/efiufhziuefizeub.m3u");
+                Assert.Fail();
+            } catch { }
+        }
+
+        [TestMethod]
         public void PL_TestM3U()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
