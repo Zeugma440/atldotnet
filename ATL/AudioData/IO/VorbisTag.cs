@@ -416,7 +416,7 @@ namespace ATL.AudioData.IO
             bool doWritePicture;
             uint nbFrames = 0;
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -478,7 +478,7 @@ namespace ATL.AudioData.IO
 
         private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
-            String chapterIndex;
+            string chapterIndex;
 
             for (int i=0; i<chapters.Count; i++)
             {
@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             long frameSizePos;
             long finalFramePos;

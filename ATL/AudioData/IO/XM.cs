@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using ATL.Logging;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -15,7 +14,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String XM_SIGNATURE = "Extended Module: ";
+        private const string XM_SIGNATURE = "Extended Module: ";
 
         // Effects (NB : very close to the MOD effect codes)
         private const byte EFFECT_POSITION_JUMP = 0xB;
@@ -38,7 +37,7 @@ namespace ATL.AudioData.IO
         private ushort initialTempo; // BPM
 
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -98,7 +97,7 @@ namespace ATL.AudioData.IO
         private class Instrument
         {
             //public byte Type;  Useful for S3M but not for XM
-            public String DisplayName;
+            public string DisplayName;
 
             // Other fields not useful for ATL
 
@@ -277,7 +276,7 @@ namespace ATL.AudioData.IO
             uint instrumentHeaderSize;
             ushort nbSamples;
 
-            IList<UInt32> sampleSizes = new List<uint>();
+            IList<uint> sampleSizes = new List<uint>();
 
             for (int i = 0; i < nbInstruments; i++)
             {
@@ -401,7 +400,7 @@ namespace ATL.AudioData.IO
             }
 
             // Title = chars 17 to 37 (length 20)
-            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
@@ -417,7 +416,7 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
 
-            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20).Trim();
+            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20).Trim();
 
             trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
             trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);

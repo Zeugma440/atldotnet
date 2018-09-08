@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
 	public class APEtag : MetaDataIO
     {
         // Tag ID
-        public const String APE_ID = "APETAGEX";                            // APE
+        public const string APE_ID = "APETAGEX";                            // APE
 
         // Size constants
         public const byte APE_TAG_FOOTER_SIZE = 32;                         // APE tag footer
@@ -209,7 +209,7 @@ namespace ATL.AudioData.IO
                         //    * The frame name
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        String description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); 
+                        string description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); 
                         ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
 
                         PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), frameName, picturePosition);
@@ -375,7 +375,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -410,7 +410,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             long frameSizePos;
             long finalFramePos;
@@ -435,7 +435,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, string pictureTypeCode, String picDescription)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, string pictureTypeCode, string picDescription)
         {
             // Binary tag writing management
             long frameSizePos;

@@ -1,18 +1,17 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders
 {
-	/// <summary>
-	/// Reads all file paths registered in a playlist
-	/// </summary>
-	public interface IPlaylistReader
+    /// <summary>
+    /// Reads all file paths registered in a playlist
+    /// </summary>
+    public interface IPlaylistReader
 	{
         /// <summary>
         /// Absolute path of the playlist file
         /// </summary>
-        String Path
+        string Path
         {
             get;
             set;
@@ -23,6 +22,6 @@ namespace ATL.PlaylistReaders
         /// NB : The existence of the files is not checked
         /// </summary>
         /// <returns>An array containing all paths</returns>
-        IList<String> GetFiles();
+        IList<string> GetFiles();
 	}
 }

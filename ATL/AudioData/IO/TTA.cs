@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;

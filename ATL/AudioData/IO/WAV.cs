@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -20,13 +19,13 @@ namespace ATL.AudioData.IO
 	class WAV : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
         // Format type names
-        public const String WAV_FORMAT_UNKNOWN = "Unknown";
-        public const String WAV_FORMAT_PCM = "Windows PCM";
-        public const String WAV_FORMAT_ADPCM = "Microsoft ADPCM";
-        public const String WAV_FORMAT_ALAW = "A-LAW";
-        public const String WAV_FORMAT_MULAW = "MU-LAW";
-        public const String WAV_FORMAT_DVI_IMA_ADPCM = "DVI/IMA ADPCM";
-        public const String WAV_FORMAT_MP3 = "MPEG Layer III";
+        public const string WAV_FORMAT_UNKNOWN = "Unknown";
+        public const string WAV_FORMAT_PCM = "Windows PCM";
+        public const string WAV_FORMAT_ADPCM = "Microsoft ADPCM";
+        public const string WAV_FORMAT_ALAW = "A-LAW";
+        public const string WAV_FORMAT_MULAW = "MU-LAW";
+        public const string WAV_FORMAT_DVI_IMA_ADPCM = "DVI/IMA ADPCM";
+        public const string WAV_FORMAT_MP3 = "MPEG Layer III";
 
         private const string HEADER_RIFF = "RIFF";
         private const string HEADER_RIFX = "RIFX";
@@ -34,15 +33,15 @@ namespace ATL.AudioData.IO
         private const string FORMAT_WAVE = "WAVE";
 
         // Standard sub-chunks
-        private const String CHUNK_FORMAT = "fmt ";
-        private const String CHUNK_FACT = "fact";
-        private const String CHUNK_DATA = "data";
+        private const string CHUNK_FORMAT = "fmt ";
+        private const string CHUNK_FACT = "fact";
+        private const string CHUNK_DATA = "data";
 
         // Broadcast Wave metadata sub-chunk
-        private const String CHUNK_BEXT = BextTag.CHUNK_BEXT;
-        private const String CHUNK_INFO = InfoTag.CHUNK_LIST;
-        private const String CHUNK_IXML = IXmlTag.CHUNK_IXML;
-        private const String CHUNK_ID3 = "id3 ";
+        private const string CHUNK_BEXT = BextTag.CHUNK_BEXT;
+        private const string CHUNK_INFO = InfoTag.CHUNK_LIST;
+        private const string CHUNK_IXML = IXmlTag.CHUNK_IXML;
+        private const string CHUNK_ID3 = "id3 ";
 
 
         // Used with ChannelModeID property
@@ -50,7 +49,7 @@ namespace ATL.AudioData.IO
         public const byte WAV_CM_STEREO = 2;                 // Index for stereo mode
 
         // Channel mode names
-        public String[] WAV_MODE = new String[3] { "Unknown", "Mono", "Stereo" };
+        public string[] WAV_MODE = new string[3] { "Unknown", "Mono", "Stereo" };
 
         //		private ushort formatID;
         private ushort channelNumber;

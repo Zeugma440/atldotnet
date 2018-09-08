@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -16,7 +15,7 @@ namespace ATL.AudioData.IO
         public const int TAK_VERSION_210 = 210;
         public const int TAK_VERSION_220 = 220;
 
-        public const String TAK_ID = "tBaK";
+        public const string TAK_ID = "tBaK";
 
  
 		// Private declarations 
@@ -118,11 +117,11 @@ namespace ATL.AudioData.IO
             bool doLoop = true;
             long position;
 
-            UInt16 readData16;
-            UInt32 readData32;
+            ushort readData16;
+            uint readData32;
 
-            UInt32 metaType;
-            UInt32 metaSize;
+            uint metaType;
+            uint metaSize;
             long sampleCount = 0;
             int frameSizeType = -1;
 
@@ -152,7 +151,7 @@ namespace ATL.AudioData.IO
                         readData16 = source.ReadUInt16();
                         frameSizeType = readData16 & 0x003C; // bits 11 to 14
                         readData32 = source.ReadUInt32();
-                        UInt32 restOfData = source.ReadUInt32();
+                        uint restOfData = source.ReadUInt32();
 
                         sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
 

@@ -49,14 +49,14 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "MOOD", "xxx"));
 
             testData.Pictures = new List<PictureInfo>();
-            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            PictureInfo pic = new PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             pic.PictureData = data;
             pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
             testData.Pictures.Add(pic);
 
-            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x09);
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            pic = new PictureInfo(ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x09);
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             pic.PictureData = data;
             pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
             testData.Pictures.Add(pic);
@@ -66,7 +66,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_simple()
         {
             string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 ANSI charset only.mp3";
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -109,8 +109,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 UTF16.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 UTF16.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -153,8 +153,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_3pictures()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -186,8 +186,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v23_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -196,8 +196,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v24_UTF8()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_UTF8.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_UTF8.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -209,7 +209,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with extended tag properties (tag restrictions)
             string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8_extendedTag.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that the presence of an extended tag does not disrupt field reading
             readExistingTagsOnFile(theFile);
@@ -223,12 +223,12 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
 
                 // Insert a large picture while tag restrictions specify that pictures shouldn't be larger than 64x64pixels AND tag size shouldn't be larger than 4 KB
-                PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
+                PictureInfo picInfo = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
                 theTag.Pictures.Add(picInfo);
 
                 // Insert a gif picture while tag restrictions specify that pictures should be either jpeg or png
-                picInfo = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.Back);
+                picInfo = new PictureInfo(ImageFormat.Gif, PictureInfo.PIC_TYPE.Back);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
                 theTag.Pictures.Add(picInfo);
 
@@ -313,8 +313,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -372,8 +372,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing unsupported fields : RVA & TBP
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -458,8 +458,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : empty MP3
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -479,7 +479,7 @@ namespace ATL.test.IO.MetaData
             ch.Subtitle = "bbb";
             ch.Url = "ccc\0ddd";
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             ch.Picture.PictureData = data;
             ch.Picture.ComputePicHash();
 
@@ -532,7 +532,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(2, found);
@@ -547,8 +547,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -564,7 +564,7 @@ namespace ATL.test.IO.MetaData
             ch.Title = "Intro";
             ch.Url = "chapter url\0https://auphonic.com/";
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg");
             ch.Picture.PictureData = data;
             ch.Picture.ComputePicHash();
             expectedChaps.Add(ch.StartTime, ch);
@@ -634,7 +634,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(9, found);
@@ -655,7 +655,7 @@ namespace ATL.test.IO.MetaData
             ch.Subtitle = "bbb";
             ch.Url = "ccc\0ddd";
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             ch.Picture.PictureData = data;
             ch.Picture.ComputePicHash();
 
@@ -708,7 +708,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(2, found);
@@ -723,8 +723,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -797,8 +797,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_ID3v2_HugeTrackAlbumNum()
         {
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/hugeAlbumTrackNumber.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/hugeAlbumTrackNumber.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile());
 

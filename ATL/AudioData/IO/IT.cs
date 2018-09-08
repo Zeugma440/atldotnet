@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using ATL.Logging;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -120,8 +119,8 @@ namespace ATL.AudioData.IO
         private class Instrument
         {
             public byte Type = 0;
-            public String FileName = "";
-            public String DisplayName = "";
+            public string FileName = "";
+            public string DisplayName = "";
 
             // Other fields not useful for ATL
         }
@@ -280,9 +279,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readSamples(BufferedBinaryReader source, IList<UInt32> samplePointers)
+        private void readSamples(BufferedBinaryReader source, IList<uint> samplePointers)
         {
-            foreach (UInt32 pos in samplePointers)
+            foreach (uint pos in samplePointers)
             {
                 source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
@@ -300,9 +299,9 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstruments(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstruments(BufferedBinaryReader source, IList<uint> instrumentPointers)
         {
-            foreach (UInt32 pos in instrumentPointers)
+            foreach (uint pos in instrumentPointers)
             {
                 source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
@@ -320,13 +319,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstrumentsOld(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstrumentsOld(BufferedBinaryReader source, IList<uint> instrumentPointers)
         {
             // The fileName and displayName fields have the same offset in the new and old format
             readInstruments(source, instrumentPointers);
         }
 
-        private void readPatterns(BufferedBinaryReader source, IList<UInt32> patternPointers)
+        private void readPatterns(BufferedBinaryReader source, IList<uint> patternPointers)
         {
             ushort nbRows;
             byte rowNum;
@@ -336,7 +335,7 @@ namespace ATL.AudioData.IO
             IList<IList<Event>> aPattern;
             IDictionary<int, byte> maskVariables = new Dictionary<int, byte>();
 
-            foreach (UInt32 pos in patternPointers)
+            foreach (uint pos in patternPointers)
             {
                 aPattern = new List<IList<Event>>();
                 if (pos > 0)
@@ -422,11 +421,11 @@ namespace ATL.AudioData.IO
 
             ushort messageLength;
             uint messageOffset;
-            String message = "";
+            string message = "";
 
-            IList<UInt32> patternPointers = new List<UInt32>();
-            IList<UInt32> instrumentPointers = new List<UInt32>();
-            IList<UInt32> samplePointers = new List<UInt32>();
+            IList<uint> patternPointers = new List<uint>();
+            IList<uint> instrumentPointers = new List<uint>();
+            IList<uint> samplePointers = new List<uint>();
 
             resetData();
             BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);

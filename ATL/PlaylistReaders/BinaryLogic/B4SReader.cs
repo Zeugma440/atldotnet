@@ -1,9 +1,6 @@
-using ATL.Logging;
-using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ATL.PlaylistReaders.BinaryLogic
@@ -14,7 +11,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class B4SReader : PlaylistReader
     {
 
-        public override void GetFiles(FileStream fs, IList<String> result)
+        public override void GetFiles(FileStream fs, IList<string> result)
         {
             // The following flags indicate if the parser is currently reading
             // the content of the corresponding tag
@@ -60,9 +57,9 @@ namespace ATL.PlaylistReaders.BinaryLogic
             }
         }
 
-        private String getResourceLocation(XmlReader source)
+        private string getResourceLocation(XmlReader source)
         {
-            String result = "";
+            string result = "";
             while (source.MoveToNextAttribute()) // Read the attributes.
             {
                 if (source.Name.Equals("Playstring", StringComparison.OrdinalIgnoreCase))

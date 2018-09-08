@@ -25,7 +25,7 @@ namespace Commons
         /// </summary>
         /// <param name="value">String to protect</param>
         /// <returns>Given string if non-null; else empty string</returns>
-        public static String ProtectValue(String value)
+        public static string ProtectValue(string value)
         {
             return (null == value) ? "" : value;
         }
@@ -66,7 +66,7 @@ namespace Commons
         {
             int h;
             long m;
-            String hStr, mStr, sStr;
+            string hStr, mStr, sStr;
             long s;
             int d;
 
@@ -85,18 +85,12 @@ namespace Commons
 
             if (d > 0)
             {
-                return d + "d " + hStr + ":" + mStr + ":" + sStr;
+                return $"{d}d {hStr}:{mStr}:{ sStr}";
             }
             else
             {
-                if (h > 0)
-                {
-                    return hStr + ":" + mStr + ":" + sStr;
-                }
-                else
-                {
-                    return mStr + ":" + sStr;
-                }
+                return (h > 0) ? $"{hStr}:{mStr}:{sStr}" : $"{mStr}:{sStr}";
+
             }
         }
 
@@ -175,7 +169,7 @@ namespace Commons
 
             return iStr.Substring(0, i);
         }
-        
+
         /// <summary>
         /// Transforms the given string to format with a given length
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
@@ -225,7 +219,8 @@ namespace Commons
                     Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
                     for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
                 }
-            } else
+            }
+            else
             {
                 result = data;
             }
@@ -251,8 +246,7 @@ namespace Commons
                 if (value.Length > 0)
                 {
                     // Numeric convert
-                    float f;
-                    if (float.TryParse(value, out f))
+                    if (float.TryParse(value, out float f))
                     {
                         return (f != 0);
                     }
@@ -280,7 +274,7 @@ namespace Commons
             char[] encodedDataChar = new char[encodedData.Length];
             Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
 
-            return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+            return Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
         }
 
         /// <summary>
@@ -303,9 +297,9 @@ namespace Commons
 
             char[] dataChar = new char[arrayLength];
 
-            System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
+            Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
-            return Utils.Latin1Encoding.GetBytes(dataChar);
+            return Latin1Encoding.GetBytes(dataChar);
         }
 
         /// <summary>
@@ -330,7 +324,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && !(s[i] == '-') ) return false;
+                    if (!char.IsDigit(s[i]) && !(s[i] == '-')) return false;
                 }
             }
 
@@ -353,7 +347,7 @@ namespace Commons
             for (int i = 0; i < s.Length; i++)
             {
                 c = char.ToUpper(s[i]);
-                if (!char.IsDigit(c) && c!='A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
+                if (!char.IsDigit(c) && c != 'A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
             }
 
             return true;

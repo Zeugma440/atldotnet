@@ -1,12 +1,11 @@
-using System;
 using System.IO;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
-	/// Dummy audio data provider
-	/// </summary>
-	public class DummyReader : IAudioDataIO
+    /// <summary>
+    /// Dummy audio data provider
+    /// </summary>
+    public class DummyReader : IAudioDataIO
 	{
         private string filePath = "";
 

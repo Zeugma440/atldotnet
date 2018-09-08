@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using ATL.Logging;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -22,7 +21,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String S3M_SIGNATURE = "SCRM";
+        private const string S3M_SIGNATURE = "SCRM";
         private const byte MAX_ROWS = 64;
 
         // Effects
@@ -45,7 +44,7 @@ namespace ATL.AudioData.IO
         private byte initialTempo;
 
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -106,8 +105,8 @@ namespace ATL.AudioData.IO
         private class Instrument
         {
             public byte Type = 0;
-            public String FileName = "";
-            public String DisplayName = "";
+            public string FileName = "";
+            public string DisplayName = "";
 
             // Other fields not useful for ATL
         }
@@ -294,9 +293,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private String getTrackerName(ushort trackerVersion)
+        private string getTrackerName(ushort trackerVersion)
         {
-            String result = "";
+            string result = "";
 
             switch ((trackerVersion & 0xF000) >> 12)
             {
@@ -410,7 +409,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
 
             // Title = first 28 chars
-            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 28);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 28);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using ATL.Logging;
 using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -8,28 +7,28 @@ using System.Text;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
-	/// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+    /// <summary>
+    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
-	/// </summary>
-	class PSF : MetaDataIO, IAudioDataIO
+    /// </summary>
+    class PSF : MetaDataIO, IAudioDataIO
 	{
 		// Format Type Names
-		public const String PSF_FORMAT_UNKNOWN = "Unknown";
-		public const String PSF_FORMAT_PSF1 = "Playstation";
-		public const String PSF_FORMAT_PSF2 = "Playstation 2";
-		public const String PSF_FORMAT_SSF = "Saturn";
-		public const String PSF_FORMAT_DSF = "Dreamcast";
-		public const String PSF_FORMAT_USF = "Nintendo 64";
-		public const String PSF_FORMAT_QSF = "Capcom QSound";
+		public const string PSF_FORMAT_UNKNOWN = "Unknown";
+		public const string PSF_FORMAT_PSF1 = "Playstation";
+		public const string PSF_FORMAT_PSF2 = "Playstation 2";
+		public const string PSF_FORMAT_SSF = "Saturn";
+		public const string PSF_FORMAT_DSF = "Dreamcast";
+		public const string PSF_FORMAT_USF = "Nintendo 64";
+		public const string PSF_FORMAT_QSF = "Capcom QSound";
 
 		// Tag predefined fields
-		public const String TAG_LENGTH = "length";
-		public const String TAG_FADE = "fade";
+		public const string TAG_LENGTH = "length";
+		public const string TAG_FADE = "fade";
 
-		private const String PSF_FORMAT_TAG = "PSF";
-		private const String TAG_HEADER = "[TAG]";
+		private const string PSF_FORMAT_TAG = "PSF";
+		private const string TAG_HEADER = "[TAG]";
 		private const uint HEADER_LENGTH = 16;
 
         private const byte LINE_FEED = 0x0A;
@@ -105,7 +104,7 @@ namespace ATL.AudioData.IO
 
         private class PSFHeader
 		{
-			public String FormatTag;					// Format tag (should be PSF_FORMAT_TAG)
+			public string FormatTag;					// Format tag (should be PSF_FORMAT_TAG)
 			public byte VersionByte;					// Version mark
 			public uint ReservedAreaLength;				// Length of reserved area (bytes)
 			public uint CompressedProgramLength;		// Length of compressed program (bytes)
@@ -121,7 +120,7 @@ namespace ATL.AudioData.IO
 
 		private class PSFTag
 		{
-			public String TagHeader;					// Tag header (should be TAG_HEADER)
+			public string TagHeader;					// Tag header (should be TAG_HEADER)
             public int size;
 
 			public void Reset()
@@ -285,12 +284,12 @@ namespace ATL.AudioData.IO
 			}
 		}
 
-		private double parsePSFDuration(String durationStr)
+		private double parsePSFDuration(string durationStr)
 		{
-			String hStr = "";
-			String mStr = "";
-			String sStr = "";
-			String dStr = "";
+            string hStr = "";
+            string mStr = "";
+            string sStr = "";
+            string dStr = "";
 			double result = 0;
 
 			int sepIndex;
@@ -336,10 +335,10 @@ namespace ATL.AudioData.IO
 				hStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
 			}
 
-			if (dStr != "") result = result + (Int32.Parse(dStr) * 100);
-			if (sStr != "") result = result + (Int32.Parse(sStr) * 1000);
-			if (mStr != "") result = result + (Int32.Parse(mStr) * 60000);
-			if (hStr != "") result = result + (Int32.Parse(hStr) * 3600000);
+			if (dStr != "") result = result + (int.Parse(dStr) * 100);
+			if (sStr != "") result = result + (int.Parse(sStr) * 1000);
+			if (mStr != "") result = result + (int.Parse(mStr) * 60000);
+			if (hStr != "") result = result + (int.Parse(hStr) * 3600000);
 			
 			return result;
 		}

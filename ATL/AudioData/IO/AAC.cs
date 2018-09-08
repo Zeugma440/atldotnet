@@ -797,7 +797,7 @@ namespace ATL.AudioData.IO
                 {
                     uint nbSizes = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                     uint max = 0;
-                    uint min = UInt32.MaxValue;
+                    uint min = uint.MaxValue;
 
                     for (int i = 0; i < nbSizes; i++)
                     {
@@ -1267,7 +1267,7 @@ namespace ATL.AudioData.IO
             int counter = 0;
             bool doWritePicture;
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -1363,7 +1363,7 @@ namespace ATL.AudioData.IO
     
             if (0 == frameClass) // Special cases : gnre, trkn, disk
             {
-                UInt16 int16data;
+                ushort int16data;
                 if (frameCode.Equals("trkn") || frameCode.Equals("disk"))
                 {
                     int16data = 0;

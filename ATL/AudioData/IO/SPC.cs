@@ -16,8 +16,8 @@ namespace ATL.AudioData.IO
         private const string ZONE_HEADER = "header";
 
         //private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data v0.30";
-        private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data"; // v0.10 can be parsed as well
-		private const String XTENDED_TAG = "xid6";
+        private const string SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data"; // v0.10 can be parsed as well
+		private const string XTENDED_TAG = "xid6";
 
 		private const int REGISTERS_LENGTH = 9;
 		private const int AUDIODATA_LENGTH = 65792;
@@ -135,7 +135,7 @@ namespace ATL.AudioData.IO
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;
-            byte ID_b = Byte.Parse(ID);
+            byte ID_b = byte.Parse(ID);
 
             // Finds the ATL field identifier
             if (ZONE_EXTENDED.Equals(zone) && extendedFrameMapping.ContainsKey(ID_b)) supportedMetaId = extendedFrameMapping[ID_b];
@@ -151,7 +151,7 @@ namespace ATL.AudioData.IO
 		{
 			public const int TAG_IN_HEADER = 26;
 
-			public String FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
+			public string FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
             public long Size;
 			public byte TagInHeader;					// Set to TAG_IN_HEADER if header contains ID666 info
 			public byte VersionByte;					// Version mark
@@ -182,7 +182,7 @@ namespace ATL.AudioData.IO
 
 		private class SPCExTags
 		{
-			public String FooterTag;					// Extended info tag (should be XTENDED_TAG)
+			public string FooterTag;					// Extended info tag (should be XTENDED_TAG)
 			public uint FooterSize;						// Chunk size
 
 			public void Reset()
@@ -559,7 +559,7 @@ namespace ATL.AudioData.IO
                 {
                     if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER)  && fieldInfo.Value.Length > 0)
                     {
-                        writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), fieldInfo.Value);
+                        writeSubChunk(w, byte.Parse(fieldInfo.NativeFieldCode), fieldInfo.Value);
                         result++;
                     }
                 }
@@ -614,7 +614,7 @@ namespace ATL.AudioData.IO
                     break;
                 case XID6_TINT:
                     writer.Write((ushort)4);
-                    writer.Write(Int32.Parse(text));
+                    writer.Write(int.Parse(text));
                     break;
             }
         }
@@ -633,7 +633,7 @@ namespace ATL.AudioData.IO
             byte fieldCode;
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                fieldCode = Byte.Parse(fieldInfo.NativeFieldCode);
+                fieldCode = byte.Parse(fieldInfo.NativeFieldCode);
                 if (!playbackFrames.Contains(fieldCode))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);

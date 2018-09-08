@@ -33,25 +33,25 @@ namespace ATL.AudioData.IO
         private const int MAX_PAGE_SIZE = 255 * 255;
 
         // Channel mode names
-        private static readonly String[] VORBIS_MODE = new String[4] { "Unknown", "Mono", "Stereo", "Multichannel" };
+        private static readonly string[] VORBIS_MODE = new string[4] { "Unknown", "Mono", "Stereo", "Multichannel" };
 
         // Ogg page header ID
-        private const String OGG_PAGE_ID = "OggS";
+        private const string OGG_PAGE_ID = "OggS";
 
         // Vorbis identification packet (frame) ID
-        private static readonly String VORBIS_HEADER_ID = (char)1 + "vorbis";
+        private static readonly string VORBIS_HEADER_ID = (char)1 + "vorbis";
 
         // Vorbis tag packet (frame) ID
-        private static readonly String VORBIS_TAG_ID = (char)3 + "vorbis";
+        private static readonly string VORBIS_TAG_ID = (char)3 + "vorbis";
 
         // Vorbis setup packet (frame) ID
-        private static readonly String VORBIS_SETUP_ID = (char)5 + "vorbis";
+        private static readonly string VORBIS_SETUP_ID = (char)5 + "vorbis";
 
         // Vorbis parameter frame ID
-        private const String OPUS_HEADER_ID = "OpusHead";
+        private const string OPUS_HEADER_ID = "OpusHead";
 
         // Opus tag frame ID
-        private const String OPUS_TAG_ID = "OpusTags";
+        private const string OPUS_TAG_ID = "OpusTags";
 
 
 
@@ -75,7 +75,7 @@ namespace ATL.AudioData.IO
         {
             get { return this.channelModeID; }
         }
-        public String ChannelMode // Channel mode name
+        public string ChannelMode // Channel mode name
         {
             get { return this.getChannelMode(); }
         }
@@ -197,7 +197,7 @@ namespace ATL.AudioData.IO
         // Vorbis parameter header
         private class VorbisHeader
         {
-            public String ID;
+            public string ID;
             public byte[] BitstreamVersion = new byte[4];  // Bitstream version number
             public byte ChannelMode;                             // Number of channels
             public int SampleRate;                                 // Sample rate (hz)
@@ -224,12 +224,12 @@ namespace ATL.AudioData.IO
         // Opus parameter header
         private class OpusHeader
         {
-            public String ID;
+            public string ID;
             public byte Version;
             public byte OutputChannelCount;
-            public UInt16 PreSkip;
-            public UInt32 InputSampleRate;
-            public Int16 OutputGain;
+            public ushort PreSkip;
+            public uint InputSampleRate;
+            public short OutputGain;
             public byte ChannelMappingFamily;
 
             public byte StreamCount;
@@ -611,7 +611,7 @@ namespace ATL.AudioData.IO
                 typeFlag = header.TypeFlag;
                 nextPageOffset = header.GetPageLength();
 
-                System.Console.WriteLine(header.AbsolutePosition - lastAbsPosition + ";" + nextPageOffset);
+                Console.WriteLine(header.AbsolutePosition - lastAbsPosition + ";" + nextPageOffset);
                 lastAbsPosition = header.AbsolutePosition;
 
             } while (0 == (typeFlag & 0x04)); // 0x04 marks the last page of the logical bitstream
@@ -636,7 +636,7 @@ namespace ATL.AudioData.IO
                 // Read Vorbis or Opus stream info
                 long position = source.Position;
 
-                String headerStart = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+                string headerStart = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
                 source.Seek(position, SeekOrigin.Begin);
                 if (VORBIS_HEADER_ID.StartsWith(headerStart))
                 {
@@ -790,9 +790,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private String getChannelMode()
+        private string getChannelMode()
         {
-            String result;
+            string result;
             // Get channel mode name
             if (channelModeID > 2) result = VORBIS_MODE[3];
             else

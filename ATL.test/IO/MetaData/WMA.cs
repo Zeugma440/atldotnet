@@ -3,8 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
-using System.Collections.Generic;
-using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -67,7 +65,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(ref theFile);
         }
@@ -80,7 +78,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free WMA
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -161,7 +159,7 @@ namespace ATL.test.IO.MetaData
             // Source : WMA with remaining non-WM metadata used for playback (isVBR, DeviceConformanceTemplate, WMFSDKxxx)
             string location = TestUtils.GetResourceLocationRoot() + "WMA/empty_non-WMFields.wma";
             string testFileLocation = TestUtils.GetTempTestFile("WMA/empty_non-WMFields.wma");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -244,7 +242,7 @@ namespace ATL.test.IO.MetaData
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (WM/Mood)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -317,8 +315,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
             // Check that it is indeed tag-free

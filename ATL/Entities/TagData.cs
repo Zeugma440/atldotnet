@@ -138,7 +138,7 @@ namespace ATL
             IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
 
             // String values
-            IDictionary<byte, String> newData = data.ToMap();
+            IDictionary<byte, string> newData = data.ToMap();
             foreach (byte key in newData.Keys)
             {
                 IntegrateValue(key, newData[key]);
@@ -233,9 +233,9 @@ namespace ATL
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<byte,String> ToMap()
+        public IDictionary<byte, string> ToMap()
         {
-            IDictionary<byte, String> result = new Dictionary<byte, String>();
+            IDictionary<byte, string> result = new Dictionary<byte, string>();
 
             // Supported fields only
             // NB : The following block of code determines the order of appearance of fields within written files
@@ -298,7 +298,7 @@ namespace ATL
         /// <param name="data">Value to add to the map</param>
         /// <param name="id">Key to add to the map</param>
         /// <param name="map">Target map to host given values</param>
-        private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
+        private void addIfConsistent(string data, byte id, IDictionary<byte, string> map)
         {
             if (data != null) map[id] = data;
         }

@@ -25,14 +25,14 @@ namespace ATL.test
         [TestMethod]
         public void PL_TestM3U()
         {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
+            IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
             Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(1, theReader.GetFiles().Count);
             foreach (string s in theReader.GetFiles())
             {
                 System.Console.WriteLine(s);
-                Assert.IsTrue(System.IO.File.Exists(s));
+                Assert.IsTrue(File.Exists(s));
             }
 
             IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
@@ -43,14 +43,14 @@ namespace ATL.test
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
             try
             {
-                theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -66,14 +66,14 @@ namespace ATL.test
 
             try
             {
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -93,14 +93,14 @@ namespace ATL.test
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.smil", replacements);
             try
             {
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -117,14 +117,14 @@ namespace ATL.test
             try
             {
 
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -139,14 +139,14 @@ namespace ATL.test
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.b4s", "$PATH", TestUtils.GetResourceLocationRoot(false));
 
             try {
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -162,14 +162,14 @@ namespace ATL.test
 
             try
             {
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally
@@ -185,14 +185,14 @@ namespace ATL.test
 
             try
             {
-                IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
+                IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
                     System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
+                    Assert.IsTrue(File.Exists(s));
                 }
             }
             finally

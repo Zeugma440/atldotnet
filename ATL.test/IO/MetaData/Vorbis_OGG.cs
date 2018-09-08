@@ -74,10 +74,10 @@ namespace ATL.test.IO.MetaData
             if (null == stream)
             {
                 string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             } else
             {
-                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
             }
 
             readExistingTagsOnFile(ref theFile);
@@ -89,7 +89,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(ref theFile, 3);
         }
@@ -115,7 +115,7 @@ namespace ATL.test.IO.MetaData
                 location = TestUtils.GetResourceLocationRoot() + emptyFile;
                 testFileLocation = TestUtils.GetTempTestFile(emptyFile);
                 streamCopy = null;
-                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             }
             else
             {
@@ -123,7 +123,7 @@ namespace ATL.test.IO.MetaData
                 testFileLocation = "";
                 streamCopy = new MemoryStream();
                 stream.CopyTo(streamCopy);
-                theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
             }
 
 
@@ -241,7 +241,7 @@ namespace ATL.test.IO.MetaData
             // Source : OGG with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -315,8 +315,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Unsupported_Empty()
         {
             // Source : tag-free OGG
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
             // Check that it is indeed tag-free
@@ -434,8 +434,8 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            string testFileLocation = TestUtils.GetTempTestFile("OGG/chapters.ogg");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -512,7 +512,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(9, found);
@@ -561,7 +561,7 @@ namespace ATL.test.IO.MetaData
                 }
                 else
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    Console.WriteLine(chap.StartTime);
                 }
             }
             Assert.AreEqual(2, found);

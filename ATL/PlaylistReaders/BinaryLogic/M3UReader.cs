@@ -1,26 +1,24 @@
 using System;
 using System.IO;
-using System.Collections;
 using System.Text;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders.BinaryLogic
 {
-	/// <summary>
+    /// <summary>
     /// M3U/M3U8 playlist reader
-	/// </summary>
-	public class M3UReader : PlaylistReader
+    /// </summary>
+    public class M3UReader : PlaylistReader
 	{
 
-        public override void GetFiles(FileStream fs, IList<String> result)
+        public override void GetFiles(FileStream fs, IList<string> result)
 		{
 			TextReader source = null;
 
 			Encoding encoding = null;
 			if (System.IO.Path.GetExtension(FFileName).ToLower().Equals(".m3u8"))
 			{
-				encoding = System.Text.Encoding.UTF8;
+				encoding = Encoding.UTF8;
 			}
 
 			if (null == encoding)
@@ -30,7 +28,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
 
             using (source = new StreamReader(fs, encoding))
             {
-                String s = source.ReadLine();
+                string s = source.ReadLine();
                 while (s != null)
                 {
                     // If the read line isn't a metadata, it's a file path

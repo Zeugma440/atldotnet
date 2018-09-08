@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace ATL.CatalogDataReaders
 {
-	/// <summary>
-	/// Factory for Catalog data readers
-	/// </summary>
+    /// <summary>
+    /// Factory for Catalog data readers
+    /// </summary>
     public class CatalogDataReaderFactory : ReaderFactory
 	{
 		// Defines the supported formats
@@ -20,48 +19,39 @@ namespace ATL.CatalogDataReaders
 		{
 			if (null == theFactory)
 			{
-				theFactory = new CatalogDataReaderFactory();
-                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
-
-                Format tempFmt = new Format("CUE sheet");
-                tempFmt.ID = CR_CUE;
-                tempFmt.AddExtension(".cue");
-                theFactory.addFormat(tempFmt);
+                theFactory = new CatalogDataReaderFactory
+                {
+                    formatListByExt = new Dictionary<string, IList<Format>>()
+                };
+                theFactory.addFormat(CueSheetFormat());
 			}
-
 			return theFactory;
 		}
 
-        public ICatalogDataReader GetCatalogDataReader(String path, int alternate = 0)
+        private static Format CueSheetFormat()
+        {
+            var format = new Format("CUE sheet")
+            {
+                ID = CR_CUE
+            };
+            format.AddExtensions(".cue");
+            return format;
+        }
+
+        public ICatalogDataReader GetCatalogDataReader(string path, int alternate = 0)
 		{
             IList<Format> formats = getFormatsFromPath(path);
-            ICatalogDataReader result;
-
-            if (formats != null && formats.Count > alternate)
-            {
-                result = GetCatalogDataReader(formats[alternate].ID, path);
-            }
-            else
-            {
-                result = GetCatalogDataReader(NO_FORMAT);
-            }
-
-            result.Path = path;
-            return result;
+            int formatId = formats.Count > alternate ? formats[alternate].ID : NO_FORMAT;
+            return GetCatalogDataReader(formatId, path);
         }
 
         private ICatalogDataReader GetCatalogDataReader(int formatId, string path = "")
         {
-            ICatalogDataReader theReader = null;
-
-            if (CR_CUE == formatId)
+            switch (formatId)
             {
-                theReader = new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
-			}
-
-            if (null == theReader) theReader = new BinaryLogic.DummyReader();
-
-			return theReader;
+                case CR_CUE: return new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
+                default: return new BinaryLogic.DummyReader() { Path = path }; 
+            }
 		}
 	}
 }

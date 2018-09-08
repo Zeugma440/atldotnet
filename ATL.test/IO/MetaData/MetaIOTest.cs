@@ -77,14 +77,14 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
 
             testData.Pictures = new List<PictureInfo>();
-            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            PictureInfo pic = new PictureInfo(ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             pic.PictureData = data;
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
-            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x02);
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            pic = new PictureInfo(ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x02);
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             pic.PictureData = data;
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
@@ -97,7 +97,7 @@ namespace ATL.test.IO.MetaData
             // Source : empty file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -190,7 +190,7 @@ namespace ATL.test.IO.MetaData
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -215,7 +215,7 @@ namespace ATL.test.IO.MetaData
             }
             testData = new TagData(theTag);
 
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
+            PictureInfo picInfo = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
@@ -260,7 +260,7 @@ namespace ATL.test.IO.MetaData
             testData = new TagData(initialTestData);
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
+            picInfo = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -301,7 +301,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -411,7 +411,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.GetTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -450,10 +450,10 @@ namespace ATL.test.IO.MetaData
 
             if (handleUnsupportedPictures)
             {
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode1);
+                picInfo = new PictureInfo(ImageFormat.Jpeg, tagType, pictureCode1);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
                 theTag.Pictures.Add(picInfo);
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode2);
+                picInfo = new PictureInfo(ImageFormat.Jpeg, tagType, pictureCode2);
                 picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
                 theTag.Pictures.Add(picInfo);
             }
@@ -521,7 +521,7 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             if (handleUnsupportedPictures)
             {
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode1);
+                picInfo = new PictureInfo(ImageFormat.Jpeg, tagType, pictureCode1);
                 picInfo.MarkedForDeletion = true;
                 theTag.Pictures.Add(picInfo);
             }
@@ -649,7 +649,7 @@ namespace ATL.test.IO.MetaData
         protected void assumeRatingInFile(string file, double rating, int tagType)
         {
             string location = TestUtils.GetResourceLocationRoot() + file;
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
