@@ -220,6 +220,8 @@ namespace ATL
 
         protected void Update(bool readEmbeddedPictures = false)
         {
+            if ((null == Path) || (0 == Path.Length)) return;
+
             // TODO when tag is not available, customize by naming options // tracks (...)
             if (null == stream) fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames);
             else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames);
