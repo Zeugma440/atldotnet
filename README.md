@@ -78,7 +78,7 @@ NB2 : All metadata is read according to Unicode/UTF-8 encoding when applicable, 
 R= Read / W= Write
 
 
-Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support | APEtag 1.0-2.0 support | Format-specific tagging support
+Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support (1) | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
 Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
@@ -89,7 +89,7 @@ Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Genesis YM2612 | .GYM |  |  |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
-Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (1)
+Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (3)
 Monkey's Audio | .APE | R/W | R/W | R/W | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
 MusePack / MPEGplus|.MPC, .MP+|R/W|R/W|R/W| |
@@ -102,17 +102,21 @@ SPC700 (Super Nintendo Sound files)|.SPC| | | |R/W|
 Toms' losslesss Audio Kompressor|.TAK| | |R/W| |
 True Audio|.TTA|R/W|R/W|R/W| |
 TwinVQ|.VQF| | | |R/W|
-PCM (uncompressed audio)|.WAV, .BWAV, .BWF|R/W|R/W| |R/W (3)|
+PCM (uncompressed audio)|.WAV, .BWAV, .BWF|R/W|R/W| |R/W (4)|
 Video Game Music (SEGA systems sound files) | .VGM, .VGZ |  |  |  | R/W
 WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 
-(1) : MIDI meta events appear on the track's Comment field
+(1) : ATL reads ID3v2.2-2.4 tags, but only writes ID3v2.4 tags
 
 (2) : all sample names appear on the track's Comment field. Track title only is editable
 
-(3) : Support for BEXT, LIST INFO and iXML chunks
+(3) : MIDI meta events appear on the track's Comment field
+
+(4) : Support for BEXT, LIST INFO and iXML chunks
+
+
 
 
 __DETECTED FIELDS__
