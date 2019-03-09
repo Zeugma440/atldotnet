@@ -121,7 +121,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 __DETECTED FIELDS__
 
-* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family
+* Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family, Channels count and arrangement
 * Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)
 * Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
 
