@@ -57,6 +57,8 @@ namespace ATL.test.CodeSnippets
 
             System.Console.WriteLine("Duration (s) : " + theTrack.Duration);
             System.Console.WriteLine("Bitrate (KBps) : " + theTrack.Bitrate);
+            System.Console.WriteLine("Number of channels : " + theTrack.ChannelsArrangement.NbChannels);
+            System.Console.WriteLine("Channels arrangement : " + theTrack.ChannelsArrangement.Description);
 
             System.Console.WriteLine("Has this file variable bitrate audio : " + (theTrack.IsVBR ? "yes" : "no"));
             System.Console.WriteLine("Has this file lossless audio : " + (AudioDataIOFactory.CF_LOSSLESS == theTrack.CodecFamily ? "yes" : "no"));
