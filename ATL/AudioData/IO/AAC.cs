@@ -373,7 +373,7 @@ namespace ATL.AudioData.IO
             */
             Position += 2;
 
-            uint channels = 0;
+            uint channels = 1;
             sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, Position, 4)];
             Position += 4;
             channels += StreamUtils.ReadBits(Source, Position, 4);
@@ -666,26 +666,24 @@ namespace ATL.AudioData.IO
 
                 for (int i = 0; i < nbDescriptions; i++)
                 {
-                    int32Data = StreamUtils.ReverseUInt32(source.ReadUInt32()); // 4-byte description length
+                    int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // 4-byte description length
                     string descFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                     if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
                     {
                         bool ismp4a = descFormat.Equals("mp4a");
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // 6-byte reserved zone set to zero
+                        source.BaseStream.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
+                        source.BaseStream.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
 
-                        source.BaseStream.Seek(10, SeekOrigin.Current); // Not useful here
+                        source.BaseStream.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
 
-                        ushort channels = StreamUtils.ReverseUInt16(source.ReadUInt16()); // Audio channels
-                        if (1 == channels) channelsArrangement = MONO;
-                        else if (2 == channels) channelsArrangement = STEREO;
-                        else if (6 == channels && ismp4a) channelsArrangement = ISO_3_2_1; // 5.1
-                        else channelsArrangement = new ChannelsArrangement(channels);
+                        ushort channels = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Channel count
+                        channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(channels);
 
                         source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime stuff
+                        source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work if so...)
 
-                        sampleRate = StreamUtils.ReverseInt32(source.ReadInt32());
+                        sampleRate = (int)StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                     }
                     else
                     {

@@ -422,7 +422,7 @@ namespace ATL.AudioData.IO
 			// Process data if loaded and header valid    
 			if ( header.IsValid() )
 			{
-				byte channels      = (byte)( ((header.Info[12] >> 1) & 0x7) + 1 );
+				int channels      = (header.Info[12] >> 1) & 0x7;
                 switch(channels)
                 {
                     case 0b0000: channelsArrangement = MONO; break;

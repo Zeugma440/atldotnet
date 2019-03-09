@@ -14,11 +14,6 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class TwinVQ : MetaDataIO, IAudioDataIO
     {
-
-        // Used with ChannelModeID property
-        public const byte TWIN_CM_MONO = 1;               // Index for mono mode
-        public const byte TWIN_CM_STEREO = 2;           // Index for stereo mode
-
         // Twin VQ header ID
         private const string TWIN_ID = "TWIN";
 

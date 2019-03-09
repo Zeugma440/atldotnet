@@ -64,6 +64,11 @@
                 this.Description = nbChannels + " channels";
             }
 
+            public override string ToString()
+            {
+                return Description;
+            }
+
             public string Description { get; set; }
             public int NbChannels { get; set; }
         }
