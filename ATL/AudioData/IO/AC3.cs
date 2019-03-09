@@ -1,5 +1,6 @@
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -9,18 +10,18 @@ namespace ATL.AudioData.IO
 	class AC3 : IAudioDataIO
     {
         // Standard bitrates (KBit/s)
-		private static readonly int[] BITRATES = new int[19] { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
-														192, 224, 256, 320, 384, 448, 512, 576, 640 };
- 
-		// Private declarations 
+        private static readonly int[] BITRATES = new int[19] { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
+                                                        192, 224, 256, 320, 384, 448, 512, 576, 640 };
+
+        // Private declarations 
         /* Unused for now
-		private uint channels;
 		private uint bits;
         */
-		private uint sampleRate;
+        private uint sampleRate;
 
         private double bitrate;
         private double duration;
+        private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
@@ -28,10 +29,6 @@ namespace ATL.AudioData.IO
 
         // Public declarations 
         /* Unused for now
-        public uint Channels
-		{
-			get { return channels; }
-		}
 		public uint Bits
 		{
 			get { return bits; }
@@ -46,13 +43,13 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         public bool IsVBR
-		{
-			get { return false; }
-		}
+        {
+            get { return false; }
+        }
         public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_LOSSY; }
-		}
+        {
+            get { return AudioDataIOFactory.CF_LOSSY; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -69,6 +66,10 @@ namespace ATL.AudioData.IO
         {
             get { return (int)this.sampleRate; }
         }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
+        }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE);
@@ -82,18 +83,17 @@ namespace ATL.AudioData.IO
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         protected void resetData()
-		{
+        {
             /*
-			channels = 0;
 			bits = 0;
             */
-			sampleRate = 0;
+            sampleRate = 0;
             duration = 0;
             bitrate = 0;
-		}
+        }
 
-		public AC3(string filePath)
-		{
+        public AC3(string filePath)
+        {
             this.filePath = filePath;
             resetData();
         }
@@ -115,7 +115,7 @@ namespace ATL.AudioData.IO
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             ushort signatureChunk;
-			byte aByte;
+            byte aByte;
             this.sizeInfo = sizeInfo;
             resetData();
 
@@ -123,52 +123,51 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
             signatureChunk = source.ReadUInt16();
-            
-			if (30475 == signatureChunk )
-			{
-				aByte = 0;
-		
-				source.BaseStream.Seek(2, SeekOrigin.Current);
-				aByte = source.ReadByte();
 
-				switch (aByte & 0xC0)
-				{
-					case 0: sampleRate = 48000; break;
-					case 0x40: sampleRate = 44100; break;
-					case 0x80: sampleRate = 32000; break;
-					default : sampleRate = 0; break;
-				}
+            if (30475 == signatureChunk)
+            {
+                aByte = 0;
 
-				bitrate = BITRATES[(aByte & 0x3F) >> 1];
+                source.BaseStream.Seek(2, SeekOrigin.Current);
+                aByte = source.ReadByte();
 
-				aByte = 0;
+                switch (aByte & 0xC0)
+                {
+                    case 0: sampleRate = 48000; break;
+                    case 0x40: sampleRate = 44100; break;
+                    case 0x80: sampleRate = 32000; break;
+                    default: sampleRate = 0; break;
+                }
+
+                bitrate = BITRATES[(aByte & 0x3F) >> 1];
+
+                aByte = 0;
 
                 source.BaseStream.Seek(1, SeekOrigin.Current);
-				aByte = source.ReadByte();
-                
-                /* unused for now
-				switch (aByte & 0xE0)
-				{
-					case 0: channels = 2; break;
-					case 0x20: channels = 1; break;
-					case 0x40: channels = 2; break;
-					case 0x60: channels = 3; break;
-					case 0x80: channels = 3; break;
-					case 0xA0: channels = 4; break;
-					case 0xC0: channels = 4; break;
-					case 0xE0: channels = 5; break;
-					default : channels = 0; break;
-				}
+                aByte = source.ReadByte();
 
-				bits = 16;
-                */
+                switch (aByte & 0xE0)
+                {
+                    case 0: channelsArrangement = DUAL_MONO; break;
+                    case 0x20: channelsArrangement = MONO; break;
+                    case 0x40: channelsArrangement = STEREO; break;
+                    case 0x60: channelsArrangement = ISO_3_0_0; break;
+                    case 0x80: channelsArrangement = ISO_2_1_0; break;
+                    case 0xA0: channelsArrangement = ISO_3_1_0; break;
+                    case 0xC0: channelsArrangement = ISO_2_2_0; break;
+                    case 0xE0: channelsArrangement = ISO_3_2_0; break;
+                    default: channelsArrangement = UNKNOWN; break;
+                }
 
-				duration = sizeInfo.FileSize * 8.0 / bitrate;
 
-				result = true;
-			}
-  
-			return result;
-		}
-	}
+                //				bits = 16;
+
+                duration = sizeInfo.FileSize * 8.0 / bitrate;
+
+                result = true;
+            }
+
+            return result;
+        }
+    }
 }

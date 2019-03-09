@@ -5,6 +5,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Collections.Generic;
 using System.Text;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -12,14 +13,11 @@ namespace ATL.AudioData.IO
     /// Class for TwinVQ files manipulation (extension : .VQF)
     /// </summary>
 	class TwinVQ : MetaDataIO, IAudioDataIO
-	{
-	 
-		// Used with ChannelModeID property
-		public const byte TWIN_CM_MONO = 1;               // Index for mono mode
-		public const byte TWIN_CM_STEREO = 2;           // Index for stereo mode
+    {
 
-		// Channel mode names
-		public static readonly String[] TWIN_MODE = new String[3] {"Unknown", "Mono", "Stereo"};
+        // Used with ChannelModeID property
+        public const byte TWIN_CM_MONO = 1;               // Index for mono mode
+        public const byte TWIN_CM_STEREO = 2;           // Index for stereo mode
 
         // Twin VQ header ID
         private const string TWIN_ID = "TWIN";
@@ -28,29 +26,20 @@ namespace ATL.AudioData.IO
 
 
         // Private declarations
-        private byte channelModeID;
-		private int sampleRate;
-
+        private int sampleRate;
         private double bitrate;
         private double duration;
+        private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
 
-        public byte ChannelModeID // Channel mode code
-		{
-			get { return this.channelModeID; }
-		}
-		public String ChannelMode // Channel mode name
-		{
-			get { return this.getChannelMode(); }
-		}	
-		public bool Corrupted // True if file corrupted
-		{
-			get { return this.isCorrupted(); }
-		}
+        public bool Corrupted // True if file corrupted
+        {
+            get { return this.isCorrupted(); }
+        }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;
@@ -64,28 +53,28 @@ namespace ATL.AudioData.IO
 
         // TwinVQ chunk header
         private class ChunkHeader
-		{
+        {
             public string ID;
-			public uint Size;                                            // Chunk size
-			public void Reset()
-			{
-				Size = 0;
-			}
-		}
+            public uint Size;                                            // Chunk size
+            public void Reset()
+            {
+                Size = 0;
+            }
+        }
 
-		// File header data - for internal use
-		private class HeaderInfo
-		{
-			// Real structure of TwinVQ file header
-			public char[] ID = new char[4];                           // Always "TWIN"
-			public char[] Version = new char[8];                         // Version ID
-			public uint Size;                                           // Header size
-			public ChunkHeader Common = new ChunkHeader();      // Common chunk header
-			public uint ChannelMode;             // Channel mode: 0 - mono, 1 - stereo
-			public uint BitRate;                                     // Total bit rate
-			public uint SampleRate;                               // Sample rate (khz)
-			public uint SecurityLevel;                                     // Always 0
-		}
+        // File header data - for internal use
+        private class HeaderInfo
+        {
+            // Real structure of TwinVQ file header
+            public char[] ID = new char[4];                           // Always "TWIN"
+            public char[] Version = new char[8];                         // Version ID
+            public uint Size;                                           // Header size
+            public ChunkHeader Common = new ChunkHeader();      // Common chunk header
+            public uint ChannelMode;             // Channel mode: 0 - mono, 1 - stereo
+            public uint BitRate;                                     // Total bit rate
+            public uint SampleRate;                               // Sample rate (khz)
+            public uint SecurityLevel;                                     // Always 0
+        }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -114,6 +103,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -164,8 +157,6 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
             isValid = false;
-
-            channelModeID = 0;
             sampleRate = 0;
 
             ResetData();
@@ -177,91 +168,88 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        
+
         // ---------- SUPPORT METHODS
 
         private static bool readHeader(BinaryReader source, ref HeaderInfo Header)
-		{
-			bool result = true;
+        {
+            bool result = true;
 
-			// Read header and get file size
-			Header.ID = source.ReadChars(4);
-			Header.Version = source.ReadChars(8);
-			Header.Size = StreamUtils.ReverseUInt32( source.ReadUInt32() );
+            // Read header and get file size
+            Header.ID = source.ReadChars(4);
+            Header.Version = source.ReadChars(8);
+            Header.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
             Header.Common.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-			Header.Common.Size = StreamUtils.ReverseUInt32( source.ReadUInt32() );
-			Header.ChannelMode = StreamUtils.ReverseUInt32( source.ReadUInt32() );
-			Header.BitRate = StreamUtils.ReverseUInt32( source.ReadUInt32() );
-			Header.SampleRate = StreamUtils.ReverseUInt32( source.ReadUInt32() );
-			Header.SecurityLevel = StreamUtils.ReverseUInt32( source.ReadUInt32() );
+            Header.Common.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.ChannelMode = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.BitRate = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.SampleRate = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.SecurityLevel = StreamUtils.ReverseUInt32(source.ReadUInt32());
 
-			return result;
-		}
+            return result;
+        }
 
-        // Get channel mode from header
-        private static byte getChannelModeID(HeaderInfo Header)
-		{
-            switch(Header.ChannelMode)
-			{
-				case 0: return TWIN_CM_MONO;
-				case 1: return TWIN_CM_STEREO;
-				default: return 0;
-			}
-		}
+        private static ChannelsArrangement getChannelArrangement(HeaderInfo Header)
+        {
+            switch (Header.ChannelMode)
+            {
+                case 0: return MONO;
+                case 1: return STEREO;
+                default: return new ChannelsArrangement((int)Header.ChannelMode);
+            }
+        }
 
-        // Get bit rate from header
         private static uint getBitRate(HeaderInfo Header)
-		{
+        {
             return Header.BitRate;
-		}
+        }
 
-        // Get real sample rate from header  
         private int GetSampleRate(HeaderInfo Header)
-		{
+        {
             int result = (int)Header.SampleRate;
-			switch(result)
-			{
-				case 11: result = 11025; break;
-				case 22: result = 22050; break;
-				case 44: result = 44100; break;
-				default: result = (ushort)(result * 1000); break;
-			}
-			return result;
-		}
+            switch (result)
+            {
+                case 11: result = 11025; break;
+                case 22: result = 22050; break;
+                case 44: result = 44100; break;
+                default: result = (ushort)(result * 1000); break;
+            }
+            return result;
+        }
 
         // Get duration from header
         private double getDuration(HeaderInfo Header)
-		{
+        {
             return Math.Abs(sizeInfo.FileSize - Header.Size - 20) * 1000.0 / 125.0 / (double)Header.BitRate;
-		}
+        }
 
-		private static bool headerEndReached(ChunkHeader Chunk)
-		{
-			// Check for header end
-			return ( ((byte)(Chunk.ID[0]) < 32) ||
-				((byte)(Chunk.ID[1]) < 32) ||
-				((byte)(Chunk.ID[2]) < 32) ||
-				((byte)(Chunk.ID[3]) < 32) ||
-				"DSIZ".Equals(Chunk.ID) );
-		}
+        private static bool headerEndReached(ChunkHeader Chunk)
+        {
+            // Check for header end
+            return (((byte)(Chunk.ID[0]) < 32) ||
+                ((byte)(Chunk.ID[1]) < 32) ||
+                ((byte)(Chunk.ID[2]) < 32) ||
+                ((byte)(Chunk.ID[3]) < 32) ||
+                "DSIZ".Equals(Chunk.ID));
+        }
 
         private bool readTag(BinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
-		{ 
-			ChunkHeader chunk = new ChunkHeader();
+        {
+            ChunkHeader chunk = new ChunkHeader();
             string data;
             bool result = false;
             bool first = true;
             long tagStart = -1;
 
-			source.BaseStream.Seek(40, SeekOrigin.Begin);
-			do
-			{
+            source.BaseStream.Seek(40, SeekOrigin.Begin);
+            do
+            {
                 // Read chunk header (length : 8 bytes)
                 chunk.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
                 chunk.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
 
-				// Read chunk data and set tag item if chunk header valid
-				if ( headerEndReached(chunk) ) break;
+                // Read chunk data and set tag item if chunk header valid
+                if (headerEndReached(chunk)) break;
 
                 if (first)
                 {
@@ -275,33 +263,28 @@ namespace ATL.AudioData.IO
 
                 result = true;
             }
-			while (source.BaseStream.Position < source.BaseStream.Length);
+            while (source.BaseStream.Position < source.BaseStream.Length);
 
             if (readTagParams.PrepareForWriting)
             {
                 // Zone goes from the first field after COMM to the last field before DSIZ
                 if (-1 == tagStart) structureHelper.AddZone(source.BaseStream.Position - 8, 0);
-                else structureHelper.AddZone(tagStart, (int)(source.BaseStream.Position - tagStart - 8) );
+                else structureHelper.AddZone(tagStart, (int)(source.BaseStream.Position - tagStart - 8));
                 structureHelper.AddSize(12, (uint)Header.Size);
             }
 
             return result;
-		}
+        }
 
-        private String getChannelMode()
-		{
-			return TWIN_MODE[channelModeID];
-		}
-
-		private bool isCorrupted()
-		{
-			// Check for file corruption
-			return ( (isValid) &&
-				((0 == channelModeID) ||
+        private bool isCorrupted()
+        {
+            // Check for file corruption
+            return ((isValid) &&
+                ((0 == channelsArrangement.NbChannels) ||
                 (bitrate < 8000) || (bitrate > 192000) ||
-				(sampleRate < 8000) || (sampleRate > 44100) ||
-				(duration < 0.1) || (duration > 10000)) );
-		}
+                (sampleRate < 8000) || (sampleRate > 44100) ||
+                (duration < 0.1) || (duration > 10000)));
+        }
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -318,20 +301,20 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             bool result = readHeader(source, ref Header);
-			// Process data if loaded and header valid
-			if ( (result) && StreamUtils.StringEqualsArr(TWIN_ID,Header.ID) )
-			{
-				isValid = true;
-				// Fill properties with header data
-				channelModeID = getChannelModeID(Header);
-				bitrate = getBitRate(Header);
-				sampleRate = GetSampleRate(Header);
-				duration = getDuration(Header);
-				// Get tag information and fill properties
-				readTag(source, Header, readTagParams);
-			}
-			return result;
-		}
+            // Process data if loaded and header valid
+            if ((result) && StreamUtils.StringEqualsArr(TWIN_ID, Header.ID))
+            {
+                isValid = true;
+                // Fill properties with header data
+                channelsArrangement = getChannelArrangement(Header);
+                bitrate = getBitRate(Header);
+                sampleRate = GetSampleRate(Header);
+                duration = getDuration(Header);
+                // Get tag information and fill properties
+                readTag(source, Header, readTagParams);
+            }
+            return result;
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {

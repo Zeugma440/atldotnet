@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -27,20 +28,20 @@ namespace ATL.AudioData.IO
         private const string FORMTYPE_AIFF = "AIFF";
         private const string FORMTYPE_AIFC = "AIFC";
 
-        private const string COMPRESSION_NONE       = "NONE";
-        private const string COMPRESSION_NONE_LE    = "sowt";
+        private const string COMPRESSION_NONE = "NONE";
+        private const string COMPRESSION_NONE_LE = "sowt";
 
-        private const string CHUNKTYPE_COMMON       = "COMM";
-        private const string CHUNKTYPE_SOUND        = "SSND";
+        private const string CHUNKTYPE_COMMON = "COMM";
+        private const string CHUNKTYPE_SOUND = "SSND";
 
-        private const string CHUNKTYPE_MARKER       = "MARK";
-        private const string CHUNKTYPE_INSTRUMENT   = "INST";
-        private const string CHUNKTYPE_COMMENTS     = "COMT";
-        private const string CHUNKTYPE_NAME         = "NAME";
-        private const string CHUNKTYPE_AUTHOR       = "AUTH";
-        private const string CHUNKTYPE_COPYRIGHT    = "(c) ";
-        private const string CHUNKTYPE_ANNOTATION   = "ANNO"; // Use in discouraged by specs in favour of COMT
-        private const string CHUNKTYPE_ID3TAG       = "ID3 ";
+        private const string CHUNKTYPE_MARKER = "MARK";
+        private const string CHUNKTYPE_INSTRUMENT = "INST";
+        private const string CHUNKTYPE_COMMENTS = "COMT";
+        private const string CHUNKTYPE_NAME = "NAME";
+        private const string CHUNKTYPE_AUTHOR = "AUTH";
+        private const string CHUNKTYPE_COPYRIGHT = "(c) ";
+        private const string CHUNKTYPE_ANNOTATION = "ANNO"; // Use in discouraged by specs in favour of COMT
+        private const string CHUNKTYPE_ID3TAG = "ID3 ";
 
         // AIFx timestamp are defined as "the number of seconds since January 1, 1904"
         private static DateTime timestampBase = new DateTime(1904, 1, 1);
@@ -58,8 +59,7 @@ namespace ATL.AudioData.IO
         }
 
         // Private declarations 
-        private uint channels;
-		private uint bits;
+        private uint bits;
         private uint sampleSize;
         private uint numSampleFrames;
 
@@ -70,6 +70,7 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
+        private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
@@ -85,31 +86,28 @@ namespace ATL.AudioData.IO
         {
             get { return this.versionID; }
         }
-        public uint Channels
-		{
-			get { return channels; }
-		}
-		public uint Bits
-		{
-			get { return bits; }
-		}
+        public uint Bits
+        {
+            get { return bits; }
+        }
         public double CompressionRatio
         {
             get { return getCompressionRatio(); }
         }
 
-        
+
+
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
         public bool IsVBR
-		{
-			get { return false; }
-		}
+        {
+            get { return false; }
+        }
         public int CodecFamily
-		{
-			get { return (compression.Equals(COMPRESSION_NONE)|| compression.Equals(COMPRESSION_NONE_LE)) ?AudioDataIOFactory.CF_LOSSLESS: AudioDataIOFactory.CF_LOSSY; }
-		}
+        {
+            get { return (compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE)) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -126,11 +124,15 @@ namespace ATL.AudioData.IO
         {
             get { return duration; }
         }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
+        }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
-        
+
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -188,15 +190,14 @@ namespace ATL.AudioData.IO
         }
 
         private void resetData()
-		{
+        {
             duration = 0;
             bitrate = 0;
             isValid = false;
             id3v2StructureHelper.Clear();
 
-            channels = 0;
-			bits = 0;
-			sampleRate = 0;
+            bits = 0;
+            sampleRate = 0;
 
             versionID = 0;
 
@@ -212,14 +213,14 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        
+
         // ---------- SUPPORT METHODS
 
         private double getCompressionRatio()
         {
             // Get compression ratio 
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channels * bits / 8.0) + 44) * 100;
+                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
             else
                 return 0;
         }
@@ -236,7 +237,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Read(aByte, 0, 1);
             // In case previous field size is not correctly documented, tries to advance to find a suitable first character for an ID
-            while ( !((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91)) ) && source.BaseStream.Position < limit) 
+            while (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.BaseStream.Position < limit)
             {
                 source.BaseStream.Read(aByte, 0, 1);
             }
@@ -244,7 +245,7 @@ namespace ATL.AudioData.IO
             if (source.BaseStream.Position < limit)
             {
                 source.BaseStream.Seek(-1, SeekOrigin.Current);
-                
+
                 // Chunk ID
                 header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
                 // Chunk size
@@ -311,7 +312,17 @@ namespace ATL.AudioData.IO
 
                         if (header.ID.Equals(CHUNKTYPE_COMMON))
                         {
-                            channels = (uint)StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                            short channels = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                            switch (channels)
+                            {
+                                case 1: channelsArrangement = MONO; break;
+                                case 2: channelsArrangement = STEREO; break;
+                                case 3: channelsArrangement = ISO_3_0_0; break;
+                                case 4: channelsArrangement = ISO_2_2_0; break; // Specs actually allow both 2/2.0 and LRCS
+                                case 6: channelsArrangement = LRLcRcCS; break;
+                                default: channelsArrangement = UNKNOWN; break;
+                            }
+
                             numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                             sampleSize = (uint)StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
                             byte[] byteArray = source.ReadBytes(10);
@@ -339,7 +350,7 @@ namespace ATL.AudioData.IO
                                     else if (compression.ToLower().Equals("alaw")) sampleSize = 8;
                                     else if (compression.ToLower().Equals("ulaw")) sampleSize = 8;
                                 }
-                                if (duration > 0) bitrate = sampleSize * numSampleFrames * channels / duration;
+                                if (duration > 0) bitrate = sampleSize * numSampleFrames * channelsArrangement.NbChannels / duration;
                             }
                         }
                         else if (header.ID.Equals(CHUNKTYPE_SOUND))
@@ -372,8 +383,8 @@ namespace ATL.AudioData.IO
                         else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
                             commentIndex++;
-                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID+commentIndex);
-                            structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID+commentIndex);
+                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + commentIndex);
+                            structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + commentIndex);
 
                             tagExists = true;
                             commentsFound = true;
@@ -415,7 +426,7 @@ namespace ATL.AudioData.IO
                         if (header.ID.Equals(CHUNKTYPE_SOUND) && header.Size % 2 > 0) source.BaseStream.Position += 1; // Sound chunk size must be even
                     }
 
-                    tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, commentStr.ToString().Replace("\0"," ").Trim());
+                    tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
 
                     if (-1 == id3v2Offset)
                     {
@@ -455,10 +466,10 @@ namespace ATL.AudioData.IO
 
                     result = true;
                 }
-			}
-  
-			return result;
-		}
+            }
+
+            return result;
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
@@ -586,7 +597,8 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEUInt32(encodeTimestamp(DateTime.Now)));
                 w.Write((short)0);
                 commentData = Utils.Latin1Encoding.GetBytes(comment);
-            } else
+            }
+            else
             {
                 w.Write(StreamUtils.EncodeBEUInt32(((CommentData)info.SpecificData).Timestamp));
                 w.Write(StreamUtils.EncodeBEInt16(((CommentData)info.SpecificData).MarkerId));
@@ -606,7 +618,7 @@ namespace ATL.AudioData.IO
         // AIFx timestamps are "the number of seconds since January 1, 1904"
         private static uint encodeTimestamp(DateTime when)
         {
-            return (uint)Math.Round( (when.Ticks - timestampBase.Ticks) * 1.0 / TimeSpan.TicksPerSecond );
+            return (uint)Math.Round((when.Ticks - timestampBase.Ticks) * 1.0 / TimeSpan.TicksPerSecond);
         }
     }
 }

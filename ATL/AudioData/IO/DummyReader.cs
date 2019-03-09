@@ -56,6 +56,10 @@ namespace ATL.AudioData.IO
         {
             get { return new DummyTag(); }
         }
+        public ChannelsArrangements.ChannelsArrangement ChannelsArrangement
+        {
+            get { return ChannelsArrangements.UNKNOWN; }
+        }
         public bool RemoveTagFromFile(int tagType)
         {
             return true;

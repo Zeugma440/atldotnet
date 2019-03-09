@@ -1,5 +1,6 @@
 using ATL.AudioData.IO;
 using System.IO;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData
 {
@@ -50,7 +51,14 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-        
+        /// <summary>
+        /// Channels arrangement
+        /// </summary>
+        ChannelsArrangement ChannelsArrangement
+        {
+            get;
+        }
+
         /// <summary>
         /// Indicated wether the given metadata type is supported
         /// </summary>

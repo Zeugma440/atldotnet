@@ -5,6 +5,7 @@ using Commons;
 using static ATL.AudioData.FileStructureHelper;
 using System.Text;
 using static ATL.AudioData.IO.MetaDataIO;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -68,37 +69,29 @@ namespace ATL.AudioData.IO
         private long firstBlockPosition;
 
         // Physical info
-		private byte channels;
 		private int sampleRate;
 		private byte bitsPerSample;
 		private long samples;
+        private ChannelsArrangement channelsArrangement;
 
-/* Unused for now
-		public byte Channels // Number of channels
-		{
-			get { return channels; }
-		}
-        public long AudioOffset //offset of audio data
-        {
-            get { return audioOffset; }
-        }
-        public byte BitsPerSample // Bits per sample
-        {
-            get { return bitsPerSample; }
-        }
-        public long Samples // Number of samples
-        {
-            get { return samples; }
-        }
-        public double Ratio // Compression ratio (%)
-        {
-            get { return getCompressionRatio(); }
-        }
-        public String ChannelMode
-        {
-            get { return getChannelMode(); }
-        }
-*/
+        /* Unused for now
+                public long AudioOffset //offset of audio data
+                {
+                    get { return audioOffset; }
+                }
+                public byte BitsPerSample // Bits per sample
+                {
+                    get { return bitsPerSample; }
+                }
+                public long Samples // Number of samples
+                {
+                    get { return samples; }
+                }
+                public double Ratio // Compression ratio (%)
+                {
+                    get { return getCompressionRatio(); }
+                }
+        */
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -126,6 +119,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return getDuration(); }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
         public int CodecFamily
         {
@@ -331,7 +328,6 @@ namespace ATL.AudioData.IO
             // Audio data
 			padding = 0;
 			paddingLast = false;
-			channels = 0;
 			sampleRate = 0;
 			bitsPerSample = 0;
 			samples = 0;
@@ -353,7 +349,7 @@ namespace ATL.AudioData.IO
         private bool isValid()
 		{
 			return ( ( header.IsValid() ) &&
-				(channels > 0) &&
+				(channelsArrangement.NbChannels > 0) &&
 				(sampleRate > 0) &&
 				(bitsPerSample > 0) &&
 				(samples > 0) );
@@ -398,27 +394,6 @@ namespace ATL.AudioData.IO
 				return 0;
 			}
 		}
-
-		//   Get channel mode
-		private String getChannelMode()
-		{
-			String result;
-			if (isValid())
-			{
-				switch(channels)
-				{
-					case 1 : result = "Mono"; break;
-					case 2 : result = "Stereo"; break;
-					default: result = "Multi Channel"; break;
-				}
-			} 
-			else 
-			{
-				result = "";
-			}
-			return result;
-		}
-
 */
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
@@ -447,7 +422,23 @@ namespace ATL.AudioData.IO
 			// Process data if loaded and header valid    
 			if ( header.IsValid() )
 			{
-				channels      = (byte)( ((header.Info[12] >> 1) & 0x7) + 1 );
+				byte channels      = (byte)( ((header.Info[12] >> 1) & 0x7) + 1 );
+                switch(channels)
+                {
+                    case 0b0000: channelsArrangement = MONO; break;
+                    case 0b0001: channelsArrangement = STEREO; break;
+                    case 0b0010: channelsArrangement = ISO_3_0_0; break;
+                    case 0b0011: channelsArrangement = QUAD; break;
+                    case 0b0100: channelsArrangement = ISO_3_2_0; break;
+                    case 0b0101: channelsArrangement = ISO_3_2_1; break;
+                    case 0b0110: channelsArrangement = LRCLFECrLssRss; break;
+                    case 0b0111: channelsArrangement = LRCLFELrRrLssRss; break;
+                    case 0b1000: channelsArrangement = JOINT_STEREO_LEFT_SIDE; break;
+                    case 0b1001: channelsArrangement = JOINT_STEREO_RIGHT_SIDE; break;
+                    case 0b1010: channelsArrangement = JOINT_STEREO_MID_SIDE; break;
+                    default: channelsArrangement = UNKNOWN; break;
+                }
+
 				sampleRate    = ( header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4 );
 				bitsPerSample = (byte)( ((header.Info[12] & 1) << 4) | (header.Info[13] >> 4) + 1 );
 				samples       = ( header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17] );

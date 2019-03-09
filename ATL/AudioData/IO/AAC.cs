@@ -4,6 +4,7 @@ using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
 using Commons;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -84,19 +85,12 @@ namespace ATL.AudioData.IO
 
         private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameClasses_mp4; // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
-
-        /* Useless for now
-        private int FTotalFrames;
-        private byte FMPEGVersionID;
-        private byte FProfileID;
-        */
-
-        private byte channels;
         private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
         private double duration;
         private int sampleRate;
+        private ChannelsArrangement channelsArrangement;
 
         private AudioDataManager.SizeInfo sizeInfo;
         private string fileName;
@@ -126,10 +120,6 @@ namespace ATL.AudioData.IO
         {
             get { return this.getProfile(); }
         }
-        public byte Channels // Number of channels
-        {
-            get { return this.FChannels; }
-        }
         public byte BitRateTypeID // Bit rate type code
         {
             get { return this.FBitrateTypeID; }
@@ -154,7 +144,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate/1000.0; }
+            get { return bitrate / 1000.0; }
         }
         public double Duration
         {
@@ -171,6 +161,10 @@ namespace ATL.AudioData.IO
         public bool IsMetaSupported(int metaType)
         {
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
 
         // IMetaDataIO
@@ -280,7 +274,7 @@ namespace ATL.AudioData.IO
             if (!frameClasses_mp4.ContainsKey(frameCode)) frameClasses_mp4.Add(frameCode, frameClass);
         }
 
-        
+
         /* Useless for now
 
         // Get header type name
@@ -379,15 +373,17 @@ namespace ATL.AudioData.IO
             */
             Position += 2;
 
+            uint channels = 0;
             sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, Position, 4)];
             Position += 4;
-            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            channels += (byte)StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
-            channels += (byte)StreamUtils.ReadBits(Source, Position, 2);
+            channels += StreamUtils.ReadBits(Source, Position, 2);
+            channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber((int)channels);
         }
 
         // Read ADTS header data
@@ -421,12 +417,13 @@ namespace ATL.AudioData.IO
                 sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, position, 4)];
                 position += 5;
 
-                channels = (byte)StreamUtils.ReadBits(Source, position, 3);
+                uint channels = StreamUtils.ReadBits(Source, position, 3);
+                channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber((int)channels);
 
-//                if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
-//                    Position += 9;
-//                else
-                    position += 7;
+                //                if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
+                //                    Position += 9;
+                //                else
+                position += 7;
 
                 totalSize += (int)StreamUtils.ReadBits(Source, position, 13);
                 position += 13;
@@ -499,16 +496,16 @@ namespace ATL.AudioData.IO
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
-            IDictionary<int,IList<int>> chapterTrackIndexes = null; // Key is track index (1-based); lists are chapter tracks indexes (1-based)
+            IDictionary<int, IList<int>> chapterTrackIndexes = null; // Key is track index (1-based); lists are chapter tracks indexes (1-based)
             IList<MP4Sample> chapterTrackSamples = null;
 
-            
+
             // TODO PERF - try and cache the whole tree structure to optimize browsing through nodes
 
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
-            source.BaseStream.Read(data32,0,4);
+            source.BaseStream.Read(data32, 0, 4);
             atomSize = StreamUtils.DecodeBEUInt32(data32);
             source.BaseStream.Seek(atomSize - 4, SeekOrigin.Current);
 
@@ -568,7 +565,7 @@ namespace ATL.AudioData.IO
                     {
                         if (null == chapterTrackIndexes) chapterTrackIndexes = new Dictionary<int, IList<int>>();
                         IList<int> thisTrackIndexes = new List<int>();
-                        for (int i=0; i<(chapSize-8)/4; i++)
+                        for (int i = 0; i < (chapSize - 8) / 4; i++)
                         {
                             thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
                         }
@@ -595,7 +592,7 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                source.BaseStream.Seek(trakPosition+8, SeekOrigin.Begin);
+                source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
                 if (0 == lookForMP4Atom(source.BaseStream, "mdia"))
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia atom could not be found; aborting read");
@@ -633,7 +630,7 @@ namespace ATL.AudioData.IO
                 // Check if current track is the 1st chapter track
                 // NB : Per convention, we will admit that the 1st track referenced in the 'chap' atom
                 // contains the chapter names (as opposed to chapter URLs or chapter images)
-                if ("text".Equals(mediaType) && chapterTrackIndexes != null) 
+                if ("text".Equals(mediaType) && chapterTrackIndexes != null)
                 {
                     foreach (IList<int> list in chapterTrackIndexes.Values)
                     {
@@ -674,11 +671,16 @@ namespace ATL.AudioData.IO
 
                     if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
                     {
+                        bool ismp4a = descFormat.Equals("mp4a");
                         source.BaseStream.Seek(4, SeekOrigin.Current); // 6-byte reserved zone set to zero
 
                         source.BaseStream.Seek(10, SeekOrigin.Current); // Not useful here
 
-                        channels = (byte)StreamUtils.ReverseUInt16(source.ReadUInt16()); // Audio channels
+                        ushort channels = StreamUtils.ReverseUInt16(source.ReadUInt16()); // Audio channels
+                        if (1 == channels) channelsArrangement = MONO;
+                        else if (2 == channels) channelsArrangement = STEREO;
+                        else if (6 == channels && ismp4a) channelsArrangement = ISO_3_2_1; // 5.1
+                        else channelsArrangement = new ChannelsArrangement(channels);
 
                         source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
                         source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime stuff
@@ -904,11 +906,11 @@ namespace ATL.AudioData.IO
                                 }
                             }
                         }
-                        
+
                         // A size-type header is used here instead of an absolute index-type header because size variation has to be recorded, and not zone position
                         // (those chunks do not even point to metadata zones but to the physical media stream)
                         structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj);
-                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS); 
+                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS);
                     } // Chunk offsets
                 }
 
@@ -1104,8 +1106,8 @@ namespace ATL.AudioData.IO
                             source.BaseStream.Seek(-3, SeekOrigin.Current);
 
                             PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), dataClass, picturePosition);
-                            picInfo.PictureData = new byte[metadataSize-16];
-                            source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize-16);
+                            picInfo.PictureData = new byte[metadataSize - 16];
+                            source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize - 16);
 
                             tagData.Pictures.Add(picInfo);
 
@@ -1219,7 +1221,7 @@ namespace ATL.AudioData.IO
             // Read header data
             if (AAC_HEADER_TYPE_ADIF == headerTypeID) readADIF(source);
             else if (AAC_HEADER_TYPE_ADTS == headerTypeID) readADTS(source);
-            else if (AAC_HEADER_TYPE_MP4 == headerTypeID) readMP4(source,readTagParams);
+            else if (AAC_HEADER_TYPE_MP4 == headerTypeID) readMP4(source, readTagParams);
 
             result = true;
 
@@ -1258,7 +1260,7 @@ namespace ATL.AudioData.IO
             {
                 result = writeNeroChapters(w, Chapters);
             }
-                
+
             return result;
         }
 
@@ -1329,7 +1331,7 @@ namespace ATL.AudioData.IO
             frameSizePos1 = writer.BaseStream.Position;
             writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
             if (frameCode.StartsWith("----")) // Specific metadata
-            { 
+            {
                 string[] frameCodeComponents = frameCode.Split(':');
                 if (3 == frameCodeComponents.Length)
                 {
@@ -1345,7 +1347,8 @@ namespace ATL.AudioData.IO
                     writer.Write(frameFlags);
                     writer.Write(Utils.Latin1Encoding.GetBytes(frameCodeComponents[2]));
                 }
-            } else
+            }
+            else
             {
                 writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             }
@@ -1360,7 +1363,7 @@ namespace ATL.AudioData.IO
 
             writer.Write(StreamUtils.ReverseInt32(frameClass));
             writer.Write(frameFlags);
-    
+
             if (0 == frameClass) // Special cases : gnre, trkn, disk
             {
                 UInt16 int16data;
@@ -1368,7 +1371,7 @@ namespace ATL.AudioData.IO
                 {
                     int16data = 0;
                     writer.Write(int16data);
-                    int16data = StreamUtils.ReverseUInt16(Convert.ToUInt16( TrackUtils.ExtractTrackNumber(text) ));
+                    int16data = StreamUtils.ReverseUInt16(Convert.ToUInt16(TrackUtils.ExtractTrackNumber(text)));
                     writer.Write(int16data);
                     int16data = 0;              // Total number of tracks/discs; unsupported for now
                     writer.Write(int16data);
@@ -1391,7 +1394,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size locations to write their actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
-            writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos -frameSizePos1)));
+            writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
             writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -1459,15 +1462,15 @@ namespace ATL.AudioData.IO
                 byte[] strData;
                 byte strDataLength;
 
-                foreach(ChapterInfo chapter in chapters)
+                foreach (ChapterInfo chapter in chapters)
                 {
-                    w.Write(StreamUtils.EncodeBEUInt64(chapter.StartTime*10000));
+                    w.Write(StreamUtils.EncodeBEUInt64(chapter.StartTime * 10000));
                     strData = Encoding.UTF8.GetBytes(chapter.Title);
                     strDataLength = (byte)Math.Min(255, strData.Length);
                     w.Write(strDataLength);
                     w.Write(strData, 0, strDataLength);
                 }
-                
+
                 // Go back to frame size locations to write their actual size 
                 finalFramePos = w.BaseStream.Position;
                 w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);

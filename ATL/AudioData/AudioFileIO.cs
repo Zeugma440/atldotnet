@@ -3,6 +3,7 @@ using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData
 {
@@ -353,6 +354,14 @@ namespace ATL.AudioData
             get
             {
                 return metaData.EmbeddedPictures;
+            }
+        }
+
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get
+            {
+                return audioData.ChannelsArrangement;
             }
         }
 

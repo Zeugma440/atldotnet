@@ -5,6 +5,7 @@ using ATL.Logging;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -80,6 +81,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return ChannelsArrangements.STEREO; }
         }
         public bool IsMetaSupported(int metaDataType)
         {

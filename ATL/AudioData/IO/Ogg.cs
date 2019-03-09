@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.IO.MetaDataIO;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -32,9 +33,6 @@ namespace ATL.AudioData.IO
 
         private const int MAX_PAGE_SIZE = 255 * 255;
 
-        // Channel mode names
-        private static readonly String[] VORBIS_MODE = new String[4] { "Unknown", "Mono", "Stereo", "Multichannel" };
-
         // Ogg page header ID
         private const String OGG_PAGE_ID = "OggS";
 
@@ -62,23 +60,15 @@ namespace ATL.AudioData.IO
 
         private int contents;
 
-        private byte channelModeID;
         private int sampleRate;
         private ushort bitRateNominal;
         private ulong samples;
+        private ChannelsArrangement channelsArrangement;
 
         private AudioDataManager.SizeInfo sizeInfo;
 
 
 
-        public byte ChannelModeID // Channel mode code
-        {
-            get { return this.channelModeID; }
-        }
-        public String ChannelMode // Channel mode name
-        {
-            get { return this.getChannelMode(); }
-        }
         public int SampleRate // Sample rate (hz)
         {
             get { return this.sampleRate; }
@@ -102,6 +92,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return getDuration(); }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
         public bool IsVBR
         {
@@ -299,8 +293,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            // Reset variables
-            channelModeID = 0;
             sampleRate = 0;
             bitRateNominal = 0;
             samples = 0;
@@ -539,7 +531,7 @@ namespace ATL.AudioData.IO
             // TODO - fine tune seekSize value
             int seekSize = (int)Math.Round(MAX_PAGE_SIZE * 0.75);
             if (seekSize > source.Length) seekSize = (int)Math.Round(source.Length * 0.5);
-            source.Seek(-seekSize, SeekOrigin.End); 
+            source.Seek(-seekSize, SeekOrigin.End);
             if (!StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID)))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "No OGG header found; aborting read operation"); // Throw exception ?
@@ -790,17 +782,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private String getChannelMode()
-        {
-            String result;
-            // Get channel mode name
-            if (channelModeID > 2) result = VORBIS_MODE[3];
-            else
-                result = VORBIS_MODE[channelModeID];
-
-            return VORBIS_MODE[channelModeID];
-        }
-
         // Calculate duration time
         private double getDuration()
         {
@@ -812,9 +793,9 @@ namespace ATL.AudioData.IO
                 else
                     result = 0;
             else
-                if ((bitRateNominal > 0) && (channelModeID > 0))
+                if ((bitRateNominal > 0) && (channelsArrangement.NbChannels > 0))
                 result = (1000.0 * (double)sizeInfo.FileSize - sizeInfo.ID3v2Size) /
-                    (double)bitRateNominal / channelModeID / 125.0 * 2;
+                    (double)bitRateNominal / channelsArrangement.NbChannels / 125.0 * 2;
             else
                 result = 0;
 
@@ -834,8 +815,24 @@ namespace ATL.AudioData.IO
         private bool isValid()
         {
             // Check for file correctness
-            return ((((VORBIS_CM_MONO <= channelModeID) && (channelModeID <= VORBIS_CM_STEREO)) || (VORBIS_CM_MULTICHANNEL == channelModeID)) &&
-                (sampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0));
+            return ((channelsArrangement.NbChannels > 0) && (sampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0));
+        }
+
+        private static ChannelsArrangement getArrangementFromCode(int vorbisCode)
+        {
+            if (vorbisCode > 8) return new ChannelsArrangement(vorbisCode);
+            else switch (vorbisCode)
+                {
+                    case 1: return MONO;
+                    case 2: return STEREO;
+                    case 3: return ISO_3_0_0;
+                    case 4: return QUAD;
+                    case 5: return ISO_3_2_0;
+                    case 6: return ISO_3_2_1;
+                    case 7: return LRCLFECrLssRss;
+                    case 8: return LRCLFELrRrLssRss;
+                    default: return UNKNOWN;
+                }
         }
 
         // ---------------------------------------------------------------------------
@@ -860,13 +857,13 @@ namespace ATL.AudioData.IO
             {
                 if (contents.Equals(CONTENTS_VORBIS))
                 {
-                    channelModeID = info.VorbisParameters.ChannelMode;
+                    channelsArrangement = getArrangementFromCode(info.VorbisParameters.ChannelMode);
                     sampleRate = info.VorbisParameters.SampleRate;
                     bitRateNominal = (ushort)(info.VorbisParameters.BitRateNominal / 1000); // Integer division
                 }
                 else if (contents.Equals(CONTENTS_OPUS))
                 {
-                    channelModeID = info.OpusParameters.OutputChannelCount;
+                    channelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
                     sampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
                 }

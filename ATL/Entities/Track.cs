@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.ChannelsArrangements;
 
 namespace ATL
 {
@@ -170,6 +171,10 @@ namespace ATL
 		/// Duration (milliseconds)
 		/// </summary>
 		public double DurationMs;
+        /// <summary>
+		/// Channels arrangement
+		/// </summary>
+		public ChannelsArrangement ChannelsArrangement;
 
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
@@ -253,6 +258,7 @@ namespace ATL
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
+            ChannelsArrangement = fileIO.ChannelsArrangement;
 
             Chapters = fileIO.Chapters;
 

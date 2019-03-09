@@ -4,6 +4,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Collections.Generic;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -45,15 +46,8 @@ namespace ATL.AudioData.IO
         private const String CHUNK_ID3 = "id3 ";
 
 
-        // Used with ChannelModeID property
-        public const byte WAV_CM_MONO = 1;                     // Index for mono mode
-        public const byte WAV_CM_STEREO = 2;                 // Index for stereo mode
-
-        // Channel mode names
-        public String[] WAV_MODE = new String[3] { "Unknown", "Mono", "Stereo" };
-
         //		private ushort formatID;
-        private ushort channelNumber;
+        private ChannelsArrangement channelsArrangement;
         private uint sampleRate;
         private uint bytesPerSecond;
         //		private ushort blockAlign;
@@ -80,14 +74,6 @@ namespace ATL.AudioData.IO
         public ushort FormatID // Format type code
 		{
 			get { return this.formatID; }
-		}	
-		public byte ChannelNumber // Number of channels
-		{
-			get { return this.channelNumber; }
-		}		 
-		public String ChannelMode // Channel mode name
-		{
-			get { return this.getChannelMode(); }
 		}	
 		public ushort BlockAlign // Block alignment
 		{
@@ -122,6 +108,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -197,7 +187,6 @@ namespace ATL.AudioData.IO
 
             //            formatID = 0;
             //            blockAlign = 0;
-            channelNumber = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
             bitsPerSample = 0;
@@ -289,8 +278,8 @@ namespace ATL.AudioData.IO
                     source.Seek(2, SeekOrigin.Current); // FormatId
 
                     source.Read(data, 0, 2);
-                    if (isLittleEndian) channelNumber = StreamUtils.DecodeUInt16(data); else channelNumber = StreamUtils.DecodeBEUInt16(data);
-                    if (channelNumber != WAV_CM_MONO && channelNumber != WAV_CM_STEREO) return false;
+                    if (isLittleEndian) channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeUInt16(data));
+                    else channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
 
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
@@ -409,12 +398,6 @@ namespace ATL.AudioData.IO
 				default : return "";  
 			}
 		}
-
-		private String getChannelMode()
-		{
-			// Get channel mode name
-			return WAV_MODE[channelNumber];
-		}
         */
 
         private double getDuration()
@@ -432,17 +415,17 @@ namespace ATL.AudioData.IO
 
         private double getBitrate()
         {
-            return Math.Round((double)this.bitsPerSample / 1000.0 * this.sampleRate * this.channelNumber);
+            return Math.Round((double)bitsPerSample / 1000.0 * sampleRate * channelsArrangement.NbChannels);
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             resetData();
 

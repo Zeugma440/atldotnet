@@ -2,6 +2,7 @@
 using Commons;
 using System;
 using System.Text.RegularExpressions;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData
 {
@@ -200,9 +201,9 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="str">String to search the year into</param>
         /// <returns>Found year in integer form; 0 if no year has been found</returns>
-   		public static int ExtractIntYear(String str)
+   		public static int ExtractIntYear(string str)
 		{
-            String resStr = ExtractStrYear(str);
+            string resStr = ExtractStrYear(str);
             if (0 == resStr.Length) return 0; else return Int32.Parse(resStr);
         }
 
@@ -211,7 +212,7 @@ namespace ATL.AudioData
 		/// </summary>
 		/// <param name="str">String to search the year into</param>
 		/// <returns>Found year in string form; "" if no year has been found</returns>
-		public static String ExtractStrYear(String str)
+		public static string ExtractStrYear(string str)
         {
             // == Optimizations (Regex are too damn expensive to use them lazily)
 
@@ -247,6 +248,21 @@ namespace ATL.AudioData
             return "";
 		}
 
+        public static ChannelsArrangement GetCommonChannelArrangementFromChannelNumber(int nbChannels)
+        {
+            switch(nbChannels)
+            {
+                case 1: return MONO;
+                case 2: return STEREO;
+                case 3: return ISO_3_0_0;
+                case 4: return QUAD;
+                case 5: return ISO_3_2_0;
+                case 6: return ISO_3_2_1;
+                case 7: return ISO_3_3_1;
+                case 8: return ISO_3_4_1;
+                default: return new ChannelsArrangement(nbChannels);
+            }
+        }
 
     }
 }

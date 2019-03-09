@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -10,54 +11,53 @@ namespace ATL.AudioData.IO
     /// Class for OptimFROG files manipulation (extensions : .OFR, .OFS)
     /// </summary>
 	class OptimFrog : IAudioDataIO
-	{
+    {
         private const string OFR_SIGNATURE = "OFR ";
 
-		private static readonly string[] OFR_COMPRESSION = new string[10] 
-		{
-			"fast", "normal", "high", "extra",
-			"best", "ultra", "insane", "highnew", "extranew", "bestnew"
+        private static readonly string[] OFR_COMPRESSION = new string[10]
+        {
+            "fast", "normal", "high", "extra",
+            "best", "ultra", "insane", "highnew", "extranew", "bestnew"
         };
 
-		private static readonly sbyte[] OFR_BITS = new sbyte[11] 
-	    {
-		    8, 8, 16, 16, 24, 24, 32, 32,
-		    -32, -32, -32 }; //negative value corresponds to floating point type.
+        private static readonly sbyte[] OFR_BITS = new sbyte[11]
+        {
+            8, 8, 16, 16, 24, 24, 32, 32,
+            -32, -32, -32 }; //negative value corresponds to floating point type.
 
-		private static readonly string[] OFR_CHANNELMODE = new string[2] {"Mono", "Stereo"};
 
-					
-		// Real structure of OptimFROG header
-		public class TOfrHeader
-		{
-			public char[] ID = new char[4];                      // Always 'OFR '
-			public uint Size;
-			public uint Length;
-			public ushort HiLength;
-			public byte SampleType;
-			public byte ChannelMode;
-			public int SampleRate;
-			public ushort EncoderID;
-			public byte CompressionID;
-			public void Reset()
-			{
-				Array.Clear(ID,0,ID.Length);
-				Size = 0;
-				Length = 0;
-				HiLength = 0;
-				SampleType = 0;
-				ChannelMode = 0;
-				SampleRate = 0;
-				EncoderID = 0;
-				CompressionID = 0;
-			}
-		}
+        // Real structure of OptimFROG header
+        public class TOfrHeader
+        {
+            public char[] ID = new char[4];                      // Always 'OFR '
+            public uint Size;
+            public uint Length;
+            public ushort HiLength;
+            public byte SampleType;
+            public byte ChannelMode;
+            public int SampleRate;
+            public ushort EncoderID;
+            public byte CompressionID;
+            public void Reset()
+            {
+                Array.Clear(ID, 0, ID.Length);
+                Size = 0;
+                Length = 0;
+                HiLength = 0;
+                SampleType = 0;
+                ChannelMode = 0;
+                SampleRate = 0;
+                EncoderID = 0;
+                CompressionID = 0;
+            }
+        }
 
-    
-		private TOfrHeader header = new TOfrHeader();
+
+        private TOfrHeader header = new TOfrHeader();
 
         private double bitrate;
         private double duration;
+        private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
@@ -76,10 +76,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return this.getCompression(); }
 		}	
-		public String ChannelMode // Channel mode
-		{
-			get { return this.getChannelMode(); }
-		}
 		public sbyte Bits // Bits per sample
 		{
 			get { return this.getBits(); }
@@ -98,17 +94,17 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         public int SampleRate // Sample rate (Hz)
-		{
-			get { return this.getSampleRate(); }
-		}
+        {
+            get { return this.getSampleRate(); }
+        }
         public bool IsVBR
-		{
-			get { return false; }
-		}
-		public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_LOSSLESS; }
-		}
+        {
+            get { return false; }
+        }
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_LOSSLESS; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -120,6 +116,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return TrackUtils.GetCommonChannelArrangementFromChannelNumber(header.ChannelMode); }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -135,7 +135,7 @@ namespace ATL.AudioData.IO
             bitrate = 0;
 
             header.Reset();
-		}
+        }
 
         public OptimFrog(string filePath)
         {
@@ -174,13 +174,6 @@ namespace ATL.AudioData.IO
         // Get number of bits per sample
         return OFR_BITS[FHeader.SampleType];
     }
-
-    private String getChannelMode()
-    {
-        // Get channel mode
-        return OFR_CHANNELMODE[FHeader.ChannelMode];
-    }
-
     private double getCompressionRatio()
     {
         // Get compression ratio
@@ -195,24 +188,24 @@ namespace ATL.AudioData.IO
 
         // Get number of samples
         private long getSamples()
-		{
-			return ( ((header.Length >> header.ChannelMode) * 0x00000001) +
-				((header.HiLength >> header.ChannelMode) * 0x00010000) );
-		}
+        {
+            return (((header.Length >> header.ChannelMode) * 0x00000001) +
+                ((header.HiLength >> header.ChannelMode) * 0x00010000));
+        }
 
         // Get song duration
         private double getDuration()
-		{
-			if (header.SampleRate > 0)
-				return (double)getSamples() * 1000.0 / header.SampleRate;
-			else
-				return 0;
-		}
+        {
+            if (header.SampleRate > 0)
+                return (double)getSamples() * 1000.0 / header.SampleRate;
+            else
+                return 0;
+        }
 
-		private int getSampleRate()
-		{
-			return header.SampleRate;
-		}
+        private int getSampleRate()
+        {
+            return header.SampleRate;
+        }
 
         private double getBitrate()
         {
@@ -225,18 +218,18 @@ namespace ATL.AudioData.IO
             this.sizeInfo = sizeInfo;
             resetData();
 
-			// Read header data
-			source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            // Read header data
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-			header.ID = source.ReadChars(4);
-			header.Size = source.ReadUInt32();
-			header.Length = source.ReadUInt32();
-			header.HiLength = source.ReadUInt16();
-			header.SampleType = source.ReadByte();
-			header.ChannelMode = source.ReadByte();
-			header.SampleRate = source.ReadInt32();
-			header.EncoderID = source.ReadUInt16();
-			header.CompressionID = source.ReadByte();
+            header.ID = source.ReadChars(4);
+            header.Size = source.ReadUInt32();
+            header.Length = source.ReadUInt32();
+            header.HiLength = source.ReadUInt16();
+            header.SampleType = source.ReadByte();
+            header.ChannelMode = source.ReadByte();
+            header.SampleRate = source.ReadInt32();
+            header.EncoderID = source.ReadUInt16();
+            header.CompressionID = source.ReadByte();
 
             if (StreamUtils.StringEqualsArr(OFR_SIGNATURE, header.ID))
             {
@@ -245,8 +238,8 @@ namespace ATL.AudioData.IO
                 bitrate = getBitrate();
             }
 
-			return result;
-		}
+            return result;
+        }
 
-	}
+    }
 }

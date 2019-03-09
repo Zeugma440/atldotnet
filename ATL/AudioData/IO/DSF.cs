@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
+using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
@@ -16,12 +17,12 @@ namespace ATL.AudioData.IO
         public const String FMT_ID = "fmt ";
         public const String DATA_ID = "data";
 
- 
-		// Private declarations 
+
+        // Private declarations 
         private int formatVersion;
-		private uint channels;
-		private uint bits;
-		private uint sampleRate;
+        private ChannelsArrangement channelsArrangement;
+        private uint bits;
+        private uint sampleRate;
 
         private double bitrate;
         private double duration;
@@ -35,20 +36,16 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
-        public uint Channels
-		{
-			get { return channels; }
-		}
-		public uint Bits
-		{
-			get { return bits; }
-		}
+        public uint Bits
+        {
+            get { return bits; }
+        }
         public double CompressionRatio
         {
             get { return getCompressionRatio(); }
         }
 
-        
+
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         public int SampleRate
@@ -56,13 +53,13 @@ namespace ATL.AudioData.IO
             get { return (int)sampleRate; }
         }
         public bool IsVBR
-		{
-			get { return false; }
-		}
+        {
+            get { return false; }
+        }
         public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_LOSSLESS; }
-		}
+        {
+            get { return AudioDataIOFactory.CF_LOSSLESS; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -74,6 +71,10 @@ namespace ATL.AudioData.IO
         public double Duration
         {
             get { return duration; }
+        }
+        public ChannelsArrangement ChannelsArrangement
+        {
+            get { return channelsArrangement; }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -98,11 +99,10 @@ namespace ATL.AudioData.IO
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         protected void resetData()
-		{
+        {
             formatVersion = -1;
-			channels = 0;
-			bits = 0;
-			sampleRate = 0;
+            bits = 0;
+            sampleRate = 0;
             duration = 0;
             bitrate = 0;
             isValid = false;
@@ -111,11 +111,11 @@ namespace ATL.AudioData.IO
         }
 
         public DSF(string filePath)
-		{
+        {
             this.filePath = filePath;
 
             resetData();
-		}
+        }
 
 
         // ---------- SUPPORT METHODS
@@ -124,7 +124,7 @@ namespace ATL.AudioData.IO
         private double getCompressionRatio()
         {
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channels * bits / 8) + 44) * 100;
+                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
             else
                 return 0;
         }
@@ -138,8 +138,8 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
             if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
-			{
-				source.BaseStream.Seek(16, SeekOrigin.Current); // Chunk size and file size
+            {
+                source.BaseStream.Seek(16, SeekOrigin.Current); // Chunk size and file size
                 id3v2Offset = source.ReadInt64();
 
                 if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
@@ -158,7 +158,19 @@ namespace ATL.AudioData.IO
 
                     source.BaseStream.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
-                    channels = source.ReadUInt32();
+                    uint channels = source.ReadUInt32();
+                    switch(channels)
+                    {
+                        case 1: channelsArrangement = MONO; break;
+                        case 2: channelsArrangement = STEREO; break;
+                        case 3: channelsArrangement = ISO_3_0_0; break;
+                        case 4: channelsArrangement = QUAD; break;
+                        case 5: channelsArrangement = LRCLFE; break;
+                        case 6: channelsArrangement = ISO_3_2_0; break;
+                        case 7: channelsArrangement = ISO_3_2_1; break;
+                        default: channelsArrangement = UNKNOWN; break;
+                    }
+
                     sampleRate = source.ReadUInt32();
                     bits = source.ReadUInt32();
 
@@ -195,7 +207,7 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-		}
+        }
 
         public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
         {
