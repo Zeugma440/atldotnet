@@ -8,6 +8,12 @@ namespace ATL.test
     [TestClass]
     public class AudioDataIOTest
     {
+        [TestMethod]
+        public void Audio_FallbackToDummy()
+        {
+            IAudioDataIO theReader = AudioDataIOFactory.GetInstance().GetFromPath(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.xyz");
+            Assert.IsInstanceOfType(theReader, typeof(ATL.AudioData.IO.DummyReader));
+        }
 
         private void testGenericAudio(string resource, int duration, int bitrate, int samplerate, bool isVbr, int codecFamily, ChannelsArrangement channelsArrangement, int alternate = 0)
         {
