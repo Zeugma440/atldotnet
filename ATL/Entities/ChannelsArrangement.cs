@@ -86,7 +86,7 @@
                 this.Description = nbChannels + " channels";
             }
 
-            public override string ToString()
+            public override string ToString() // Keep it there; used to get a clearer trace when testing
             {
                 return Description;
             }
