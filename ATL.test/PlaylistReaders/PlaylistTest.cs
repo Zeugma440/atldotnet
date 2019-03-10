@@ -11,6 +11,13 @@ namespace ATL.test
     public class PlaylistTest
     {
         [TestMethod]
+        public void PL_ReadNoFormat()
+        {
+            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.xyz");
+            Assert.IsInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
+        }
+
+        [TestMethod]
         public void PL_TestCommon()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
