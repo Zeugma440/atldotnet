@@ -983,7 +983,6 @@ namespace ATL.AudioData.IO
 
 
         // TODO : Write ID3v2.4 footer
-        // TODO : check date field format (YYYY, DDMM, timestamp)
 
         private int writeExtHeaderAndFrames(TagData tag, BinaryWriter w)
         {

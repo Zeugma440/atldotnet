@@ -100,7 +100,12 @@ namespace Commons
             }
         }
 
-        // TODO Doc
+        /// <summary>
+        /// Converts the duration of the given timecode to milliseconds
+        /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd
+        /// </summary>
+        /// <param name="timeCode">Timecode to convert</param>
+        /// <returns>Duration of the given timecode expressed in milliseconds if succeeded; -1 if failed</returns>
         static public int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
@@ -177,7 +182,7 @@ namespace Commons
         }
         
         /// <summary>
-        /// Transforms the given string to format with a given length
+        /// Transforms the given string to format with the given length, expressed in number of characters
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
         ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given character
         /// </summary>
@@ -201,6 +206,18 @@ namespace Commons
             return result;
         }
 
+        /// <summary>
+        /// Transforms the given string to format with the given length, expressed in number of bytes
+        ///  - If the given length is shorter than the actual length of the string, it will be truncated
+        ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given byte
+        /// </summary>
+        /// <param name="value">String to transform</param>
+        /// <param name="targetLength">Target length of the final string</param>
+        /// <param name="paddingByte">Byte to use if padding is needed</param>
+        /// <param name="encoding">Encoding to use to represent the given string in binary format</param>
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// false if the padding has to be done on the left-side (optional; default value = true)</param>
+        /// <returns>Reprocessed string of given length, in binary format, according to rules documented in the method description</returns>
         public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
         {
             byte[] result;
