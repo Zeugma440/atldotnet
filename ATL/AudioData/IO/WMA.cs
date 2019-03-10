@@ -655,7 +655,7 @@ namespace ATL.AudioData.IO
             // Process data if loaded and valid
             if (result && isValid(fileData))
             {
-                channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(fileData.Channels);
+                channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(fileData.Channels);
                 sampleRate = fileData.SampleRate;
                 bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / duration;
                 isVBR = (WMA_GSM_VBR_ID == fileData.FormatTag);

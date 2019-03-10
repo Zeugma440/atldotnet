@@ -204,7 +204,7 @@ namespace ATL.AudioData.IO
                         int channelCount = (b & 0b11110000) >> 4; // First 4 bits
                         bool isMidSideStereo = (b & 0b00001000) > 0; // First 4 bits
                         if (isMidSideStereo) channelsArrangement = JOINT_STEREO_MID_SIDE;
-                        else channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(channelCount);
+                        else channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channelCount);
                         long framesPerPacket = (long)Math.Pow(4, (b & 0b00000111)); // Last 3 bits
 
                         profileID = MPP_PROFILE_UNKNOWN;   // Profile info is SV7-only

@@ -136,7 +136,7 @@ namespace ATL.AudioData.IO
                 isValid = true;
 
                 audioFormat = source.ReadUInt16();
-                channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(source.ReadUInt16());
+                channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(source.ReadUInt16());
                 bitsPerSample = source.ReadUInt16();
                 sampleRate = source.ReadUInt32();
                 samplesSize = source.ReadUInt32();

@@ -55,7 +55,7 @@
         /// </summary>
         /// <param name="nbChannels">Number of channels</param>
         /// <returns>Most commonly used ISO ChannelsArrangement corresponding to the given number of channels</returns>
-        public static ChannelsArrangement GetCommonChannelArrangementFromChannelNumber(int nbChannels)
+        public static ChannelsArrangement GuessFromChannelNumber(int nbChannels)
         {
             switch (nbChannels)
             {
