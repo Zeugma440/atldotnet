@@ -1,7 +1,9 @@
-﻿using ATL.PlaylistReaders;
+﻿using ATL.Logging;
+using ATL.PlaylistReaders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.Logging.Log;
 
 namespace ATL.test
 {
@@ -15,11 +17,17 @@ namespace ATL.test
 
             Assert.AreEqual(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u", theReader.Path);
 
+            ArrayLogger log = new ArrayLogger();
             try
             {
                 theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/efiufhziuefizeub.m3u");
+                theReader.GetFiles();
                 Assert.Fail();
-            } catch { }
+            } catch {
+                IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
+                Assert.AreEqual(1, logItems.Count);
+                Assert.IsTrue(logItems[0].Message.Contains("efiufhziuefizeub.m3u")); // Can't do much more than than because the exception message is localized
+            }
         }
 
         [TestMethod]
