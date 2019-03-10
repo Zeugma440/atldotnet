@@ -47,7 +47,29 @@
         public static ChannelsArrangement CFCRLFRFLRRR = new ChannelsArrangement(6, "Center front - Center rear - Left front - Right front - Left rear - Right rear");
         public static ChannelsArrangement CLCCRLRSLSR = new ChannelsArrangement(7, "Left center - Center - Right center - Left - Right - Left surround - Right surround");
         public static ChannelsArrangement CLCRLRSL1SL2SR1SR2 = new ChannelsArrangement(8, "Left center - Right center - Left - Right - Left surround 1 - Left surround 2 - Right surround 1 - Right surround 2");
-        public static ChannelsArrangement CLCCRLRSLSSR = new ChannelsArrangement(8, "Left center - Center - Right center - Left - Right - Left surround - Surround - Right surround");        
+        public static ChannelsArrangement CLCCRLRSLSSR = new ChannelsArrangement(8, "Left center - Center - Right center - Left - Right - Left surround - Surround - Right surround");
+
+
+        /// <summary>
+        /// Returns the most commonly used ISO ChannelsArrangement corresponding to the given number of channels
+        /// </summary>
+        /// <param name="nbChannels">Number of channels</param>
+        /// <returns>Most commonly used ISO ChannelsArrangement corresponding to the given number of channels</returns>
+        public static ChannelsArrangement GetCommonChannelArrangementFromChannelNumber(int nbChannels)
+        {
+            switch (nbChannels)
+            {
+                case 1: return MONO;
+                case 2: return STEREO;
+                case 3: return ISO_3_0_0;
+                case 4: return QUAD;
+                case 5: return ISO_3_2_0;
+                case 6: return ISO_3_2_1;
+                case 7: return ISO_3_3_1;
+                case 8: return ISO_3_4_1;
+                default: return new ChannelsArrangement(nbChannels);
+            }
+        }
 
 
         public class ChannelsArrangement

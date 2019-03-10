@@ -306,7 +306,7 @@ namespace ATL.AudioData.IO
             {
                 result = true;
                 version = (wvh4.version >> 8);
-                channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber((int)(2 - (wvh4.flags & 4)));
+                channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber((int)(2 - (wvh4.flags & 4)));
 
                 bits = (int)((wvh4.flags & 3) * 16);   // bytes stored flag
                 samples = wvh4.total_samples;
@@ -420,7 +420,7 @@ namespace ATL.AudioData.IO
                         hasfmt = true;
                         result = true;
                         formatTag = fmt.wformattag;
-                        channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(fmt.wchannels);
+                        channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(fmt.wchannels);
                         sampleRate = (int)fmt.dwsamplespersec;
                         bits = fmt.wbitspersample;
                         bitrate = (double)fmt.dwavgbytespersec * 8;
@@ -453,7 +453,7 @@ namespace ATL.AudioData.IO
                         {
                             result = true;
                             version = wvh3.version;
-                            channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(2 - (wvh3.flags & 1));
+                            channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(2 - (wvh3.flags & 1));
                             samples = wvh3.total_samples;
 
                             codecFamily = AudioDataIOFactory.CF_LOSSLESS;

@@ -151,8 +151,11 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// TODO
+        /// Returns the given popularity encoded with the given convention
         /// </summary>
+        /// <param name="ratingStr">Popularity (note 0-5), represented in String form (e.g. "2.5")</param>
+        /// <param name="convention">Convention type (See MetaDataIO.RC_XXX constants)</param>
+        /// <returns>Popularity encoded with the given convention</returns>
         public static int EncodePopularity(string ratingStr, int convention)
         {
             double rating = Utils.ParseDouble(ratingStr);
@@ -247,22 +250,5 @@ namespace ATL.AudioData
             }
             return "";
 		}
-
-        public static ChannelsArrangement GetCommonChannelArrangementFromChannelNumber(int nbChannels)
-        {
-            switch(nbChannels)
-            {
-                case 1: return MONO;
-                case 2: return STEREO;
-                case 3: return ISO_3_0_0;
-                case 4: return QUAD;
-                case 5: return ISO_3_2_0;
-                case 6: return ISO_3_2_1;
-                case 7: return ISO_3_3_1;
-                case 8: return ISO_3_4_1;
-                default: return new ChannelsArrangement(nbChannels);
-            }
-        }
-
     }
 }

@@ -278,8 +278,8 @@ namespace ATL.AudioData.IO
                     source.Seek(2, SeekOrigin.Current); // FormatId
 
                     source.Read(data, 0, 2);
-                    if (isLittleEndian) channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeUInt16(data));
-                    else channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
+                    if (isLittleEndian) channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeUInt16(data));
+                    else channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
 
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);

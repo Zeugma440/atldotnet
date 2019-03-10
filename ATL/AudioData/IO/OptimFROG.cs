@@ -119,7 +119,7 @@ namespace ATL.AudioData.IO
         }
         public ChannelsArrangement ChannelsArrangement
         {
-            get { return TrackUtils.GetCommonChannelArrangementFromChannelNumber(header.ChannelMode + 1); }
+            get { return ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(header.ChannelMode + 1); }
         }
         public bool IsMetaSupported(int metaDataType)
         {

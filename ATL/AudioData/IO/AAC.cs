@@ -383,7 +383,7 @@ namespace ATL.AudioData.IO
             channels += StreamUtils.ReadBits(Source, Position, 4);
             Position += 4;
             channels += StreamUtils.ReadBits(Source, Position, 2);
-            channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber((int)channels);
+            channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber((int)channels);
         }
 
         // Read ADTS header data
@@ -418,7 +418,7 @@ namespace ATL.AudioData.IO
                 position += 5;
 
                 uint channels = StreamUtils.ReadBits(Source, position, 3);
-                channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber((int)channels);
+                channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber((int)channels);
 
                 //                if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
                 //                    Position += 9;
@@ -678,7 +678,7 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
 
                         ushort channels = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Channel count
-                        channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(channels);
+                        channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(channels);
 
                         source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
                         source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work if so...)

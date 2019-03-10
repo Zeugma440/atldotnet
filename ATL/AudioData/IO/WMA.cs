@@ -655,7 +655,7 @@ namespace ATL.AudioData.IO
             // Process data if loaded and valid
             if (result && isValid(fileData))
             {
-                channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(fileData.Channels);
+                channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(fileData.Channels);
                 sampleRate = fileData.SampleRate;
                 bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / duration;
                 isVBR = (WMA_GSM_VBR_ID == fileData.FormatTag);
@@ -687,7 +687,7 @@ namespace ATL.AudioData.IO
             string author = "";
             string copyright = "";
             string comment = "";
-            string rating = ""; // TODO - check if it really should be a string
+            string rating = "";
 
             IDictionary<byte, String> map = tag.ToMap();
 

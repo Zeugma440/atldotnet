@@ -310,7 +310,7 @@ namespace ATL.AudioData.IO
 
                     // based on MAC SDK 3.98a1 (APEinfo.h)
                     sampleRate = (int)APE_NEW.nSampleRate;
-                    channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(APE_NEW.nChannels);
+                    channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(APE_NEW.nChannels);
                     formatFlags = APE_NEW.nFormatFlags;
                     bits = APE_NEW.nBitsPerSample;
                     compressionMode = APE_NEW.nCompressionLevel;
@@ -349,7 +349,7 @@ namespace ATL.AudioData.IO
 
                     compressionMode = APE_OLD.nCompressionLevel;
                     sampleRate = (int)APE_OLD.nSampleRate;
-                    channelsArrangement = TrackUtils.GetCommonChannelArrangementFromChannelNumber(APE_OLD.nChannels);
+                    channelsArrangement = ChannelsArrangements.GetCommonChannelArrangementFromChannelNumber(APE_OLD.nChannels);
                     formatFlags = APE_OLD.nFormatFlags;
                     bits = 16;
                     if ((APE_OLD.nFormatFlags & MONKEY_FLAG_8_BIT) != 0) bits = 8;
