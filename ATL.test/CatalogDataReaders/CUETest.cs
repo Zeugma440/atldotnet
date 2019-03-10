@@ -8,6 +8,14 @@ namespace ATL.test
     public class CUETest
     {
         [TestMethod]
+        public void Cue_ReadNoFormat()
+        {
+            string testFileLocation = TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.xyz";
+            ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(testFileLocation);
+            Assert.IsInstanceOfType(theReader, typeof(CatalogDataReaders.BinaryLogic.DummyReader));
+        }
+
+        [TestMethod]
         public void Cue_ReadTracks1()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
