@@ -69,7 +69,7 @@ Please refer to the [Code snippets section of the Documentation](https://github.
 
 ## What kind of data can ATL actually read ? From which formats ?
 
-__SUPPORTED AUDIO FORMATS AND TAGGING STANDARDS__
+### SUPPORTED AUDIO FORMATS AND TAGGING STANDARDS
 
 NB1 : Empty cells mean "not applicable for this audio format"
 
@@ -117,24 +117,31 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 (4) : Support for BEXT, LIST INFO and iXML chunks
 
 
-
-
-__DETECTED FIELDS__
+### DETECTED FIELDS
 
 * Audio data (from audio data) : Bitrate, Sample rate, Duration, VBR, Codec family, Channels count and arrangement
 * Standard Metadata (from tags) : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Disc number, Year, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)
 * Custom Metadata : any other field that might be in the tag is readable __and__ editable by ATL
 
-__SUPPORTED PLAYLISTS FORMATS :__ ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
 
-__SUPPORTED CUESHEETS FORMATS :__ CUE
+### SUPPORTED PLAYLISTS FORMATS
+
+ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+
+
+### SUPPORTED CUESHEETS FORMATS
+
+CUE
 
 
 ## What is the roadmap of ATL.NET ?
 
 * Support for Broadcast wave metadata : aXML and XMP
 * Support for other audio file formats : Speex, Theora, Audible
+* Support for lyrics fields
 * Connectors to __other library file formats__ (e.g. iTunes)
+
+NB : Any user request that can be granted quickly will take priority over the roadmap
 
 
 ## Does ATL.NET include code authored by other people ?
