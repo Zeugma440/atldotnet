@@ -372,11 +372,27 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public ushort TrackTotal
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).TrackTotal;
+            }
+        }
+
         public ushort Disc
         {
             get
             {
                 return ((IMetaDataIO)vorbisTag).Disc;
+            }
+        }
+
+        public ushort DiscTotal
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).DiscTotal;
             }
         }
 

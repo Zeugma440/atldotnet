@@ -227,11 +227,25 @@ namespace ATL.AudioData
             get { return metaData.Track; }
         }
         /// <summary>
+        /// Total track number
+        /// </summary>
+        public ushort TrackTotal
+        {
+            get { return metaData.TrackTotal; }
+        }
+        /// <summary>
         /// Disc number
         /// </summary>
         public ushort Disc
         {
             get { return metaData.Disc; }
+        }
+        /// <summary>
+        /// Total disc number
+        /// </summary>
+        public ushort DiscTotal
+        {
+            get { return metaData.DiscTotal; }
         }
         /// <summary>
         /// Year, converted to int

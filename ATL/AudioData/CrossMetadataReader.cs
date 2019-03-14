@@ -145,6 +145,22 @@ namespace ATL.AudioData
 			}
 		}
         /// <summary>
+		/// Total track number
+		/// </summary>
+		public ushort TrackTotal
+        {
+            get
+            {
+                ushort trackTotal = 0;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    trackTotal = reader.TrackTotal;
+                    if (trackTotal != 0) break;
+                }
+                return trackTotal;
+            }
+        }
+        /// <summary>
         /// Disc number
         /// </summary>
         public ushort Disc
@@ -160,10 +176,26 @@ namespace ATL.AudioData
                 return disc;
             }
         }
-		/// <summary>
-		/// Year
-		/// </summary>
-		public String Year
+        /// <summary>
+        /// Total disc number
+        /// </summary>
+        public ushort DiscTotal
+        {
+            get
+            {
+                ushort discTotal = 0;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    discTotal = reader.DiscTotal;
+                    if (discTotal != 0) break;
+                }
+                return discTotal;
+            }
+        }
+        /// <summary>
+        /// Year
+        /// </summary>
+        public String Year
 		{
 			get
 			{

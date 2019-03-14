@@ -59,17 +59,31 @@ namespace ATL.AudioData
 		{
 			get;
 		}
-		/// <summary>
-		/// Disc number
+        /// <summary>
+		/// Total track number
 		/// </summary>
-		ushort Disc
+		ushort TrackTotal
+        {
+            get;
+        }
+        /// <summary>
+        /// Disc number
+        /// </summary>
+        ushort Disc
 		{
 			get;
 		}
-		/// <summary>
-		/// Year
-		/// </summary>
-		string Year
+        /// <summary>
+        /// Total disc number
+        /// </summary>
+        ushort DiscTotal
+        {
+            get;
+        }
+        /// <summary>
+        /// Year
+        /// </summary>
+        string Year
 		{
 			get;
 		}

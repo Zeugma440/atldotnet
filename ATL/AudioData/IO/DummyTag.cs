@@ -42,11 +42,19 @@ namespace ATL.AudioData.IO
 		{
 			get { return 0; }
 		}
+        public ushort TrackTotal
+        {
+            get { return 0; }
+        }
         public ushort Disc
         {
             get { return 0; }
         }
-		public String Year
+        public ushort DiscTotal
+        {
+            get { return 0; }
+        }
+        public String Year
 		{
 			get { return ""; }
 		}

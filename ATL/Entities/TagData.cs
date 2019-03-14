@@ -6,45 +6,49 @@ using System.IO;
 
 namespace ATL
 {
-	/// <summary>
-	/// Basic metadata fields container
+    /// <summary>
+    /// Basic metadata fields container
     /// 
     /// TagData aims at staying a basic, universal container, without any Property accessor layer nor any field interpretation logic
-	/// </summary>
-	public class TagData
-	{
+    /// </summary>
+    public class TagData
+    {
         [Obsolete("Access picture data directly through the Pictures attribute, after reading a file with ReadTagParams.ReadPictures=true")]
         public delegate void PictureStreamHandlerDelegate(ref MemoryStream stream, PictureInfo.PIC_TYPE picType, ImageFormat imgFormat, int originalTag, object nativePicCode, int position);
 
         // Identifiers for 'classic' fields
-        public const byte TAG_FIELD_GENERAL_DESCRIPTION     = 0;
-        public const byte TAG_FIELD_TITLE                   = 1;
-        public const byte TAG_FIELD_ARTIST                  = 2;
-        public const byte TAG_FIELD_COMPOSER                = 3;
-        public const byte TAG_FIELD_COMMENT                 = 4;
-        public const byte TAG_FIELD_GENRE                   = 5;
-        public const byte TAG_FIELD_ALBUM                   = 6;
-        public const byte TAG_FIELD_RECORDING_YEAR          = 7;
-        public const byte TAG_FIELD_RECORDING_DATE          = 8;
-        public const byte TAG_FIELD_RECORDING_TIME          = 9; // Used internally for ID3v2 for now
-        public const byte TAG_FIELD_RECORDING_DAYMONTH      = 10;
-        public const byte TAG_FIELD_TRACK_NUMBER            = 11;
-        public const byte TAG_FIELD_DISC_NUMBER             = 12;
-        public const byte TAG_FIELD_RATING                  = 13;
-        public const byte TAG_FIELD_ORIGINAL_ARTIST         = 14;
-        public const byte TAG_FIELD_ORIGINAL_ALBUM          = 15;
-        public const byte TAG_FIELD_COPYRIGHT               = 16;
-        public const byte TAG_FIELD_ALBUM_ARTIST            = 17;
-        public const byte TAG_FIELD_PUBLISHER               = 18;
-        public const byte TAG_FIELD_CONDUCTOR               = 19;
+        public const byte TAG_FIELD_GENERAL_DESCRIPTION = 0;
+        public const byte TAG_FIELD_TITLE = 1;
+        public const byte TAG_FIELD_ARTIST = 2;
+        public const byte TAG_FIELD_COMPOSER = 3;
+        public const byte TAG_FIELD_COMMENT = 4;
+        public const byte TAG_FIELD_GENRE = 5;
+        public const byte TAG_FIELD_ALBUM = 6;
+        public const byte TAG_FIELD_RECORDING_YEAR = 7;
+        public const byte TAG_FIELD_RECORDING_DATE = 8;
+        public const byte TAG_FIELD_RECORDING_TIME = 9; // Used internally for ID3v2 for now
+        public const byte TAG_FIELD_RECORDING_DAYMONTH = 10;
+        public const byte TAG_FIELD_TRACK_NUMBER = 11;
+        public const byte TAG_FIELD_DISC_NUMBER = 12;
+        public const byte TAG_FIELD_RATING = 13;
+        public const byte TAG_FIELD_ORIGINAL_ARTIST = 14;
+        public const byte TAG_FIELD_ORIGINAL_ALBUM = 15;
+        public const byte TAG_FIELD_COPYRIGHT = 16;
+        public const byte TAG_FIELD_ALBUM_ARTIST = 17;
+        public const byte TAG_FIELD_PUBLISHER = 18;
+        public const byte TAG_FIELD_CONDUCTOR = 19;
+        public const byte TAG_FIELD_TRACK_TOTAL = 20;
+        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 21;
+        public const byte TAG_FIELD_DISC_TOTAL = 22;
+        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 23;
 
         // Values for 'classic' fields
         public string GeneralDescription = null;
         public string Title = null;
-		public string Artist = null;
+        public string Artist = null;
         public string OriginalArtist = null;
         public string Composer = null;
-		public string Comment = null;
+        public string Comment = null;
         public string Genre = null;
         public string Album = null;
         public string OriginalAlbum = null;
@@ -58,6 +62,10 @@ namespace ATL
         public string AlbumArtist = null;
         public string Publisher = null;
         public string Conductor = null;
+        public string TrackTotal = null;
+        public string TrackNumberTotal = null;
+        public string DiscTotal = null;
+        public string DiscNumberTotal = null;
 
         /// <summary>
         /// Chapters 
@@ -106,26 +114,30 @@ namespace ATL
             switch (key)
             {
                 // Textual fields
-                case TAG_FIELD_GENERAL_DESCRIPTION:     GeneralDescription = value; break;
-                case TAG_FIELD_TITLE:                   Title = value; break;
-                case TAG_FIELD_ARTIST:                  Artist= value; break;
-                case TAG_FIELD_COMPOSER:                Composer = value; break;
-                case TAG_FIELD_COMMENT:                 Comment = value; break;
-                case TAG_FIELD_GENRE:                   Genre = value; break;
-                case TAG_FIELD_ALBUM:                   Album = value; break;
-                case TAG_FIELD_ORIGINAL_ARTIST:         OriginalArtist = value; break;
-                case TAG_FIELD_ORIGINAL_ALBUM:          OriginalAlbum = value; break;
-                case TAG_FIELD_COPYRIGHT:               Copyright = value; break;
-                case TAG_FIELD_ALBUM_ARTIST:            AlbumArtist = value; break;
-                case TAG_FIELD_PUBLISHER:               Publisher = value; break;
-                case TAG_FIELD_CONDUCTOR:               Conductor = value; break;
+                case TAG_FIELD_GENERAL_DESCRIPTION: GeneralDescription = value; break;
+                case TAG_FIELD_TITLE: Title = value; break;
+                case TAG_FIELD_ARTIST: Artist = value; break;
+                case TAG_FIELD_COMPOSER: Composer = value; break;
+                case TAG_FIELD_COMMENT: Comment = value; break;
+                case TAG_FIELD_GENRE: Genre = value; break;
+                case TAG_FIELD_ALBUM: Album = value; break;
+                case TAG_FIELD_ORIGINAL_ARTIST: OriginalArtist = value; break;
+                case TAG_FIELD_ORIGINAL_ALBUM: OriginalAlbum = value; break;
+                case TAG_FIELD_COPYRIGHT: Copyright = value; break;
+                case TAG_FIELD_ALBUM_ARTIST: AlbumArtist = value; break;
+                case TAG_FIELD_PUBLISHER: Publisher = value; break;
+                case TAG_FIELD_CONDUCTOR: Conductor = value; break;
                 // Numeric fields (a value at zero mean nothing has been valued -> field should be empty)
-                case TAG_FIELD_RECORDING_DATE:          RecordingDate = emptyIfZero(value); break;
-                case TAG_FIELD_RECORDING_YEAR:          RecordingYear = emptyIfZero(value); break;
-                case TAG_FIELD_RECORDING_DAYMONTH:      RecordingDayMonth = emptyIfZero(value); break;
-                case TAG_FIELD_TRACK_NUMBER:            TrackNumber = emptyIfZero(value); break;
-                case TAG_FIELD_DISC_NUMBER:             DiscNumber = emptyIfZero(value); break;
-                case TAG_FIELD_RATING:                  Rating = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_DATE: RecordingDate = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_YEAR: RecordingYear = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_DAYMONTH: RecordingDayMonth = emptyIfZero(value); break;
+                case TAG_FIELD_TRACK_NUMBER: TrackNumber = emptyIfZero(value); break;
+                case TAG_FIELD_DISC_NUMBER: DiscNumber = emptyIfZero(value); break;
+                case TAG_FIELD_RATING: Rating = emptyIfZero(value); break;
+                case TAG_FIELD_TRACK_TOTAL: TrackTotal = emptyIfZero(value); break;
+                case TAG_FIELD_TRACK_NUMBER_TOTAL: TrackNumberTotal = emptyIfZero(value); break;
+                case TAG_FIELD_DISC_TOTAL: DiscTotal = emptyIfZero(value); break;
+                case TAG_FIELD_DISC_NUMBER_TOTAL: DiscNumberTotal = emptyIfZero(value); break;
             }
         }
 
@@ -185,7 +197,7 @@ namespace ATL
                 {
                     // New MetaFieldInfo tag type+field code+streamNumber+language already exists in current TagData
                     // or new MetaFieldInfo mimics an existing field (added or edited through simplified interface)
-                    if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo)) 
+                    if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo))
                     {
                         if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
                         else
@@ -203,7 +215,7 @@ namespace ATL
                 }
                 else if (newMetaInfo.MarkedForDeletion && !found) // Cannot delete a field that has not been found
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code "+newMetaInfo.NativeFieldCode+" cannot be deleted because it has not been found on current TagData.");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
                 }
             }
 
@@ -220,7 +232,7 @@ namespace ATL
                     Chapters = new List<ChapterInfo>();
                 }
 
-                foreach(ChapterInfo chapter in data.Chapters)
+                foreach (ChapterInfo chapter in data.Chapters)
                 {
                     Chapters.Add(new ChapterInfo(chapter));
                 }
@@ -233,7 +245,7 @@ namespace ATL
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<byte,String> ToMap()
+        public IDictionary<byte, String> ToMap()
         {
             IDictionary<byte, String> result = new Dictionary<byte, String>();
 
@@ -258,6 +270,10 @@ namespace ATL
             addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, result);
             addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
             addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
+            addIfConsistent(TrackTotal, TAG_FIELD_TRACK_TOTAL, result);
+            addIfConsistent(TrackNumberTotal, TAG_FIELD_TRACK_NUMBER_TOTAL, result);
+            addIfConsistent(DiscTotal, TAG_FIELD_DISC_TOTAL, result);
+            addIfConsistent(DiscNumberTotal, TAG_FIELD_DISC_NUMBER_TOTAL, result);
 
             return result;
         }
@@ -290,6 +306,39 @@ namespace ATL
             AlbumArtist = null;
             Publisher = null;
             Conductor = null;
+            TrackTotal = null;
+            TrackNumberTotal = null;
+            DiscTotal = null;
+            DiscNumberTotal = null;
+        }
+
+        public void Cleanup()
+        {
+            if (TrackNumber != null && TrackNumber.Contains("/"))
+            {
+                TrackNumberTotal = TrackNumber;
+                string[] parts = TrackNumber.Split('/');
+                TrackNumber = parts[0];
+                TrackTotal = parts[1];
+            }
+            else if (Utils.IsNumeric(TrackNumber))
+            {
+                TrackNumberTotal = TrackNumber;
+                if (Utils.IsNumeric(TrackTotal)) TrackNumberTotal += "/" + TrackTotal;
+            }
+
+            if (DiscNumber != null && DiscNumber.Contains("/"))
+            {
+                DiscNumberTotal = DiscNumber;
+                string[] parts = DiscNumber.Split('/');
+                DiscNumber = parts[0];
+                DiscTotal = parts[1];
+            }
+            else if (Utils.IsNumeric(DiscNumber))
+            {
+                DiscNumberTotal = DiscNumber;
+                if (Utils.IsNumeric(DiscTotal)) DiscNumberTotal += "/" + DiscTotal;
+            }
         }
 
         /// <summary>
@@ -298,7 +347,7 @@ namespace ATL
         /// <param name="data">Value to add to the map</param>
         /// <param name="id">Key to add to the map</param>
         /// <param name="map">Target map to host given values</param>
-        private void addIfConsistent(String data, byte id, IDictionary<byte,String> map)
+        private void addIfConsistent(String data, byte id, IDictionary<byte, String> map)
         {
             if (data != null) map[id] = data;
         }
@@ -323,13 +372,13 @@ namespace ATL
         /// NB : This method does not calculate any position; it just generates the map
         /// </summary>
         /// <returns>Map containing the position for each picture</returns>
-        private IDictionary<PictureInfo,int> generatePicturePositions()
+        private IDictionary<PictureInfo, int> generatePicturePositions()
         {
             IDictionary<PictureInfo, int> result = new Dictionary<PictureInfo, int>();
 
             foreach (PictureInfo picInfo in Pictures)
             {
-                if (result.ContainsKey(picInfo)) result[picInfo] = Math.Max(result[picInfo],picInfo.Position);
+                if (result.ContainsKey(picInfo)) result[picInfo] = Math.Max(result[picInfo], picInfo.Position);
                 else result.Add(picInfo, picInfo.Position);
             }
 

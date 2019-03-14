@@ -178,16 +178,59 @@ namespace ATL.AudioData.IO
         /// </summary>
         public ushort Track
         {
-            get { return TrackUtils.ExtractTrackNumber(tagData.TrackNumber); }
+            get {
+                if (tagData.TrackNumberTotal != null)
+                    return TrackUtils.ExtractTrackNumber(tagData.TrackNumberTotal);
+                else if (Utils.IsNumeric(tagData.TrackNumber))
+                    return ushort.Parse(tagData.TrackNumber);
+                else return 0;
+            }
             set { tagData.TrackNumber = value.ToString(); }
+        }
+        /// <summary>
+        /// Total track number
+        /// </summary>
+        public ushort TrackTotal
+        {
+            get
+            {
+                if (tagData.TrackNumberTotal != null)
+                    return TrackUtils.ExtractTrackTotal(tagData.TrackNumberTotal);
+                else if (Utils.IsNumeric(tagData.TrackTotal))
+                    return ushort.Parse(tagData.TrackTotal);
+                else return 0;
+            }
+            set { tagData.TrackTotal = value.ToString(); }
         }
         /// <summary>
         /// Disc number
         /// </summary>
         public ushort Disc
         {
-            get { return TrackUtils.ExtractTrackNumber(tagData.DiscNumber); }
+            get
+            {
+                if (tagData.DiscNumberTotal != null)
+                    return TrackUtils.ExtractTrackNumber(tagData.DiscNumberTotal);
+                else if (Utils.IsNumeric(tagData.DiscNumber))
+                    return ushort.Parse(tagData.DiscNumber);
+                else return 0;
+            }
             set { tagData.DiscNumber = value.ToString(); }
+        }
+        /// <summary>
+        /// Total disc number
+        /// </summary>
+        public ushort DiscTotal
+        {
+            get
+            {
+                if (tagData.DiscNumberTotal != null)
+                    return TrackUtils.ExtractTrackTotal(tagData.DiscNumberTotal);
+                else if (Utils.IsNumeric(tagData.DiscTotal))
+                    return ushort.Parse(tagData.DiscTotal);
+                else return 0;
+            }
+            set { tagData.DiscTotal = value.ToString(); }
         }
         /// <summary>
         /// Rating, from 0 to 5
@@ -597,6 +640,7 @@ namespace ATL.AudioData.IO
             TagData dataToWrite;
             dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
+            dataToWrite.Cleanup();
 
             foreach (Zone zone in Zones)
             {

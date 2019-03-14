@@ -7,15 +7,15 @@ using static ATL.ChannelsArrangements;
 
 namespace ATL
 {
-	/// <summary>
-	/// High-level class for audio file manipulation
-	/// </summary>
-	public class Track
-	{
+    /// <summary>
+    /// High-level class for audio file manipulation
+    /// </summary>
+    public class Track
+    {
         /// <summary>
         /// Basic constructor; does nothing else than instanciating the Track object
         /// </summary>
-		public Track() {}
+		public Track() { }
 
         /// <summary>
         /// Loads the file at the given path
@@ -109,9 +109,17 @@ namespace ATL
 		/// </summary>
         public int TrackNumber;
         /// <summary>
+		/// Total track number
+		/// </summary>
+        public int TrackTotal;
+        /// <summary>
 		/// Disc number
 		/// </summary>
         public int DiscNumber;
+        /// <summary>
+		/// Total disc number
+		/// </summary>
+        public int DiscTotal;
         /// <summary>
 		/// Rating (1 to 5)
 		/// </summary>
@@ -232,7 +240,7 @@ namespace ATL
             else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames);
 
             Title = fileIO.Title;
-            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) )
+            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title))
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
@@ -250,7 +258,9 @@ namespace ATL
             Year = fileIO.IntYear;
             Album = fileIO.Album;
             TrackNumber = fileIO.Track;
+            TrackTotal = fileIO.TrackTotal;
             DiscNumber = fileIO.Disc;
+            DiscTotal = fileIO.DiscTotal;
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             DurationMs = fileIO.Duration;
@@ -269,7 +279,7 @@ namespace ATL
 
             if (readEmbeddedPictures)
             {
-                foreach(PictureInfo picInfo in fileIO.EmbeddedPictures)
+                foreach (PictureInfo picInfo in fileIO.EmbeddedPictures)
                 {
                     picInfo.ComputePicHash();
                     embeddedPictures.Add(picInfo);
@@ -307,7 +317,9 @@ namespace ATL
             result.RecordingYear = Year.ToString();
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();
+            result.TrackTotal = TrackTotal.ToString();
             result.DiscNumber = DiscNumber.ToString();
+            result.DiscTotal = DiscTotal.ToString();
             result.Rating = (Popularity * 5).ToString();
 
             if (Chapters.Count > 0)

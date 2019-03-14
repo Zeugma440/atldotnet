@@ -96,11 +96,13 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
 
             theTrack.Artist = "Hey ho";
+            theTrack.Year = 1944;
             theTrack.Save();
 
             theTrack = new Track(testFileLocation);
 
-            Assert.AreEqual("Hey ho", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
+            Assert.AreEqual("Hey ho", theTrack.Artist);
+            Assert.AreEqual(1944, theTrack.Year);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);

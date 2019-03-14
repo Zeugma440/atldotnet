@@ -2,7 +2,6 @@
 using Commons;
 using System;
 using System.Text.RegularExpressions;
-using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData
 {
@@ -16,7 +15,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="TrackString">Raw "track" field in string form</param>
         /// <returns>Track number, in integer form; 0 if no track number has been found</returns>
-        public static ushort ExtractTrackNumber(String str)
+        public static ushort ExtractTrackNumber(string str)
         {
             // == Optimizations (Regex are too damn expensive to use them lazily)
 
@@ -53,6 +52,51 @@ namespace ATL.AudioData
                 long number = long.Parse(match.Value);
                 if (number > ushort.MaxValue) number = 0;
                 return (ushort)number;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Extract the total track number from the given string
+        /// </summary>
+        /// <param name="TrackString">Raw "track" field in string form</param>
+        /// <returns>Total track number, in integer form; 0 if no total track number has been found</returns>
+        public static ushort ExtractTrackTotal(string str)
+        {
+            // == Optimizations (Regex are too damn expensive to use them lazily)
+
+            // Invalid inputs
+            if (null == str) return 0;
+            str = str.Trim();
+            if (str.Length < 1) return 0;
+            if (!str.Contains("/")) return 0;
+
+            int indexOfDelimiter = str.IndexOf("/");
+            if (indexOfDelimiter == str.Length) return 0;
+
+            // Try extracting the total manually when "/" is followed by a number
+            int i = indexOfDelimiter + 1;
+            while (char.IsNumber(str[i]))
+            {
+                i++;
+                if (str.Length == i) break;
+            }
+
+            if (i > indexOfDelimiter + 1)
+            {
+                long number = long.Parse(str.Substring(indexOfDelimiter + 1, i - indexOfDelimiter - 1));
+                if (number > ushort.MaxValue) number = 0;
+                return (ushort)number;
+            }
+
+
+            // == If everything above fails...
+            string pattern = "/[\\s]*(\\d+)"; // Any continuous sequence of numbers after a "/"
+            foreach (Match match in Regex.Matches(str, pattern))
+            {
+                long number = long.Parse(match.Value);
+                if (number > ushort.MaxValue) number = 0;
+                return (ushort)number; // First match is directly returned
             }
             return 0;
         }
@@ -112,7 +156,7 @@ namespace ATL.AudioData
 
                 case MetaDataIO.RC_APE:
 
-                    if (rating < 5.1) return (float)rating/5; // Stored as float
+                    if (rating < 5.1) return (float)rating / 5; // Stored as float
                     else if (rating < 10) return 0;           // Stored as scale of 0..100
                     else if (rating < 20) return (float)0.1;
                     else if (rating < 30) return (float)0.2;
@@ -139,7 +183,8 @@ namespace ATL.AudioData
                         else if (rating < 242) return (float)0.8;
                         else if (rating < 255) return (float)0.9;
                         else return 1;
-                    } else if (rating > 5) // Between 5 and 10
+                    }
+                    else if (rating > 5) // Between 5 and 10
                     {
                         return (float)(rating / 10.0);
                     }
@@ -205,7 +250,7 @@ namespace ATL.AudioData
         /// <param name="str">String to search the year into</param>
         /// <returns>Found year in integer form; 0 if no year has been found</returns>
    		public static int ExtractIntYear(string str)
-		{
+        {
             string resStr = ExtractStrYear(str);
             if (0 == resStr.Length) return 0; else return Int32.Parse(resStr);
         }
@@ -249,6 +294,6 @@ namespace ATL.AudioData
                 return match.Value;
             }
             return "";
-		}
+        }
     }
 }

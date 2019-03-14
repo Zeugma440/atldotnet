@@ -143,8 +143,10 @@ namespace ATL.test.IO.MetaData
             theTag.RecordingYear = "2008";
             theTag.RecordingDate = "2008/01/01";
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
+            theTag.TrackNumber = "01";
+            theTag.TrackTotal = "02";
+            theTag.DiscNumber = "03";
+            theTag.DiscTotal = "04";
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
@@ -165,7 +167,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("2008", theFile.NativeTag.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
             Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(2, theFile.NativeTag.TrackTotal);
+            Assert.AreEqual(3, theFile.NativeTag.Disc);
+            Assert.AreEqual(4, theFile.NativeTag.DiscTotal);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);

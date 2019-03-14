@@ -13,14 +13,14 @@ namespace ATL.AudioData.IO
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
 	class FLAC : IMetaDataIO, IAudioDataIO
-	{
-		private const byte META_STREAMINFO      = 0;
-		private const byte META_PADDING         = 1;
-		private const byte META_APPLICATION     = 2;
-		private const byte META_SEEKTABLE       = 3;
-		private const byte META_VORBIS_COMMENT  = 4;
-		private const byte META_CUESHEET        = 5;
-        private const byte META_PICTURE         = 6;
+    {
+        private const byte META_STREAMINFO = 0;
+        private const byte META_PADDING = 1;
+        private const byte META_APPLICATION = 2;
+        private const byte META_SEEKTABLE = 3;
+        private const byte META_VORBIS_COMMENT = 4;
+        private const byte META_CUESHEET = 5;
+        private const byte META_PICTURE = 6;
 
         private const string FLAC_ID = "fLaC";
 
@@ -29,18 +29,18 @@ namespace ATL.AudioData.IO
 
 
         private class FlacHeader
-		{
+        {
             public string StreamMarker;
-			public byte[] MetaDataBlockHeader = new byte[4];
-			public byte[] Info = new byte[18];
-			// 16-bytes MD5 Sum only applies to audio data
-    
-			public void Reset()
-			{
+            public byte[] MetaDataBlockHeader = new byte[4];
+            public byte[] Info = new byte[18];
+            // 16-bytes MD5 Sum only applies to audio data
+
+            public void Reset()
+            {
                 StreamMarker = "";
-				Array.Clear(MetaDataBlockHeader,0,4);
-				Array.Clear(Info,0,18);
-			}
+                Array.Clear(MetaDataBlockHeader, 0, 4);
+                Array.Clear(Info, 0, 18);
+            }
 
             public bool IsValid()
             {
@@ -51,27 +51,27 @@ namespace ATL.AudioData.IO
             {
                 Reset();
             }
-		}
+        }
 
         private readonly string filePath;
         private AudioDataManager.SizeInfo sizeInfo;
 
         private VorbisTag vorbisTag;
-        
+
         private FlacHeader header;
         IList<FileStructureHelper.Zone> zones; // That's one hint of why interactions with VorbisTag need to be redesigned...
 
         // Internal metrics
         private int paddingIndex;
-		private bool paddingLast;
-		private uint padding;
-		private long audioOffset;
+        private bool paddingLast;
+        private uint padding;
+        private long audioOffset;
         private long firstBlockPosition;
 
         // Physical info
-		private int sampleRate;
-		private byte bitsPerSample;
-		private long samples;
+        private int sampleRate;
+        private byte bitsPerSample;
+        private long samples;
         private ChannelsArrangement channelsArrangement;
 
         /* Unused for now
@@ -172,18 +172,22 @@ namespace ATL.AudioData.IO
 
         public ushort Track
         {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Track;
-            }
+            get { return ((IMetaDataIO)vorbisTag).Track; }
+        }
+
+        public ushort TrackTotal
+        {
+            get { return ((IMetaDataIO)vorbisTag).TrackTotal; }
         }
 
         public ushort Disc
         {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Disc;
-            }
+            get { return ((IMetaDataIO)vorbisTag).Disc; }
+        }
+
+        public ushort DiscTotal
+        {
+            get { return ((IMetaDataIO)vorbisTag).DiscTotal; }
         }
 
         public string Year
@@ -326,14 +330,14 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Audio data
-			padding = 0;
-			paddingLast = false;
-			sampleRate = 0;
-			bitsPerSample = 0;
-			samples = 0;
-			paddingIndex = 0;
-			audioOffset = 0;
-		}
+            padding = 0;
+            paddingLast = false;
+            sampleRate = 0;
+            bitsPerSample = 0;
+            samples = 0;
+            paddingIndex = 0;
+            audioOffset = 0;
+        }
 
         public FLAC(string path)
         {
@@ -347,13 +351,13 @@ namespace ATL.AudioData.IO
 
         // Check for right FLAC file data
         private bool isValid()
-		{
-			return ( ( header.IsValid() ) &&
-				(channelsArrangement.NbChannels > 0) &&
-				(sampleRate > 0) &&
-				(bitsPerSample > 0) &&
-				(samples > 0) );
-		}
+        {
+            return ((header.IsValid()) &&
+                (channelsArrangement.NbChannels > 0) &&
+                (sampleRate > 0) &&
+                (bitsPerSample > 0) &&
+                (samples > 0));
+        }
 
         private void readHeader(BinaryReader source)
         {
@@ -368,33 +372,33 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
         }
 
-		private double getDuration()
-		{
-			if ( (isValid()) && (sampleRate > 0) )  
-			{
-				return (double)samples * 1000.0 / sampleRate;
-			} 
-			else 
-			{
-				return 0;
-			}
-		}
+        private double getDuration()
+        {
+            if ((isValid()) && (sampleRate > 0))
+            {
+                return (double)samples * 1000.0 / sampleRate;
+            }
+            else
+            {
+                return 0;
+            }
+        }
 
-/* Unused for now
+        /* Unused for now
 
-		//   Get compression ratio
-		private double getCompressionRatio()
-		{
-			if (isValid()) 
-			{
-				return (double)sizeInfo.FileSize / (samples * channels * bitsPerSample / 8.0) * 100;
-			} 
-			else 
-			{
-				return 0;
-			}
-		}
-*/
+                //   Get compression ratio
+                private double getCompressionRatio()
+                {
+                    if (isValid()) 
+                    {
+                        return (double)sizeInfo.FileSize / (samples * channels * bitsPerSample / 8.0) * 100;
+                    } 
+                    else 
+                    {
+                        return 0;
+                    }
+                }
+        */
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
@@ -412,18 +416,18 @@ namespace ATL.AudioData.IO
             byte[] aMetaDataBlockHeader;
             long position;
             uint blockLength;
-			int blockType;
-			int blockIndex;
+            int blockType;
+            int blockIndex;
             bool isLast;
             bool bPaddingFound = false;
 
             readHeader(source);
 
-			// Process data if loaded and header valid    
-			if ( header.IsValid() )
-			{
-				int channels      = (header.Info[12] >> 1) & 0x7;
-                switch(channels)
+            // Process data if loaded and header valid    
+            if (header.IsValid())
+            {
+                int channels = (header.Info[12] >> 1) & 0x7;
+                switch (channels)
                 {
                     case 0b0000: channelsArrangement = MONO; break;
                     case 0b0001: channelsArrangement = STEREO; break;
@@ -439,13 +443,13 @@ namespace ATL.AudioData.IO
                     default: channelsArrangement = UNKNOWN; break;
                 }
 
-				sampleRate    = ( header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4 );
-				bitsPerSample = (byte)( ((header.Info[12] & 1) << 4) | (header.Info[13] >> 4) + 1 );
-				samples       = ( header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17] );
+                sampleRate = (header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4);
+                bitsPerSample = (byte)(((header.Info[12] & 1) << 4) | (header.Info[13] >> 4) + 1);
+                samples = (header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17]);
 
-				if ( 0 == (header.MetaDataBlockHeader[1] & 0x80) ) // metadata block exists
-				{
-					blockIndex = 0;
+                if (0 == (header.MetaDataBlockHeader[1] & 0x80)) // metadata block exists
+                {
+                    blockIndex = 0;
                     if (readTagParams.PrepareForWriting)
                     {
                         if (null == zones) zones = new List<Zone>(); else zones.Clear();
@@ -453,32 +457,32 @@ namespace ATL.AudioData.IO
                     }
 
                     do // read more metadata blocks if available
-					{
-						aMetaDataBlockHeader = source.ReadBytes(4);
+                    {
+                        aMetaDataBlockHeader = source.ReadBytes(4);
                         isLast = ((aMetaDataBlockHeader[0] & 0x80) > 0); // last flag ( first bit == 1 )
 
                         blockIndex++;
                         blockLength = StreamUtils.DecodeBEUInt24(aMetaDataBlockHeader, 1);
 
-						blockType = (aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
+                        blockType = (aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
                         position = source.BaseStream.Position;
 
-						if ( blockType == META_VORBIS_COMMENT ) // Vorbis metadata
-						{
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_VORBISTAG, position - 4, (int)blockLength+4, new byte[0], (byte)(isLast ? 1 : 0)));
+                        if (blockType == META_VORBIS_COMMENT) // Vorbis metadata
+                        {
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_VORBISTAG, position - 4, (int)blockLength + 4, new byte[0], (byte)(isLast ? 1 : 0)));
                             vorbisTag.Read(source, readTagParams);
-						}
-						else if ((blockType == META_PADDING) && (! bPaddingFound) )  // Padding block
-						{ 
-							padding = blockLength;                                            // if we find more skip & put them in metablock array
-							paddingLast = ((aMetaDataBlockHeader[0] & 0x80) != 0);
-							paddingIndex = blockIndex;
-							bPaddingFound = true;
+                        }
+                        else if ((blockType == META_PADDING) && (!bPaddingFound))  // Padding block
+                        {
+                            padding = blockLength;                                            // if we find more skip & put them in metablock array
+                            paddingLast = ((aMetaDataBlockHeader[0] & 0x80) != 0);
+                            paddingIndex = blockIndex;
+                            bPaddingFound = true;
                             source.BaseStream.Seek(padding, SeekOrigin.Current); // advance into file till next block or audio data start
-						}
+                        }
                         else if (blockType == META_PICTURE)
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_PICTURE, position - 4, (int)blockLength+4, new byte[0], (byte)(isLast ? 1 : 0)));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_PICTURE, position - 4, (int)blockLength + 4, new byte[0], (byte)(isLast ? 1 : 0)));
                             vorbisTag.ReadPicture(source.BaseStream, readTagParams);
                         }
                         // TODO : support for CUESHEET block
@@ -492,15 +496,15 @@ namespace ATL.AudioData.IO
                             // Abnormal header : incorrect size and/or misplaced last-metadata-block flag
                             break;
                         }
-					}
-					while ( !isLast );
+                    }
+                    while (!isLast);
 
                     if (readTagParams.PrepareForWriting)
                     {
                         bool vorbisTagFound = false;
                         bool pictureFound = false;
 
-                        foreach(Zone zone in zones)
+                        foreach (Zone zone in zones)
                         {
                             if (zone.Name.Equals(ZONE_PICTURE)) pictureFound = true;
                             else if (zone.Name.Equals(ZONE_VORBISTAG)) vorbisTagFound = true;
@@ -509,8 +513,8 @@ namespace ATL.AudioData.IO
                         if (!vorbisTagFound) zones.Add(new Zone(ZONE_VORBISTAG, firstBlockPosition, 0, new byte[0]));
                         if (!pictureFound) zones.Add(new Zone(ZONE_PICTURE, firstBlockPosition, 0, new byte[0]));
                     }
-				}
-			}
+                }
+            }
 
             if (isValid())
             {
@@ -518,8 +522,8 @@ namespace ATL.AudioData.IO
                 result = true;
             }
 
-			return result;  
-		}
+            return result;
+        }
 
         // NB1 : previously scattered picture blocks become contiguous after rewriting
         // NB2 : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
@@ -552,11 +556,13 @@ namespace ATL.AudioData.IO
                         {
                             pictureBlockFound = true;
                             writtenFields = writePictures(msw, vorbisTag.EmbeddedPictures, 1 == zone.Flag);
-                        } else
+                        }
+                        else
                         {
                             writtenFields = 0; // Other picture blocks are erased
                         }
-                    } else
+                    }
+                    else
                     {
                         writtenFields = 0;
                     }
@@ -631,7 +637,7 @@ namespace ATL.AudioData.IO
             {
                 blockType = META_PICTURE;
                 if (isLast) blockType = (byte)(blockType & 0x80);
-                
+
                 w.Write(blockType);
                 sizePos = w.BaseStream.Position;
                 w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method

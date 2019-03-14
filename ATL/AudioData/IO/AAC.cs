@@ -237,8 +237,8 @@ namespace ATL.AudioData.IO
                 { "©day", TagData.TAG_FIELD_RECORDING_YEAR },
                 { "©gen", TagData.TAG_FIELD_GENRE },
                 { "gnre", TagData.TAG_FIELD_GENRE },
-                { "trkn", TagData.TAG_FIELD_TRACK_NUMBER },
-                { "disk", TagData.TAG_FIELD_DISC_NUMBER },
+                { "trkn", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+                { "disk", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
                 { "rtng", TagData.TAG_FIELD_RATING },
                 { "rate", TagData.TAG_FIELD_RATING },
                 { "©wrt", TagData.TAG_FIELD_COMPOSER },
@@ -534,7 +534,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(3, SeekOrigin.Current); // 3-byte flags
             if (1 == version) source.BaseStream.Seek(16, SeekOrigin.Current); else source.BaseStream.Seek(8, SeekOrigin.Current);
 
-            globalTimeScale = StreamUtils.ReverseInt32(source.ReadInt32());
+            globalTimeScale = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             long timeLengthPerSec;
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             duration = timeLengthPerSec * 1000.0 / globalTimeScale;
@@ -662,7 +662,7 @@ namespace ATL.AudioData.IO
                     return;
                 }
                 source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                uint nbDescriptions = StreamUtils.ReverseUInt32(source.ReadUInt32());
+                uint nbDescriptions = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
                 for (int i = 0; i < nbDescriptions; i++)
                 {
@@ -678,7 +678,7 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
 
                         ushort channels = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Channel count
-                        channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels);
+                        channelsArrangement = GuessFromChannelNumber(channels);
 
                         source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
                         source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work if so...)
@@ -1027,7 +1027,7 @@ namespace ATL.AudioData.IO
                 // Browse all metadata
                 while (iListPosition < iListSize - 8)
                 {
-                    atomSize = StreamUtils.ReverseUInt32(source.ReadUInt32());
+                    atomSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                     atomHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                     if ("----".Equals(atomHeader)) // Custom text metadata
@@ -1126,13 +1126,13 @@ namespace ATL.AudioData.IO
                         if ("trkn".Equals(atomHeader) || "disk".Equals(atomHeader))
                         {
                             source.BaseStream.Seek(2, SeekOrigin.Current);
-                            int16Data = StreamUtils.ReverseUInt16(source.ReadUInt16());
-                            source.BaseStream.Seek(2, SeekOrigin.Current); // Total number of tracks/discs is on the following 2 bytes; ignored for now
-                            SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                            ushort number = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Current track/disc number
+                            ushort total = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Total number of tracks/discs
+                            SetMetaField(atomHeader, number.ToString() + "/" + total.ToString(), readTagParams.ReadAllMetaFrames);
                         }
                         else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                         {
-                            int16Data = StreamUtils.ReverseUInt16(source.ReadUInt16());
+                            int16Data = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                             strData = "";
                             if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
@@ -1369,9 +1369,9 @@ namespace ATL.AudioData.IO
                 {
                     int16data = 0;
                     writer.Write(int16data);
-                    int16data = StreamUtils.ReverseUInt16(Convert.ToUInt16(TrackUtils.ExtractTrackNumber(text)));
+                    int16data = StreamUtils.ReverseUInt16(TrackUtils.ExtractTrackNumber(text));
                     writer.Write(int16data);
-                    int16data = 0;              // Total number of tracks/discs; unsupported for now
+                    int16data = StreamUtils.ReverseUInt16(TrackUtils.ExtractTrackTotal(text));
                     writer.Write(int16data);
                     if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
                 }

@@ -64,7 +64,11 @@ namespace ATL.AudioData.IO
                 { "GENRE", TagData.TAG_FIELD_GENRE },
                 { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
                 { "TRACKNUMBER", TagData.TAG_FIELD_TRACK_NUMBER },
+                { "TRACKTOTAL", TagData.TAG_FIELD_TRACK_TOTAL },
+                { "TOTALTRACKS", TagData.TAG_FIELD_TRACK_TOTAL },
                 { "DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER },
+                { "DISCTOTAL", TagData.TAG_FIELD_DISC_TOTAL },
+                { "TOTALDISCS", TagData.TAG_FIELD_DISC_TOTAL },
                 { "COMMENT", TagData.TAG_FIELD_COMMENT },
                 { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
                 { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
@@ -363,6 +367,7 @@ namespace ATL.AudioData.IO
             int result;
             TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+            dataToWrite.Cleanup();
 
             // Write new tag to a MemoryStream
             BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8);
