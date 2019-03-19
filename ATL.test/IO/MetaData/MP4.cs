@@ -61,6 +61,24 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "AAC/empty.m4a";
             notEmptyFile = "AAC/mp4.m4a";
+            tagType = MetaDataIOFactory.TAG_NATIVE;
+
+            // MP4 does not support leading zeroes
+            testData.TrackNumber = "1";
+            testData.TrackTotal = "2";
+            testData.DiscNumber = "3";
+            testData.DiscTotal = "4";
+            testData.Conductor = null;
+
+            testData.AdditionalFields.Clear();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));
+
+            testData.Pictures.Clear();
+            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 13);
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            pic.PictureData = data;
+            pic.ComputePicHash();
+            testData.Pictures.Add(pic);
         }
 
 
@@ -71,9 +89,9 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            readExistingTagsOnFile(ref theFile,1);
+            readExistingTagsOnFile(theFile, 1);
         }
 
         [TestMethod]
@@ -84,7 +102,7 @@ namespace ATL.test.IO.MetaData
             // Source : tag-free M4A
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -128,7 +146,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
             Assert.AreEqual(1, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
-            Assert.AreEqual(2.5/5, theFile.NativeTag.Popularity);
+            Assert.AreEqual(2.5 / 5, theFile.NativeTag.Popularity);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
@@ -165,7 +183,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -173,15 +191,15 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+ "_Images/pic1.jpg");
+            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Png, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TAG_ANY, 14);
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             theTag.Pictures.Add(picInfo);
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile, 2);
+            readExistingTagsOnFile(theFile, 2);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
@@ -192,9 +210,9 @@ namespace ATL.test.IO.MetaData
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == nbFound))
                 {
                     Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                    Assert.AreEqual(picture.Width, 175);
+                    Assert.AreEqual(picture.Height, 168);
                 }
                 nbFound++;
             }
@@ -213,7 +231,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile);
+            readExistingTagsOnFile(theFile);
 
             // Additional removed field
             Assert.AreEqual("", theFile.NativeTag.Conductor);
@@ -241,7 +259,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free M4A
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -293,7 +311,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(picture.Width, 900);
                     found++;
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1==found))  // No custom nor categorized picture type in MP4
+                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == found))  // No custom nor categorized picture type in MP4
                 {
                     Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -336,7 +354,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0==found))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == found))
                 {
                     Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
                     Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -407,7 +425,7 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(4, found);
 
-            
+
             // Modify elements
             TagData theTag = new TagData();
             theTag.Chapters = new List<ChapterInfo>();
@@ -452,7 +470,7 @@ namespace ATL.test.IO.MetaData
                 }
             }
             Assert.AreEqual(2, found);
-            
+
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
@@ -512,52 +530,52 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(4, found);
 
-/*
-            // Modify elements -- not supported yet
-            TagData theTag = new TagData();
-            theTag.Chapters = new List<ChapterInfo>();
-            expectedChaps.Clear();
+            /*
+                        // Modify elements -- not supported yet
+                        TagData theTag = new TagData();
+                        theTag.Chapters = new List<ChapterInfo>();
+                        expectedChaps.Clear();
 
-            ch = new ChapterInfo();
-            ch.StartTime = 123;
-            ch.Title = "aaa";
+                        ch = new ChapterInfo();
+                        ch.StartTime = 123;
+                        ch.Title = "aaa";
 
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
+                        theTag.Chapters.Add(ch);
+                        expectedChaps.Add(ch.StartTime, ch);
 
-            ch = new ChapterInfo();
-            ch.StartTime = 1230;
-            ch.Title = "aaa0";
+                        ch = new ChapterInfo();
+                        ch.StartTime = 1230;
+                        ch.Title = "aaa0";
 
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
+                        theTag.Chapters.Add(ch);
+                        expectedChaps.Add(ch.StartTime, ch);
 
-            // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+                        // Check if they are persisted properly
+                        Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
+                        Assert.IsTrue(theFile.ReadFromFile(false, true));
+                        Assert.IsNotNull(theFile.NativeTag);
+                        Assert.IsTrue(theFile.NativeTag.Exists);
 
-            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+                        Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
 
-            // Check if values are the same
-            found = 0;
-            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
-            {
-                if (expectedChaps.ContainsKey(chap.StartTime))
-                {
-                    found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                }
-                else
-                {
-                    System.Console.WriteLine(chap.StartTime);
-                }
-            }
-            Assert.AreEqual(2, found);
-*/
+                        // Check if values are the same
+                        found = 0;
+                        foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                        {
+                            if (expectedChaps.ContainsKey(chap.StartTime))
+                            {
+                                found++;
+                                Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                                Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                            }
+                            else
+                            {
+                                System.Console.WriteLine(chap.StartTime);
+                            }
+                        }
+                        Assert.AreEqual(2, found);
+            */
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
@@ -607,44 +625,6 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_APE()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
-        }
-
-        private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
-        {
-            Assert.IsTrue(theFile.ReadFromFile(true, true));
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            // Supported fields
-            Assert.AreEqual("aa父bb", theFile.NativeTag.Title);
-            Assert.AreEqual("FATHER", theFile.NativeTag.Artist);
-            Assert.AreEqual("Papa rules", theFile.NativeTag.Album);
-            Assert.AreEqual("1997", theFile.NativeTag.Year);
-            Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual("House", theFile.NativeTag.Genre);
-            Assert.AreEqual("父父!", theFile.NativeTag.Comment);
-            Assert.AreEqual("Bébé", theFile.NativeTag.Composer);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
-
-            // Pictures
-            Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
-            byte nbFound = 0;
-
-            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
-            {
-                Image picture;
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == nbFound)) // Supported picture = first picture
-                {
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                    Assert.AreEqual(picture.Height, 168);
-                    Assert.AreEqual(picture.Width, 175);
-                    nbFound++;
-                }
-            }
-
-            Assert.AreEqual(nbFound, 1);
         }
     }
 }

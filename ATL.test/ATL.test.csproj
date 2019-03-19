@@ -126,6 +126,7 @@
     <None Include="Resources\OGG\chapters.ogg" />
     <None Include="Resources\OGG\empty.ogg" />
     <None Include="Resources\OGG\ogg.ogg" />
+    <None Include="Resources\OGG\ogg_dirtyTrackDiscNumbering.ogg" />
     <None Include="Resources\OPUS\01_2_32.opus" />
     <None Include="Resources\PSF\nolength.PSF" />
     <None Include="Resources\PSF\empty.psf" />
@@ -226,6 +227,7 @@
     <Content Include="Resources\AIF\aiff.aiff" />
     <Content Include="Resources\AIF\aiff_empty.aif" />
     <Content Include="Resources\AIF\empty.aif" />
+    <Content Include="Resources\FLAC\flac_dirtyTrackDiscNumbering.flac" />
     <Content Include="Resources\MID\ataezou - I %28HEART%29 RUEAMATASU.mid" />
     <Content Include="Resources\MID\chron.mid" />
     <Content Include="Resources\MID\memory.mid" />

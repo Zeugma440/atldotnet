@@ -42,7 +42,7 @@ namespace ATL.AudioData.IO
 
         // Mapping between Vorbis field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping;
-        
+
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
         private readonly bool writePicturesWithMetadata;
         // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
@@ -154,7 +154,7 @@ namespace ATL.AudioData.IO
             // Ensure there is a slot to record the chapter
             while (tagData.Chapters.Count < chapterIndex) tagData.Chapters.Add(new ChapterInfo());
 
-            if (fieldName.EndsWith("NAME",StringComparison.OrdinalIgnoreCase)) // Chapter name
+            if (fieldName.EndsWith("NAME", StringComparison.OrdinalIgnoreCase)) // Chapter name
             {
                 tagData.Chapters[chapterIndex - 1].Title = fieldValue;
             }
@@ -197,7 +197,7 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                tagId += Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex)?KEY_BUFFER:equalsIndex);
+                tagId += Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex);
             }
             Source.Seek(-(KEY_BUFFER - equalsIndex - 1), SeekOrigin.Current);
 
@@ -302,8 +302,7 @@ namespace ATL.AudioData.IO
             int index = 0;
             bool result = true;
 
-            // Read Vorbis tag
-            ResetData();
+            // ResetData(); <-- no; that calls resets image data when VorbisTag is managed by FLAC. ResetData has to be called manually by using Clear
 
             /// TODO - check if still useful
             if (readTagParams.PrepareForWriting && !readTagParams.ReadPictures)
@@ -356,7 +355,7 @@ namespace ATL.AudioData.IO
             } while (index <= nbFields);
 
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), hasCoreSignature?CORE_SIGNATURE:new byte[0]);
+            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
 
             return result;
         }
@@ -388,7 +387,8 @@ namespace ATL.AudioData.IO
             if (AdditionalFields.ContainsKey(VENDOR_METADATA_ID))
             {
                 vendor = AdditionalFields[VENDOR_METADATA_ID];
-            } else
+            }
+            else
             {
                 // Even when no existing field, vendor field is mandatory in OGG structure
                 // => a file with no vendor is a FLAC file
@@ -406,7 +406,7 @@ namespace ATL.AudioData.IO
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
             // NB : Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
-            if (Settings.EnablePadding) for (int i=0; i<2048;i++) w.Write((byte)0);
+            if (Settings.EnablePadding) for (int i = 0; i < 2048; i++) w.Write((byte)0);
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
@@ -432,8 +432,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            string value = map[frameType];
-                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
+                            string value = formatBeforeWriting(frameType, tag, map);
 
                             writeTextFrame(w, s, value);
                             nbFrames++;
@@ -485,7 +484,7 @@ namespace ATL.AudioData.IO
         {
             String chapterIndex;
 
-            for (int i=0; i<chapters.Count; i++)
+            for (int i = 0; i < chapters.Count; i++)
             {
                 chapterIndex = Utils.BuildStrictLengthString((i + 1).ToString(), 3, '0', false);
                 writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.EncodeTimecode_ms(chapters[i].StartTime));
@@ -503,13 +502,13 @@ namespace ATL.AudioData.IO
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
 
             // TODO : handle multi-line comments : comment[0], comment[1]...
-            writer.Write(Utils.Latin1Encoding.GetBytes(frameCode+"="));
+            writer.Write(Utils.Latin1Encoding.GetBytes(frameCode + "="));
             writer.Write(Encoding.UTF8.GetBytes(text));
 
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write((uint)(finalFramePos-frameSizePos-4));
+            writer.Write((uint)(finalFramePos - frameSizePos - 4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
@@ -553,7 +552,8 @@ namespace ATL.AudioData.IO
             if (props.Format.Equals(ImageFormat.Gif))
             {
                 picW.Write(StreamUtils.ReverseInt32(props.NumColorsInPalette));    // Color num
-            } else
+            }
+            else
             {
                 picW.Write((int)0);
             }

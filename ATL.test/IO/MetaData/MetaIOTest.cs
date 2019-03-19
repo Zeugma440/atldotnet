@@ -56,20 +56,22 @@ namespace ATL.test.IO.MetaData
             // Initialize default test data
             testData = new TagData();
 
-            testData.Title = "Title";
-            testData.Album = "父";
-            testData.Artist = "Artist";
-            testData.AlbumArtist = "Bob"; 
-            testData.Comment = "Test!";
-            testData.RecordingYear = "2017";
+            testData.Title = "aa父bb";
+            testData.Artist = "֎FATHER֎";
+            testData.Album = "Papa֍rules";
+            testData.AlbumArtist = "aaᱬbb"; 
+            testData.Comment = "父父!";
+            testData.RecordingYear = "1997";
             testData.RecordingDate = ""; // Empty string means "supported, but not valued in test sample"
-            testData.Genre = "Test";
+            testData.Genre = "House";
             testData.Rating = "0";
-            testData.TrackNumber = "22";
-            testData.Composer = "Me";
+            testData.TrackNumber = "01";
+            testData.TrackTotal = "02";
+            testData.Composer = "ccᱬdd";
             testData.Conductor = "";
             testData.Publisher = "";
-            testData.DiscNumber = "2";
+            testData.DiscNumber = "03";
+            testData.DiscTotal = "04";
             testData.Copyright = "";
             testData.GeneralDescription = "";
 
@@ -323,8 +325,10 @@ namespace ATL.test.IO.MetaData
             if (testData.RecordingDate != null) theTag.RecordingDate = "2008/01/01";
             if (testData.Genre != null) theTag.Genre = "Merengue";
             if (testData.Rating != null) theTag.Rating = 2.5.ToString();
-            if (testData.TrackNumber != null) theTag.TrackNumber = "01/01";
-            if (testData.DiscNumber != null) theTag.DiscNumber = "2";
+            if (testData.TrackNumber != null) theTag.TrackNumber = "01";
+            if (testData.TrackTotal != null) theTag.TrackTotal = "02";
+            if (testData.DiscNumber != null) theTag.DiscNumber = "03";
+            if (testData.DiscTotal != null) theTag.DiscTotal = "04";
             if (testData.Composer != null) theTag.Composer = "Me";
             if (testData.Copyright != null) theTag.Copyright = "a"+ internationalChar + "a";
             if (testData.Conductor != null) theTag.Conductor = "John Johnson Jr.";
@@ -358,7 +362,9 @@ namespace ATL.test.IO.MetaData
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
             if (testData.Rating != null) Assert.AreEqual((float)(2.5/5), meta.Popularity);
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
-            if (testData.DiscNumber != null) Assert.AreEqual(2, meta.Disc);
+            if (testData.TrackTotal != null) Assert.AreEqual(2, meta.TrackTotal);
+            if (testData.DiscNumber != null) Assert.AreEqual(3, meta.Disc);
+            if (testData.DiscTotal != null) Assert.AreEqual(4, meta.DiscTotal);
             if (testData.Composer != null) Assert.AreEqual("Me", meta.Composer);
             if (testData.Copyright != null) Assert.AreEqual("a" + internationalChar + "a", meta.Copyright);
             if (testData.Conductor != null) Assert.AreEqual("John Johnson Jr.", meta.Conductor);
@@ -604,9 +610,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(testData.Rating, meta.Popularity.ToString());
                 }
             }
-            if (testData.TrackNumber != null) Assert.AreEqual(TrackUtils.ExtractTrackNumber(testData.TrackNumber).ToString(), meta.Track.ToString());
+            if (testData.TrackNumber != null) Assert.AreEqual(ushort.Parse(testData.TrackNumber), meta.Track);
+            if (testData.TrackTotal != null) Assert.AreEqual(ushort.Parse(testData.TrackTotal), meta.TrackTotal);
             if (testData.Composer != null) Assert.AreEqual(testData.Composer, meta.Composer);
-            if (testData.DiscNumber != null) Assert.AreEqual(TrackUtils.ExtractTrackNumber(testData.DiscNumber).ToString(), meta.Disc.ToString());
+            if (testData.DiscNumber != null) Assert.AreEqual(ushort.Parse(testData.DiscNumber), meta.Disc);
+            if (testData.DiscTotal != null) Assert.AreEqual(ushort.Parse(testData.DiscTotal), meta.DiscTotal);
             if (testData.Conductor != null) Assert.AreEqual(testData.Conductor, meta.Conductor);
             if (testData.Publisher != null) Assert.AreEqual(testData.Publisher, meta.Publisher);
             if (testData.Copyright != null) Assert.AreEqual(testData.Copyright, meta.Copyright);
@@ -632,13 +640,14 @@ namespace ATL.test.IO.MetaData
                 {
                     foreach (PictureInfo testPicInfo in testData.Pictures)
                     {
-                        if (   pic.NativePicCode.Equals(testPicInfo.NativePicCode)
-                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr))
+                        if (  (pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
+                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, System.StringComparison.OrdinalIgnoreCase))
                            )
                         {
                             nbFound++;
                             pic.ComputePicHash();
                             Assert.AreEqual(testPicInfo.PictureHash, pic.PictureHash);
+                            break;
                         }
                     }
                 }

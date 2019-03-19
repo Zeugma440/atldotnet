@@ -1090,7 +1090,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                     {
-                        PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
+                        PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic; // TODO - to check : this seems to prevent ATL from detecting multiple images from the same type, as for a file with two "Front Cover" images; only one image will be detected
 
                         int picturePosition;
                         addPictureToken(picType);
@@ -1278,8 +1278,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            string value = map[frameType];
-                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
+                            string value = formatBeforeWriting(frameType, tag, map);
 
                             writeTextFrame(w, s, value);
                             counter++;

@@ -3,8 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
-using System.Collections.Generic;
-using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -59,6 +57,9 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "WMA/empty_full.wma";
             notEmptyFile = "WMA/wma.wma";
+            tagType = MetaDataIOFactory.TAG_NATIVE;
+
+            testData.Conductor = null;
         }
 
         [TestMethod]
@@ -67,11 +68,11 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            readExistingTagsOnFile(ref theFile);
+            readExistingTagsOnFile(theFile);
         }
-        
+
         [TestMethod]
         public void TagIO_RW_WMA_Empty()
         {
@@ -102,7 +103,7 @@ namespace ATL.test.IO.MetaData
             theTag.TrackNumber = "01/01";
             theTag.DiscNumber = "2";
             theTag.Composer = "Me";
-            theTag.Rating= "2";
+            theTag.Rating = "2";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
 
@@ -123,7 +124,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
             Assert.AreEqual(1, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
-            Assert.AreEqual((float)(2.0/5), theFile.NativeTag.Popularity);
+            Assert.AreEqual((float)(2.0 / 5), theFile.NativeTag.Popularity);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
@@ -211,7 +212,8 @@ namespace ATL.test.IO.MetaData
             try
             {
                 Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
-            } finally
+            }
+            finally
             {
                 Settings.ASF_keepNonWMFieldsWhenRemovingTag = false;
             }
@@ -253,14 +255,14 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot()+ "_Images/pic1.jpg");
+            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             theTag.Pictures.Add(picInfo);
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile, 3);
+            readExistingTagsOnFile(theFile, 3);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
@@ -291,24 +293,24 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(ref theFile);
+            readExistingTagsOnFile(theFile);
 
             // Additional removed field
             Assert.AreEqual("", theFile.NativeTag.Conductor);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-/* Not possible yet due to zone order differences
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
+            /* Not possible yet due to zone order differences
+                        FileInfo originalFileInfo = new FileInfo(location);
+                        FileInfo testFileInfo = new FileInfo(testFileLocation);
 
-            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                        Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+                        string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                        string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-*/
+                        Assert.IsTrue(originalMD5.Equals(testMD5));
+            */
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
@@ -318,7 +320,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free file
             String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -457,55 +459,6 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WMA_APE()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
-        }
-
-
-        private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
-        {
-            Assert.IsTrue(theFile.ReadFromFile(true, true));
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            // Supported fields
-            Assert.AreEqual("Title", theFile.NativeTag.Title);
-            Assert.AreEqual("父", theFile.NativeTag.Album);
-            Assert.AreEqual("Artist", theFile.NativeTag.Artist);
-            Assert.AreEqual("Test!", theFile.NativeTag.Comment);
-            Assert.AreEqual("2017", theFile.NativeTag.Year);
-            Assert.AreEqual("Test", theFile.NativeTag.Genre);
-            Assert.AreEqual(22, theFile.NativeTag.Track);
-            Assert.AreEqual("Me", theFile.NativeTag.Composer);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
-
-            // Unsupported field (MOOD)
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("WM/Mood"));
-            Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["WM/Mood"]);
-
-
-            // Pictures
-            Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
-
-            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
-            {
-                Image picture;
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front)) // Supported picture
-                {
-                    Assert.AreEqual(pic.NativePicCode, 0x03);
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 150);
-                    Assert.AreEqual(picture.Width, 150);
-                }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported))  // Unsupported picture
-                {
-                    Assert.AreEqual(pic.NativePicCode, 0x02);
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                    Assert.AreEqual(picture.Height, 168);
-                    Assert.AreEqual(picture.Width, 175);
-                }
-            }
         }
     }
 }

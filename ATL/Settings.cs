@@ -25,5 +25,11 @@ namespace ATL
         public static int[] DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_ID3V2, AudioData.MetaDataIOFactory.TAG_NATIVE };
 
         public static bool UseFileNameWhenNoTitle = true;               // If true, file name (without the extension) will go to the Title field if metadata contains no title
+
+        //
+        // Behaviour related to leading zeroes when formatting Disc and Track fields (ID3v2, Vorbis, APE)
+        //
+        public static bool UseLeadingZeroes = false;                    // If true, use leading zeroes; number of digits is aligned on TOTAL fields or 2 digits if no total field
+        public static bool OverrideExistingLeadingZeroesFormat = false; // If true, UseLeadingZeroes is always _applied_ regardless of the format of the original file; if false, formatting of the original file prevails
     }
 }

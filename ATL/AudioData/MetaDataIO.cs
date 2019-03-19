@@ -82,7 +82,7 @@ namespace ATL.AudioData.IO
         protected IList<PictureInfo> pictureTokens;
 
         private IList<KeyValuePair<string, int>> picturePositions;
-        
+
         internal FileStructureHelper structureHelper;
 
         protected IMetaDataEmbedder embedder;
@@ -109,7 +109,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         public int Size
         {
-            get {
+            get
+            {
                 int result = 0;
 
                 foreach (Zone zone in Zones) result += zone.Size;
@@ -178,12 +179,11 @@ namespace ATL.AudioData.IO
         /// </summary>
         public ushort Track
         {
-            get {
+            get
+            {
                 if (tagData.TrackNumberTotal != null)
                     return TrackUtils.ExtractTrackNumber(tagData.TrackNumberTotal);
-                else if (Utils.IsNumeric(tagData.TrackNumber))
-                    return ushort.Parse(tagData.TrackNumber);
-                else return 0;
+                else return TrackUtils.ExtractTrackNumber(tagData.TrackNumber);
             }
             set { tagData.TrackNumber = value.ToString(); }
         }
@@ -198,7 +198,7 @@ namespace ATL.AudioData.IO
                     return TrackUtils.ExtractTrackTotal(tagData.TrackNumberTotal);
                 else if (Utils.IsNumeric(tagData.TrackTotal))
                     return ushort.Parse(tagData.TrackTotal);
-                else return 0;
+                else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber); ;
             }
             set { tagData.TrackTotal = value.ToString(); }
         }
@@ -211,9 +211,7 @@ namespace ATL.AudioData.IO
             {
                 if (tagData.DiscNumberTotal != null)
                     return TrackUtils.ExtractTrackNumber(tagData.DiscNumberTotal);
-                else if (Utils.IsNumeric(tagData.DiscNumber))
-                    return ushort.Parse(tagData.DiscNumber);
-                else return 0;
+                else return TrackUtils.ExtractTrackNumber(tagData.DiscNumber);
             }
             set { tagData.DiscNumber = value.ToString(); }
         }
@@ -228,7 +226,7 @@ namespace ATL.AudioData.IO
                     return TrackUtils.ExtractTrackTotal(tagData.DiscNumberTotal);
                 else if (Utils.IsNumeric(tagData.DiscTotal))
                     return ushort.Parse(tagData.DiscTotal);
-                else return 0;
+                else return TrackUtils.ExtractTrackTotal(tagData.DiscNumber);
             }
             set { tagData.DiscTotal = value.ToString(); }
         }
@@ -357,7 +355,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         public IDictionary<string, string> AdditionalFields
         {
-            get {
+            get
+            {
                 IDictionary<string, string> result = new Dictionary<string, string>();
 
                 IList<MetaFieldInfo> additionalFields = GetAdditionalFields(0);
@@ -397,7 +396,7 @@ namespace ATL.AudioData.IO
 
                 foreach (PictureInfo picInfo in tagData.Pictures)
                 {
-                    if ( !picInfo.MarkedForDeletion && ( !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType()) ) ) ) result.Add(picInfo);
+                    if (!picInfo.MarkedForDeletion && (!picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType())))) result.Add(picInfo);
                 }
 
                 return result;
@@ -450,12 +449,12 @@ namespace ATL.AudioData.IO
 
         protected void addPictureToken(PictureInfo.PIC_TYPE picType)
         {
-            pictureTokens.Add( new PictureInfo(ImageFormat.Undefined, picType) );
+            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, picType));
         }
 
         protected void addPictureToken(int tagType, byte nativePicCode)
         {
-            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode) );
+            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
         }
 
         protected void addPictureToken(int tagType, string nativePicCode)
@@ -484,7 +483,7 @@ namespace ATL.AudioData.IO
             bool found = false;
             int picPosition = 1;
 
-            for (int i=0;i<picturePositions.Count; i++)
+            for (int i = 0; i < picturePositions.Count; i++)
             {
                 if (picturePositions[i].Key.Equals(picId))
                 {
@@ -543,6 +542,25 @@ namespace ATL.AudioData.IO
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
             if (supportedMetaID < 255)
             {
+                if (TagData.TAG_FIELD_TRACK_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = data.Length;
+                else if (TagData.TAG_FIELD_TRACK_NUMBER_TOTAL == supportedMetaID)
+                {
+                    if (data.Contains("/"))
+                    {
+                        string[] parts = data.Split('/');
+                        if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = parts[0].Length;
+                    }
+                }
+                else if (TagData.TAG_FIELD_DISC_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = data.Length;
+                else if (TagData.TAG_FIELD_DISC_NUMBER_TOTAL == supportedMetaID)
+                {
+                    if (data.Contains("/"))
+                    {
+                        string[] parts = data.Split('/');
+                        if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
+                    }
+                }
+
                 setMetaField(supportedMetaID, data);
             }
             else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
@@ -562,6 +580,41 @@ namespace ATL.AudioData.IO
         private void setMetaField(byte ID, string data)
         {
             tagData.IntegrateValue(ID, data);
+        }
+
+        protected string formatBeforeWriting(byte frameType, TagData tag, IDictionary<byte, string> map)
+        {
+            string value = "";
+            string total = "";
+            switch (frameType)
+            {
+                case TagData.TAG_FIELD_RATING: return TrackUtils.EncodePopularity(map[frameType], ratingConvention).ToString();
+                case TagData.TAG_FIELD_TRACK_NUMBER:
+                    value = map[TagData.TAG_FIELD_TRACK_NUMBER];
+                    map.TryGetValue(TagData.TAG_FIELD_TRACK_TOTAL, out total);
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                case TagData.TAG_FIELD_TRACK_TOTAL:
+                    value = map[TagData.TAG_FIELD_TRACK_TOTAL];
+                    total = value;
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                case TagData.TAG_FIELD_TRACK_NUMBER_TOTAL:
+                    value = map[TagData.TAG_FIELD_TRACK_NUMBER_TOTAL];
+                    total = value;
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                case TagData.TAG_FIELD_DISC_NUMBER:
+                    value = map[TagData.TAG_FIELD_DISC_NUMBER];
+                    map.TryGetValue(TagData.TAG_FIELD_DISC_TOTAL, out total);
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                case TagData.TAG_FIELD_DISC_TOTAL:
+                    value = map[TagData.TAG_FIELD_DISC_TOTAL];
+                    total = value;
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                case TagData.TAG_FIELD_DISC_NUMBER_TOTAL:
+                    value = map[TagData.TAG_FIELD_DISC_NUMBER_TOTAL];
+                    total = value;
+                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                default: return map[frameType];
+            }
         }
 
         public void Clear()
@@ -656,7 +709,7 @@ namespace ATL.AudioData.IO
                         isTagWritten = true;
                         newTagSize = s.Length;
 
-                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2  && embedder.ID3v2EmbeddingHeaderSize > 0)
+                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
                         {
                             StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
                             s.Position = 0;
@@ -664,7 +717,9 @@ namespace ATL.AudioData.IO
 
                             newTagSize = s.Length;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         isTagWritten = false;
                         newTagSize = zone.CoreSignature.Length;
                     }
@@ -713,7 +768,8 @@ namespace ATL.AudioData.IO
                     if (isTagWritten)
                     {
                         StreamUtils.CopyStream(s, w.BaseStream);
-                    } else
+                    }
+                    else
                     {
                         if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
                     }

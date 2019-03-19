@@ -1046,7 +1046,8 @@ namespace ATL.AudioData.IO
                         {
                             if (frameType == frameMapping_v24[s])
                             {
-                                writeTextFrame(w, s, map[frameType], tagEncoding);
+                                string value = formatBeforeWriting(frameType, tag, map);
+                                writeTextFrame(w, s, value, tagEncoding);
                                 nbFrames++;
                                 break;
                             }
@@ -1299,7 +1300,6 @@ namespace ATL.AudioData.IO
                 }
             }
 
-
             if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
             actualFrameCode = frameCode;
 
@@ -1353,7 +1353,7 @@ namespace ATL.AudioData.IO
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
 
-                w.Write((byte)TrackUtils.EncodePopularity(text, ratingConvention));
+                w.Write(byte.Parse(text));
 
                 // Play count
                 w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)

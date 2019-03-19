@@ -165,8 +165,8 @@ namespace ATL.AudioData.IO
                 { "WM/DESCRIPTION", TagData.TAG_FIELD_COMMENT },
                 { "WM/Year", TagData.TAG_FIELD_RECORDING_YEAR },
                 { "WM/Genre", TagData.TAG_FIELD_GENRE },
-                { "WM/TrackNumber", TagData.TAG_FIELD_TRACK_NUMBER },
-                { "WM/PartOfSet", TagData.TAG_FIELD_DISC_NUMBER },
+                { "WM/TrackNumber", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+                { "WM/PartOfSet", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
                 { "WM/RATING", TagData.TAG_FIELD_RATING },
                 { "WM/SharedUserRating", TagData.TAG_FIELD_RATING },
                 { "WM/Composer", TagData.TAG_FIELD_COMPOSER },
@@ -750,8 +750,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            string value = map[frameType];
-                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
+                            string value = formatBeforeWriting(frameType, tag, map);
 
                             writeTextFrame(w, s, value);
                             counter++;

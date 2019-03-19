@@ -450,6 +450,7 @@ namespace ATL.AudioData.IO
                 if (0 == (header.MetaDataBlockHeader[1] & 0x80)) // metadata block exists
                 {
                     blockIndex = 0;
+                    vorbisTag.Clear();
                     if (readTagParams.PrepareForWriting)
                     {
                         if (null == zones) zones = new List<Zone>(); else zones.Clear();
@@ -540,6 +541,11 @@ namespace ATL.AudioData.IO
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
 
+            // Prepare picture data with freshly read vorbisTag
+            TagData dataToWrite = new TagData();
+            dataToWrite.Pictures = vorbisTag.EmbeddedPictures;
+            dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
+
             // Rewrite vorbis tag zone
             foreach (Zone zone in zones)
             {
@@ -555,7 +561,7 @@ namespace ATL.AudioData.IO
                         if (!pictureBlockFound) // All pictures are written at the position of the 1st picture block
                         {
                             pictureBlockFound = true;
-                            writtenFields = writePictures(msw, vorbisTag.EmbeddedPictures, 1 == zone.Flag);
+                            writtenFields = writePictures(msw, dataToWrite.Pictures, 1 == zone.Flag);
                         }
                         else
                         {
@@ -635,21 +641,30 @@ namespace ATL.AudioData.IO
 
             foreach (PictureInfo picture in pictures)
             {
-                blockType = META_PICTURE;
-                if (isLast) blockType = (byte)(blockType & 0x80);
+                // Picture has either to be supported, or to come from the right tag standard
+                bool doWritePicture = !picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture = (MetaDataIOFactory.TAG_NATIVE == picture.TagType);
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && (!picture.MarkedForDeletion);
 
-                w.Write(blockType);
-                sizePos = w.BaseStream.Position;
-                w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
+                if (doWritePicture)
+                {
+                    blockType = META_PICTURE;
+                    if (isLast) blockType = (byte)(blockType & 0x80);
 
-                dataPos = w.BaseStream.Position;
-                vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
+                    w.Write(blockType);
+                    sizePos = w.BaseStream.Position;
+                    w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
-                finalPos = w.BaseStream.Position;
-                w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
-                w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
-                result++;
+                    dataPos = w.BaseStream.Position;
+                    vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
+
+                    finalPos = w.BaseStream.Position;
+                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                    w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
+                    w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+                    result++;
+                }
             }
 
             return result;

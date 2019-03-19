@@ -159,7 +159,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_IXML_Existing()
         {
             initIXmlTestData();
-            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of paraiste end-of-line characters and padding
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
         }
 
     }

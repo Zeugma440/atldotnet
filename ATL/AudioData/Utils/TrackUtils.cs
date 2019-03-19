@@ -295,5 +295,22 @@ namespace ATL.AudioData
             }
             return "";
         }
+
+        public static string ApplyLeadingZeroes(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
+        {
+            if (value.Contains("/"))
+            {
+                string[] parts = value.Split('/');
+                return applyLeadingZeroesInternal(parts[0], parts[1], digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat) + "/" + applyLeadingZeroesInternal(parts[1], parts[1], digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat);
+            }
+            else return applyLeadingZeroesInternal(value, total, digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat);
+        }
+
+        private static string applyLeadingZeroesInternal(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
+        {
+            if (!overrideExistingLeadingZeroesFormat && digitsForLeadingZeroes > 0) return Utils.BuildStrictLengthString(value, digitsForLeadingZeroes, '0', false);
+            int totalLength = (total != null && total.Length > 1) ? total.Length : 2;
+            return useLeadingZeroes ? Utils.BuildStrictLengthString(value, totalLength, '0', false) : value;
+        }
     }
 }

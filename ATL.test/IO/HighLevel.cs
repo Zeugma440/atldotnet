@@ -29,7 +29,8 @@ namespace ATL.test.IO
 
                 Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
                 Assert.AreEqual(0, theTrack.Year); // Specifically tagged as empty on the ID3v1 tag
-            } finally
+            }
+            finally
             {
                 // Set back default settings
                 MetaDataIOFactory.GetInstance().CrossReading = crossreadingDefault;
@@ -57,7 +58,8 @@ namespace ATL.test.IO
 
                 Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
                 Assert.AreEqual(1984, theTrack.Year); // Empty on the ID3v1 tag => cross-reading should read it on ID3v2
-            } finally
+            }
+            finally
             {
                 // Set back default settings
                 MetaDataIOFactory.GetInstance().CrossReading = crossreadingDefault;
@@ -93,6 +95,44 @@ namespace ATL.test.IO
         public void TagIO_RW_UpdateTagBaseField()
         {
             string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.Artist = "Hey ho";
+            theTrack.Year = 1944;
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("Hey ho", theTrack.Artist);
+            Assert.AreEqual(1944, theTrack.Year);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateTagBaseField_OGG()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("VQF/vqf.vqf");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.Artist = "Hey ho";
+            theTrack.Year = 1944;
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("Hey ho", theTrack.Artist);
+            Assert.AreEqual(1944, theTrack.Year);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateTagBaseField_DSD()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("DSF/dsf.dsf");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.Artist = "Hey ho";
@@ -248,18 +288,92 @@ namespace ATL.test.IO
                 FileInfo testFileInfo = new FileInfo(testFileLocation);
 
                 Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                /* Not possible due to field order being changed
+                                string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                                string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
 
-                string originalMD5 = TestUtils.GetFileMD5Hash(location);
-                string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-                Assert.IsTrue(originalMD5.Equals(testMD5));
-
+                                Assert.IsTrue(originalMD5.Equals(testMD5));
+                */
                 // Get rid of the working copy
                 File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
                 Settings.EnablePadding = false;
             }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateKeepTrackDiscZeroes_APE()
+        {
+            bool settingsInit1 = Settings.UseLeadingZeroes;
+            Settings.UseLeadingZeroes = false;
+            bool settingsInit2 = Settings.OverrideExistingLeadingZeroesFormat;
+            Settings.OverrideExistingLeadingZeroesFormat = false;
+
+            try
+            {
+                string fileName = "MP3/APE.mp3";
+                string location = TestUtils.GetResourceLocationRoot() + fileName;
+                string testFileLocation = TestUtils.GetTempTestFile(fileName);
+                Track theTrack = new Track(testFileLocation);
+
+                // Update Track count
+                theTrack.TrackNumber = 6;
+                theTrack.TrackTotal = 6;
+
+                theTrack.Save();
+
+                // TODO - check if formatting of track and disc are correct on-file
+                theTrack = new Track(testFileLocation);
+                Assert.AreEqual(6, theTrack.TrackNumber);
+                Assert.AreEqual(6, theTrack.TrackTotal);
+                Assert.AreEqual(3, theTrack.DiscNumber);
+                Assert.AreEqual(4, theTrack.DiscTotal);
+
+                // File length should stay the same (which means all leading zeroes are accounted for)
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+                Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.UseLeadingZeroes = settingsInit1;
+                Settings.OverrideExistingLeadingZeroesFormat = settingsInit2;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateKeepTrackDiscZeroes_ID3v2()
+        {
+            string fileName = "MP3/id3v2.4_UTF8.mp3";
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.GetTempTestFile(fileName);
+            Track theTrack = new Track(testFileLocation);
+
+            // Update Track count
+            theTrack.TrackNumber = 6;
+            theTrack.TrackTotal = 6;
+
+            theTrack.Save();
+
+            // TODO - check if formatting of track and disc are correct on-file
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(6, theTrack.TrackNumber);
+            Assert.AreEqual(6, theTrack.TrackTotal);
+            Assert.AreEqual(3, theTrack.DiscNumber);
+            Assert.AreEqual(4, theTrack.DiscTotal);
+
+            // File length should stay the same (which means all leading zeroes are accounted for)
+            FileInfo originalFileInfo = new FileInfo(location);
+            FileInfo testFileInfo = new FileInfo(testFileLocation);
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
         [TestMethod]

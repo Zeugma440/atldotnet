@@ -22,9 +22,6 @@ namespace ATL.AudioData.IO
         public const int APE_VERSION_1_0 = 1000;
         public const int APE_VERSION_2_0 = 2000;
 
-        // List of standard fields
-        private static ICollection<string> standardFrames;
-
         // Mapping between APE field IDs and ATL fields
         private static IDictionary<string, byte> frameMapping;
 
@@ -39,7 +36,7 @@ namespace ATL.AudioData.IO
             public int FrameCount;                                        // Number of fields
             public int Flags;                                                    // Tag flags
             public char[] Reserved = new char[8];                  // Reserved for later use
-                                                                            // Extended data
+                                                                   // Extended data
             public byte DataShift;                                 // Used if ID3v1 tag found
             public long FileSize;		                                 // File size (bytes)
 
@@ -58,8 +55,6 @@ namespace ATL.AudioData.IO
 
         static APEtag()
         {
-            standardFrames = new List<string>() { "Title", "Artist", "Album", "Track", "Year", "Genre", "Comment", "Copyright", "Composer", "rating", "preference", "Discnumber", "Album Artist", "Conductor", "Disc", "Albumartist" };
-
             // Mapping between standard ATL fields and APE identifiers
             /*
              * Note : APE tag standard being a little loose, field codes vary according to the various implementations that have been made
@@ -73,7 +68,7 @@ namespace ATL.AudioData.IO
             frameMapping.Add("TITLE", TagData.TAG_FIELD_TITLE);
             frameMapping.Add("ARTIST", TagData.TAG_FIELD_ARTIST);
             frameMapping.Add("ALBUM", TagData.TAG_FIELD_ALBUM);
-            frameMapping.Add("TRACK", TagData.TAG_FIELD_TRACK_NUMBER);
+            frameMapping.Add("TRACK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL);
             frameMapping.Add("YEAR", TagData.TAG_FIELD_RECORDING_YEAR);
             frameMapping.Add("GENRE", TagData.TAG_FIELD_GENRE);
             frameMapping.Add("COMMENT", TagData.TAG_FIELD_COMMENT);
@@ -81,8 +76,8 @@ namespace ATL.AudioData.IO
             frameMapping.Add("COMPOSER", TagData.TAG_FIELD_COMPOSER);
             frameMapping.Add("RATING", TagData.TAG_FIELD_RATING);
             frameMapping.Add("PREFERENCE", TagData.TAG_FIELD_RATING);
-            frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER);
-            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER);
+            frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER_TOTAL);
+            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER_TOTAL);
             frameMapping.Add("ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
             frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
             frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
@@ -209,8 +204,8 @@ namespace ATL.AudioData.IO
                         //    * The frame name
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        String description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); 
-                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length-3,3));
+                        String description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length - 3, 3));
 
                         PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), frameName, picturePosition);
                         picInfo.Description = description;
@@ -375,7 +370,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -386,9 +381,7 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            string value = map[frameType];
-                            if (TagData.TAG_FIELD_RATING == frameType) value = TrackUtils.EncodePopularity(value, ratingConvention).ToString();
-
+                            string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(w, s, value);
                             nbFrames++;
                         }
@@ -468,7 +461,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write((int)(finalFramePos-dataPos));
+            writer.Write((int)(finalFramePos - dataPos));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
     }

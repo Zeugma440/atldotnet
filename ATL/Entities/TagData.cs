@@ -86,6 +86,15 @@ namespace ATL
         /// </summary>
         public IList<MetaFieldInfo> AdditionalFields;
 
+        /// <summary>
+        /// > 0 if Track field is formatted with leading zeroes over X digits
+        /// </summary>
+        public int TrackDigitsForLeadingZeroes = 0;
+        /// <summary>
+        /// > 0 if Disc field is formatted with leading zeroes over X digits
+        /// </summary>
+        public int DiscDigitsForLeadingZeroes = 0;
+
 
 
         public TagData()
@@ -259,21 +268,21 @@ namespace ATL
             addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, result);
             addIfConsistent(Genre, TAG_FIELD_GENRE, result);
             addIfConsistent(Composer, TAG_FIELD_COMPOSER, result);
+            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, result);
             addIfConsistent(TrackNumber, TAG_FIELD_TRACK_NUMBER, result);
+            addIfConsistent(TrackNumberTotal, TAG_FIELD_TRACK_NUMBER_TOTAL, result);
+            addIfConsistent(TrackTotal, TAG_FIELD_TRACK_TOTAL, result);
             addIfConsistent(DiscNumber, TAG_FIELD_DISC_NUMBER, result);
+            addIfConsistent(DiscNumberTotal, TAG_FIELD_DISC_NUMBER_TOTAL, result);
+            addIfConsistent(DiscTotal, TAG_FIELD_DISC_TOTAL, result);
             addIfConsistent(Comment, TAG_FIELD_COMMENT, result);
             addIfConsistent(Rating, TAG_FIELD_RATING, result);
             addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, result);
             addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, result);
             addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, result);
-            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, result);
             addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, result);
             addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
             addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
-            addIfConsistent(TrackTotal, TAG_FIELD_TRACK_TOTAL, result);
-            addIfConsistent(TrackNumberTotal, TAG_FIELD_TRACK_NUMBER_TOTAL, result);
-            addIfConsistent(DiscTotal, TAG_FIELD_DISC_TOTAL, result);
-            addIfConsistent(DiscNumberTotal, TAG_FIELD_DISC_NUMBER_TOTAL, result);
 
             return result;
         }
@@ -310,6 +319,9 @@ namespace ATL
             TrackNumberTotal = null;
             DiscTotal = null;
             DiscNumberTotal = null;
+
+            TrackDigitsForLeadingZeroes = 0;
+            DiscDigitsForLeadingZeroes = 0;
         }
 
         public void Cleanup()

@@ -787,7 +787,11 @@ namespace ATL.AudioData.IO
                                 isValidTagHeader = (OPUS_TAG_ID.Equals(tagId));
                             }
 
-                            if (isValidTagHeader) vorbisTag.Read(msr, readTagParams);
+                            if (isValidTagHeader)
+                            {
+                                vorbisTag.Clear();
+                                vorbisTag.Read(msr, readTagParams);
+                            }
                         }
                     } // using MemoryStream
 

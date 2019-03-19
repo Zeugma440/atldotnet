@@ -15,25 +15,22 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TAG_APE;
 
             // Initialize specific test data (Publisher and Description fields not supported in APE tag)
-            testData = new TagData();
+            testData.Publisher = null;
+            testData.GeneralDescription = null;
 
-            testData.Title = "Title";
-            testData.Album = "父";
-            testData.Artist = "Artist";
-            testData.AlbumArtist = "Bob";
-            testData.Comment = "Test!";
-            testData.RecordingYear = "2017";
-            testData.RecordingDate = ""; // Empty string means "supported, but not valued in test sample"
-            testData.Genre = "Test";
-            testData.Rating = "0";
-            testData.TrackNumber = "22";
-            testData.Composer = "Me";
-            testData.Conductor = "";
-            testData.DiscNumber = "2";
-            testData.Copyright = "";
+            // Initialize specific test data (Picture native codes are strings)
+            testData.Pictures.Clear();
+            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, "COVER ART (FRONT)");
+            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            pic.PictureData = data;
+            pic.ComputePicHash();
+            testData.Pictures.Add(pic);
 
-            testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
+            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, "COVER ART (BACK)");
+            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            pic.PictureData = data;
+            pic.ComputePicHash();
+            testData.Pictures.Add(pic);
         }
 
 
@@ -55,8 +52,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_APE_Existing()
         {
-            // Final size and hash checks NOT POSSIBLE YET mainly due to tag order and tag name (e.g. "DISC" becoming "DISCNUMBER") differences
-            test_RW_Existing(notEmptyFile, 2, true, false, false);
+            // Hash check NOT POSSIBLE YET mainly due to tag order differences
+            test_RW_Existing(notEmptyFile, 2, true, true, false);
         }
 
         [TestMethod]

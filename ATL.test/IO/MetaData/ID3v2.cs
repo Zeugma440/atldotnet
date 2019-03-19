@@ -23,43 +23,6 @@ namespace ATL.test.IO.MetaData
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/id3v2.3_UTF16.mp3";
             tagType = MetaDataIOFactory.TAG_ID3V2;
-
-            // Initialize specific test data
-            testData = new TagData();
-
-            testData.Title = "Title";
-            testData.Album = "父";
-            testData.Artist = "Artist";
-            testData.Comment = "Test!";
-            testData.RecordingYear = "2017";
-            testData.Genre = "Test";
-            testData.Rating = "0";
-            testData.TrackNumber = "22";
-            testData.Composer = "Me";
-            testData.DiscNumber = "2";
-            testData.AlbumArtist = "Yeah";
-            testData.OriginalAlbum = "";
-            testData.OriginalArtist = "";
-            testData.Conductor = "";
-            testData.Publisher = "";
-            testData.Copyright = "";
-            testData.GeneralDescription = "";
-
-            testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "MOOD", "xxx"));
-
-            testData.Pictures = new List<PictureInfo>();
-            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 0x03);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            pic.PictureData = data;
-            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
-            testData.Pictures.Add(pic);
-
-            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, 0x09);
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
-            pic.PictureData = data;
-            pic.PictureHash = HashDepot.Fnv1a.Hash32(pic.PictureData);
-            testData.Pictures.Add(pic);
         }
 
         [TestMethod]
@@ -82,8 +45,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("1997", theFile.ID3v2.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
             Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual(3, theFile.ID3v2.DiscTotal);
 
             // Pictures
             Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
@@ -126,8 +91,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("1997", theFile.ID3v2.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
             Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual(3, theFile.ID3v2.DiscTotal);
 
             // Pictures
             Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
