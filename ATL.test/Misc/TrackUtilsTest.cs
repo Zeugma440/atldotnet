@@ -102,5 +102,24 @@ namespace ATL.test
             Assert.AreEqual("", TrackUtils.ExtractStrYear("aaaa"));
             Assert.AreEqual("", TrackUtils.ExtractStrYear("999"));
         }
+
+        [TestMethod]
+        public void TrackUtils_ApplyLeadingZeroes()
+        {
+            // Use existing track format
+            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "", 1, false, false));
+            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 1, false, false));
+            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 1, true, false));
+            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, true, false));
+            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, false, false));
+
+            // Override existing track format
+            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 2, false, true));
+            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "1", 2, false, true));
+            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, true, true));
+            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "10", 2, true, true));
+            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 0, true, true));
+            Assert.AreEqual("001", TrackUtils.ApplyLeadingZeroes("1", "100", 0, true, true));
+        }
     }
 }
