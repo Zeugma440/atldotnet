@@ -51,6 +51,8 @@ namespace ATL.test.IO.MetaData
         protected bool supportsInternationalChars = true;
         protected bool canMetaNotExist = true;
 
+        public delegate void StreamDelegate(FileStream fs);
+
         public MetaIOTest()
         {
             // Initialize default test data
@@ -59,7 +61,7 @@ namespace ATL.test.IO.MetaData
             testData.Title = "aa父bb";
             testData.Artist = "֎FATHER֎";
             testData.Album = "Papa֍rules";
-            testData.AlbumArtist = "aaᱬbb"; 
+            testData.AlbumArtist = "aaᱬbb";
             testData.Comment = "父父!";
             testData.RecordingYear = "1997";
             testData.RecordingDate = ""; // Empty string means "supported, but not valued in test sample"
@@ -296,6 +298,49 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile) File.Delete(testFileLocation);
         }
 
+        protected void test_RW_UpdateTrackDiscZeroes(string fileName, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat, StreamDelegate checkDelegate, bool deleteTempFile = true)
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            bool settingsInit1 = Settings.UseLeadingZeroes;
+            Settings.UseLeadingZeroes = useLeadingZeroes;
+            bool settingsInit2 = Settings.OverrideExistingLeadingZeroesFormat;
+            Settings.OverrideExistingLeadingZeroesFormat = overrideExistingLeadingZeroesFormat;
+
+            try
+            {
+                // Source : totally metadata-free file
+                string location = TestUtils.GetResourceLocationRoot() + fileName;
+                string testFileLocation = TestUtils.GetTempTestFile(fileName);
+                Track theTrack = new Track(testFileLocation);
+
+                // Update Track count
+                theTrack.TrackNumber = 6;
+                theTrack.TrackTotal = 6;
+
+                theTrack.Save();
+
+                // Check if values are as expected
+                theTrack = new Track(testFileLocation);
+                Assert.AreEqual(6, theTrack.TrackNumber);
+                Assert.AreEqual(6, theTrack.TrackTotal);
+                Assert.AreEqual(3, theTrack.DiscNumber);
+                Assert.AreEqual(4, theTrack.DiscTotal);
+
+                // Check if formatting of track and disc are correctly formatted
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+                    checkDelegate(fs);
+
+                // Get rid of the working copy
+                if (deleteTempFile) File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.UseLeadingZeroes = settingsInit1;
+                Settings.OverrideExistingLeadingZeroesFormat = settingsInit2;
+            }
+        }
+
         public void test_RW_Empty(string fileName, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
         {
             ConsoleLogger log = new ConsoleLogger();
@@ -330,7 +375,7 @@ namespace ATL.test.IO.MetaData
             if (testData.DiscNumber != null) theTag.DiscNumber = "03";
             if (testData.DiscTotal != null) theTag.DiscTotal = "04";
             if (testData.Composer != null) theTag.Composer = "Me";
-            if (testData.Copyright != null) theTag.Copyright = "a"+ internationalChar + "a";
+            if (testData.Copyright != null) theTag.Copyright = "a" + internationalChar + "a";
             if (testData.Conductor != null) theTag.Conductor = "John Johnson Jr.";
             if (testData.Publisher != null) theTag.Publisher = "Z Corp.";
             if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description";
@@ -360,7 +405,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
             if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual((float)(2.5/5), meta.Popularity);
+            if (testData.Rating != null) Assert.AreEqual((float)(2.5 / 5), meta.Popularity);
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
             if (testData.TrackTotal != null) Assert.AreEqual(2, meta.TrackTotal);
             if (testData.DiscNumber != null) Assert.AreEqual(3, meta.Disc);
@@ -448,7 +493,8 @@ namespace ATL.test.IO.MetaData
             {
                 pictureCode1 = "pic1";
                 pictureCode2 = "pic2";
-            } else
+            }
+            else
             {
                 pictureCode1 = 23;
                 pictureCode2 = 24;
@@ -490,8 +536,8 @@ namespace ATL.test.IO.MetaData
 
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
-                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && 
-                         (pic.NativePicCode.Equals(pictureCode1) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)) )
+                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
+                         (pic.NativePicCode.Equals(pictureCode1) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)))
                        )
                     {
                         Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
@@ -500,7 +546,7 @@ namespace ATL.test.IO.MetaData
                         Assert.AreEqual(picture.Width, 900);
                         found++;
                     }
-                    else if (   pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) 
+                    else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)
                                 && (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
                             )
                     {
@@ -558,7 +604,7 @@ namespace ATL.test.IO.MetaData
 
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
-                    if ( pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && 
+                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
                          (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
                        )
                     {
@@ -599,7 +645,7 @@ namespace ATL.test.IO.MetaData
                 if (Utils.IsNumeric(testData.Rating))
                 {
                     float f = float.Parse(testData.Rating);
-                    Assert.AreEqual((f/5.0).ToString(), meta.Popularity.ToString());
+                    Assert.AreEqual((f / 5.0).ToString(), meta.Popularity.ToString());
                 }
                 else if (0 == testData.Rating.Length)
                 {
@@ -640,7 +686,7 @@ namespace ATL.test.IO.MetaData
                 {
                     foreach (PictureInfo testPicInfo in testData.Pictures)
                     {
-                        if (  (pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
+                        if ((pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
                             || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, System.StringComparison.OrdinalIgnoreCase))
                            )
                         {

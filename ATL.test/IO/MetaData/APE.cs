@@ -2,6 +2,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.Collections.Generic;
+using System.IO;
+using Commons;
 
 namespace ATL.test.IO.MetaData
 {
@@ -60,6 +62,39 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_APE_Unsupported_Empty()
         {
             test_RW_Unsupported_Empty(emptyFile);
+        }
+
+        private void checkTrackDiscZeroes(FileStream fs)
+        {
+            using (BinaryReader r = new BinaryReader(fs))
+            {
+                byte[] bytes = new byte[20];
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER")));
+                fs.Seek(1, SeekOrigin.Current);
+                String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("03/04", s.Substring(0, s.Length-1));
+
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACK")));
+                fs.Seek(1, SeekOrigin.Current);
+                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("06/06", s.Substring(0, s.Length - 1));
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_APE_UpdateKeepTrackDiscZeroes()
+        {
+            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_APE_UpdateFormatTrackDiscZeroes()
+        {
+            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            test_RW_UpdateTrackDiscZeroes(notEmptyFile, true, true, dlg);
         }
 
         [TestMethod]

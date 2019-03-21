@@ -4,6 +4,7 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.test.IO.MetaData
 {
@@ -252,6 +253,47 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             if (deleteTempFile) File.Delete(testFileLocation);
+        }
+
+        private void checkTrackDiscZeroes(FileStream fs)
+        {
+            using (BinaryReader r = new BinaryReader(fs))
+            {
+                byte[] bytes = new byte[20];
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKNUMBER=")));
+                String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("06", s.Substring(0, s.Length - 1));
+
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKTOTAL=")));
+                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("06", s.Substring(0, s.Length - 1));
+
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER=")));
+                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("03", s.Substring(0, s.Length - 1));
+
+                fs.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCTOTAL=")));
+                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
+                Assert.AreEqual("04", s.Substring(0, s.Length - 1));
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_VorbisFLAC_UpdateKeepTrackDiscZeroes()
+        {
+            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_VorbisFLAC_UpdateFormatTrackDiscZeroes()
+        {
+            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            test_RW_UpdateTrackDiscZeroes(notEmptyFile, true, true, dlg);
         }
 
         [TestMethod]
