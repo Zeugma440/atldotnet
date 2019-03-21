@@ -85,6 +85,7 @@ namespace ATL.AudioData.IO
             // Extended data
             public long FileSize;                                 // File size (bytes)
             public long HeaderEnd;                           // End position of header
+            public long PaddingOffset = -1;
             public long ActualEnd;     // End position of entire tag (including all padding bytes)
 
             // Extended header flags
@@ -97,20 +98,36 @@ namespace ATL.AudioData.IO
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation
             {
-                get { return ((Flags & 128) > 0); }
+                get { return (Flags & 128) > 0; }
             }
             public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
             {
-                get { return (((Flags & 64) > 0) && (Version > TAG_VERSION_2_2)); }
+                get { return ((Flags & 64) > 0) && (Version > TAG_VERSION_2_2); }
             }
             public bool IsExperimental // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
             {
-                get { return ((Flags & 32) > 0); }
+                get { return (Flags & 32) > 0; }
             }
             public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
             {
-                get { return ((Flags & 0x10) > 0); }
+                get { return (Flags & 0x10) > 0; }
             }
+            public int GetSize(bool includeFooter = true)
+            {
+                // Get total tag size
+                int result = StreamUtils.DecodeSynchSafeInt32(Size) + 10; // 10 being the size of the header
+
+                if (includeFooter && HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
+
+                if (result > FileSize) result = 0;
+
+                return result;
+            }
+            public long GetPaddingSize()
+            {
+                return ActualEnd - PaddingOffset;
+            }
+
 
             // **** EXTENDED HEADER PROPERTIES ****
             public int TagFramesRestriction
@@ -411,18 +428,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int getTagSize(TagInfo Tag, bool includeFooter = true)
-        {
-            // Get total tag size
-            int result = StreamUtils.DecodeSynchSafeInt32(Tag.Size) + 10; // 10 being the size of the header
-
-            if (includeFooter && Tag.HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
-
-            if (result > Tag.FileSize) result = 0;
-
-            return result;
-        }
-
         private bool readFrame(
             BufferedBinaryReader source,
             TagInfo tag,
@@ -450,6 +455,7 @@ namespace ATL.AudioData.IO
                 // We might be at the beginning of a padding frame
                 if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                 {
+                    tag.PaddingOffset = initialTagPos;
                     // Read until there's something else than zeroes
                     byte[] data = new byte[PADDING_BUFFER_SIZE];
                     bool endReached = false;
@@ -474,7 +480,7 @@ namespace ATL.AudioData.IO
                 else // If not, we're in the wrong place
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Valid frame not found where expected; parsing interrupted");
-                    source.Seek(initialTagPos - tag.HeaderEnd + getTagSize(tag, false), SeekOrigin.Begin);
+                    source.Seek(initialTagPos - tag.HeaderEnd + tag.GetSize(false), SeekOrigin.Begin);
                     return false;
                 }
             }
@@ -784,8 +790,9 @@ namespace ATL.AudioData.IO
         {
             long streamPos;
             long streamLength = source.Length;
-            int tagSize = getTagSize(tag, false);
+            int tagSize = tag.GetSize(false);
 
+            tag.PaddingOffset = -1;
             tag.ActualEnd = -1;
 
             IList<MetaFieldInfo> comments = new List<MetaFieldInfo>();
@@ -828,12 +835,12 @@ namespace ATL.AudioData.IO
 
             if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {
+                // Prod to see if there's padding after the end of the tag
                 if (streamPos + 4 < source.Length)
                 {
-                    int test = source.ReadInt32();
-                    // See if there's padding after the end of the tag
-                    if (0 == test)
+                    if (0 == source.ReadInt32())
                     {
+                        tag.PaddingOffset = streamPos;
                         // Read until there's something else than zeroes
                         byte[] data = new byte[PADDING_BUFFER_SIZE];
                         bool endReached = false;
@@ -900,7 +907,7 @@ namespace ATL.AudioData.IO
                 tagVersion = tagHeader.Version;
 
                 // Get information from frames if version supported
-                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (getTagSize(tagHeader) > 0))
+                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (tagHeader.GetSize() > 0))
                 {
                     readFrames(reader, tagHeader, offset, readTagParams);
                     structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
@@ -961,7 +968,20 @@ namespace ATL.AudioData.IO
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
 
-            result = writeExtHeaderAndFrames(tag, w);
+            writeExtHeader(w);
+            long headerEnd = w.BaseStream.Position;
+            result = writeFrames(tag, w);
+
+            // Write the remaining padding bytes, if any detected during initial reading
+            // TODO - if footer support is added, don't write padding since they are mutually exclusive (see specs)
+            if (tagHeader.PaddingOffset > -1)
+            {
+                long originalTagSize = tagHeader.PaddingOffset - tagHeader.HeaderEnd;
+                long currentTagSize = w.BaseStream.Position - headerEnd;
+                long paddingSize = tagHeader.GetPaddingSize() + (originalTagSize - currentTagSize);
+                if (paddingSize > 0)
+                    for (long l = 0; l < paddingSize; l++) w.Write('\0');
+            }
 
             // Record final(*) size of tag into "tag size" field of header
             // (*) : Spec clearly states that the tag final size is tag size after unsynchronization
@@ -983,17 +1003,16 @@ namespace ATL.AudioData.IO
 
 
         // TODO : Write ID3v2.4 footer
+        // if footer support is added, don't write padding since they are mutually exclusive (see specs)
 
-        private int writeExtHeaderAndFrames(TagData tag, BinaryWriter w)
+        private void writeExtHeader(BinaryWriter w)
         {
-            int nbFrames = 0;
-            bool doWritePicture;
             Encoding tagEncoding = Settings.DefaultTextEncoding;
 
             // Rewrites extended header as is
             if (tagHeader.HasExtendedHeader)
             {
-                w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.ExtendedHeaderSize,4));
+                w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.ExtendedHeaderSize, 4));
                 w.Write((byte)1); // Number of flag bytes; always 1 according to spec
                 w.Write(tagHeader.ExtendedFlags);
                 // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
@@ -1003,6 +1022,7 @@ namespace ATL.AudioData.IO
                 if (Settings.ID3v2_useExtendedHeaderRestrictions)
                 {
                     // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
+                    // TODO - what's the point of that since we're purposely writing UTF-8 ID3v2.4 tags ?
                     if (tagHeader.HasTextEncodingRestriction)
                     {
                         if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
@@ -1012,25 +1032,29 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
+        }
+
+        private int writeFrames(TagData tag, BinaryWriter w)
+        {
+            int nbFrames = 0;
+            bool doWritePicture;
+            Encoding tagEncoding = Settings.DefaultTextEncoding;
 
             // === ID3v2 FRAMES ===
             IDictionary<byte, String> map = tag.ToMap();
-/*
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
-*/
 
-            // Supported textual fields
+            // 1st pass to gather date information
+            // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
+            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+            //   ID3v2.4 : TDRC (timestamp)
             foreach (byte frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
-                    //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
-                    //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
-                    //   ID3v2.4 : TDRC (timestamp)
-/*
                     if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
                     {
                         recordingYear = map[frameType];
@@ -1043,9 +1067,15 @@ namespace ATL.AudioData.IO
                     {
                         recordingTime = map[frameType];
                     }
-                    else
-                    {
-*/
+                }
+            }
+            if (recordingYear.Length > 0) map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+
+
+            foreach (byte frameType in map.Keys)
+            {
+                if (map[frameType].Length > 0) // No frame with empty value
+                {
                         foreach (string s in frameMapping_v24.Keys)
                         {
                             if (frameType == frameMapping_v24[s])
@@ -1056,7 +1086,6 @@ namespace ATL.AudioData.IO
                                 break;
                             }
                         }
-//                    }
                 }
             }
 /*
@@ -1431,10 +1460,6 @@ namespace ATL.AudioData.IO
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
             // Data size is the "natural" size of the picture (i.e. without unsynchronization) + the size of the headerless APIC frame (i.e. starting from the "text encoding" byte)
-            /*
-            w.Write('\0');
-            w.Write('\0');
-            */
             UInt16 flags = 1;
             if (tagHeader.UsesUnsynchronisation) flags = 3;
             w.Write(StreamUtils.ReverseUInt16(flags));

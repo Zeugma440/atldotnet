@@ -613,11 +613,12 @@ namespace ATL.AudioData.IO
                     value = map[TagData.TAG_FIELD_DISC_NUMBER_TOTAL];
                     total = value;
                     return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+/*
                 case TagData.TAG_FIELD_RECORDING_DATE:
                     // TODO - What if user changes the year (with the YEAR field) over a field that had a dayMonth + time format ?
                     string year = "";
                     map.TryGetValue(TagData.TAG_FIELD_RECORDING_YEAR, out year);
-                    if (year.Length > 0)
+                    if (Utils.ProtectValue(year).Length > 0)
                     {
                         string dayMonth = "";
                         string time = "";
@@ -625,6 +626,7 @@ namespace ATL.AudioData.IO
                         map.TryGetValue(TagData.TAG_FIELD_RECORDING_TIME, out time);
                         return TrackUtils.FormatISOTimestamp(year, dayMonth, time);
                     } else return map[frameType];
+*/
                 default: return map[frameType];
             }
         }

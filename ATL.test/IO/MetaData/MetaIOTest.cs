@@ -264,7 +264,7 @@ namespace ATL.test.IO.MetaData
             testData = new TagData(initialTestData);
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
+            picInfo = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
