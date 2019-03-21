@@ -135,7 +135,6 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Publisher = "Square-Enix";
 
-
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
