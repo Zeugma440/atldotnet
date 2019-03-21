@@ -668,9 +668,10 @@ namespace ATL.AudioData.IO
                 {
                     if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TAG_ANY == fieldInfo.TagType)
                     {
-                        if (Utils.ProtectValue(fieldInfo.NativeFieldCode).Length != FieldCodeFixedLength)
+                        string fieldCode = Utils.ProtectValue(fieldInfo.NativeFieldCode);
+                        if (fieldCode.Length != FieldCodeFixedLength && !fieldCode.Contains("----")) // "----" = exception for MP4 extended fields (e.g. ----:com.apple.iTunes:CONDUCTOR)
                         {
-                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(fieldInfo.NativeFieldCode) + "' is " + Utils.ProtectValue(fieldInfo.NativeFieldCode).Length + " characters long and cannot be written");
+                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + fieldCode + "' is " + fieldCode.Length + " characters long and cannot be written");
                         }
                     }
                 }
