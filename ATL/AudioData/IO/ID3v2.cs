@@ -1015,9 +1015,11 @@ namespace ATL.AudioData.IO
 
             // === ID3v2 FRAMES ===
             IDictionary<byte, String> map = tag.ToMap();
+/*
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
+*/
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
@@ -1028,6 +1030,7 @@ namespace ATL.AudioData.IO
                     //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
                     //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
                     //   ID3v2.4 : TDRC (timestamp)
+/*
                     if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
                     {
                         recordingYear = map[frameType];
@@ -1042,6 +1045,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
+*/
                         foreach (string s in frameMapping_v24.Keys)
                         {
                             if (frameType == frameMapping_v24[s])
@@ -1052,10 +1056,10 @@ namespace ATL.AudioData.IO
                                 break;
                             }
                         }
-                    }
+//                    }
                 }
             }
-
+/*
             // Finally write recording date if recording day-month and/or year have been provided
             if (4 == recordingYear.Length && Utils.IsNumeric(recordingYear))
             {
@@ -1066,6 +1070,7 @@ namespace ATL.AudioData.IO
                 writeTextFrame(w, "TDRC", recordingTimestamp.ToString(), tagEncoding);
                 nbFrames++;
             }
+*/
 
             // Chapters
             if (Chapters.Count > 0)

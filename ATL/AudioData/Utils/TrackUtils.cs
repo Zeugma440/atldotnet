@@ -1,6 +1,7 @@
 ﻿using ATL.AudioData.IO;
 using Commons;
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ATL.AudioData
@@ -296,6 +297,7 @@ namespace ATL.AudioData
             return "";
         }
 
+        // TODO doc
         public static string ApplyLeadingZeroes(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
         {
             if (value.Contains("/"))
@@ -311,6 +313,45 @@ namespace ATL.AudioData
             if (!overrideExistingLeadingZeroesFormat && digitsForLeadingZeroes > 0) return Utils.BuildStrictLengthString(value, digitsForLeadingZeroes, '0', false);
             int totalLength = (total != null && total.Length > 1) ? total.Length : 2;
             return useLeadingZeroes ? Utils.BuildStrictLengthString(value, totalLength, '0', false) : value;
+        }
+
+        // TODO doc
+        // subset of ISO 8601 : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        public static string FormatISOTimestamp(string year, string dayMonth, string time)
+        {
+            string day = "";
+            string month = "";
+            if (Utils.IsNumeric(dayMonth) && (4 == dayMonth.Length))
+            {
+                month = dayMonth.Substring(2, 2);
+                day = dayMonth.Substring(0, 2);
+            }
+
+
+            string hour = "";
+            string minutes = "";
+            string seconds = "";
+            if (Utils.IsNumeric(time) && (4 == time.Length))
+            {
+                hour = dayMonth.Substring(0, 2);
+                minutes = dayMonth.Substring(2, 2);
+            }
+
+            return FormatISOTimestamp(year, day, month, hour, minutes, seconds);
+        }
+
+        public static string FormatISOTimestamp(string year, string day, string month, string hour, string minutes, string seconds)
+        {
+            StringBuilder result = new StringBuilder();
+
+            if (4 == year.Length && Utils.IsNumeric(year)) result.Append(year);
+            if (2 == month.Length && Utils.IsNumeric(month)) result.Append("-").Append(month);
+            if (2 == day.Length && Utils.IsNumeric(day)) result.Append("-").Append(day);
+            if (2 == hour.Length && Utils.IsNumeric(hour)) result.Append("T").Append(hour);
+            if (2 == minutes.Length && Utils.IsNumeric(minutes)) result.Append(":").Append(minutes);
+            if (2 == seconds.Length && Utils.IsNumeric(seconds)) result.Append(":").Append(seconds);
+
+            return result.ToString();
         }
     }
 }

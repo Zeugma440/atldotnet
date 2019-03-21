@@ -331,6 +331,13 @@ namespace ATL.test.IO.MetaData
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
                     checkDelegate(fs);
 
+                if (!overrideExistingLeadingZeroesFormat)
+                {
+                    FileInfo originalFileInfo = new FileInfo(location);
+                    FileInfo testFileInfo = new FileInfo(testFileLocation);
+                    Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                }
+
                 // Get rid of the working copy
                 if (deleteTempFile) File.Delete(testFileLocation);
             }

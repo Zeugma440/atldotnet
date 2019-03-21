@@ -91,61 +91,92 @@ namespace ATL.test.IO
             File.Delete(testFileLocation);
         }
 
+        /// <summary>
+        /// Check if the given file keeps its integrity after a no-op/neutral update
+        /// </summary>
+        /// <param name="resource"></param>
+        private void tagIO_RW_UpdateNeutral(string resource)
+        {
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            Track theTrack = new Track(testFileLocation);
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            // Check that the resulting file (working copy that has been processed) remains identical to the original file (i.e. no byte lost nor added)
+
+            // 1- File length should be the same
+            FileInfo originalFileInfo = new FileInfo(location);
+            FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+            // 2- File contents should be the same
+            // NB : Due to field order differences, MD5 comparison is not possible yet
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateNeutral()
+        {
+            tagIO_RW_UpdateNeutral("MP3/id3v2.4_UTF8.mp3"); // ID3v2
+            tagIO_RW_UpdateNeutral("DSF/dsf.dsf"); // ID3v2 in DSF
+            tagIO_RW_UpdateNeutral("FLAC/flac.flac"); // Vorbis-FLAC
+            tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
+            tagIO_RW_UpdateNeutral("MP3/APE.mp3"); // APE
+            // Native formats
+            tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
+            tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
+            tagIO_RW_UpdateNeutral("SPC/spc.spc");
+            tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
+            tagIO_RW_UpdateNeutral("WMA/wma.wma");
+        }
+
+        private void tagIO_RW_UpdateTagBaseField(string resource, bool supportsDisc = true, bool supportsTotalTracksDiscs = true, bool supportsTrack = true)
+        {
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            Track theTrack = new Track(testFileLocation);
+
+            // Simple field
+            theTrack.Artist = "Hey ho";
+            // Tricky fields that aren't managed with a 1-to-1 mapping
+            theTrack.Year = 1944;
+            theTrack.TrackNumber = 10;
+            theTrack.TrackTotal = 20;
+            theTrack.DiscNumber = 30;
+            theTrack.DiscTotal = 40;
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("Hey ho", theTrack.Artist);
+            Assert.AreEqual(1944, theTrack.Year);
+            if (supportsTrack) Assert.AreEqual(10, theTrack.TrackNumber);
+            if (supportsTotalTracksDiscs) Assert.AreEqual(20, theTrack.TrackTotal);
+            if (supportsDisc) Assert.AreEqual(30, theTrack.DiscNumber);
+            if (supportsTotalTracksDiscs) Assert.AreEqual(40, theTrack.DiscTotal);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
         [TestMethod]
         public void TagIO_RW_UpdateTagBaseField()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
-            Track theTrack = new Track(testFileLocation);
-
-            theTrack.Artist = "Hey ho";
-            theTrack.Year = 1944;
-            theTrack.Save();
-
-            theTrack = new Track(testFileLocation);
-
-            Assert.AreEqual("Hey ho", theTrack.Artist);
-            Assert.AreEqual(1944, theTrack.Year);
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_UpdateTagBaseField_OGG()
-        {
-            string testFileLocation = TestUtils.GetTempTestFile("VQF/vqf.vqf");
-            Track theTrack = new Track(testFileLocation);
-
-            theTrack.Artist = "Hey ho";
-            theTrack.Year = 1944;
-            theTrack.Save();
-
-            theTrack = new Track(testFileLocation);
-
-            Assert.AreEqual("Hey ho", theTrack.Artist);
-            Assert.AreEqual(1944, theTrack.Year);
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_UpdateTagBaseField_DSD()
-        {
-            string testFileLocation = TestUtils.GetTempTestFile("DSF/dsf.dsf");
-            Track theTrack = new Track(testFileLocation);
-
-            theTrack.Artist = "Hey ho";
-            theTrack.Year = 1944;
-            theTrack.Save();
-
-            theTrack = new Track(testFileLocation);
-
-            Assert.AreEqual("Hey ho", theTrack.Artist);
-            Assert.AreEqual(1944, theTrack.Year);
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+            tagIO_RW_UpdateTagBaseField("MP3/id3v2.4_UTF8.mp3"); // ID3v2
+            tagIO_RW_UpdateTagBaseField("DSF/dsf.dsf"); // ID3v2 in DSF
+            tagIO_RW_UpdateTagBaseField("FLAC/flac.flac"); // Vorbis-FLAC
+            tagIO_RW_UpdateTagBaseField("OGG/ogg.ogg"); // Vorbis-OGG
+            tagIO_RW_UpdateTagBaseField("MP3/APE.mp3"); // APE
+            // Specific formats
+            tagIO_RW_UpdateTagBaseField("VQF/vqf.vqf", false, false);
+            tagIO_RW_UpdateTagBaseField("VGM/vgm.vgm", false, false, false);
+            tagIO_RW_UpdateTagBaseField("SPC/spc.spc", false, false);
+            tagIO_RW_UpdateTagBaseField("AAC/mp4.m4a");
+            tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
         }
 
         [TestMethod]

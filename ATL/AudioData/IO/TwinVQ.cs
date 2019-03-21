@@ -139,9 +139,9 @@ namespace ATL.AudioData.IO
                 { "(c) ", TagData.TAG_FIELD_COPYRIGHT },
                 { "MUSC", TagData.TAG_FIELD_COMPOSER },
                 { "CDCT", TagData.TAG_FIELD_CONDUCTOR },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
-                { "DATE", TagData.TAG_FIELD_RECORDING_DATE },
-                { "GENR", TagData.TAG_FIELD_GENRE },
+                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER }, // Unofficial; found in sample files
+                { "DATE", TagData.TAG_FIELD_RECORDING_DATE }, // Unofficial; found in sample files
+                { "GENR", TagData.TAG_FIELD_GENRE }, // Unofficial; found in sample files
                 { "COMT", TagData.TAG_FIELD_COMMENT }
                 // TODO - handle integer extension sub-chunks : YEAR, TRAC
             };
@@ -326,7 +326,8 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            writeTextFrame(w, s, map[frameType]);
+                            string value = formatBeforeWriting(frameType, tag, map);
+                            writeTextFrame(w, s, value);
                             result++;
                         }
                         break;
