@@ -304,7 +304,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_UpdateFormatTrackDiscZeroes()
         {
             StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
-            test_RW_UpdateTrackDiscZeroes(notEmptyFile, true, true, dlg);
+            test_RW_UpdateTrackDiscZeroes("MP3/id3v2.4_UTF8_singleDigitTrackTags.mp3", true, true, dlg);
         }
 
         [TestMethod]
