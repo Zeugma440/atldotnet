@@ -362,8 +362,15 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_UpdateKeepTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
-            test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
+            Settings.EnablePadding = true;
+            try
+            {
+                StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+                test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
+            } finally
+            {
+                Settings.EnablePadding = false;
+            }
         }
 
         [TestMethod]

@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
 
         // Max. tag size for saving
         private const int ID3V2_MAX_SIZE = 4096;
-        
+
         // Buffer size to use to parse through padding frames
         private const int PADDING_BUFFER_SIZE = 512;
 
@@ -146,7 +146,8 @@ namespace ATL.AudioData.IO
             }
             public int TagSizeRestrictionKB
             {
-                get {
+                get
+                {
                     switch ((TagRestrictions & 0xC0) >> 6)
                     {
                         case 0: return 1024;
@@ -206,9 +207,9 @@ namespace ATL.AudioData.IO
 
         static ID3v2()
         {
-            standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE","UFI","ULT","WAF","WAR","WAS","WCM","WCP","WPB","WXX" };
-            standardFrames_v23 = new List<string>() { "AENC","APIC","COMM","COMR","ENCR","EQUA","ETCO","GEOB","GRID","IPLS","LINK","MCDI","MLLT","OWNE","PRIV","PCNT","POPM","POSS","RBUF","RVAD","RVRB","SYLT","SYTC","TALB","TBPM","TCOM","TCON","TCOP","TDAT","TDLY","TENC","TEXT","TFLT","TIME","TIT1", "TIT2", "TIT3","TKEY","TLAN","TLEN","TMED","TOAL","TOFN","TOLY","TOPE","TORY","TOWN","TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
-            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI","COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK","SIGN","SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR","TDRC","TDRL","TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL","TMED", "TMOO","TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA","TSOP","TSOT", "TSRC", "TSSE", "TSST","TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+            standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
+            standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
             commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
@@ -395,7 +396,7 @@ namespace ATL.AudioData.IO
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
             Tag.Flags = SourceFile.ReadByte();
-            
+
             // ID3v2 tag size
             Tag.Size = SourceFile.ReadBytes(4);
 
@@ -411,7 +412,7 @@ namespace ATL.AudioData.IO
                 {
                     // This flag is informative and has no corresponding data
                 }
-                if ( (Tag.ExtendedFlags & 32) > 0) // CRC present
+                if ((Tag.ExtendedFlags & 32) > 0) // CRC present
                 {
                     Tag.CRC = StreamUtils.DecodeSynchSafeInt(SourceFile.ReadBytes(5));
                 }
@@ -513,7 +514,8 @@ namespace ATL.AudioData.IO
             {
                 dataSize = dataSize - 1; // Minus encoding byte
                 encodingCode = source.ReadByte();
-            } else
+            }
+            else
             {
                 encodingCode = 0; // Latin-1; default according to spec
             }
@@ -627,7 +629,7 @@ namespace ATL.AudioData.IO
                     }
                     else if ("CHA".Equals(shortFrameId)) // Chapters
                     {
-                        if (null == tagData.Chapters) tagData.Chapters= new List<ChapterInfo>();
+                        if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
                         chapter = new ChapterInfo();
                         tagData.Chapters.Add(chapter);
 
@@ -772,7 +774,8 @@ namespace ATL.AudioData.IO
                                 readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
                                 mem.Close();
                             }
-                        } else
+                        }
+                        else
                         {
                             tagData.Chapters[tagData.Chapters.Count - 1].Picture = picInfo;
                         }
@@ -816,8 +819,8 @@ namespace ATL.AudioData.IO
             {
                 foreach (MetaFieldInfo comm in comments)
                 {
-                    string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY,"");
-                    if (commentDescription.Length > 0) 
+                    string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                    if (commentDescription.Length > 0)
                     {
                         if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                         {
@@ -914,7 +917,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    if ( (tagVersion < TAG_VERSION_2_2) ||  (tagVersion > TAG_VERSION_2_4) ) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + tagVersion  + "; parsing interrupted");
+                    if ((tagVersion < TAG_VERSION_2_2) || (tagVersion > TAG_VERSION_2_4)) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + tagVersion + "; parsing interrupted");
                     if (0 == Size) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 size is zero; parsing interrupted");
                 }
             }
@@ -992,9 +995,9 @@ namespace ATL.AudioData.IO
 
             if (Settings.ID3v2_useExtendedHeaderRestrictions)
             {
-                if (tagSize/1024 > tagHeader.TagSizeRestrictionKB)
+                if (tagSize / 1024 > tagHeader.TagSizeRestrictionKB)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize/1024 + "KB) according to ID3v2 restrictions (" + tagHeader.TagSizeRestrictionKB + ") !");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize / 1024 + "KB) according to ID3v2 restrictions (" + tagHeader.TagSizeRestrictionKB + ") !");
                 }
             }
 
@@ -1069,37 +1072,41 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            if (recordingYear.Length > 0) map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
-
+            if (recordingYear.Length > 0)
+            {
+                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear))
+                    map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+            }
 
             foreach (byte frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                        foreach (string s in frameMapping_v24.Keys)
+                    foreach (string s in frameMapping_v24.Keys)
+                    {
+                        if (frameType == frameMapping_v24[s])
                         {
-                            if (frameType == frameMapping_v24[s])
-                            {
-                                string value = formatBeforeWriting(frameType, tag, map);
-                                writeTextFrame(w, s, value, tagEncoding);
-                                nbFrames++;
-                                break;
-                            }
+                            string value = formatBeforeWriting(frameType, tag, map);
+                            writeTextFrame(w, s, value, tagEncoding);
+                            nbFrames++;
+                            break;
                         }
+                    }
                 }
             }
-/*
-            // Finally write recording date if recording day-month and/or year have been provided
-            if (4 == recordingYear.Length && Utils.IsNumeric(recordingYear))
-            {
-                StringBuilder recordingTimestamp = new StringBuilder(recordingYear);
-                if (4 == recordingDayMonth.Length && Utils.IsNumeric(recordingDayMonth)) recordingTimestamp.Append("-" ).Append(recordingDayMonth.Substring(2, 2)).Append("-").Append(recordingDayMonth.Substring(0, 2));
-                if (4 == recordingTime.Length && Utils.IsNumeric(recordingTime)) recordingTimestamp.Append("T").Append(recordingTime.Substring(0, 2)).Append(":").Append(recordingTime.Substring(2, 2));
+            /*
+                        // Finally write recording date if recording day-month and/or year have been provided
+                        if (4 == recordingYear.Length && Utils.IsNumeric(recordingYear))
+                        {
+                            StringBuilder recordingTimestamp = new StringBuilder(recordingYear);
+                            if (4 == recordingDayMonth.Length && Utils.IsNumeric(recordingDayMonth)) recordingTimestamp.Append("-" ).Append(recordingDayMonth.Substring(2, 2)).Append("-").Append(recordingDayMonth.Substring(0, 2));
+                            if (4 == recordingTime.Length && Utils.IsNumeric(recordingTime)) recordingTimestamp.Append("T").Append(recordingTime.Substring(0, 2)).Append(":").Append(recordingTime.Substring(2, 2));
 
-                writeTextFrame(w, "TDRC", recordingTimestamp.ToString(), tagEncoding);
-                nbFrames++;
-            }
-*/
+                            writeTextFrame(w, "TDRC", recordingTimestamp.ToString(), tagEncoding);
+                            nbFrames++;
+                        }
+            */
 
             // Chapters
             if (Chapters.Count > 0)
@@ -1111,7 +1118,7 @@ namespace ATL.AudioData.IO
             string fieldCode;
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if (( fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
 
@@ -1136,7 +1143,7 @@ namespace ATL.AudioData.IO
             {
                 // Picture has either to be supported, or to come from the right tag standard
                 doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture =  (getImplementedTagType() == picInfo.TagType);
+                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 
@@ -1151,7 +1158,7 @@ namespace ATL.AudioData.IO
             {
                 if (nbFrames > tagHeader.TagFramesRestriction)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames ("+ nbFrames +") according to ID3v2 restrictions ("+ tagHeader.TagFramesRestriction +") !");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames (" + nbFrames + ") according to ID3v2 restrictions (" + tagHeader.TagFramesRestriction + ") !");
                 }
             }
 
@@ -1207,7 +1214,7 @@ namespace ATL.AudioData.IO
                 // Entry count
                 w.Write((byte)chapters.Count);
 
-                for (int i=0; i < chapters.Count; i++)
+                for (int i = 0; i < chapters.Count; i++)
                 {
                     // Generate a chapter ID if none has been given
                     if (0 == chapters[i].UniqueID.Length)
@@ -1319,7 +1326,9 @@ namespace ATL.AudioData.IO
                 s = new MemoryStream(Size);
                 w = new BinaryWriter(s, tagEncoding);
                 frameOffset = writer.BaseStream.Position;
-            } else {
+            }
+            else
+            {
                 w = writer;
                 frameOffset = 0;
             }
@@ -1421,7 +1430,7 @@ namespace ATL.AudioData.IO
 
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
-            writer.BaseStream.Seek(frameOffset+frameSizePos, SeekOrigin.Begin);
+            writer.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
@@ -1482,7 +1491,7 @@ namespace ATL.AudioData.IO
                 {
                     if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ mimeType +") does not respect ID3v2 restrictions (jpeg or png required)");
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + mimeType + ") does not respect ID3v2 restrictions (jpeg or png required)");
                     }
                 }
 
@@ -1491,9 +1500,9 @@ namespace ATL.AudioData.IO
                 {
                     ImageProperties props = ImageUtils.GetImageProperties(pictureData);
 
-                    if ( (256 == tagHeader.PictureSizeRestriction) && ((props.Height > 256) || (props.Width > 256))) // 256x256 or less
+                    if ((256 == tagHeader.PictureSizeRestriction) && ((props.Height > 256) || (props.Width > 256))) // 256x256 or less
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format ("+ props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (256x256 or less)");
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (256x256 or less)");
 
                         /*
                         picture = Image.FromStream(new MemoryStream(pictureData));
@@ -1566,11 +1575,11 @@ namespace ATL.AudioData.IO
         {
             if (null == iGenre) return "";
 
-            string result = iGenre.Trim().Replace("\0","");
+            string result = iGenre.Trim().Replace("\0", "");
             int genreIndex = -1;
             int openParenthesisIndex = -1;
 
-            for (int i=0;i < result.Length;i++)
+            for (int i = 0; i < result.Length; i++)
             {
                 if ('(' == result[i]) openParenthesisIndex = i;
                 else if (')' == result[i] && openParenthesisIndex > -1)
@@ -1732,7 +1741,7 @@ namespace ATL.AudioData.IO
              *   BinaryReader.readByte vs. BufferedBinaryReader.readByte vs. Stream.Read
              *   BinaryWriter.Write vs. Stream.WriteByte
              */
-            
+
             byte[] data = new byte[2];
             long streamLength = from.Length;
             long position = from.Position;
@@ -1746,7 +1755,7 @@ namespace ATL.AudioData.IO
                 position++;
 
                 to.Write(data[0]);
-                if (0xFF == data[0] && ( (0x00 == data[1]) || (0xE0 == (data[1] & 0xE0))))
+                if (0xFF == data[0] && ((0x00 == data[1]) || (0xE0 == (data[1] & 0xE0))))
                 {
                     to.Write((byte)0);
                 }

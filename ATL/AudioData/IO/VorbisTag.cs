@@ -427,22 +427,14 @@ namespace ATL.AudioData.IO
         {
             bool doWritePicture;
             uint nbFrames = 0;
-            string recordingYear = "";
 
             IDictionary<byte, String> map = tag.ToMap();
-
-            // 1st pass to gather date information
-            foreach (byte frameType in map.Keys)
+            string recordingYear = Utils.ProtectValue(tag.RecordingYear);
+            if (recordingYear.Length > 0)
             {
-                if (map[frameType].Length > 0) // No frame with empty value
-                {
-                    if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
-                    {
-                        recordingYear = map[frameType];
-                    }
-                }
+                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
             }
-            if (recordingYear.Length > 0) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)

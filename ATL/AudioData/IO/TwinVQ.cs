@@ -329,7 +329,11 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            if (recordingYear.Length > 0) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
+            if (recordingYear.Length > 0)
+            {
+                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
+            }
 
             // Supported textual fields
             foreach (byte frameType in map.Keys)
