@@ -3,18 +3,18 @@
     <TargetFrameworks>net30;netstandard2.0;netcoreapp2.0</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
     <Company />
-    <AssemblyVersion>2.7.0.0</AssemblyVersion>
+    <AssemblyVersion>2.8.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
-	<PackageVersion>2.6.0</PackageVersion>
+	<PackageVersion>2.7.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>audio metadata tag mp3 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Zeugma440/atldotnet</PackageProjectUrl>
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
-    <FileVersion>2.7.0.0</FileVersion>
+    <FileVersion>2.8.0.0</FileVersion>
     <PackageReleaseNotes>TBD</PackageReleaseNotes>
-    <Version>2.7</Version>
+    <Version>2.8</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
     <DebugType>full</DebugType>
