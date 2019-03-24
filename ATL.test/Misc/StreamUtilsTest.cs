@@ -10,6 +10,64 @@ namespace ATL.test
     public class StreamUtilsTest
     {
         [TestMethod]
+        public void StreamUtils_CopyStream_limited()
+        {
+            IList<int> list1 = new List<int>();
+            for (byte i = 0; i < 20; i++) list1.Add(i);
+
+            IList<int> list2 = new List<int>();
+            for (byte i = 0; i < 20; i++) list2.Add(i);
+
+            using (MemoryStream stream1 = new MemoryStream(20))
+            using (MemoryStream stream2 = new MemoryStream(20))
+            {
+                foreach (byte i in list1) stream1.WriteByte(i);
+                foreach (byte i in list2) stream2.WriteByte(i);
+
+                stream1.Seek(0, SeekOrigin.Begin);
+                stream2.Seek(5, SeekOrigin.Begin);
+
+                StreamUtils.CopyStream(stream1, stream2, 5);
+
+                // Build expected result
+                for (int i = 5; i < 10; i++) list2[i] = i - 5;
+
+                // Test expected result
+                stream2.Seek(0, SeekOrigin.Begin);
+                for (int i = 0; i < 20; i++) Assert.AreEqual(list2[i], stream2.ReadByte());
+            }
+        }
+
+        [TestMethod]
+        public void StreamUtils_CopyStream_unlimited()
+        {
+            IList<int> list1 = new List<int>();
+            for (byte i = 0; i < 20; i++) list1.Add(i);
+
+            IList<int> list2 = new List<int>();
+            for (byte i = 0; i < 20; i++) list2.Add(i);
+
+            using (MemoryStream stream1 = new MemoryStream(20))
+            using (MemoryStream stream2 = new MemoryStream(20))
+            {
+                foreach (byte i in list1) stream1.WriteByte(i);
+                foreach (byte i in list2) stream2.WriteByte(i);
+
+                stream1.Seek(0, SeekOrigin.Begin);
+                stream2.Seek(5, SeekOrigin.Begin);
+
+                StreamUtils.CopyStream(stream1, stream2);
+
+                // Build expected result
+                for (int i = 5; i < 20; i++) list2[i] = i - 5;
+
+                // Test expected result
+                stream2.Seek(0, SeekOrigin.Begin);
+                for (int i = 0; i < 20; i++) Assert.AreEqual(list2[i], stream2.ReadByte());
+            }
+        }
+
+        [TestMethod]
         public void StreamUtils_ShortenStream()
         {
             IList<byte> list = new List<byte>();
@@ -24,7 +82,6 @@ namespace ATL.test
                 stream.Seek(0, SeekOrigin.Begin);
                 for (int i = 0; i < 11; i++) Assert.AreEqual(list[i], stream.ReadByte());
             }
-
         }
 
         [TestMethod]
@@ -130,7 +187,7 @@ namespace ATL.test
         {
             uint intValue = 0x00873529;
 
-            Assert.AreEqual((uint)0x00FFFFFF, StreamUtils.DecodeBEUInt24( new byte[3] { 0xFF, 0xFF, 0xFF } ));
+            Assert.AreEqual((uint)0x00FFFFFF, StreamUtils.DecodeBEUInt24(new byte[3] { 0xFF, 0xFF, 0xFF }));
 
             byte[] byteValue = StreamUtils.EncodeBEUInt24(intValue);
             Assert.AreEqual(intValue, StreamUtils.DecodeBEUInt24(byteValue));
@@ -153,10 +210,12 @@ namespace ATL.test
             Assert.IsFalse(StreamUtils.ArrEqualsArr(new byte[1], new byte[2]));
             Assert.IsFalse(StreamUtils.StringEqualsArr(".", new char[2]));
 
-            try {
+            try
+            {
                 StreamUtils.DecodeBEUInt16(new byte[1]);
                 Assert.Fail();
-            } catch { }
+            }
+            catch { }
 
             try
             {
