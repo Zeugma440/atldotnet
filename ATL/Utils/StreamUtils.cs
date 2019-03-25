@@ -133,6 +133,7 @@ namespace ATL
         /// <param name="delta">Number of bytes to remove</param>
         public static void ShortenStream(Stream s, long endOffset, uint delta) 
         {
+            /*
             int bufSize;
             byte[] data = new byte[BUFFERSIZE];
             long newIndex = endOffset - delta;
@@ -148,8 +149,10 @@ namespace ATL
                 s.Write(data, 0, bufSize);
                 i += bufSize;
             }
+            */
+            CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset));
 
-            s.SetLength(initialLength - delta);
+            s.SetLength(s.Length - delta);
         }
 
         /// <summary>
@@ -161,6 +164,8 @@ namespace ATL
         /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
         public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false)
         {
+            long newIndex = oldIndex + delta;
+            /*
             byte[] data = new byte[BUFFERSIZE];
             long newIndex = oldIndex + delta;
             long oldLength = s.Length;
@@ -179,12 +184,14 @@ namespace ATL
                 s.Write(data, 0, bufSize);
                 i += bufSize;
             }
+            */
+            CopySameStream(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex));
 
             if (fillZeroes)
             {
                 // Fill the location of old copied data with zeroes
                 s.Seek(oldIndex, SeekOrigin.Begin);
-                for (i = oldIndex; i < newIndex; i++) s.WriteByte(0);
+                for (long i = oldIndex; i < newIndex; i++) s.WriteByte(0);
             }
         }
 
