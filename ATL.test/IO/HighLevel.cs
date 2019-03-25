@@ -3,6 +3,7 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using ATL.test.IO.MetaData;
+using System.Collections.Generic;
 
 namespace ATL.test.IO
 {
@@ -296,6 +297,73 @@ namespace ATL.test.IO
 
             Assert.IsTrue(foundFront);
             Assert.IsTrue(foundConductor);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_AddRemoveChapters()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.Chapters.RemoveAt(2);
+
+            // Add new chapter
+            ChapterInfo chapter = new ChapterInfo();
+            chapter.StartTime = 440;
+            chapter.StartOffset = 4400;
+            chapter.EndTime = 880;
+            chapter.EndOffset = 8800;
+            chapter.UniqueID = "849849";
+            theTrack.Chapters.Add(chapter);
+
+            IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
+
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(chaptersSave.Count, theTrack.Chapters.Count);
+
+            for (int i=0; i<theTrack.Chapters.Count; i++)
+            {
+                Assert.AreEqual(theTrack.Chapters[i].StartOffset, chaptersSave[i].StartOffset);
+                Assert.AreEqual(theTrack.Chapters[i].StartTime, chaptersSave[i].StartTime);
+                Assert.AreEqual(theTrack.Chapters[i].EndOffset, chaptersSave[i].EndOffset);
+                Assert.AreEqual(theTrack.Chapters[i].EndTime, chaptersSave[i].EndTime);
+                Assert.AreEqual(theTrack.Chapters[i].Title, chaptersSave[i].Title);
+                Assert.AreEqual(theTrack.Chapters[i].Subtitle, chaptersSave[i].Subtitle);
+                Assert.AreEqual(theTrack.Chapters[i].UniqueID, chaptersSave[i].UniqueID);
+                Assert.AreEqual(theTrack.Chapters[i].Url, chaptersSave[i].Url);
+            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateTagChapters()
+        {
+            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            // Update 3rd chapter
+            ChapterInfo chapter = new ChapterInfo(theTrack.Chapters[2]);
+            chapter.Title = "updated title";
+            chapter.Subtitle = "updated subtitle";
+            chapter.Url = "updated url";
+
+            theTrack.Chapters[2] = chapter;
+
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(chapter.Title, theTrack.Chapters[2].Title);
+            Assert.AreEqual(chapter.Subtitle, theTrack.Chapters[2].Subtitle);
+            Assert.AreEqual(chapter.Url, theTrack.Chapters[2].Url);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
