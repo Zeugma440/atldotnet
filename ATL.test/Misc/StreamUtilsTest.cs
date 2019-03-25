@@ -24,13 +24,13 @@ namespace ATL.test
                 foreach (byte i in list1) stream1.WriteByte(i);
                 foreach (byte i in list2) stream2.WriteByte(i);
 
-                stream1.Seek(0, SeekOrigin.Begin);
+                stream1.Seek(1, SeekOrigin.Begin);
                 stream2.Seek(5, SeekOrigin.Begin);
 
                 StreamUtils.CopyStream(stream1, stream2, 5);
 
                 // Build expected result
-                for (int i = 5; i < 10; i++) list2[i] = i - 5;
+                for (int i = 5; i < 10; i++) list2[i] = i - 4;
 
                 // Test expected result
                 stream2.Seek(0, SeekOrigin.Begin);
@@ -53,20 +53,20 @@ namespace ATL.test
                 foreach (byte i in list1) stream1.WriteByte(i);
                 foreach (byte i in list2) stream2.WriteByte(i);
 
-                stream1.Seek(0, SeekOrigin.Begin);
+                stream1.Seek(1, SeekOrigin.Begin);
                 stream2.Seek(5, SeekOrigin.Begin);
 
                 StreamUtils.CopyStream(stream1, stream2);
 
                 // Build expected result
-                for (int i = 5; i < 20; i++) list2[i] = i - 5;
+                for (int i = 5; i < 20; i++) list2[i] = i - 4;
 
                 // Test expected result
                 stream2.Seek(0, SeekOrigin.Begin);
                 for (int i = 0; i < 20; i++) Assert.AreEqual(list2[i], stream2.ReadByte());
             }
         }
-
+        
         [TestMethod]
         public void StreamUtils_ShortenStream()
         {
