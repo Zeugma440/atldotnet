@@ -1227,7 +1227,7 @@ namespace ATL.AudioData.IO
                 }
 
                 // Blank CTOC description
-                writeTextFrame(w, "TIT2", "", tagEncoding, "", true);
+                writeTextFrame(w, "TIT2", "Table of Contents", tagEncoding, "", true);
 
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
