@@ -1226,7 +1226,8 @@ namespace ATL.AudioData.IO
                     w.Write('\0');
                 }
 
-                // CTOC description not supported
+                // Blank CTOC description
+                writeTextFrame(w, "TIT2", "", tagEncoding, "", true);
 
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
