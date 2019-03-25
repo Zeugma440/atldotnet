@@ -608,7 +608,7 @@ namespace ATL.AudioData.IO
                     {
                         /*
                          * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
-                         * ID3v2.3+ : Spec is unclear wether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
+                         * ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
@@ -890,7 +890,7 @@ namespace ATL.AudioData.IO
         /// <param name="source">Reader object from where to read ID3v2 data</param>
         /// <param name="pictureStreamHandler">If not null, handler that will be triggered whenever a supported embedded picture is read</param>
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
-        /// <param name="storeUnsupportedMetaFields">Indicates wether unsupported fields should be read and stored in memory (optional; default = false)</param>
+        /// <param name="storeUnsupportedMetaFields">Indicates whether unsupported fields should be read and stored in memory (optional; default = false)</param>
         /// <returns></returns>
         public bool Read(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
@@ -1782,7 +1782,7 @@ namespace ATL.AudioData.IO
         private static Encoding decodeID3v2CharEncoding(byte encoding)
         {
             if (0 == encoding) return Utils.Latin1Encoding;                 // aka ISO Latin-1
-            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM if version > 2.2
+            else if (1 == encoding) return Encoding.Unicode;                // UTF-16 with BOM (since ID3v2.2)
             else if (2 == encoding) return Encoding.BigEndianUnicode;       // UTF-16 Big Endian without BOM (since ID3v2.4)
             else if (3 == encoding) return Encoding.UTF8;                   // UTF-8 (since ID3v2.4)
             else return Encoding.Default;

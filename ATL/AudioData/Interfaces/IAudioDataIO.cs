@@ -60,7 +60,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Indicated wether the given metadata type is supported
+        /// Indicated whether the given metadata type is supported
         /// </summary>
         /// <param name="metaDataType">Metadata type to be tested (see list in MetaDataIOFactory)</param>
         /// <returns>True if current file supports the given metadata type; false if not</returns>
