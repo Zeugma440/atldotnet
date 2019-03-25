@@ -16,7 +16,7 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<PictureReading>();
 
-            BenchmarkRunner.Run<Misc>();
+            //BenchmarkRunner.Run<Misc>();
 
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
@@ -34,6 +34,8 @@ namespace ATL.benchmark
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\temp\", "*.it");
+
+            writeAt(@"FLAC/flac.flac");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
@@ -48,7 +50,7 @@ namespace ATL.benchmark
                 Track t = new Track(filePath);
                 //t.GetEmbeddedPicture(useOldImplementation, false);
 
-//                Console.WriteLine(t.Title);
+                //                Console.WriteLine(t.Title);
             }
             else if (Directory.Exists(filePath))
             {
@@ -60,7 +62,7 @@ namespace ATL.benchmark
                 }
             }
 
-//            Console.WriteLine("end");
+            //            Console.WriteLine("end");
             Console.ReadLine();
         }
 
@@ -73,5 +75,14 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
 
+        static private void writeAt(String fileName)
+        {
+            Writing w = new Writing();
+            w.Setup(fileName);
+            w.Perf_WriteFLAC();
+            w.Cleanup();
+
+            Console.ReadLine();
+        }
     }
 }
