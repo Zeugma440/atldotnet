@@ -24,6 +24,11 @@ namespace ATL.AudioData.IO
     ///     
     ///     This feature is currently not supported. If any CTOC is detected while reading, ATL will "blindly" write a flat CTOC containing
     ///     all chapters. Any hierarchical table of contents will be lost while rewriting.
+    ///     
+    ///     3. Unsynchronization and Unicode
+    ///     
+    ///     Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers.
+    ///     Hence unsycnhronization is force-disabled when text encoding is Unicode.
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -35,8 +40,16 @@ namespace ATL.AudioData.IO
         private TagInfo tagHeader;
 
 
+        private static readonly byte[] BOM_UTF16_LE = new byte[] { 0xFF, 0xFE };
+        private static readonly byte[] BOM_UTF16_BE = new byte[] { 0xFE, 0xFF };
+        private static readonly byte[] BOM_NONE = new byte[] { };
+
+        private static readonly byte[] NULLTERMINATOR = new byte[] { 0x00 };
+        private static readonly byte[] NULLTERMINATOR_2 = new byte[] { 0x00, 0x00 };
+        
+
         // ID3v2 tag ID
-        private const String ID3V2_ID = "ID3";
+        private const string ID3V2_ID = "ID3";
 
         // List of standard fields
         private static ICollection<string> standardFrames_v22;
@@ -57,6 +70,10 @@ namespace ATL.AudioData.IO
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions
         private static IDictionary<string, string> frameMapping_v22_4;
         private static IDictionary<string, string> frameMapping_v23_4;
+
+        // Mapping between ID3v2.2/4 fields and ID3v2.3 fields not included in frameMapping_v2x, and that have changed between versions
+        private static IDictionary<string, string> frameMapping_v22_3;
+        private static IDictionary<string, string> frameMapping_v24_3;
 
 
         // Max. tag size for saving
@@ -98,19 +115,19 @@ namespace ATL.AudioData.IO
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation
             {
-                get { return (Flags & 128) > 0; }
+                get { return (Flags & 0b10000000) > 0; }
             }
             public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
             {
-                get { return ((Flags & 64) > 0) && (Version > TAG_VERSION_2_2); }
+                get { return ((Flags & 0b01000000) > 0) && (Version > TAG_VERSION_2_2); }
             }
             public bool IsExperimental // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
             {
-                get { return (Flags & 32) > 0; }
+                get { return (Flags & 0b00100000) > 0; }
             }
             public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
             {
-                get { return (Flags & 0x10) > 0; }
+                get { return (Flags & 0b00010000) > 0; }
             }
             public int GetSize(bool includeFooter = true)
             {
@@ -304,6 +321,12 @@ namespace ATL.AudioData.IO
                 // TYE, TDA and TIM are converted on the fly when writing
         };
 
+            frameMapping_v22_3 = new Dictionary<string, string>();
+            foreach (string s in frameMapping_v22_4.Keys)
+            {
+                frameMapping_v22_3.Add(s, frameMapping_v22_4[s]);
+            }
+
             frameMapping_v23_4 = new Dictionary<string, string>
             {
                 { "EQUA", "EQU2" },
@@ -312,6 +335,13 @@ namespace ATL.AudioData.IO
                 { "TORY", "TDOR" } // yyyy is a valid timestamp
                 // TYER, TDAT and TIME are converted on the fly when writing
             };
+
+            frameMapping_v24_3 = new Dictionary<string, string>();
+            foreach (string s in frameMapping_v23_4.Keys)
+            {
+                frameMapping_v24_3.Add(frameMapping_v23_4[s], s);
+                if (frameMapping_v22_3.ContainsKey(frameMapping_v23_4[s])) frameMapping_v22_3[frameMapping_v23_4[s]] = s;
+            }
 
             // Mapping between standard fields and ID3v2.3 identifiers
             frameMapping_v23 = new Dictionary<string, byte>
@@ -959,21 +989,32 @@ namespace ATL.AudioData.IO
             long tagSizePos;
             int tagSize;
 
-            w.Write(ID3V2_ID.ToCharArray());
+            if (Settings.ID3v2_tagSubVersion < 3 || Settings.ID3v2_tagSubVersion > 4)
+                throw new NotImplementedException("Writing metadata with ID3v2." + Settings.ID3v2_tagSubVersion + " convention is not supported");
+
+            w.Write(Utils.Latin1Encoding.GetBytes(ID3V2_ID));
 
             // Version 2.4.0
-            w.Write(TAG_VERSION_2_4);
+            if (3 == Settings.ID3v2_tagSubVersion) w.Write(TAG_VERSION_2_3);
+            else if (4 == Settings.ID3v2_tagSubVersion) w.Write(TAG_VERSION_2_4);
             w.Write((byte)0);
 
+            Encoding tagEncoding = Settings.DefaultTextEncoding;
+            if (tagEncoding.Equals(Encoding.UTF8) && 3 == Settings.ID3v2_tagSubVersion) tagEncoding = Encoding.Unicode; // UTF-8 isn't available in ID3v2.4 -> fallback to unicode
+
             // Flags : keep initial flags
+            // NB1 : Writing ID3v2.4 flags on an ID3v2.3 tag won't have any effect since v2.4 specific bits won't be exploited
+            // NB2 : Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers
+            // Hence unsycnhronization is force-disabled when the encoding is Unicode
+            if (tagHeader.UsesUnsynchronisation && tagEncoding.Equals(Encoding.Unicode)) tagHeader.Flags = (byte)(tagHeader.Flags & ~0b10000000);
             w.Write(tagHeader.Flags);
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
             w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
 
-            writeExtHeader(w);
+            writeExtHeader(w, tagEncoding);
             long headerEnd = w.BaseStream.Position;
-            result = writeFrames(tag, w);
+            result = writeFrames(tag, w, tagEncoding);
 
             // Write the remaining padding bytes, if any detected during initial reading
             // TODO - if footer support is added, don't write padding since they are mutually exclusive (see specs)
@@ -984,6 +1025,14 @@ namespace ATL.AudioData.IO
                 long paddingSize = tagHeader.GetPaddingSize() + (originalTagSize - currentTagSize);
                 if (paddingSize > 0)
                     for (long l = 0; l < paddingSize; l++) w.Write('\0');
+
+                if (3 == Settings.ID3v2_tagSubVersion) // Write size of padding
+                {
+                    long tmpPos = w.BaseStream.Position;
+                    w.BaseStream.Seek(headerEnd - 4, SeekOrigin.Begin);
+                    w.Write(StreamUtils.EncodeBEInt32((int)paddingSize));
+                    w.BaseStream.Seek(tmpPos, SeekOrigin.Begin);
+                }
             }
 
             // Record final(*) size of tag into "tag size" field of header
@@ -991,9 +1040,10 @@ namespace ATL.AudioData.IO
             long finalTagPos = w.BaseStream.Position;
             w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
             tagSize = (int)(finalTagPos - tagSizePos - 4);
-            w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
+            if (4 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
+            else if (3 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeBEInt32(tagSize));
 
-            if (Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (tagSize / 1024 > tagHeader.TagSizeRestrictionKB)
                 {
@@ -1008,43 +1058,49 @@ namespace ATL.AudioData.IO
         // TODO : Write ID3v2.4 footer
         // if footer support is added, don't write padding since they are mutually exclusive (see specs)
 
-        private void writeExtHeader(BinaryWriter w)
+        private void writeExtHeader(BinaryWriter w, Encoding tagEncoding)
         {
-            Encoding tagEncoding = Settings.DefaultTextEncoding;
-
             // Rewrites extended header as is
             if (tagHeader.HasExtendedHeader)
             {
                 w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.ExtendedHeaderSize, 4));
-                w.Write((byte)1); // Number of flag bytes; always 1 according to spec
-                w.Write(tagHeader.ExtendedFlags);
-                // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
-                if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
-                if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
-
-                if (Settings.ID3v2_useExtendedHeaderRestrictions)
+                if (4 == Settings.ID3v2_tagSubVersion)
                 {
-                    // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
-                    // TODO - what's the point of that since we're purposely writing UTF-8 ID3v2.4 tags ?
-                    if (tagHeader.HasTextEncodingRestriction)
+                    w.Write((byte)1); // Number of flag bytes; always 1 according to spec
+                    w.Write(tagHeader.ExtendedFlags);
+                    // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
+                    if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
+                    if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
+
+                    if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
                     {
-                        if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
+                        // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
+                        // TODO - what's the point of that since we're purposely writing UTF-8 ID3v2.4 tags ?
+                        if (tagHeader.HasTextEncodingRestriction)
                         {
-                            tagEncoding = Settings.DefaultTextEncoding;
+                            if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
+                            {
+                                tagEncoding = Settings.DefaultTextEncoding;
+                            }
                         }
                     }
+                }
+                else if (3 == Settings.ID3v2_tagSubVersion)
+                {
+                    w.Write(tagHeader.ExtendedFlags);
+                    w.Write((byte)0); // Always 0 according to spec
+                    w.Write((int)0);  // Size of padding
                 }
             }
         }
 
-        private int writeFrames(TagData tag, BinaryWriter w)
+        private int writeFrames(TagData tag, BinaryWriter w, Encoding tagEncoding)
         {
             int nbFrames = 0;
             bool doWritePicture;
-            Encoding tagEncoding = Settings.DefaultTextEncoding;
 
             // === ID3v2 FRAMES ===
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<byte, string> map = tag.ToMap();
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
@@ -1079,13 +1135,16 @@ namespace ATL.AudioData.IO
                     map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
             }
 
+            IDictionary<string, byte> mapping = frameMapping_v24;
+            if (3 == Settings.ID3v2_tagSubVersion) mapping = frameMapping_v23;
+
             foreach (byte frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    foreach (string s in frameMapping_v24.Keys)
+                    foreach (string s in mapping.Keys)
                     {
-                        if (frameType == frameMapping_v24[s])
+                        if (frameType == mapping[s])
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(w, s, value, tagEncoding);
@@ -1095,18 +1154,6 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            /*
-                        // Finally write recording date if recording day-month and/or year have been provided
-                        if (4 == recordingYear.Length && Utils.IsNumeric(recordingYear))
-                        {
-                            StringBuilder recordingTimestamp = new StringBuilder(recordingYear);
-                            if (4 == recordingDayMonth.Length && Utils.IsNumeric(recordingDayMonth)) recordingTimestamp.Append("-" ).Append(recordingDayMonth.Substring(2, 2)).Append("-").Append(recordingDayMonth.Substring(0, 2));
-                            if (4 == recordingTime.Length && Utils.IsNumeric(recordingTime)) recordingTimestamp.Append("T").Append(recordingTime.Substring(0, 2)).Append(":").Append(recordingTime.Substring(2, 2));
-
-                            writeTextFrame(w, "TDRC", recordingTimestamp.ToString(), tagEncoding);
-                            nbFrames++;
-                        }
-            */
 
             // Chapters
             if (Chapters.Count > 0)
@@ -1125,13 +1172,27 @@ namespace ATL.AudioData.IO
                     if (fieldCode.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
 
                     // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
-                    if (TAG_VERSION_2_2 == tagVersion)
+                    if (4 == Settings.ID3v2_tagSubVersion)
                     {
-                        if (frameMapping_v22_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_4[fieldCode];
+                        if (TAG_VERSION_2_2 == tagVersion)
+                        {
+                            if (frameMapping_v22_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_4[fieldCode];
+                        }
+                        else if (TAG_VERSION_2_3 == tagVersion)
+                        {
+                            if (frameMapping_v23_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v23_4[fieldCode];
+                        }
                     }
-                    else if (TAG_VERSION_2_3 == tagVersion)
+                    else if (3 == Settings.ID3v2_tagSubVersion)
                     {
-                        if (frameMapping_v23_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v23_4[fieldCode];
+                        if (TAG_VERSION_2_2 == tagVersion)
+                        {
+                            if (frameMapping_v22_3.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_3[fieldCode];
+                        }
+                        else if (TAG_VERSION_2_4 == tagVersion)
+                        {
+                            if (frameMapping_v24_3.ContainsKey(fieldCode)) fieldCode = frameMapping_v24_3[fieldCode];
+                        }
                     }
 
                     writeTextFrame(w, fieldCode, fieldInfo.Value, tagEncoding, fieldInfo.Language);
@@ -1154,7 +1215,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (nbFrames > tagHeader.TagFramesRestriction)
                 {
@@ -1232,7 +1293,9 @@ namespace ATL.AudioData.IO
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
                 w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+                if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+                else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
                 result++;
@@ -1291,7 +1354,9 @@ namespace ATL.AudioData.IO
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
                 w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+                int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+                if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+                else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
             }
 
@@ -1319,6 +1384,9 @@ namespace ATL.AudioData.IO
             bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
             bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
 
+            ICollection<string> standardFrames = standardFrames_v24;
+            if (3 == Settings.ID3v2_tagSubVersion) standardFrames = standardFrames_v23;
+
             BinaryWriter w;
             MemoryStream s = null;
 
@@ -1334,7 +1402,7 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            if (Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 if (text.Length > tagHeader.TextFieldSizeRestriction)
                 {
@@ -1354,12 +1422,12 @@ namespace ATL.AudioData.IO
                 isCommentCode = true;
             }
             // If frame is not standard, it has to be added through TXXX frame ("user-defined text information frame")
-            else if (!standardFrames_v24.Contains(frameCode))
+            else if (!standardFrames.Contains(frameCode))
             {
                 frameCode = "TXXX";
             }
 
-            w.Write(frameCode.ToCharArray());
+            w.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             frameSizePos = w.BaseStream.Position;
             w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
 
@@ -1381,14 +1449,14 @@ namespace ATL.AudioData.IO
 
                 // Language ID (ISO-639-2)
                 if (language != null) language = Utils.BuildStrictLengthString(language, 3, '\0');
-                w.Write(language.ToCharArray());
+                w.Write(Utils.Latin1Encoding.GetBytes(language));
 
                 // Short content description
                 if (isCommentCode)
                 {
-                    w.Write(actualFrameCode.ToCharArray());
+                    w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode));
                 }
-                w.Write('\0');
+                w.Write(getNullTerminatorFromEncoding(tagEncoding));
 
                 writeTextEncoding = false;
             }
@@ -1407,7 +1475,7 @@ namespace ATL.AudioData.IO
             else if (shortCode.Equals("TXX")) // User-defined text frame specifics
             {
                 if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
-                w.Write(actualFrameCode.ToCharArray());
+                w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode));
                 w.Write('\0');
 
                 writeTextEncoding = false;
@@ -1417,8 +1485,9 @@ namespace ATL.AudioData.IO
             if (writeValue)
             {
                 if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
-                w.Write(text.ToCharArray());
-                if (writeNullTermination) w.Write('\0');
+                w.Write(getBomFromEncoding(tagEncoding));
+                w.Write(tagEncoding.GetBytes(text));
+                if (writeNullTermination) w.Write(getNullTerminatorFromEncoding(tagEncoding));
             }
 
 
@@ -1432,7 +1501,9 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize)));
+            int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+            if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+            else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
@@ -1463,7 +1534,7 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            w.Write("APIC".ToCharArray());
+            w.Write(Utils.Latin1Encoding.GetBytes("APIC"));
 
             frameSizePos = w.BaseStream.Position;
             w.Write((int)0); // Temp frame size placeholder; will be rewritten at the end of the routine
@@ -1484,7 +1555,7 @@ namespace ATL.AudioData.IO
             w.Write(encodeID3v2CharEncoding(tagEncoding));
 
             // Application of ID3v2 extended header restrictions
-            if (Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
                 // Force JPEG if encoding restriction is enabled and mime-type is not among authorized types
                 // TODO : make target format customizable (JPEG or PNG)
@@ -1532,13 +1603,15 @@ namespace ATL.AudioData.IO
             }
 
             // Null-terminated string = mime-type encoded in ISO-8859-1
-            w.Write(Utils.Latin1Encoding.GetBytes(mimeType.ToCharArray())); // Force ISO-8859-1 format for mime-type
+            w.Write(Utils.Latin1Encoding.GetBytes(mimeType)); // Force ISO-8859-1 format for mime-type
             w.Write('\0'); // String should be null-terminated
 
             w.Write(pictureTypeCode);
 
-            if (picDescription.Length > 0) w.Write(picDescription); // Picture description
-            w.Write('\0'); // Description should be null-terminated
+            // Picture description
+            w.Write(getBomFromEncoding(tagEncoding));
+            if (picDescription.Length > 0) w.Write(picDescription);
+            w.Write(getNullTerminatorFromEncoding(tagEncoding)); // Description should be null-terminated
 
             w.Write(pictureData);
 
@@ -1555,10 +1628,15 @@ namespace ATL.AudioData.IO
             finalFramePos = writer.BaseStream.Position;
 
             writer.BaseStream.Seek(frameSizePos + frameOffset, SeekOrigin.Begin);
-            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePos - frameSizePos - frameOffset - dataSizeModifier)));
+            int size = (int)(finalFramePos - frameSizePos - frameOffset - dataSizeModifier);
+            if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+            else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
 
             writer.BaseStream.Seek(frameSizePos2 + frameOffset, SeekOrigin.Begin);
-            writer.Write(StreamUtils.EncodeSynchSafeInt32((int)(finalFramePosRaw - frameSizePos2 - dataSizeModifier)));
+
+            size = (int)(finalFramePosRaw - frameSizePos2 - dataSizeModifier);
+            if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+            else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
 
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
@@ -1794,6 +1872,24 @@ namespace ATL.AudioData.IO
             else if (encoding.Equals(Encoding.BigEndianUnicode)) return 2;
             else if (encoding.Equals(Encoding.UTF8)) return 3;
             else return 0; // Default = ISO-8859-1 / ISO Latin-1
+        }
+
+        // TODO Doc
+        private static byte[] getBomFromEncoding(Encoding encoding)
+        {
+            if (encoding.Equals(Encoding.Unicode)) return BOM_UTF16_LE;
+            else if (encoding.Equals(Encoding.BigEndianUnicode)) return BOM_UTF16_BE;
+            else if (encoding.Equals(Encoding.UTF8)) return BOM_NONE;
+            else return BOM_NONE; // Default = ISO-8859-1 / ISO Latin-1
+        }
+
+        // TODO Doc
+        private static byte[] getNullTerminatorFromEncoding(Encoding encoding)
+        {
+            if (encoding.Equals(Encoding.Unicode)) return NULLTERMINATOR_2;
+            else if (encoding.Equals(Encoding.BigEndianUnicode)) return NULLTERMINATOR_2;
+            else if (encoding.Equals(Encoding.UTF8)) return NULLTERMINATOR;
+            else return NULLTERMINATOR; // Default = ISO-8859-1 / ISO Latin-1
         }
 
     }

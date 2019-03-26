@@ -29,7 +29,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_simple()
         {
             string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 ANSI charset only.mp3";
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -324,7 +324,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(4, theFile.ID3v2.AdditionalFields.Count);
 
             int found = 0;
-            foreach (KeyValuePair<string,string> field in theFile.ID3v2.AdditionalFields)
+            foreach (KeyValuePair<string, string> field in theFile.ID3v2.AdditionalFields)
             {
                 if (field.Key.Equals("iTunNORM"))
                 {
@@ -763,15 +763,15 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v2_Rating()
         {
             assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp3", 0.5/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp3", 1.0/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp3", 1.5/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp3", 2.0/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp3", 2.5/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp3", 3.0/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp3", 3.5/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp3", 4.0/5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp3", 4.5/5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TAG_ID3V2);
             assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
 
             assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
@@ -808,6 +808,39 @@ namespace ATL.test.IO.MetaData
             // Supported fields
             Assert.AreEqual(0, theFile.ID3v2.Disc);
             Assert.AreEqual(0, theFile.ID3v2.Track);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_WriteID3v2_3()
+        {
+            Settings.ID3v2_tagSubVersion = 3;
+            try
+            {
+                String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+                AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                // Check if the two fields are indeed accessible
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+                Assert.IsNotNull(theFile.ID3v2);
+                Assert.IsTrue(theFile.ID3v2.Exists);
+
+                readExistingTagsOnFile(theFile);
+
+                // Check if they are persisted with proper ID3v2.3 field codes when editing the tag
+                TagData theTag = new TagData();
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+                readExistingTagsOnFile(theFile);
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.ID3v2_tagSubVersion = 4;
+            }
         }
 
         [TestMethod]
