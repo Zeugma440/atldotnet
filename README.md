@@ -108,7 +108,7 @@ WavPack|.WV| | |R/W| |
 Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 
-(1) : ATL reads ID3v2.2-2.4 tags, but only writes ID3v2.4 tags
+(1) : ATL reads ID3v2.2, ID3v2.3 and ID3v2.4 tags, but only writes ID3v2.3 tags and ID3v2.4 tags
 
 (2) : all sample names appear on the track's Comment field. Track title only is editable
 
