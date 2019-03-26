@@ -1040,8 +1040,8 @@ namespace ATL.AudioData.IO
             long finalTagPos = w.BaseStream.Position;
             w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
             tagSize = (int)(finalTagPos - tagSizePos - 4);
-            if (4 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
-            else if (3 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeBEInt32(tagSize));
+            /*if (4 == Settings.ID3v2_tagSubVersion) */w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
+            //else if (3 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeBEInt32(tagSize));
 
             if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
