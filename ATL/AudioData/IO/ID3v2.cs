@@ -46,7 +46,7 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] NULLTERMINATOR = new byte[] { 0x00 };
         private static readonly byte[] NULLTERMINATOR_2 = new byte[] { 0x00, 0x00 };
-        
+
 
         // ID3v2 tag ID
         private const string ID3V2_ID = "ID3";
@@ -1104,6 +1104,7 @@ namespace ATL.AudioData.IO
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
+            string recordingDate = "";
 
             // 1st pass to gather date information
             // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
@@ -1126,13 +1127,32 @@ namespace ATL.AudioData.IO
                     {
                         recordingTime = map[frameType];
                     }
+                    else if (TagData.TAG_FIELD_RECORDING_DATE == frameType)
+                    {
+                        recordingDate = map[frameType];
+                    }
                 }
             }
-            if (recordingYear.Length > 0)
+
+            if (4 == Settings.ID3v2_tagSubVersion && recordingYear.Length > 0)
             {
-                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear))
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) // Make sure we don't erase an existing, same date with less detailed (year only) information
                     map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+            }
+            else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3) // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
+            {
+                if (0 == recordingYear.Length) // Make sure we don't erase an existing year, which has the priority
+                {
+                    map[TagData.TAG_FIELD_RECORDING_YEAR] = recordingDate.Substring(0, 4);
+                    if (recordingDate.Length > 9)
+                    {
+                        map[TagData.TAG_FIELD_RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                        if (recordingDate.Length > 15)
+                        {
+                            map[TagData.TAG_FIELD_RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
+                        }
+                    }
+                }
             }
 
             IDictionary<string, byte> mapping = frameMapping_v24;
@@ -1474,12 +1494,13 @@ namespace ATL.AudioData.IO
             }
             else if (shortCode.Equals("TXX")) // User-defined text frame specifics
             {
-                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
-                w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode));
-                w.Write('\0');
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding));
+                w.Write(getBomFromEncoding(tagEncoding));
+                w.Write(tagEncoding.GetBytes(actualFrameCode));
+                w.Write(getNullTerminatorFromEncoding(tagEncoding));
 
                 writeTextEncoding = false;
-                writeNullTermination = true;
+                writeNullTermination = true; // Seems to be the de facto standard; however, it isn't written like that in the specs
             }
 
             if (writeValue)
