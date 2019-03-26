@@ -1040,8 +1040,7 @@ namespace ATL.AudioData.IO
             long finalTagPos = w.BaseStream.Position;
             w.BaseStream.Seek(tagSizePos, SeekOrigin.Begin);
             tagSize = (int)(finalTagPos - tagSizePos - 4);
-            /*if (4 == Settings.ID3v2_tagSubVersion) */w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize));
-            //else if (3 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeBEInt32(tagSize));
+            w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize)); // Synch-safe int32 since ID3v2.3
 
             if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
             {
@@ -1249,8 +1248,7 @@ namespace ATL.AudioData.IO
         private int writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
             Random randomGenerator = null;
-            long frameSizePos, finalFramePos, frameOffset;
-            int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+            long frameSizePos, frameDataPos, finalFramePos, frameOffset;
             int result = 0;
 
             BinaryWriter w;
@@ -1285,6 +1283,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEUInt16(flags));
 
                 // Default unique toc ID
+                frameDataPos = w.BaseStream.Position;
                 w.Write(Utils.Latin1Encoding.GetBytes("toc"));
                 w.Write('\0');
 
@@ -1313,7 +1312,7 @@ namespace ATL.AudioData.IO
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
                 w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-                int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+                int size = (int)(finalFramePos - frameDataPos - frameOffset);
                 if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
                 else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -1336,6 +1335,7 @@ namespace ATL.AudioData.IO
                 }
                 w.Write(StreamUtils.EncodeBEUInt16(flags));
 
+                frameDataPos = w.BaseStream.Position;
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
 
@@ -1374,7 +1374,7 @@ namespace ATL.AudioData.IO
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;
                 w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-                int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+                int size = (int)(finalFramePos - frameDataPos - frameOffset);
                 if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
                 else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
                 w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -1395,8 +1395,7 @@ namespace ATL.AudioData.IO
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", bool isInsideUnsynch = false)
         {
             string actualFrameCode; // Used for writing TXXX frames
-            long frameSizePos, finalFramePos, frameOffset;
-            int frameHeaderSize = 6; // 4-byte size + 2-byte flags
+            long frameSizePos, frameDataPos, finalFramePos, frameOffset;
 
             bool isCommentCode = false;
 
@@ -1459,6 +1458,7 @@ namespace ATL.AudioData.IO
             }
             w.Write(StreamUtils.EncodeBEUInt16(flags));
 
+            frameDataPos = w.BaseStream.Position;
             string shortCode = frameCode.Substring(0, 3);
 
             // Comments frame specifics
@@ -1522,7 +1522,7 @@ namespace ATL.AudioData.IO
             // Go back to frame size location to write its actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
-            int size = (int)(finalFramePos - frameSizePos - frameOffset - frameHeaderSize);
+            int size = (int)(finalFramePos - frameDataPos - frameOffset);
             if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
             else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -1533,10 +1533,11 @@ namespace ATL.AudioData.IO
             // Binary tag writing management
             long frameOffset;
             long frameSizePos;
-            long frameSizePos2;
+            long dataSizePos = 0;
+            long frameDataPos;
             long finalFramePos;
             long finalFramePosRaw;
-            int dataSizeModifier = 0;
+            bool useDataSize = (4 == Settings.ID3v2_tagSubVersion);
 
             // Unsynchronization management
             BinaryWriter w;
@@ -1562,17 +1563,20 @@ namespace ATL.AudioData.IO
 
             // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
             // Data size is the "natural" size of the picture (i.e. without unsynchronization) + the size of the headerless APIC frame (i.e. starting from the "text encoding" byte)
-            UInt16 flags = 1;
-            if (tagHeader.UsesUnsynchronisation) flags = 3;
+            UInt16 flags = 0;
+            if (useDataSize) flags |= 1; // Force data length indicator for ID3v2.4
+            if (tagHeader.UsesUnsynchronisation) flags |= 2;
             w.Write(StreamUtils.ReverseUInt16(flags));
-            dataSizeModifier += 2;
 
-            frameSizePos2 = w.BaseStream.Position;
-            w.Write((int)0);
-            dataSizeModifier += 4;
+            frameDataPos = w.BaseStream.Position;
+
+            if (useDataSize)
+            {
+                dataSizePos = w.BaseStream.Position; // Data length, as indicated by the flag we just set
+                w.Write((int)0);
+            }
 
             // Beginning of APIC frame data
-
             w.Write(encodeID3v2CharEncoding(tagEncoding));
 
             // Application of ID3v2 extended header restrictions
@@ -1649,15 +1653,16 @@ namespace ATL.AudioData.IO
             finalFramePos = writer.BaseStream.Position;
 
             writer.BaseStream.Seek(frameSizePos + frameOffset, SeekOrigin.Begin);
-            int size = (int)(finalFramePos - frameSizePos - frameOffset - dataSizeModifier);
+            int size = (int)(finalFramePos - frameDataPos - frameOffset);
             if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
             else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
 
-            writer.BaseStream.Seek(frameSizePos2 + frameOffset, SeekOrigin.Begin);
-
-            size = (int)(finalFramePosRaw - frameSizePos2 - dataSizeModifier);
-            if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
-            else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
+            if (useDataSize) // ID3v2.4 only
+            {
+                writer.BaseStream.Seek(dataSizePos + frameOffset, SeekOrigin.Begin);
+                size = (int)(finalFramePosRaw - frameDataPos);
+                writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
+            }
 
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
