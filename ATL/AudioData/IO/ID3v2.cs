@@ -1336,8 +1336,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEUInt16(flags));
 
                 frameDataPos = w.BaseStream.Position;
-                // Encoding according to ID3v2 specs
-                w.Write(encodeID3v2CharEncoding(tagEncoding));
+                w.Write(encodeID3v2CharEncoding(Encoding.UTF8));
 
                 // Generate a chapter ID if none has been given
                 if (0 == chapter.UniqueID.Length)

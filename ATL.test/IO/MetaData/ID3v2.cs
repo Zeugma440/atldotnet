@@ -453,7 +453,25 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_Chapters()
+        public void TagIO_RW_ID3v2_Chapters_v3()
+        {
+            Settings.ID3v2_tagSubVersion = 3;
+            try
+            {
+                TagIO_RW_ID3v2_Chapters();
+            } finally
+            {
+                Settings.ID3v2_tagSubVersion = 4;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_Chapters_v4()
+        {
+            TagIO_RW_ID3v2_Chapters();
+        }
+
+        private void TagIO_RW_ID3v2_Chapters()
         {
             ConsoleLogger log = new ConsoleLogger();
 
