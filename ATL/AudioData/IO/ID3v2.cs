@@ -1302,7 +1302,7 @@ namespace ATL.AudioData.IO
                         if (null == randomGenerator) randomGenerator = new Random();
                         chapters[i].UniqueID = randomGenerator.Next().ToString();
                     }
-                    w.Write(Encoding.UTF8.GetBytes(chapters[i].UniqueID));
+                    w.Write(Utils.Latin1Encoding.GetBytes(chapters[i].UniqueID));
                     w.Write('\0');
                 }
 
@@ -1336,7 +1336,6 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEUInt16(flags));
 
                 frameDataPos = w.BaseStream.Position;
-                w.Write(encodeID3v2CharEncoding(Encoding.UTF8));
 
                 // Generate a chapter ID if none has been given
                 if (0 == chapter.UniqueID.Length)
@@ -1345,7 +1344,7 @@ namespace ATL.AudioData.IO
                     chapter.UniqueID = randomGenerator.Next().ToString();
                 }
 
-                w.Write(Encoding.UTF8.GetBytes(chapter.UniqueID));
+                w.Write(Utils.Latin1Encoding.GetBytes(chapter.UniqueID));
                 w.Write('\0');
 
                 w.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
