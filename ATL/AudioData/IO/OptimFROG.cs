@@ -1,8 +1,6 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
-using Commons;
 using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
@@ -57,7 +55,6 @@ namespace ATL.AudioData.IO
 
         private double bitrate;
         private double duration;
-        private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
