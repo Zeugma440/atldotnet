@@ -3,7 +3,7 @@ using ATL.AudioData;
 using ATL.PlaylistReaders;
 using ATL.CatalogDataReaders;
 using ATL.Logging;
-using System.IO;
+using System.Collections.Generic;
 
 namespace ATL.test.CodeSnippets
 {
@@ -35,8 +35,8 @@ namespace ATL.test.CodeSnippets
         [TestCleanup]
         public void End()
         {
-            File.Delete(audioFilePath);
-            File.Delete(cuesheetPath);
+            System.IO.File.Delete(audioFilePath);
+            System.IO.File.Delete(cuesheetPath);
         }
 
         [TestMethod, TestCategory("snippets")]
@@ -121,10 +121,11 @@ namespace ATL.test.CodeSnippets
         [TestMethod, TestCategory("snippets")]
         public void CS_WriteChapters()
         {
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(audioFilePath));
+            // Note : if you target ID3v2 chapters, it is highly advised to use Settings.ID3v2_tagSubVersion = 3
+            // as most readers only support ID3v2.3 chapters
+            Track theFile = new Track(audioFilePath);
 
-            TagData theTag = new TagData();
-            theTag.Chapters = new System.Collections.Generic.List<ChapterInfo>();
+            theFile.Chapters = new System.Collections.Generic.List<ChapterInfo>();
 
 	        ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 123;
@@ -135,7 +136,7 @@ namespace ATL.test.CodeSnippets
 	        ch.Title = "aaa";
 	        ch.Subtitle = "bbb";
 	        ch.Url = "ccc\0ddd";
-	        theTag.Chapters.Add(ch);
+            theFile.Chapters.Add(ch);
 
 	        ch = new ChapterInfo();
             ch.StartTime = 1230;
@@ -146,15 +147,22 @@ namespace ATL.test.CodeSnippets
 	        ch.Title = "aaa0";
 	        ch.Subtitle = "bbb0";
 	        ch.Url = "ccc\0ddd0";
-	        theTag.Chapters.Add(ch);
+            // Add a picture to the 2nd chapter
+            ch.Picture = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
+            byte[] data = System.IO.File.ReadAllBytes(imagePath);
+            ch.Picture.PictureData = data;
 
-	        // Persists the chapters
-	        theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2);
+            theFile.Chapters.Add(ch);
 
-	        // Reads them
-	        theFile.ReadFromFile(false, true);
+            // Persists the chapters
+            theFile.Save();
 
-	        foreach (ChapterInfo chap in theFile.ID3v2.Chapters)
+            // Reads the file again from sratch
+            theFile = new Track(audioFilePath);
+            IList<PictureInfo> pics = theFile.EmbeddedPictures; // Hack to load chapter pictures
+
+            // Display chapters
+            foreach (ChapterInfo chap in theFile.Chapters)
 	        {
 		        System.Console.WriteLine(chap.Title + "(" + chap.StartTime + ")");
 	        }
