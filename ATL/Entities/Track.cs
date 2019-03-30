@@ -138,6 +138,10 @@ namespace ATL
         /// </summary>
         public IList<PictureInfo> PictureTokens = null;
         /// <summary>
+        /// Chapters table of content description
+        /// </summary>
+        public string ChaptersTableDescription;
+        /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
         public IList<ChapterInfo> Chapters;
@@ -212,12 +216,13 @@ namespace ATL
         /// <summary>
         /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
         /// </summary>
-        private readonly String mimeType;
+        private readonly string mimeType;
         private AudioFileIO fileIO;
 
 
         // ========== METHODS
 
+        // Used for pictures lazy loading
         private IList<PictureInfo> getEmbeddedPictures()
         {
             if (null == embeddedPictures)
@@ -261,6 +266,8 @@ namespace ATL
             TrackTotal = fileIO.TrackTotal;
             DiscNumber = fileIO.Disc;
             DiscTotal = fileIO.DiscTotal;
+            ChaptersTableDescription = Utils.ProtectValue(fileIO.ChaptersTableDescription);
+
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             DurationMs = fileIO.Duration;
@@ -320,6 +327,7 @@ namespace ATL
             result.TrackTotal = TrackTotal.ToString();
             result.DiscNumber = DiscNumber.ToString();
             result.DiscTotal = DiscTotal.ToString();
+            result.ChaptersTableDescription = ChaptersTableDescription.ToString();
             result.Rating = (Popularity * 5).ToString();
 
             if (Chapters.Count > 0)

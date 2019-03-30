@@ -13,7 +13,7 @@ namespace ATL.AudioData.IO
         public const int DEFAULT_GENRE = 255;               // Index for default genre
 
         public const int ID3V1_TAG_SIZE = 128;
-        public const String ID3V1_ID = "TAG";
+        public const string ID3V1_ID = "TAG";
 
 		// Used with VersionID property
 		public const byte TAG_VERSION_1_0 = 1;                // Index for ID3v1.0 tag
@@ -205,12 +205,11 @@ namespace ATL.AudioData.IO
                 // Fill properties using tag data
                 if (TAG_VERSION_1_0 == tagVersion)
                 {
-                    Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+                    tagData.Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
                 }
                 else
                 {
-                    Comment = tagData.Comment;
-                    Track = endComment[1];
+                    tagData.TrackNumber = endComment[1].ToString();
                 }
 
                 tagData.Genre = (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "";

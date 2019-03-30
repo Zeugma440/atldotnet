@@ -135,7 +135,6 @@ namespace ATL.AudioData.IO
         public String Title
         {
             get { return Utils.ProtectValue(tagData.Title); }
-            set { tagData.Title = value; }
         }
         /// <summary>
         /// Artist (Performer)
@@ -148,7 +147,6 @@ namespace ATL.AudioData.IO
                 if (0 == result.Length) result = AlbumArtist;
                 return result;
             }
-            set { tagData.Artist = value; }
         }
         /// <summary>
         /// Album Artist
@@ -156,7 +154,6 @@ namespace ATL.AudioData.IO
         public String AlbumArtist
         {
             get { return Utils.ProtectValue(tagData.AlbumArtist); }
-            set { tagData.AlbumArtist = value; }
         }
         /// <summary>
         /// Composer
@@ -164,7 +161,6 @@ namespace ATL.AudioData.IO
         public String Composer
         {
             get { return Utils.ProtectValue(tagData.Composer); }
-            set { tagData.Composer = value; }
         }
         /// <summary>
         /// Album title
@@ -172,7 +168,6 @@ namespace ATL.AudioData.IO
         public String Album
         {
             get { return Utils.ProtectValue(tagData.Album); }
-            set { tagData.Album = value; }
         }
         /// <summary>
         /// Track number
@@ -185,7 +180,6 @@ namespace ATL.AudioData.IO
                     return TrackUtils.ExtractTrackNumber(tagData.TrackNumberTotal);
                 else return TrackUtils.ExtractTrackNumber(tagData.TrackNumber);
             }
-            set { tagData.TrackNumber = value.ToString(); }
         }
         /// <summary>
         /// Total track number
@@ -200,7 +194,6 @@ namespace ATL.AudioData.IO
                     return ushort.Parse(tagData.TrackTotal);
                 else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber); ;
             }
-            set { tagData.TrackTotal = value.ToString(); }
         }
         /// <summary>
         /// Disc number
@@ -213,7 +206,6 @@ namespace ATL.AudioData.IO
                     return TrackUtils.ExtractTrackNumber(tagData.DiscNumberTotal);
                 else return TrackUtils.ExtractTrackNumber(tagData.DiscNumber);
             }
-            set { tagData.DiscNumber = value.ToString(); }
         }
         /// <summary>
         /// Total disc number
@@ -228,7 +220,6 @@ namespace ATL.AudioData.IO
                     return ushort.Parse(tagData.DiscTotal);
                 else return TrackUtils.ExtractTrackTotal(tagData.DiscNumber);
             }
-            set { tagData.DiscTotal = value.ToString(); }
         }
         /// <summary>
         /// Rating, from 0 to 5
@@ -257,7 +248,6 @@ namespace ATL.AudioData.IO
                 if (0 == result.Length) result = TrackUtils.ExtractStrYear(tagData.RecordingDate);
                 return result;
             }
-            set { tagData.RecordingYear = value; }
         }
         /// <summary>
         /// Release date (DateTime.MinValue if field does not exist)
@@ -278,7 +268,6 @@ namespace ATL.AudioData.IO
                 }
                 return result;
             }
-            set { tagData.RecordingDate = value.ToShortDateString(); }
         }
         /// <summary>
         /// Genre name
@@ -286,7 +275,6 @@ namespace ATL.AudioData.IO
         public String Genre
         {
             get { return Utils.ProtectValue(tagData.Genre); }
-            set { tagData.Genre = value; }
         }
         /// <summary>
         /// Commment
@@ -294,7 +282,6 @@ namespace ATL.AudioData.IO
         public String Comment
         {
             get { return Utils.ProtectValue(tagData.Comment); }
-            set { tagData.Comment = value; }
         }
         /// <summary>
         /// Copyright
@@ -302,7 +289,6 @@ namespace ATL.AudioData.IO
         public String Copyright
         {
             get { return Utils.ProtectValue(tagData.Copyright); }
-            set { tagData.Copyright = value; }
         }
         /// <summary>
         /// Original artist
@@ -310,7 +296,6 @@ namespace ATL.AudioData.IO
         public String OriginalArtist
         {
             get { return Utils.ProtectValue(tagData.OriginalArtist); }
-            set { tagData.OriginalArtist = value; }
         }
         /// <summary>
         /// Original album
@@ -318,7 +303,6 @@ namespace ATL.AudioData.IO
         public String OriginalAlbum
         {
             get { return Utils.ProtectValue(tagData.OriginalAlbum); }
-            set { tagData.OriginalAlbum = value; }
         }
         /// <summary>
         /// General Description
@@ -326,7 +310,6 @@ namespace ATL.AudioData.IO
         public String GeneralDescription
         {
             get { return Utils.ProtectValue(tagData.GeneralDescription); }
-            set { tagData.GeneralDescription = value; }
         }
         /// <summary>
         /// Publisher
@@ -334,7 +317,6 @@ namespace ATL.AudioData.IO
         public String Publisher
         {
             get { return Utils.ProtectValue(tagData.Publisher); }
-            set { tagData.Publisher = value; }
         }
         /// <summary>
         /// Conductor
@@ -342,11 +324,7 @@ namespace ATL.AudioData.IO
         public String Conductor
         {
             get { return Utils.ProtectValue(tagData.Conductor); }
-            set { tagData.Conductor = value; }
         }
-
-
-        // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
@@ -428,6 +406,13 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
+
+        public string ChaptersTableDescription
+        {
+            get { return Utils.ProtectValue(tagData.ChaptersTableDescription); }
+        }
+
+        // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         public virtual byte FieldCodeFixedLength
         {

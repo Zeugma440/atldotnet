@@ -379,6 +379,14 @@ namespace ATL.AudioData
             }
         }
 
+        public string ChaptersTableDescription
+        {
+            get
+            {
+                return metaData.ChaptersTableDescription;
+            }
+        }
+
         public bool IsMetaSupported(int metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);

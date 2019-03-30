@@ -184,7 +184,14 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// Chapters table of contents description
+        /// </summary>
+        string ChaptersTableDescription
+        {
+            get;
+        }
+        /// <summary>
+        /// Chapters
         /// </summary>
         IList<ChapterInfo> Chapters
         {

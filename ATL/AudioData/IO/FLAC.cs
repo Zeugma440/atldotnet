@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using Commons;
 using static ATL.AudioData.FileStructureHelper;
-using System.Text;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
 
@@ -302,6 +301,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public string ChaptersTableDescription
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).ChaptersTableDescription;
+            }
+        }
+
         public IList<ChapterInfo> Chapters
         {
             get
@@ -581,7 +588,7 @@ namespace ATL.AudioData.IO
                     long tagBeginOffset = zone.Offset + cumulativeDelta;
                     long tagEndOffset = tagBeginOffset + zone.Size;
 
-                    
+
                     // TODO optimization : this is the physical file we're editing !
                     // => there are as many resizing operations as there are zones in the file ?!
                     if (newTagSize > zone.Size) // Need to build a larger file

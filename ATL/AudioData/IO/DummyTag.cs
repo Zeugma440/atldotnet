@@ -114,6 +114,11 @@ namespace ATL.AudioData.IO
             get { return ""; }
         }
 
+        public string ChaptersTableDescription
+        {
+            get { return ""; }
+        }
+
         public IDictionary<string, string> AdditionalFields
         {
             get { return new Dictionary<string, string>();  }

@@ -364,7 +364,8 @@ namespace ATL.AudioData.IO
                 { "POPM", TagData.TAG_FIELD_RATING },
                 { "TCON", TagData.TAG_FIELD_GENRE },
                 { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER }
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
+                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
             };
 
             // Mapping between standard fields and ID3v2.4 identifiers
@@ -386,7 +387,8 @@ namespace ATL.AudioData.IO
                 { "POPM", TagData.TAG_FIELD_RATING },
                 { "TCON", TagData.TAG_FIELD_GENRE },
                 { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER }
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
+                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
             };
         }
 
@@ -656,6 +658,26 @@ namespace ATL.AudioData.IO
                         // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
                         if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                    }
+                    else if ("CTO".Equals(shortFrameId)) // Chapters table of contents -> store chapter description
+                    {
+                        StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip element ID
+                        source.Seek(1, SeekOrigin.Current); // Skip flags
+                        int entryCount = source.ReadByte();
+                        for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
+                        // There's an optional header here
+                        if (source.Position - dataPosition < Frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
+                        {
+                            source.Seek(6, SeekOrigin.Current); // Skip size and flags
+                            encodingCode = source.ReadByte();
+                            Encoding encoding = decodeID3v2CharEncoding(encodingCode);
+                            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readBOM(source);
+                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataPosition + Frame.Size - source.Position));
+                        }
+                        else
+                        {
+                            strData = "";
+                        }
                     }
                     else if ("CHA".Equals(shortFrameId)) // Chapters
                     {
@@ -1306,8 +1328,9 @@ namespace ATL.AudioData.IO
                     w.Write('\0');
                 }
 
-                // Blank CTOC description
-                writeTextFrame(w, "TIT2", "Table of Contents", tagEncoding, "", true);
+                // CTOC description
+                if (Utils.ProtectValue(ChaptersTableDescription).Length > 0)
+                    writeTextFrame(w, "TIT2", ChaptersTableDescription, tagEncoding, "", true);
 
                 // Go back to frame size location to write its actual size 
                 finalFramePos = w.BaseStream.Position;

@@ -508,6 +508,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public string ChaptersTableDescription
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).ChaptersTableDescription;
+            }
+        }
+
         public IList<ChapterInfo> Chapters
         {
             get

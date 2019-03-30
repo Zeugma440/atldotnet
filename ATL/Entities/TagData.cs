@@ -41,6 +41,7 @@ namespace ATL
         public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 21;
         public const byte TAG_FIELD_DISC_TOTAL = 22;
         public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 23;
+        public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 24;
 
         // Values for 'classic' fields
         public string GeneralDescription = null;
@@ -66,6 +67,7 @@ namespace ATL
         public string TrackNumberTotal = null;
         public string DiscTotal = null;
         public string DiscNumberTotal = null;
+        public string ChaptersTableDescription = null;
 
         /// <summary>
         /// Chapters 
@@ -147,6 +149,7 @@ namespace ATL
                 case TAG_FIELD_TRACK_NUMBER_TOTAL: TrackNumberTotal = emptyIfZero(value); break;
                 case TAG_FIELD_DISC_TOTAL: DiscTotal = emptyIfZero(value); break;
                 case TAG_FIELD_DISC_NUMBER_TOTAL: DiscNumberTotal = emptyIfZero(value); break;
+                case TAG_FIELD_CHAPTERS_TOC_DESCRIPTION: ChaptersTableDescription = emptyIfZero(value); break;
             }
         }
 
@@ -283,6 +286,7 @@ namespace ATL
             addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, result);
             addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
             addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
+            addIfConsistent(ChaptersTableDescription, TAG_FIELD_CHAPTERS_TOC_DESCRIPTION, result);
 
             return result;
         }
@@ -319,6 +323,7 @@ namespace ATL
             TrackNumberTotal = null;
             DiscTotal = null;
             DiscNumberTotal = null;
+            ChaptersTableDescription = null;
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;

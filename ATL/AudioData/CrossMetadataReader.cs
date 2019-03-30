@@ -362,6 +362,19 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        public string ChaptersTableDescription
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.ChaptersTableDescription;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
         /// <summary>
         /// List of picture IDs stored in the tag
         /// </summary>

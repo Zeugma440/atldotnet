@@ -486,6 +486,7 @@ namespace ATL.test.IO.MetaData
             Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
 
             TagData theTag = new TagData();
+            theTag.ChaptersTableDescription = "Content֍";
             theTag.Chapters = new List<ChapterInfo>();
             ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 123;
@@ -524,6 +525,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
+            Assert.AreEqual("Content֍", theFile.ID3v2.ChaptersTableDescription);
             Assert.AreEqual(2, theFile.ID3v2.Chapters.Count);
 
             // Check if values are the same
@@ -573,6 +575,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
+            Assert.AreEqual("toplevel toc", theFile.ID3v2.ChaptersTableDescription);
             Assert.AreEqual(9, theFile.ID3v2.Chapters.Count);
 
             Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
@@ -660,6 +663,7 @@ namespace ATL.test.IO.MetaData
 
             // Modify elements
             TagData theTag = new TagData();
+            theTag.ChaptersTableDescription = "Content֍";
             theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();
 
@@ -700,6 +704,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
+            Assert.AreEqual("Content֍", theFile.ID3v2.ChaptersTableDescription);
             Assert.AreEqual(2, theFile.ID3v2.Chapters.Count);
 
             // Check if values are the same

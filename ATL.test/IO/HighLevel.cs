@@ -4,6 +4,7 @@ using System.IO;
 using System.Drawing;
 using ATL.test.IO.MetaData;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.test.IO
 {
@@ -308,6 +309,7 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
             Track theTrack = new Track(testFileLocation);
 
+            theTrack.ChaptersTableDescription = "Content";
             theTrack.Chapters.RemoveAt(2);
 
             // Add new chapter
@@ -317,26 +319,39 @@ namespace ATL.test.IO
             chapter.EndTime = 880;
             chapter.EndOffset = 8800;
             chapter.UniqueID = "849849";
+            chapter.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
+            chapter.Picture.PictureData = data;
             theTrack.Chapters.Add(chapter);
+
 
             IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
 
             theTrack.Save();
 
             theTrack = new Track(testFileLocation);
+            // TODO explicit parameter to load chapter images
 
+            Assert.AreEqual("Content", theTrack.ChaptersTableDescription);
             Assert.AreEqual(chaptersSave.Count, theTrack.Chapters.Count);
 
+            ChapterInfo readChapter;
             for (int i=0; i<theTrack.Chapters.Count; i++)
             {
-                Assert.AreEqual(theTrack.Chapters[i].StartOffset, chaptersSave[i].StartOffset);
-                Assert.AreEqual(theTrack.Chapters[i].StartTime, chaptersSave[i].StartTime);
-                Assert.AreEqual(theTrack.Chapters[i].EndOffset, chaptersSave[i].EndOffset);
-                Assert.AreEqual(theTrack.Chapters[i].EndTime, chaptersSave[i].EndTime);
-                Assert.AreEqual(theTrack.Chapters[i].Title, chaptersSave[i].Title);
-                Assert.AreEqual(theTrack.Chapters[i].Subtitle, chaptersSave[i].Subtitle);
-                Assert.AreEqual(theTrack.Chapters[i].UniqueID, chaptersSave[i].UniqueID);
-                Assert.AreEqual(theTrack.Chapters[i].Url, chaptersSave[i].Url);
+                readChapter = theTrack.Chapters[i];
+                Assert.AreEqual(readChapter.StartOffset, chaptersSave[i].StartOffset);
+                Assert.AreEqual(readChapter.StartTime, chaptersSave[i].StartTime);
+                Assert.AreEqual(readChapter.EndOffset, chaptersSave[i].EndOffset);
+                Assert.AreEqual(readChapter.EndTime, chaptersSave[i].EndTime);
+                Assert.AreEqual(readChapter.Title, chaptersSave[i].Title);
+                Assert.AreEqual(readChapter.Subtitle, chaptersSave[i].Subtitle);
+                Assert.AreEqual(readChapter.UniqueID, chaptersSave[i].UniqueID);
+                Assert.AreEqual(readChapter.Url, chaptersSave[i].Url);
+                if (chaptersSave[i].Picture != null)
+                {
+                    Assert.IsNotNull(readChapter.Picture);
+                    Assert.AreEqual(chaptersSave[i].Picture.ComputePicHash(), readChapter.Picture.ComputePicHash());
+                }
             }
 
             // Get rid of the working copy
@@ -361,6 +376,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
 
+            Assert.AreEqual("toplevel toc", theTrack.ChaptersTableDescription);
             Assert.AreEqual(chapter.Title, theTrack.Chapters[2].Title);
             Assert.AreEqual(chapter.Subtitle, theTrack.Chapters[2].Subtitle);
             Assert.AreEqual(chapter.Url, theTrack.Chapters[2].Url);
