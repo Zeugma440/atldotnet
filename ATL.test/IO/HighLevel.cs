@@ -330,7 +330,7 @@ namespace ATL.test.IO
             theTrack.Save();
 
             theTrack = new Track(testFileLocation);
-            // TODO explicit parameter to load chapter images
+            IList<PictureInfo> pics = theTrack.EmbeddedPictures; // Hack to load chapter pictures
 
             Assert.AreEqual("Content", theTrack.ChaptersTableDescription);
             Assert.AreEqual(chaptersSave.Count, theTrack.Chapters.Count);

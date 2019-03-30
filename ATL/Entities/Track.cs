@@ -33,8 +33,8 @@ namespace ATL
         /// Loads the raw data in the given stream according to the given MIME-type
         /// </summary>
         /// <param name="stream">Stream containing the raw data to be loaded</param>
-        /// <param name="mimeType">MIME-type (e.g. "audio/mp3" or file extension (e.g. ".mp3") of the content</param>
-        public Track(Stream stream, String mimeType)
+        /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
+        public Track(Stream stream, string mimeType)
         {
             this.stream = stream;
             this.mimeType = mimeType;
@@ -199,7 +199,8 @@ namespace ATL
 
         /// <summary>
         /// List of pictures stored in the tag
-        /// NB : PictureInfo.PictureData (raw binary picture data) is valued
+        /// NB1 : PictureInfo.PictureData (raw binary picture data) is valued
+        /// NB2 : Also allows to value embedded pictures inside chapters
         /// </summary>
         public IList<PictureInfo> EmbeddedPictures
         {
@@ -230,7 +231,7 @@ namespace ATL
                 embeddedPictures = new List<PictureInfo>();
                 initialEmbeddedPictures = new List<PictureInfo>();
 
-                Update(true);
+                Update(true); // TODO - unexpected behaviour when calling getEmbeddedPictures after setting a few fields -> they are overwritten by the new call to Update() !
             }
 
             return embeddedPictures;
