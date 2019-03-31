@@ -167,7 +167,7 @@ namespace ATL.AudioData.IO
             }
             else if (fieldName.EndsWith("URL", StringComparison.OrdinalIgnoreCase)) // Chapter url
             {
-                tagData.Chapters[chapterIndex - 1].Url = fieldValue;
+                tagData.Chapters[chapterIndex - 1].Url = new ChapterInfo.UrlInfo("", fieldValue);
             }
             else // Chapter start time
             {
@@ -494,14 +494,14 @@ namespace ATL.AudioData.IO
 
         private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
-            String chapterIndex;
+            string chapterIndex;
 
             for (int i = 0; i < chapters.Count; i++)
             {
                 chapterIndex = Utils.BuildStrictLengthString((i + 1).ToString(), 3, '0', false);
                 writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.EncodeTimecode_ms(chapters[i].StartTime));
                 if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "NAME", chapters[i].Title);
-                if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "URL", chapters[i].Url);
+                if (chapters[i].Url != null && chapters[i].Url.Url.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "URL", chapters[i].Url.Url);
             }
         }
 

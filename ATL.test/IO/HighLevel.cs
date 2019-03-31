@@ -346,7 +346,11 @@ namespace ATL.test.IO
                 Assert.AreEqual(readChapter.Title, chaptersSave[i].Title);
                 Assert.AreEqual(readChapter.Subtitle, chaptersSave[i].Subtitle);
                 Assert.AreEqual(readChapter.UniqueID, chaptersSave[i].UniqueID);
-                Assert.AreEqual(readChapter.Url, chaptersSave[i].Url);
+                if (chaptersSave[i].Url != null)
+                {
+                    Assert.AreEqual(chaptersSave[i].Url.Description, readChapter.Url.Description);
+                    Assert.AreEqual(chaptersSave[i].Url.Url, readChapter.Url.Url);
+                }
                 if (chaptersSave[i].Picture != null)
                 {
                     Assert.IsNotNull(readChapter.Picture);
@@ -368,7 +372,7 @@ namespace ATL.test.IO
             ChapterInfo chapter = new ChapterInfo(theTrack.Chapters[2]);
             chapter.Title = "updated title";
             chapter.Subtitle = "updated subtitle";
-            chapter.Url = "updated url";
+            chapter.Url = new ChapterInfo.UrlInfo("updated url");
 
             theTrack.Chapters[2] = chapter;
 
@@ -379,7 +383,7 @@ namespace ATL.test.IO
             Assert.AreEqual("toplevel toc", theTrack.ChaptersTableDescription);
             Assert.AreEqual(chapter.Title, theTrack.Chapters[2].Title);
             Assert.AreEqual(chapter.Subtitle, theTrack.Chapters[2].Subtitle);
-            Assert.AreEqual(chapter.Url, theTrack.Chapters[2].Url);
+            Assert.AreEqual(chapter.Url.Url, theTrack.Chapters[2].Url.Url);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);

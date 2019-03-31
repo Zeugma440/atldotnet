@@ -29,6 +29,11 @@ namespace ATL.AudioData.IO
     ///     
     ///     Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers.
     ///     Hence unsycnhronization is force-disabled when text encoding is Unicode.
+    ///
+    ///     4. Unsynchronization at frame level
+    ///     
+    ///     Even though ID3v2.4 allows it, ATL does not support "individual" unsynchronization at frame level
+    ///     => Either the whole tag (all frames) is unsynchronized, or none is
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -46,6 +51,16 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] NULLTERMINATOR = new byte[] { 0x00 };
         private static readonly byte[] NULLTERMINATOR_2 = new byte[] { 0x00, 0x00 };
+
+        // Tag flags
+        private const byte FLAG_TAG_UNSYNCHRONIZED = 0b10000000;
+        private const byte FLAG_TAG_HAS_EXTENDED_HEADER = 0b01000000;
+        private const byte FLAG_TAG_IS_EXPERIMENTAL = 0b00100000;
+        private const byte FLAG_TAG_HAS_FOOTER = 0b00010000;
+
+        // Supported frame flags
+        private const short FLAG_FRAME_24_UNSYNCHRONIZED = 0b0000000000000010; // ID3v2.4 only
+        private const short FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR = 0b0000000000000001; // ID3v2.4 only
 
 
         // ID3v2 tag ID
@@ -115,19 +130,19 @@ namespace ATL.AudioData.IO
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation
             {
-                get { return (Flags & 0b10000000) > 0; }
+                get { return (Flags & FLAG_TAG_UNSYNCHRONIZED) > 0; }
             }
             public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
             {
-                get { return ((Flags & 0b01000000) > 0) && (Version > TAG_VERSION_2_2); }
+                get { return ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); }
             }
             public bool IsExperimental // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
             {
-                get { return (Flags & 0b00100000) > 0; }
+                get { return (Flags & FLAG_TAG_IS_EXPERIMENTAL) > 0; }
             }
             public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
             {
-                get { return (Flags & 0b00010000) > 0; }
+                get { return (Flags & FLAG_TAG_HAS_FOOTER) > 0; }
             }
             public int GetSize(bool includeFooter = true)
             {
@@ -704,6 +719,14 @@ namespace ATL.AudioData.IO
 
                         strData = "";
                     }
+                    else if ("WXX".Equals(shortFrameId)) // Custom URL
+                    {
+                        // Description encoded with current encoding
+                        strData = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                        strData += Settings.InternalValueSeparator;
+                        // URL encoded in ISO-8859-1
+                        strData += Utils.Latin1Encoding.GetString(source.ReadBytes((int)(dataSize - (source.Position - dataPosition))));
+                    }
                     else
                     {
                         // Read frame data and set tag item if frame supported
@@ -724,7 +747,10 @@ namespace ATL.AudioData.IO
                             {
                                 case "TIT2": chapter.Title = strData; break;
                                 case "TIT3": chapter.Subtitle = strData; break;
-                                case "WXXX": chapter.Url = strData; break;
+                                case "WXXX":
+                                    string[] parts = strData.Split(Settings.InternalValueSeparator);
+                                    chapter.Url = new ChapterInfo.UrlInfo(parts[0], parts[1]);
+                                    break;
                             }
                         }
                     }
@@ -1267,6 +1293,17 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
+        private void writeFrameHeader(BinaryWriter w, string frameCode, bool useUnsynchronization, bool useDataSize = false)
+        {
+            w.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+            w.Write((int)0);
+
+            short flags = 0;
+            if (useDataSize) flags |= FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR; // Force data length indicator for ID3v2.4
+            if (useUnsynchronization) flags |= FLAG_FRAME_24_UNSYNCHRONIZED;
+            w.Write(StreamUtils.EncodeBEInt16(flags));
+        }
+
         private int writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
             Random randomGenerator = null;
@@ -1292,17 +1329,8 @@ namespace ATL.AudioData.IO
             // NB : Hierarchical table of contents is not supported; see implementation notes in the header
             if ((Settings.ID3v2_alwaysWriteCTOCFrame && chapters.Count > 0) || AdditionalFields.ContainsKey("CTOC"))
             {
-                w.Write(Utils.Latin1Encoding.GetBytes("CTOC"));
-                frameSizePos = w.BaseStream.Position;
-                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
-
-                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-                ushort flags = 0;
-                if (tagHeader.UsesUnsynchronisation)
-                {
-                    flags = 2;
-                }
-                w.Write(StreamUtils.EncodeBEUInt16(flags));
+                frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+                writeFrameHeader(w, "CTOC", tagHeader.UsesUnsynchronisation);
 
                 // Default unique toc ID
                 frameDataPos = w.BaseStream.Position;
@@ -1346,17 +1374,8 @@ namespace ATL.AudioData.IO
             // Write individual chapters
             foreach (ChapterInfo chapter in chapters)
             {
-                w.Write(Utils.Latin1Encoding.GetBytes("CHAP"));
-                frameSizePos = w.BaseStream.Position;
-                w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
-
-                // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-                ushort flags = 0;
-                if (tagHeader.UsesUnsynchronisation)
-                {
-                    flags = 2;
-                }
-                w.Write(StreamUtils.EncodeBEUInt16(flags));
+                frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+                writeFrameHeader(w, "CHAP", tagHeader.UsesUnsynchronisation);
 
                 frameDataPos = w.BaseStream.Position;
 
@@ -1383,9 +1402,9 @@ namespace ATL.AudioData.IO
                 {
                     writeTextFrame(w, "TIT3", chapter.Subtitle, tagEncoding, "", true);
                 }
-                if (chapter.Url != null && chapter.Url.Length > 0)
+                if (chapter.Url != null)
                 {
-                    writeTextFrame(w, "WXXX", chapter.Url, tagEncoding, "", true);
+                    writeTextFrame(w, "WXXX", chapter.Url.ToString(), tagEncoding, "", true);
                 }
                 if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
                 {
@@ -1467,17 +1486,8 @@ namespace ATL.AudioData.IO
                 frameCode = "TXXX";
             }
 
-            w.Write(Utils.Latin1Encoding.GetBytes(frameCode));
-            frameSizePos = w.BaseStream.Position;
-            w.Write((int)0); // Frame size placeholder to be rewritten in a few lines
-
-            // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-            UInt16 flags = 0;
-            if (tagHeader.UsesUnsynchronisation)
-            {
-                flags = 2;
-            }
-            w.Write(StreamUtils.EncodeBEUInt16(flags));
+            frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+            writeFrameHeader(w, frameCode, tagHeader.UsesUnsynchronisation);
 
             frameDataPos = w.BaseStream.Position;
             string shortCode = frameCode.Substring(0, 3);
@@ -1522,6 +1532,17 @@ namespace ATL.AudioData.IO
 
                 writeTextEncoding = false;
                 writeNullTermination = true; // Seems to be the de facto standard; however, it isn't written like that in the specs
+            }
+            else if (shortCode.Equals("WXX")) // User-defined URL
+            {
+                string[] parts = text.Split(Settings.InternalValueSeparator);
+                w.Write(encodeID3v2CharEncoding(tagEncoding));
+                w.Write(getBomFromEncoding(tagEncoding));
+                w.Write(tagEncoding.GetBytes(parts[0]));
+                w.Write(getNullTerminatorFromEncoding(tagEncoding));
+                w.Write(Utils.Latin1Encoding.GetBytes(parts[1]));
+
+                writeValue = false;
             }
 
             if (writeValue)
@@ -1577,17 +1598,8 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            w.Write(Utils.Latin1Encoding.GetBytes("APIC"));
-
-            frameSizePos = w.BaseStream.Position;
-            w.Write((int)0); // Temp frame size placeholder; will be rewritten at the end of the routine
-
-            // TODO : handle frame flags (See ID3v2.4 spec; §4.1)
-            // Data size is the "natural" size of the picture (i.e. without unsynchronization) + the size of the headerless APIC frame (i.e. starting from the "text encoding" byte)
-            UInt16 flags = 0;
-            if (useDataSize) flags |= 1; // Force data length indicator for ID3v2.4
-            if (tagHeader.UsesUnsynchronisation) flags |= 2;
-            w.Write(StreamUtils.ReverseUInt16(flags));
+            frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+            writeFrameHeader(w, "APIC", tagHeader.UsesUnsynchronisation, useDataSize);
 
             frameDataPos = w.BaseStream.Position;
 

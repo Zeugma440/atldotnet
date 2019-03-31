@@ -459,7 +459,8 @@ namespace ATL.test.IO.MetaData
             try
             {
                 TagIO_RW_ID3v2_Chapters();
-            } finally
+            }
+            finally
             {
                 Settings.ID3v2_tagSubVersion = 4;
             }
@@ -496,7 +497,7 @@ namespace ATL.test.IO.MetaData
             ch.UniqueID = "";
             ch.Title = "aaa";
             ch.Subtitle = "bbb";
-            ch.Url = "ccc\0ddd";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
             byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             ch.Picture.PictureData = data;
@@ -513,7 +514,7 @@ namespace ATL.test.IO.MetaData
             ch.UniqueID = "002";
             ch.Title = "aaa0";
             ch.Subtitle = "bbb0";
-            ch.Url = "ccc\0ddd0";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
 
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
@@ -543,7 +544,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
-                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Url != null)
+                    {
+                        Assert.AreEqual(chap.Url.Url, expectedChaps[chap.StartTime].Url.Url);
+                        Assert.AreEqual(chap.Url.Description, expectedChaps[chap.StartTime].Url.Description);
+                    }
                     if (expectedChaps[chap.StartTime].Picture != null)
                     {
                         Assert.IsNotNull(chap.Picture);
@@ -583,7 +588,7 @@ namespace ATL.test.IO.MetaData
             ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 0;
             ch.Title = "Intro";
-            ch.Url = "chapter url\0https://auphonic.com/";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/");
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
             byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg");
             ch.Picture.PictureData = data;
@@ -593,49 +598,48 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 15000;
             ch.Title = "Creating a new production";
-            ch.Url = "chapter url\0https://auphonic.com/engine/upload/";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/engine/upload/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 22000;
             ch.Title = "Sound analysis";
-            ch.Url = "";
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 34000;
             ch.Title = "Adaptive leveler";
-            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23leveler";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/audio_examples%23leveler");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 45000;
             ch.Title = "Global loudness normalization";
-            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23loudnorm";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/audio_examples%23loudnorm");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 60000;
             ch.Title = "Audio restoration algorithms";
-            ch.Url = "chapter url\0https://auphonic.com/audio_examples%23denoise";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/audio_examples%23denoise");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 76000;
             ch.Title = "Output file formats";
-            ch.Url = "chapter url\0http://auphonic.com/blog/5/";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "http://auphonic.com/blog/5/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 94000;
             ch.Title = "External services";
-            ch.Url = "chapter url\0http://auphonic.com/blog/16/";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "http://auphonic.com/blog/16/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 111500;
             ch.Title = "Get a free account!";
-            ch.Url = "chapter url\0https://auphonic.com/accounts/register";
+            ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/accounts/register");
             expectedChaps.Add(ch.StartTime, ch);
 
             int found = 0;
@@ -646,7 +650,11 @@ namespace ATL.test.IO.MetaData
                     found++;
                     Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Url != null)
+                    {
+                        Assert.AreEqual(chap.Url.Url, expectedChaps[chap.StartTime].Url.Url);
+                        Assert.AreEqual(chap.Url.Description, expectedChaps[chap.StartTime].Url.Description);
+                    }
                     if (expectedChaps[chap.StartTime].Picture != null)
                     {
                         Assert.IsNotNull(chap.Picture);
@@ -675,7 +683,7 @@ namespace ATL.test.IO.MetaData
             ch.UniqueID = "";
             ch.Title = "aaa";
             ch.Subtitle = "bbb";
-            ch.Url = "ccc\0ddd";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
             ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
             data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
             ch.Picture.PictureData = data;
@@ -692,7 +700,7 @@ namespace ATL.test.IO.MetaData
             ch.UniqueID = "002";
             ch.Title = "aaa0";
             ch.Subtitle = "bbb0";
-            ch.Url = "ccc\0ddd0";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
 
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
@@ -722,7 +730,11 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     Assert.AreEqual(chap.Subtitle, expectedChaps[chap.StartTime].Subtitle);
-                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    if (expectedChaps[chap.StartTime].Url != null)
+                    {
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Url, chap.Url.Url);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Description, chap.Url.Description);
+                    }
                     if (expectedChaps[chap.StartTime].Picture != null)
                     {
                         Assert.IsNotNull(chap.Picture);

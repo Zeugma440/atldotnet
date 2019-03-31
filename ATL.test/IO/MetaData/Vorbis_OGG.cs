@@ -518,55 +518,54 @@ namespace ATL.test.IO.MetaData
             ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 0;
             ch.Title = "Intro";
-            ch.Url = "https://auphonic.com/";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 15000;
             ch.Title = "Creating a new production";
-            ch.Url = "https://auphonic.com/engine/upload/";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/engine/upload/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 22000;
             ch.Title = "Sound analysis";
-            ch.Url = "";
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 34000;
             ch.Title = "Adaptive leveler";
-            ch.Url = "https://auphonic.com/audio_examples#leveler";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/audio_examples#leveler");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 45000;
             ch.Title = "Global loudness normalization";
-            ch.Url = "https://auphonic.com/audio_examples#loudnorm";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/audio_examples#loudnorm");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 60000;
             ch.Title = "Audio restoration algorithms";
-            ch.Url = "https://auphonic.com/audio_examples#denoise";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/audio_examples#denoise");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 76000;
             ch.Title = "Output file formats";
-            ch.Url = "http://auphonic.com/blog/5/";
+            ch.Url = new ChapterInfo.UrlInfo("http://auphonic.com/blog/5/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 94000;
             ch.Title = "External services";
-            ch.Url = "http://auphonic.com/blog/16/";
+            ch.Url = new ChapterInfo.UrlInfo("http://auphonic.com/blog/16/");
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
             ch.StartTime = 111500;
             ch.Title = "Get a free account!";
-            ch.Url = "https://auphonic.com/accounts/register";
+            ch.Url = new ChapterInfo.UrlInfo("https://auphonic.com/accounts/register");
             expectedChaps.Add(ch.StartTime, ch);
 
             int found = 0;
@@ -577,7 +576,11 @@ namespace ATL.test.IO.MetaData
                     found++;
                     Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
                     Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
-                    Assert.AreEqual(expectedChaps[chap.StartTime].Url, chap.Url);
+                    if (expectedChaps[chap.StartTime].Url != null)
+                    {
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Url, chap.Url.Url);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Description, chap.Url.Description);
+                    }
                 }
                 else
                 {
@@ -595,7 +598,7 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 123;
             ch.Title = "aaa";
-            ch.Url = "ddd";
+            ch.Url = new ChapterInfo.UrlInfo("ddd");
 
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
@@ -603,7 +606,7 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 1230;
             ch.Title = "aaa0";
-            ch.Url = "ddd0";
+            ch.Url = new ChapterInfo.UrlInfo("ddd0");
 
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
@@ -624,9 +627,13 @@ namespace ATL.test.IO.MetaData
                 if (expectedChaps.ContainsKey(chap.StartTime))
                 {
                     found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                    Assert.AreEqual(chap.Url, expectedChaps[chap.StartTime].Url);
+                    Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
+                    Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
+                    if (expectedChaps[chap.StartTime].Url != null)
+                    {
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Url, chap.Url.Url);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Url.Description, chap.Url.Description);
+                    }
                 }
                 else
                 {

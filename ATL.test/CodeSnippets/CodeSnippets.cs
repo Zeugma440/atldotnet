@@ -135,7 +135,7 @@ namespace ATL.test.CodeSnippets
 	        ch.UniqueID = "";
 	        ch.Title = "aaa";
 	        ch.Subtitle = "bbb";
-	        ch.Url = "ccc\0ddd";
+	        ch.Url = new ChapterInfo.UrlInfo("ccc","ddd");
             theFile.Chapters.Add(ch);
 
 	        ch = new ChapterInfo();
@@ -146,7 +146,7 @@ namespace ATL.test.CodeSnippets
 	        ch.UniqueID = "002";
 	        ch.Title = "aaa0";
 	        ch.Subtitle = "bbb0";
-	        ch.Url = "ccc\0ddd0";
+	        ch.Url = new ChapterInfo.UrlInfo("ccc","ddd0");
             // Add a picture to the 2nd chapter
             ch.Picture = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
             byte[] data = System.IO.File.ReadAllBytes(imagePath);
