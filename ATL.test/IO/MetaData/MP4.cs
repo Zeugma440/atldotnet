@@ -68,7 +68,8 @@ namespace ATL.test.IO.MetaData
             testData.TrackTotal = "2";
             testData.DiscNumber = "3";
             testData.DiscTotal = "4";
-            testData.Conductor = null;
+            testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
+            testData.Publisher = null;
 
             testData.AdditionalFields.Clear();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));
@@ -97,83 +98,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
-
-            // Source : tag-free M4A
-            string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-
-            // Check that it is indeed tag-free
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
-
-
-            // Construct a new tag with the most basic options (no un supported fields, no pictures)
-            TagData theTag = new TagData();
-            theTag.Title = "Test !!";
-            theTag.Album = "Album";
-            theTag.Artist = "Artist";
-            theTag.AlbumArtist = "Mike";
-            theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.RecordingDate = "2008/01/01";
-            theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
-            theTag.Rating = 2.5.ToString();
-            theTag.Composer = "Me";
-            theTag.Copyright = "父";
-            theTag.Conductor = "John Johnson Jr.";
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.AreEqual("Test !!", theFile.NativeTag.Title);
-            Assert.AreEqual("Album", theFile.NativeTag.Album);
-            Assert.AreEqual("Artist", theFile.NativeTag.Artist);
-            Assert.AreEqual("Mike", theFile.NativeTag.AlbumArtist);
-            Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
-            Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
-            Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
-            Assert.AreEqual(2.5 / 5, theFile.NativeTag.Popularity);
-            Assert.AreEqual("Me", theFile.NativeTag.Composer);
-            Assert.AreEqual("父", theFile.NativeTag.Copyright);
-            Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
-
-
-            // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
-
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
-
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
-
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+            test_RW_Empty(emptyFile, true, true, true);
         }
 
         [TestMethod]
