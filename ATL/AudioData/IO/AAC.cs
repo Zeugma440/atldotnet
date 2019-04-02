@@ -158,7 +158,7 @@ namespace ATL.AudioData.IO
         {
             get { return fileName; }
         }
-        public bool IsMetaSupported(int metaType)
+        public bool IsMetaSupported(int metaType) // TODO : MP4 and M4A actually do not allow ID3v2 -> test according to the extension or separate formats in two classes
         {
             return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
         }
