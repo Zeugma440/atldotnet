@@ -145,6 +145,53 @@ namespace ATL.test.IO
             tagIO_RW_UpdateNeutral("WMA/wma.wma");
         }
 
+        private void tagIO_RW_UpdateEmpty(string resource, bool supportsTrack = true)
+        {
+            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            Track theTrack = new Track(testFileLocation);
+
+            // Simple field
+            theTrack.Artist = "Hey ho";
+            // Tricky fields that aren't managed with a 1-to-1 mapping
+            theTrack.Year = 1944;
+            theTrack.TrackNumber = 10;
+            theTrack.Save();
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("Hey ho", theTrack.Artist);
+            Assert.AreEqual(1944, theTrack.Year);
+            if (supportsTrack) Assert.AreEqual(10, theTrack.TrackNumber);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_UpdateEmpty()
+        {
+//            Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_NATIVE, AudioData.MetaDataIOFactory.TAG_ID3V2 };
+            try
+            {
+                tagIO_RW_UpdateEmpty("MP3/empty.mp3"); // ID3v2
+                tagIO_RW_UpdateEmpty("DSF/empty.dsf"); // ID3v2 in DSF
+                tagIO_RW_UpdateEmpty("FLAC/empty.flac"); // Vorbis-FLAC
+                tagIO_RW_UpdateEmpty("OGG/empty.ogg"); // Vorbis-OGG
+                tagIO_RW_UpdateEmpty("MP3/empty.mp3"); // APE
+                // Native formats
+                tagIO_RW_UpdateEmpty("VQF/empty.vqf");
+                tagIO_RW_UpdateEmpty("VGM/empty.vgm", false);
+                tagIO_RW_UpdateEmpty("SPC/empty.spc");
+
+                tagIO_RW_UpdateEmpty("AAC/empty.m4a");
+                tagIO_RW_UpdateEmpty("WMA/empty_full.wma");
+            }
+            finally
+            {
+                Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_ID3V2, AudioData.MetaDataIOFactory.TAG_NATIVE };
+            }
+        }
+
         private void tagIO_RW_UpdateTagBaseField(string resource, bool supportsDisc = true, bool supportsTotalTracksDiscs = true, bool supportsTrack = true)
         {
             string testFileLocation = TestUtils.GetTempTestFile(resource);
@@ -336,7 +383,7 @@ namespace ATL.test.IO
             Assert.AreEqual(chaptersSave.Count, theTrack.Chapters.Count);
 
             ChapterInfo readChapter;
-            for (int i=0; i<theTrack.Chapters.Count; i++)
+            for (int i = 0; i < theTrack.Chapters.Count; i++)
             {
                 readChapter = theTrack.Chapters[i];
                 Assert.AreEqual(readChapter.StartOffset, chaptersSave[i].StartOffset);

@@ -774,6 +774,8 @@ namespace ATL.AudioData.IO
 
                         result = structureHelper.RewriteHeaders(w, delta, action, zone.Name);
                     }
+
+                    zone.Size = (int)newTagSize;
                 }
             } // Loop through zones
 
