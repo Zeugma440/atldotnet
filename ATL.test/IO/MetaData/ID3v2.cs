@@ -567,6 +567,69 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_Chapters_CTOCEdgeCases()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : empty MP3
+            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Case 1. Setting Track.ChaptersTableDescription alone without setting any chapter shouldn't write any CTOC frame
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
+            TagData theTag = new TagData();
+            theTag.ChaptersTableDescription = "aaa";
+            theTag.Chapters = new List<ChapterInfo>();
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
+            // Read the file itself and check that no CTOC frame has been written
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
+            {
+                Assert.IsFalse(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("CTOC")));
+            }
+
+            
+            //Case 2. If Settings.ID3v2_alwaysWriteCTOCFrame to true and at least 1 chapter without setting Track.ChaptersTableDescription shouldn't write any TIT2 subframe
+            
+            // Set a chapter but no description
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.StartOffset = 456;
+            ch.EndTime = 789;
+            ch.EndOffset = 101112;
+            ch.UniqueID = "";
+            ch.Subtitle = "bbb";
+            theTag.ChaptersTableDescription = "";
+            theTag.Chapters.Add(ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Read the file itself
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("CTOC")));
+                Assert.IsFalse(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TIT2")));
+            }
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_Chapters_Existing()
         {
             ConsoleLogger log = new ConsoleLogger();

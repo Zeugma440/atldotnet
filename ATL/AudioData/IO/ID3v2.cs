@@ -1213,6 +1213,8 @@ namespace ATL.AudioData.IO
                     {
                         if (frameType == mapping[s])
                         {
+                            if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
+
                             string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(w, s, value, tagEncoding);
                             nbFrames++;
@@ -1235,8 +1237,6 @@ namespace ATL.AudioData.IO
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
-
-                    if (fieldCode.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
 
                     // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
                     if (4 == Settings.ID3v2_tagSubVersion)
@@ -1327,7 +1327,7 @@ namespace ATL.AudioData.IO
 
             // Write a "flat" table of contents, if any CTOC is present in tag
             // NB : Hierarchical table of contents is not supported; see implementation notes in the header
-            if ((Settings.ID3v2_alwaysWriteCTOCFrame && chapters.Count > 0) || AdditionalFields.ContainsKey("CTOC"))
+            if (Settings.ID3v2_alwaysWriteCTOCFrame && chapters.Count > 0)
             {
                 frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
                 writeFrameHeader(w, "CTOC", tagHeader.UsesUnsynchronisation);
