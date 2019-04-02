@@ -1536,10 +1536,10 @@ namespace ATL.AudioData.IO
             else if (shortCode.Equals("WXX")) // User-defined URL
             {
                 string[] parts = text.Split(Settings.InternalValueSeparator);
-                w.Write(encodeID3v2CharEncoding(tagEncoding));
-                w.Write(getBomFromEncoding(tagEncoding));
-                w.Write(tagEncoding.GetBytes(parts[0]));
-                w.Write(getNullTerminatorFromEncoding(tagEncoding));
+                w.Write(encodeID3v2CharEncoding(Utils.Latin1Encoding));     // ISO-8859-1 seems to be the de facto norm, although spec allows fancier encodings
+                //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
+                w.Write(Utils.Latin1Encoding.GetBytes(parts[0]));
+                w.Write(getNullTerminatorFromEncoding(Utils.Latin1Encoding));
                 w.Write(Utils.Latin1Encoding.GetBytes(parts[1]));
 
                 writeValue = false;

@@ -17,6 +17,9 @@ namespace Commons
         /// </summary>
         public delegate void voidDelegate();
 
+        /// <summary>
+        /// ISO-8859-1 encoding
+        /// </summary>
         public static Encoding Latin1Encoding { get { return latin1Encoding; } }
 
 
