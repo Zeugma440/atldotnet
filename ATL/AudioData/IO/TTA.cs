@@ -44,7 +44,7 @@ namespace ATL.AudioData.IO
         }
         public uint CRC32
         {
-            get { return CRC32; }
+            get { return cRC32; }
         }
         public uint AudioFormat
         {
