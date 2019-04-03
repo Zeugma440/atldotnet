@@ -55,7 +55,6 @@ namespace ATL.AudioData.IO
         // Tag flags
         private const byte FLAG_TAG_UNSYNCHRONIZED = 0b10000000;
         private const byte FLAG_TAG_HAS_EXTENDED_HEADER = 0b01000000;
-        private const byte FLAG_TAG_IS_EXPERIMENTAL = 0b00100000;
         private const byte FLAG_TAG_HAS_FOOTER = 0b00010000;
 
         // Supported frame flags
@@ -67,28 +66,165 @@ namespace ATL.AudioData.IO
         private const string ID3V2_ID = "ID3";
 
         // List of standard fields
-        private static ICollection<string> standardFrames_v22;
-        private static ICollection<string> standardFrames_v23;
-        private static ICollection<string> standardFrames_v24;
+        private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
+        private static readonly ICollection<string> standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+        private static readonly ICollection<string> standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
         // Field codes that need to be persisted in a COMMENT field
-        private static ICollection<string> commentsFields;
+        private static readonly ICollection<string> commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
         // Fields where text encoding descriptor byte is not required
-        private static ICollection<string> noTextEncodingFields;
+        private static readonly ICollection<string> noTextEncodingFields = new List<string>() { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
-        // Mapping between ID3v2 field IDs and ATL fields
-        private static IDictionary<string, byte> frameMapping_v22;
-        private static IDictionary<string, byte> frameMapping_v23;
-        private static IDictionary<string, byte> frameMapping_v24;
+        // Note on date field identifiers
+        //
+        // Original release date
+        //   ID3v2.0 : TOR (year only)
+        //   ID3v2.3 : TORY (year only)
+        //   ID3v2.4 : TDOR (timestamp according to spec)
+        //
+        // Release date
+        //   ID3v2.0 : no standard
+        //   ID3v2.3 : no standard
+        //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
+        //
+        // Recording date <== de facto standard behind the "date" field on most taggers
+        //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+        //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+        //   ID3v2.4 : TDRC (timestamp)
+
+        // Mapping between standard fields and ID3v2.2 identifiers
+        private static readonly IDictionary<string, byte> frameMapping_v22 = new Dictionary<string, byte>
+            {
+                { "TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TT2", TagData.TAG_FIELD_TITLE },
+                { "TP1", TagData.TAG_FIELD_ARTIST },
+                { "TP2", TagData.TAG_FIELD_ALBUM_ARTIST },  // De facto standard, regardless of spec
+                { "TP3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TAL", TagData.TAG_FIELD_ALBUM },
+                { "TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+                { "TPA", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+                { "TYE", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "TIM", TagData.TAG_FIELD_RECORDING_TIME },
+                { "COM", TagData.TAG_FIELD_COMMENT },
+                { "TCM", TagData.TAG_FIELD_COMPOSER },
+                { "POP", TagData.TAG_FIELD_RATING },
+                { "TCO", TagData.TAG_FIELD_GENRE },
+                { "TCR", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPB", TagData.TAG_FIELD_PUBLISHER }
+            };
+
+        // Mapping between standard fields and ID3v2.3 identifiers
+        private static readonly IDictionary<string, byte> frameMapping_v23 = new Dictionary<string, byte>
+            {
+                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TIT2", TagData.TAG_FIELD_TITLE },
+                { "TPE1", TagData.TAG_FIELD_ARTIST },
+                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TALB", TagData.TAG_FIELD_ALBUM },
+                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
+                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "TIME", TagData.TAG_FIELD_RECORDING_TIME },
+                { "COMM", TagData.TAG_FIELD_COMMENT },
+                { "TCOM", TagData.TAG_FIELD_COMPOSER },
+                { "POPM", TagData.TAG_FIELD_RATING },
+                { "TCON", TagData.TAG_FIELD_GENRE },
+                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
+                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
+            };
+
+        // Mapping between standard fields and ID3v2.4 identifiers
+        private static readonly IDictionary<string, byte> frameMapping_v24 = new Dictionary<string, byte>
+            {
+                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+                { "TIT2", TagData.TAG_FIELD_TITLE },
+                { "TPE1", TagData.TAG_FIELD_ARTIST },
+                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
+                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
+                { "TALB", TagData.TAG_FIELD_ALBUM },
+                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
+                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE },
+                { "COMM", TagData.TAG_FIELD_COMMENT },
+                { "TCOM", TagData.TAG_FIELD_COMPOSER },
+                { "POPM", TagData.TAG_FIELD_RATING },
+                { "TCON", TagData.TAG_FIELD_GENRE },
+                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
+                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
+                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
+            };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions
-        private static IDictionary<string, string> frameMapping_v22_4;
-        private static IDictionary<string, string> frameMapping_v23_4;
+        private static readonly IDictionary<string, string> frameMapping_v22_4 = new Dictionary<string, string>
+            {
+                { "BUF", "RBUF" },
+                { "CNT", "PCNT" },
+                { "CRA", "AENC" },
+                // CRM / Encrypted meta frame field has been droppped
+                { "ETC", "ETCO" },
+                { "EQU", "EQU2" },
+                { "GEO", "GEOB" },
+                { "IPL", "TIPL" },
+                { "LNK", "LINK" },
+                { "MCI", "MCDI" },
+                { "MLL", "MLLT" },
+                { "REV", "RVRB" },
+                { "RVA", "RVA2" },
+                { "SLT", "SYLT" },
+                { "STC", "SYTC" },
+                { "TBP", "TBPM" },
+                { "TDY", "TDLY" },
+                { "TEN", "TENC" },
+                { "TFT", "TFLT" },
+                { "TKE", "TKEY" },
+                { "TLA", "TLAN" },
+                { "TLE", "TLEN" },
+                { "TMT", "TMED" },
+                { "TOF", "TOFN" },
+                { "TOL", "TOLY" },
+                { "TP4", "TPE4" },
+                { "TPA", "TPOS" },
+                { "TRC", "TSRC" },
+                //{ "TRD", "" } no direct equivalent
+                // TSI / Size field has been dropped
+                { "TSS", "TSSE" },
+                { "TT3", "TIT3" },
+                { "TXT", "TEXT" },
+                { "TXX", "TXXX" },
+                { "UFI", "UFID" },
+                { "ULT", "USLT" },
+                { "WAF", "WOAF" },
+                { "WAR", "WOAR" },
+                { "WAS", "WOAS" },
+                { "WCM", "WCOM" },
+                { "WCP", "WCOP" },
+                { "WPB", "WPUB" },
+                { "WXX", "WXXX" }
+                // TYE, TDA and TIM are converted on the fly when writing
+        };
+        private static readonly IDictionary<string, string> frameMapping_v23_4 = new Dictionary<string, string>
+            {
+                { "EQUA", "EQU2" },
+                { "IPLS", "TIPL" },
+                { "RVAD", "RVA2" },
+                { "TORY", "TDOR" } // yyyy is a valid timestamp
+                // TYER, TDAT and TIME are converted on the fly when writing
+            };
 
         // Mapping between ID3v2.2/4 fields and ID3v2.3 fields not included in frameMapping_v2x, and that have changed between versions
-        private static IDictionary<string, string> frameMapping_v22_3;
-        private static IDictionary<string, string> frameMapping_v24_3;
+        private static readonly IDictionary<string, string> frameMapping_v22_3 = new Dictionary<string, string>();
+        private static readonly IDictionary<string, string> frameMapping_v24_3 = new Dictionary<string, string>();
 
         // Buffer size to use to parse through padding frames
         private const int PADDING_BUFFER_SIZE = 512;
@@ -98,7 +234,7 @@ namespace ATL.AudioData.IO
         {
             public string ID;                           // Frame ID
             public int Size;                            // Size excluding header
-            public ushort Flags;				        // Flags
+            public ushort Flags;                        // Flags
         }
 
         // ID3v2 header data - for internal use
@@ -110,7 +246,7 @@ namespace ATL.AudioData.IO
             public byte Revision;                                   // Revision number
             public byte Flags;                                         // Flags of tag
             public byte[] Size = new byte[4];             // Tag size excluding header
-            // Extended data
+                                                          // Extended data
             public long FileSize;                                 // File size (bytes)
             public long HeaderEnd;                           // End position of header
             public long PaddingOffset = -1;
@@ -231,172 +367,16 @@ namespace ATL.AudioData.IO
 
         static ID3v2()
         {
-            standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
-            standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
-            standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
-
-            commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
-
-            noTextEncodingFields = new List<string>() { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
-
-            // Note on date field identifiers
-            //
-            // Original release date
-            //   ID3v2.0 : TOR (year only)
-            //   ID3v2.3 : TORY (year only)
-            //   ID3v2.4 : TDOR (timestamp according to spec)
-            //
-            // Release date
-            //   ID3v2.0 : no standard
-            //   ID3v2.3 : no standard
-            //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
-            //
-            // Recording date <== de facto standard behind the "date" field on most taggers
-            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
-            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
-            //   ID3v2.4 : TDRC (timestamp)
-
-            // Mapping between standard ATL fields and ID3v2.2 identifiers
-            frameMapping_v22 = new Dictionary<string, byte>
-            {
-                { "TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TT2", TagData.TAG_FIELD_TITLE },
-                { "TP1", TagData.TAG_FIELD_ARTIST },
-                { "TP2", TagData.TAG_FIELD_ALBUM_ARTIST },  // De facto standard, regardless of spec
-                { "TP3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TAL", TagData.TAG_FIELD_ALBUM },
-                { "TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPA", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TYE", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH },
-                { "TIM", TagData.TAG_FIELD_RECORDING_TIME },
-                { "COM", TagData.TAG_FIELD_COMMENT },
-                { "TCM", TagData.TAG_FIELD_COMPOSER },
-                { "POP", TagData.TAG_FIELD_RATING },
-                { "TCO", TagData.TAG_FIELD_GENRE },
-                { "TCR", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPB", TagData.TAG_FIELD_PUBLISHER }
-            };
-
-            frameMapping_v22_4 = new Dictionary<string, string>
-            {
-                { "BUF", "RBUF" },
-                { "CNT", "PCNT" },
-                { "CRA", "AENC" },
-                // CRM / Encrypted meta frame field has been droppped
-                { "ETC", "ETCO" },
-                { "EQU", "EQU2" },
-                { "GEO", "GEOB" },
-                { "IPL", "TIPL" },
-                { "LNK", "LINK" },
-                { "MCI", "MCDI" },
-                { "MLL", "MLLT" },
-                { "REV", "RVRB" },
-                { "RVA", "RVA2" },
-                { "SLT", "SYLT" },
-                { "STC", "SYTC" },
-                { "TBP", "TBPM" },
-                { "TDY", "TDLY" },
-                { "TEN", "TENC" },
-                { "TFT", "TFLT" },
-                { "TKE", "TKEY" },
-                { "TLA", "TLAN" },
-                { "TLE", "TLEN" },
-                { "TMT", "TMED" },
-                { "TOF", "TOFN" },
-                { "TOL", "TOLY" },
-                { "TP4", "TPE4" },
-                { "TPA", "TPOS" },
-                { "TRC", "TSRC" },
-                //{ "TRD", "" } no direct equivalent
-                // TSI / Size field has been dropped
-                { "TSS", "TSSE" },
-                { "TT3", "TIT3" },
-                { "TXT", "TEXT" },
-                { "TXX", "TXXX" },
-                { "UFI", "UFID" },
-                { "ULT", "USLT" },
-                { "WAF", "WOAF" },
-                { "WAR", "WOAR" },
-                { "WAS", "WOAS" },
-                { "WCM", "WCOM" },
-                { "WCP", "WCOP" },
-                { "WPB", "WPUB" },
-                { "WXX", "WXXX" }
-                // TYE, TDA and TIM are converted on the fly when writing
-        };
-
-            frameMapping_v22_3 = new Dictionary<string, string>();
             foreach (string s in frameMapping_v22_4.Keys)
             {
                 frameMapping_v22_3.Add(s, frameMapping_v22_4[s]);
             }
 
-            frameMapping_v23_4 = new Dictionary<string, string>
-            {
-                { "EQUA", "EQU2" },
-                { "IPLS", "TIPL" },
-                { "RVAD", "RVA2" },
-                { "TORY", "TDOR" } // yyyy is a valid timestamp
-                // TYER, TDAT and TIME are converted on the fly when writing
-            };
-
-            frameMapping_v24_3 = new Dictionary<string, string>();
             foreach (string s in frameMapping_v23_4.Keys)
             {
                 frameMapping_v24_3.Add(frameMapping_v23_4[s], s);
                 if (frameMapping_v22_3.ContainsKey(frameMapping_v23_4[s])) frameMapping_v22_3[frameMapping_v23_4[s]] = s;
             }
-
-            // Mapping between standard fields and ID3v2.3 identifiers
-            frameMapping_v23 = new Dictionary<string, byte>
-            {
-                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TIT2", TagData.TAG_FIELD_TITLE },
-                { "TPE1", TagData.TAG_FIELD_ARTIST },
-                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
-                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TALB", TagData.TAG_FIELD_ALBUM },
-                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
-                { "TIME", TagData.TAG_FIELD_RECORDING_TIME },
-                { "COMM", TagData.TAG_FIELD_COMMENT },
-                { "TCOM", TagData.TAG_FIELD_COMPOSER },
-                { "POPM", TagData.TAG_FIELD_RATING },
-                { "TCON", TagData.TAG_FIELD_GENRE },
-                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
-                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
-            };
-
-            // Mapping between standard fields and ID3v2.4 identifiers
-            frameMapping_v24 = new Dictionary<string, byte>
-            {
-                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TIT2", TagData.TAG_FIELD_TITLE },
-                { "TPE1", TagData.TAG_FIELD_ARTIST },
-                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
-                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TALB", TagData.TAG_FIELD_ALBUM },
-                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE },
-                { "COMM", TagData.TAG_FIELD_COMMENT },
-                { "TCOM", TagData.TAG_FIELD_COMPOSER },
-                { "POPM", TagData.TAG_FIELD_RATING },
-                { "TCON", TagData.TAG_FIELD_GENRE },
-                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
-                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
-            };
         }
 
         public ID3v2()
@@ -672,7 +652,7 @@ namespace ATL.AudioData.IO
                         source.Seek(1, SeekOrigin.Current); // Skip flags
                         int entryCount = source.ReadByte();
                         for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
-                        // There's an optional header here
+                                                                                                                                 // There's an optional header here
                         if (source.Position - dataPosition < Frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
                         {
                             source.Seek(6, SeekOrigin.Current); // Skip size and flags
@@ -700,7 +680,7 @@ namespace ATL.AudioData.IO
                         chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
-                        chapter.UseOffset = (!(chapter.StartOffset == UInt32.MaxValue));
+                        chapter.UseOffset = (chapter.StartOffset != uint.MaxValue);
 
                         long remainingData = dataSize - (source.Position - initPos);
                         while (remainingData > 0)
@@ -890,14 +870,11 @@ namespace ATL.AudioData.IO
                 foreach (MetaFieldInfo comm in comments)
                 {
                     string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
-                    if (commentDescription.Length > 0)
+                    if (commentDescription.Length > 0 && !commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Processed as an additional field
-                            SetMetaField(commentDescription, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, 0, comm.Language);
-                            continue;
-                        }
+                        // Processed as an additional field
+                        SetMetaField(commentDescription, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, 0, comm.Language);
+                        continue;
                     }
 
                     // Processed as a "classic" Comment
@@ -1050,9 +1027,9 @@ namespace ATL.AudioData.IO
             w.Write(tagHeader.Flags);
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
-            w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
+            w.Write(0); // Tag size placeholder to be rewritten in a few lines
 
-            writeExtHeader(w, tagEncoding);
+            writeExtHeader(w);
             long headerEnd = w.BaseStream.Position;
             result = writeFrames(tag, w, tagEncoding);
 
@@ -1082,12 +1059,9 @@ namespace ATL.AudioData.IO
             tagSize = (int)(finalTagPos - tagSizePos - 4);
             w.Write(StreamUtils.EncodeSynchSafeInt32(tagSize)); // Synch-safe int32 since ID3v2.3
 
-            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && tagSize / 1024 > tagHeader.TagSizeRestrictionKB)
             {
-                if (tagSize / 1024 > tagHeader.TagSizeRestrictionKB)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize / 1024 + "KB) according to ID3v2 restrictions (" + tagHeader.TagSizeRestrictionKB + ") !");
-                }
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag is too large (" + tagSize / 1024 + "KB) according to ID3v2 restrictions (" + tagHeader.TagSizeRestrictionKB + ") !");
             }
 
             return result;
@@ -1097,7 +1071,7 @@ namespace ATL.AudioData.IO
         // TODO : Write ID3v2.4 footer
         // if footer support is added, don't write padding since they are mutually exclusive (see specs)
 
-        private void writeExtHeader(BinaryWriter w, Encoding tagEncoding)
+        private void writeExtHeader(BinaryWriter w)
         {
             // Rewrites extended header as is
             if (tagHeader.HasExtendedHeader)
@@ -1107,28 +1081,23 @@ namespace ATL.AudioData.IO
                 {
                     w.Write((byte)1); // Number of flag bytes; always 1 according to spec
                     w.Write(tagHeader.ExtendedFlags);
-                    // TODO : calculate a new CRC according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
+                    // A new CRC should be calculated according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
                     if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
                     if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
 
-                    if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
+                    /* TODO - to be reimplemented and tested with a proper unit test
+                    if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && tagHeader.HasTextEncodingRestriction && (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8"))))
                     {
                         // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
-                        // TODO - what's the point of that since we're purposely writing UTF-8 ID3v2.4 tags ?
-                        if (tagHeader.HasTextEncodingRestriction)
-                        {
-                            if (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8")))
-                            {
-                                tagEncoding = Settings.DefaultTextEncoding;
-                            }
-                        }
+                        tagEncoding = Settings.DefaultTextEncoding;
                     }
+                    */
                 }
                 else if (3 == Settings.ID3v2_tagSubVersion)
                 {
                     w.Write(tagHeader.ExtendedFlags);
                     w.Write((byte)0); // Always 0 according to spec
-                    w.Write((int)0);  // Size of padding
+                    w.Write(0);  // Size of padding
                 }
             }
         }
@@ -1178,18 +1147,15 @@ namespace ATL.AudioData.IO
                 if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) // Make sure we don't erase an existing, same date with less detailed (year only) information
                     map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
             }
-            else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3) // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
+            else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length) // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
             {
-                if (0 == recordingYear.Length) // Make sure we don't erase an existing year, which has the priority
+                map[TagData.TAG_FIELD_RECORDING_YEAR] = recordingDate.Substring(0, 4);
+                if (recordingDate.Length > 9)
                 {
-                    map[TagData.TAG_FIELD_RECORDING_YEAR] = recordingDate.Substring(0, 4);
-                    if (recordingDate.Length > 9)
+                    map[TagData.TAG_FIELD_RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                    if (recordingDate.Length > 15)
                     {
-                        map[TagData.TAG_FIELD_RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
-                        if (recordingDate.Length > 15)
-                        {
-                            map[TagData.TAG_FIELD_RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
-                        }
+                        map[TagData.TAG_FIELD_RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
                     }
                 }
             }
@@ -1237,9 +1203,9 @@ namespace ATL.AudioData.IO
                         {
                             if (frameMapping_v22_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_4[fieldCode];
                         }
-                        else if (TAG_VERSION_2_3 == tagVersion)
+                        else if (TAG_VERSION_2_3 == tagVersion && frameMapping_v23_4.ContainsKey(fieldCode))
                         {
-                            if (frameMapping_v23_4.ContainsKey(fieldCode)) fieldCode = frameMapping_v23_4[fieldCode];
+                            fieldCode = frameMapping_v23_4[fieldCode];
                         }
                     }
                     else if (3 == Settings.ID3v2_tagSubVersion)
@@ -1248,9 +1214,9 @@ namespace ATL.AudioData.IO
                         {
                             if (frameMapping_v22_3.ContainsKey(fieldCode)) fieldCode = frameMapping_v22_3[fieldCode];
                         }
-                        else if (TAG_VERSION_2_4 == tagVersion)
+                        else if (TAG_VERSION_2_4 == tagVersion && frameMapping_v24_3.ContainsKey(fieldCode))
                         {
-                            if (frameMapping_v24_3.ContainsKey(fieldCode)) fieldCode = frameMapping_v24_3[fieldCode];
+                            fieldCode = frameMapping_v24_3[fieldCode];
                         }
                     }
 
@@ -1269,17 +1235,14 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, tagEncoding);
+                    writePictureFrame(w, picInfo.PictureData, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, tagEncoding);
                     nbFrames++;
                 }
             }
 
-            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && nbFrames > tagHeader.TagFramesRestriction)
             {
-                if (nbFrames > tagHeader.TagFramesRestriction)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames (" + nbFrames + ") according to ID3v2 restrictions (" + tagHeader.TagFramesRestriction + ") !");
-                }
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Tag has too many frames (" + nbFrames + ") according to ID3v2 restrictions (" + tagHeader.TagFramesRestriction + ") !");
             }
 
             return nbFrames;
@@ -1288,7 +1251,7 @@ namespace ATL.AudioData.IO
         private void writeFrameHeader(BinaryWriter w, string frameCode, bool useUnsynchronization, bool useDataSize = false)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(frameCode));
-            w.Write((int)0);
+            w.Write(0);
 
             short flags = 0;
             if (useDataSize) flags |= FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR; // Force data length indicator for ID3v2.4
@@ -1298,24 +1261,31 @@ namespace ATL.AudioData.IO
 
         private int writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
         {
-            Random randomGenerator = null;
-            long frameSizePos, frameDataPos, finalFramePos, frameOffset;
-            int result = 0;
-
-            BinaryWriter w;
-            MemoryStream s = null;
+            int result;
 
             if (tagHeader.UsesUnsynchronisation)
             {
-                s = new MemoryStream(Size);
-                w = new BinaryWriter(s, tagEncoding);
-                frameOffset = writer.BaseStream.Position;
+                MemoryStream s = new MemoryStream(Size);
+                using (BinaryWriter w = new BinaryWriter(s, tagEncoding))
+                {
+                    result = writeChaptersInternal(writer, w, chapters, tagEncoding, writer.BaseStream.Position);
+                    s.Seek(0, SeekOrigin.Begin);
+                    encodeUnsynchronizedStreamTo(s, writer);
+                }
             }
             else
             {
-                w = writer;
-                frameOffset = 0;
+                result = writeChaptersInternal(writer, writer, chapters, tagEncoding, 0);
             }
+
+            return result;
+        }
+
+        private int writeChaptersInternal(BinaryWriter writer, BinaryWriter w, IList<ChapterInfo> chapters, Encoding tagEncoding, long frameOffset)
+        {
+            Random randomGenerator = null;
+            long frameSizePos, frameDataPos, finalFramePos;
+            int result = 0;
 
             // Write a "flat" table of contents, if any CTOC is present in tag
             // NB : Hierarchical table of contents is not supported; see implementation notes in the header
@@ -1400,7 +1370,7 @@ namespace ATL.AudioData.IO
                 }
                 if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
                 {
-                    writePictureFrame(w, chapter.Picture.PictureData, chapter.Picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
+                    writePictureFrame(w, chapter.Picture.PictureData, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
                 }
 
                 // Go back to frame size location to write its actual size 
@@ -1413,14 +1383,6 @@ namespace ATL.AudioData.IO
             }
 
             result += chapters.Count;
-
-            if (tagHeader.UsesUnsynchronisation)
-            {
-                s.Seek(0, SeekOrigin.Begin);
-                encodeUnsynchronizedStreamTo(s, writer);
-                w.Close();
-            }
-
             return result;
         }
 
@@ -1453,14 +1415,11 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && text.Length > tagHeader.TextFieldSizeRestriction)
             {
-                if (text.Length > tagHeader.TextFieldSizeRestriction)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + tagHeader.TextFieldSizeRestriction + " characters");
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + tagHeader.TextFieldSizeRestriction + " characters");
 
-                    text = text.Substring(0, tagHeader.TextFieldSizeRestriction);
-                }
+                text = text.Substring(0, tagHeader.TextFieldSizeRestriction);
             }
 
             if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
@@ -1511,7 +1470,7 @@ namespace ATL.AudioData.IO
                 w.Write(byte.Parse(text));
 
                 // Play count
-                w.Write((int)0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
+                w.Write(0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
 
                 writeValue = false;
             }
@@ -1529,7 +1488,7 @@ namespace ATL.AudioData.IO
             {
                 string[] parts = text.Split(Settings.InternalValueSeparator);
                 w.Write(encodeID3v2CharEncoding(Utils.Latin1Encoding));     // ISO-8859-1 seems to be the de facto norm, although spec allows fancier encodings
-                //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
+                                                                            //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
                 w.Write(Utils.Latin1Encoding.GetBytes(parts[0]));
                 w.Write(getNullTerminatorFromEncoding(Utils.Latin1Encoding));
                 w.Write(Utils.Latin1Encoding.GetBytes(parts[1]));
@@ -1562,7 +1521,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding, bool isInsideUnsynch = false)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, byte pictureTypeCode, string picDescription, Encoding tagEncoding, bool isInsideUnsynch = false)
         {
             // Binary tag writing management
             long frameOffset;
@@ -1598,7 +1557,7 @@ namespace ATL.AudioData.IO
             if (useDataSize)
             {
                 dataSizePos = w.BaseStream.Position; // Data length, as indicated by the flag we just set
-                w.Write((int)0);
+                w.Write(0);
             }
 
             // Beginning of APIC frame data
@@ -1609,12 +1568,9 @@ namespace ATL.AudioData.IO
             {
                 // Force JPEG if encoding restriction is enabled and mime-type is not among authorized types
                 // TODO : make target format customizable (JPEG or PNG)
-                if (tagHeader.HasPictureEncodingRestriction)
+                if (tagHeader.HasPictureEncodingRestriction && (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png"))))
                 {
-                    if (!(mimeType.ToLower().Equals("image/jpeg") || mimeType.ToLower().Equals("image/png")))
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + mimeType + ") does not respect ID3v2 restrictions (jpeg or png required)");
-                    }
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + mimeType + ") does not respect ID3v2 restrictions (jpeg or png required)");
                 }
 
                 // Force picture dimensions if a size restriction is enabled
@@ -1625,29 +1581,14 @@ namespace ATL.AudioData.IO
                     if ((256 == tagHeader.PictureSizeRestriction) && ((props.Height > 256) || (props.Width > 256))) // 256x256 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (256x256 or less)");
-
-                        /*
-                        picture = Image.FromStream(new MemoryStream(pictureData));
-                        picture = Utils.ResizeImage(picture, new System.Drawing.Size(256, 256), true);
-                        */
                     }
                     else if ((63 == tagHeader.PictureSizeRestriction) && ((props.Height > 64) || (props.Width > 64))) // 64x64 or less
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (64x64 or less)");
-
-                        /*
-                        picture = Image.FromStream(new MemoryStream(pictureData));
-                        picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), true);
-                        */
                     }
                     else if ((64 == tagHeader.PictureSizeRestriction) && ((props.Height != 64) && (props.Width != 64))) // exactly 64x64
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_INFO, "Embedded picture format (" + props.Width + "x" + props.Height + ") does not respect ID3v2 restrictions (exactly 64x64)");
-
-                        /*
-                        picture = Image.FromStream(new MemoryStream(pictureData));
-                        picture = Utils.ResizeImage(picture, new System.Drawing.Size(64, 64), false);
-                        */
                     }
                 }
             }
@@ -1712,14 +1653,13 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < result.Length; i++)
             {
                 if ('(' == result[i]) openParenthesisIndex = i;
-                else if (')' == result[i] && openParenthesisIndex > -1)
+                else if (')' == result[i] && openParenthesisIndex > -1
+                    && int.TryParse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1), out genreIndex)
+                    )
                 {
-                    if (int.TryParse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1), out genreIndex))
-                    {
-                        // Delete genre index string from the tag value
-                        result = result.Remove(0, i + 1);
-                        break;
-                    }
+                    // Delete genre index string from the tag value
+                    result = result.Remove(0, i + 1);
+                    break;
                 }
             }
 
