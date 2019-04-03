@@ -332,7 +332,7 @@ namespace ATL.AudioData.IO
                     bin = true;
                     for (int i = 4; i < 8; i++)
                     {
-                        bin = bin & (0 == date[i]);
+                        bin = bin && (0 == date[i]);
                     }
                 }
             }

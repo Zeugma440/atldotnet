@@ -14,7 +14,7 @@ namespace ATL.AudioData
         public const int CF_SEQ_WAV = 2; // Sequenced with embedded sound library
         public const int CF_SEQ = 3; // Sequenced with codec or hardware-dependent sound library
 
-        public static int NB_CODEC_FAMILIES = 4;
+        public static readonly int NB_CODEC_FAMILIES = 4;
 
         public const int MAX_ALTERNATES = 10;   // Max number of alternate formats having the same file extension
 

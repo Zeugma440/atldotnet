@@ -90,10 +90,6 @@ namespace ATL.AudioData.IO
         private static IDictionary<string, string> frameMapping_v22_3;
         private static IDictionary<string, string> frameMapping_v24_3;
 
-
-        // Max. tag size for saving
-        private const int ID3V2_MAX_SIZE = 4096;
-
         // Buffer size to use to parse through padding frames
         private const int PADDING_BUFFER_SIZE = 512;
 
@@ -135,10 +131,6 @@ namespace ATL.AudioData.IO
             public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
             {
                 get { return ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); }
-            }
-            public bool IsExperimental // Determinated from flags; indicates if tag is experimental (ID3v2.4+)
-            {
-                get { return (Flags & FLAG_TAG_IS_EXPERIMENTAL) > 0; }
             }
             public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
             {
@@ -1781,7 +1773,7 @@ namespace ATL.AudioData.IO
                 // => Having them both read means that the entirety of the UTF-16 BOM has been read
                 foundFE = foundFE || (0xFE == b[0]);
                 foundFF = foundFF || (0xFF == b[0]);
-                if (foundFE & foundFF) break;
+                if (foundFE && foundFF) break;
 
                 if (first && b[0] > 0)
                 {

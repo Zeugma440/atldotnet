@@ -202,3 +202,4 @@ $RECYCLE.BIN/
 /sonar.bat
 *.trx
 *.dll
+/opencover.xml
