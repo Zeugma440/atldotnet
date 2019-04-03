@@ -654,7 +654,7 @@ namespace ATL.AudioData.IO
                     if ("POP".Equals(shortFrameId))
                     {
                         /*
-                         * ID3v2.0 : According to spec (see §3.2), encoding should actually be ISO-8859-1
+                         * ID3v2.0 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
                          * ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                          */
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
@@ -1441,7 +1441,7 @@ namespace ATL.AudioData.IO
 
             bool writeValue = true;
             bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
-            bool writeNullTermination = true; // Required by specs; see §4, concerning $03 encoding
+            bool writeNullTermination = true; // Required by specs; see paragraph4, concerning $03 encoding
 
             ICollection<string> standardFrames = standardFrames_v24;
             if (3 == Settings.ID3v2_tagSubVersion) standardFrames = standardFrames_v23;
@@ -1814,7 +1814,7 @@ namespace ATL.AudioData.IO
             else return 0;
         }
 
-        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
+        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.0 specs; paragraph6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
         private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int length)
         {
@@ -1870,7 +1870,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // Copies the stream while unsynchronizing it (Cf. §5 of ID3v2.0 specs; §6 of ID3v2.3+ specs)
+        // Copies the stream while unsynchronizing it (Cf. paragraph5 of ID3v2.0 specs; paragraph6 of ID3v2.3+ specs)
         // => every "0xff 0xex" becomes "0xff 0x00 0xex"; every "0xff 0x00" becomes "0xff 0x00 0x00"
         private static void encodeUnsynchronizedStreamTo(Stream from, BinaryWriter to)
         {

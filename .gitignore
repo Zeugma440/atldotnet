@@ -200,3 +200,5 @@ $RECYCLE.BIN/
 /.sonarqube/conf/cs/SonarLint.xml
 /.sonarqube/out
 /sonar.bat
+*.trx
+*.dll
