@@ -158,9 +158,9 @@ namespace ATL.AudioData.IO
         {
             get { return fileName; }
         }
-        public bool IsMetaSupported(int metaType) // TODO : MP4 and M4A actually do not allow ID3v2 -> test according to the extension or separate formats in two classes
+        public bool IsMetaSupported(int metaDataType) // TODO : MP4 and M4A actually do not allow ID3v2 -> test according to the extension or separate formats in two classes
         {
-            return (metaType == MetaDataIOFactory.TAG_ID3V1) || (metaType == MetaDataIOFactory.TAG_ID3V2) || (metaType == MetaDataIOFactory.TAG_APE) || (metaType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
         public ChannelsArrangement ChannelsArrangement
         {
@@ -491,7 +491,6 @@ namespace ATL.AudioData.IO
             string strData = "";
             uint atomSize;
             long atomPosition;
-            string atomHeader;
 
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
@@ -671,7 +670,6 @@ namespace ATL.AudioData.IO
 
                     if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
                     {
-                        bool ismp4a = descFormat.Equals("mp4a");
                         source.BaseStream.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
                         source.BaseStream.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
 
@@ -1024,6 +1022,7 @@ namespace ATL.AudioData.IO
                     tagExists = true;
                 }
 
+                string atomHeader;
                 // Browse all metadata
                 while (iListPosition < iListSize - 8)
                 {
@@ -1244,7 +1243,6 @@ namespace ATL.AudioData.IO
                 // ============
                 // == FRAMES ==
                 // ============
-                long dataPos = w.BaseStream.Position;
                 result = writeFrames(tag, w);
 
                 // Record final size of tag into "tag size" field of header

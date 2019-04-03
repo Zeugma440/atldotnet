@@ -187,3 +187,16 @@ $RECYCLE.BIN/
 /ATL/msbuild command to package.bat
 /ATL/BUILD TODO.txt
 /ATL/sonar.bat
+*.ruleset
+/.sonarqube/conf/4/ProjectOutFolderPath.txt
+/.sonarqube/conf/3/ProjectOutFolderPath.txt
+/.sonarqube/conf/2/ProjectOutFolderPath.txt
+/.sonarqube/conf/1/ProjectOutFolderPath.txt
+/.sonarqube/conf/0/ProjectOutFolderPath.txt
+/.sonarqube/out/.sonar/report-task.txt
+/.sonarqube/out/.sonar/.sonar_lock
+/.sonarqube/conf/vbnet/SonarLint.xml
+/.sonarqube/conf/SonarQubeAnalysisConfig.xml
+/.sonarqube/conf/cs/SonarLint.xml
+/.sonarqube/out
+/sonar.bat

@@ -8,7 +8,7 @@ namespace ATL.test
     [TestClass]
     public class FileStructureHelperTest
     {
-        private FileStructureHelper structureHelper = new FileStructureHelper();
+        private readonly FileStructureHelper structureHelper = new FileStructureHelper();
 
         private void init(BinaryWriter w)
         {

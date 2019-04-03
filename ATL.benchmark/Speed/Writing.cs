@@ -42,17 +42,6 @@ namespace ATL.benchmark
             performWrite();
         }
 
-        /*
-        [Benchmark]
-        public void Perf_WriteFLACMemory()
-        {
-            AudioDataManager.SetFileOptions(FileOptions.None);
-            AudioDataManager.SetBufferSize(4096);
-
-            performWrite();
-        }
-        */
-
         private void performWrite()
         {
             // Mass-read resulting files

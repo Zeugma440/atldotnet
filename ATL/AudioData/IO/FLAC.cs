@@ -565,7 +565,10 @@ namespace ATL.AudioData.IO
                     if (zone.Name.Equals(ZONE_VORBISTAG)) writtenFields = writeVorbisTag(msw, tag, 1 == zone.Flag);
                     else if (zone.Name.Equals(ZONE_PICTURE))
                     {
-                        if (!pictureBlockFound) // All pictures are written at the position of the 1st picture block
+                        // All pictures are written at the position of the 1st picture block
+                        // TODO: optimize - when there are more than 1 pictures, a simple neutral update of the file extends the 1st zone to the size of all picture and shrinks all other zones
+                        // => a LOT of unnecessary byte moving
+                        if (!pictureBlockFound) 
                         {
                             pictureBlockFound = true;
                             writtenFields = writePictures(msw, dataToWrite.Pictures, 1 == zone.Flag);
