@@ -205,6 +205,18 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void StreamUtils_LongConverters()
+        {
+            ulong longValue = 0x45976248;
+
+            byte[] byteValue = BitConverter.GetBytes(longValue);
+            Assert.AreEqual(longValue, StreamUtils.DecodeUInt64(byteValue));
+
+            byteValue = StreamUtils.EncodeBEUInt64(longValue);
+            Assert.AreEqual((long)longValue, StreamUtils.DecodeBEInt64(byteValue));
+        }
+
+        [TestMethod]
         public void StreamUtils_Exceptions()
         {
             Assert.IsFalse(StreamUtils.ArrEqualsArr(new byte[1], new byte[2]));
