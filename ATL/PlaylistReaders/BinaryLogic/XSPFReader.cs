@@ -14,6 +14,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class XSPFReader : PlaylistReader
     {
 
+#pragma warning disable S2583 // Conditionally executed blocks should be reachable
         public override void GetFiles(FileStream fs, IList<String> result)
         {
             Uri uri;
@@ -111,5 +112,6 @@ namespace ATL.PlaylistReaders.BinaryLogic
                 } // while
             } // using
         }
+#pragma warning restore S2583 // Conditionally executed blocks should be reachable
     }
 }

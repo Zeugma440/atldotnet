@@ -103,7 +103,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_IXML));
 
             long sizePos = w.BaseStream.Position;
-            w.Write((int)0); // Placeholder for chunk size that will be rewritten at the end of the method
+            w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
 
             XmlWriterSettings settings = new XmlWriterSettings();
@@ -160,10 +160,11 @@ namespace ATL.AudioData.IO
             }
 
             // Closes all terminated paths
-            for (int i = previousPath.Length - 2; i >= 0; i--)
-            {
-                writer.WriteEndElement();
-            }
+            if (previousPath != null)
+                for (int i = previousPath.Length - 2; i >= 0; i--)
+                {
+                    writer.WriteEndElement();
+                }
             writer.Close();
 
 

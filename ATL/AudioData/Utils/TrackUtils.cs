@@ -93,7 +93,8 @@ namespace ATL.AudioData
 
             // == If everything above fails...
             string pattern = "/[\\s]*(\\d+)"; // Any continuous sequence of numbers after a "/"
-            foreach (Match match in Regex.Matches(str, pattern))
+            Match match = Regex.Match(str, pattern);
+            if (match.Success)
             {
                 long number = long.Parse(match.Value);
                 if (number > ushort.MaxValue) number = 0;

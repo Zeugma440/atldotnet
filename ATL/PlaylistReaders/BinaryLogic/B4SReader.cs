@@ -14,6 +14,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
     public class B4SReader : PlaylistReader
     {
 
+#pragma warning disable S2583 // Conditionally executed blocks should be reachable
         public override void GetFiles(FileStream fs, IList<String> result)
         {
             // The following flags indicate if the parser is currently reading
@@ -59,6 +60,7 @@ namespace ATL.PlaylistReaders.BinaryLogic
                 }
             }
         }
+#pragma warning restore S2583 // Conditionally executed blocks should be reachable
 
         private String getResourceLocation(XmlReader source)
         {

@@ -145,13 +145,16 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         {
                             currentTrack = new Track();
                             if (trackInfo.Length > 0) currentTrack.TrackNumber = byte.Parse(trackInfo[1]);
-                            currentTrack.Genre = physicalTrack.Genre;
-                            currentTrack.IsVBR = physicalTrack.IsVBR;
-                            currentTrack.Bitrate = physicalTrack.Bitrate;
-                            currentTrack.CodecFamily = physicalTrack.CodecFamily;
-                            currentTrack.Year = physicalTrack.Year;
-                            currentTrack.PictureTokens = physicalTrack.PictureTokens;
-                            currentTrack.DiscNumber = physicalTrack.DiscNumber;
+                            if (physicalTrack != null)
+                            {
+                                currentTrack.Genre = physicalTrack.Genre;
+                                currentTrack.IsVBR = physicalTrack.IsVBR;
+                                currentTrack.Bitrate = physicalTrack.Bitrate;
+                                currentTrack.CodecFamily = physicalTrack.CodecFamily;
+                                currentTrack.Year = physicalTrack.Year;
+                                currentTrack.PictureTokens = physicalTrack.PictureTokens;
+                                currentTrack.DiscNumber = physicalTrack.DiscNumber;
+                            }
                             currentTrack.Artist = "";
                             currentTrack.Title = "";
                             currentTrack.Comment = "";
@@ -202,24 +205,21 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         {
                             if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
                         }
-                        else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                        else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && trackInfo.Length > 1)
                         {
-                            if (trackInfo.Length > 1)
+                            int timeOffset = decodeTimecodeToMs(trackInfo[2]);
+
+                            if (0 == indexRelativePosition && previousTrack != null)
                             {
-                                int timeOffset = decodeTimecodeToMs(trackInfo[2]);
-
-                                if (0 == indexRelativePosition && previousTrack != null)
-                                {
-                                    previousTrack.DurationMs += timeOffset - previousTimeOffset;
-                                }
-                                else
-                                {
-                                    currentTrack.DurationMs += timeOffset - previousTimeOffset;
-                                }
-                                previousTimeOffset = timeOffset;
-
-                                indexRelativePosition++;
+                                previousTrack.DurationMs += timeOffset - previousTimeOffset;
                             }
+                            else
+                            {
+                                currentTrack.DurationMs += timeOffset - previousTimeOffset;
+                            }
+                            previousTimeOffset = timeOffset;
+
+                            indexRelativePosition++;
                         }
 
                     }

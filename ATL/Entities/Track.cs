@@ -18,7 +18,7 @@ namespace ATL
 		public Track() { }
 
         /// <summary>
-        /// Loads the file at the given path
+        /// Loads the file at the given pathg
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="Path">Path of the local file to be loaded</param>
@@ -359,7 +359,7 @@ namespace ATL
             result.Pictures = new List<PictureInfo>();
             if (embeddedPictures != null) foreach (PictureInfo targetPic in embeddedPictures) targetPic.Flag = 0;
 
-            if (initialEmbeddedPictures != null)
+            if (initialEmbeddedPictures != null && embeddedPictures != null)
             {
                 foreach (PictureInfo picInfo in initialEmbeddedPictures)
                 {
