@@ -235,7 +235,7 @@ namespace ATL
         public ulong ReadUInt64()
         {
             prepareBuffer(8);
-            ulong val = (ulong)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24 | buffer[cursorPosition + 4] << 32 | buffer[cursorPosition + 5] << 40 | buffer[cursorPosition + 6] << 48 | buffer[cursorPosition + 7] << 56);
+            ulong val = buffer[cursorPosition] | (ulong)buffer[cursorPosition + 1] << 8 | (ulong)buffer[cursorPosition + 2] << 16 | (ulong)buffer[cursorPosition + 3] << 24 | (ulong)buffer[cursorPosition + 4] << 32 | (ulong)buffer[cursorPosition + 5] << 40 | (ulong)buffer[cursorPosition + 6] << 48 | (ulong)buffer[cursorPosition + 7] << 56;
             cursorPosition += 8;
             return val;
         }
@@ -243,7 +243,7 @@ namespace ATL
         public long ReadInt64()
         {
             prepareBuffer(8);
-            long val = (long)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24 | buffer[cursorPosition + 4] << 32 | buffer[cursorPosition + 5] << 40 | buffer[cursorPosition + 6] << 48 | buffer[cursorPosition + 7] << 56);
+            long val = buffer[cursorPosition] | (long)buffer[cursorPosition + 1] << 8 | (long)buffer[cursorPosition + 2] << 16 | (long)buffer[cursorPosition + 3] << 24 | (long)buffer[cursorPosition + 4] << 32 | (long)buffer[cursorPosition + 5] << 40 | (long)buffer[cursorPosition + 6] << 48 | (long)buffer[cursorPosition + 7] << 56;
             cursorPosition += 8;
             return val;
         }
