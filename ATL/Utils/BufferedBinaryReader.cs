@@ -185,11 +185,11 @@ namespace ATL
 
         public byte[] ReadBytes(int nbBytes)
         {
-            byte[] buffer = new byte[nbBytes];
+            byte[] buf = new byte[nbBytes];
 
-            Read(buffer, 0, nbBytes);
+            Read(buf, 0, nbBytes);
 
-            return buffer;
+            return buf;
         }
 
         public new byte ReadByte()

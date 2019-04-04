@@ -133,23 +133,6 @@ namespace ATL
         /// <param name="delta">Number of bytes to remove</param>
         public static void ShortenStream(Stream s, long endOffset, uint delta) 
         {
-            /*
-            int bufSize;
-            byte[] data = new byte[BUFFERSIZE];
-            long newIndex = endOffset - delta;
-            long initialLength = s.Length;
-            long i = 0;
-
-            while (i < initialLength - endOffset) // Forward loop
-            {
-                bufSize = (int)Math.Min(BUFFERSIZE, initialLength - endOffset - i);
-                s.Seek(endOffset + i, SeekOrigin.Begin);
-                s.Read(data, 0, bufSize);
-                s.Seek(newIndex + i, SeekOrigin.Begin);
-                s.Write(data, 0, bufSize);
-                i += bufSize;
-            }
-            */
             CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset));
 
             s.SetLength(s.Length - delta);
@@ -165,26 +148,6 @@ namespace ATL
         public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false)
         {
             long newIndex = oldIndex + delta;
-            /*
-            byte[] data = new byte[BUFFERSIZE];
-            long newIndex = oldIndex + delta;
-            long oldLength = s.Length;
-            long newLength = s.Length + delta;
-            s.SetLength(newLength);
-
-            long i = 0;
-            int bufSize;
-
-            while (newLength - i > newIndex) // Backward loop
-            {
-                bufSize = (int)Math.Min(BUFFERSIZE, newLength - newIndex - i);
-                s.Seek(-i - bufSize - delta, SeekOrigin.End); // Seeking is done from the "modified" end (new length) => substract delta
-                s.Read(data, 0, bufSize);
-                s.Seek(-i - bufSize, SeekOrigin.End);
-                s.Write(data, 0, bufSize);
-                i += bufSize;
-            }
-            */
             CopySameStream(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex));
 
             if (fillZeroes)
@@ -499,11 +462,11 @@ namespace ATL
         /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
         /// <param name="encoding">Encoding to use for reading the stream</param>
         /// <returns>Read value</returns>
-        public static String ReadNullTerminatedString(BinaryReader r, Encoding encoding)
+        public static string ReadNullTerminatedString(BinaryReader r, Encoding encoding)
         {
             return readNullTerminatedString(r.BaseStream, encoding, 0, false);
         }
-        public static String ReadNullTerminatedString(Stream s, Encoding encoding)
+        public static string ReadNullTerminatedString(Stream s, Encoding encoding)
         {
             return readNullTerminatedString(s, encoding, 0, false);
         }
@@ -516,11 +479,11 @@ namespace ATL
         /// <param name="encoding">Encoding to use for reading the stream</param>
         /// <param name="limit">Maximum number of bytes to read</param>
         /// <returns>Read value</returns>
-        public static String ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
+        public static string ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
         {
             return readNullTerminatedString(r.BaseStream, encoding, limit, true);
         }
-        public static String ReadNullTerminatedStringFixed(BufferedBinaryReader r, Encoding encoding, int limit)
+        public static string ReadNullTerminatedStringFixed(BufferedBinaryReader r, Encoding encoding, int limit)
         {
             return readNullTerminatedString(r, encoding, limit, true);
         }
@@ -533,7 +496,7 @@ namespace ATL
         /// <param name="limit">Limit (in bytes) of read data (0=unlimited)</param>
         /// <param name="moveStreamToLimit">Indicates if the stream has to advance to the limit before returning</param>
         /// <returns>The string read, without the zeroes at its end</returns>
-        private static String readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
+        private static string readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
             int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
             byte[] readBytes = new byte[limit > 0 ? limit : 100];
@@ -582,7 +545,7 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt(byte[] bytes)
         {
-            if (bytes.Length > 5) throw new Exception("Array too long : has to be 1 to 5 bytes; found : " + bytes.Length + " bytes");
+            if (bytes.Length > 5) throw new ArgumentException("Array too long : has to be 1 to 5 bytes; found : " + bytes.Length + " bytes");
             int result = 0;
 
             for (int i = 0; i < bytes.Length; i++)
@@ -601,7 +564,7 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt32(byte[] bytes)
         {
-            if (bytes.Length != 4) throw new Exception("Array length has to be 4 bytes; found : "+bytes.Length+" bytes");
+            if (bytes.Length != 4) throw new ArgumentException("Array length has to be 4 bytes; found : "+bytes.Length+" bytes");
 
             return                 
                 bytes[0] * 0x200000 +   //2^21
@@ -619,7 +582,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
         {
-            if ((nbBytes < 1) || (nbBytes > 5)) throw new Exception("nbBytes has to be 1 to 5; found : " + nbBytes);
+            if ((nbBytes < 1) || (nbBytes > 5)) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
             byte[] result = new byte[nbBytes];
             int range;
 
@@ -644,7 +607,7 @@ namespace ATL
             result[0] = (byte)((value & 0xFE00000) >> 21);
             result[1] = (byte)((value & 0x01FC000) >> 14);
             result[2] = (byte)((value & 0x0003F80) >> 7);
-            result[3] = (byte)((value & 0x000007F));
+            result[3] = (byte)(value & 0x000007F);
 
             return result;
         }
@@ -713,7 +676,7 @@ namespace ATL
         public static uint ReadBits(BinaryReader source, int bitPosition, int bitCount)
         {
             if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
-            byte[] buffer = new byte[4];
+            byte[] buffer;
 
             // Read a number of bits from file at the given position
             source.BaseStream.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div

@@ -66,7 +66,7 @@ namespace ATL.AudioData.IO
         private const string ID3V2_ID = "ID3";
 
         // List of standard fields
-        private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
+        //private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
         private static readonly ICollection<string> standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
         private static readonly ICollection<string> standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
 
@@ -476,26 +476,7 @@ namespace ATL.AudioData.IO
                 if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                 {
                     tag.PaddingOffset = initialTagPos;
-                    // Read until there's something else than zeroes
-                    byte[] data = new byte[PADDING_BUFFER_SIZE];
-                    bool endReached = false;
-                    long initialPos = source.Position;
-                    int read = 0;
-
-                    while (!endReached)
-                    {
-                        source.Read(data, 0, PADDING_BUFFER_SIZE);
-                        for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
-                        {
-                            if (data[i] > 0)
-                            {
-                                tag.ActualEnd = initialPos + read + i;
-                                endReached = true;
-                                break;
-                            }
-                        }
-                        if (!endReached) read += PADDING_BUFFER_SIZE;
-                    }
+                    tag.ActualEnd = traversePadding(source);
                 }
                 else // If not, we're in the wrong place
                 {
@@ -886,42 +867,37 @@ namespace ATL.AudioData.IO
             if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {
                 // Prod to see if there's padding after the end of the tag
-                if (streamPos + 4 < source.Length)
+                if (streamPos + 4 < source.Length && 0 == source.ReadInt32())
                 {
-                    if (0 == source.ReadInt32())
-                    {
-                        tag.PaddingOffset = streamPos;
-                        // Read until there's something else than zeroes
-                        byte[] data = new byte[PADDING_BUFFER_SIZE];
-                        bool endReached = false;
-                        long initialPos = source.Position;
-                        int read = 0;
-
-                        while (!endReached)
-                        {
-                            source.Read(data, 0, PADDING_BUFFER_SIZE);
-                            for (int i = 0; i < PADDING_BUFFER_SIZE; i++)
-                            {
-                                if (data[i] > 0)
-                                {
-                                    tag.ActualEnd = initialPos + read + i;
-                                    endReached = true;
-                                    break;
-                                }
-                            }
-                            if (!endReached) read += PADDING_BUFFER_SIZE;
-                        }
-                    }
-                    else
-                    {
-                        tag.ActualEnd = streamPos;
-                    }
+                    tag.PaddingOffset = streamPos;
+                    tag.ActualEnd = traversePadding(source);
                 }
                 else
                 {
                     tag.ActualEnd = streamPos;
                 }
             }
+        }
+
+        private long traversePadding(BufferedBinaryReader source)
+        {
+            // Read until there's something else than zeroes
+            byte[] data = new byte[PADDING_BUFFER_SIZE];
+            long initialPos = source.Position;
+            int read, readTotal = 0;
+
+            read = source.Read(data, 0, PADDING_BUFFER_SIZE);
+            while (read > 0)
+            {
+                for (int i = 0; i < read; i++)
+                {
+                    if (data[i] > 0) return initialPos + readTotal + i;
+                }
+                readTotal += read;
+                read = source.Read(data, 0, PADDING_BUFFER_SIZE);
+            }
+
+            return readTotal;
         }
 
         // ********************** Public functions & voids **********************
