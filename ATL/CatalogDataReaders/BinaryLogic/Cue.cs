@@ -229,13 +229,16 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
                 if (currentTrack != null)
                 {
-                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
-                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
-                    if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
-                    if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
-                    if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
                     currentTrack.Album = title;
-                    currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
+                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                    if (physicalTrack != null)
+                    {
+                        if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
+                        if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
+                        if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
+                        if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
+                        currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
+                    }
 
                     tracks.Add(currentTrack);
                 }
