@@ -2,6 +2,8 @@ image: Visual Studio 2017
 before_build:
  - nuget restore
 build_script:
+ - choco install "sonarscanner-msbuild-net46" -y
+ - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
  - msbuild /verbosity:minimal "ATL.sln"
 test_script:
  - .\packages\OpenCover.4.7.922\tools\OpenCover.Console.exe -register:user -target:"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\MSTest.exe" -targetargs:"/noisolation /category:!snippets /resultsfile:testResults.txt /detail:stdout /detail:stderr /testcontainer:"".\ATL.test\bin\Debug\ATL.test.dll" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
@@ -10,3 +12,4 @@ after_test:
  - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
  - pip install codecov
  - codecov -f "coverage.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
+ - SonarScanner.MSBuild.exe end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
