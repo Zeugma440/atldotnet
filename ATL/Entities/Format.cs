@@ -25,6 +25,20 @@ namespace ATL
             init(iName);
         }
 
+        public Format(Format f)
+        {
+            copyFrom(f);
+        }
+
+        protected void copyFrom(Format iFormat)
+        {
+            this.fName = iFormat.fName;
+            this.fID = iFormat.fID;
+            this.mimeList = new Dictionary<string, int>(iFormat.mimeList);
+            this.extList = new Dictionary<string, int>(iFormat.extList);
+            this.fReadable = iFormat.fReadable;
+        }
+
         protected void init(string iName)
         {
             fName = iName;
