@@ -120,7 +120,8 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 ### SUPPORTED PLAYLISTS FORMATS
 
-ASX, B4S, FPL (experimental), M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+* Read-only : ASX, B4S, FPL (experimental), PLS, SMIL (including WPL and ZPL), XSPF
+* Read and write : M3U, M3U8
 
 
 ### SUPPORTED CUESHEETS FORMATS
@@ -130,6 +131,7 @@ CUE
 
 ## What is the roadmap of ATL.NET ?
 
+* Support for writing more playlist formats
 * Support for Broadcast wave metadata : aXML and XMP
 * Support for other audio file formats : Speex, Theora, Audible
 * Support for lyrics fields
