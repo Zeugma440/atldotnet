@@ -4,6 +4,7 @@ using ATL.PlaylistReaders;
 using ATL.CatalogDataReaders;
 using ATL.Logging;
 using System.Collections.Generic;
+using ATL.Playlist;
 
 namespace ATL.test.CodeSnippets
 {
@@ -12,6 +13,7 @@ namespace ATL.test.CodeSnippets
     {
         string audioFilePath;
         string cuesheetPath;
+        string playlistFilePath;
         string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
         string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
 
@@ -25,10 +27,16 @@ namespace ATL.test.CodeSnippets
             theLog.Register(this);
         }
 
+        public void DoLog(Log.LogItem anItem)
+        {
+            messages.Add(anItem);
+        }
+
         [TestInitialize]
         public void Init()
         {
             audioFilePath = TestUtils.DuplicateTempTestFile("MP3/id3v2.3_UTF16.mp3");
+            playlistFilePath = TestUtils.CreateTempTestFile("playlist.test");
             cuesheetPath = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
         }
 
@@ -249,9 +257,22 @@ namespace ATL.test.CodeSnippets
             System.Console.WriteLine(messages[0].Message);
         }
 
-        public void DoLog(Log.LogItem anItem)
+        [TestMethod, TestCategory("snippets")]
+        public void TestWritePls()
         {
-            messages.Add(anItem);
-        }
+            IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistFilePath);
+
+            // Writing file paths
+            IList<string> pathsToWrite = new List<string>();
+            pathsToWrite.Add("aaa.mp3");
+            pathsToWrite.Add("bbb.mp3");
+            pls.FilePaths = pathsToWrite;
+
+            // Writing tracks
+            IList<Track> tracksToWrite = new List<Track>();
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
+            pls.Tracks = tracksToWrite;
+        }        
     }
 }
