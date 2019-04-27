@@ -19,7 +19,7 @@ namespace ATL.test
             ArrayLogger log = new ArrayLogger();
             string resource = "AAC/mp4.m4a";
             string location = TestUtils.GetResourceLocationRoot() + resource;
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
             {

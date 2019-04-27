@@ -25,7 +25,7 @@ namespace ATL.test
             if (includeFinalSeparator) return locationRoot + Path.DirectorySeparatorChar; else return locationRoot;
         }
 
-        public static string GetTempTestFile(string fileName)
+        public static string DuplicateTempTestFile(string fileName)
         {
             string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
             int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
@@ -33,8 +33,26 @@ namespace ATL.test
             if (!Directory.Exists(GetResourceLocationRoot()+"tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
             string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToString("HH.mm.ss.fff") + extension;
 
-            // Create writable a working copy
+            // Create a writable working copy
             File.Copy(GetResourceLocationRoot() + fileName, result, true);
+            FileInfo fileInfo = new FileInfo(result);
+            fileInfo.IsReadOnly = false;
+
+            return result;
+        }
+
+        public static string CreateTempTestFile(string fileName)
+        {
+            string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
+            int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
+            string bareFileName = fileName.Substring(lastSeparatorPos + 1, fileName.Length - lastSeparatorPos - 1);
+            if (!Directory.Exists(GetResourceLocationRoot() + "tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
+            string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToString("HH.mm.ss.fff") + extension;
+
+            // Create a writable file from scratch
+            Stream s = File.Create(result);
+            s.Close();
+
             FileInfo fileInfo = new FileInfo(result);
             fileInfo.IsReadOnly = false;
 

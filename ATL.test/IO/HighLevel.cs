@@ -81,7 +81,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_DeleteTag()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.Remove(MetaDataIOFactory.TAG_ID3V2);
@@ -100,7 +100,7 @@ namespace ATL.test.IO
         private void tagIO_RW_UpdateNeutral(string resource)
         {
             string location = TestUtils.GetResourceLocationRoot() + resource;
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
             theTrack.Save();
 
@@ -147,7 +147,7 @@ namespace ATL.test.IO
 
         private void tagIO_RW_UpdateEmpty(string resource, bool supportsTrack = true)
         {
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
 
             // Simple field
@@ -194,7 +194,7 @@ namespace ATL.test.IO
 
         private void tagIO_RW_UpdateTagBaseField(string resource, bool supportsDisc = true, bool supportsTotalTracksDiscs = true, bool supportsTrack = true)
         {
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
 
             // Simple field
@@ -239,7 +239,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_AddRemoveTagAdditionalField()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.AdditionalFields.Add("ABCD", "efgh");
@@ -259,7 +259,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateTagAdditionalField()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/01 - Title Screen.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.AdditionalFields["TENC"] = "update test";
@@ -278,7 +278,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_AddRemoveTagPictures()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.4_UTF8.mp3");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.EmbeddedPictures.RemoveAt(1); // Remove Conductor; Front Cover remains
@@ -313,7 +313,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateTagPictures()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.4_UTF8.mp3");
             Track theTrack = new Track(testFileLocation);
 
             // Update Front picture
@@ -353,7 +353,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_AddRemoveChapters()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/chapters.mp3");
             Track theTrack = new Track(testFileLocation);
 
             theTrack.ChaptersTableDescription = "Content";
@@ -412,7 +412,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateTagChapters()
         {
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/chapters.mp3");
             Track theTrack = new Track(testFileLocation);
 
             // Update 3rd chapter
@@ -445,7 +445,7 @@ namespace ATL.test.IO
             {
                 string resource = "OGG/ogg.ogg";
                 string location = TestUtils.GetResourceLocationRoot() + resource;
-                string testFileLocation = TestUtils.GetTempTestFile(resource);
+                string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
                 Track theTrack = new Track(testFileLocation);
 
                 string initialArtist = theTrack.Artist;
@@ -482,7 +482,7 @@ namespace ATL.test.IO
         {
             string resource = "OGG/ogg.ogg";
             string location = TestUtils.GetResourceLocationRoot() + resource;
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -505,7 +505,7 @@ namespace ATL.test.IO
         {
             string resource = "OGG/ogg.ogg";
             string location = TestUtils.GetResourceLocationRoot() + resource;
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -523,7 +523,7 @@ namespace ATL.test.IO
         {
             string resource = "OGG/empty.ogg";
             string location = TestUtils.GetResourceLocationRoot() + resource;
-            string testFileLocation = TestUtils.GetTempTestFile(resource);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
             {

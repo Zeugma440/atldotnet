@@ -175,7 +175,7 @@ namespace ATL.test.IO.MetaData
             ArrayLogger logger = new ArrayLogger();
 
             // Source : MP3 with extended tag properties (tag restrictions)
-            string testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8_extendedTag.mp3");
+            string testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.4_UTF8_extendedTag.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that the presence of an extended tag does not disrupt field reading
@@ -313,7 +313,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
+            String testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -372,7 +372,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing unsupported fields : RVA & TBP
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
+            String testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -477,7 +477,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : empty MP3
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -572,7 +572,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : empty MP3
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Case 1. Setting Track.ChaptersTableDescription alone without setting any chapter shouldn't write any CTOC frame
@@ -635,7 +635,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            String testFileLocation = TestUtils.DuplicateTempTestFile("MP3/chapters.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -821,7 +821,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.GetTempTestFile("MP3/chapters.mp3");
+            String testFileLocation = TestUtils.DuplicateTempTestFile("MP3/chapters.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -914,7 +914,7 @@ namespace ATL.test.IO.MetaData
             Settings.ID3v2_tagSubVersion = 3;
             try
             {
-                String testFileLocation = TestUtils.GetTempTestFile("MP3/id3v2.4_UTF8.mp3");
+                String testFileLocation = TestUtils.DuplicateTempTestFile("MP3/id3v2.4_UTF8.mp3");
                 AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible

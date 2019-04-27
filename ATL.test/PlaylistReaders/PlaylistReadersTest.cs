@@ -5,20 +5,20 @@ using System.Collections.Generic;
 using System.IO;
 using static ATL.Logging.Log;
 
-namespace ATL.test
+namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class PlaylistTest
+    public class PlaylistReadersTest
     {
         [TestMethod]
-        public void PL_ReadNoFormat()
+        public void PL_NoFormat()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.xyz");
             Assert.IsInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
         }
 
         [TestMethod]
-        public void PL_TestCommon()
+        public void PL_Common()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
@@ -38,7 +38,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestM3U()
+        public void PL_M3U()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
@@ -75,7 +75,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestXSPF()
+        public void PL_XSPF()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.xspf", "$PATH", TestUtils.GetResourceLocationRoot(false));
 
@@ -98,7 +98,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestSMIL()
+        public void PL_SMIL()
         {
             IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
             string resourceRoot = TestUtils.GetResourceLocationRoot(false);
@@ -125,7 +125,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestASX()
+        public void PL_ASX()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", "$PATH", TestUtils.GetResourceLocationRoot(false).Replace("\\", "/"));
 
@@ -149,7 +149,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestB4S()
+        public void PL_B4S()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.b4s", "$PATH", TestUtils.GetResourceLocationRoot(false));
 
@@ -171,7 +171,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestPLS()
+        public void PL_PLS()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.pls", "$PATH", TestUtils.GetResourceLocationRoot(false));
 
@@ -194,7 +194,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void PL_TestFPL()
+        public void PL_FPL()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.fpl", "$PATH", TestUtils.GetResourceLocationRoot(false));
 

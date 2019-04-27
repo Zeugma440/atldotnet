@@ -93,7 +93,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free OGG
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
@@ -179,7 +179,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.GetTempTestFile(fileName);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -300,7 +300,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisFLAC_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 

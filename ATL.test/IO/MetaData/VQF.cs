@@ -59,7 +59,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free VQF
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
@@ -129,7 +129,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file with existing tag incl. unsupported field (dumper)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            string testFileLocation = TestUtils.GetTempTestFile(notEmptyFile);
+            string testFileLocation = TestUtils.DuplicateTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -177,7 +177,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VQF_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.GetTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
