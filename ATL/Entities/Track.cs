@@ -22,11 +22,11 @@ namespace ATL
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="Path">Path of the local file to be loaded</param>
-        public Track(string Path)
+        public Track(string Path, bool load = true)
         {
             this.Path = Path;
             stream = null;
-            Update();
+            if (load) Update();
         }
 
         /// <summary>
