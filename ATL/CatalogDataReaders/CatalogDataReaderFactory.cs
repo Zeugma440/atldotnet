@@ -7,7 +7,7 @@ namespace ATL.CatalogDataReaders
 	/// <summary>
 	/// Factory for Catalog data readers
 	/// </summary>
-    public class CatalogDataReaderFactory : ReaderFactory
+    public class CatalogDataReaderFactory : Factory
 	{
 		// Defines the supported formats
         public const int CR_CUE     = 0;

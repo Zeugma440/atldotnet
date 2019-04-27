@@ -6,7 +6,7 @@ namespace ATL.AudioData
     /// <summary>
     /// Factory for audio data readers
     /// </summary>
-    public class AudioDataIOFactory : ReaderFactory
+    public class AudioDataIOFactory : Factory
     {
         // Codec families
         public const int CF_LOSSY = 0; // Streamed, lossy data

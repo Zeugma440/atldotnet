@@ -6,7 +6,7 @@ namespace ATL
     /// <summary>
     /// Abstract factory for data readers, containing shared methods and members
     /// </summary>
-    public abstract class ReaderFactory
+    public abstract class Factory
     {
         // ID representing the absence of format
         public const int NO_FORMAT = -1;

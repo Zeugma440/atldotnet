@@ -7,7 +7,7 @@ namespace ATL.PlaylistReaders
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class PlaylistReaderFactory : ReaderFactory
+	public class PlaylistReaderFactory : Factory
 	{
 		// Defines the supported formats
 		public const int PL_M3U     = 0;
