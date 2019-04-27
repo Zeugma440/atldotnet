@@ -1,12 +1,11 @@
 using System;
-using System.IO;
 using ATL.PlaylistReaders.BinaryLogic;
 using System.Collections.Generic;
 
 namespace ATL.PlaylistReaders
 {
 	/// <summary>
-	/// Description r¨¦sum¨¦e de PlaylistReaderFactory.
+	/// TODO
 	/// </summary>
 	public class PlaylistReaderFactory : ReaderFactory
 	{

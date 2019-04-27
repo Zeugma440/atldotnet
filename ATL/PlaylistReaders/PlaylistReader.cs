@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
-using System.Collections;
 using ATL.Logging;
 using System.Collections.Generic;
 
