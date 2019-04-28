@@ -94,6 +94,9 @@
     <Compile Include="Misc\ImageUtilsTest.cs" />
     <Compile Include="Misc\TrackUtilsTest.cs" />
     <Compile Include="Misc\UtilsTest.cs" />
+    <Compile Include="Playlist\SMILIO.cs" />
+    <Compile Include="Playlist\ASXIO.cs" />
+    <Compile Include="Playlist\B4SIO.cs" />
     <Compile Include="Playlist\XSPFIO.cs" />
     <Compile Include="Playlist\FPLIO.cs" />
     <Compile Include="Playlist\PLSIO.cs" />
@@ -415,6 +418,9 @@
     <Content Include="Resources\_Ratings\windows7\4.wma" />
     <Content Include="Resources\_Ratings\windows7\5.mp3" />
     <Content Include="Resources\_Ratings\windows7\5.wma" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="obj\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

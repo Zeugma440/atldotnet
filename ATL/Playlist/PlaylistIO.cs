@@ -36,6 +36,7 @@ namespace ATL.Playlist
         public IList<string> getFiles()
         {
             IList<string> result = new List<string>();
+            LogDelegator.GetLocateDelegate()(FFileName);
 
             try
             {
@@ -47,23 +48,10 @@ namespace ATL.Playlist
             catch (Exception e)
             {
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
             }
 
             return result;
-        }
-
-        public void setFiles(IList<string> fileList)
-        {
-            IList<Track> trackList = new List<Track>();
-
-            foreach(string file in fileList)
-            {
-                Track t = new Track(file, false); // Empty container
-                trackList.Add(t);
-            }
-
-            setTracks(trackList);
         }
 
         public IList<Track> getTracks()
@@ -81,14 +69,28 @@ namespace ATL.Playlist
             catch (Exception e)
             {
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
             }
 
             return result;
         }
 
+        public void setFiles(IList<string> fileList)
+        {
+            IList<Track> trackList = new List<Track>();
+
+            foreach (string file in fileList)
+            {
+                Track t = new Track(file, false); // Empty container
+                trackList.Add(t);
+            }
+
+            setTracks(trackList);
+        }
+
         public void setTracks(IList<Track> trackList)
         {
+            LogDelegator.GetLocateDelegate()(FFileName);
             try
             {
                 using (FileStream fs = new FileStream(FFileName, FileMode.Create, FileAccess.ReadWrite))
@@ -99,7 +101,7 @@ namespace ATL.Playlist
             catch (Exception e)
             {
                 System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message + " (" + FFileName + ")");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
             }
         }
     }
