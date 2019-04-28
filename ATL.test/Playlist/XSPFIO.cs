@@ -55,7 +55,6 @@ namespace ATL.test.IO.Playlist
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (XmlReader source = XmlReader.Create(fs))
                 {
-                    source.ReadStartElement();
                     while (source.Read())
                     {
                         if (source.NodeType == XmlNodeType.Element)
@@ -72,8 +71,12 @@ namespace ATL.test.IO.Playlist
                     }
                 }
 
+                Assert.AreEqual(4, parents.Count);
+
                 // Test Track writing
                 pls.Tracks = tracksToWrite;
+                index = -1;
+                parents.Clear();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (XmlReader source = XmlReader.Create(fs))
@@ -92,7 +95,7 @@ namespace ATL.test.IO.Playlist
                             }
                             else if (parents.Contains("track"))
                             {
-                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Path);
+                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Path.Replace('\\','/'));
                                 else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Title);
                                 else if (source.Name.Equals("creator", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Artist);
                                 else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Album);
