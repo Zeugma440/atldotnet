@@ -21,8 +21,8 @@ namespace ATL.PlaylistReaders
 		// The instance of this factory
 		private static PlaylistReaderFactory theFactory = null;
 
-
-		public static PlaylistReaderFactory GetInstance()
+        [Obsolete("Use Playlist.PlaylistIOFactory")]
+        public static PlaylistReaderFactory GetInstance()
 		{
 			if (null == theFactory)
 			{

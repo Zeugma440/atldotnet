@@ -204,9 +204,9 @@ namespace ATL.test.CodeSnippets
         [TestMethod, TestCategory("snippets")]
         public void CS_ReadingPlaylist()
         {
-            IPlaylistReader theReader = PlaylistReaderFactory.GetInstance().GetPlaylistReader(playlistPath);
+            IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
 
-            foreach (string s in theReader.GetFiles())
+            foreach (string s in theReader.FilePaths)
             {
                 System.Console.WriteLine(s);
             }
@@ -231,7 +231,7 @@ namespace ATL.test.CodeSnippets
         {
             System.Text.StringBuilder filter = new System.Text.StringBuilder("");
 
-            foreach (Format f in PlaylistReaderFactory.GetInstance().getFormats())
+            foreach (Format f in PlaylistIOFactory.GetInstance().getFormats())
             {
                 if (f.Readable)
                 {
