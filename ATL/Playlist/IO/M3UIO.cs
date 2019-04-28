@@ -1,8 +1,5 @@
-using System;
 using System.IO;
-using System.Collections;
 using System.Text;
-using ATL.Logging;
 using System.Collections.Generic;
 
 namespace ATL.Playlist.IO
