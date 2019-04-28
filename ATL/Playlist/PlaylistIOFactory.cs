@@ -11,6 +11,8 @@ namespace ATL.Playlist
         // Defines the supported formats
         public const int PL_M3U = 0;
         public const int PL_PLS = 1;
+        public const int PL_FPL = 2;
+        public const int PL_XSPF = 3;
 
         // The instance of this factory
         private static PlaylistIOFactory theFactory = null;
@@ -32,6 +34,16 @@ namespace ATL.Playlist
                 tempFmt = new Format("PLS");
                 tempFmt.ID = PL_PLS;
                 tempFmt.AddExtension(".pls");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("FPL (experimental)");
+                tempFmt.ID = PL_FPL;
+                tempFmt.AddExtension(".fpl");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("XSPF (spiff)");
+                tempFmt.ID = PL_XSPF;
+                tempFmt.AddExtension(".xspf");
                 theFactory.addFormat(tempFmt);
             }
 
@@ -66,6 +78,14 @@ namespace ATL.Playlist
             } else if (PL_PLS == formatId)
             {
                 theReader = new PLSIO();
+            }
+            else if (PL_FPL == formatId)
+            {
+                theReader = new FPLIO();
+            }
+            else if (PL_XSPF == formatId)
+            {
+                theReader = new XSPFIO();
             }
 
             if (null == theReader) theReader = new DummyIO();

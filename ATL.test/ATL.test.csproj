@@ -94,6 +94,8 @@
     <Compile Include="Misc\ImageUtilsTest.cs" />
     <Compile Include="Misc\TrackUtilsTest.cs" />
     <Compile Include="Misc\UtilsTest.cs" />
+    <Compile Include="Playlist\XSPFIO.cs" />
+    <Compile Include="Playlist\FPLIO.cs" />
     <Compile Include="Playlist\PLSIO.cs" />
     <Compile Include="Playlist\M3UIO.cs" />
     <Compile Include="Playlist\PlaylistIOTest.cs" />
