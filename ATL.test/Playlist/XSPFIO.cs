@@ -81,7 +81,6 @@ namespace ATL.test.IO.Playlist
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (XmlReader source = XmlReader.Create(fs))
                 {
-                    source.ReadStartElement();
                     while (source.Read())
                     {
                         if (source.NodeType == XmlNodeType.Element)
@@ -101,11 +100,12 @@ namespace ATL.test.IO.Playlist
                                 else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Album);
                                 else if (source.Name.Equals("annotation", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Comment);
                                 else if (source.Name.Equals("trackNum", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].TrackNumber);
-                                else if (source.Name.Equals("duration", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].DurationMs);
+                                else if (source.Name.Equals("duration", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), ((long)Math.Round(tracksToWrite[index].DurationMs)).ToString());
                             }
                         }
                     }
                 }
+                Assert.AreEqual(4, parents.Count);
             }
             finally
             {

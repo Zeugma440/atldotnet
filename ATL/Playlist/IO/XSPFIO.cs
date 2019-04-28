@@ -124,7 +124,7 @@ namespace ATL.Playlist.IO
                 if (t.DurationMs > 0)
                 {
                     writer.WriteStartElement("duration");
-                    writer.WriteValue(t.DurationMs);
+                    writer.WriteValue((long)Math.Round(t.DurationMs));
                     writer.WriteEndElement();
                 }
                 writer.WriteEndElement(); // track
