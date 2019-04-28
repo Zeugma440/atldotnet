@@ -59,7 +59,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free SPC
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
@@ -126,7 +126,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file with existing tag incl. unsupported field (dumper)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(notEmptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -174,7 +174,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_SPC_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 

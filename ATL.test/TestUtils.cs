@@ -25,7 +25,7 @@ namespace ATL.test
             if (includeFinalSeparator) return locationRoot + Path.DirectorySeparatorChar; else return locationRoot;
         }
 
-        public static string DuplicateTempTestFile(string fileName)
+        public static string CopyAsTempTestFile(string fileName)
         {
             string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
             int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));

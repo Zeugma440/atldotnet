@@ -100,7 +100,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : empty file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
@@ -193,7 +193,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -311,7 +311,7 @@ namespace ATL.test.IO.MetaData
             {
                 // Source : totally metadata-free file
                 string location = TestUtils.GetResourceLocationRoot() + fileName;
-                string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
+                string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
                 Track theTrack = new Track(testFileLocation);
 
                 // Update Track count
@@ -354,7 +354,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
@@ -468,7 +468,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free

@@ -128,7 +128,7 @@ namespace ATL.test.IO.MetaData
             if (null == stream)
             {
                 location = TestUtils.GetResourceLocationRoot() + emptyFile;
-                testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+                testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
                 streamCopy = null;
                 theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             }
@@ -260,7 +260,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : OGG with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(fileName);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -384,7 +384,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Unsupported_Empty()
         {
             // Source : tag-free OGG
-            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
 
 
@@ -503,7 +503,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
-            String testFileLocation = TestUtils.DuplicateTempTestFile("OGG/chapters.ogg");
+            String testFileLocation = TestUtils.CopyAsTempTestFile("OGG/chapters.ogg");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible

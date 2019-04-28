@@ -80,7 +80,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : totally metadata-free WMA
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
@@ -161,7 +161,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : WMA with remaining non-WM metadata used for playback (isVBR, DeviceConformanceTemplate, WMFSDKxxx)
             string location = TestUtils.GetResourceLocationRoot() + "WMA/empty_non-WMFields.wma";
-            string testFileLocation = TestUtils.DuplicateTempTestFile("WMA/empty_non-WMFields.wma");
+            string testFileLocation = TestUtils.CopyAsTempTestFile("WMA/empty_non-WMFields.wma");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
@@ -245,7 +245,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (WM/Mood)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            string testFileLocation = TestUtils.DuplicateTempTestFile(notEmptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
@@ -319,7 +319,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.DuplicateTempTestFile(emptyFile);
+            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 

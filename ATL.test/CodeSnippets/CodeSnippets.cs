@@ -35,7 +35,7 @@ namespace ATL.test.CodeSnippets
         [TestInitialize]
         public void Init()
         {
-            audioFilePath = TestUtils.DuplicateTempTestFile("MP3/id3v2.3_UTF16.mp3");
+            audioFilePath = TestUtils.CopyAsTempTestFile("MP3/id3v2.3_UTF16.mp3");
             playlistFilePath = TestUtils.CreateTempTestFile("playlist.test");
             cuesheetPath = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
         }

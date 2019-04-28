@@ -6,23 +6,17 @@ using System.IO;
 namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class PlaylistIOTest
+    public class M3UIO
     {
         [TestMethod]
-        public void PLIO_R_NoFormat()
-        {
-            IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.xyz");
-            Assert.IsInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
-        }
-
-        [TestMethod]
-        public void PLIO_R_M3U_Path()
+        public void PLIO_R_M3U()
         {
             IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
             Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
             Assert.AreEqual(1, pls.FilePaths.Count);
             foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+            foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
 
             IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
             string resourceRoot = TestUtils.GetResourceLocationRoot(false);
@@ -37,32 +31,6 @@ namespace ATL.test.IO.Playlist
                 Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
                 Assert.AreEqual(3, pls.FilePaths.Count);
                 foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-            }
-            finally
-            {
-                File.Delete(testFileLocation);
-            }
-        }
-
-        [TestMethod]
-        public void PLIO_R_M3U_Track()
-        {
-            IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
-
-            Assert.AreEqual(1, pls.Tracks.Count);
-            foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
-
-            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
-            string resourceRoot = TestUtils.GetResourceLocationRoot(false);
-            replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", resourceRoot.Substring(2, resourceRoot.Length - 2)));
-
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
-            try
-            {
-                pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.AreEqual(3, pls.FilePaths.Count);
                 foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
             }
             finally
