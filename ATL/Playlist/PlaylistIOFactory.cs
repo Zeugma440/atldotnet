@@ -10,6 +10,7 @@ namespace ATL.Playlist
     {
         // Defines the supported formats
         public const int PL_M3U = 0;
+        public const int PL_PLS = 1;
 
         // The instance of this factory
         private static PlaylistIOFactory theFactory = null;
@@ -26,6 +27,11 @@ namespace ATL.Playlist
                 tempFmt.ID = PL_M3U;
                 tempFmt.AddExtension(".m3u");
                 tempFmt.AddExtension(".m3u8");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format("PLS");
+                tempFmt.ID = PL_PLS;
+                tempFmt.AddExtension(".pls");
                 theFactory.addFormat(tempFmt);
             }
 
@@ -57,6 +63,9 @@ namespace ATL.Playlist
             if (PL_M3U == formatId)
             {
                 theReader = new M3UIO();
+            } else if (PL_PLS == formatId)
+            {
+                theReader = new PLSIO();
             }
 
             if (null == theReader) theReader = new DummyIO();
