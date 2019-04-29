@@ -11,13 +11,6 @@ namespace ATL.test.IO.Playlist
     public class PlaylistReadersTest
     {
         [TestMethod]
-        public void PL_NoFormat()
-        {
-            IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.xyz");
-            Assert.IsInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
-        }
-
-        [TestMethod]
         public void PL_Common()
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
@@ -42,7 +35,6 @@ namespace ATL.test.IO.Playlist
         {
             IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
-            Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
             Assert.AreEqual(1, theReader.GetFiles().Count);
             foreach (string s in theReader.GetFiles())
             {
@@ -60,7 +52,6 @@ namespace ATL.test.IO.Playlist
             {
                 theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -83,7 +74,6 @@ namespace ATL.test.IO.Playlist
             {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -110,7 +100,6 @@ namespace ATL.test.IO.Playlist
             {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -134,7 +123,6 @@ namespace ATL.test.IO.Playlist
 
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -156,7 +144,6 @@ namespace ATL.test.IO.Playlist
             try {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -179,7 +166,6 @@ namespace ATL.test.IO.Playlist
             {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(3, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {
@@ -202,7 +188,6 @@ namespace ATL.test.IO.Playlist
             {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.IsNotInstanceOfType(theReader, typeof(PlaylistReaders.BinaryLogic.DummyReader));
                 Assert.AreEqual(4, theReader.GetFiles().Count);
                 foreach (string s in theReader.GetFiles())
                 {

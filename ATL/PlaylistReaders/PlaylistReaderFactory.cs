@@ -1,13 +1,14 @@
 using System;
-using ATL.PlaylistReaders.BinaryLogic;
 using System.Collections.Generic;
+using ATL.Playlist;
 
 namespace ATL.PlaylistReaders
 {
-	/// <summary>
-	/// TODO
-	/// </summary>
-	public class PlaylistReaderFactory : Factory
+    /// <summary>
+    /// TODO
+    /// </summary>
+    [Obsolete("Use Playlist.PlaylistIOFactory")]
+    public class PlaylistReaderFactory : Factory
 	{
 		// Defines the supported formats
 		public const int PL_M3U     = 0;
@@ -21,7 +22,7 @@ namespace ATL.PlaylistReaders
 		// The instance of this factory
 		private static PlaylistReaderFactory theFactory = null;
 
-        [Obsolete("Use Playlist.PlaylistIOFactory")]
+        
         public static PlaylistReaderFactory GetInstance()
 		{
 			if (null == theFactory)
@@ -76,58 +77,7 @@ namespace ATL.PlaylistReaders
 
         public IPlaylistReader GetPlaylistReader(String path, int alternate = 0)
 		{
-            IList<Format> formats = getFormatsFromPath(path);
-            IPlaylistReader result;
-
-            if (formats != null && formats.Count > alternate)
-            {
-                result = GetPlaylistReader(formats[alternate].ID);
-            }
-            else
-            {
-                result = GetPlaylistReader(NO_FORMAT);
-            }
-
-            result.Path = path;
-            return result;
+            return new PlaylistIOAdapter(PlaylistIOFactory.GetInstance().GetPlaylistIO(path, alternate));
         }
-
-        public IPlaylistReader GetPlaylistReader(int formatId)
-        {
-            IPlaylistReader theReader = null;
-
-            if (PL_PLS == formatId)
-			{
-				theReader = new PLSReader();
-			}
-            else if (PL_M3U == formatId)
-			{
-				theReader = new M3UReader();
-			}
-            else if (PL_FPL == formatId)
-            {
-                theReader = new FPLReader();
-            }
-            else if (PL_XSPF == formatId)
-            {
-                theReader = new XSPFReader();
-            }
-            else if (PL_SMIL == formatId)
-            {
-                theReader = new SMILReader();
-            }
-            else if (PL_ASX == formatId)
-            {
-                theReader = new ASXReader();
-            }
-            else if (PL_B4S == formatId)
-            {
-                theReader = new B4SReader();
-            }
-
-            if (null == theReader) theReader = new DummyReader();
-
-			return theReader;
-		}
 	}
 }
