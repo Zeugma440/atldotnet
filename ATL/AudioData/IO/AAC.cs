@@ -72,6 +72,44 @@ namespace ATL.AudioData.IO
 
         private const string ZONE_MP4_NEROCHAPTERS = "neroChapters";
 
+        // Mapping between MP4 frame codes and ATL frame codes
+        private static Dictionary<string, byte> frameMapping_mp4 = new Dictionary<string, byte>() {
+            { "©nam", TagData.TAG_FIELD_TITLE },
+            { "titl", TagData.TAG_FIELD_TITLE },
+            { "©alb", TagData.TAG_FIELD_ALBUM },
+            { "©art", TagData.TAG_FIELD_ARTIST },
+            { "©ART", TagData.TAG_FIELD_ARTIST },
+            { "©cmt", TagData.TAG_FIELD_COMMENT },
+            { "©day", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "©gen", TagData.TAG_FIELD_GENRE },
+            { "gnre", TagData.TAG_FIELD_GENRE },
+            { "trkn", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+            { "disk", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+            { "rtng", TagData.TAG_FIELD_RATING },
+            { "rate", TagData.TAG_FIELD_RATING },
+            { "©wrt", TagData.TAG_FIELD_COMPOSER },
+            { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+            { "cprt", TagData.TAG_FIELD_COPYRIGHT },
+            { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
+            { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
+        };
+
+        // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
+        private static Dictionary<string, byte> frameClasses_mp4 = new Dictionary<string, byte>() {
+            { "gnre", 0 },
+            { "trkn", 0 },
+            { "disk", 0 },
+            { "rtng", 21 },
+            { "tmpo", 21 },
+            { "cpil", 21 },
+            { "stik", 21 },
+            { "pcst", 21 },
+            { "purl", 0 },
+            { "egid", 0 },
+            { "tvsn", 21 },
+            { "tves", 21 },
+            { "pgap", 21 }
+        };
 
         private class MP4Sample
         {
@@ -82,9 +120,6 @@ namespace ATL.AudioData.IO
             public long RelativeOffset;
         }
 
-
-        private static Dictionary<string, byte> frameMapping_mp4; // Mapping between MP4 frame codes and ATL frame codes
-        private static Dictionary<string, byte> frameClasses_mp4; // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
         private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
@@ -93,42 +128,7 @@ namespace ATL.AudioData.IO
         private ChannelsArrangement channelsArrangement;
 
         private AudioDataManager.SizeInfo sizeInfo;
-        private string fileName;
-
-        /* Useless for now
-        public byte HeaderTypeID // Header type code
-        {
-            get { return this.FHeaderTypeID; }
-        }
-        public String HeaderType // Header type name
-        {
-            get { return this.getHeaderType(); }
-        }
-        public byte MPEGVersionID // MPEG version code
-        {
-            get { return this.FMPEGVersionID; }
-        }
-        public String MPEGVersion // MPEG version name
-        {
-            get { return this.getMPEGVersion(); }
-        }
-        public byte ProfileID // Profile code
-        {
-            get { return this.FProfileID; }
-        }
-        public String Profile // Profile name
-        {
-            get { return this.getProfile(); }
-        }
-        public byte BitRateTypeID // Bit rate type code
-        {
-            get { return this.FBitrateTypeID; }
-        }
-        public String BitRateType // Bit rate type name
-        {
-            get { return this.getBitRateType(); }
-        }
-        */
+        private readonly string fileName;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -203,13 +203,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            /* useless for now
-            FMPEGVersionID = AAC_MPEG_VERSION_UNKNOWN;
-            FProfileID = AAC_PROFILE_UNKNOWN;
-            FChannels = 0;
-            FTotalFrames = 0;
-            */
-
             headerTypeID = AAC_HEADER_TYPE_UNKNOWN;
             bitrateTypeID = AAC_BITRATE_TYPE_UNKNOWN;
 
@@ -224,83 +217,12 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        static AAC()
-        {
-            frameMapping_mp4 = new Dictionary<string, byte>
-            {
-                { "©nam", TagData.TAG_FIELD_TITLE },
-                { "titl", TagData.TAG_FIELD_TITLE },
-                { "©alb", TagData.TAG_FIELD_ALBUM },
-                { "©art", TagData.TAG_FIELD_ARTIST },
-                { "©ART", TagData.TAG_FIELD_ARTIST },
-                { "©cmt", TagData.TAG_FIELD_COMMENT },
-                { "©day", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "©gen", TagData.TAG_FIELD_GENRE },
-                { "gnre", TagData.TAG_FIELD_GENRE },
-                { "trkn", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "disk", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "rtng", TagData.TAG_FIELD_RATING },
-                { "rate", TagData.TAG_FIELD_RATING },
-                { "©wrt", TagData.TAG_FIELD_COMPOSER },
-                { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "cprt", TagData.TAG_FIELD_COPYRIGHT },
-                { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
-                { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
-            };
-
-            frameClasses_mp4 = new Dictionary<string, byte>
-            {
-                { "gnre", 0 },
-                { "trkn", 0 },
-                { "disk", 0 },
-                { "rtng", 21 },
-                { "tmpo", 21 },
-                { "cpil", 21 },
-                { "stik", 21 },
-                { "pcst", 21 },
-                { "purl", 0 },
-                { "egid", 0 },
-                { "tvsn", 21 },
-                { "tves", 21 },
-                { "pgap", 21 }
-            };
-        }
-
-
         // ********************** Private functions & procedures *********************
 
         private static void addFrameClass(string frameCode, byte frameClass)
         {
             if (!frameClasses_mp4.ContainsKey(frameCode)) frameClasses_mp4.Add(frameCode, frameClass);
         }
-
-
-        /* Useless for now
-
-        // Get header type name
-        private string getHeaderType()
-        {
-            return AAC_HEADER_TYPE[FHeaderTypeID];
-        }
-
-        // Get MPEG version name
-        private string getMPEGVersion()
-        {
-            return AAC_MPEG_VERSION[FMPEGVersionID];
-        }
-
-        // Get profile name
-        private string getProfile()
-        {
-            return AAC_PROFILE[FProfileID];
-        }
-
-        // Get bit rate type name
-        private string getBitRateType()
-        {
-            return AAC_BITRATE_TYPE[bitrateTypeID];
-        }
-        */
 
         // Calculate duration time
         private double getDuration()
@@ -367,10 +289,6 @@ namespace ATL.AudioData.IO
             if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) Position += 51;
             else Position += 31;
 
-            /* Useless for now
-            FMPEGVersionID = AAC_MPEG_VERSION_4;
-            FProfileID = (byte)(StreamUtils.ReadBits(Source, Position, 2) + 1);
-            */
             Position += 2;
 
             uint channels = 1;
@@ -400,19 +318,7 @@ namespace ATL.AudioData.IO
 
                 if (StreamUtils.ReadBits(Source, position, 12) != 0xFFF) break;
 
-                position += 12;
-
-                /* Useless for now
-                if (0 == StreamUtils.ReadBits(Source, Position, 1))
-                    FMPEGVersionID = AAC_MPEG_VERSION_4;
-                else
-                    FMPEGVersionID = AAC_MPEG_VERSION_2;
-
-                Position += 4;
-                FProfileID = (byte)(StreamUtils.ReadBits(Source, Position, 2) + 1);
-                Position += 2;
-                */
-                position += 6; // <-- this line to be deleted when the block above is decommented
+                position += 18;
 
                 sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, position, 4)];
                 position += 5;
@@ -420,9 +326,6 @@ namespace ATL.AudioData.IO
                 uint channels = StreamUtils.ReadBits(Source, position, 3);
                 channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
 
-                //                if (AAC_MPEG_VERSION_4 == FMPEGVersionID)
-                //                    Position += 9;
-                //                else
                 position += 7;
 
                 totalSize += (int)StreamUtils.ReadBits(Source, position, 13);
@@ -1407,13 +1310,13 @@ namespace ATL.AudioData.IO
             if (firstPicture) // If multiples pictures are embedded, the 'covr' atom is not repeated; the 'data' atom is
             {
                 frameSizePos1 = writer.BaseStream.Position;
-                writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+                writer.Write(0); // Frame size placeholder to be rewritten in a few lines
                 writer.Write(Utils.Latin1Encoding.GetBytes("covr"));
             }
 
             // == METADATA VALUE ==
             frameSizePos2 = writer.BaseStream.Position;
-            writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
 
             int frameClass;
