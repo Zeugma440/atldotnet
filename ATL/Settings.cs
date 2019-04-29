@@ -2,6 +2,9 @@
 
 namespace ATL
 {
+#pragma warning disable S2223 // Non-constant static fields should not be visible
+#pragma warning disable S1104 // Fields should not have public accessibility
+
     public static class Settings
     {
         /*
@@ -42,4 +45,7 @@ namespace ATL
 
         public static bool M3U_useExtendedFormat = true;
     }
+
+#pragma warning restore S1104 // Fields should not have public accessibility
+#pragma warning restore S2223 // Non-constant static fields should not be visible
 }
