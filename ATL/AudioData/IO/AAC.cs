@@ -123,7 +123,7 @@ namespace ATL.AudioData.IO
         private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
-        private double duration;
+        private double calculatedDuration;
         private int sampleRate;
         private ChannelsArrangement channelsArrangement;
 
@@ -208,7 +208,7 @@ namespace ATL.AudioData.IO
 
             bitrate = 0;
             sampleRate = 0;
-            duration = 0;
+            calculatedDuration = 0;
         }
 
         public AAC(string fileName)
@@ -229,7 +229,7 @@ namespace ATL.AudioData.IO
         {
             if (headerTypeID == AAC_HEADER_TYPE_MP4)
             {
-                return duration;
+                return calculatedDuration;
             }
             else
             {
@@ -439,7 +439,7 @@ namespace ATL.AudioData.IO
             globalTimeScale = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             long timeLengthPerSec;
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            duration = timeLengthPerSec * 1000.0 / globalTimeScale;
+            calculatedDuration = timeLengthPerSec * 1000.0 / globalTimeScale;
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
 
@@ -1065,7 +1065,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return;
             }
-            bitrate = (int)Math.Round(mdatSize * 8 / duration * 1000.0, 0);
+            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
         }
 
         /// <summary>

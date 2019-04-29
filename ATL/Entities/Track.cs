@@ -194,7 +194,7 @@ namespace ATL
         public IDictionary<string, string> AdditionalFields;
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
 
-        private IList<PictureInfo> embeddedPictures = null;
+        private IList<PictureInfo> currentEmbeddedPictures = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
         /// <summary>
@@ -226,15 +226,15 @@ namespace ATL
         // Used for pictures lazy loading
         private IList<PictureInfo> getEmbeddedPictures()
         {
-            if (null == embeddedPictures)
+            if (null == currentEmbeddedPictures)
             {
-                embeddedPictures = new List<PictureInfo>();
+                currentEmbeddedPictures = new List<PictureInfo>();
                 initialEmbeddedPictures = new List<PictureInfo>();
 
                 Update(true); // TODO - unexpected behaviour when calling getEmbeddedPictures after setting a few fields -> they are overwritten by the new call to Update() !
             }
 
-            return embeddedPictures;
+            return currentEmbeddedPictures;
         }
 
         protected void Update(bool readEmbeddedPictures = false)
@@ -272,7 +272,9 @@ namespace ATL
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             DurationMs = fileIO.Duration;
+#pragma warning disable CS0618 // Obsolete
             Rating = fileIO.Rating;
+#pragma warning restore CS0618 // Obsolete
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
@@ -290,18 +292,18 @@ namespace ATL
                 foreach (PictureInfo picInfo in fileIO.EmbeddedPictures)
                 {
                     picInfo.ComputePicHash();
-                    embeddedPictures.Add(picInfo);
+                    currentEmbeddedPictures.Add(picInfo);
 
                     PictureInfo initialPicInfo = new PictureInfo(picInfo, false);
                     initialEmbeddedPictures.Add(initialPicInfo);
                 }
             }
 
-            if (!readEmbeddedPictures && embeddedPictures != null)
+            if (!readEmbeddedPictures && currentEmbeddedPictures != null)
             {
-                embeddedPictures.Clear();
+                currentEmbeddedPictures.Clear();
                 initialEmbeddedPictures.Clear();
-                embeddedPictures = null;
+                currentEmbeddedPictures = null;
                 initialEmbeddedPictures = null;
             }
         }
@@ -357,14 +359,14 @@ namespace ATL
             }
 
             result.Pictures = new List<PictureInfo>();
-            if (embeddedPictures != null) foreach (PictureInfo targetPic in embeddedPictures) targetPic.Flag = 0;
+            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.Flag = 0;
 
-            if (initialEmbeddedPictures != null && embeddedPictures != null)
+            if (initialEmbeddedPictures != null && currentEmbeddedPictures != null)
             {
                 foreach (PictureInfo picInfo in initialEmbeddedPictures)
                 {
                     // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
-                    if (!embeddedPictures.Contains(picInfo))
+                    if (!currentEmbeddedPictures.Contains(picInfo))
                     {
                         PictureInfo picToDelete = new PictureInfo(picInfo);
                         picToDelete.MarkedForDeletion = true;
@@ -372,7 +374,7 @@ namespace ATL
                     }
                     else // Only add new additions (pictures identical to initial list will be kept, and do not have to make it to the list, or else a duplicate will be created)
                     {
-                        foreach (PictureInfo targetPic in embeddedPictures)
+                        foreach (PictureInfo targetPic in currentEmbeddedPictures)
                         {
                             if (targetPic.Equals(picInfo))
                             {
@@ -395,9 +397,9 @@ namespace ATL
                     }
                 }
 
-                if (embeddedPictures != null)
+                if (currentEmbeddedPictures != null)
                 {
-                    foreach (PictureInfo targetPic in embeddedPictures)
+                    foreach (PictureInfo targetPic in currentEmbeddedPictures)
                     {
                         if (0 == targetPic.Flag) // Entirely new pictures without equivalent in initialEmbeddedPictures
                         {
