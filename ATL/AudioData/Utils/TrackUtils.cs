@@ -73,7 +73,7 @@ namespace ATL.AudioData
             if (!str.Contains("/")) return 0;
 
             int indexOfDelimiter = str.IndexOf("/");
-            if (indexOfDelimiter == str.Length) return 0;
+            if (indexOfDelimiter == str.Length - 1) return 0;
 
             // Try extracting the total manually when "/" is followed by a number
             int i = indexOfDelimiter + 1;
