@@ -100,7 +100,7 @@ namespace ATL.test.IO.Playlist
                             else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase) && parents.Contains("seq"))
                             {
                                 index++;
-                                Assert.AreEqual(tracksToWrite[index].Path.Replace('\\', '/'), source.GetAttribute("src"));
+                                Assert.AreEqual("file:///"+tracksToWrite[index].Path.Replace('\\', '/'), source.GetAttribute("src"));
                             }
                         }
                     }

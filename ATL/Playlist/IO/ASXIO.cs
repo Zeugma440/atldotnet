@@ -72,7 +72,7 @@ namespace ATL.Playlist.IO
                 writer.WriteStartElement("ENTRY");
 
                 writer.WriteStartElement("REF");
-                writer.WriteAttributeString("HREF", trackUri.IsAbsoluteUri ? trackUri.AbsolutePath : trackUri.OriginalString);
+                writer.WriteAttributeString("HREF", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
                 writer.WriteEndElement();
 
                 if (t.Title != null && t.Title.Length > 0)

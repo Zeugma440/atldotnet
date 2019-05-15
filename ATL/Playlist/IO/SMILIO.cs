@@ -107,7 +107,7 @@ namespace ATL.Playlist.IO
                 Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
 
                 writer.WriteStartElement("media");
-                writer.WriteAttributeString("src", trackUri.IsAbsoluteUri ? trackUri.AbsolutePath : trackUri.OriginalString);
+                writer.WriteAttributeString("src", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
                 writer.WriteEndElement();
             }
 
