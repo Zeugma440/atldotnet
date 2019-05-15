@@ -35,12 +35,12 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_ASX()
         {
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add("aaa.mp3");
-            pathsToWrite.Add("bbb.mp3");
+            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "aaa.mp3");
+            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.asx");
@@ -66,12 +66,18 @@ namespace ATL.test.IO.Playlist
                                 index++;
                                 parents.Add(source.Name.ToLower());
                             }
-                            else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual(pathsToWrite[index], source.GetAttribute("HREF"));
+                            else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual(pathsToWrite[index].Replace('\\', '/'), source.GetAttribute("HREF"));
                         }
                     }
                 }
 
                 Assert.AreEqual(3, parents.Count);
+
+                IList<string> filePaths = pls.FilePaths;
+                Assert.AreEqual(2, filePaths.Count);
+                Assert.AreEqual(pathsToWrite[0], filePaths[0]);
+                Assert.AreEqual(pathsToWrite[1], filePaths[1]);
+
 
                 // Test Track writing
                 pls.Tracks = tracksToWrite;
@@ -101,6 +107,11 @@ namespace ATL.test.IO.Playlist
                     }
                 }
                 Assert.AreEqual(3, parents.Count);
+
+                IList<Track> tracks = pls.Tracks;
+                Assert.AreEqual(2, tracks.Count);
+                Assert.AreEqual(tracksToWrite[0].Path, tracks[0].Path);
+                Assert.AreEqual(tracksToWrite[1].Path, tracks[1].Path);
             }
             finally
             {

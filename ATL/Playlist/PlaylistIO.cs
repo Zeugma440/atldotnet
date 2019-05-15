@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
 
 namespace ATL.Playlist
 {
@@ -32,6 +33,18 @@ namespace ATL.Playlist
 
         abstract protected void getFiles(FileStream fs, IList<string> result);
         abstract protected void setTracks(FileStream fs, IList<Track> values);
+
+        protected XmlWriterSettings getWriterSettings()
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.CloseOutput = true;
+            settings.Encoding = Encoding.UTF8;
+            settings.OmitXmlDeclaration = true;
+            settings.ConformanceLevel = ConformanceLevel.Fragment;
+            settings.Indent = true;
+            settings.DoNotEscapeUriAttributes = false;
+            return settings;
+        }
 
         public IList<string> getFiles()
         {

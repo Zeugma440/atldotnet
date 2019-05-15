@@ -50,19 +50,13 @@ namespace ATL.Playlist.IO
             }
             catch (UriFormatException)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, href + " is not a valid URI");
             }
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = false;
-            settings.Encoding = Encoding.UTF8;
-
-            XmlWriter writer = XmlWriter.Create(fs, settings);
-
-            writer.WriteStartDocument();
+            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
             writer.WriteStartElement("ASX", "http://xspf.org/ns/0/");
 
             // Write the title.
@@ -98,8 +92,7 @@ namespace ATL.Playlist.IO
                 writer.WriteEndElement(); // entry
             }
 
-            writer.WriteEndDocument();
-
+            writer.Flush();
             writer.Close();
         }
     }
