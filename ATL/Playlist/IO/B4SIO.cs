@@ -39,7 +39,12 @@ namespace ATL.Playlist.IO
 
         protected override void setTracks(FileStream fs, IList<Track> values)
         {
-            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
+            XmlWriterSettings settings = getWriterSettings();
+            settings.OmitXmlDeclaration = false;
+            settings.ConformanceLevel = ConformanceLevel.Document;
+
+            XmlWriter writer = XmlWriter.Create(fs, settings);
+            writer.WriteStartDocument(true);
             writer.WriteStartElement("WinampXML");
 
             writer.WriteStartElement("playlist");
@@ -69,6 +74,7 @@ namespace ATL.Playlist.IO
                 }
                 writer.WriteEndElement(); // entry
             }
+            writer.WriteEndDocument();
 
             writer.Flush();
             writer.Close();
