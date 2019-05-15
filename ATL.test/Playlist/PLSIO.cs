@@ -36,8 +36,8 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.pls");
@@ -65,6 +65,11 @@ namespace ATL.test.IO.Playlist
                     Assert.AreEqual("Version=2", sr.ReadLine());
                     Assert.IsTrue(sr.EndOfStream);
                 }
+                IList<string> filePaths = pls.FilePaths;
+                Assert.AreEqual(2, filePaths.Count);
+                Assert.IsTrue(filePaths[0].EndsWith(pathsToWrite[0]));
+                Assert.IsTrue(filePaths[1].EndsWith(pathsToWrite[1]));
+
 
                 // Test Track writing
                 pls.Tracks = tracksToWrite;
@@ -87,6 +92,11 @@ namespace ATL.test.IO.Playlist
                     Assert.AreEqual("Version=2", sr.ReadLine());
                     Assert.IsTrue(sr.EndOfStream);
                 }
+
+                IList<Track> tracks = pls.Tracks;
+                Assert.AreEqual(2, tracks.Count);
+                Assert.AreEqual(tracksToWrite[0].Path, tracks[0].Path);
+                Assert.AreEqual(tracksToWrite[1].Path, tracks[1].Path);
             }
             finally
             {

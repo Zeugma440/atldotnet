@@ -20,7 +20,7 @@ namespace ATL.Playlist.IO
                 while (s != null)
                 {
                     // If the read line isn't a metadata, it's a file path
-                    if ("FILE" == s.Substring(0, 4).ToUpper())
+                    if (s.Length > 3 && s.Substring(0,4).Equals("FILE",System.StringComparison.OrdinalIgnoreCase))
                     {
                         equalIndex = s.IndexOf("=") + 1;
                         s = s.Substring(equalIndex, s.Length - equalIndex);
