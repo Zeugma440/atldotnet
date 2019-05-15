@@ -34,12 +34,12 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_XSPF()
         {
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add("aaa.mp3");
-            pathsToWrite.Add("bbb.mp3");
+            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "aaa.mp3");
+            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
+            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.xspf");
@@ -66,12 +66,18 @@ namespace ATL.test.IO.Playlist
                                 parents.Add(source.Name);
                                 index++;
                             }
-                            else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase) && parents.Contains("track")) Assert.AreEqual(getXmlValue(source), pathsToWrite[index]);
+                            else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase) && parents.Contains("track")) Assert.AreEqual(getXmlValue(source).Replace('/','\\'), pathsToWrite[index]);
                         }
                     }
                 }
 
                 Assert.AreEqual(4, parents.Count);
+
+                IList<string> filePaths = pls.FilePaths;
+                Assert.AreEqual(2, filePaths.Count);
+                Assert.IsTrue(filePaths[0].EndsWith(pathsToWrite[0]));
+                Assert.IsTrue(filePaths[1].EndsWith(pathsToWrite[1]));
+
 
                 // Test Track writing
                 pls.Tracks = tracksToWrite;
@@ -106,6 +112,11 @@ namespace ATL.test.IO.Playlist
                     }
                 }
                 Assert.AreEqual(4, parents.Count);
+
+                IList<Track> tracks = pls.Tracks;
+                Assert.AreEqual(2, tracks.Count);
+                Assert.AreEqual(tracksToWrite[0].Path, tracks[0].Path);
+                Assert.AreEqual(tracksToWrite[1].Path, tracks[1].Path);
             }
             finally
             {

@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System;
 using System.Xml;
@@ -60,13 +59,7 @@ namespace ATL.Playlist.IO
 
         protected override void setTracks(FileStream fs, IList<Track> values)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = false;
-            settings.Encoding = Encoding.UTF8;
-
-            XmlWriter writer = XmlWriter.Create(fs, settings);
-
-            writer.WriteStartDocument();
+            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
             writer.WriteStartElement("playlist", "http://xspf.org/ns/0/");
 
             // Write the title.
@@ -83,7 +76,7 @@ namespace ATL.Playlist.IO
                 writer.WriteStartElement("track");
 
                 writer.WriteStartElement("location");
-                writer.WriteString(trackUri.IsAbsoluteUri?trackUri.AbsolutePath:trackUri.OriginalString);
+                writer.WriteString(trackUri.IsAbsoluteUri ? trackUri.AbsolutePath : trackUri.OriginalString);
                 writer.WriteEndElement();
 
                 if (t.Title != null && t.Title.Length > 0)
@@ -132,8 +125,8 @@ namespace ATL.Playlist.IO
 
             writer.WriteEndElement(); // tracklist
             writer.WriteEndElement(); // playlist
-            writer.WriteEndDocument();
 
+            writer.Flush();
             writer.Close();
         }
     }
