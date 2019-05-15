@@ -92,13 +92,7 @@ namespace ATL.Playlist.IO
 
         protected override void setTracks(FileStream fs, IList<Track> values)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = false;
-            settings.Encoding = Encoding.UTF8;
-
-            XmlWriter writer = XmlWriter.Create(fs, settings);
-
-            writer.WriteStartDocument();
+            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
             writer.WriteStartElement("smil");
 
             writer.WriteStartElement("head");
@@ -117,8 +111,7 @@ namespace ATL.Playlist.IO
                 writer.WriteEndElement();
             }
 
-            writer.WriteEndDocument();
-
+            writer.Flush();
             writer.Close();
         }
     }
