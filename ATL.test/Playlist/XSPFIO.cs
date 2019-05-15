@@ -61,12 +61,12 @@ namespace ATL.test.IO.Playlist
                         {
                             if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name);
                             else if (source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase) && parents.Contains("playlist")) parents.Add(source.Name);
-                            else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase) && parents.Contains("tracklist"))
+                            else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase) && parents.Contains("trackList"))
                             {
                                 parents.Add(source.Name);
                                 index++;
                             }
-                            else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase) && parents.Contains("track")) Assert.AreEqual(getXmlValue(source).Replace('/','\\'), pathsToWrite[index]);
+                            else if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase) && parents.Contains("track")) Assert.AreEqual("file:\\\\\\"+pathsToWrite[index], getXmlValue(source).Replace('/', '\\'));
                         }
                     }
                 }
@@ -92,15 +92,15 @@ namespace ATL.test.IO.Playlist
                         if (source.NodeType == XmlNodeType.Element)
                         {
                             if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name);
-                            else if (source.Name.Equals("tracklist", StringComparison.OrdinalIgnoreCase) && parents.Contains("playlist")) parents.Add(source.Name);
-                            else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase) && parents.Contains("tracklist"))
+                            else if (source.Name.Equals("trackList", StringComparison.OrdinalIgnoreCase) && parents.Contains("playlist")) parents.Add(source.Name);
+                            else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase) && parents.Contains("trackList"))
                             {
                                 parents.Add(source.Name);
                                 index++;
                             }
                             else if (parents.Contains("track"))
                             {
-                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Path.Replace('\\','/'));
+                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), "file:///"+tracksToWrite[index].Path.Replace('\\','/'));
                                 else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Title);
                                 else if (source.Name.Equals("creator", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Artist);
                                 else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Album);

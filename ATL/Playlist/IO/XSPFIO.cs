@@ -68,7 +68,7 @@ namespace ATL.Playlist.IO
             writer.WriteEndElement();
 
             // Open tracklist
-            writer.WriteStartElement("tracklist");
+            writer.WriteStartElement("trackList");
             foreach (Track t in values)
             {
                 Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
@@ -76,7 +76,7 @@ namespace ATL.Playlist.IO
                 writer.WriteStartElement("track");
 
                 writer.WriteStartElement("location");
-                writer.WriteString(trackUri.IsAbsoluteUri ? trackUri.AbsolutePath : trackUri.OriginalString);
+                writer.WriteString(trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
                 writer.WriteEndElement();
 
                 if (t.Title != null && t.Title.Length > 0)
