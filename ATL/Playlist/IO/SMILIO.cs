@@ -1,9 +1,7 @@
 ﻿using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System;
 using System.Xml;
-using ATL.Logging;
 
 namespace ATL.Playlist.IO
 {
@@ -25,13 +23,11 @@ namespace ATL.Playlist.IO
                     switch (source.NodeType)
                     {
                         case XmlNodeType.Element: // Element start
-                            if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase))
+                            if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase)
+                                || source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
                             {
-                                result.Add(getResourceLocation(source));
-                            }
-                            else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
-                            {
-                                result.Add(getResourceLocation(source));
+                                string resourceLocation = getResourceLocation(source);
+                                if (null != resourceLocation) result.Add(resourceLocation);
                             }
                             break;
 
@@ -47,47 +43,16 @@ namespace ATL.Playlist.IO
         }
 
         // Most SMIL sample playlists store resource location with a relative path
-        private String getResourceLocation(XmlReader source)
+        private string getResourceLocation(XmlReader source)
         {
-            String result = "";
             while (source.MoveToNextAttribute()) // Read the attributes.
             {
                 if (source.Name.Equals("src", StringComparison.OrdinalIgnoreCase))
                 {
-                    result = source.Value;
-
-                    // It it an URI ?
-                    if (result.Contains("://"))
-                    {
-                        if (Uri.IsWellFormedUriString(result, UriKind.RelativeOrAbsolute))
-                        {
-                            try
-                            {
-                                Uri uri = new Uri(result);
-                                if (uri.IsFile)
-                                {
-                                    result = uri.LocalPath;
-                                }
-                            }
-                            catch (UriFormatException)
-                            {
-                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI");
-                            }
-                        }
-                        else
-                        {
-                            result = result.Replace("file:///", "").Replace("file://", "");
-                        }
-                    }
-
-                    if (!System.IO.Path.IsPathRooted(result))
-                    {
-                        result = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), result);
-                    }
-                    result = System.IO.Path.GetFullPath(result);
+                    return parseLocation(source.Value);
                 }
             }
-            return result;
+            return null;
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)

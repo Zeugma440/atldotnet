@@ -22,36 +22,12 @@ namespace ATL.Playlist.IO
                 {
                     while (source.Read())
                     {
-                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) parseLocation(source, result);
+                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) parseLocation(source, "HREF", result);
                         else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("ENTRY", StringComparison.OrdinalIgnoreCase)) break;
                     }
                 }
             }
 
-        }
-
-        private void parseLocation(XmlReader source, IList<string> result)
-        {
-            string href = source.GetAttribute("HREF");
-            try
-            {
-                Uri uri = new Uri(href);
-                if (uri.IsFile)
-                {
-                    if (!System.IO.Path.IsPathRooted(uri.LocalPath))
-                    {
-                        result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
-                    }
-                    else
-                    {
-                        result.Add(uri.LocalPath);
-                    }
-                }
-            }
-            catch (UriFormatException)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, href + " is not a valid URI");
-            }
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)

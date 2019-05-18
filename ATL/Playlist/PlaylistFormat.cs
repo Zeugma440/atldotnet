@@ -2,7 +2,14 @@
 {
     public class PlaylistFormat : Format
     {
-        public enum LocationFormatting { Undefined = -1, FilePath = 0, MS_URI = 1, RFC_URI = 2, Winamp_URI = 3 };
+        public enum LocationFormatting
+        {
+            Undefined = -1,
+            FilePath = 0, // C:\the folder\theFile.mp3
+            Winamp_URI = 1, // file:C:\the folder\theFile.mp3
+            MS_URI = 2, // file://C:\the folder\theFile.mp3
+            RFC_URI = 3 // file:///C:/the%20folder/theFile.mp3
+        };
 
         protected LocationFormatting locationFormat;
 

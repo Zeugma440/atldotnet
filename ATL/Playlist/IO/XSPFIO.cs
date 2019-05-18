@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System;
 using System.Xml;
-using ATL.Logging;
 
 namespace ATL.Playlist.IO
 {
@@ -33,28 +32,7 @@ namespace ATL.Playlist.IO
         private void parseLocation(XmlReader source, IList<string> result)
         {
             source.Read();
-            if (source.NodeType == XmlNodeType.Text)
-            {
-                try
-                {
-                    Uri uri = new Uri(source.Value);
-                    if (uri.IsFile)
-                    {
-                        if (!System.IO.Path.IsPathRooted(uri.LocalPath))
-                        {
-                            result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
-                        }
-                        else
-                        {
-                            result.Add(uri.LocalPath);
-                        }
-                    }
-                }
-                catch (UriFormatException)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
-                }
-            }
+            if (source.NodeType == XmlNodeType.Text) result.Add(parseLocation(source.Value));
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)

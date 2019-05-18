@@ -6,12 +6,12 @@
       <Name>local.MID</Name>
       <Length>103950</Length>
     </entry>
-	<!-- older format -->
+	<!-- Older format (Winamp) : Winamp URI -->
     <entry Playstring="file:$PATH\MP3\empty.mp3">
       <Name>empty</Name>
       <Length>3366</Length>
     </entry>
-	<!-- newer format -->
+	<!-- Newer format (VLC) : RFC URI -->
     <entry Playstring="file:///$PATH/OGG/empty.ogg">
       <Name>empty.ogg</Name>
       <Length>7645</Length>

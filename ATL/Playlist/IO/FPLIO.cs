@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System;
+using Commons;
 
 namespace ATL.Playlist.IO
 {
@@ -13,19 +14,14 @@ namespace ATL.Playlist.IO
 	/// </summary>
     public class FPLIO : PlaylistIO
     {
-        private static byte[] FILE_IDENTIFIER = new byte[7] { 102, 105, 108, 101, 58, 47, 47 }; // "file://"
-
+        private static byte[] FILE_IDENTIFIER = Utils.Latin1Encoding.GetBytes("file://");
 
         protected override void getFiles(FileStream fs, IList<string> result)
         {
-            string filePath;
-            string playlistPath = System.IO.Path.GetDirectoryName(fs.Name) + System.IO.Path.DirectorySeparatorChar;
-
             while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
-                filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
-                if (!System.IO.Path.IsPathRooted(filePath)) filePath = playlistPath + filePath;
-                result.Add(filePath);
+                string filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
+                result.Add(parseLocation(filePath));
             }
         }
 

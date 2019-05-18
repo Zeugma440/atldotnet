@@ -24,11 +24,7 @@ namespace ATL.Playlist.IO
                     {
                         equalIndex = s.IndexOf("=") + 1;
                         s = s.Substring(equalIndex, s.Length - equalIndex);
-                        if (!System.IO.Path.IsPathRooted(s))
-                        {
-                            s = System.IO.Path.GetDirectoryName(FFileName) + System.IO.Path.DirectorySeparatorChar + s;
-                        }
-                        result.Add(System.IO.Path.GetFullPath(s));
+                        result.Add(parseLocation(s));
                     }
                     s = source.ReadLine();
                 }

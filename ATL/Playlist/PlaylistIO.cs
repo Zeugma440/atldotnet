@@ -124,47 +124,55 @@ namespace ATL.Playlist
             return settings;
         }
 
-        protected void formatLocation(string location)
+        protected string formatLocation(string location)
         {
-
+            switch (LocationFormatting)
+            {
+                default:
+                    return location;
+            }
         }
 
         protected void parseLocation(XmlReader source, string attributeName, IList<string> result)
         {
-            string href = source.GetAttribute(attributeName);
+            string location = parseLocation(source.GetAttribute(attributeName));
+            if (location != null) result.Add(location);
+        }
 
-            // Filepath
-            if (!href.StartsWith("file://"))
-            {
-                href = href.Replace("file:", ""); // Older B4S format : "file:" + filepath
-                if (!System.IO.Path.IsPathRooted(href))
-                {
-                    href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), href);
-                }
-                result.Add(href);
-            }
-            else // URI
+        protected string parseLocation(string href)
+        {
+            // It it an URI ?
+            string hrefUri = href.Replace('\\', '/'); // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
+            if (hrefUri.Contains("://") && Uri.IsWellFormedUriString(hrefUri, UriKind.RelativeOrAbsolute)) // RFC URI
             {
                 try
                 {
-                    Uri uri = new Uri(href);
+                    Uri uri = new Uri(hrefUri);
                     if (uri.IsFile)
                     {
                         if (!System.IO.Path.IsPathRooted(uri.LocalPath))
                         {
-                            result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
+                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath);
                         }
                         else
                         {
-                            result.Add(uri.LocalPath);
+                            return uri.LocalPath;
                         }
                     }
                 }
                 catch (UriFormatException)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, hrefUri + " is not a valid URI [" + FFileName + "]");
                 }
             }
+            
+            href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "");
+            if (!System.IO.Path.IsPathRooted(href))
+            {
+                href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), href);
+            }
+            // href = System.IO.Path.GetFullPath(href);
+            return href;
         }
     }
 }

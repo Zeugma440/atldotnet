@@ -13,7 +13,7 @@ namespace ATL.test.IO.Playlist
         [TestMethod]
         public void PLIO_R_XSPF()
         {
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.xspf", "$PATH", TestUtils.GetResourceLocationRoot(false));
+            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.xspf", "$PATH", TestUtils.GetResourceLocationRoot(false).Replace('\\', '/'));
 
             try
             {
