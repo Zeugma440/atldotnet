@@ -33,7 +33,7 @@ namespace ATL.Playlist.IO
                     // If the read line isn't a metadata, it's a file path
                     if ((s.Length > 0) && (s[0] != '#'))
                     {
-                        result.Add(parseLocation(s));
+                        result.Add(decodeLocation(s));
                     }
                     s = source.ReadLine();
                 }

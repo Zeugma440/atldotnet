@@ -32,7 +32,7 @@ namespace ATL.Playlist.IO
         private void parseLocation(XmlReader source, IList<string> result)
         {
             source.Read();
-            if (source.NodeType == XmlNodeType.Text) result.Add(parseLocation(source.Value));
+            if (source.NodeType == XmlNodeType.Text) result.Add(decodeLocation(source.Value));
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)

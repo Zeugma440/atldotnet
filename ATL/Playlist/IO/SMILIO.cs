@@ -49,7 +49,7 @@ namespace ATL.Playlist.IO
             {
                 if (source.Name.Equals("src", StringComparison.OrdinalIgnoreCase))
                 {
-                    return parseLocation(source.Value);
+                    return decodeLocation(source.Value);
                 }
             }
             return null;

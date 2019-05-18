@@ -18,7 +18,7 @@ namespace ATL.Playlist.IO
             {
                 while (source.ReadToFollowing("entry"))
                 {
-                    parseLocation(source, "Playstring", result);
+                    decodeLocation(source, "Playstring", result);
                     while (source.Read())
                     {
                         if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;

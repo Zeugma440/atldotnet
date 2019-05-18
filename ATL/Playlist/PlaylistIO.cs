@@ -124,7 +124,7 @@ namespace ATL.Playlist
             return settings;
         }
 
-        protected string formatLocation(string location)
+        protected string encodeLocation(string location)
         {
             switch (LocationFormatting)
             {
@@ -133,13 +133,13 @@ namespace ATL.Playlist
             }
         }
 
-        protected void parseLocation(XmlReader source, string attributeName, IList<string> result)
+        protected void decodeLocation(XmlReader source, string attributeName, IList<string> result)
         {
-            string location = parseLocation(source.GetAttribute(attributeName));
+            string location = decodeLocation(source.GetAttribute(attributeName));
             if (location != null) result.Add(location);
         }
 
-        protected string parseLocation(string href)
+        protected string decodeLocation(string href)
         {
             // It it an URI ?
             string hrefUri = href.Replace('\\', '/'); // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted

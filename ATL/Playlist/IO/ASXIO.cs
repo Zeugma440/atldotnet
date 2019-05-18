@@ -22,7 +22,7 @@ namespace ATL.Playlist.IO
                 {
                     while (source.Read())
                     {
-                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) parseLocation(source, "HREF", result);
+                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) decodeLocation(source, "HREF", result);
                         else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("ENTRY", StringComparison.OrdinalIgnoreCase)) break;
                     }
                 }

@@ -21,7 +21,7 @@ namespace ATL.Playlist.IO
             while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
                 string filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
-                result.Add(parseLocation(filePath));
+                result.Add(decodeLocation(filePath));
             }
         }
 

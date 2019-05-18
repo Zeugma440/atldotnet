@@ -24,7 +24,7 @@ namespace ATL.Playlist.IO
                     {
                         equalIndex = s.IndexOf("=") + 1;
                         s = s.Substring(equalIndex, s.Length - equalIndex);
-                        result.Add(parseLocation(s));
+                        result.Add(decodeLocation(s));
                     }
                     s = source.ReadLine();
                 }
