@@ -66,7 +66,7 @@ namespace ATL.test.IO.Playlist
                                 index++;
                                 parents.Add(source.Name.ToLower());
                             }
-                            else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual("file://"+pathsToWrite[index], source.GetAttribute("HREF"));
+                            else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual(pathsToWrite[index], source.GetAttribute("HREF"));
                         }
                     }
                 }
@@ -99,7 +99,7 @@ namespace ATL.test.IO.Playlist
                             }
                             else if (parents.Contains("entry"))
                             {
-                                if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual("file://"+tracksToWrite[index].Path, source.GetAttribute("HREF"));
+                                if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Path, source.GetAttribute("HREF"));
                                 else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Title, getXmlValue(source));
                                 else if (source.Name.Equals("author", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Artist, getXmlValue(source));
                             }
