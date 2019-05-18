@@ -65,7 +65,7 @@ namespace ATL.test.IO.Playlist
                             {
                                 parents.Add(source.Name);
                                 index++;
-                                Assert.AreEqual(pathsToWrite[index], source.GetAttribute("Playstring"));
+                                Assert.AreEqual("file:"+pathsToWrite[index], source.GetAttribute("Playstring"));
                             }
                         }
                     }
@@ -96,7 +96,7 @@ namespace ATL.test.IO.Playlist
                             {
                                 parents.Add(source.Name);
                                 index++;
-                                Assert.IsTrue(source.GetAttribute("Playstring").EndsWith(tracksToWrite[index].Path.Replace('\\','/')));
+                                Assert.IsTrue(source.GetAttribute("Playstring").EndsWith(tracksToWrite[index].Path));
                             }
                             else if (parents.Contains("entry"))
                             {

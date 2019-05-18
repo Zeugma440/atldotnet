@@ -1,9 +1,7 @@
 ﻿using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System;
 using System.Xml;
-using ATL.Logging;
 
 namespace ATL.Playlist.IO
 {
@@ -44,11 +42,9 @@ namespace ATL.Playlist.IO
             // Open tracklist
             foreach (Track t in values)
             {
-                Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
-
                 writer.WriteStartElement("entry");
                 // Although the unofficial standard is "file:" followed by the filepath, URI seems to work best with Winamp and VLC
-                writer.WriteAttributeString("Playstring", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
+                writer.WriteAttributeString("Playstring", encodeLocation(t.Path));
 
                 string label = "";
                 if (t.Title != null && t.Title.Length > 0) label = t.Title;

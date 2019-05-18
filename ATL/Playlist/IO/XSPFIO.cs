@@ -49,12 +49,10 @@ namespace ATL.Playlist.IO
             writer.WriteStartElement("trackList");
             foreach (Track t in values)
             {
-                Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
-
                 writer.WriteStartElement("track");
 
                 writer.WriteStartElement("location");
-                writer.WriteString(trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
+                writer.WriteString(encodeLocation(t.Path));
                 writer.WriteEndElement();
 
                 if (t.Title != null && t.Title.Length > 0)

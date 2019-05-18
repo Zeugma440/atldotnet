@@ -1,9 +1,7 @@
 ﻿using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System;
 using System.Xml;
-using ATL.Logging;
 
 namespace ATL.Playlist.IO
 {
@@ -43,12 +41,10 @@ namespace ATL.Playlist.IO
             // Open tracklist
             foreach (Track t in values)
             {
-                Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
-
                 writer.WriteStartElement("ENTRY");
 
                 writer.WriteStartElement("REF");
-                writer.WriteAttributeString("HREF", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
+                writer.WriteAttributeString("HREF", encodeLocation(t.Path));
                 writer.WriteEndElement();
 
                 if (t.Title != null && t.Title.Length > 0)

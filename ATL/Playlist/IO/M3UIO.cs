@@ -60,10 +60,10 @@ namespace ATL.Playlist.IO
                         if (t.Title != null && t.Title.Length > 0) label += t.Title;
                         if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
                         w.WriteLine(label);
-                        w.WriteLine(t.Path); // Can be rooted or not
+                        w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
                     } else
                     {
-                        w.WriteLine(t.Path); // Can be rooted or not
+                        w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
                     }
                 }
             }

@@ -128,6 +128,14 @@ namespace ATL.Playlist
         {
             switch (LocationFormatting)
             {
+                case PlaylistFormat.LocationFormatting.RFC_URI:
+                    Uri trackUri = new Uri(location, UriKind.RelativeOrAbsolute);
+                    return trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString;
+                case PlaylistFormat.LocationFormatting.MS_URI:
+                    return "file://" + location;
+                case PlaylistFormat.LocationFormatting.Winamp_URI:
+                    return "file:" + location;
+                case PlaylistFormat.LocationFormatting.FilePath:
                 default:
                     return location;
             }

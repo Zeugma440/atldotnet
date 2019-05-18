@@ -51,7 +51,7 @@ namespace ATL.Playlist.IO
                     w.Write("File");
                     w.Write(counter);
                     w.Write("=");
-                    w.WriteLine(t.Path); // Can be rooted or not
+                    w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
 
                     w.Write("Title");
                     w.Write(counter);

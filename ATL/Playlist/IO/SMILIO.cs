@@ -69,10 +69,8 @@ namespace ATL.Playlist.IO
 
             foreach (Track t in values)
             {
-                Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
-
                 writer.WriteStartElement("media");
-                writer.WriteAttributeString("src", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
+                writer.WriteAttributeString("src", encodeLocation(t.Path));
                 writer.WriteEndElement();
             }
 
