@@ -58,7 +58,7 @@ namespace ATL.Playlist
                 tempFmt.AddExtension(".asx");
                 tempFmt.AddExtension(".wax");
                 tempFmt.AddExtension(".wvx");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_B4S, "B4S");
