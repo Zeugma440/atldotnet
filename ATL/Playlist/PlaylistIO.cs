@@ -12,6 +12,8 @@ namespace ATL.Playlist
     /// </summary>
     public abstract class PlaylistIO : IPlaylistIO
     {
+        protected static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+
         protected string FFileName; // Path of the playlist file
         protected PlaylistFormat.LocationFormatting locationFormatting;
 

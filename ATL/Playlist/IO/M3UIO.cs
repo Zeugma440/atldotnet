@@ -9,8 +9,6 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class M3UIO : PlaylistIO
     {
-        private static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
-
         private Encoding getEncoding(FileStream fs)
         {
             if (System.IO.Path.GetExtension(FFileName).ToLower().Equals(".m3u8"))
