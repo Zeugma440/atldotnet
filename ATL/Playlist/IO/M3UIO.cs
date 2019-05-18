@@ -9,6 +9,8 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class M3UIO : PlaylistIO
     {
+        private static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+
         private Encoding getEncoding(FileStream fs)
         {
             if (System.IO.Path.GetExtension(FFileName).ToLower().Equals(".m3u8"))
@@ -46,6 +48,7 @@ namespace ATL.Playlist.IO
 
             using (TextWriter w = new StreamWriter(fs, encoding))
             {
+                if (encoding.Equals(System.Text.Encoding.UTF8)) fs.Write(BOM_UTF8, 0, 3);
                 if (Settings.M3U_useExtendedFormat) w.WriteLine("#EXTM3U");
 
                 foreach (Track t in values)
