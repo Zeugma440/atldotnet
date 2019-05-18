@@ -1,5 +1,4 @@
-﻿using ATL.Playlist;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ATL.Playlist.IO
 {
@@ -35,5 +34,13 @@ namespace ATL.Playlist.IO
             }
         }
 
+        public PlaylistFormat.LocationFormatting LocationFormatting
+        {
+            get => PlaylistFormat.LocationFormatting.Undefined;
+            set
+            {
+                // Nothing;
+            }
+        }
     }
 }

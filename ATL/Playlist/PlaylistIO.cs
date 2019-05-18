@@ -13,11 +13,17 @@ namespace ATL.Playlist
     public abstract class PlaylistIO : IPlaylistIO
     {
         protected string FFileName; // Path of the playlist file
+        protected PlaylistFormat.LocationFormatting locationFormatting;
 
         public string Path
         {
             get { return FFileName; }
             set { FFileName = value; }
+        }
+        public PlaylistFormat.LocationFormatting LocationFormatting
+        {
+            get { return locationFormatting; }
+            set { locationFormatting = value; }
         }
 
         public IList<string> FilePaths
@@ -33,18 +39,6 @@ namespace ATL.Playlist
 
         abstract protected void getFiles(FileStream fs, IList<string> result);
         abstract protected void setTracks(FileStream fs, IList<Track> values);
-
-        protected XmlWriterSettings getWriterSettings()
-        {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = true;
-            settings.Encoding = Encoding.UTF8;
-            settings.OmitXmlDeclaration = true;
-            settings.ConformanceLevel = ConformanceLevel.Fragment;
-            settings.Indent = true;
-            settings.DoNotEscapeUriAttributes = false;
-            return settings;
-        }
 
         public IList<string> getFiles()
         {
@@ -115,6 +109,61 @@ namespace ATL.Playlist
             {
                 System.Console.WriteLine(e.StackTrace);
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+            }
+        }
+
+        protected XmlWriterSettings getWriterSettings()
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.CloseOutput = true;
+            settings.Encoding = Encoding.UTF8;
+            settings.OmitXmlDeclaration = true;
+            settings.ConformanceLevel = ConformanceLevel.Fragment;
+            settings.Indent = true;
+            settings.DoNotEscapeUriAttributes = false;
+            return settings;
+        }
+
+        protected void formatLocation(string location)
+        {
+
+        }
+
+        protected void parseLocation(XmlReader source, string attributeName, IList<string> result)
+        {
+            string href = source.GetAttribute(attributeName);
+
+            // Filepath
+            if (!href.StartsWith("file://"))
+            {
+                href = href.Replace("file:", ""); // Older B4S format : "file:" + filepath
+                if (!System.IO.Path.IsPathRooted(href))
+                {
+                    href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), href);
+                }
+                result.Add(href);
+            }
+            else // URI
+            {
+                try
+                {
+                    Uri uri = new Uri(href);
+                    if (uri.IsFile)
+                    {
+                        if (!System.IO.Path.IsPathRooted(uri.LocalPath))
+                        {
+                            result.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath));
+                        }
+                        else
+                        {
+                            result.Add(uri.LocalPath);
+                        }
+                    }
+                }
+                catch (UriFormatException)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, result + " is not a valid URI [" + FFileName + "]");
+                }
             }
         }
     }

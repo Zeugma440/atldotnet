@@ -18,23 +18,13 @@ namespace ATL.Playlist.IO
             {
                 while (source.ReadToFollowing("entry"))
                 {
-                    parseLocation(source, result);
+                    parseLocation(source, "Playstring", result);
                     while (source.Read())
                     {
                         if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;
                     }
                 }
             }
-        }
-
-        private void parseLocation(XmlReader source, IList<string> result)
-        {
-            string href = source.GetAttribute("Playstring").Replace("file:", "");
-            if (!System.IO.Path.IsPathRooted(href))
-            {
-                href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), href);
-            }
-            result.Add(href);
         }
 
         protected override void setTracks(FileStream fs, IList<Track> values)
@@ -52,11 +42,13 @@ namespace ATL.Playlist.IO
             writer.WriteAttributeString("label", "Playlist");
 
             // Open tracklist
-            writer.WriteStartElement("tracklist");
             foreach (Track t in values)
             {
+                Uri trackUri = new Uri(t.Path, UriKind.RelativeOrAbsolute);
+
                 writer.WriteStartElement("entry");
-                writer.WriteAttributeString("Playstring", "file:" + t.Path);
+                // Although the unofficial standard is "file:" followed by the filepath, URI seems to work best with Winamp and VLC
+                writer.WriteAttributeString("Playstring", trackUri.IsAbsoluteUri ? trackUri.AbsoluteUri : trackUri.OriginalString);
 
                 string label = "";
                 if (t.Title != null && t.Title.Length > 0) label = t.Title;
@@ -74,7 +66,6 @@ namespace ATL.Playlist.IO
                 }
                 writer.WriteEndElement(); // entry
             }
-            writer.WriteEndDocument();
 
             writer.Flush();
             writer.Close();

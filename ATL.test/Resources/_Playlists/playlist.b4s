@@ -6,11 +6,13 @@
       <Name>local.MID</Name>
       <Length>103950</Length>
     </entry>
+	<!-- older format -->
     <entry Playstring="file:$PATH\MP3\empty.mp3">
       <Name>empty</Name>
       <Length>3366</Length>
     </entry>
-    <entry Playstring="file:$PATH\OGG\empty.ogg">
+	<!-- newer format -->
+    <entry Playstring="file:///$PATH/OGG/empty.ogg">
       <Name>empty.ogg</Name>
       <Length>7645</Length>
     </entry>

@@ -28,66 +28,67 @@ namespace ATL.Playlist
                 theFactory = new PlaylistIOFactory();
                 theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
-                Format tempFmt = new Format("M3U");
-                tempFmt.ID = PL_M3U;
+                PlaylistFormat tempFmt = new PlaylistFormat(PL_M3U, "M3U");
                 tempFmt.AddExtension(".m3u");
                 tempFmt.AddExtension(".m3u8");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("PLS");
-                tempFmt.ID = PL_PLS;
+                tempFmt = new PlaylistFormat(PL_PLS, "PLS");
                 tempFmt.AddExtension(".pls");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("FPL (experimental)");
-                tempFmt.ID = PL_FPL;
+                tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)");
                 tempFmt.AddExtension(".fpl");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("XSPF (spiff)");
-                tempFmt.ID = PL_XSPF;
+                tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
                 tempFmt.AddExtension(".xspf");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("SMIL");
-                tempFmt.ID = PL_SMIL;
+                tempFmt = new PlaylistFormat(PL_SMIL, "SMIL");
                 tempFmt.AddExtension(".smil");
                 tempFmt.AddExtension(".smi");
                 tempFmt.AddExtension(".zpl");
                 tempFmt.AddExtension(".wpl");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("ASX");
-                tempFmt.ID = PL_ASX;
+                tempFmt = new PlaylistFormat(PL_ASX, "ASX");
                 tempFmt.AddExtension(".asx");
                 tempFmt.AddExtension(".wax");
                 tempFmt.AddExtension(".wvx");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("B4S");
-                tempFmt.ID = PL_B4S;
+                tempFmt = new PlaylistFormat(PL_B4S, "B4S");
                 tempFmt.AddExtension(".b4s");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.Winamp_URI;
                 theFactory.addFormat(tempFmt);
             }
 
             return theFactory;
         }
 
-        public IPlaylistIO GetPlaylistIO(string path, int alternate = 0)
+        public IPlaylistIO GetPlaylistIO(string path, PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined, int alternate = 0)
         {
-            IList<Format> formats = getFormatsFromPath(path);
+            IList<Format> formats = (List<Format>)getFormatsFromPath(path);
+            Format format = null;
             IPlaylistIO result;
 
             if (formats != null && formats.Count > alternate)
             {
-                result = GetPlaylistIO(formats[alternate].ID);
+                format = formats[alternate];
             }
             else
             {
-                result = GetPlaylistIO(NO_FORMAT);
+                format = UNKNOWN_FORMAT;
             }
-
+            result = GetPlaylistIO(format.ID);
             result.Path = path;
+            if (!format.Equals(UNKNOWN_FORMAT))
+                result.LocationFormatting = (locationFormatting == PlaylistFormat.LocationFormatting.Undefined) ? ((PlaylistFormat)format).LocationFormat : locationFormatting;
+
             return result;
         }
 
@@ -98,7 +99,8 @@ namespace ATL.Playlist
             if (PL_M3U == formatId)
             {
                 theReader = new M3UIO();
-            } else if (PL_PLS == formatId)
+            }
+            else if (PL_PLS == formatId)
             {
                 theReader = new PLSIO();
             }

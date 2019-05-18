@@ -1,39 +1,37 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace ATL.CatalogDataReaders
 {
-	/// <summary>
-	/// Factory for Catalog data readers
-	/// </summary>
+    /// <summary>
+    /// Factory for Catalog data readers
+    /// </summary>
     public class CatalogDataReaderFactory : Factory
-	{
-		// Defines the supported formats
-        public const int CR_CUE     = 0;
+    {
+        // Defines the supported formats
+        public const int CR_CUE = 0;
 
-		// The instance of this factory
-		private static CatalogDataReaderFactory theFactory = null;
+        // The instance of this factory
+        private static CatalogDataReaderFactory theFactory = null;
 
 
-		public static CatalogDataReaderFactory GetInstance()
-		{
-			if (null == theFactory)
-			{
-				theFactory = new CatalogDataReaderFactory();
+        public static CatalogDataReaderFactory GetInstance()
+        {
+            if (null == theFactory)
+            {
+                theFactory = new CatalogDataReaderFactory();
                 theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
-                Format tempFmt = new Format("CUE sheet");
-                tempFmt.ID = CR_CUE;
+                Format tempFmt = new Format(CR_CUE, "CUE sheet");
                 tempFmt.AddExtension(".cue");
                 theFactory.addFormat(tempFmt);
-			}
+            }
 
-			return theFactory;
-		}
+            return theFactory;
+        }
 
         public ICatalogDataReader GetCatalogDataReader(String path, int alternate = 0)
-		{
+        {
             IList<Format> formats = getFormatsFromPath(path);
             ICatalogDataReader result;
 
@@ -43,7 +41,7 @@ namespace ATL.CatalogDataReaders
             }
             else
             {
-                result = GetCatalogDataReader(NO_FORMAT);
+                result = GetCatalogDataReader(UNKNOWN_FORMAT.ID);
             }
 
             result.Path = path;
@@ -57,11 +55,11 @@ namespace ATL.CatalogDataReaders
             if (CR_CUE == formatId)
             {
                 theReader = new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
-			}
+            }
 
             if (null == theReader) theReader = new BinaryLogic.DummyReader();
 
-			return theReader;
-		}
-	}
+            return theReader;
+        }
+    }
 }

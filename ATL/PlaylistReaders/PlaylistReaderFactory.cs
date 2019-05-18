@@ -9,25 +9,25 @@ namespace ATL.PlaylistReaders
     /// </summary>
     [Obsolete("Use Playlist.PlaylistIOFactory")]
     public class PlaylistReaderFactory : Factory
-	{
-		// Defines the supported formats
-		public const int PL_M3U     = 0;
-		public const int PL_PLS     = 1;
-        public const int PL_FPL     = 2;
-        public const int PL_XSPF    = 3;
-        public const int PL_SMIL    = 4;
-        public const int PL_ASX     = 5;
-        public const int PL_B4S     = 6;
+    {
+        // Defines the supported formats
+        public const int PL_M3U = 0;
+        public const int PL_PLS = 1;
+        public const int PL_FPL = 2;
+        public const int PL_XSPF = 3;
+        public const int PL_SMIL = 4;
+        public const int PL_ASX = 5;
+        public const int PL_B4S = 6;
 
-		// The instance of this factory
-		private static PlaylistReaderFactory theFactory = null;
+        // The instance of this factory
+        private static PlaylistReaderFactory theFactory = null;
 
-        
+
         public static PlaylistReaderFactory GetInstance()
-		{
-			if (null == theFactory)
-			{
-				theFactory = new PlaylistReaderFactory();
+        {
+            if (null == theFactory)
+            {
+                theFactory = new PlaylistReaderFactory();
                 theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
                 Format tempFmt = new Format("PLS");
@@ -72,12 +72,12 @@ namespace ATL.PlaylistReaders
                 theFactory.addFormat(tempFmt);
             }
 
-			return theFactory;
-		}
-
-        public IPlaylistReader GetPlaylistReader(String path, int alternate = 0)
-		{
-            return new PlaylistIOAdapter(PlaylistIOFactory.GetInstance().GetPlaylistIO(path, alternate));
+            return theFactory;
         }
-	}
+
+        public IPlaylistReader GetPlaylistReader(string path, int alternate = 0)
+        {
+            return new PlaylistIOAdapter(PlaylistIOFactory.GetInstance().GetPlaylistIO(path));
+        }
+    }
 }

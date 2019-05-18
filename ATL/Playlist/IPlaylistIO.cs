@@ -19,6 +19,15 @@ namespace ATL.Playlist
         }
 
         /// <summary>
+        /// Location formatting to use when writing the playlist
+        /// </summary>
+        PlaylistFormat.LocationFormatting LocationFormatting
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the absolute paths of all files registered in a playlist
         /// NB : The existence of the files is not checked when getting them
         /// </summary>

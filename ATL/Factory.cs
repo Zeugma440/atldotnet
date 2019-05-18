@@ -8,8 +8,7 @@ namespace ATL
     /// </summary>
     public abstract class Factory
     {
-        // ID representing the absence of format
-        public const int NO_FORMAT = -1;
+        public readonly Format UNKNOWN_FORMAT = new Format(-1, "Unknown");
 
         // List of all formats supported by this kind of data reader
         // They are indexed by file extension to speed up matching
@@ -123,6 +122,5 @@ namespace ATL
             }
             return result.Values;
         }
-
     }
 }

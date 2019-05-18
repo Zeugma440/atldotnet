@@ -68,8 +68,7 @@ namespace ATL.AudioData
                 theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
                 theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
 
-                Format tempFmt = new Format("MPEG Audio Layer");
-                tempFmt.ID = CID_MP3;
+                Format tempFmt = new Format(CID_MP3, "MPEG Audio Layer");
                 tempFmt.AddMimeType("audio/mp3");
                 tempFmt.AddMimeType("audio/mpeg");
                 tempFmt.AddMimeType("audio/x-mpeg");
@@ -78,8 +77,7 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".mp3");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("OGG : Vorbis, Opus");
-                tempFmt.ID = CID_OGG;
+                tempFmt = new Format(CID_OGG, "OGG : Vorbis, Opus");
                 tempFmt.AddMimeType("audio/ogg");
                 tempFmt.AddMimeType("audio/vorbis");
                 tempFmt.AddMimeType("audio/opus");
@@ -88,24 +86,21 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".opus");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Musepack / MPEGplus");
-                tempFmt.ID = CID_MPC;
+                tempFmt = new Format(CID_MPC, "Musepack / MPEGplus");
                 tempFmt.AddMimeType("audio/x-musepack");
                 tempFmt.AddMimeType("audio/musepack");
                 tempFmt.AddExtension(".mp+");
                 tempFmt.AddExtension(".mpc");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Windows Media Audio");
-                tempFmt.ID = CID_WMA;
+                tempFmt = new Format(CID_WMA, "Windows Media Audio");
                 tempFmt.AddMimeType("audio/x-ms-wma");
                 tempFmt.AddMimeType("video/x-ms-asf");
                 tempFmt.AddExtension(".asf");
                 tempFmt.AddExtension(".wma");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Advanced Audio Coding");
-                tempFmt.ID = CID_AAC;
+                tempFmt = new Format(CID_AAC, "Advanced Audio Coding");
                 tempFmt.AddMimeType("audio/mp4");
                 tempFmt.AddMimeType("audio/aac");
                 tempFmt.AddMimeType("audio/mp4a-latm");
@@ -115,57 +110,49 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".m4v");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Dolby Digital");
-                tempFmt.ID = CID_AC3;
+                tempFmt = new Format(CID_AC3, "Dolby Digital");
                 tempFmt.AddMimeType("audio/ac3");
                 tempFmt.AddExtension(".ac3");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Digital Theatre System");
-                tempFmt.ID = CID_DTS;
+                tempFmt = new Format(CID_DTS, "Digital Theatre System");
                 tempFmt.AddMimeType("audio/vnd.dts");
                 tempFmt.AddMimeType("audio/vnd.dts.hd");
                 tempFmt.AddExtension(".dts");
                 tempFmt.Readable = false;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("TwinVQ");
-                tempFmt.ID = CID_VQF;
+                tempFmt = new Format(CID_VQF, "TwinVQ");
                 tempFmt.AddExtension(".vqf");
                 tempFmt.AddMimeType("audio/x-twinvq");
                 tempFmt.Readable = false;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Free Lossless Audio Codec");
-                tempFmt.ID = CID_FLAC;
+                tempFmt = new Format(CID_FLAC, "Free Lossless Audio Codec");
                 tempFmt.AddMimeType("audio/x-flac");
                 tempFmt.AddExtension(".flac");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Monkey's Audio");
-                tempFmt.ID = CID_APE;
+                tempFmt = new Format(CID_APE, "Monkey's Audio");
                 tempFmt.AddMimeType("audio/ape");
                 tempFmt.AddMimeType("audio/x-ape");
                 tempFmt.AddExtension(".ape");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("OptimFROG");
-                tempFmt.ID = CID_OFR;
+                tempFmt = new Format(CID_OFR, "OptimFROG");
                 tempFmt.AddMimeType("audio/ofr");
                 tempFmt.AddMimeType("audio/x-ofr");
                 tempFmt.AddExtension(".ofr");
                 tempFmt.AddExtension(".ofs");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("WAVPack");
-                tempFmt.ID = CID_WAVPACK;
+                tempFmt = new Format(CID_WAVPACK, "WAVPack");
                 tempFmt.AddMimeType("audio/x-wavpack");
                 tempFmt.AddMimeType("audio/wavpack");
                 tempFmt.AddExtension(".wv");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("PCM (uncompressed audio)");
-                tempFmt.ID = CID_WAV;
+                tempFmt = new Format(CID_WAV, "PCM (uncompressed audio)");
                 tempFmt.AddMimeType("audio/x-wav");
                 tempFmt.AddMimeType("audio/wav");
                 tempFmt.AddExtension(".wav");
@@ -173,15 +160,13 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".bwav");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Musical Instruments Digital Interface");
-                tempFmt.ID = CID_MIDI;
+                tempFmt = new Format(CID_MIDI, "Musical Instruments Digital Interface");
                 tempFmt.AddMimeType("audio/mid");
                 tempFmt.AddExtension(".mid");
                 tempFmt.AddExtension(".midi");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Direct Stream Digital");
-                tempFmt.ID = CID_DSF;
+                tempFmt = new Format(CID_DSF, "Direct Stream Digital");
                 tempFmt.AddMimeType("audio/dsf");
                 tempFmt.AddMimeType("audio/x-dsf");
                 tempFmt.AddMimeType("audio/dsd");
@@ -190,8 +175,7 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".dsd");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Portable Sound Format");
-                tempFmt.ID = CID_PSF;
+                tempFmt = new Format(CID_PSF, "Portable Sound Format");
                 tempFmt.AddMimeType("audio/psf");   // Unofficial
                 tempFmt.AddMimeType("audio/x-psf"); // Unofficial
                 tempFmt.AddExtension(".psf");
@@ -210,55 +194,47 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".miniqsf");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("SPC700 Sound Files");
-                tempFmt.ID = CID_SPC;
+                tempFmt = new Format(CID_SPC, "SPC700 Sound Files");
                 tempFmt.AddMimeType("audio/spc");   // Unofficial
                 tempFmt.AddMimeType("audio/x-spc"); // Unofficial
                 tempFmt.AddExtension(".spc");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("True Audio");
-                tempFmt.ID = CID_TTA;
+                tempFmt = new Format(CID_TTA, "True Audio");
                 tempFmt.AddMimeType("audio/tta");
                 tempFmt.AddMimeType("audio/x-tta");
                 tempFmt.AddExtension(".tta");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Tom's lossless Audio Kompressor (TAK)");
-                tempFmt.ID = CID_TAK;
+                tempFmt = new Format(CID_TAK, "Tom's lossless Audio Kompressor (TAK)");
                 tempFmt.AddMimeType("audio/tak");   // Unofficial
                 tempFmt.AddMimeType("audio/x-tak"); // Unofficial
                 tempFmt.AddExtension(".tak");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Noisetracker/Soundtracker/Protracker Module");
-                tempFmt.ID = CID_MOD;
+                tempFmt = new Format(CID_MOD, "Noisetracker/Soundtracker/Protracker Module");
                 tempFmt.AddMimeType("audio/x-mod");
                 tempFmt.AddExtension(".mod");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("ScreamTracker Module");
-                tempFmt.ID = CID_S3M;
+                tempFmt = new Format(CID_S3M, "ScreamTracker Module");
                 tempFmt.AddMimeType("audio/s3m");
                 tempFmt.AddMimeType("audio/x-s3m");
                 tempFmt.AddExtension(".s3m");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Extended Module");
-                tempFmt.ID = CID_XM;
+                tempFmt = new Format(CID_XM, "Extended Module");
                 tempFmt.AddMimeType("audio/xm");
                 tempFmt.AddMimeType("audio/x-xm");
                 tempFmt.AddExtension(".xm");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Impulse Tracker");
-                tempFmt.ID = CID_IT;
+                tempFmt = new Format(CID_IT, "Impulse Tracker");
                 tempFmt.AddMimeType("audio/it");
                 tempFmt.AddExtension(".it");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Audio Interchange File Format: (Audio IFF)");
-                tempFmt.ID = CID_AIFF;
+                tempFmt = new Format(CID_AIFF, "Audio Interchange File Format: (Audio IFF)");
                 tempFmt.AddMimeType("audio/x-aiff");
                 tempFmt.AddExtension(".aif");
                 tempFmt.AddExtension(".aiff");
@@ -266,16 +242,14 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".snd");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Video Game Music");
-                tempFmt.ID = CID_VGM;
+                tempFmt = new Format(CID_VGM, "Video Game Music");
                 tempFmt.AddMimeType("audio/vgm");   // Unofficial
                 tempFmt.AddMimeType("audio/x-vgm"); // Unofficial
                 tempFmt.AddExtension(".vgm");
                 tempFmt.AddExtension(".vgz");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format("Genesis YM2612");
-                tempFmt.ID = CID_GYM;
+                tempFmt = new Format(CID_GYM, "Genesis YM2612");
                 tempFmt.AddMimeType("audio/gym");   // Unofficial
                 tempFmt.AddMimeType("audio/x-gym"); // Unofficial
                 tempFmt.AddExtension(".gym");
@@ -288,7 +262,7 @@ namespace ATL.AudioData
         public IAudioDataIO GetFromPath(String path, int alternate = 0)
         {
             IList<Format> formats = getFormatsFromPath(path);
-            int formatId = NO_FORMAT;
+            int formatId = UNKNOWN_FORMAT.ID;
 
             if (formats != null && formats.Count > alternate)
             {
@@ -391,7 +365,7 @@ namespace ATL.AudioData
             if (mimeType.StartsWith(".")) formats = getFormatsFromPath(mimeType);
             else formats = getFormatsFromMimeType(mimeType);
 
-            int formatId = NO_FORMAT;
+            int formatId = UNKNOWN_FORMAT.ID;
 
             if (formats != null && formats.Count > alternate)
             {

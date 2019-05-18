@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -19,10 +20,15 @@ namespace ATL
         // true if the format is readable by ATL
         protected bool fReadable;
 
-
+        [Obsolete("Use Format(ID, Name)")]
         public Format(string iName)
         {
-            init(iName);
+            init(-1, iName);
+        }
+
+        public Format(int ID, string Name)
+        {
+            init(ID, Name);
         }
 
         public Format(Format f)
@@ -30,7 +36,7 @@ namespace ATL
             copyFrom(f);
         }
 
-        protected void copyFrom(Format iFormat)
+        protected virtual void copyFrom(Format iFormat)
         {
             this.fName = iFormat.fName;
             this.fID = iFormat.fID;
@@ -39,9 +45,10 @@ namespace ATL
             this.fReadable = iFormat.fReadable;
         }
 
-        protected void init(string iName)
+        protected virtual void init(int ID, string Name)
         {
-            fName = iName;
+            fID = ID;
+            fName = Name;
             fReadable = true;
             extList = new Dictionary<string, int>();
             mimeList = new Dictionary<string, int>();
