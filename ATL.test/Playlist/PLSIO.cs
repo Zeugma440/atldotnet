@@ -49,21 +49,29 @@ namespace ATL.test.IO.Playlist
                 pls.FilePaths = pathsToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
-                using (StreamReader sr = new StreamReader(fs))
                 {
-                    Assert.AreEqual("[playlist]", sr.ReadLine());
-                    sr.ReadLine();
-                    Assert.AreEqual("File1=aaa.mp3", sr.ReadLine());
-                    Assert.AreEqual("Title1=aaa", sr.ReadLine());
-                    Assert.AreEqual("Length1=-1", sr.ReadLine());
-                    sr.ReadLine();
-                    Assert.AreEqual("File2=bbb.mp3", sr.ReadLine());
-                    Assert.AreEqual("Title2=bbb", sr.ReadLine());
-                    Assert.AreEqual("Length2=-1", sr.ReadLine());
-                    sr.ReadLine();
-                    Assert.AreEqual("NumberOfEntries=2", sr.ReadLine());
-                    Assert.AreEqual("Version=2", sr.ReadLine());
-                    Assert.IsTrue(sr.EndOfStream);
+                    // Test if the default UTF-8 BOM has been written at the beginning of the file
+                    byte[] bom = new byte[3];
+                    fs.Read(bom, 0, 3);
+                    Assert.IsTrue(StreamUtils.ArrEqualsArr(bom, PlaylistIO.BOM_UTF8));
+                    fs.Seek(0, SeekOrigin.Begin);
+
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        Assert.AreEqual("[playlist]", sr.ReadLine());
+                        sr.ReadLine();
+                        Assert.AreEqual("File1=aaa.mp3", sr.ReadLine());
+                        Assert.AreEqual("Title1=aaa", sr.ReadLine());
+                        Assert.AreEqual("Length1=-1", sr.ReadLine());
+                        sr.ReadLine();
+                        Assert.AreEqual("File2=bbb.mp3", sr.ReadLine());
+                        Assert.AreEqual("Title2=bbb", sr.ReadLine());
+                        Assert.AreEqual("Length2=-1", sr.ReadLine());
+                        sr.ReadLine();
+                        Assert.AreEqual("NumberOfEntries=2", sr.ReadLine());
+                        Assert.AreEqual("Version=2", sr.ReadLine());
+                        Assert.IsTrue(sr.EndOfStream);
+                    }
                 }
                 IList<string> filePaths = pls.FilePaths;
                 Assert.AreEqual(2, filePaths.Count);

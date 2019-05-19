@@ -57,19 +57,27 @@ namespace ATL.test.IO.Playlist
                 int index = -1;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
-                using (XmlReader source = XmlReader.Create(fs))
                 {
-                    while (source.Read())
+                    // Test if the default UTF-8 BOM has been written at the beginning of the file
+                    byte[] bom = new byte[3];
+                    fs.Read(bom, 0, 3);
+                    Assert.IsTrue(StreamUtils.ArrEqualsArr(bom, PlaylistIO.BOM_UTF8));
+                    fs.Seek(0, SeekOrigin.Begin);
+
+                    using (XmlReader source = XmlReader.Create(fs))
                     {
-                        if (source.NodeType == XmlNodeType.Element)
+                        while (source.Read())
                         {
-                            if (source.Name.Equals("smil", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name);
-                            else if (source.Name.Equals("body", StringComparison.OrdinalIgnoreCase) && parents.Contains("smil")) parents.Add(source.Name);
-                            else if (source.Name.Equals("seq", StringComparison.OrdinalIgnoreCase) && parents.Contains("body")) parents.Add(source.Name);
-                            else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase) && parents.Contains("seq"))
+                            if (source.NodeType == XmlNodeType.Element)
                             {
-                                index++;
-                                Assert.AreEqual(pathsToWrite[index], source.GetAttribute("src"));
+                                if (source.Name.Equals("smil", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name);
+                                else if (source.Name.Equals("body", StringComparison.OrdinalIgnoreCase) && parents.Contains("smil")) parents.Add(source.Name);
+                                else if (source.Name.Equals("seq", StringComparison.OrdinalIgnoreCase) && parents.Contains("body")) parents.Add(source.Name);
+                                else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase) && parents.Contains("seq"))
+                                {
+                                    index++;
+                                    Assert.AreEqual(pathsToWrite[index], source.GetAttribute("src"));
+                                }
                             }
                         }
                     }

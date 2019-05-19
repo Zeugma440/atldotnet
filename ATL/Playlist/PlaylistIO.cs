@@ -13,7 +13,7 @@ namespace ATL.Playlist
     /// </summary>
     public abstract class PlaylistIO : IPlaylistIO
     {
-        private static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+        public static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
         protected static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
         protected static readonly Encoding ANSI = Utils.Latin1Encoding;
 

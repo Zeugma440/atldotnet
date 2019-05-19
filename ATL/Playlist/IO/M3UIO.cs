@@ -17,7 +17,10 @@ namespace ATL.Playlist.IO
             }
             else
             {
-                return StreamUtils.GetEncodingFromFileBOM(fs);
+                long position = fs.Position;
+                Encoding result = StreamUtils.GetEncodingFromFileBOM(fs);
+                fs.Position = position;
+                return result;
             }
         }
 
