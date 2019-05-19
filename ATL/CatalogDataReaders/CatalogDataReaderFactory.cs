@@ -54,7 +54,7 @@ namespace ATL.CatalogDataReaders
 
             if (CR_CUE == formatId)
             {
-                theReader = new BinaryLogic.Cue(path); //new BinaryLogic.CueAdapter();
+                theReader = new BinaryLogic.Cue(path);
             }
 
             if (null == theReader) theReader = new BinaryLogic.DummyReader();

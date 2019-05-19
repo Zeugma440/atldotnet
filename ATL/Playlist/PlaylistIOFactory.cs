@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ATL.Playlist
 {
     /// <summary>
-    /// TODO
+    /// Factory for playlist I/O classes
     /// </summary>
     public class PlaylistIOFactory : Factory
     {
@@ -38,8 +38,8 @@ namespace ATL.Playlist
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)");
-                tempFmt.AddExtension(".fpl");
                 tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
+                tempFmt.AddExtension(".fpl");
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
@@ -47,24 +47,24 @@ namespace ATL.Playlist
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_SMIL, "SMIL");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
                 tempFmt.AddExtension(".smil");
                 tempFmt.AddExtension(".smi");
                 tempFmt.AddExtension(".zpl");
                 tempFmt.AddExtension(".wpl");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_ASX, "ASX");
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
                 tempFmt.AddExtension(".asx");
                 tempFmt.AddExtension(".wax");
                 tempFmt.AddExtension(".wvx");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_B4S, "B4S");
                 tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
-                tempFmt.AddExtension(".b4s");
                 tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.Winamp_URI;
+                tempFmt.AddExtension(".b4s");
                 theFactory.addFormat(tempFmt);
             }
 

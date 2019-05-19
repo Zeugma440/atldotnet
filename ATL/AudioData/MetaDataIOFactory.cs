@@ -3,7 +3,7 @@ using System;
 namespace ATL.AudioData
 {
 	/// <summary>
-	/// Factory for metadata (tag) readers
+	/// Factory for metadata (tag) I/O classes
 	/// </summary>
 	public class MetaDataIOFactory
 	{
@@ -15,7 +15,7 @@ namespace ATL.AudioData
         public const int TAG_ANY = 99;      // Whenever tag type is not known in advance and may apply to any available tag
 
         // Count of the types defined above, excluding "any" type
-        public static int TAG_TYPE_COUNT = 4;
+        public static readonly int TAG_TYPE_COUNT = 4;
 
         // Defines the default reading priority of the metadata
         private int[] tagPriority;
