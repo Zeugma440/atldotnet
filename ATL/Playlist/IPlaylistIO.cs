@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace ATL.Playlist
 {
     /// <summary>
-    /// TODO
+    /// Interface for standard playlist I/O classes
     /// </summary>
     public interface IPlaylistIO
     {
@@ -37,10 +35,10 @@ namespace ATL.Playlist
         }
 
         /// <summary>
-        /// Gets the absolute paths of all files registered in a playlist
+        /// Gets the absolute paths of all files registered in the playlist
         /// NB : The existence of the files is not checked when getting them
         /// </summary>
-        /// <returns>An array containing all paths</returns>
+        /// <returns>Array containing all paths</returns>
         IList<string> FilePaths
         {
             get;
@@ -48,9 +46,9 @@ namespace ATL.Playlist
         }
 
         /// <summary>
-        /// Tracks extracted from all files registered in a playlist
+        /// Gest all the tracks registered in the playlist
         /// </summary>
-        /// <returns>An array containing all tracks</returns>
+        /// <returns>Array containing all tracks</returns>
         IList<Track> Tracks
         {
             get;

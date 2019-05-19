@@ -9,7 +9,8 @@ using System.Xml;
 namespace ATL.Playlist
 {
     /// <summary>
-    /// TODO
+    /// Asbtract parent for all playlist manipulation (I/O) classes
+    /// Contrains all common methods and attributes
     /// </summary>
     public abstract class PlaylistIO : IPlaylistIO
     {
@@ -128,6 +129,11 @@ namespace ATL.Playlist
             return settings;
         }
 
+        /// <summary>
+        /// Encodes the given location usingcurrent LocationFormatting
+        /// </summary>
+        /// <param name="location">File path to encode</param>
+        /// <returns></returns>
         protected string encodeLocation(string location)
         {
             switch (LocationFormatting)
@@ -145,12 +151,23 @@ namespace ATL.Playlist
             }
         }
 
+        /// <summary>
+        /// Decodes the given location to an absolute filepath and adds it to the given list
+        /// </summary>
+        /// <param name="source">Xml source to get the location from</param>
+        /// <param name="attributeName">Attribute name in current Xml source to get the location from</param>
+        /// <param name="result">List of locations to add the found location to</param>
         protected void decodeLocation(XmlReader source, string attributeName, IList<string> result)
         {
             string location = decodeLocation(source.GetAttribute(attributeName));
             if (location != null) result.Add(location);
         }
 
+        /// <summary>
+        /// Decodes the given location to an absolute filepath
+        /// </summary>
+        /// <param name="href">Location to decode (can be an URI of any form or a relative filepath)</param>
+        /// <returns>Absolute filepath corresponding to the given location</returns>
         protected string decodeLocation(string href)
         {
             // It it an URI ?
@@ -183,7 +200,6 @@ namespace ATL.Playlist
             {
                 href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);
             }
-            // href = System.IO.Path.GetFullPath(href);
             return href;
         }
     }
