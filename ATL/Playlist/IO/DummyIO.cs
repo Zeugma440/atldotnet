@@ -42,5 +42,14 @@ namespace ATL.Playlist.IO
                 // Nothing;
             }
         }
+
+        public PlaylistFormat.FileEncoding Encoding
+        {
+            get => PlaylistFormat.FileEncoding.Undefined;
+            set
+            {
+                // Nothing;
+            }
+        }
     }
 }

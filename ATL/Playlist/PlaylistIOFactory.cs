@@ -62,6 +62,7 @@ namespace ATL.Playlist
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new PlaylistFormat(PL_B4S, "B4S");
+                tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
                 tempFmt.AddExtension(".b4s");
                 tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.Winamp_URI;
                 theFactory.addFormat(tempFmt);
@@ -70,7 +71,11 @@ namespace ATL.Playlist
             return theFactory;
         }
 
-        public IPlaylistIO GetPlaylistIO(string path, PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined, int alternate = 0)
+        public IPlaylistIO GetPlaylistIO(
+            string path, 
+            PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined, 
+            PlaylistFormat.FileEncoding fileEncoding = PlaylistFormat.FileEncoding.Undefined,
+            int alternate = 0)
         {
             IList<Format> formats = (List<Format>)getFormatsFromPath(path);
             Format format = null;
@@ -86,8 +91,12 @@ namespace ATL.Playlist
             }
             result = GetPlaylistIO(format.ID);
             result.Path = path;
+            // Default settings inherited from format
             if (!format.Equals(UNKNOWN_FORMAT))
+            {
                 result.LocationFormatting = (locationFormatting == PlaylistFormat.LocationFormatting.Undefined) ? ((PlaylistFormat)format).LocationFormat : locationFormatting;
+                result.Encoding = (fileEncoding == PlaylistFormat.FileEncoding.Undefined) ? ((PlaylistFormat)format).Encoding : fileEncoding;
+            }
 
             return result;
         }

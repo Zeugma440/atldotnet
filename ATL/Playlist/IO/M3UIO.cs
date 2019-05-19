@@ -11,7 +11,7 @@ namespace ATL.Playlist.IO
     {
         private Encoding getEncoding(FileStream fs)
         {
-            if (System.IO.Path.GetExtension(FFileName).ToLower().Equals(".m3u8"))
+            if (System.IO.Path.GetExtension(Path).Equals(".m3u8", System.StringComparison.OrdinalIgnoreCase))
             {
                 return System.Text.Encoding.UTF8;
             }
@@ -46,7 +46,6 @@ namespace ATL.Playlist.IO
 
             using (TextWriter w = new StreamWriter(fs, encoding))
             {
-                if (encoding.Equals(System.Text.Encoding.UTF8)) fs.Write(BOM_UTF8, 0, 3);
                 if (Settings.M3U_useExtendedFormat) w.WriteLine("#EXTM3U");
 
                 foreach (Track t in values)

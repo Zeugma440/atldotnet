@@ -33,11 +33,10 @@ namespace ATL.Playlist.IO
 
         protected override void setTracks(FileStream fs, IList<Track> values)
         {
-            Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
+            Encoding encoding = UTF8_NO_BOM;
 
             using (TextWriter w = new StreamWriter(fs, encoding))
             {
-                fs.Write(BOM_UTF8, 0, 3);
                 w.WriteLine("[playlist]");
 
                 int counter = 1;

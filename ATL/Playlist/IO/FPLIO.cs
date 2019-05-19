@@ -1,5 +1,4 @@
 using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System;
 using Commons;
@@ -20,7 +19,7 @@ namespace ATL.Playlist.IO
         {
             while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
-                string filePath = StreamUtils.ReadNullTerminatedString(fs, Encoding.UTF8);
+                string filePath = StreamUtils.ReadNullTerminatedString(fs, UTF8_NO_BOM);
                 result.Add(decodeLocation(filePath));
             }
         }

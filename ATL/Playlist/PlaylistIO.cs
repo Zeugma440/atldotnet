@@ -1,4 +1,5 @@
 ﻿using ATL.Logging;
+using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,21 +13,13 @@ namespace ATL.Playlist
     /// </summary>
     public abstract class PlaylistIO : IPlaylistIO
     {
-        protected static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+        private static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+        protected static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
+        protected static readonly Encoding ANSI = Utils.Latin1Encoding;
 
-        protected string FFileName; // Path of the playlist file
-        protected PlaylistFormat.LocationFormatting locationFormatting;
-
-        public string Path
-        {
-            get { return FFileName; }
-            set { FFileName = value; }
-        }
-        public PlaylistFormat.LocationFormatting LocationFormatting
-        {
-            get { return locationFormatting; }
-            set { locationFormatting = value; }
-        }
+        public string Path { get; set; }
+        public PlaylistFormat.LocationFormatting LocationFormatting { get; set; }
+        public PlaylistFormat.FileEncoding Encoding { get; set; }
 
         public IList<string> FilePaths
         {
@@ -45,11 +38,11 @@ namespace ATL.Playlist
         public IList<string> getFiles()
         {
             IList<string> result = new List<string>();
-            LogDelegator.GetLocateDelegate()(FFileName);
+            LogDelegator.GetLocateDelegate()(Path);
 
             try
             {
-                using (FileStream fs = new FileStream(FFileName, FileMode.Open, FileAccess.Read))
+                using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read))
                 {
                     getFiles(fs, result);
                 }
@@ -99,11 +92,12 @@ namespace ATL.Playlist
 
         public void setTracks(IList<Track> trackList)
         {
-            LogDelegator.GetLocateDelegate()(FFileName);
+            LogDelegator.GetLocateDelegate()(Path);
             try
             {
-                using (FileStream fs = new FileStream(FFileName, FileMode.Create, FileAccess.ReadWrite))
+                using (FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite))
                 {
+                    if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
                     setTracks(fs, trackList);
                 }
             }
@@ -118,7 +112,15 @@ namespace ATL.Playlist
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.CloseOutput = true;
-            settings.Encoding = Encoding.UTF8;
+            switch(Encoding)
+            {
+                case (PlaylistFormat.FileEncoding.ANSI):
+                    settings.Encoding = ANSI;
+                    break;
+                default:
+                    settings.Encoding = UTF8_NO_BOM;
+                    break;
+            }
             settings.OmitXmlDeclaration = true;
             settings.ConformanceLevel = ConformanceLevel.Fragment;
             settings.Indent = true;
@@ -162,7 +164,7 @@ namespace ATL.Playlist
                     {
                         if (!System.IO.Path.IsPathRooted(uri.LocalPath))
                         {
-                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), uri.LocalPath);
+                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), uri.LocalPath);
                         }
                         else
                         {
@@ -172,14 +174,14 @@ namespace ATL.Playlist
                 }
                 catch (UriFormatException)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, hrefUri + " is not a valid URI [" + FFileName + "]");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, hrefUri + " is not a valid URI [" + Path + "]");
                 }
             }
             
             href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "");
             if (!System.IO.Path.IsPathRooted(href))
             {
-                href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(FFileName), href);
+                href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);
             }
             // href = System.IO.Path.GetFullPath(href);
             return href;

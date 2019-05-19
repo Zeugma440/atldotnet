@@ -19,9 +19,18 @@ namespace ATL.Playlist
         }
 
         /// <summary>
-        /// Location formatting to use when writing the playlist
+        /// Location formatting to use when writing the file
         /// </summary>
         PlaylistFormat.LocationFormatting LocationFormatting
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Encoding convention to use when writing the file
+        /// </summary>
+        PlaylistFormat.FileEncoding Encoding
         {
             get;
             set;
