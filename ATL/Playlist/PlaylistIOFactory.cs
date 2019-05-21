@@ -63,7 +63,7 @@ namespace ATL.Playlist
 
                 tempFmt = new PlaylistFormat(PL_B4S, "B4S");
                 tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.Winamp_URI;
+                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
                 tempFmt.AddExtension(".b4s");
                 theFactory.addFormat(tempFmt);
             }
