@@ -172,7 +172,7 @@ namespace ATL.Playlist
         {
             // It it an URI ?
             string hrefUri = href.Replace('\\', '/'); // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
-            if (hrefUri.Contains("://") && Uri.IsWellFormedUriString(hrefUri, UriKind.RelativeOrAbsolute)) // RFC URI
+            if (hrefUri.Contains("://")) // RFC URI
             {
                 try
                 {
