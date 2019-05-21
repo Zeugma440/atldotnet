@@ -185,7 +185,8 @@ namespace ATL.Playlist
                         }
                         else
                         {
-                            return uri.LocalPath;
+                            // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
+                            return uri.LocalPath.Replace(""+System.IO.Path.DirectorySeparatorChar+System.IO.Path.DirectorySeparatorChar, ""+System.IO.Path.DirectorySeparatorChar);
                         }
                     }
                 }
