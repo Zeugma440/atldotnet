@@ -447,7 +447,7 @@ namespace ATL
             {
                 // There might be some cases where the Default encoding reads illegal characters
                 // e.g. "ß" encoded in Windows-1250 gives an illegal character when read with Chinese-simplified (gb2312)
-                result = Encoding.Default;
+                result = Settings.DefaultTextEncoding;
             }
 
             // Now reposition the file cursor back to the start of the file

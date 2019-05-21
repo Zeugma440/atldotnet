@@ -17,7 +17,7 @@ namespace ATL
 
         public static bool ReadAllMetaFrames = true; // If true, default Track behaviour reads all metadata frames, including those not described by IMetaDataIO
 
-        public static Encoding DefaultTextEncoding = Encoding.UTF8;
+        public static Encoding DefaultTextEncoding = Encoding.UTF8; // Could also be set to Encoding.Default for system default
 
         // Tag editing preferences : what tagging systems to use when audio file has no metadata ?
         // NB1 : If more than one item, _all_ of them will be written

@@ -38,7 +38,6 @@ namespace ATL.test.IO.Playlist
             Assert.AreEqual(1, theReader.GetFiles().Count);
             foreach (string s in theReader.GetFiles())
             {
-                System.Console.WriteLine(s);
                 Assert.IsTrue(System.IO.File.Exists(s));
             }
 
@@ -53,11 +52,7 @@ namespace ATL.test.IO.Playlist
                 theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(3, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -75,11 +70,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(4, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -101,11 +92,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(3, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -124,11 +111,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(4, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -145,11 +128,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(3, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -166,12 +145,8 @@ namespace ATL.test.IO.Playlist
             {
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
-                Assert.AreEqual(3, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                Assert.AreEqual(4, theReader.GetFiles().Count);
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {
@@ -189,11 +164,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistReader theReader = PlaylistReaders.PlaylistReaderFactory.GetInstance().GetPlaylistReader(testFileLocation);
 
                 Assert.AreEqual(4, theReader.GetFiles().Count);
-                foreach (string s in theReader.GetFiles())
-                {
-                    System.Console.WriteLine(s);
-                    Assert.IsTrue(System.IO.File.Exists(s));
-                }
+                foreach (string s in theReader.GetFiles()) Assert.IsTrue(System.IO.File.Exists(s));
             }
             finally
             {

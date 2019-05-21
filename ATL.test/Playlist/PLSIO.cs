@@ -18,7 +18,7 @@ namespace ATL.test.IO.Playlist
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
                 Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(3, pls.FilePaths.Count);
+                Assert.AreEqual(4, pls.FilePaths.Count);
                 foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
                 foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
             }
