@@ -120,8 +120,10 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 ### SUPPORTED PLAYLISTS FORMATS
 
-* Read-only : FPL
 * Read and write : ASX, B4S, M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+* Read-only : FPL
+
+See detailed compatibility table [here](https://docs.google.com/spreadsheets/d/1Wo9ifsKbBloofdWCsoXziAtaS-QVjqci5aavAV8dt2U/edit?usp=sharing)
 
 
 ### SUPPORTED CUESHEETS FORMATS
@@ -146,3 +148,8 @@ ATL.NET is based on :
 * Audio Tools Library 2.3  by Jurgen Faul, Mattias Dahlberg, Gambit, MaDah and Erik Stenborg (code ported from Pascal to C# and refactored)
 
 * MIDI class 1.5 by Valentin Schmidt & Michael Mlivoncic (code ported from PHP to C# and refactored)
+
+
+## Special thanks for their contributions to...
+
+[leglubert](https://github.com/leglubert), [tarrats](https://github.com/tarrats), [DividedSE](https://github.com/DividedSE)
