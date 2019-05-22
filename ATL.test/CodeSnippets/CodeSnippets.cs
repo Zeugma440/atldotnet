@@ -71,10 +71,10 @@ namespace ATL.test.CodeSnippets
             System.Console.WriteLine("Has this file variable bitrate audio : " + (theTrack.IsVBR ? "yes" : "no"));
             System.Console.WriteLine("Has this file lossless audio : " + (AudioDataIOFactory.CF_LOSSLESS == theTrack.CodecFamily ? "yes" : "no"));
 
-            // Display any additional 'unsupported' fields (e.g. TXXX values in ID3v2, or any other custom tag)
+            // Display custom fields (e.g. TXXX values in ID3v2, or any other custom tag)
             foreach (System.Collections.Generic.KeyValuePair<string, string> field in theTrack.AdditionalFields)
             {
-                System.Console.WriteLine("Field " + field.Key + " : value = " + field.Value);
+                System.Console.WriteLine("Custom field " + field.Key + " : value = " + field.Value);
             }
         }
 
@@ -103,6 +103,8 @@ namespace ATL.test.CodeSnippets
             // Modify metadata
             theTrack.Artist = "Hey ho";
             theTrack.Composer = "Oscar Wilde";
+            theTrack.AdditionalFields["fancyField"] = "fancyValue";
+
 
             // Save modifications on the disc
             theTrack.Save();
