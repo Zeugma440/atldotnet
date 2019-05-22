@@ -120,8 +120,10 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 ### SUPPORTED PLAYLISTS FORMATS
 
-* Read-only : FPL
 * Read and write : ASX, B4S, M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
+* Read-only : FPL
+
+See detailed compatibility table [here](https://docs.google.com/spreadsheets/d/1Wo9ifsKbBloofdWCsoXziAtaS-QVjqci5aavAV8dt2U/edit?usp=sharing)
 
 
 ### SUPPORTED CUESHEETS FORMATS
