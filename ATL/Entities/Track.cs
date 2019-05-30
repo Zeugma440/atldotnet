@@ -44,6 +44,7 @@ namespace ATL
 
         //=== METADATA
 
+#pragma warning disable S1104 // Fields should not have public accessibility
         /// <summary>
         /// Full path of the underlying file
         /// </summary>
@@ -61,9 +62,9 @@ namespace ATL
         /// </summary>
         public string Composer;
         /// <summary>
-		/// Comments
-		/// </summary>
-		public string Comment;
+        /// Comments
+        /// </summary>
+        public string Comment;
         /// <summary>
 		/// Genre
 		/// </summary>
@@ -224,7 +225,7 @@ namespace ATL
         private readonly string mimeType;
         private AudioFileIO fileIO;
 
-
+#pragma warning restore S1104 // Fields should not have public accessibility
         // ========== METHODS
 
         // Used for pictures lazy loading

@@ -42,7 +42,7 @@ namespace ATL
         public const byte TAG_FIELD_DISC_TOTAL = 22;
         public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 23;
         public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 24;
-
+#pragma warning disable S1104 // Fields should not have public accessibility
         // Values for 'classic' fields
         public string GeneralDescription = null;
         public string Title = null;
@@ -98,7 +98,7 @@ namespace ATL
         /// </summary>
         public int DiscDigitsForLeadingZeroes = 0;
 
-
+#pragma warning restore S1104 // Fields should not have public accessibility
 
         public TagData()
         {
