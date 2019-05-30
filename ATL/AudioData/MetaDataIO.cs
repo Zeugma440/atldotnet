@@ -256,15 +256,14 @@ namespace ATL.AudioData.IO
         {
             get // TODO - TEST EXTENSIVELY
             {
-                DateTime result = DateTime.MinValue;
+                DateTime result;
                 if (!DateTime.TryParse(tagData.RecordingDate, out result)) // First try with a proper Recording date field
                 {
                     bool success = false;
                     string dayMonth = Utils.ProtectValue(tagData.RecordingDayMonth); // If not, try to assemble year and dateMonth (e.g. ID3v2)
                     if (4 == dayMonth.Length && 4 == Year.Length)
-                    {
-                        success = DateTime.TryParse(dayMonth.Substring(0, 2) + "/" + dayMonth.Substring(3, 2) + "/" + Year, out result);
-                    }
+                        success = DateTime.TryParse(dayMonth.Substring(0, 2) + "/" + dayMonth.Substring(2, 2) + "/" + Year, out result);
+                    if (!success) result = DateTime.MinValue;
                 }
                 return result;
             }
