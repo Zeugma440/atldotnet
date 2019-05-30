@@ -396,6 +396,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public DateTime Date
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Date;
+            }
+        }
+
         public string Year
         {
             get

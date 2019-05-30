@@ -25,7 +25,7 @@ namespace ATL.benchmark
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
+            readAt(@"E:\temp\id3v2\Testband - Copy - Copy - Copy.mp3");
 
 
             //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
@@ -50,7 +50,7 @@ namespace ATL.benchmark
                 Track t = new Track(filePath);
                 //t.GetEmbeddedPicture(useOldImplementation, false);
 
-                //                Console.WriteLine(t.Title);
+                                Console.WriteLine(t.Title);
             }
             else if (Directory.Exists(filePath))
             {

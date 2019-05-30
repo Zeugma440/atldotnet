@@ -3,7 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using System.Drawing;
-using System.Collections.Generic;
 using Commons;
 
 namespace ATL.test.IO.MetaData
@@ -62,6 +61,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TAG_NATIVE;
 
             testData.Conductor = null;
+            testData.RecordingDate = "1997-06-20";
         }
 
         [TestMethod]
@@ -206,11 +206,13 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
                 {
-                    Assert.AreEqual(pic.NativePicCode, 0x06);
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    Assert.AreEqual(0x06, pic.NativePicCode);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     nbFound++;
                     break;
                 }
@@ -347,18 +349,22 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
                 else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -398,10 +404,12 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }

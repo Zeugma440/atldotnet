@@ -1,6 +1,7 @@
 ﻿using ATL.AudioData;
 using Commons;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -64,13 +65,13 @@ namespace ATL.test.IO.MetaData
             testData.AlbumArtist = "aaᱬbb";
             testData.Comment = "父父!";
             testData.RecordingYear = "1997";
-            testData.RecordingDate = ""; // Empty string means "supported, but not valued in test sample"
+            testData.RecordingDate = "1997-06-20T04:04:04";
             testData.Genre = "House";
             testData.Rating = "0";
             testData.TrackNumber = "01";
             testData.TrackTotal = "02";
             testData.Composer = "ccᱬdd";
-            testData.Conductor = "";
+            testData.Conductor = "";  // Empty string means "supported, but not valued in test sample"
             testData.Publisher = "";
             testData.DiscNumber = "03";
             testData.DiscTotal = "04";
@@ -247,10 +248,12 @@ namespace ATL.test.IO.MetaData
                         {
                             Assert.AreEqual(0x06, pic.NativePicCode);
                         }
-                        Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 600);
-                        Assert.AreEqual(picture.Width, 900);
+                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                        {
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(600, picture.Height);
+                            Assert.AreEqual(900, picture.Width);
+                        }
                         nbFound++;
                         break;
                     }
@@ -410,6 +413,12 @@ namespace ATL.test.IO.MetaData
             if (testData.Artist != null) Assert.AreEqual("Artist", meta.Artist);
             if (testData.AlbumArtist != null) Assert.AreEqual("Mike", meta.AlbumArtist);
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
+            if (testData.RecordingDate != null)
+            {
+                DateTime date;
+                Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
+                Assert.AreEqual(date, meta.Date);
+            }
             if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
             if (testData.Rating != null) Assert.AreEqual((float)(2.5 / 5), meta.Popularity);
@@ -547,20 +556,24 @@ namespace ATL.test.IO.MetaData
                          (pic.NativePicCode.Equals(pictureCode1) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)))
                        )
                     {
-                        Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 600);
-                        Assert.AreEqual(picture.Width, 900);
+                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                        {
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(600, picture.Height);
+                            Assert.AreEqual(900, picture.Width);
+                        }
                         found++;
                     }
                     else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)
                                 && (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
                             )
                     {
-                        Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 290);
-                        Assert.AreEqual(picture.Width, 900);
+                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                        {
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(290, picture.Height);
+                            Assert.AreEqual(900, picture.Width);
+                        }
                         found++;
                     }
                 }
@@ -615,10 +628,12 @@ namespace ATL.test.IO.MetaData
                          (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
                        )
                     {
-                        Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(picture.Height, 290);
-                        Assert.AreEqual(picture.Width, 900);
+                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                        {
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(290, picture.Height);
+                            Assert.AreEqual(900, picture.Width);
+                        }
                         found++;
                     }
                 }
@@ -645,7 +660,12 @@ namespace ATL.test.IO.MetaData
             if (testData.AlbumArtist != null) Assert.AreEqual(testData.AlbumArtist, meta.AlbumArtist);
             if (testData.Comment != null) Assert.AreEqual(testData.Comment, meta.Comment);
             if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
-            //if (testData.RecordingDate != null) Assert.AreEqual(testData.RecordingDate, meta.);
+            if (testData.RecordingDate != null)
+            {
+                DateTime date;
+                Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
+                Assert.AreEqual(date, meta.Date);
+            }
             if (testData.Genre != null) Assert.AreEqual(testData.Genre, meta.Genre);
             if (testData.Rating != null)
             {

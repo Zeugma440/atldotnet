@@ -189,6 +189,14 @@ namespace ATL.AudioData.IO
             get { return ((IMetaDataIO)vorbisTag).DiscTotal; }
         }
 
+        public DateTime Date
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Date;
+            }
+        }
+
         public string Year
         {
             get

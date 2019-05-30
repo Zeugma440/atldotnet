@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
-using System.Collections.Generic;
 using System.IO;
 using Commons;
 
@@ -19,6 +18,7 @@ namespace ATL.test.IO.MetaData
             // Initialize specific test data (Publisher and Description fields not supported in APE tag)
             testData.Publisher = null;
             testData.GeneralDescription = null;
+            testData.RecordingDate = null;
 
             // Initialize specific test data (Picture native codes are strings)
             testData.Pictures.Clear();

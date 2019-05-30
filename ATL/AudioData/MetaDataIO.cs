@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
@@ -262,7 +263,21 @@ namespace ATL.AudioData.IO
                     bool success = false;
                     string dayMonth = Utils.ProtectValue(tagData.RecordingDayMonth); // If not, try to assemble year and dateMonth (e.g. ID3v2)
                     if (4 == dayMonth.Length && 4 == Year.Length)
-                        success = DateTime.TryParse(dayMonth.Substring(0, 2) + "/" + dayMonth.Substring(2, 2) + "/" + Year, out result);
+                    {
+                        StringBuilder dateTimeBuilder = new StringBuilder();
+                        dateTimeBuilder.Append(Year).Append("-");
+                        dateTimeBuilder.Append(dayMonth.Substring(2, 2)).Append("-");
+                        dateTimeBuilder.Append(dayMonth.Substring(0, 2));
+                        string time = Utils.ProtectValue(tagData.RecordingTime); // Try to add time if available
+                        if (time.Length >= 4)
+                        {
+                            dateTimeBuilder.Append("T");
+                            dateTimeBuilder.Append(time.Substring(0, 2)).Append(":");
+                            dateTimeBuilder.Append(time.Substring(2, 2)).Append(":");
+                            dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
+                        }
+                        success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                    }
                     if (!success) result = DateTime.MinValue;
                 }
                 return result;

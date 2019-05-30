@@ -81,6 +81,13 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
+        /// Release date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        DateTime Date
+        {
+            get;
+        }
+        /// <summary>
         /// Year
         /// </summary>
         string Year

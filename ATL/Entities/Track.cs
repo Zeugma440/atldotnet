@@ -101,6 +101,10 @@ namespace ATL
         /// </summary>
         public string Conductor;
         /// <summary>
+		/// Recording Date
+		/// </summary>
+        public DateTime Date;
+        /// <summary>
 		/// Recording Year
 		/// </summary>
         public int Year;
@@ -261,6 +265,7 @@ namespace ATL
             Publisher = Utils.ProtectValue(fileIO.Publisher);
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
+            Date = fileIO.Date;
             Year = fileIO.IntYear;
             Album = fileIO.Album;
             TrackNumber = fileIO.Track;
@@ -324,6 +329,7 @@ namespace ATL
             result.Publisher = Publisher;
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
+            result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
             result.RecordingYear = Year.ToString();
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();

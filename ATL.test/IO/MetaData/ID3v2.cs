@@ -153,10 +153,17 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v23_UTF16()
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            readExistingTagsOnFile(theFile);
+            try
+            {
+                testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
+                readExistingTagsOnFile(theFile);
+            } finally
+            {
+                testData.RecordingDate = "1997-06-20T04:04:04";
+            }
         }
 
         [TestMethod]
@@ -914,7 +921,7 @@ namespace ATL.test.IO.MetaData
             Settings.ID3v2_tagSubVersion = 3;
             try
             {
-                String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
+                string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
                 AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
@@ -930,6 +937,7 @@ namespace ATL.test.IO.MetaData
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
+                testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
                 readExistingTagsOnFile(theFile);
 
                 // Get rid of the working copy
@@ -938,6 +946,7 @@ namespace ATL.test.IO.MetaData
             finally
             {
                 Settings.ID3v2_tagSubVersion = 4;
+                testData.RecordingDate = "1997-06-20T04:04:04";
             }
         }
 

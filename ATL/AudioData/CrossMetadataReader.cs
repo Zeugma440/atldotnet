@@ -193,6 +193,22 @@ namespace ATL.AudioData
             }
         }
         /// <summary>
+        /// Release date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime Date
+        {
+            get
+            {
+                DateTime date = DateTime.MinValue;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    date = reader.Date;
+                    if (date != DateTime.MinValue) break;
+                }
+                return date;
+            }
+        }
+        /// <summary>
         /// Year
         /// </summary>
         public String Year

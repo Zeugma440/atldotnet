@@ -26,7 +26,7 @@ namespace ATL
         public const byte TAG_FIELD_ALBUM = 6;
         public const byte TAG_FIELD_RECORDING_YEAR = 7;
         public const byte TAG_FIELD_RECORDING_DATE = 8;
-        public const byte TAG_FIELD_RECORDING_TIME = 9; // Used internally for ID3v2 for now
+        public const byte TAG_FIELD_RECORDING_TIME = 9;
         public const byte TAG_FIELD_RECORDING_DAYMONTH = 10;
         public const byte TAG_FIELD_TRACK_NUMBER = 11;
         public const byte TAG_FIELD_DISC_NUMBER = 12;
@@ -55,6 +55,7 @@ namespace ATL
         public string OriginalAlbum = null;
         public string RecordingYear = null;
         public string RecordingDayMonth = null;
+        public string RecordingTime = null;
         public string RecordingDate = null;
         public string TrackNumber = null;
         public string DiscNumber = null;
@@ -142,6 +143,7 @@ namespace ATL
                 case TAG_FIELD_RECORDING_DATE: RecordingDate = emptyIfZero(value); break;
                 case TAG_FIELD_RECORDING_YEAR: RecordingYear = emptyIfZero(value); break;
                 case TAG_FIELD_RECORDING_DAYMONTH: RecordingDayMonth = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_TIME: RecordingTime = emptyIfZero(value); break;
                 case TAG_FIELD_TRACK_NUMBER: TrackNumber = emptyIfZero(value); break;
                 case TAG_FIELD_DISC_NUMBER: DiscNumber = emptyIfZero(value); break;
                 case TAG_FIELD_RATING: Rating = emptyIfZero(value); break;
@@ -269,6 +271,7 @@ namespace ATL
             addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, result);
             addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, result);
             addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, result);
+            addIfConsistent(RecordingTime, TAG_FIELD_RECORDING_TIME, result);
             addIfConsistent(Genre, TAG_FIELD_GENRE, result);
             addIfConsistent(Composer, TAG_FIELD_COMPOSER, result);
             addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, result);
@@ -311,6 +314,7 @@ namespace ATL
             OriginalAlbum = null;
             RecordingYear = null;
             RecordingDayMonth = null;
+            RecordingTime = null;
             RecordingDate = null;
             TrackNumber = null;
             DiscNumber = null;
@@ -364,7 +368,7 @@ namespace ATL
         /// <param name="data">Value to add to the map</param>
         /// <param name="id">Key to add to the map</param>
         /// <param name="map">Target map to host given values</param>
-        private void addIfConsistent(String data, byte id, IDictionary<byte, String> map)
+        private void addIfConsistent(string data, byte id, IDictionary<byte, string> map)
         {
             if (data != null) map[id] = data;
         }

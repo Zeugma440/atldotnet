@@ -312,6 +312,13 @@ namespace ATL.AudioData
             get { return metaData.Exists; }
         }
         /// <summary>
+        /// Release date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime Date
+        {
+            get { return metaData.Date; }
+        }
+        /// <summary>
         /// Year, in its original form
         /// </summary>
         public string Year

@@ -183,7 +183,7 @@ namespace Commons
 
             return iStr.Substring(0, i);
         }
-        
+
         /// <summary>
         /// Transforms the given string to format with the given length, expressed in number of characters
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
@@ -195,6 +195,10 @@ namespace Commons
         /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
+        public static string BuildStrictLengthString(int value, int length, char paddingChar, bool padRight = true)
+        {
+            return BuildStrictLengthString(value.ToString(), length, paddingChar, padRight);
+        }
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
             string result = (null == value) ? "" : value;

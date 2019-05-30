@@ -54,6 +54,10 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
+        public DateTime Date
+        {
+            get { return DateTime.MinValue; }
+        }
         public String Year
 		{
 			get { return ""; }

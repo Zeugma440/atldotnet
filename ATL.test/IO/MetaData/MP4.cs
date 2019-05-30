@@ -70,6 +70,7 @@ namespace ATL.test.IO.MetaData
             testData.DiscTotal = "4";
             testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
             testData.Publisher = null;
+            testData.RecordingDate = null;
 
             testData.AdditionalFields.Clear();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));

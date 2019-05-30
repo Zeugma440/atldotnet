@@ -318,6 +318,19 @@ namespace ATL.AudioData
 
         // TODO doc
         // subset of ISO 8601 : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        public static string FormatISOTimestamp(DateTime dateTime)
+        {
+            bool includeTime = (dateTime.Hour > 0 || dateTime.Minute > 0 || dateTime.Second > 0);
+            return FormatISOTimestamp(
+                Utils.BuildStrictLengthString(dateTime.Year, 4, '0', false),
+                Utils.BuildStrictLengthString(dateTime.Day, 2, '0', false),
+                Utils.BuildStrictLengthString(dateTime.Month, 2, '0', false),
+                includeTime ? Utils.BuildStrictLengthString(dateTime.Hour, 2, '0', false) : "",
+                includeTime ? Utils.BuildStrictLengthString(dateTime.Minute, 2, '0', false) : "",
+                includeTime ? Utils.BuildStrictLengthString(dateTime.Second, 2, '0', false) : ""
+            );
+        }
+
         public static string FormatISOTimestamp(string year, string dayMonth, string time)
         {
             string day = "";

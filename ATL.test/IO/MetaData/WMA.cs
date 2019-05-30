@@ -60,6 +60,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TAG_NATIVE;
 
             testData.Conductor = null;
+            testData.RecordingDate = null;
         }
 
         [TestMethod]

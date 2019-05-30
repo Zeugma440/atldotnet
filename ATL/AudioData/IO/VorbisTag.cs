@@ -48,21 +48,7 @@ namespace ATL.AudioData.IO
         }
 
         // Mapping between Vorbis field IDs and ATL fields
-        private static IDictionary<string, byte> frameMapping;
-
-        // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
-        private readonly bool writePicturesWithMetadata;
-        // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
-        private readonly bool writeMetadataFramingBit;
-        // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
-        private readonly bool hasCoreSignature;
-
-        // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static VorbisTag()
-        {
-            frameMapping = new Dictionary<string, byte>
-            {
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>() {
                 { "DESCRIPTION", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
                 { "ARTIST", TagData.TAG_FIELD_ARTIST },
                 { "TITLE", TagData.TAG_FIELD_TITLE },
@@ -82,8 +68,16 @@ namespace ATL.AudioData.IO
                 { "RATING", TagData.TAG_FIELD_RATING },
                 { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
                 { "PUBLISHER", TagData.TAG_FIELD_PUBLISHER }
-            };
-        }
+        };
+
+        // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
+        private readonly bool writePicturesWithMetadata;
+        // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
+        private readonly bool writeMetadataFramingBit;
+        // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
+        private readonly bool hasCoreSignature;
+
+        // ---------- CONSTRUCTORS & INITIALIZERS
 
         public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature)
         {
@@ -187,7 +181,7 @@ namespace ATL.AudioData.IO
         private void SetExtendedTagItem(Stream Source, int size, ReadTagParams readTagParams)
         {
             const int KEY_BUFFER = 20;
-            string tagId = "";
+            StringBuilder tagIdBuilder = new StringBuilder();
             byte[] stringData = new byte[KEY_BUFFER];
             int equalsIndex = -1;
 
@@ -204,10 +198,11 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                tagId += Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex);
+                tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex));
             }
             Source.Seek(-(KEY_BUFFER - equalsIndex - 1), SeekOrigin.Current);
 
+            string tagId = tagIdBuilder.ToString();
             if (tagId.Equals(PICTURE_METADATA_ID_NEW))
             {
                 size = size - 1 - PICTURE_METADATA_ID_NEW.Length;
@@ -299,7 +294,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override bool read(BinaryReader Source, ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             int size;
             string strData;
@@ -317,15 +312,15 @@ namespace ATL.AudioData.IO
                 readTagParams.ReadPictures = true;
             }
 
-            initialPos = Source.BaseStream.Position;
+            initialPos = source.BaseStream.Position;
             do
             {
-                size = Source.ReadInt32();
+                size = source.ReadInt32();
 
-                position = Source.BaseStream.Position;
+                position = source.BaseStream.Position;
                 if (size < 500) // 'Small' field
                 {
-                    strData = Encoding.UTF8.GetString(Source.ReadBytes(size)).Trim();
+                    strData = Encoding.UTF8.GetString(source.ReadBytes(size)).Trim();
 
                     int strIndex = strData.IndexOf('=');
                     if (strIndex > -1 && strIndex < strData.Length)
@@ -348,21 +343,21 @@ namespace ATL.AudioData.IO
                 }
                 else // 'Large' field = picture
                 {
-                    SetExtendedTagItem(Source.BaseStream, size, readTagParams);
+                    SetExtendedTagItem(source.BaseStream, size, readTagParams);
                 }
-                Source.BaseStream.Seek(position + size, SeekOrigin.Begin);
+                source.BaseStream.Seek(position + size, SeekOrigin.Begin);
 
                 if (0 == index)
                 {
-                    fieldCounterPos = Source.BaseStream.Position;
-                    nbFields = Source.ReadInt32();
+                    fieldCounterPos = source.BaseStream.Position;
+                    nbFields = source.ReadInt32();
                 }
 
                 index++;
             } while (index <= nbFields);
 
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialPos, (int)(Source.BaseStream.Position - initialPos), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
+            structureHelper.AddZone(initialPos, (int)(source.BaseStream.Position - initialPos), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
 
             return result;
         }
@@ -567,7 +562,7 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                picW.Write((int)0);
+                picW.Write(0);
             }
 
             picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
