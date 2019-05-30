@@ -12,12 +12,6 @@ namespace ATL.AudioData.IO
     /// 
     /// TODO - Rewrite as "pure" helper, with Ogg and FLAC inheriting MetaDataIO
     /// 
-    /// Implementation notes
-    /// 
-    ///     1. Padding
-    /// 
-    ///     Padding is handled the plainest way possible, by inserting the same number of null bytes when activated.
-    ///     
     /// </summary>
     class VorbisTag : MetaDataIO
     {
