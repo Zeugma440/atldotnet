@@ -26,11 +26,6 @@ namespace ATL.AudioData.IO
         private const int CONTENTS_VORBIS = 0;				// Vorbis
         private const int CONTENTS_OPUS = 1;                // Opus
 
-        // Used with ChannelModeID property
-        private const byte VORBIS_CM_MONO = 1;              // Code for mono mode		
-        private const byte VORBIS_CM_STEREO = 2;            // Code for stereo mode
-        private const byte VORBIS_CM_MULTICHANNEL = 6;		// Code for Multichannel Mode
-
         private const int MAX_PAGE_SIZE = 255 * 255;
 
         // Ogg page header ID

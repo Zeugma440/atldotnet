@@ -8,7 +8,7 @@ using static ATL.AudioData.FileStructureHelper;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Vorbis tags manipulation
+    /// Class for Vorbis tags (VorbisComment) manipulation
     /// 
     /// TODO - Rewrite as "pure" helper, with Ogg and FLAC inheriting MetaDataIO
     /// 
@@ -26,6 +26,8 @@ namespace ATL.AudioData.IO
         private const string VENDOR_METADATA_ID = "VENDOR";
 
         private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
+
+        private const int PADDING_SIZE = 2048;
 
         // "Xiph.Org libVorbis I 20150105" vendor with zero fields
         private static readonly byte[] CORE_SIGNATURE = new byte[43] { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
@@ -77,6 +79,9 @@ namespace ATL.AudioData.IO
         // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
         private readonly bool hasCoreSignature;
 
+        // Initial offset of the padding block; used to handle padding the smart way when rewriting data
+        private long initialPaddingOffset, initialPaddingSize;
+
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature)
@@ -84,6 +89,10 @@ namespace ATL.AudioData.IO
             this.writePicturesWithMetadata = writePicturesWithMetadata;
             this.writeMetadataFramingBit = writeMetadataFramingBit;
             this.hasCoreSignature = hasCoreSignature;
+
+            initialPaddingOffset = -1;
+            initialPaddingSize = 0;
+
             ResetData();
         }
 
@@ -299,7 +308,6 @@ namespace ATL.AudioData.IO
             int size;
             string strData;
             long initialPos, position;
-            long fieldCounterPos = 0;
             int nbFields = 0;
             int index = 0;
             bool result = true;
@@ -347,17 +355,28 @@ namespace ATL.AudioData.IO
                 }
                 source.BaseStream.Seek(position + size, SeekOrigin.Begin);
 
-                if (0 == index)
-                {
-                    fieldCounterPos = source.BaseStream.Position;
-                    nbFields = source.ReadInt32();
-                }
+                if (0 == index) nbFields = source.ReadInt32();
 
                 index++;
             } while (index <= nbFields);
 
+            // All fields have been read
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
             structureHelper.AddZone(initialPos, (int)(source.BaseStream.Position - initialPos), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
+
+            if (readTagParams.PrepareForWriting)
+            {
+                // Skip framing bit
+                if (1 == source.PeekChar()) source.BaseStream.Seek(1, SeekOrigin.Current);
+
+                long streamPos = source.BaseStream.Position;
+                // Prod to see if there's padding after the last field
+                if (streamPos + 4 < source.BaseStream.Length && 0 == source.ReadInt32())
+                {
+                    initialPaddingOffset = streamPos;
+                    initialPaddingSize = StreamUtils.TraversePadding(source.BaseStream) - initialPaddingOffset;
+                }
+            }
 
             return result;
         }
@@ -407,8 +426,22 @@ namespace ATL.AudioData.IO
 
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
-            // NB : Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
-            if (Settings.EnablePadding) for (int i = 0; i < 2048; i++) w.Write((byte)0);
+            // PADDING MANAGEMENT
+            // Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
+            if (Settings.EnablePadding)
+            {
+                long paddingSizeToWrite = PADDING_SIZE;
+                // Write the remaining padding bytes, if any detected during initial reading
+                if (initialPaddingOffset > -1)
+                {
+                    long originalTagSize = initialPaddingOffset;
+                    long currentTagSize = w.BaseStream.Position;
+                    paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), PADDING_SIZE);
+                }
+
+                if (paddingSizeToWrite > 0)
+                    for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+            }
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);

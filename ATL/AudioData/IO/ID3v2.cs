@@ -226,9 +226,6 @@ namespace ATL.AudioData.IO
         private static readonly IDictionary<string, string> frameMapping_v22_3 = new Dictionary<string, string>();
         private static readonly IDictionary<string, string> frameMapping_v24_3 = new Dictionary<string, string>();
 
-        // Buffer size to use to parse through padding frames
-        private const int PADDING_BUFFER_SIZE = 512;
-
         // Frame header (universal)
         private class FrameHeader
         {
@@ -476,7 +473,7 @@ namespace ATL.AudioData.IO
                 if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
                 {
                     tag.PaddingOffset = initialTagPos;
-                    tag.ActualEnd = traversePadding(source);
+                    tag.ActualEnd = StreamUtils.TraversePadding(source);
                 }
                 else // If not, we're in the wrong place
                 {
@@ -870,34 +867,13 @@ namespace ATL.AudioData.IO
                 if (streamPos + 4 < source.Length && 0 == source.ReadInt32())
                 {
                     tag.PaddingOffset = streamPos;
-                    tag.ActualEnd = traversePadding(source);
+                    tag.ActualEnd = StreamUtils.TraversePadding(source);
                 }
                 else
                 {
                     tag.ActualEnd = streamPos;
                 }
             }
-        }
-
-        private long traversePadding(BufferedBinaryReader source)
-        {
-            // Read until there's something else than zeroes
-            byte[] data = new byte[PADDING_BUFFER_SIZE];
-            long initialPos = source.Position;
-            int read, readTotal = 0;
-
-            read = source.Read(data, 0, PADDING_BUFFER_SIZE);
-            while (read > 0)
-            {
-                for (int i = 0; i < read; i++)
-                {
-                    if (data[i] > 0) return initialPos + readTotal + i;
-                }
-                readTotal += read;
-                read = source.Read(data, 0, PADDING_BUFFER_SIZE);
-            }
-
-            return readTotal;
         }
 
         // ********************** Public functions & voids **********************

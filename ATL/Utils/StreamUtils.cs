@@ -824,5 +824,26 @@ namespace ATL
 
             return BitConverter.ToDouble(data, 0);
         }
+
+        public static long TraversePadding(Stream source)
+        {
+            // Read until there's something else than zeroes
+            byte[] data = new byte[BUFFERSIZE];
+            long initialPos = source.Position;
+            int read, readTotal = 0;
+
+            read = source.Read(data, 0, BUFFERSIZE);
+            while (read > 0)
+            {
+                for (int i = 0; i < read; i++)
+                {
+                    if (data[i] > 0) return initialPos + readTotal + i;
+                }
+                readTotal += read;
+                read = source.Read(data, 0, BUFFERSIZE);
+            }
+
+            return readTotal;
+        }
     }
 }
