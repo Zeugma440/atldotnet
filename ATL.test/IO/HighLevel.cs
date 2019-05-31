@@ -141,7 +141,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
             tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
             tagIO_RW_UpdateNeutral("SPC/spc.spc");
-            tagIO_RW_UpdateNeutral("AAC/mp4.m4a"); // TODO - Remanining issue with gnre numeric field being rewritten as (c)gen string field
+            tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
             tagIO_RW_UpdateNeutral("WMA/wma.wma"); // TODO - Remanining issues
         }
 
