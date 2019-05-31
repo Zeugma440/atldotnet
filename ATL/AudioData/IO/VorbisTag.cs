@@ -21,8 +21,6 @@ namespace ATL.AudioData.IO
 
         private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
 
-        private const int PADDING_SIZE = 2048;
-
         // "Xiph.Org libVorbis I 20150105" vendor with zero fields
         private static readonly byte[] CORE_SIGNATURE = new byte[43] { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
 
@@ -421,14 +419,14 @@ namespace ATL.AudioData.IO
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
             // PADDING MANAGEMENT
-            // Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
-            long paddingSizeToWrite = Settings.EnablePadding ? PADDING_SIZE : 0;
+            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
             // Write the remaining padding bytes, if any detected during initial reading
             if (initialPaddingOffset > -1)
             {
                 long originalTagSize = initialPaddingOffset;
                 long currentTagSize = w.BaseStream.Position;
-                paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), PADDING_SIZE);
+                // Padding size is constrained by either its initial size or the max size defined in settings
+                paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), Math.Max(Settings.PaddingSize, initialPaddingSize) );
             }
 
             if (paddingSizeToWrite > 0)

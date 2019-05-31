@@ -985,24 +985,28 @@ namespace ATL.AudioData.IO
             long headerEnd = w.BaseStream.Position;
             result = writeFrames(tag, w, tagEncoding);
 
-            // Write the remaining padding bytes, if any detected during initial reading
+            // PADDING MANAGEMENT
             // TODO - if footer support is added, don't write padding since they are mutually exclusive (see specs)
+            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
             if (tagHeader.PaddingOffset > -1)
             {
                 long originalTagSize = tagHeader.PaddingOffset - tagHeader.HeaderEnd;
                 long currentTagSize = w.BaseStream.Position - headerEnd;
-                long paddingSize = tagHeader.GetPaddingSize() + (originalTagSize - currentTagSize);
-                if (paddingSize > 0)
-                    for (long l = 0; l < paddingSize; l++) w.Write('\0');
-
+                paddingSizeToWrite = Math.Min(tagHeader.GetPaddingSize() + (originalTagSize - currentTagSize), Math.Max(Settings.PaddingSize, tagHeader.GetPaddingSize()));
+            }
+            if (paddingSizeToWrite > 0)
+            {
                 if (3 == Settings.ID3v2_tagSubVersion) // Write size of padding
                 {
                     long tmpPos = w.BaseStream.Position;
                     w.BaseStream.Seek(headerEnd - 4, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEInt32((int)paddingSize));
+                    w.Write(StreamUtils.EncodeBEInt32((int)paddingSizeToWrite));
                     w.BaseStream.Seek(tmpPos, SeekOrigin.Begin);
                 }
+
+                for (long l = 0; l < paddingSizeToWrite; l++) w.Write((byte)0);
             }
+
 
             // Record final(*) size of tag into "tag size" field of header
             // (*) : Spec clearly states that the tag final size is tag size after unsynchronization
