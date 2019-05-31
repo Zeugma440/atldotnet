@@ -667,6 +667,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
+            computePicturesDestination(tag.Pictures);
+
             if (ZONE_CONTENT_DESCRIPTION.Equals(zone)) return writeContentDescription(tag, w);
             else if (ZONE_EXTENDED_HEADER_METADATA.Equals(zone)) return writeExtendedHeaderMeta(tag, w);
             else if (ZONE_EXTENDED_HEADER_METADATA_LIBRARY.Equals(zone)) return writeExtendedHeaderMetaLibrary(tag, w);
@@ -773,13 +775,7 @@ namespace ATL.AudioData.IO
             // Picture fields
             foreach (PictureInfo picInfo in tag.Pictures)
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                if (doWritePicture && picInfo.PictureData.Length + 50 <= ushort.MaxValue)
+                if (0 == picInfo.TransientFlag)
                 {
                     writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
                     counter++;
@@ -870,18 +866,12 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            // Picture fields (exclusively written in Metadata Library Object zone)
+            // Picture fields
             if (isExtendedMetaLibrary)
             {
                 foreach (PictureInfo picInfo in tag.Pictures)
                 {
-                    // Picture has either to be supported, or to come from the right tag standard
-                    doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                    // It also has not to be marked for deletion
-                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                    if (doWritePicture && picInfo.PictureData.Length + 50 > ushort.MaxValue)
+                    if (1 == picInfo.TransientFlag)
                     {
                         writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, true);
                         counter++;
@@ -1056,6 +1046,34 @@ namespace ATL.AudioData.IO
             else
             {
                 return base.Remove(w);
+            }
+        }
+
+        // Decides whether picture has to be written and set it to their TransientFlag field
+        // -1: Nowhere
+        //  0: In content description
+        //  1: In extended metadata
+        private void computePicturesDestination(IList<PictureInfo> picInfos)
+        {
+            bool foundFirstContentDescPicture = false;
+            foreach (PictureInfo picInfo in picInfos)
+            {
+                // Picture has either to be supported, or to come from the right tag standard
+                bool doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                if (doWritePicture)
+                {
+                    if (picInfo.PictureData.Length + 50 <= ushort.MaxValue && !foundFirstContentDescPicture)
+                    {
+                        picInfo.TransientFlag = 0;
+                        foundFirstContentDescPicture = true;
+                    }
+                    else picInfo.TransientFlag = 1;
+                }
+                else picInfo.TransientFlag = -1;
             }
         }
     }

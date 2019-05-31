@@ -366,7 +366,7 @@ namespace ATL
             }
 
             result.Pictures = new List<PictureInfo>();
-            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.Flag = 0;
+            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.TransientFlag = 0;
 
             if (initialEmbeddedPictures != null && currentEmbeddedPictures != null)
             {
@@ -398,7 +398,7 @@ namespace ATL
                                     result.Pictures.Add(picToDelete);
                                 }
 
-                                targetPic.Flag = 1;
+                                targetPic.TransientFlag = 1;
                             }
                         }
                     }
@@ -408,7 +408,7 @@ namespace ATL
                 {
                     foreach (PictureInfo targetPic in currentEmbeddedPictures)
                     {
-                        if (0 == targetPic.Flag) // Entirely new pictures without equivalent in initialEmbeddedPictures
+                        if (0 == targetPic.TransientFlag) // Entirely new pictures without equivalent in initialEmbeddedPictures
                         {
                             result.Pictures.Add(targetPic);
                         }

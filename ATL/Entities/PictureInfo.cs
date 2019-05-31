@@ -53,9 +53,9 @@ namespace ATL
         /// </summary>
         public bool MarkedForDeletion = false;
         /// <summary>
-        /// Freeform value to be used by other parts of the library
+        /// Freeform transient value to be used by other parts of the library
         /// </summary>
-        public int Flag;
+        public int TransientFlag;
 
         // ---------------- CONSTRUCTORS
 
@@ -75,7 +75,7 @@ namespace ATL
             }
             this.PictureHash = picInfo.PictureHash;
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
-            this.Flag = picInfo.Flag;
+            this.TransientFlag = picInfo.TransientFlag;
         }
         public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
         {

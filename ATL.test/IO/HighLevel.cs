@@ -127,15 +127,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateNeutral("MP3/id3v2.4_UTF8.mp3"); // ID3v2
             tagIO_RW_UpdateNeutral("DSF/dsf.dsf"); // ID3v2 in DSF
             tagIO_RW_UpdateNeutral("FLAC/flac.flac"); // Vorbis-FLAC
-            Settings.EnablePadding = true;
-            try
-            {
-                tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
-            }
-            finally
-            {
-                Settings.EnablePadding = false;
-            }
+            tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
             tagIO_RW_UpdateNeutral("MP3/APE.mp3"); // APE
             // Native formats
             tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
