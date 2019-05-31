@@ -12,7 +12,7 @@ namespace ATL.test.CodeSnippets
     public class CodeSnippets : ILogDevice
     {
         string audioFilePath;
-        string cuesheetPath;
+        string cuesheetFilePath;
         string playlistFilePath;
         string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
         string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
@@ -37,14 +37,15 @@ namespace ATL.test.CodeSnippets
         {
             audioFilePath = TestUtils.CopyAsTempTestFile("MP3/id3v2.3_UTF16.mp3");
             playlistFilePath = TestUtils.CreateTempTestFile("playlist.test");
-            cuesheetPath = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
+            cuesheetFilePath = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Cuesheet/cue.cue", "$PATH", TestUtils.GetResourceLocationRoot(false));
         }
 
         [TestCleanup]
         public void End()
         {
             System.IO.File.Delete(audioFilePath);
-            System.IO.File.Delete(cuesheetPath);
+            System.IO.File.Delete(cuesheetFilePath);
+            System.IO.File.Delete(playlistFilePath);
         }
 
         [TestMethod, TestCategory("snippets")]
@@ -217,7 +218,7 @@ namespace ATL.test.CodeSnippets
         [TestMethod, TestCategory("snippets")]
         public void CS_ReadingCuesheet()
         {
-            ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(cuesheetPath);
+            ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(cuesheetFilePath);
 
             System.Console.WriteLine(theReader.Artist);
             System.Console.WriteLine(theReader.Title);
