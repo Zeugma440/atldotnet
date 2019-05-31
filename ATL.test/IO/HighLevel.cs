@@ -134,7 +134,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
             tagIO_RW_UpdateNeutral("SPC/spc.spc");
             tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
-            tagIO_RW_UpdateNeutral("WMA/wma.wma"); // TODO - Remanining issues
+            tagIO_RW_UpdateNeutral("WMA/wma.wma");
         }
 
         private void tagIO_RW_UpdateEmpty(string resource, bool supportsTrack = true)
