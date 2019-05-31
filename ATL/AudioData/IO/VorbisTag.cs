@@ -422,20 +422,18 @@ namespace ATL.AudioData.IO
 
             // PADDING MANAGEMENT
             // Foobar2000 adds a padding block of 2048 bytes here for OGG container, regardless of the type or size of written fields
-            if (Settings.EnablePadding)
+            long paddingSizeToWrite = Settings.EnablePadding ? PADDING_SIZE : 0;
+            // Write the remaining padding bytes, if any detected during initial reading
+            if (initialPaddingOffset > -1)
             {
-                long paddingSizeToWrite = Settings.EnablePadding ? PADDING_SIZE : 0;
-                // Write the remaining padding bytes, if any detected during initial reading
-                if (initialPaddingOffset > -1)
-                {
-                    long originalTagSize = initialPaddingOffset;
-                    long currentTagSize = w.BaseStream.Position;
-                    paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), PADDING_SIZE);
-                }
-
-                if (paddingSizeToWrite > 0)
-                    for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+                long originalTagSize = initialPaddingOffset;
+                long currentTagSize = w.BaseStream.Position;
+                paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), PADDING_SIZE);
             }
+
+            if (paddingSizeToWrite > 0)
+                for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
