@@ -419,16 +419,8 @@ namespace ATL.AudioData.IO
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
             // PADDING MANAGEMENT
-            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
             // Write the remaining padding bytes, if any detected during initial reading
-            if (initialPaddingOffset > -1)
-            {
-                long originalTagSize = initialPaddingOffset;
-                long currentTagSize = w.BaseStream.Position;
-                // Padding size is constrained by either its initial size or the max size defined in settings
-                paddingSizeToWrite = Math.Min(initialPaddingSize + (originalTagSize - currentTagSize), Math.Max(Settings.PaddingSize, initialPaddingSize) );
-            }
-
+            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingOffset, initialPaddingSize, w.BaseStream.Position);
             if (paddingSizeToWrite > 0)
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
 

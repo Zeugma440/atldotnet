@@ -367,5 +367,15 @@ namespace ATL.AudioData
 
             return result.ToString();
         }
+
+        // TODO Doc
+        public static long ComputePaddingSize(long initialTagSize, long initialPaddingOffset, long initialPaddingSize, long currentTagSize)
+        {
+            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
+            // Padding size is constrained by either its initial size or the max size defined in settings
+            if (initialPaddingOffset > -1)
+                paddingSizeToWrite = Math.Min(initialPaddingSize + (initialTagSize - currentTagSize), Math.Max(Settings.PaddingSize, initialPaddingSize));
+            return paddingSizeToWrite;
+        }
     }
 }

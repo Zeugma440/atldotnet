@@ -987,13 +987,11 @@ namespace ATL.AudioData.IO
 
             // PADDING MANAGEMENT
             // TODO - if footer support is added, don't write padding since they are mutually exclusive (see specs)
-            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
-            if (tagHeader.PaddingOffset > -1)
-            {
-                long originalTagSize = tagHeader.PaddingOffset - tagHeader.HeaderEnd;
-                long currentTagSize = w.BaseStream.Position - headerEnd;
-                paddingSizeToWrite = Math.Min(tagHeader.GetPaddingSize() + (originalTagSize - currentTagSize), Math.Max(Settings.PaddingSize, tagHeader.GetPaddingSize()));
-            }
+            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(
+                tagHeader.PaddingOffset - tagHeader.HeaderEnd,  // Initial tag size
+                tagHeader.PaddingOffset,                        // Initial padding offset
+                tagHeader.GetPaddingSize(),                     // Initial padding size
+                w.BaseStream.Position - headerEnd);             // Current tag size
             if (paddingSizeToWrite > 0)
             {
                 if (3 == Settings.ID3v2_tagSubVersion) // Write size of padding
