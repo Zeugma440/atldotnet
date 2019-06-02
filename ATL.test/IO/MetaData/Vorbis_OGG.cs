@@ -230,6 +230,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
             Settings.EnablePadding = true;
+            Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
@@ -238,6 +239,7 @@ namespace ATL.test.IO.MetaData
             } finally
             {
                 Settings.EnablePadding = false;
+                Settings.PaddingSize = 2048;
             }
         }
 
@@ -245,6 +247,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
             Settings.EnablePadding = true;
+            Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
@@ -252,6 +255,7 @@ namespace ATL.test.IO.MetaData
             } finally
             {
                 Settings.EnablePadding = false;
+                Settings.PaddingSize = 2048;
             }
         }
 

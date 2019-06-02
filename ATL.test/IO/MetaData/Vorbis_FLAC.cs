@@ -302,7 +302,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisFLAC_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 

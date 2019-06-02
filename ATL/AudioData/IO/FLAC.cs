@@ -23,10 +23,11 @@ namespace ATL.AudioData.IO
 
         private const string FLAC_ID = "fLaC";
 
-        private const string ZONE_VORBISTAG = "VORBISTAG";
-        private const string ZONE_PICTURE = "PICTURE";
+        private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 
-        private const int FLAG_LAST_METADATA_BLOCK = 0x80;
+        // Modes for file modification
+        private const int MODE_REPLACE = 0;
+        private const int MODE_OVERWRITE = 1;
 
 
         private class FlacHeader
@@ -63,12 +64,11 @@ namespace ATL.AudioData.IO
 
         IList<FileStructureHelper.Zone> zones; // TODO - That's one hint of why interactions with VorbisTag need to be redesigned...
 
-        // Internal metrics
-        private int paddingIndex;
-        private bool paddingLast;
-        private uint padding;
+        // Initial offset of the padding block; used to handle padding the smart way when rewriting data
+        private long initialPaddingOffset, initialPaddingSize;
+
+        // Offset of audio data
         private long audioOffset;
-        private long firstBlockPosition;
 
         // Physical info
         private int sampleRate;
@@ -76,24 +76,6 @@ namespace ATL.AudioData.IO
         private long samples;
         private ChannelsArrangement channelsArrangement;
 
-        /* Unused for now
-                public long AudioOffset //offset of audio data
-                {
-                    get { return audioOffset; }
-                }
-                public byte BitsPerSample // Bits per sample
-                {
-                    get { return bitsPerSample; }
-                }
-                public long Samples // Number of samples
-                {
-                    get { return samples; }
-                }
-                public double Ratio // Compression ratio (%)
-                {
-                    get { return getCompressionRatio(); }
-                }
-        */
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -348,13 +330,12 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Audio data
-            padding = 0;
-            paddingLast = false;
             sampleRate = 0;
             bitsPerSample = 0;
             samples = 0;
-            paddingIndex = 0;
             audioOffset = 0;
+            initialPaddingOffset = -1;
+            initialPaddingSize = 0;
         }
 
         public FLAC(string path)
@@ -370,7 +351,7 @@ namespace ATL.AudioData.IO
         // Check for right FLAC file data
         private bool isValid()
         {
-            return  header.IsValid() &&
+            return header.IsValid() &&
                     (channelsArrangement.NbChannels > 0) &&
                     (sampleRate > 0) &&
                     (bitsPerSample > 0) &&
@@ -425,6 +406,7 @@ namespace ATL.AudioData.IO
             return Read(source, readTagParams);
         }
 
+        // TODO : support for CUESHEET block
         public bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
@@ -434,10 +416,11 @@ namespace ATL.AudioData.IO
             byte[] aMetaDataBlockHeader;
             long position;
             uint blockLength;
-            int blockType;
+            byte blockType;
             int blockIndex;
             bool isLast;
-            bool bPaddingFound = false;
+            bool paddingFound = false;
+            long blockEndOffset = -1;
 
             readHeader(source);
 
@@ -461,9 +444,9 @@ namespace ATL.AudioData.IO
                     default: channelsArrangement = UNKNOWN; break;
                 }
 
-                sampleRate = (header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4);
+                sampleRate = header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4;
                 bitsPerSample = (byte)(((header.Info[12] & 1) << 4) | (header.Info[13] >> 4) + 1);
-                samples = (header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17]);
+                samples = header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17];
 
                 if (0 == (header.MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK)) // metadata block exists
                 {
@@ -472,43 +455,48 @@ namespace ATL.AudioData.IO
                     if (readTagParams.PrepareForWriting)
                     {
                         if (null == zones) zones = new List<Zone>(); else zones.Clear();
-                        firstBlockPosition = source.BaseStream.Position;
+                        blockEndOffset = source.BaseStream.Position;
                     }
 
                     do // read more metadata blocks if available
                     {
                         aMetaDataBlockHeader = source.ReadBytes(4);
-                        isLast = ((aMetaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0); // last flag ( first bit == 1 )
+                        isLast = (aMetaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0; // last flag ( first bit == 1 )
 
                         blockIndex++;
                         blockLength = StreamUtils.DecodeBEUInt24(aMetaDataBlockHeader, 1);
 
-                        blockType = (aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
+                        blockType = (byte)(aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
                         position = source.BaseStream.Position;
 
                         if (blockType == META_VORBIS_COMMENT) // Vorbis metadata
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_VORBISTAG, position - 4, (int)blockLength + 4, new byte[0], (byte)(isLast ? 1 : 0)));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], blockType));
                             vorbisTag.Read(source, readTagParams);
                         }
-                        else if ((blockType == META_PADDING) && (!bPaddingFound))  // Padding block
+                        else if ((blockType == META_PADDING) && (!paddingFound))  // Padding block (skip any other padding block)
                         {
-                            padding = blockLength;                                            // if we find more skip & put them in metablock array
-                            paddingLast = ((aMetaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) != 0);
-                            paddingIndex = blockIndex;
-                            bPaddingFound = true;
-                            source.BaseStream.Seek(padding, SeekOrigin.Current); // advance into file till next block or audio data start
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(PADDING_ZONE_NAME, position - 4, (int)blockLength + 4, new byte[0], blockType));
+                            initialPaddingSize = blockLength;
+                            initialPaddingOffset = position;
+                            paddingFound = true;
+                            source.BaseStream.Seek(blockLength, SeekOrigin.Current);
                         }
                         else if (blockType == META_PICTURE)
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(ZONE_PICTURE, position - 4, (int)blockLength + 4, new byte[0], (byte)(isLast ? 1 : 0)));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], blockType));
                             vorbisTag.ReadPicture(source.BaseStream, readTagParams);
                         }
-                        // TODO : support for CUESHEET block
+                        else // Unhandled block; needs to be zoned anyway because isLast bit needs to be managed at write-time
+                        {
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], blockType));
+                        }
+
 
                         if (blockType < 7)
                         {
                             source.BaseStream.Seek(position + blockLength, SeekOrigin.Begin);
+                            blockEndOffset = position + blockLength;
                         }
                         else
                         {
@@ -525,19 +513,20 @@ namespace ATL.AudioData.IO
 
                         foreach (Zone zone in zones)
                         {
-                            if (zone.Name.Equals(ZONE_PICTURE)) pictureFound = true;
-                            else if (zone.Name.Equals(ZONE_VORBISTAG)) vorbisTagFound = true;
+                            if (zone.Flag == META_PICTURE) pictureFound = true;
+                            else if (zone.Flag == META_VORBIS_COMMENT) vorbisTagFound = true;
                         }
 
-                        if (!vorbisTagFound) zones.Add(new Zone(ZONE_VORBISTAG, firstBlockPosition, 0, new byte[0]));
-                        if (!pictureFound) zones.Add(new Zone(ZONE_PICTURE, firstBlockPosition, 0, new byte[0]));
+                        if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "", blockEndOffset, 0, new byte[0], META_VORBIS_COMMENT));
+                        if (!pictureFound) zones.Add(new Zone(META_PICTURE + "", blockEndOffset, 0, new byte[0], META_PICTURE));
+                        if (!paddingFound && Settings.EnablePadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], META_PADDING));
                     }
                 }
             }
 
             if (isValid())
             {
-                audioOffset = source.BaseStream.Position;  // we need that to rebuild the file if nedeed
+                audioOffset = source.BaseStream.Position;  // we need that to calculate bitrate
                 result = true;
             }
 
@@ -549,73 +538,142 @@ namespace ATL.AudioData.IO
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
             bool result = true;
-            int oldTagSize, writtenFields;
-            long newTagSize;
-            bool pictureBlockFound = false;
+            int writtenFields;
+            long oldTagSize, newTagSize;
             long cumulativeDelta = 0;
+
+            int existingPicturePosition = 0;
+            int targetPicturePosition = 0;
+
+            int mode;
+
+            // Handling of the 'isLast' bit
+            long latestBlockOffset = -1;
+            byte latestBlockType = 0;
 
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
 
+            IList<PictureInfo> initialPictures = vorbisTag.EmbeddedPictures;
+
             // Prepare picture data with freshly read vorbisTag
             TagData dataToWrite = new TagData();
             dataToWrite.Pictures = vorbisTag.EmbeddedPictures;
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
 
+            int nbExistingPictures = 0;
+            int lastPictureZoneIndex = -1;
+            long lastPictureZoneOffset = -1;
+
+            // Adjust the number of picture zones to the actual number of pictures to be written
+            for (int i = 0; i < zones.Count; i++)
+            {
+                if (zones[i].Name.Equals(META_PICTURE + ""))
+                {
+                    nbExistingPictures++;
+                    lastPictureZoneIndex = i;
+                    lastPictureZoneOffset = zones[i].Offset;
+                }
+            }
+
+            if (nbExistingPictures < dataToWrite.Pictures.Count)
+            {
+                for (int i = 0; i < dataToWrite.Pictures.Count - nbExistingPictures; i++)
+                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "", lastPictureZoneOffset, 0, new byte[0], META_PICTURE));
+            }
+
             // Rewrite vorbis tag zone
             foreach (Zone zone in zones)
             {
                 oldTagSize = zone.Size;
+                mode = MODE_REPLACE;
 
                 // Write new tag to a MemoryStream
                 using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                 {
-                    if (zone.Name.Equals(ZONE_VORBISTAG)) writtenFields = writeVorbisTag(msw, tag, 1 == zone.Flag);
-                    else if (zone.Name.Equals(ZONE_PICTURE))
+                    if (zone.Name.Equals(META_VORBIS_COMMENT + "")) writtenFields = writeVorbisTag(msw, tag);
+                    else if (zone.Name.Equals(PADDING_ZONE_NAME)) writtenFields = writePaddingTag(msw, cumulativeDelta);
+                    else if (zone.Name.Equals(META_PICTURE + ""))
                     {
-                        // All pictures are written at the position of the 1st picture block
-                        // TODO: optimize - when there are more than 1 pictures, a simple neutral update of the file extends the 1st zone to the size of all picture and shrinks all other zones
-                        // => a LOT of unnecessary byte moving
-                        if (!pictureBlockFound) 
+                        bool doWritePicture = false;
+                        PictureInfo pictureToWrite = null;
+                        while (!doWritePicture && dataToWrite.Pictures.Count > targetPicturePosition)
                         {
-                            pictureBlockFound = true;
-                            writtenFields = writePictures(msw, dataToWrite.Pictures, 1 == zone.Flag);
+                            pictureToWrite = dataToWrite.Pictures[targetPicturePosition++];
+
+                            // Picture has either to be supported, or to come from the right tag standard
+                            doWritePicture = !pictureToWrite.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                            if (!doWritePicture) doWritePicture = (MetaDataIOFactory.TAG_NATIVE == pictureToWrite.TagType);
+                            // It also has not to be marked for deletion
+                            doWritePicture = doWritePicture && (!pictureToWrite.MarkedForDeletion);
+                        }
+
+                        if (doWritePicture)
+                        {
+                            bool pictureExists = false;
+                            // Check if the picture to write is already there ('neutral update' use case)
+                            if (initialPictures.Count > existingPicturePosition)
+                            {
+                                PictureInfo existingPic = initialPictures[existingPicturePosition++];
+                                pictureExists = existingPic.ComputePicHash() == pictureToWrite.ComputePicHash(); // No need to rewrite an identical pic
+                            }
+                            if (!pictureExists) writtenFields = writePicture(msw, pictureToWrite);
+                            else
+                            {
+                                mode = MODE_OVERWRITE;
+                                msw.Write(zone.Flag);
+                                writtenFields = 1;
+                            }
                         }
                         else
                         {
-                            writtenFields = 0; // Other picture blocks are erased
+                            writtenFields = 0; // Nothing else to write; existing picture blocks are erased
                         }
                     }
-                    else
+                    else // Unhandled field - write raw header without isLast bit and let the rest as it is
                     {
-                        writtenFields = 0;
+                        mode = MODE_OVERWRITE;
+                        msw.Write(zone.Flag);
+                        writtenFields = 1;
                     }
-
-                    if (0 == writtenFields) s.SetLength(0); // No core signature for metadata in FLAC structure
-
-                    newTagSize = s.Length;
 
                     // -- Adjust tag slot to new size in file --
                     long tagBeginOffset = zone.Offset + cumulativeDelta;
                     long tagEndOffset = tagBeginOffset + zone.Size;
 
-
-                    // TODO optimization : this is the physical file we're editing !
-                    // => there are as many resizing operations as there are zones in the file ?!
-                    if (newTagSize > zone.Size) // Need to build a larger file
+                    // Remember the latest block position
+                    if (writtenFields > 0)
                     {
-                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
+                        latestBlockOffset = tagBeginOffset;
+                        latestBlockType = zone.Flag;
                     }
-                    else if (newTagSize < zone.Size) // Need to reduce file size
+
+                    if (MODE_REPLACE == mode)
                     {
-                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
+                        if (0 == writtenFields) s.SetLength(0); // No core signature for metadata in FLAC structure
+                        newTagSize = s.Length;
+
+                        // TODO optimization : this is the physical file we're editing !
+                        // => there are as many resizing operations as there are zones in the file ?!
+                        if (newTagSize > zone.Size) // Need to build a larger file
+                        {
+                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
+                        }
+                        else if (newTagSize < zone.Size) // Need to reduce file size
+                        {
+                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
+                        }
+                    }
+                    else // Insert mode
+                    {
+                        newTagSize = zone.Size;
                     }
 
                     // Copy tag contents to the new slot
-                    r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                    w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
                     s.Seek(0, SeekOrigin.Begin);
 
                     if (newTagSize > zone.CoreSignature.Length)
@@ -631,17 +689,19 @@ namespace ATL.AudioData.IO
                 }
             } // Loop through zones
 
+            // Set the 'isLast' bit on the actual last block
+            w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
+            w.Write((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
+
             return result;
         }
 
-        private int writeVorbisTag(BinaryWriter w, TagData tag, bool isLast)
+        private int writeVorbisTag(BinaryWriter w, TagData tag)
         {
             int result;
             long sizePos, dataPos, finalPos;
-            byte blockType = META_VORBIS_COMMENT;
-            if (isLast) blockType = (byte)(blockType & FLAG_LAST_METADATA_BLOCK);
 
-            w.Write(blockType);
+            w.Write(META_VORBIS_COMMENT);
             sizePos = w.BaseStream.Position;
             w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
@@ -656,41 +716,37 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writePictures(BinaryWriter w, IList<PictureInfo> pictures, bool isLast)
+        private int writePicture(BinaryWriter w, PictureInfo picture)
         {
-            int result = 0;
             long sizePos, dataPos, finalPos;
-            byte blockType;
 
-            foreach (PictureInfo picture in pictures)
+            w.Write(META_PICTURE);
+
+            sizePos = w.BaseStream.Position;
+            w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
+
+            dataPos = w.BaseStream.Position;
+            vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
+
+            finalPos = w.BaseStream.Position;
+            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
+            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+
+            return 1;
+        }
+
+        private int writePaddingTag(BinaryWriter w, long cumulativeDelta)
+        {
+            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, cumulativeDelta);
+            if (paddingSizeToWrite > 0)
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                bool doWritePicture = !picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (MetaDataIOFactory.TAG_NATIVE == picture.TagType);
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picture.MarkedForDeletion);
-
-                if (doWritePicture)
-                {
-                    blockType = META_PICTURE;
-                    if (isLast) blockType = (byte)(blockType & FLAG_LAST_METADATA_BLOCK);
-
-                    w.Write(blockType);
-                    sizePos = w.BaseStream.Position;
-                    w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
-
-                    dataPos = w.BaseStream.Position;
-                    vorbisTag.WritePicture(w, picture.PictureData, picture.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picture.NativeFormat), picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
-
-                    finalPos = w.BaseStream.Position;
-                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
-                    w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
-                    result++;
-                }
+                w.Write(META_PADDING);
+                w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
+                for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+                return 1;
             }
-
-            return result;
+            else return 0;
         }
 
         public bool Remove(BinaryWriter w)
@@ -698,15 +754,37 @@ namespace ATL.AudioData.IO
             bool result = true;
             long cumulativeDelta = 0;
 
+            // Handling of the 'isLast' bit
+            long latestBlockOffset = -1;
+            byte latestBlockType = 0;
+
             foreach (Zone zone in zones)
             {
                 if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-                    vorbisTag.Clear();
+                    if (zone.Flag == META_PADDING || zone.Flag == META_PICTURE || zone.Flag == META_VORBIS_COMMENT)
+                    {
+                        StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        vorbisTag.Clear();
 
-                    cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                        cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                    }
+                    else
+                    {
+                        latestBlockOffset = zone.Offset - cumulativeDelta;
+                        latestBlockType = zone.Flag;
+
+                        w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
+                        w.Write(latestBlockType);
+                    }
                 }
+            }
+
+            // Set the 'isLast' bit on the actual last block
+            if (latestBlockOffset > -1)
+            {
+                w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
+                w.Write((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
             }
 
             return result;

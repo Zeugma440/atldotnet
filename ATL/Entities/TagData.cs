@@ -159,10 +159,8 @@ namespace ATL
         /// Merge given TagData object with current TagData object
         /// </summary>
         /// <param name="data">TagData object to merge</param>
-        public void IntegrateValues(TagData data)
+        public void IntegrateValues(TagData data, bool integratePictures = true)
         {
-            IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
-
             // String values
             IDictionary<byte, String> newData = data.ToMap();
             foreach (byte key in newData.Keys)
@@ -171,8 +169,10 @@ namespace ATL
             }
 
             // Pictures
-            if (data.Pictures != null)
+            if (integratePictures && data.Pictures != null)
             {
+                IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
+
                 foreach (PictureInfo newPicInfo in data.Pictures)
                 {
                     // New PictureInfo picture type already exists in current TagData

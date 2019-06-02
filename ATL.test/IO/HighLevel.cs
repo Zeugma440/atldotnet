@@ -432,6 +432,7 @@ namespace ATL.test.IO
         public void TagIO_RW_UpdateKeepDataIntegrity()
         {
             Settings.EnablePadding = true;
+            Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
@@ -466,6 +467,7 @@ namespace ATL.test.IO
             finally
             {
                 Settings.EnablePadding = false;
+                Settings.PaddingSize = 2048;
             }
         }
 

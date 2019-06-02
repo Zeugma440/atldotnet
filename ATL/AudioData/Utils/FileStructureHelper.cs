@@ -13,6 +13,7 @@ namespace ATL.AudioData
     public class FileStructureHelper
     {
         public const string DEFAULT_ZONE_NAME = "default"; // Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
+        public const string PADDING_ZONE_NAME = "padding"; // Zone name to be used for padding
 
         // Type of action to react to
         public const int ACTION_EDIT    = 0; // Existing zone is edited, and not removed
@@ -33,19 +34,19 @@ namespace ATL.AudioData
             /// <summary>
             /// Header type (allowed values are TYPE_XXX within FrameHeader class)
             /// </summary>
-            public byte Type;
+            public readonly byte Type;
             /// <summary>
             /// Position of the header
             /// </summary>
-            public long Position;
+            public readonly long Position;
+            /// <summary>
+            /// True if header value is stored using little-endian convention; false if big-endian
+            /// </summary>
+            public readonly bool IsLittleEndian;
             /// <summary>
             /// Current value of the header (counter : number of frames / size : frame size / index : frame index (absolute) / rindex : frame index (relative to header position))
             /// </summary>
             public object Value;
-            /// <summary>
-            /// True if header value is stored using little-endian convention; false if big-endian
-            /// </summary>
-            public bool IsLittleEndian;
 
             /// <summary>
             /// Constructs a new frame header using the given field values
@@ -105,16 +106,16 @@ namespace ATL.AudioData
         }
 
         // Recorded zones
-        private IDictionary<string, Zone> zones;
+        private readonly IDictionary<string, Zone> zones;
         
         // Stores offset variations caused by zone editing (add/remove/shrink/expand) within current file
         //      Dictionary key  : zone name
         //      KVP Key         : initial end offset of given zone (i.e. position of last byte within zone)
         //      KVP Value       : variation applied to given zone (can be positive or negative)
-        private IDictionary<string,KeyValuePair<long, long>> dynamicOffsetCorrection = new Dictionary<string,KeyValuePair<long,long>>();
+        private readonly IDictionary<string,KeyValuePair<long, long>> dynamicOffsetCorrection = new Dictionary<string,KeyValuePair<long,long>>();
         
         // True if attached file uses little-endian convention for number representation; false if big-endian
-        private bool isLittleEndian;
+        private readonly bool isLittleEndian;
 
 
         /// <summary>

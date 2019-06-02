@@ -70,7 +70,7 @@ namespace ATL
         /// </summary>
         /// <param name="from">Stream to start copy from</param>
         /// <param name="to">Stream to copy to</param>
-        /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the stream)</param>
+        /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the 'from' stream)</param>
         public static void CopyStream(Stream from, Stream to, int length = 0)
         {
             byte[] data = new byte[BUFFERSIZE];

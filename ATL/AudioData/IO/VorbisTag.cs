@@ -82,9 +82,6 @@ namespace ATL.AudioData.IO
             this.writeMetadataFramingBit = writeMetadataFramingBit;
             this.hasCoreSignature = hasCoreSignature;
 
-            initialPaddingOffset = -1;
-            initialPaddingSize = 0;
-
             ResetData();
         }
 
@@ -305,6 +302,9 @@ namespace ATL.AudioData.IO
             bool result = true;
 
             // ResetData(); <-- no; that calls resets image data when VorbisTag is managed by FLAC. ResetData has to be called manually by using Clear
+            // Resets stuff anyway
+            initialPaddingOffset = -1;
+            initialPaddingSize = 0;
 
             /// TODO - check if still useful
             if (readTagParams.PrepareForWriting && !readTagParams.ReadPictures)
@@ -378,7 +378,7 @@ namespace ATL.AudioData.IO
         {
             int result;
             TagData dataToWrite = tagData;
-            dataToWrite.IntegrateValues(tag); // Write existing information + new tag information
+            dataToWrite.IntegrateValues(tag, writePicturesWithMetadata); // Write existing information + new tag information
             dataToWrite.Cleanup();
 
             // Write new tag to a MemoryStream
@@ -420,7 +420,7 @@ namespace ATL.AudioData.IO
 
             // PADDING MANAGEMENT
             // Write the remaining padding bytes, if any detected during initial reading
-            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingOffset, initialPaddingSize, w.BaseStream.Position);
+            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
             if (paddingSizeToWrite > 0)
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
 
