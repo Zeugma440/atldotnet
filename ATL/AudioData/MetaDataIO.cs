@@ -704,6 +704,8 @@ namespace ATL.AudioData.IO
                 using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                 {
+                    if (zone.Name.Equals(FileStructureHelper.PADDING_ZONE_NAME)) dataToWrite.DataSizeDelta = cumulativeDelta;
+
                     if (write(dataToWrite, msw, zone.Name) > 0)
                     {
                         isTagWritten = true;
@@ -816,7 +818,7 @@ namespace ATL.AudioData.IO
 
             foreach (Zone zone in Zones)
             {
-                if (zone.Offset > -1)
+                if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
                 {
                     if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
@@ -825,7 +827,7 @@ namespace ATL.AudioData.IO
                         w.BaseStream.Position = zone.Offset - cumulativeDelta;
                         w.Write(zone.CoreSignature);
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, FileStructureHelper.ACTION_DELETE, zone.Name);
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, ACTION_DELETE, zone.Name);
 
                     cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }

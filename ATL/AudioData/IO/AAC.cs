@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Commons;
 using static ATL.ChannelsArrangements;
+using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
@@ -1056,6 +1057,19 @@ namespace ATL.AudioData.IO
                 }
             }
 
+            bool paddingFound = false;
+            // Seek the generic padding atom
+            if (readTagParams.PrepareForWriting)
+            {
+                source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+                uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
+                if (initialPaddingSize > 0)
+                {
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
+                    paddingFound = true;
+                }
+            }
+
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -1066,6 +1080,9 @@ namespace ATL.AudioData.IO
                 return;
             }
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
+
+            if (readTagParams.PrepareForWriting && Settings.EnablePadding && !paddingFound)
+                structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
         }
 
         /// <summary>
@@ -1117,6 +1134,7 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             ResetData();
+
             headerTypeID = recognizeHeaderType(source);
             // Read header data
             if (AAC_HEADER_TYPE_ADIF == headerTypeID) readADIF(source);
@@ -1134,7 +1152,7 @@ namespace ATL.AudioData.IO
             uint tagSize;
             int result = 0;
 
-            if (FileStructureHelper.DEFAULT_ZONE_NAME.Equals(zone))
+            if (DEFAULT_ZONE_NAME.Equals(zone))
             {
                 // ============
                 // == HEADER ==
@@ -1158,6 +1176,19 @@ namespace ATL.AudioData.IO
             else if (ZONE_MP4_NEROCHAPTERS.Equals(zone)) // Nero chapters
             {
                 result = writeNeroChapters(w, Chapters);
+            }
+            else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
+            {
+                Zone z = structureHelper.GetZone(zone);
+                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, tag.DataSizeDelta);
+
+                if (paddingSizeToWrite > 0)
+                {
+                    w.Write(StreamUtils.EncodeBEUInt32((uint)paddingSizeToWrite));
+                    w.Write(Utils.Latin1Encoding.GetBytes("free"));
+                        for (int i = 0; i < paddingSizeToWrite - 8; i++) w.Write((byte)0);
+                    result = 1;
+                }
             }
 
             return result;

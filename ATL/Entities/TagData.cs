@@ -98,6 +98,11 @@ namespace ATL
         /// </summary>
         public int DiscDigitsForLeadingZeroes = 0;
 
+        /// <summary>
+        /// Current delta of written data size vs. initial data size
+        /// </summary>
+        public long DataSizeDelta = 0;
+
 #pragma warning restore S1104 // Fields should not have public accessibility
 
         public TagData()
