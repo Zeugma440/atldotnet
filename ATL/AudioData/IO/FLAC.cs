@@ -423,7 +423,10 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false, false);
+            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false, false, false);
+
+            initialPaddingOffset = -1;
+            initialPaddingSize = 0;
 
             byte[] aMetaDataBlockHeader;
             long position;
@@ -614,10 +617,12 @@ namespace ATL.AudioData.IO
                         // TODO optimization : this is the physical file we're editing !
                         if (newTagSize > zone.Size) // Need to build a larger file
                         {
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Lengthening (delta=" + (newTagSize - zone.Size) + ")");
                             StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
                         }
                         else if (newTagSize < zone.Size) // Need to reduce file size
                         {
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
                             StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
                         }
                     }
@@ -699,7 +704,7 @@ namespace ATL.AudioData.IO
 
         private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta)
         {
-            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, cumulativeDelta);
+            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -cumulativeDelta);
             if (paddingSizeToWrite > 0)
             {
                 w.Write(META_PADDING);

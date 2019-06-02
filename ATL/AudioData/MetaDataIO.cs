@@ -756,10 +756,12 @@ namespace ATL.AudioData.IO
                     // Need to build a larger file
                     if (newTagSize > zone.Size)
                     {
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Lengthening (delta="+ (newTagSize - zone.Size)+")");
                         StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
                     }
                     else if (newTagSize < zone.Size) // Need to reduce file size
                     {
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
                         StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
                     }
 

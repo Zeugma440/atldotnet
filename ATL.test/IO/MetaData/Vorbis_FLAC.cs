@@ -175,86 +175,95 @@ namespace ATL.test.IO.MetaData
 
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            Settings.EnablePadding = true;
+            Settings.PaddingSize = 4063; // Default padding of the sample FLAC file
 
-            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            string location = TestUtils.GetResourceLocationRoot() + fileName;
-            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            // Add a new supported field and a new supported picture
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            TagData theTag = new TagData();
-            theTag.Conductor = "John Jackman";
-
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
-            theTag.Pictures.Add(picInfo);
-
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-            readExistingTagsOnFile(theFile, initialNbPictures + 1);
-
-            // Additional supported field
-            Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
-
-            int nbFound = 0;
-            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
+            try
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
+                ConsoleLogger log = new ConsoleLogger();
+
+                // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+                string location = TestUtils.GetResourceLocationRoot() + fileName;
+                string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
+                AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                // Add a new supported field and a new supported picture
+                Assert.IsTrue(theFile.ReadFromFile());
+
+                TagData theTag = new TagData();
+                theTag.Conductor = "John Jackman";
+
+                PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
+                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+                theTag.Pictures.Add(picInfo);
+
+
+                // Add the new tag and check that it has been indeed added with all the correct information
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                readExistingTagsOnFile(theFile, initialNbPictures + 1);
+
+                // Additional supported field
+                Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
+
+                int nbFound = 0;
+                foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
                 {
-                    Assert.AreEqual(0x06, pic.NativePicCode);
-                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
                     {
-                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Assert.AreEqual(600, picture.Height);
-                        Assert.AreEqual(900, picture.Width);
+                        Assert.AreEqual(0x06, pic.NativePicCode);
+                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                        {
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(600, picture.Height);
+                            Assert.AreEqual(900, picture.Width);
+                        }
+                        nbFound++;
+                        break;
                     }
-                    nbFound++;
-                    break;
                 }
+
+                Assert.AreEqual(1, nbFound);
+
+                // Remove the additional supported field
+                theTag = new TagData();
+                theTag.Conductor = "";
+
+                // Remove additional picture
+                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
+                picInfo.MarkedForDeletion = true;
+                theTag.Pictures.Add(picInfo);
+
+                // Add the new tag and check that it has been indeed added with all the correct information
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                readExistingTagsOnFile(theFile, initialNbPictures);
+
+                // Additional removed field
+                Assert.AreEqual("", theFile.NativeTag.Conductor);
+
+
+                // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+                Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                /*
+                 * Not possible yet due to field order differences
+                 * 
+                string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+
+                Assert.IsTrue(originalMD5.Equals(testMD5));
+                */
+
+                // Get rid of the working copy
+                if (deleteTempFile) File.Delete(testFileLocation);
+            } finally {
+                Settings.EnablePadding = false;
+                Settings.PaddingSize = 2048;
             }
-
-            Assert.AreEqual(1, nbFound);
-
-            // Remove the additional supported field
-            theTag = new TagData();
-            theTag.Conductor = "";
-
-            // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.CD);
-            picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-            readExistingTagsOnFile(theFile, initialNbPictures);
-
-            // Additional removed field
-            Assert.AreEqual("", theFile.NativeTag.Conductor);
-
-
-            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
-            FileInfo originalFileInfo = new FileInfo(location);
-            FileInfo testFileInfo = new FileInfo(testFileLocation);
-
-            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
-
-            /*
-             * Not possible yet due to field order differences
-             * 
-            string originalMD5 = TestUtils.GetFileMD5Hash(location);
-            string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            Assert.IsTrue(originalMD5.Equals(testMD5));
-            */
-
-            // Get rid of the working copy
-            if (deleteTempFile) File.Delete(testFileLocation);
         }
 
         private void checkTrackDiscZeroes(FileStream fs)

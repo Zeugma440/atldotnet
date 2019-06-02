@@ -5,6 +5,8 @@ using System.Drawing;
 using ATL.test.IO.MetaData;
 using System.Collections.Generic;
 using Commons;
+using ATL.Logging;
+using static ATL.Logging.Log;
 
 namespace ATL.test.IO
 {
@@ -228,6 +230,81 @@ namespace ATL.test.IO
             tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
         }
 
+        private void tagIO_RW_UpdatePadding(string resource, int paddingSize = 2048, bool skipStreamChecks = false)
+        {
+            Settings.PaddingSize = paddingSize;
+            try
+            {
+                ArrayLogger log = new ArrayLogger();
+                string location = TestUtils.GetResourceLocationRoot() + resource;
+                string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+                Track theTrack = new Track(testFileLocation);
+
+                string originalTitle = theTrack.Title;
+
+                // Test the use of padding without padding option on
+
+                // A1- Check that the resulting file (working copy that has been processed) keeps the same quantity of bytes when adding data
+                theTrack.Title = originalTitle + "1234567890";
+                theTrack.Save();
+
+                // A11- File length should be the same
+                FileInfo originalFileInfo = new FileInfo(location);
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+                Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                // A12- No stream manipulation should have occurred
+                IList<LogItem> logItems = log.GetAllItems(LV_DEBUG);
+                foreach (LogItem item in logItems)
+                {
+                    if (!skipStreamChecks && item.Message.StartsWith("Data stream operation : "))
+                    {
+                        Assert.Fail(item.Message);
+                    }
+                }
+
+                // A2- Check that the resulting file (working copy that has been processed) keeps the same quantity of bytes when removing data
+                theTrack.Title = originalTitle;
+                theTrack.Save();
+
+                // A21- File length should be the same
+                originalFileInfo = new FileInfo(location);
+                testFileInfo = new FileInfo(testFileLocation);
+
+                Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+                // A22- No stream manipulation should have occurred
+                logItems = log.GetAllItems(LV_DEBUG);
+                foreach (LogItem item in logItems)
+                {
+                    if (!skipStreamChecks && item.Message.StartsWith("Data stream operation : "))
+                    {
+                        Assert.Fail(item.Message);
+                    }
+                }
+
+
+                // TODO : B- Check that new padding is added to empty files when option is enabled
+
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            } finally
+            {
+                Settings.PaddingSize = 2048;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_Padding()
+        {
+            tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
+            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063, true); // padded Vorbis-FLAC -- TODO performance issue here
+            tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
+            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 2048, true); // padded MP4 -- TODO performance issue here
+        }
+
         [TestMethod]
         public void TagIO_RW_AddRemoveTagAdditionalField()
         {
@@ -327,10 +404,12 @@ namespace ATL.test.IO
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front))
                 {
                     foundFront = true;
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Width, 900);
-                    Assert.AreEqual(picture.Height, 290);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        Assert.AreEqual(900, picture.Width);
+                        Assert.AreEqual(290, picture.Height);
+                    }
                 }
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)) foundConductor = true;
             }
@@ -432,7 +511,6 @@ namespace ATL.test.IO
         public void TagIO_RW_UpdateKeepDataIntegrity()
         {
             Settings.EnablePadding = true;
-            Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
@@ -441,7 +519,7 @@ namespace ATL.test.IO
                 string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
                 Track theTrack = new Track(testFileLocation);
 
-                string initialArtist = theTrack.Artist;
+                string initialArtist = theTrack.Artist; // '֎FATHER֎'
                 theTrack.Artist = "Hey ho";
                 theTrack.Save();
 
@@ -467,7 +545,6 @@ namespace ATL.test.IO
             finally
             {
                 Settings.EnablePadding = false;
-                Settings.PaddingSize = 2048;
             }
         }
 

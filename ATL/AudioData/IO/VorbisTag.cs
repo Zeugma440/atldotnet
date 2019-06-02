@@ -70,17 +70,20 @@ namespace ATL.AudioData.IO
         private readonly bool writeMetadataFramingBit;
         // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
         private readonly bool hasCoreSignature;
+        // Tweak to enable/disable padding management at VorbisComment level (OGG vs. FLAC behaviour)
+        private readonly bool managePadding;
 
         // Initial offset of the padding block; used to handle padding the smart way when rewriting data
         private long initialPaddingOffset, initialPaddingSize;
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
-        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature)
+        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature, bool managePadding)
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;
             this.writeMetadataFramingBit = writeMetadataFramingBit;
             this.hasCoreSignature = hasCoreSignature;
+            this.managePadding = managePadding;
 
             ResetData();
         }
@@ -420,10 +423,12 @@ namespace ATL.AudioData.IO
 
             // PADDING MANAGEMENT
             // Write the remaining padding bytes, if any detected during initial reading
-            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
-            if (paddingSizeToWrite > 0)
-                for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
-
+            if (managePadding)
+            {
+                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
+                if (paddingSizeToWrite > 0)
+                    for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+            }
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(counterPos, SeekOrigin.Begin);

@@ -14,16 +14,9 @@ namespace ATL.AudioData.IO
     /// 
     /// Implementation notes
     /// 
-    ///     1. Tag edition optimization through the use of padding frames
-    /// 
-    ///     Current implementation doesn't use the extra space allocated by 'free' padding frames, and pulls/pushes the 'mdat' frame regardless of the size of the edited data.
-    ///     A faster, more optimized way of doing things would be to use padding space as far as edited data size fits into it, thus preventing the entire file to be rewritten.
+    ///     1. LATM and LOAS/LATM support is missing
     ///     
-    ///     2. LATM and LOAS/LATM support is missing
-    ///     
-    ///     3. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
-    ///     
-    ///     
+    ///     2. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
     /// 
     /// </summary>
 	class AAC : MetaDataIO, IAudioDataIO
@@ -1180,7 +1173,7 @@ namespace ATL.AudioData.IO
             else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
             {
                 Zone z = structureHelper.GetZone(zone);
-                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, tag.DataSizeDelta);
+                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, -tag.DataSizeDelta);
 
                 if (paddingSizeToWrite > 0)
                 {
