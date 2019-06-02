@@ -612,7 +612,6 @@ namespace ATL.AudioData.IO
                         newTagSize = s.Length;
 
                         // TODO optimization : this is the physical file we're editing !
-                        // => there are as many resizing operations as there are zones in the file ?!
                         if (newTagSize > zone.Size) // Need to build a larger file
                         {
                             StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
