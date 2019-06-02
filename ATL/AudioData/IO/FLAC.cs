@@ -586,9 +586,9 @@ namespace ATL.AudioData.IO
                 using (MemoryStream s = new MemoryStream(zone.Size))
                 using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                 {
-                    if (zone.Name.Equals(META_VORBIS_COMMENT + "")) result = writeVorbisTag(msw, tag);
-                    else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingTag(msw, cumulativeDelta);
-                    else if (zone.Name.Equals(META_PICTURE + "")) result = tryWritePicture(msw, initialPictures, dataToWrite.Pictures, ref existingPictureIndex, ref targetPictureIndex);
+                    if (zone.Name.Equals(META_VORBIS_COMMENT + "")) result = writeVorbisCommentBlock(msw, tag);
+                    else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(msw, cumulativeDelta);
+                    else if (zone.Name.Equals(META_PICTURE + "")) result = processPictureBlock(msw, initialPictures, dataToWrite.Pictures, ref existingPictureIndex, ref targetPictureIndex);
                     else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
                     {
                         msw.Write(zone.Flag);
@@ -679,7 +679,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private WriteResult writeVorbisTag(BinaryWriter w, TagData tag)
+        private WriteResult writeVorbisCommentBlock(BinaryWriter w, TagData tag)
         {
             long sizePos, dataPos, finalPos;
 
@@ -698,7 +698,7 @@ namespace ATL.AudioData.IO
             return new WriteResult(MODE_REPLACE, writtenFields);
         }
 
-        private WriteResult writePaddingTag(BinaryWriter w, long cumulativeDelta)
+        private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta)
         {
             long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, cumulativeDelta);
             if (paddingSizeToWrite > 0)
@@ -711,7 +711,20 @@ namespace ATL.AudioData.IO
             else return new WriteResult(MODE_REPLACE, 0);
         }
 
-        private WriteResult tryWritePicture(BinaryWriter w, IList<PictureInfo> initialPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
+        /// <summary>
+        /// Process picture block at the index 'targetPictureIndex'
+        /// Three outcomes :
+        ///     1/ Target picture cannot be written => block is marked for deletion
+        ///     2/ Target picture can be written and is identical to existing picture at the same position => block is left as it is
+        ///     3/ Target picture can be written and is different to existing picture at the same position => target picture is written
+        /// </summary>
+        /// <param name="w">Writer to be used</param>
+        /// <param name="existingPictures">List of existing pictures on the file</param>
+        /// <param name="picturesToWrite">List of pictures to write</param>
+        /// <param name="existingPictureIndex">Current index of existing pictures in use in the main write loop</param>
+        /// <param name="targetPictureIndex">Current index of target pictures in use in the main write loop</param>
+        /// <returns></returns>
+        private WriteResult processPictureBlock(BinaryWriter w, IList<PictureInfo> existingPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
         {
             bool doWritePicture = false;
             PictureInfo pictureToWrite = null;
@@ -730,12 +743,12 @@ namespace ATL.AudioData.IO
             {
                 bool pictureExists = false;
                 // Check if the picture to write is already there ('neutral update' use case)
-                if (initialPictures.Count > existingPictureIndex)
+                if (existingPictures.Count > existingPictureIndex)
                 {
-                    PictureInfo existingPic = initialPictures[existingPictureIndex++];
+                    PictureInfo existingPic = existingPictures[existingPictureIndex++];
                     pictureExists = existingPic.ComputePicHash() == pictureToWrite.ComputePicHash(); // No need to rewrite an identical pic
                 }
-                if (!pictureExists) return new WriteResult(MODE_REPLACE, writePicture(w, pictureToWrite));
+                if (!pictureExists) return new WriteResult(MODE_REPLACE, writePictureBlock(w, pictureToWrite));
                 else
                 {
                     w.Write(META_PICTURE);
@@ -745,7 +758,7 @@ namespace ATL.AudioData.IO
             else return new WriteResult(MODE_REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
-        private int writePicture(BinaryWriter w, PictureInfo picture)
+        private int writePictureBlock(BinaryWriter w, PictureInfo picture)
         {
             long sizePos, dataPos, finalPos;
 
