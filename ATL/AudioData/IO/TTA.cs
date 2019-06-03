@@ -123,8 +123,6 @@ namespace ATL.AudioData.IO
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            char[] signatureChunk = new char[4];
-
             this.sizeInfo = sizeInfo;
             resetData();
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);

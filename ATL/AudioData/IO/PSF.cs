@@ -9,29 +9,29 @@ using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
-	/// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+    /// <summary>
+    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
-	/// </summary>
-	class PSF : MetaDataIO, IAudioDataIO
-	{
-		// Format Type Names
-		public const String PSF_FORMAT_UNKNOWN = "Unknown";
-		public const String PSF_FORMAT_PSF1 = "Playstation";
-		public const String PSF_FORMAT_PSF2 = "Playstation 2";
-		public const String PSF_FORMAT_SSF = "Saturn";
-		public const String PSF_FORMAT_DSF = "Dreamcast";
-		public const String PSF_FORMAT_USF = "Nintendo 64";
-		public const String PSF_FORMAT_QSF = "Capcom QSound";
+    /// </summary>
+    class PSF : MetaDataIO, IAudioDataIO
+    {
+        // Format Type Names
+        public const String PSF_FORMAT_UNKNOWN = "Unknown";
+        public const String PSF_FORMAT_PSF1 = "Playstation";
+        public const String PSF_FORMAT_PSF2 = "Playstation 2";
+        public const String PSF_FORMAT_SSF = "Saturn";
+        public const String PSF_FORMAT_DSF = "Dreamcast";
+        public const String PSF_FORMAT_USF = "Nintendo 64";
+        public const String PSF_FORMAT_QSF = "Capcom QSound";
 
-		// Tag predefined fields
-		public const String TAG_LENGTH = "length";
-		public const String TAG_FADE = "fade";
+        // Tag predefined fields
+        public const String TAG_LENGTH = "length";
+        public const String TAG_FADE = "fade";
 
-		private const String PSF_FORMAT_TAG = "PSF";
-		private const String TAG_HEADER = "[TAG]";
-		private const uint HEADER_LENGTH = 16;
+        private const String PSF_FORMAT_TAG = "PSF";
+        private const String TAG_HEADER = "[TAG]";
+        private const uint HEADER_LENGTH = 16;
 
         private const byte LINE_FEED = 0x0A;
         private const byte SPACE = 0x20;
@@ -54,17 +54,17 @@ namespace ATL.AudioData.IO
 
         // AudioDataIO
         public int SampleRate // Sample rate (hz)
-		{
-			get { return this.sampleRate; }
-		}	
+        {
+            get { return this.sampleRate; }
+        }
         public bool IsVBR
-		{
-			get { return false; }
-		}
-		public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_SEQ_WAV; }
-		}
+        {
+            get { return false; }
+        }
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_SEQ_WAV; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -109,32 +109,32 @@ namespace ATL.AudioData.IO
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
         private class PSFHeader
-		{
-			public String FormatTag;					// Format tag (should be PSF_FORMAT_TAG)
-			public byte VersionByte;					// Version mark
-			public uint ReservedAreaLength;				// Length of reserved area (bytes)
-			public uint CompressedProgramLength;		// Length of compressed program (bytes)
+        {
+            public String FormatTag;                    // Format tag (should be PSF_FORMAT_TAG)
+            public byte VersionByte;                    // Version mark
+            public uint ReservedAreaLength;             // Length of reserved area (bytes)
+            public uint CompressedProgramLength;        // Length of compressed program (bytes)
 
-			public void Reset()
-			{
-				FormatTag = "";
-				VersionByte = 0;
-				ReservedAreaLength = 0;
-				CompressedProgramLength = 0;
-			}
-		}
+            public void Reset()
+            {
+                FormatTag = "";
+                VersionByte = 0;
+                ReservedAreaLength = 0;
+                CompressedProgramLength = 0;
+            }
+        }
 
-		private class PSFTag
-		{
-			public String TagHeader;					// Tag header (should be TAG_HEADER)
+        private class PSFTag
+        {
+            public String TagHeader;					// Tag header (should be TAG_HEADER)
             public int size;
 
-			public void Reset()
-			{
-				TagHeader = "";
+            public void Reset()
+            {
+                TagHeader = "";
                 size = 0;
-			}
-		}
+            }
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -183,23 +183,23 @@ namespace ATL.AudioData.IO
         // ---------- SUPPORT METHODS
 
         private bool readHeader(BinaryReader source, ref PSFHeader header)
-		{
+        {
             header.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
-			if (PSF_FORMAT_TAG == header.FormatTag)
-			{
-				header.VersionByte = source.ReadByte();
-				header.ReservedAreaLength = source.ReadUInt32();
-				header.CompressedProgramLength = source.ReadUInt32();
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
+            if (PSF_FORMAT_TAG == header.FormatTag)
+            {
+                header.VersionByte = source.ReadByte();
+                header.ReservedAreaLength = source.ReadUInt32();
+                header.CompressedProgramLength = source.ReadUInt32();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         private string readPSFLine(Stream source, Encoding encoding)
-		{
+        {
             long lineStart = source.Position;
             long lineEnd;
             bool hasEOL = true;
@@ -219,35 +219,35 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[lineEnd - lineStart];
             source.Read(data, 0, data.Length);
 
-            for (int i=0;i<data.Length; i++) if (data[i] < SPACE) data[i] = SPACE; // According to spec : "All characters 0x01-0x20 are considered whitespace"
+            for (int i = 0; i < data.Length; i++) if (data[i] < SPACE) data[i] = SPACE; // According to spec : "All characters 0x01-0x20 are considered whitespace"
 
-            return encoding.GetString(data,0,data.Length - (hasEOL?1:0) ).Trim(); // -1 because we don't want to include LINE_FEED in the result
-		}
+            return encoding.GetString(data, 0, data.Length - (hasEOL ? 1 : 0)).Trim(); // -1 because we don't want to include LINE_FEED in the result
+        }
 
         private bool readTag(BinaryReader source, ref PSFTag tag, ReadTagParams readTagParams)
-		{
+        {
             long initialPosition = source.BaseStream.Position;
             Encoding encoding = Utils.Latin1Encoding;
 
             tag.TagHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(5));
-			if (TAG_HEADER == tag.TagHeader)
-			{
-				string s = readPSFLine(source.BaseStream, encoding);
-				
-				int equalIndex;
+            if (TAG_HEADER == tag.TagHeader)
+            {
+                string s = readPSFLine(source.BaseStream, encoding);
+
+                int equalIndex;
                 string keyStr, valueStr, lowKeyStr;
                 string lastKey = "";
                 string lastValue = "";
                 bool lengthFieldFound = false;
 
-				while ( s != "" )
-				{
-					equalIndex = s.IndexOf("=");
-					if (equalIndex != -1)
-					{
-						keyStr = s.Substring(0,equalIndex).Trim();
+                while (s != "")
+                {
+                    equalIndex = s.IndexOf("=");
+                    if (equalIndex != -1)
+                    {
+                        keyStr = s.Substring(0, equalIndex).Trim();
                         lowKeyStr = keyStr.ToLower();
-						valueStr = s.Substring(equalIndex+1, s.Length-(equalIndex+1)).Trim();
+                        valueStr = s.Substring(equalIndex + 1, s.Length - (equalIndex + 1)).Trim();
 
                         if (lowKeyStr.Equals("utf8") && valueStr.Equals("1")) encoding = Encoding.UTF8;
 
@@ -260,7 +260,7 @@ namespace ATL.AudioData.IO
                         // PSF specifics : a field appearing more than once is the same field, with values spanning over multiple lines
                         if (lastKey.Equals(keyStr))
                         {
-                            lastValue +=  Environment.NewLine + valueStr;
+                            lastValue += Environment.NewLine + valueStr;
                         }
                         else
                         {
@@ -268,10 +268,10 @@ namespace ATL.AudioData.IO
                             lastValue = valueStr;
                         }
                         lastKey = keyStr;
-					}
+                    }
 
-					s = readPSFLine(source.BaseStream, encoding);
-				} // Metadata lines 
+                    s = readPSFLine(source.BaseStream, encoding);
+                } // Metadata lines 
                 SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
@@ -282,72 +282,72 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(initialPosition, tag.size);
                 }
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
-		private double parsePSFDuration(String durationStr)
-		{
-			String hStr = "";
-			String mStr = "";
-			String sStr = "";
-			String dStr = "";
-			double result = 0;
+        private double parsePSFDuration(String durationStr)
+        {
+            String hStr = "";
+            String mStr = "";
+            String sStr = "";
+            String dStr = "";
+            double result = 0;
 
-			int sepIndex;
+            int sepIndex;
 
-			// decimal
-			sepIndex = durationStr.LastIndexOf(".");
-			if (-1 == sepIndex) sepIndex = durationStr.LastIndexOf(",");
+            // decimal
+            sepIndex = durationStr.LastIndexOf(".");
+            if (-1 == sepIndex) sepIndex = durationStr.LastIndexOf(",");
 
-			if (-1 != sepIndex)
-			{
-				sepIndex++;
-				dStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
-				durationStr = durationStr.Substring(0,Math.Max(0,sepIndex-1));
-			}
+            if (-1 != sepIndex)
+            {
+                sepIndex++;
+                dStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
+                durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
+            }
 
-			
-			// seconds
-			sepIndex = durationStr.LastIndexOf(":");
 
-			sepIndex++;
-			sStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
+            // seconds
+            sepIndex = durationStr.LastIndexOf(":");
+
+            sepIndex++;
+            sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
             //if (1 == sStr.Length) sStr = sStr + "0"; // "2:2" means 2:20 and not 2:02
 
-			durationStr = durationStr.Substring(0,Math.Max(0,sepIndex-1));
+            durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
 
-			// minutes
-			if (durationStr.Length > 0)
-			{
-				sepIndex = durationStr.LastIndexOf(":");
-				
-				sepIndex++;
-				mStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
+            // minutes
+            if (durationStr.Length > 0)
+            {
+                sepIndex = durationStr.LastIndexOf(":");
 
-				durationStr = durationStr.Substring(0,Math.Max(0,sepIndex-1));
-			}
+                sepIndex++;
+                mStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
 
-			// hours
-			if (durationStr.Length > 0)
-			{
-				sepIndex = durationStr.LastIndexOf(":");
-				
-				sepIndex++;
-				hStr = durationStr.Substring(sepIndex,durationStr.Length-sepIndex);
-			}
+                durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
+            }
 
-			if (dStr != "") result = result + (Int32.Parse(dStr) * 100);
-			if (sStr != "") result = result + (Int32.Parse(sStr) * 1000);
-			if (mStr != "") result = result + (Int32.Parse(mStr) * 60000);
-			if (hStr != "") result = result + (Int32.Parse(hStr) * 3600000);
-			
-			return result;
-		}
+            // hours
+            if (durationStr.Length > 0)
+            {
+                sepIndex = durationStr.LastIndexOf(":");
+
+                sepIndex++;
+                hStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
+            }
+
+            if (dStr != "") result = result + (Int32.Parse(dStr) * 100);
+            if (sStr != "") result = result + (Int32.Parse(sStr) * 1000);
+            if (mStr != "") result = result + (Int32.Parse(mStr) * 60000);
+            if (hStr != "") result = result + (Int32.Parse(hStr) * 3600000);
+
+            return result;
+        }
 
         // === PUBLIC METHODS ===
 
@@ -361,29 +361,29 @@ namespace ATL.AudioData.IO
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
-			PSFHeader header = new PSFHeader();
-			PSFTag tag = new PSFTag();
+            PSFHeader header = new PSFHeader();
+            PSFTag tag = new PSFTag();
 
             header.Reset();
             tag.Reset();
             resetData();
 
             isValid = readHeader(source, ref header);
-			if ( !isValid ) throw new Exception("Not a PSF file");
+            if (!isValid) throw new InvalidDataException("Not a PSF file");
 
-			if (source.BaseStream.Length > HEADER_LENGTH+header.CompressedProgramLength+header.ReservedAreaLength)
-			{
-				source.BaseStream.Seek((long)(4+header.CompressedProgramLength+header.ReservedAreaLength),SeekOrigin.Current);
+            if (source.BaseStream.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
+            {
+                source.BaseStream.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
 
-                if (!readTag(source, ref tag, readTagParams)) throw new Exception("Not a PSF tag");
+                if (!readTag(source, ref tag, readTagParams)) throw new InvalidDataException("Not a PSF tag");
 
                 tagExists = true;
-			} 
+            }
 
-            bitrate = (sizeInfo.FileSize-tag.size)* 8 / duration;
+            bitrate = (sizeInfo.FileSize - tag.size) * 8 / duration;
 
-			return result;
-		}
+            return result;
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
@@ -466,7 +466,7 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode) )
+                if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;

@@ -439,8 +439,7 @@ namespace ATL.AudioData.IO
 
             if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
             {
-                result = false;
-                throw new Exception(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
+                throw new InvalidDataException(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
             }
 
             tagExists = true;
@@ -464,7 +463,7 @@ namespace ATL.AudioData.IO
 
             flags = bSource.ReadUInt16();
 
-            useSamplesAsInstruments = !((flags & 0x04) > 0);
+            useSamplesAsInstruments = (flags & 0x04) <= 0;
 
             special = bSource.ReadUInt16();
 
@@ -526,7 +525,6 @@ namespace ATL.AudioData.IO
             if ((special & 0x1) > 0)
             {
                 bSource.Seek(messageOffset, SeekOrigin.Begin);
-                //message = new String( StreamUtils.ReadOneByteChars(source, messageLength) );
                 message = StreamUtils.ReadNullTerminatedStringFixed(bSource, Utils.Latin1Encoding, messageLength);
             }
 

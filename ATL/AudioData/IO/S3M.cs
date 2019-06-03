@@ -436,7 +436,7 @@ namespace ATL.AudioData.IO
             if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
             {
                 result = false;
-                throw new Exception("Invalid S3M file (file signature mismatch)");
+                throw new InvalidDataException("Invalid S3M file (file signature mismatch)");
             }
             bSource.Seek(1, SeekOrigin.Current); // globalVolume (8b)
 

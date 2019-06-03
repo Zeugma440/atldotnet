@@ -63,7 +63,7 @@ namespace ATL.AudioData.IO
         */
 
 
-        private class wavpack_header3
+        private class WavpackHeader3
         {
             public char[] ckID = new char[4];
             public uint ckSize;
@@ -95,7 +95,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class wavpack_header4
+        private class WavPackHeader4
         {
             public char[] ckID = new char[4];
             public uint ckSize;
@@ -123,7 +123,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private struct fmt_chunk
+        private struct FormatChunk
         {
             public ushort wformattag;
             public ushort wchannels;
@@ -133,7 +133,7 @@ namespace ATL.AudioData.IO
             public ushort wbitspersample;
         }
 
-        private class riff_chunk
+        private class RiffChunk
         {
             public char[] id = new char[4];
             public uint size;
@@ -253,8 +253,7 @@ namespace ATL.AudioData.IO
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            char[] marker = new char[4];
-
+            char[] marker;
             bool result = false;
 
             this.sizeInfo = sizeInfo;
@@ -281,7 +280,7 @@ namespace ATL.AudioData.IO
 
         private bool _ReadV4(BinaryReader r)
         {
-            wavpack_header4 wvh4 = new wavpack_header4();
+            WavPackHeader4 wvh4 = new WavPackHeader4();
             byte[] EncBuf = new byte[4096];
             int tempo;
             byte encoderbyte;
@@ -374,12 +373,11 @@ namespace ATL.AudioData.IO
 
         private bool _ReadV3(BinaryReader r)
         {
-            riff_chunk chunk = new riff_chunk();
-            char[] wavchunk = new char[4];
-            fmt_chunk fmt;
+            RiffChunk chunk = new RiffChunk();
+            char[] wavchunk;
+            FormatChunk fmt;
             bool hasfmt;
-            long fpos;
-            wavpack_header3 wvh3 = new wavpack_header3();
+            WavpackHeader3 wvh3 = new WavpackHeader3();
             bool result = false;
 
 
@@ -403,8 +401,6 @@ namespace ATL.AudioData.IO
                 chunk.size = r.ReadUInt32();
 
                 if (chunk.size <= 0) break;
-
-                fpos = r.BaseStream.Position;
 
                 if (StreamUtils.StringEqualsArr("fmt ", chunk.id))  // Format chunk found read it
                 {

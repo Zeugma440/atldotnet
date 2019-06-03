@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -17,7 +16,21 @@ namespace ATL.AudioData.IO
         // Twin VQ header ID
         private const string TWIN_ID = "TWIN";
 
-        private static IDictionary<string, byte> frameMapping; // Mapping between TwinVQ frame codes and ATL frame codes
+        // Mapping between TwinVQ frame codes and ATL frame codes
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        {
+            { "NAME", TagData.TAG_FIELD_TITLE },
+            { "ALBM", TagData.TAG_FIELD_ALBUM },
+            { "AUTH", TagData.TAG_FIELD_ARTIST },
+            { "(c) ", TagData.TAG_FIELD_COPYRIGHT },
+            { "MUSC", TagData.TAG_FIELD_COMPOSER },
+            { "CDCT", TagData.TAG_FIELD_CONDUCTOR },
+            { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER }, // Unofficial; found in sample files
+            { "DATE", TagData.TAG_FIELD_RECORDING_DATE }, // Unofficial; found in sample files
+            { "GENR", TagData.TAG_FIELD_GENRE }, // Unofficial; found in sample files
+            { "COMT", TagData.TAG_FIELD_COMMENT }
+            // TODO - handle integer extension sub-chunks : YEAR, TRAC
+        };
 
 
         // Private declarations
@@ -129,24 +142,6 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
-        static TwinVQ()
-        {
-            frameMapping = new Dictionary<string, byte>
-            {
-                { "NAME", TagData.TAG_FIELD_TITLE },
-                { "ALBM", TagData.TAG_FIELD_ALBUM },
-                { "AUTH", TagData.TAG_FIELD_ARTIST },
-                { "(c) ", TagData.TAG_FIELD_COPYRIGHT },
-                { "MUSC", TagData.TAG_FIELD_COMPOSER },
-                { "CDCT", TagData.TAG_FIELD_CONDUCTOR },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER }, // Unofficial; found in sample files
-                { "DATE", TagData.TAG_FIELD_RECORDING_DATE }, // Unofficial; found in sample files
-                { "GENR", TagData.TAG_FIELD_GENRE }, // Unofficial; found in sample files
-                { "COMT", TagData.TAG_FIELD_COMMENT }
-                // TODO - handle integer extension sub-chunks : YEAR, TRAC
-            };
-        }
-
         private void resetData()
         {
             duration = 0;
@@ -228,11 +223,10 @@ namespace ATL.AudioData.IO
                 "DSIZ".Equals(Chunk.ID));
         }
 
-        private bool readTag(BinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
+        private void readTag(BinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
         {
             ChunkHeader chunk = new ChunkHeader();
             string data;
-            bool result = false;
             bool first = true;
             long tagStart = -1;
 
@@ -255,8 +249,6 @@ namespace ATL.AudioData.IO
                 data = Encoding.UTF8.GetString(source.ReadBytes((int)chunk.Size)).Trim();
 
                 SetMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
-
-                result = true;
             }
             while (source.BaseStream.Position < source.BaseStream.Length);
 
@@ -265,10 +257,8 @@ namespace ATL.AudioData.IO
                 // Zone goes from the first field after COMM to the last field before DSIZ
                 if (-1 == tagStart) structureHelper.AddZone(source.BaseStream.Position - 8, 0);
                 else structureHelper.AddZone(tagStart, (int)(source.BaseStream.Position - tagStart - 8));
-                structureHelper.AddSize(12, (uint)Header.Size);
+                structureHelper.AddSize(12, Header.Size);
             }
-
-            return result;
         }
 
         private bool isCorrupted()
@@ -297,7 +287,7 @@ namespace ATL.AudioData.IO
 
             bool result = readHeader(source, ref Header);
             // Process data if loaded and header valid
-            if ((result) && StreamUtils.StringEqualsArr(TWIN_ID, Header.ID))
+            if (result && StreamUtils.StringEqualsArr(TWIN_ID, Header.ID))
             {
                 isValid = true;
                 // Fill properties with header data

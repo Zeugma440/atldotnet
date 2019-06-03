@@ -20,7 +20,7 @@ namespace ATL.AudioData.IO
 		public const byte TAG_VERSION_1_1 = 2;                // Index for ID3v1.1 tag
 
 		#region music genres
-		public static String[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
+		public static readonly string[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
 		{	// Standard genres
 			"Blues",
 			"Classic Rock",

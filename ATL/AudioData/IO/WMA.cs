@@ -87,12 +87,6 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string filePath;
 
-        /* Unused for now
-                public bool IsStreamed
-                {
-                    get { return true; }
-                }
-        */
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -732,7 +726,6 @@ namespace ATL.AudioData.IO
         {
             long beginPos, frameSizePos, counterPos, finalFramePos;
             ushort counter = 0;
-            bool doWritePicture;
 
             beginPos = w.BaseStream.Position;
             w.Write(WMA_EXTENDED_CONTENT_DESCRIPTION_ID);
@@ -846,11 +839,7 @@ namespace ATL.AudioData.IO
 
         private ushort writeExtendedMeta(TagData tag, BinaryWriter w, bool isExtendedMetaLibrary = false)
         {
-            bool doWritePicture;
             ushort counter = 0;
-
-            IDictionary<byte, String> map = tag.ToMap();
-
             // Supported textual fields : all current supported fields are located in extended content description frame
 
             // Other textual fields

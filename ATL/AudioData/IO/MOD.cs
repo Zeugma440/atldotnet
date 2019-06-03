@@ -36,9 +36,51 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_PATTERN_DELAY = 0xE;
         private const byte EFFECT_INVERT_LOOP   = 0xF;
 
-        private static IDictionary<String, ModFormat> modFormats;
+        private static IDictionary<String, ModFormat> modFormats = new Dictionary<string, ModFormat>()
+        {
+            { "M.K.", new ModFormat("ProTracker", "M.K.", 31, 4) },
+            { "M!K!", new ModFormat("ProTracker", "M!K!", 31, 4) },
+            { "FLT4", new ModFormat("StarTrekker", "FLT4", 31, 4)},
+            { "2CHN", new ModFormat("FastTracker", "2CHN", 31, 2)},
+            { "4CHN", new ModFormat("FastTracker", "4CHN", 31, 4)},
+            { "6CHN", new ModFormat("FastTracker", "6CHN", 31, 6)},
+            { "8CHN", new ModFormat("FastTracker", "8CHN", 31, 8)},
+            { "OCTA", new ModFormat("FastTracker", "OCTA", 31, 8)},
+            { "FLT8", new ModFormat("StarTrekker", "FLT8", 31, 8)},
+            { "CD81", new ModFormat("Falcon", "CD81", 31, 8) },
+            { "10CH", new ModFormat("FastTracker", "10CH", 31, 10)},
+            { "12CH", new ModFormat("FastTracker", "12CH", 31, 12)},
+            { "14CH", new ModFormat("FastTracker", "14CH", 31, 14)},
+            { "11CH", new ModFormat("TakeTracker", "11CH", 31, 11)},
+            { "13CH", new ModFormat("TakeTracker", "13CH", 31, 13)},
+            { "15CH", new ModFormat("TakeTracker", "15CH", 31, 15)},
+            { "16CH", new ModFormat("FastTracker", "16CH", 31, 16)},
+            { "17CH", new ModFormat("FastTracker", "17CH", 31, 17)},
+            { "18CH", new ModFormat("FastTracker", "18CH", 31, 18)},
+            { "19CH", new ModFormat("FastTracker", "19CH", 31, 19)},
+            { "20CH", new ModFormat("FastTracker", "20CH", 31, 20)},
+            { "21CH", new ModFormat("FastTracker", "21CH", 31, 21)},
+            { "22CH", new ModFormat("FastTracker", "22CH", 31, 22)},
+            { "23CH", new ModFormat("FastTracker", "23CH", 31, 23)},
+            { "24CH", new ModFormat("FastTracker", "24CH", 31, 24)},
+            { "25CH", new ModFormat("FastTracker", "25CH", 31, 25)},
+            { "26CH", new ModFormat("FastTracker", "26CH", 31, 26)},
+            { "27CH", new ModFormat("FastTracker", "27CH", 31, 27)},
+            { "28CH", new ModFormat("FastTracker", "28CH", 31, 28)},
+            { "29CH", new ModFormat("FastTracker", "29CH", 31, 29)},
+            { "30CH", new ModFormat("FastTracker", "30CH", 31, 30)},
+            { "31CH", new ModFormat("FastTracker", "31CH", 31, 31)},
+            { "32CH", new ModFormat("FastTracker", "32CH", 31, 32)},
+            { "33CH", new ModFormat("FastTracker", "33CH", 31, 33)},
+            { "TDZ1", new ModFormat("TakeTracker", "TDZ1", 31, 1)},
+            { "TDZ2", new ModFormat("TakeTracker", "TDZ2", 31, 2)},
+            { "TDZ3", new ModFormat("TakeTracker", "TDZ3", 31, 3)},
+            { "5CHN", new ModFormat("TakeTracker", "5CHN", 31, 5)},
+            { "7CHN", new ModFormat("TakeTracker", "7CHN", 31, 7)},
+            { "9CHN", new ModFormat("TakeTracker", "9CHN", 31, 9)}
+        };
 
-		// Standard fields
+        // Standard fields
         private IList<Sample> FSamples;
         private IList<IList<IList<int>>> FPatterns;
         private IList<byte> FPatternTable;
@@ -107,9 +149,9 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class Sample
+        internal class Sample
 		{
-            public String Name;
+            public string Name;
             public int Size;
             public SByte Finetune;
             public byte Volume;
@@ -129,55 +171,20 @@ namespace ATL.AudioData.IO
             }
 		}
 
-        private class ModFormat
+        internal class ModFormat
         {
-            public String Name = "";
-            public String Signature = "";
-            public byte NbSamples = 0;
-            public byte NbChannels = 0;
+            public readonly string Name;
+            public readonly string Signature;
+            public readonly byte NbSamples = 0;
+            public readonly byte NbChannels = 0;
 
-            public ModFormat(String name, String sig, byte nbSamples, byte nbChannels)
+            public ModFormat(string name, string sig, byte nbSamples, byte nbChannels)
             {
                 Name = name;
                 Signature = sig;
                 NbSamples = nbSamples;
                 NbChannels = nbChannels;
             }
-        }
-
-        
-        // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static MOD()
-        {
-            modFormats = new Dictionary<string, ModFormat>();
-
-            modFormats.Add("M.K.", new ModFormat("ProTracker", "M.K.", 31, 4));
-            modFormats.Add("M!K!", new ModFormat("ProTracker", "M!K!", 31, 4));
-            modFormats.Add("FLT4", new ModFormat("StarTrekker", "FLT4", 31, 4));
-            modFormats.Add("2CHN", new ModFormat("FastTracker", "2CHN", 31, 2));
-            modFormats.Add("4CHN", new ModFormat("FastTracker", "4CHN", 31, 4));
-            modFormats.Add("6CHN", new ModFormat("FastTracker", "6CHN", 31, 6));
-            modFormats.Add("8CHN", new ModFormat("FastTracker", "8CHN", 31, 8));
-            modFormats.Add("OCTA", new ModFormat("FastTracker", "OCTA", 31, 8));
-            modFormats.Add("FLT8", new ModFormat("StarTrekker", "FLT8", 31, 8));
-            modFormats.Add("CD81", new ModFormat("Falcon", "CD81", 31, 8));
-            modFormats.Add("10CH", new ModFormat("FastTracker", "10CH", 31, 10));
-            modFormats.Add("12CH", new ModFormat("FastTracker", "12CH", 31, 12));
-            modFormats.Add("14CH", new ModFormat("FastTracker", "14CH", 31, 14));
-            modFormats.Add("11CH", new ModFormat("TakeTracker", "11CH", 31, 11));
-            modFormats.Add("13CH", new ModFormat("TakeTracker", "13CH", 31, 13));
-            modFormats.Add("15CH", new ModFormat("TakeTracker", "15CH", 31, 15));
-            for (byte i = 16; i < 33; i++)
-            {
-                modFormats.Add(i + "CH", new ModFormat("FastTracker", i + "CH", 31, i));
-            }
-            modFormats.Add("TDZ1", new ModFormat("TakeTracker", "TDZ1", 31, 1));
-            modFormats.Add("TDZ2", new ModFormat("TakeTracker", "TDZ2", 31, 2));
-            modFormats.Add("TDZ3", new ModFormat("TakeTracker", "TDZ3", 31, 3));
-            modFormats.Add("5CHN", new ModFormat("TakeTracker", "5CHN", 31, 5));
-            modFormats.Add("7CHN", new ModFormat("TakeTracker", "7CHN", 31, 7));
-            modFormats.Add("9CHN", new ModFormat("TakeTracker", "9CHN", 31, 9));
         }
 
         private void resetData()
@@ -347,9 +354,9 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
             int maxPatterns = -1;
-            byte nbSamples = 31;
+            byte nbSamples;
 
-            String readString;
+            string readString;
             StringBuilder comment = new StringBuilder("");
 
             Sample sample;
@@ -363,8 +370,7 @@ namespace ATL.AudioData.IO
             readString = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
             if (readString.Equals(SIG_POWERPACKER))
             {
-                result = false;
-                throw new Exception("MOD files compressed with PowerPacker are not supported yet");
+                throw new InvalidDataException("MOD files compressed with PowerPacker are not supported yet");
             }
 
             tagExists = true;

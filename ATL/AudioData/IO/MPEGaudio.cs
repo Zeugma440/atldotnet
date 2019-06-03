@@ -390,19 +390,8 @@ public String Encoder // Guessed encoder name
 
         private static int getFrameSize(FrameHeader Frame)
         {
-            ushort Coefficient;
-            ushort BitRate;
-            ushort SampleRate;
-            ushort Padding;
-
-            // Calculate MPEG frame length
-            Coefficient = getCoefficient(Frame);
-            BitRate = getBitRate(Frame);
-            SampleRate = getSampleRate(Frame);
-            Padding = getPadding(Frame);
-
             // This formula only works for Layers II and III
-            return (int)Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding;
+            return (int)Math.Floor(getCoefficient(Frame) * getBitRate(Frame) * 1000.0 / getSampleRate(Frame)) + getPadding(Frame);
         }
 
         private static bool isXing(int Index, byte[] Data)
@@ -416,7 +405,7 @@ public String Encoder // Guessed encoder name
                 (Data[Index + 5] == 0));
         }
 
-        private static VBRData getXingInfo(BufferedBinaryReader source, long position)
+        private static VBRData getXingInfo(BufferedBinaryReader source)
         {
             VBRData result = new VBRData();
             byte[] data = new byte[8];
@@ -439,14 +428,14 @@ public String Encoder // Guessed encoder name
 
             source.Seek(103, SeekOrigin.Current);
 
-            result.Scale = (byte)source.ReadByte();
+            result.Scale = source.ReadByte();
             source.Read(data, 0, 8);
             result.VendorID = Utils.Latin1Encoding.GetString(data, 0, 8);
 
             return result;
         }
 
-        private static VBRData getFhGInfo(BufferedBinaryReader source, long position)
+        private static VBRData getFhGInfo(BufferedBinaryReader source)
         {
             VBRData result = new VBRData();
             byte[] data = new byte[9];
@@ -485,8 +474,8 @@ public String Encoder // Guessed encoder name
             source.Read(data, 0, 4);
             string vbrId = Utils.Latin1Encoding.GetString(data);
 
-            if (VBR_ID_XING.Equals(vbrId)) result = getXingInfo(source, position);
-            else if (VBR_ID_FHG.Equals(vbrId)) result = getFhGInfo(source, position);
+            if (VBR_ID_XING.Equals(vbrId)) result = getXingInfo(source);
+            else if (VBR_ID_FHG.Equals(vbrId)) result = getFhGInfo(source);
             else
             {
                 result = new VBRData();

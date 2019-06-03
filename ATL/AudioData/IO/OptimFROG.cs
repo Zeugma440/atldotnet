@@ -51,7 +51,7 @@ namespace ATL.AudioData.IO
         }
 
 
-        private TOfrHeader header = new TOfrHeader();
+        private readonly TOfrHeader header = new TOfrHeader();
 
         private double bitrate;
         private double duration;

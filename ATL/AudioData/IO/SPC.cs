@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             isValid = readHeader(source, ref header);
-            if (!isValid) throw new Exception("Not a SPC file");
+            if (!isValid) throw new InvalidDataException("Not a SPC file");
 
             // Reads the header tag
             if (SPCHeader.TAG_IN_HEADER == header.TagInHeader)
@@ -543,7 +543,7 @@ namespace ATL.AudioData.IO
 
                 w.Write(Utils.Latin1Encoding.GetBytes(XTENDED_TAG));
                 sizePos = w.BaseStream.Position;
-                w.Write((int)0); // Size placeholder; to be rewritten with actual value at the end of the method
+                w.Write(0); // Size placeholder; to be rewritten with actual value at the end of the method
 
                 IDictionary<byte, string> map = tag.ToMap();
 

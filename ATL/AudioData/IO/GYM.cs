@@ -31,7 +31,7 @@ namespace ATL.AudioData.IO
         private static uint FADEOUT_DURATION_DEFAULT = 0;   // Default fadeout duration, in seconds
         private static uint PLAYBACK_RATE_DEFAULT = 60;     // Default playback rate if no preference set (Hz)
 
-        private static byte[] CORE_SIGNATURE;
+        private static byte[] CORE_SIGNATURE = new byte[416];
 
         // Standard fields
         private int sampleRate;
@@ -98,12 +98,6 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
-        static GYM()
-        {
-            CORE_SIGNATURE = new byte[416];
-            Array.Clear(CORE_SIGNATURE, 0, 416);
-        }
-
         private void resetData()
         {
             // Reset variables
@@ -129,7 +123,6 @@ namespace ATL.AudioData.IO
 		{
             string str;
 
-            long initialPosition = source.Position;
             if (GYM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GYM_SIGNATURE.Length))))
 			{
                 if (readTagParams.PrepareForWriting)

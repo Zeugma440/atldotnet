@@ -9,7 +9,7 @@ using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
+    /// <summary>
     /// Class for Video Game Music files (Master System, Game Gear, SG1000, Genesis) manipulation (extensions : .VGM)
     /// According to file format v1.70
     /// 
@@ -17,9 +17,9 @@ namespace ATL.AudioData.IO
     ///   1/ GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
     ///   
     ///   2/ Gzipped files are currently supported in read-only mode (i.e. ATL cannot write metadata to a GYM file containing gzipped data)
-	/// </summary>
-	class VGM : MetaDataIO, IAudioDataIO
-	{
+    /// </summary>
+    class VGM : MetaDataIO, IAudioDataIO
+    {
         private const string VGM_SIGNATURE = "Vgm ";
         private const string GD3_SIGNATURE = "Gd3 ";
 
@@ -46,17 +46,17 @@ namespace ATL.AudioData.IO
 
         // AudioDataIO
         public int SampleRate // Sample rate (hz)
-		{
-			get { return sampleRate; }
-		}	
+        {
+            get { return sampleRate; }
+        }
         public bool IsVBR
-		{
-			get { return false; }
-		}
-		public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_SEQ_WAV; }
-		}
+        {
+            get { return false; }
+        }
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_SEQ_WAV; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -115,19 +115,18 @@ namespace ATL.AudioData.IO
         }
 
 
-		// === PRIVATE METHODS ===
+        // === PRIVATE METHODS ===
 
-		private bool readHeader(BinaryReader source, ReadTagParams readTagParams)
-		{
+        private bool readHeader(BinaryReader source, ReadTagParams readTagParams)
+        {
             int nbSamples, loopNbSamples;
             int nbLoops = LOOP_COUNT_DEFAULT;
             int recordingRate = RECORDING_RATE_DEFAULT;
 
-            long initialPosition = source.BaseStream.Position;
             byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
             if (VGM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(headerSignature)))
-			{
-				source.BaseStream.Seek(4,SeekOrigin.Current); // EOF offset
+            {
+                source.BaseStream.Seek(4, SeekOrigin.Current); // EOF offset
                 version = source.ReadInt32();
                 source.BaseStream.Seek(8, SeekOrigin.Current); // Clocks
                 gd3TagOffset = source.ReadInt32() + (int)source.BaseStream.Position - 4;
@@ -138,7 +137,8 @@ namespace ATL.AudioData.IO
                     {
                         structureHelper.AddZone(gd3TagOffset, (int)sizeInfo.FileSize - gd3TagOffset);
                         structureHelper.AddIndex(source.BaseStream.Position - 4, gd3TagOffset, true);
-                    } else
+                    }
+                    else
                     {
                         structureHelper.AddZone(sizeInfo.FileSize, 0);
                         structureHelper.AddIndex(source.BaseStream.Position - 4, 0, true);
@@ -175,13 +175,13 @@ namespace ATL.AudioData.IO
                 bitrate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
 
                 return true;
-			}
+            }
             else
-			{
+            {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Not a VGM file");
                 return false;
-			}
-		}
+            }
+        }
 
         private void readGd3Tag(BinaryReader source, int offset)
         {
@@ -199,7 +199,7 @@ namespace ATL.AudioData.IO
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (english)
-                tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM,  str);
+                tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
 
@@ -276,7 +276,7 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-		}
+        }
 
         // Write GD3 tag
         protected override int write(TagData tag, BinaryWriter w, string zone)
@@ -291,7 +291,7 @@ namespace ATL.AudioData.IO
             w.Write(0x00000100); // Version number
 
             sizePos = w.BaseStream.Position;
-            w.Write((int)0);
+            w.Write(0);
 
             w.Write(unicodeEncoder.GetBytes(tag.Title));
             w.Write(endString); // Strings must be null-terminated

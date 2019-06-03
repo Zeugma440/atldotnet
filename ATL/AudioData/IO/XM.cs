@@ -179,7 +179,7 @@ namespace ATL.AudioData.IO
 
             double speed = initialSpeed;
             double tempo = initialTempo;
-            
+
             do // Patterns loop
             {
                 do // Lines loop
@@ -317,15 +317,15 @@ namespace ATL.AudioData.IO
             byte firstByte;
             IList<Event> aRow;
             IList<IList<Event>> aPattern;
-            
+
             uint headerLength;
             ushort nbRows;
             uint packedDataSize;
 
-            for (int i=0; i<nbPatterns;i++)
+            for (int i = 0; i < nbPatterns; i++)
             {
                 aPattern = new List<IList<Event>>();
-                
+
                 headerLength = source.ReadUInt32();
                 source.Seek(1, SeekOrigin.Current); // Packing type
                 nbRows = source.ReadUInt16();
@@ -338,31 +338,33 @@ namespace ATL.AudioData.IO
                     {
                         aRow = new List<Event>();
 
-                        for (int k=0; k<nbChannels;k++)
+                        for (int k = 0; k < nbChannels; k++)
                         {
                             Event e = new Event();
-                            e.Channel = k+1;
+                            e.Channel = k + 1;
 
                             firstByte = source.ReadByte();
                             if ((firstByte & 0x80) > 0) // Most Significant Byte (MSB) is set => packed data layout
                             {
-                                if ((firstByte & 0x1) > 0) source.Seek(1,SeekOrigin.Current); // Note
-                                if ((firstByte & 0x2) > 0) source.Seek(1,SeekOrigin.Current); // Instrument
-                                if ((firstByte & 0x4) > 0) source.Seek(1,SeekOrigin.Current); // Volume
+                                if ((firstByte & 0x1) > 0) source.Seek(1, SeekOrigin.Current); // Note
+                                if ((firstByte & 0x2) > 0) source.Seek(1, SeekOrigin.Current); // Instrument
+                                if ((firstByte & 0x4) > 0) source.Seek(1, SeekOrigin.Current); // Volume
                                 if ((firstByte & 0x8) > 0) e.Command = source.ReadByte();                // Effect type
                                 if ((firstByte & 0x10) > 0) e.Info = source.ReadByte();                  // Effect param
 
-                            } else { // No MSB set => standard data layout
+                            }
+                            else
+                            { // No MSB set => standard data layout
                                 // firstByte is the Note
-                                source.Seek(1,SeekOrigin.Current); // Instrument
-                                source.Seek(1,SeekOrigin.Current); // Volume
+                                source.Seek(1, SeekOrigin.Current); // Instrument
+                                source.Seek(1, SeekOrigin.Current); // Volume
                                 e.Command = source.ReadByte();
                                 e.Info = source.ReadByte();
                             }
 
                             aRow.Add(e);
                         }
-                        
+
                         aPattern.Add(aRow);
                     }
                 }
@@ -401,8 +403,7 @@ namespace ATL.AudioData.IO
             // File format signature
             if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(17))))
             {
-                result = false;
-                throw new Exception("Invalid XM file (file signature String mismatch)");
+                throw new InvalidDataException("Invalid XM file (file signature String mismatch)");
             }
 
             // Title = chars 17 to 37 (length 20)
@@ -416,8 +417,7 @@ namespace ATL.AudioData.IO
             // File format signature
             if (!0x1a.Equals(bSource.ReadByte()))
             {
-                result = false;
-                throw new Exception("Invalid XM file (file signature ID mismatch)");
+                throw new InvalidDataException("Invalid XM file (file signature ID mismatch)");
             }
 
             tagExists = true;
@@ -432,7 +432,7 @@ namespace ATL.AudioData.IO
 
             bSource.Seek(2, SeekOrigin.Current); // Restart position
 
-            nbChannels = (byte)Math.Min(bSource.ReadUInt16(),(ushort)0xFF);
+            nbChannels = (byte)Math.Min(bSource.ReadUInt16(), (ushort)0xFF);
             nbPatterns = bSource.ReadUInt16();
             nbInstruments = bSource.ReadUInt16();
 
@@ -450,7 +450,7 @@ namespace ATL.AudioData.IO
             readPatterns(bSource, nbPatterns);
             readInstruments(bSource, nbInstruments);
 
-            
+
             // == Computing track properties
 
             duration = calculateDuration() * 1000.0;

@@ -91,7 +91,7 @@ namespace ATL.test.CodeSnippets
             // Transform them into .NET Image, if needed
             foreach (PictureInfo pic in embeddedPictures)
             {
-                System.Drawing.Image image = System.Drawing.Image.FromStream((new System.IO.MemoryStream(pic.PictureData)));
+                System.Drawing.Image image = System.Drawing.Image.FromStream(new System.IO.MemoryStream(pic.PictureData));
             }
         }
 
@@ -104,7 +104,7 @@ namespace ATL.test.CodeSnippets
             // Modify metadata
             theTrack.Artist = "Hey ho";
             theTrack.Composer = "Oscar Wilde";
-            theTrack.AdditionalFields["fancyField"] = "fancyValue";
+            theTrack.AdditionalFields["customField"] = "fancyValue";
 
 
             // Save modifications on the disc

@@ -50,7 +50,7 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private byte FStreamVersion;
         private byte profileID;
-        private String encoder;
+        private string encoder;
 
         private double bitrate;
         private double duration;
