@@ -164,7 +164,7 @@ namespace ATL
         /// Merge given TagData object with current TagData object
         /// </summary>
         /// <param name="data">TagData object to merge</param>
-        public void IntegrateValues(TagData data, bool integratePictures = true)
+        public void IntegrateValues(TagData data, bool integratePictures = true, bool mergeAdditionalData = true)
         {
             // String values
             IDictionary<byte, String> newData = data.ToMap();
@@ -209,33 +209,39 @@ namespace ATL
 
             bool found;
             // Additional textual fields
-            foreach (MetaFieldInfo newMetaInfo in data.AdditionalFields)
+            if (mergeAdditionalData)
             {
-                found = false;
-                foreach (MetaFieldInfo metaInfo in AdditionalFields)
+                foreach (MetaFieldInfo newMetaInfo in data.AdditionalFields)
                 {
-                    // New MetaFieldInfo tag type+field code+streamNumber+language already exists in current TagData
-                    // or new MetaFieldInfo mimics an existing field (added or edited through simplified interface)
-                    if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo))
+                    found = false;
+                    foreach (MetaFieldInfo metaInfo in AdditionalFields)
                     {
-                        if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
-                        else
+                        // New MetaFieldInfo tag type+field code+streamNumber+language already exists in current TagData
+                        // or new MetaFieldInfo mimics an existing field (added or edited through simplified interface)
+                        if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo))
                         {
-                            found = true;
-                            metaInfo.Value = newMetaInfo.Value;
-                            break;
+                            if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
+                            else
+                            {
+                                found = true;
+                                metaInfo.Value = newMetaInfo.Value;
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (!newMetaInfo.MarkedForDeletion && !found) // New MetaFieldInfo type+streamNumber+language does not exist in current TagData
-                {
-                    AdditionalFields.Add(newMetaInfo);
+                    if (!newMetaInfo.MarkedForDeletion && !found) // New MetaFieldInfo type+streamNumber+language does not exist in current TagData
+                    {
+                        AdditionalFields.Add(newMetaInfo);
+                    }
+                    else if (newMetaInfo.MarkedForDeletion && !found) // Cannot delete a field that has not been found
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
+                    }
                 }
-                else if (newMetaInfo.MarkedForDeletion && !found) // Cannot delete a field that has not been found
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
-                }
+            } else
+            {
+                AdditionalFields = new List<MetaFieldInfo>(data.AdditionalFields);
             }
 
             // Chapters, processed as a whole

@@ -275,7 +275,7 @@ namespace ATL.AudioData
         /// <param name="delta">Value to add</param>
         /// <param name="updatedValue">Updated value (out parameter; will be returned as same type as reference value)</param>
         /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value</returns>
-        private static byte[] addToValue(object value, int delta, out object updatedValue)
+        private static byte[] addToValue(object value, long delta, out object updatedValue)
         {
             if (value is byte)
             {
@@ -334,10 +334,10 @@ namespace ATL.AudioData
         /// <param name="action">Action applied to zone</param>
         /// <param name="zone">Name of zone</param>
         /// <returns></returns>
-        public bool RewriteHeaders(BinaryWriter w, int deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
+        public bool RewriteHeaders(BinaryWriter w, long deltaSize, int action, string zone = DEFAULT_ZONE_NAME)
         {
             bool result = true;
-            int delta;
+            long delta;
             long offsetCorrection;
             byte[] value;
             object updatedValue;

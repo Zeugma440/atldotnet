@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Commons;
 using static ATL.AudioData.FileStructureHelper;
 using static ATL.AudioData.IO.MetaDataIO;
+using static ATL.AudioData.IO.FileSurgeon;
 using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
@@ -24,10 +25,6 @@ namespace ATL.AudioData.IO
         private const string FLAC_ID = "fLaC";
 
         private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
-
-        // Modes for file modification
-        private const int MODE_REPLACE = 0;     // Replace : existing block is replaced by written data
-        private const int MODE_OVERWRITE = 1;   // Overwrite : written data overwrites existing block (non-overwritten parts are kept as is)
 
 
         private class FlacHeader
@@ -55,18 +52,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class WriteResult
-        {
-            public readonly int RequiredMode;
-            public readonly int WrittenFields;
-
-            public WriteResult(int requiredMode, int writtenFields)
-            {
-                this.RequiredMode = requiredMode;
-                this.WrittenFields = writtenFields;
-            }
-        }
-
         private readonly FlacHeader header;
 
         private readonly string filePath;
@@ -87,6 +72,22 @@ namespace ATL.AudioData.IO
         private byte bitsPerSample;
         private long samples;
         private ChannelsArrangement channelsArrangement;
+
+
+        /// <summary>
+        ///  Write-time vars (TODO - find a better place than the whole class scope)
+        /// </summary>
+
+        // Save a snapshot of the initial embedded pictures for processing purposes
+        private IList<PictureInfo> initialPictures;
+
+        // Indexes of currently processed existing and target embedded pictures
+        private int existingPictureIndex;
+        private int targetPictureIndex;
+
+        // Handling of the 'isLast' bit
+        private long latestBlockOffset = -1;
+        private byte latestBlockType = 0;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -552,107 +553,54 @@ namespace ATL.AudioData.IO
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            long oldTagSize, newTagSize;
-            long cumulativeDelta = 0;
-
-            // Indexes of currently processed existing and target embedded pictures
-            int existingPictureIndex = 0;
-            int targetPictureIndex = 0;
-
-            // Handling of the 'isLast' bit
-            long latestBlockOffset = -1;
-            byte latestBlockType = 0;
-
-
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
-            Read(r, readTagParams);
+            bool tagExists = Read(r, readTagParams);
 
             // Save a snapshot of the initial embedded pictures for processing purposes
-            IList<PictureInfo> initialPictures = vorbisTag.EmbeddedPictures;
+            existingPictureIndex = 0;
+            targetPictureIndex = 0;
+            initialPictures = vorbisTag.EmbeddedPictures;
 
             // Prepare picture data with freshly read vorbisTag
             TagData dataToWrite = new TagData();
             dataToWrite.Pictures = vorbisTag.EmbeddedPictures;
-            dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
+            dataToWrite.IntegrateValues(tag, true, false); // Merge existing information + new tag information except additional fields which will be merged by VorbisComment
 
             adjustPictureZones(dataToWrite.Pictures);
 
-            // Rewrite vorbis tag zone
-            foreach (Zone zone in zones)
-            {
-                oldTagSize = zone.Size;
-                WriteResult result;
-
-                // Write new tag to a MemoryStream
-                using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
-                {
-                    if (zone.Name.Equals(META_VORBIS_COMMENT + "")) result = writeVorbisCommentBlock(msw, tag);
-                    else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(msw, cumulativeDelta);
-                    else if (zone.Name.Equals(META_PICTURE + "")) result = processPictureBlock(msw, initialPictures, dataToWrite.Pictures, ref existingPictureIndex, ref targetPictureIndex);
-                    else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
-                    {
-                        msw.Write(zone.Flag);
-                        result = new WriteResult(MODE_OVERWRITE, 1);
-                    }
-
-                    // -- Adjust tag slot to new size in file --
-                    long tagBeginOffset = zone.Offset + cumulativeDelta;
-                    long tagEndOffset = tagBeginOffset + zone.Size;
-
-                    // Remember the latest block position
-                    if (result.WrittenFields > 0)
-                    {
-                        latestBlockOffset = tagBeginOffset;
-                        latestBlockType = zone.Flag;
-                    }
-
-                    if (MODE_REPLACE == result.RequiredMode)
-                    {
-                        if (0 == result.WrittenFields) s.SetLength(0); // No core signature for metadata in FLAC structure
-                        newTagSize = s.Length;
-
-                        // TODO optimization : this is the physical file we're editing !
-                        if (newTagSize > zone.Size) // Need to build a larger file
-                        {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Lengthening (delta=" + (newTagSize - zone.Size) + ")");
-                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
-                        }
-                        else if (newTagSize < zone.Size) // Need to reduce file size
-                        {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
-                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
-                        }
-                    }
-                    else // Overwrite mode
-                    {
-                        newTagSize = zone.Size;
-                    }
-
-                    // Copy tag contents to the new slot
-                    w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                    s.Seek(0, SeekOrigin.Begin);
-
-                    if (newTagSize > zone.CoreSignature.Length)
-                    {
-                        StreamUtils.CopyStream(s, w.BaseStream);
-                    }
-                    else
-                    {
-                        if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
-                    }
-
-                    cumulativeDelta += newTagSize - oldTagSize;
-                }
-            } // Loop through zones
+            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TAG_NATIVE, TO_BUILTIN);
+            surgeon.RewriteZones(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
 
             // Set the 'isLast' bit on the actual last block
             w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
             w.Write((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
 
             return true;
+        }
+
+        private WriteResult write(BinaryWriter w, TagData tag, Zone zone)
+        {
+            WriteResult result;
+
+            if (zone.Name.Equals(META_VORBIS_COMMENT + "")) result = writeVorbisCommentBlock(w, tag);
+            else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(w, tag.DataSizeDelta);
+            else if (zone.Name.Equals(META_PICTURE + "")) result = processPictureBlock(w, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
+            else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
+            {
+                w.Write(zone.Flag);
+                result = new WriteResult(WriteMode.MODE_OVERWRITE, 1);
+            }
+
+            // Remember the latest block position
+            if (result.WrittenFields > 0)
+            {
+                latestBlockOffset = zone.Offset + tag.DataSizeDelta;
+                latestBlockType = zone.Flag;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -699,7 +647,7 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
             w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
 
-            return new WriteResult(MODE_REPLACE, writtenFields);
+            return new WriteResult(WriteMode.MODE_REPLACE, writtenFields);
         }
 
         private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta)
@@ -710,9 +658,9 @@ namespace ATL.AudioData.IO
                 w.Write(META_PADDING);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
-                return new WriteResult(MODE_REPLACE, 1);
+                return new WriteResult(WriteMode.MODE_REPLACE, 1);
             }
-            else return new WriteResult(MODE_REPLACE, 0);
+            else return new WriteResult(WriteMode.MODE_REPLACE, 0);
         }
 
         /// <summary>
@@ -752,14 +700,14 @@ namespace ATL.AudioData.IO
                     PictureInfo existingPic = existingPictures[existingPictureIndex++];
                     pictureExists = existingPic.ComputePicHash() == pictureToWrite.ComputePicHash(); // No need to rewrite an identical pic
                 }
-                if (!pictureExists) return new WriteResult(MODE_REPLACE, writePictureBlock(w, pictureToWrite));
+                if (!pictureExists) return new WriteResult(WriteMode.MODE_REPLACE, writePictureBlock(w, pictureToWrite));
                 else
                 {
                     w.Write(META_PICTURE);
-                    return new WriteResult(MODE_OVERWRITE, 1);
+                    return new WriteResult(WriteMode.MODE_OVERWRITE, 1);
                 }
             }
-            else return new WriteResult(MODE_REPLACE, 0); // Nothing else to write; existing picture blocks are erased
+            else return new WriteResult(WriteMode.MODE_REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
         private int writePictureBlock(BinaryWriter w, PictureInfo picture)
@@ -788,8 +736,8 @@ namespace ATL.AudioData.IO
             long cumulativeDelta = 0;
 
             // Handling of the 'isLast' bit
-            long latestBlockOffset = -1;
-            byte latestBlockType = 0;
+            latestBlockOffset = -1;
+            latestBlockType = 0;
 
             foreach (Zone zone in zones)
             {

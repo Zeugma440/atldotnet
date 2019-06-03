@@ -15,9 +15,9 @@ namespace ATL.AudioData.IO
         // ------ CONSTS -----------------------------------------------------
 
         // Default tag offset
-        protected const int TO_EOF = 0;     // Tag offset is at End Of File
-        protected const int TO_BOF = 1;     // Tag offset is at Beginning Of File
-        protected const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
+        public const int TO_EOF = 0;     // Tag offset is at End Of File
+        public const int TO_BOF = 1;     // Tag offset is at Beginning Of File
+        public const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
 
         // Rating conventions
         public const int RC_ID3v2 = 0;       // ID3v2 convention (0..255 scale with various tweaks)
@@ -628,11 +628,13 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
+        private FileSurgeon.WriteResult writeAdapter(BinaryWriter w, TagData tag, Zone zone)
+        {
+            return new FileSurgeon.WriteResult(FileSurgeon.WriteMode.MODE_REPLACE, write(tag, w, zone.Name));
+        }
+
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
         {
-            long oldTagSize;
-            long newTagSize;
-            long cumulativeDelta = 0;
             bool result = true;
 
             // Constraint-check on non-supported values
@@ -695,107 +697,8 @@ namespace ATL.AudioData.IO
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
             dataToWrite.Cleanup();
 
-            foreach (Zone zone in Zones)
-            {
-                oldTagSize = zone.Size;
-                bool isTagWritten;
-
-                // Write new tag to a MemoryStream
-                using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
-                {
-                    if (zone.Name.Equals(FileStructureHelper.PADDING_ZONE_NAME)) dataToWrite.DataSizeDelta = cumulativeDelta;
-
-                    if (write(dataToWrite, msw, zone.Name) > 0)
-                    {
-                        isTagWritten = true;
-                        newTagSize = s.Length;
-
-                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
-                        {
-                            StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
-                            s.Position = 0;
-                            embedder.WriteID3v2EmbeddingHeader(msw, newTagSize);
-
-                            newTagSize = s.Length;
-                        }
-                    }
-                    else
-                    {
-                        isTagWritten = false;
-                        newTagSize = zone.CoreSignature.Length;
-                    }
-
-                    // -- Adjust tag slot to new size in file --
-                    long tagBeginOffset, tagEndOffset;
-
-                    if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
-                    {
-                        tagBeginOffset = zone.Offset + cumulativeDelta;
-                        tagEndOffset = tagBeginOffset + zone.Size;
-                    }
-                    else // A brand new tag has been added to the file
-                    {
-                        if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
-                        {
-                            tagBeginOffset = embedder.Id3v2Zone.Offset;
-                        }
-                        else
-                        {
-                            switch (getDefaultTagOffset())
-                            {
-                                case TO_EOF: tagBeginOffset = r.BaseStream.Length; break;
-                                case TO_BOF: tagBeginOffset = 0; break;
-                                case TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
-                                default: tagBeginOffset = -1; break;
-                            }
-                        }
-                        tagEndOffset = tagBeginOffset + zone.Size;
-                    }
-
-                    // Need to build a larger file
-                    if (newTagSize > zone.Size)
-                    {
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Lengthening (delta="+ (newTagSize - zone.Size)+")");
-                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
-                    }
-                    else if (newTagSize < zone.Size) // Need to reduce file size
-                    {
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
-                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
-                    }
-
-                    // Copy tag contents to the new slot
-                    r.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                    s.Seek(0, SeekOrigin.Begin);
-
-                    if (isTagWritten)
-                    {
-                        StreamUtils.CopyStream(s, w.BaseStream);
-                    }
-                    else
-                    {
-                        if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
-                    }
-
-                    int delta = (int)(newTagSize - oldTagSize);
-                    cumulativeDelta += delta;
-
-                    // Edit wrapping size markers and frame counters if needed
-                    if (delta != 0 && (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)))
-                    {
-                        int action;
-
-                        if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION_ADD;
-                        else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
-                        else action = ACTION_EDIT;
-
-                        result = structureHelper.RewriteHeaders(w, delta, action, zone.Name);
-                    }
-
-                    zone.Size = (int)newTagSize;
-                }
-            } // Loop through zones
+            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset());
+            result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
             /* TODO - this implementation is too risky : 
