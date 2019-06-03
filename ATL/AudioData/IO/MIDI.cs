@@ -265,12 +265,12 @@ namespace ATL.AudioData.IO
 															  "Gunshot"};
         #endregion
 
-        private const String MIDI_FILE_HEADER = "MThd";
-        private const String MIDI_TRACK_HEADER = "MTrk";
+        private const string MIDI_FILE_HEADER = "MThd";
+        private const string MIDI_TRACK_HEADER = "MTrk";
 
         private const int DEFAULT_TEMPO = 500; // Default MIDI tempo is 120bpm, 500ms per beat
 
-        public StringBuilder comment;
+        private StringBuilder comment;
 
         private double duration;
         private double bitrate;
@@ -409,7 +409,6 @@ namespace ATL.AudioData.IO
             byte[] header;
             string trigger;
 
-            IList<string> trackStrings = new List<string>();
             IList<MidiTrack> tracks = new List<MidiTrack>();
 
             resetData();
@@ -607,7 +606,7 @@ namespace ATL.AudioData.IO
             int len;
             byte tmp;
             byte c;
-            String txt;
+            string txt;
             MidiEvent evt;
 
             int currentTempo = 0;
@@ -699,12 +698,12 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_LYRICS: // Meta Lyrics
                                     case MidiEvents.META_MARKER: // Meta Marker
                                     case MidiEvents.META_CUE: // Meta Cue
-                                        String[] texttypes = new String[7] { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
+                                        string[] texttypes = new string[7] { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
 
-                                        String type = texttypes[meta - 1];
+                                        string textType = texttypes[meta - 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("Meta " + type + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new InvalidDataException("Meta " + textType + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
 
                                         txt = Encoding.ASCII.GetString(data, position, len);
                                         if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append(Settings.InternalValueSeparator);
@@ -712,7 +711,7 @@ namespace ATL.AudioData.IO
 
                                         evt = new MidiEvent(currentTicks, meta, -1, meta - 1);
                                         evt.isMetaEvent = true;
-                                        evt.Description = " Meta " + type + " \"" + txt + "\"";
+                                        evt.Description = " Meta " + textType + " \"" + txt + "\"";
                                         track.Add(evt);
 
                                         position += len;
@@ -749,7 +748,6 @@ namespace ATL.AudioData.IO
                                             track.Duration = currentTicks * this.tempo;
                                         }
                                         return track;//ignore rest
-                                    //break;
                                     case MidiEvents.META_TEMPO: // Tempo
                                         // Adds (ticks since last tempo event)*current tempo to track duration
                                         if (lastTempoTicks > -1)
@@ -815,7 +813,7 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_SEQUENCER_DATA: // Sequencer specific data
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("SeqSpec has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new InvalidDataException("SeqSpec has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
                                             //String str = Encoding.ASCII.GetString(data, position + 3, len); //data.=' '.sprintf("%02x",(byte)($data[$p+3+$i]));
@@ -832,7 +830,7 @@ namespace ATL.AudioData.IO
                                         byte metacode = data[position + 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new Exception("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
+                                        if ((len + position) > trackLen) throw new InvalidDataException("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
                                             String str = Encoding.ASCII.GetString(data, position + 3, len); //sprintf("%02x",(byte)($data[$p+3+$i]));
@@ -850,7 +848,7 @@ namespace ATL.AudioData.IO
                             case MidiEvents.EVT_SYSEX: // SysEx
                                 position += 1;
                                 len = readVarLen(ref data, ref position);
-                                if ((len + position) > trackLen) throw new Exception("SysEx has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + " p: " + position + "]");
+                                if ((len + position) > trackLen) throw new InvalidDataException("SysEx has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + " p: " + position + "]");
                                 {
                                     //String str = "f0" + Encoding.ASCII.GetString(data, position + 2, len); //str+=' '.sprintf("%02x",(byte)(data[p+2+i]));
                                     evt = new MidiEvent(currentTicks, eventTypeHigh, -1, currentTempo);
@@ -913,10 +911,10 @@ namespace ATL.AudioData.IO
                                 // MM: ToDo: Repetition of SysEx and META-events? with <last>?? \n";
                                 //  _err("unknown repetition: $last");
                                 break;
-                        } // switch (eventType)
+                        } // eventType
                         break;
-                } // switch ($high)
-            } // while ( p < trackLen )
+                } // $high
+            } // while p < trackLen
             track.Ticks = currentTicks;
             if (lastTempoTicks > -1)
             {
