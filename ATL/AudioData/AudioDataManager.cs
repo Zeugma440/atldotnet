@@ -30,7 +30,7 @@ namespace ATL.AudioData
         public class SizeInfo
         {
             public long FileSize = 0;
-            private IDictionary<int, long> TagSizes = new Dictionary<int, long>();
+            private readonly IDictionary<int, long> TagSizes = new Dictionary<int, long>();
 
             public void ResetData() { FileSize = 0; TagSizes.Clear(); }
 
@@ -54,7 +54,7 @@ namespace ATL.AudioData
         private readonly IAudioDataIO audioDataIO;
         private readonly Stream stream;
 
-        private SizeInfo sizeInfo = new SizeInfo();
+        private readonly SizeInfo sizeInfo = new SizeInfo();
 
 
         private string fileName
@@ -175,7 +175,7 @@ namespace ATL.AudioData
             
         }
 
-        [Obsolete]
+        [Obsolete("Use ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)")]
         public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
         {
             bool result = false;
@@ -344,7 +344,7 @@ namespace ATL.AudioData
             return read(source, readTagParams);
         }
 
-        [Obsolete]
+        [Obsolete("Use read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)")]
         private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false, bool prepareForWriting = false)
         {
             sizeInfo.ResetData();

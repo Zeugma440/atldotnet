@@ -62,7 +62,7 @@ namespace ATL.AudioData.IO
             /// </summary>
             public long offset = 0;
 
-            [Obsolete]
+            [Obsolete("Use ReadTagParams(bool readPictures, bool readAllMetaFrames)")]
             public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
             {
                 PictureStreamHandler = pictureStreamHandler; ReadAllMetaFrames = readAllMetaFrames;
