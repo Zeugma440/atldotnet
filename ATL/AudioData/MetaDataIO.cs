@@ -193,7 +193,7 @@ namespace ATL.AudioData.IO
                     return TrackUtils.ExtractTrackTotal(tagData.TrackNumberTotal);
                 else if (Utils.IsNumeric(tagData.TrackTotal))
                     return ushort.Parse(tagData.TrackTotal);
-                else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber); ;
+                else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber);
             }
         }
         /// <summary>
@@ -255,7 +255,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public DateTime Date
         {
-            get // TODO - TEST EXTENSIVELY
+            get
             {
                 DateTime result;
                 if (!DateTime.TryParse(tagData.RecordingDate, out result)) // First try with a proper Recording date field
@@ -370,7 +370,7 @@ namespace ATL.AudioData.IO
                 if (
                     getImplementedTagType().Equals(fieldInfo.TagType)
                     && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
-                    && ("".Equals(language) || language.Equals(fieldInfo.Language))
+                    && ((0 == language.Length) || language.Equals(fieldInfo.Language))
                     )
                 {
                     result.Add(fieldInfo);
@@ -621,11 +621,11 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public bool Read(BinaryReader Source, ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             if (readTagParams.PrepareForWriting) structureHelper.Clear();
 
-            return read(Source, readTagParams);
+            return read(source, readTagParams);
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
