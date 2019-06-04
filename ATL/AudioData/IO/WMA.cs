@@ -78,14 +78,48 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
 
-        private static IDictionary<string, byte> frameMapping; // Mapping between WMA frame codes and ATL frame codes
-        private static IList<string> embeddedFields; // Field that are embedded in standard ASF description, and do not need to be written in any other frame
-        private static IDictionary<string, ushort> frameClasses; // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
+        // Mapping between WMA frame codes and ATL frame codes
+        // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
+        // their ID will not appear as is in the WMA header. 
+        // Their info is contained in the standard Content Description block at the very beginning of the file
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
+        {
+            { "WM/TITLE", TagData.TAG_FIELD_TITLE },
+            { "WM/AlbumTitle", TagData.TAG_FIELD_ALBUM },
+            { "WM/AUTHOR", TagData.TAG_FIELD_ARTIST },
+            { "WM/COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
+            { "WM/DESCRIPTION", TagData.TAG_FIELD_COMMENT },
+            { "WM/Year", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "WM/Genre", TagData.TAG_FIELD_GENRE },
+            { "WM/TrackNumber", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+            { "WM/PartOfSet", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+            { "WM/RATING", TagData.TAG_FIELD_RATING },
+            { "WM/SharedUserRating", TagData.TAG_FIELD_RATING },
+            { "WM/Composer", TagData.TAG_FIELD_COMPOSER },
+            { "WM/AlbumArtist", TagData.TAG_FIELD_ALBUM_ARTIST },
+            { "WM/Conductor", TagData.TAG_FIELD_CONDUCTOR }
+        };
+        // Field that are embedded in standard ASF description, and do not need to be written in any other frame
+        private static IList<string> embeddedFields = new List<string>
+        {
+            { "WM/TITLE" },
+            { "WM/AUTHOR" },
+            { "WM/COPYRIGHT" },
+            { "WM/DESCRIPTION" },
+            { "WM/RATING" }
+        };
+
+        // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
+        private static IDictionary<string, ushort> frameClasses = new Dictionary<string, ushort>() // To be further populated while reading
+        {
+            { "WM/SharedUserRating", 3 }
+        };
+
 
         private IList<string> languages; // Optional language index described in the WMA header
 
         private AudioDataManager.SizeInfo sizeInfo;
-        private string filePath;
+        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -144,43 +178,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static WMA()
-        {
-            // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
-            // their ID will not appear as is in the WMA header. 
-            // Their info is contained in the standard Content Description block at the very beginning of the file
-            frameMapping = new Dictionary<string, byte>
-            {
-                { "WM/TITLE", TagData.TAG_FIELD_TITLE },
-                { "WM/AlbumTitle", TagData.TAG_FIELD_ALBUM },
-                { "WM/AUTHOR", TagData.TAG_FIELD_ARTIST },
-                { "WM/COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
-                { "WM/DESCRIPTION", TagData.TAG_FIELD_COMMENT },
-                { "WM/Year", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "WM/Genre", TagData.TAG_FIELD_GENRE },
-                { "WM/TrackNumber", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "WM/PartOfSet", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "WM/RATING", TagData.TAG_FIELD_RATING },
-                { "WM/SharedUserRating", TagData.TAG_FIELD_RATING },
-                { "WM/Composer", TagData.TAG_FIELD_COMPOSER },
-                { "WM/AlbumArtist", TagData.TAG_FIELD_ALBUM_ARTIST },
-                { "WM/Conductor", TagData.TAG_FIELD_CONDUCTOR }
-            };
-
-            embeddedFields = new List<string>
-            {
-                { "WM/TITLE" },
-                { "WM/AUTHOR" },
-                { "WM/COPYRIGHT" },
-                { "WM/DESCRIPTION" },
-                { "WM/RATING" }
-            };
-
-
-            frameClasses = new Dictionary<string, ushort>(); // To be further populated while reading
-            frameClasses.Add("WM/SharedUserRating", 3);
-        }
 
         private void resetData()
         {

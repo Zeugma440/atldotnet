@@ -13,9 +13,9 @@ namespace ATL.AudioData.IO
 	class DSF : IAudioDataIO, IMetaDataEmbedder
     {
         // Headers ID
-        public const String DSD_ID = "DSD ";
-        public const String FMT_ID = "fmt ";
-        public const String DATA_ID = "data";
+        public const string DSD_ID = "DSD ";
+        public const string FMT_ID = "fmt ";
+        public const string DATA_ID = "data";
 
 
         // Private declarations 
@@ -32,7 +32,7 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         private long id3v2Offset;
-        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
+        private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
 
 
         // Public declarations 
@@ -159,7 +159,7 @@ namespace ATL.AudioData.IO
                     source.BaseStream.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
                     uint channels = source.ReadUInt32();
-                    switch(channels)
+                    switch (channels)
                     {
                         case 1: channelsArrangement = MONO; break;
                         case 2: channelsArrangement = STEREO; break;

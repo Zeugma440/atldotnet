@@ -37,7 +37,6 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         uint loopStart;
 
@@ -223,12 +222,9 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            isValid = readHeader(bufferedSource, readTagParams);
-
-            if (isValid)
+            if (readHeader(bufferedSource, readTagParams))
             {
                 duration = calculateDuration(bufferedSource, loopStart, LOOP_COUNT_DEFAULT) * 1000.0;
-
                 bitrate = (sizeInfo.FileSize - GYM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
             }
 

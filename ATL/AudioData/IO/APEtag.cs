@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
 	public class APEtag : MetaDataIO
     {
         // Tag ID
-        public const String APE_ID = "APETAGEX";                            // APE
+        public const string APE_ID = "APETAGEX";                            // APE
 
         // Size constants
         public const byte APE_TAG_FOOTER_SIZE = 32;                         // APE tag footer
@@ -22,8 +22,33 @@ namespace ATL.AudioData.IO
         public const int APE_VERSION_1_0 = 1000;
         public const int APE_VERSION_2_0 = 2000;
 
-        // Mapping between APE field IDs and ATL fields
-        private static IDictionary<string, byte> frameMapping;
+        // Mapping between standard ATL fields and APE identifiers
+        /*
+         * Note : APE tag standard being a little loose, field codes vary according to the various implementations that have been made
+         * => Some fields can be found in multiple frame code variants
+         *      - Rating : "rating", "preference" frames
+         *      - Disc number : "disc", "discnumber" frames
+         *      - Album Artist : "albumartist", "album artist" frames
+         */
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
+        {
+            { "TITLE", TagData.TAG_FIELD_TITLE },
+            { "ARTIST", TagData.TAG_FIELD_ARTIST },
+            { "ALBUM", TagData.TAG_FIELD_ALBUM },
+            { "TRACK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
+            { "YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "GENRE", TagData.TAG_FIELD_GENRE },
+            { "COMMENT", TagData.TAG_FIELD_COMMENT },
+            { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
+            { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
+            { "RATING", TagData.TAG_FIELD_RATING },
+            { "PREFERENCE", TagData.TAG_FIELD_RATING },
+            { "DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+            { "DISC", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
+            { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
+            { "ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
+            { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
+        };
 
 
         // APE tag data - for internal use
@@ -53,35 +78,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        static APEtag()
-        {
-            // Mapping between standard ATL fields and APE identifiers
-            /*
-             * Note : APE tag standard being a little loose, field codes vary according to the various implementations that have been made
-             * => Some fields can be found in multiple frame code variants
-             *      - Rating : "rating", "preference" frames
-             *      - Disc number : "disc", "discnumber" frames
-             *      - Album Artist : "albumartist", "album artist" frames
-             */
-            frameMapping = new Dictionary<string, byte>();
-
-            frameMapping.Add("TITLE", TagData.TAG_FIELD_TITLE);
-            frameMapping.Add("ARTIST", TagData.TAG_FIELD_ARTIST);
-            frameMapping.Add("ALBUM", TagData.TAG_FIELD_ALBUM);
-            frameMapping.Add("TRACK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL);
-            frameMapping.Add("YEAR", TagData.TAG_FIELD_RECORDING_YEAR);
-            frameMapping.Add("GENRE", TagData.TAG_FIELD_GENRE);
-            frameMapping.Add("COMMENT", TagData.TAG_FIELD_COMMENT);
-            frameMapping.Add("COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT);
-            frameMapping.Add("COMPOSER", TagData.TAG_FIELD_COMPOSER);
-            frameMapping.Add("RATING", TagData.TAG_FIELD_RATING);
-            frameMapping.Add("PREFERENCE", TagData.TAG_FIELD_RATING);
-            frameMapping.Add("DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER_TOTAL);
-            frameMapping.Add("DISC", TagData.TAG_FIELD_DISC_NUMBER_TOTAL);
-            frameMapping.Add("ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
-            frameMapping.Add("ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST);
-            frameMapping.Add("CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR);
-        }
 
         public APEtag()
         {
@@ -302,11 +298,11 @@ namespace ATL.AudioData.IO
 
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
-            w.Write((int)0); // Tag size placeholder to be rewritten in a few lines
+            w.Write(0); // Tag size placeholder to be rewritten in a few lines
 
             // Keep position in mind to calculate final item count and come back here to write it
             itemCountPos = w.BaseStream.Position;
-            w.Write((int)0); // Item count placeholder to be rewritten in a few lines
+            w.Write(0); // Item count placeholder to be rewritten in a few lines
 
             w.Write(flags);
 
@@ -437,7 +433,7 @@ namespace ATL.AudioData.IO
             int frameFlags = 0x00000002; // This frame contains binary information (essential for pictures)
 
             frameSizePos = writer.BaseStream.Position;
-            writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
 
             writer.Write(frameFlags);
 

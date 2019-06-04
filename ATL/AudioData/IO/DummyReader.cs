@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 namespace ATL.AudioData.IO
@@ -8,7 +7,7 @@ namespace ATL.AudioData.IO
 	/// </summary>
 	public class DummyReader : IAudioDataIO
 	{
-        private string filePath = "";
+        private readonly string filePath = "";
 
         public DummyReader(string filePath)
         {

@@ -64,7 +64,20 @@ namespace ATL.AudioData.IO
         private FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
 
-        private static IDictionary<string, byte> frameMapping; // Mapping between WAV frame codes and ATL frame codes
+        // Mapping between WAV frame codes and ATL frame codes
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        {
+            { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
+            { "info.INAM", TagData.TAG_FIELD_TITLE },
+            { "info.TITL", TagData.TAG_FIELD_TITLE },
+            { "info.IART", TagData.TAG_FIELD_ARTIST },
+            { "info.ICOP", TagData.TAG_FIELD_COPYRIGHT },
+            { "info.IGNR", TagData.TAG_FIELD_GENRE },
+            { "info.IRTD", TagData.TAG_FIELD_RATING },
+            { "info.YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "info.TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
+            { "info.ICMT", TagData.TAG_FIELD_COMMENT }
+        };
 
 
         /* Unused for now
@@ -159,23 +172,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static WAV()
-        {
-            frameMapping = new Dictionary<string, byte>
-            {
-                { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "info.INAM", TagData.TAG_FIELD_TITLE },
-                { "info.TITL", TagData.TAG_FIELD_TITLE },
-                { "info.IART", TagData.TAG_FIELD_ARTIST },
-                { "info.ICOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "info.IGNR", TagData.TAG_FIELD_GENRE },
-                { "info.IRTD", TagData.TAG_FIELD_RATING },
-                { "info.YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "info.TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
-                { "info.ICMT", TagData.TAG_FIELD_COMMENT }
-            };
-        }
 
         protected void resetData()
         {

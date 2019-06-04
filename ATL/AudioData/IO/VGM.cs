@@ -34,7 +34,6 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         private int gd3TagOffset;
 
@@ -267,9 +266,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            isValid = readHeader(usedSource, readTagParams);
-
-            if (isValid && gd3TagOffset > VGM_HEADER_SIZE)
+            if (readHeader(usedSource, readTagParams) && gd3TagOffset > VGM_HEADER_SIZE)
             {
                 tagExists = true;
                 readGd3Tag(usedSource, gd3TagOffset);

@@ -51,7 +51,7 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
         private VorbisTag vorbisTag;
 
-        private FileInfo info = new FileInfo();
+        private readonly FileInfo info = new FileInfo();
 
         private int contents;
 
@@ -547,8 +547,6 @@ namespace ATL.AudioData.IO
         // Read total samples of OGG file, which are located on the very last page of the file
         private ulong getSamples(BufferedBinaryReader source)
         {
-            OggHeader header = new OggHeader();
-
             string headerId;
             byte typeFlag;
             byte[] lacingValues = new byte[255];

@@ -81,21 +81,65 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        private static IDictionary<byte, byte> extendedFrameMapping; // Mapping between SPC extended frame codes and ATL frame codes
-        private static IDictionary<byte, byte> headerFrameMapping; // Mapping between SPC header frame codes and ATL frame codes
-        private static IList<byte> playbackFrames; // Frames that are required for playback
-        private static IDictionary<byte, byte> extendedFrameTypes; // Mapping between SPC frame codes and frame types that aren't type 1 (ANSI string)
+        // Mapping between SPC extended frame codes and ATL frame codes
+        private static IDictionary<byte, byte> extendedFrameMapping = new Dictionary<byte, byte>
+        {
+            { XID6_SONG, TagData.TAG_FIELD_TITLE },
+            { XID6_GAME, TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
+            { XID6_ARTIST, TagData.TAG_FIELD_ARTIST },
+            { XID6_CMNTS, TagData.TAG_FIELD_COMMENT },
+            { XID6_COPY, TagData.TAG_FIELD_RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
+            { XID6_TRACK, TagData.TAG_FIELD_TRACK_NUMBER },
+            { XID6_DISC, TagData.TAG_FIELD_DISC_NUMBER },
+            { XID6_PUB, TagData.TAG_FIELD_PUBLISHER }
+        };
+        // Mapping between SPC header frame codes and ATL frame codes
+        private static IDictionary<byte, byte> headerFrameMapping = new Dictionary<byte, byte>
+        {
+            { HEADER_TITLE, TagData.TAG_FIELD_TITLE },
+            { HEADER_ALBUM, TagData.TAG_FIELD_ALBUM },
+            { HEADER_ARTIST, TagData.TAG_FIELD_ARTIST },
+            { HEADER_COMMENT, TagData.TAG_FIELD_COMMENT }
+        };
+        // Frames that are required for playback
+        private static IList<byte> playbackFrames = new List<byte>
+        {
+            XID6_INTRO,
+            XID6_LOOP,
+            XID6_END,
+            XID6_FADE,
+            XID6_MUTE,
+            XID6_LOOPX,
+            XID6_AMP,
+            HEADER_SONGLENGTH,
+            HEADER_FADE
+        };
+        // Mapping between SPC frame codes and frame types that aren't type 1 (ANSI string)
+        private static IDictionary<byte, byte> extendedFrameTypes = new Dictionary<byte, byte>()
+        {
+            { XID6_DATE, 4 },
+            { XID6_EMU, 0 },
+            { XID6_DISC, 0 },
+            { XID6_TRACK, 0 },
+            { XID6_COPY, 0 },
+            { XID6_INTRO, 4 },
+            { XID6_LOOP, 4 },
+            { XID6_END, 4 },
+            { XID6_FADE, 4 },
+            { XID6_MUTE, 0 },
+            { XID6_LOOPX, 0 },
+            { XID6_AMP, 4 }
+        };
 
 
-        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+    // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // AudioDataIO
-        public int SampleRate // Sample rate (hz)
+    // AudioDataIO
+    public int SampleRate // Sample rate (hz)
         {
             get { return this.sampleRate; }
         }
@@ -199,56 +243,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static SPC()
-        {
-            extendedFrameMapping = new Dictionary<byte, byte>
-            {
-                { XID6_SONG, TagData.TAG_FIELD_TITLE },
-                { XID6_GAME, TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
-                { XID6_ARTIST, TagData.TAG_FIELD_ARTIST },
-                { XID6_CMNTS, TagData.TAG_FIELD_COMMENT },
-                { XID6_COPY, TagData.TAG_FIELD_RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
-                { XID6_TRACK, TagData.TAG_FIELD_TRACK_NUMBER },
-                { XID6_DISC, TagData.TAG_FIELD_DISC_NUMBER },
-                { XID6_PUB, TagData.TAG_FIELD_PUBLISHER }
-            };
-
-            headerFrameMapping = new Dictionary<byte, byte>
-            {
-                { HEADER_TITLE, TagData.TAG_FIELD_TITLE },
-                { HEADER_ALBUM, TagData.TAG_FIELD_ALBUM },
-                { HEADER_ARTIST, TagData.TAG_FIELD_ARTIST },
-                { HEADER_COMMENT, TagData.TAG_FIELD_COMMENT }
-            };
-
-            playbackFrames = new List<byte>
-            {
-                XID6_INTRO,
-                XID6_LOOP,
-                XID6_END,
-                XID6_FADE,
-                XID6_MUTE,
-                XID6_LOOPX,
-                XID6_AMP,
-                HEADER_SONGLENGTH,
-                HEADER_FADE
-            };
-
-            extendedFrameTypes = new Dictionary<byte, byte>();
-            extendedFrameTypes.Add(XID6_DATE, 4);
-            extendedFrameTypes.Add(XID6_EMU, 0);
-            extendedFrameTypes.Add(XID6_DISC, 0);
-            extendedFrameTypes.Add(XID6_TRACK, 0);
-            extendedFrameTypes.Add(XID6_COPY, 0);
-            extendedFrameTypes.Add(XID6_INTRO, 4);
-            extendedFrameTypes.Add(XID6_LOOP, 4);
-            extendedFrameTypes.Add(XID6_END, 4);
-            extendedFrameTypes.Add(XID6_FADE, 4);
-            extendedFrameTypes.Add(XID6_MUTE, 0);
-            extendedFrameTypes.Add(XID6_LOOPX, 0);
-            extendedFrameTypes.Add(XID6_AMP, 4);
-        }
 
         private void resetData()
         {
@@ -488,8 +482,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            isValid = readHeader(source, ref header);
-            if (!isValid) throw new InvalidDataException("Not a SPC file");
+            if (!readHeader(source, ref header)) throw new InvalidDataException("Not a SPC file");
 
             // Reads the header tag
             if (SPCHeader.TAG_IN_HEADER == header.TagInHeader)

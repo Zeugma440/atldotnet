@@ -77,9 +77,15 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         private long id3v2Offset;
-        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
+        private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
-        private static IDictionary<string, byte> frameMapping; // Mapping between AIFx frame codes and ATL frame codes
+        // Mapping between AIFx frame codes and ATL frame codes
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        {
+            { CHUNKTYPE_NAME, TagData.TAG_FIELD_TITLE },
+            { CHUNKTYPE_AUTHOR, TagData.TAG_FIELD_ARTIST },
+            { CHUNKTYPE_COPYRIGHT, TagData.TAG_FIELD_COPYRIGHT }
+        }; 
 
 
         public byte VersionID // Version code
@@ -178,16 +184,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static AIFF()
-        {
-            frameMapping = new Dictionary<string, byte>
-            {
-                { CHUNKTYPE_NAME, TagData.TAG_FIELD_TITLE },
-                { CHUNKTYPE_AUTHOR, TagData.TAG_FIELD_ARTIST },
-                { CHUNKTYPE_COPYRIGHT, TagData.TAG_FIELD_COPYRIGHT }
-            };
-        }
 
         private void resetData()
         {
@@ -481,7 +477,7 @@ namespace ATL.AudioData.IO
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
-                    w.Write((int)0); // Placeholder for field size that will be rewritten at the end of the method
+                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Title);
                     w.Write(strBytes);
@@ -498,7 +494,7 @@ namespace ATL.AudioData.IO
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
-                    w.Write((int)0); // Placeholder for field size that will be rewritten at the end of the method
+                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Artist);
                     w.Write(strBytes);
@@ -515,7 +511,7 @@ namespace ATL.AudioData.IO
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
-                    w.Write((int)0); // Placeholder for field size that will be rewritten at the end of the method
+                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Copyright);
                     w.Write(strBytes);
@@ -547,7 +543,7 @@ namespace ATL.AudioData.IO
                     ushort numComments = 0;
                     w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
                     long sizePos = w.BaseStream.Position;
-                    w.Write((int)0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
+                    w.Write(0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
                     w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
 
                     // First write generic comments (those linked to the Comment field)

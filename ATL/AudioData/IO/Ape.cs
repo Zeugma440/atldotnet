@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -34,7 +33,7 @@ namespace ATL.AudioData.IO
         public static readonly string[] MONKEY_MODE = new string[3] { "Unknown", "Mono", "Stereo" };
 
 
-        ApeHeader header = new ApeHeader();             // common header
+        readonly ApeHeader header = new ApeHeader();             // common header
 
         // Stuff loaded from the header:
         private int version;
@@ -375,13 +374,9 @@ namespace ATL.AudioData.IO
 
                     // calculate total uncompressed samples
                     if (APE_OLD.nTotalFrames > 0)
-                    {
-                        totalSamples = (long)(APE_OLD.nTotalFrames - 1) *
-                            (long)(BlocksPerFrame) +
-                            (long)(APE_OLD.nFinalFrameBlocks);
-                    }
-                    LoadSuccess = true;
+                        totalSamples = (APE_OLD.nTotalFrames - 1) * BlocksPerFrame + APE_OLD.nFinalFrameBlocks;
 
+                    LoadSuccess = true;
                 }
                 if (LoadSuccess)
                 {
@@ -395,7 +390,7 @@ namespace ATL.AudioData.IO
                         compressionModeStr = compressionMode.ToString();
                     }
                     // length
-                    if (sampleRate > 0) duration = ((double)totalSamples * 1000.0 / sampleRate);
+                    if (sampleRate > 0) duration = totalSamples * 1000.0 / sampleRate;
                     // average bitrate
                     if (duration > 0) bitrate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / (duration);
                     // some extra sanity checks

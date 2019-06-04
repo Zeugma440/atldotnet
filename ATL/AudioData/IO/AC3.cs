@@ -14,9 +14,6 @@ namespace ATL.AudioData.IO
                                                         192, 224, 256, 320, 384, 448, 512, 576, 640 };
 
         // Private declarations 
-        /* Unused for now
-		private uint bits;
-        */
         private uint sampleRate;
 
         private double bitrate;
@@ -29,10 +26,6 @@ namespace ATL.AudioData.IO
 
         // Public declarations 
         /* Unused for now
-		public uint Bits
-		{
-			get { return bits; }
-		}
         public double CompressionRatio
         {
             get { return getCompressionRatio(); }
@@ -84,9 +77,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            /*
-			bits = 0;
-            */
             sampleRate = 0;
             duration = 0;
             bitrate = 0;
@@ -126,8 +116,6 @@ namespace ATL.AudioData.IO
 
             if (30475 == signatureChunk)
             {
-                aByte = 0;
-
                 source.BaseStream.Seek(2, SeekOrigin.Current);
                 aByte = source.ReadByte();
 
@@ -140,8 +128,6 @@ namespace ATL.AudioData.IO
                 }
 
                 bitrate = BITRATES[(aByte & 0x3F) >> 1];
-
-                aByte = 0;
 
                 source.BaseStream.Seek(1, SeekOrigin.Current);
                 aByte = source.ReadByte();
@@ -158,9 +144,6 @@ namespace ATL.AudioData.IO
                     case 0xE0: channelsArrangement = ISO_3_2_0; break;
                     default: channelsArrangement = UNKNOWN; break;
                 }
-
-
-                //				bits = 16;
 
                 duration = sizeInfo.FileSize * 8.0 / bitrate;
 

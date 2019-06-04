@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_BEXT));
 
             long sizePos = w.BaseStream.Position;
-            w.Write((int)0); // Placeholder for chunk size that will be rewritten at the end of the method
+            w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
             // Text values
             string description = Utils.ProtectValue(meta.GeneralDescription);

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using ATL.Logging;
 using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -46,8 +45,28 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        private static IDictionary<string, byte> frameMapping; // Mapping between PSF frame codes and ATL frame codes
-        private static IList<string> playbackFrames; // Frames that are required for playback
+        // Mapping between PSF frame codes and ATL frame codes
+        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        {
+            { "title", TagData.TAG_FIELD_TITLE },
+            { "game", TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
+            { "artist", TagData.TAG_FIELD_ARTIST },
+            { "copyright", TagData.TAG_FIELD_COPYRIGHT },
+            { "comment", TagData.TAG_FIELD_COMMENT },
+            { "year", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "genre", TagData.TAG_FIELD_GENRE },
+            { "rating", TagData.TAG_FIELD_RATING } // Does not belong to the predefined standard PSF tags
+        };
+        // Frames that are required for playback
+        private static IList<string> playbackFrames = new List<string>
+        {
+            "volume",
+            "length",
+            "fade",
+            "filedir",
+            "filename",
+            "fileext"
+        };
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -79,7 +98,7 @@ namespace ATL.AudioData.IO
         }
         public ChannelsArrangement ChannelsArrangement
         {
-            get { return ChannelsArrangements.STEREO; }
+            get { return STEREO; }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -138,31 +157,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
-
-        static PSF()
-        {
-            frameMapping = new Dictionary<string, byte>
-            {
-                { "title", TagData.TAG_FIELD_TITLE },
-                { "game", TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
-                { "artist", TagData.TAG_FIELD_ARTIST },
-                { "copyright", TagData.TAG_FIELD_COPYRIGHT },
-                { "comment", TagData.TAG_FIELD_COMMENT },
-                { "year", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "genre", TagData.TAG_FIELD_GENRE },
-                { "rating", TagData.TAG_FIELD_RATING } // Does not belong to the predefined standard PSF tags
-            };
-
-            playbackFrames = new List<string>
-            {
-                "volume",
-                "length",
-                "fade",
-                "filedir",
-                "filename",
-                "fileext"
-            };
-        }
 
         private void resetData()
         {
