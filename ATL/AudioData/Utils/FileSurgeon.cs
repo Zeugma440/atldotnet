@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.FileStructureHelper;
 
@@ -6,6 +7,21 @@ namespace ATL.AudioData.IO
 {
     class FileSurgeon
     {
+        // Modes for zone block modification
+        public enum WriteMode
+        {
+            REPLACE = 0,   // Replace : existing block is replaced by written data
+            OVERWRITE = 1  // Overwrite : written data overwrites existing block (non-overwritten parts are kept as is)
+        }
+
+        // Modes for zone management
+        public enum ZoneManagement
+        {
+            ON_DISK = 0,    // Modifications are performed directly on disk; adapted for small files or single zones
+            BUFFERED = 1    // Modifications are performed in a memory buffer, then written on disk in one go
+        }
+
+
         private readonly FileStructureHelper structureHelper;
         private readonly IMetaDataEmbedder embedder;
 
@@ -14,13 +30,6 @@ namespace ATL.AudioData.IO
 
         public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
 
-
-        // Modes for file modification
-        public enum WriteMode
-        {
-            MODE_REPLACE = 0,   // Replace : existing block is replaced by written data
-            MODE_OVERWRITE = 1  // Overwrite : written data overwrites existing block (non-overwritten parts are kept as is)
-        }
 
         public class WriteResult
         {
@@ -55,6 +64,23 @@ namespace ATL.AudioData.IO
             TagData dataToWrite,
             bool tagExists)
         {
+            ZoneManagement mode;
+            if (1 == zones.Count) mode = ZoneManagement.ON_DISK;
+            else mode = ZoneManagement.BUFFERED;
+
+            if (ZoneManagement.ON_DISK == mode) return RewriteZonesDirect(w, write, zones, dataToWrite, tagExists);
+            else return RewriteZonesBuffered(w, write, zones, dataToWrite, tagExists);
+        }
+
+        private bool RewriteZonesDirect(
+            BinaryWriter w,
+            WriteDelegate write,
+            ICollection<Zone> zones,
+            TagData dataToWrite,
+            bool tagExists,
+            long globalOffsetCorrection = 0,
+            bool buffered = false)
+        {
             long oldTagSize;
             long newTagSize;
             long cumulativeDelta = 0;
@@ -71,7 +97,7 @@ namespace ATL.AudioData.IO
                     dataToWrite.DataSizeDelta = cumulativeDelta;
                     WriteResult writeResult = write(msw, dataToWrite, zone);
 
-                    if (WriteMode.MODE_REPLACE == writeResult.RequiredMode)
+                    if (WriteMode.REPLACE == writeResult.RequiredMode)
                     {
                         if (writeResult.WrittenFields > 0)
                         {
@@ -101,14 +127,14 @@ namespace ATL.AudioData.IO
 
                     if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
                     {
-                        tagBeginOffset = zone.Offset + cumulativeDelta;
+                        tagBeginOffset = zone.Offset + cumulativeDelta - globalOffsetCorrection;
                         tagEndOffset = tagBeginOffset + zone.Size;
                     }
                     else // A brand new tag has been added to the file
                     {
                         if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
                         {
-                            tagBeginOffset = embedder.Id3v2Zone.Offset;
+                            tagBeginOffset = embedder.Id3v2Zone.Offset - globalOffsetCorrection;
                         }
                         else
                         {
@@ -119,21 +145,22 @@ namespace ATL.AudioData.IO
                                 case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
                                 default: tagBeginOffset = -1; break;
                             }
+                            tagBeginOffset -= globalOffsetCorrection;
                         }
                         tagEndOffset = tagBeginOffset + zone.Size;
                     }
 
-                    if (WriteMode.MODE_REPLACE == writeResult.RequiredMode)
+                    if (WriteMode.REPLACE == writeResult.RequiredMode)
                     {
                         // Need to build a larger file
                         if (newTagSize > zone.Size)
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Lengthening (delta=" + (newTagSize - zone.Size) + ")");
+                            if (!buffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (newTagSize - zone.Size) + ")");
                             StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
                         }
                         else if (newTagSize < zone.Size) // Need to reduce file size
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Data stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
+                            if (!buffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
                             StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
                         }
                     }
@@ -164,13 +191,98 @@ namespace ATL.AudioData.IO
                         else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
                         else action = ACTION_EDIT;
 
-                        result = structureHelper.RewriteHeaders(w, delta, action, zone.Name);
+                        result = structureHelper.RewriteHeaders(w, delta, action, zone.Name, globalOffsetCorrection);
                     }
 
                     zone.Size = (int)newTagSize;
                 }
             } // Loop through zones
 
+            return result;
+        }
+
+        private bool RewriteZonesBuffered(
+            BinaryWriter w,
+            WriteDelegate write,
+            ICollection<Zone> zones,
+            TagData dataToWrite,
+            bool tagExists)
+        {
+            bool result = true;
+
+            // Load the 'interesting' part of the file in memory
+            // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC)
+            long chunkBeginOffset = getFirstRecordedOffset(zones);
+            long chunkEndOffset = getLastRecordedOffset(zones);
+
+            if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+            {
+                chunkBeginOffset = Math.Min(chunkBeginOffset, embedder.Id3v2Zone.Offset);
+                chunkEndOffset = Math.Max(chunkEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
+            }
+
+            long initialChunkLength = chunkEndOffset - chunkBeginOffset;
+
+
+            w.BaseStream.Seek(chunkBeginOffset, SeekOrigin.Begin);
+
+            using (MemoryStream chunk = new MemoryStream((int)initialChunkLength))
+            {
+                StreamUtils.CopyStream(w.BaseStream, chunk, (int)initialChunkLength);
+                using (BinaryWriter msw = new BinaryWriter(chunk, Settings.DefaultTextEncoding))
+                {
+                    result = RewriteZonesDirect(msw, write, zones, dataToWrite, tagExists, chunkBeginOffset, true);
+
+                    // -- Adjust file slot to new size of chunk --
+                    long tagBeginOffset = chunkBeginOffset;
+                    long tagEndOffset = tagBeginOffset + initialChunkLength;
+
+                    // Need to build a larger file
+                    if (chunk.Length > initialChunkLength)
+                    {
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (chunk.Length - initialChunkLength) + ")");
+                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(chunk.Length - initialChunkLength));
+                    }
+                    else if (chunk.Length < initialChunkLength) // Need to reduce file size
+                    {
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (chunk.Length - initialChunkLength) + ")");
+                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialChunkLength - chunk.Length));
+                    }
+
+                    // Copy tag contents to the new slot
+                    w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                    chunk.Seek(0, SeekOrigin.Begin);
+
+                    StreamUtils.CopyStream(chunk, w.BaseStream);
+                }
+            }
+
+            return result;
+        }
+
+        private static long getFirstRecordedOffset(ICollection<Zone> zones)
+        {
+            long result = long.MaxValue;
+            if (zones != null)
+                foreach (Zone zone in zones)
+                {
+                    result = Math.Min(result, zone.Offset);
+                    foreach (FrameHeader header in zone.Headers)
+                        result = Math.Min(result, header.Position);
+                }
+            return result;
+        }
+
+        private static long getLastRecordedOffset(ICollection<Zone> zones)
+        {
+            long result = 0;
+            if (zones != null)
+                foreach (Zone zone in zones)
+                {
+                    result = Math.Max(result, zone.Offset + zone.Size);
+                    foreach (FrameHeader header in zone.Headers)
+                        result = Math.Max(result, header.Position);
+                }
             return result;
         }
     }

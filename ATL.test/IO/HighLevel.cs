@@ -230,7 +230,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
         }
 
-        private void tagIO_RW_UpdatePadding(string resource, int paddingSize = 2048, bool skipStreamChecks = false)
+        private void tagIO_RW_UpdatePadding(string resource, int paddingSize = 2048)
         {
             Settings.PaddingSize = paddingSize;
             try
@@ -258,7 +258,7 @@ namespace ATL.test.IO
                 IList<LogItem> logItems = log.GetAllItems(LV_DEBUG);
                 foreach (LogItem item in logItems)
                 {
-                    if (!skipStreamChecks && item.Message.StartsWith("Data stream operation : "))
+                    if (item.Message.StartsWith("Disk stream operation : "))
                     {
                         Assert.Fail(item.Message);
                     }
@@ -278,7 +278,7 @@ namespace ATL.test.IO
                 logItems = log.GetAllItems(LV_DEBUG);
                 foreach (LogItem item in logItems)
                 {
-                    if (!skipStreamChecks && item.Message.StartsWith("Data stream operation : "))
+                    if (item.Message.StartsWith("Disk stream operation : "))
                     {
                         Assert.Fail(item.Message);
                     }
@@ -300,9 +300,9 @@ namespace ATL.test.IO
         public void TagIO_RW_Padding()
         {
             tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
-            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063, true); // padded Vorbis-FLAC -- TODO performance issue here
+            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC -- TODO performance issue here
             tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
-            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 2048, true); // padded MP4 -- TODO performance issue here
+            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 2048); // padded MP4 -- TODO performance issue here
         }
 
         [TestMethod]

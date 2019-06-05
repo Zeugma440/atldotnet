@@ -630,7 +630,7 @@ namespace ATL.AudioData.IO
 
         private FileSurgeon.WriteResult writeAdapter(BinaryWriter w, TagData tag, Zone zone)
         {
-            return new FileSurgeon.WriteResult(FileSurgeon.WriteMode.MODE_REPLACE, write(tag, w, zone.Name));
+            return new FileSurgeon.WriteResult(FileSurgeon.WriteMode.REPLACE, write(tag, w, zone.Name));
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag)

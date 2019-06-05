@@ -590,7 +590,7 @@ namespace ATL.AudioData.IO
             else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
             {
                 w.Write(zone.Flag);
-                result = new WriteResult(WriteMode.MODE_OVERWRITE, 1);
+                result = new WriteResult(WriteMode.OVERWRITE, 1);
             }
 
             // Remember the latest block position
@@ -647,7 +647,7 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
             w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
 
-            return new WriteResult(WriteMode.MODE_REPLACE, writtenFields);
+            return new WriteResult(WriteMode.REPLACE, writtenFields);
         }
 
         private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta)
@@ -658,9 +658,9 @@ namespace ATL.AudioData.IO
                 w.Write(META_PADDING);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
-                return new WriteResult(WriteMode.MODE_REPLACE, 1);
+                return new WriteResult(WriteMode.REPLACE, 1);
             }
-            else return new WriteResult(WriteMode.MODE_REPLACE, 0);
+            else return new WriteResult(WriteMode.REPLACE, 0);
         }
 
         /// <summary>
@@ -700,14 +700,14 @@ namespace ATL.AudioData.IO
                     PictureInfo existingPic = existingPictures[existingPictureIndex++];
                     pictureExists = existingPic.ComputePicHash() == pictureToWrite.ComputePicHash(); // No need to rewrite an identical pic
                 }
-                if (!pictureExists) return new WriteResult(WriteMode.MODE_REPLACE, writePictureBlock(w, pictureToWrite));
+                if (!pictureExists) return new WriteResult(WriteMode.REPLACE, writePictureBlock(w, pictureToWrite));
                 else
                 {
                     w.Write(META_PICTURE);
-                    return new WriteResult(WriteMode.MODE_OVERWRITE, 1);
+                    return new WriteResult(WriteMode.OVERWRITE, 1);
                 }
             }
-            else return new WriteResult(WriteMode.MODE_REPLACE, 0); // Nothing else to write; existing picture blocks are erased
+            else return new WriteResult(WriteMode.REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
         private int writePictureBlock(BinaryWriter w, PictureInfo picture)
