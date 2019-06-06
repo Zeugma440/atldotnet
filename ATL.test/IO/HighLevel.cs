@@ -285,7 +285,7 @@ namespace ATL.test.IO
                 }
 
 
-                // TODO : B- Check that new padding is added to empty files when option is enabled
+                // B- Check that new padding is added to empty files when option is enabled
 
 
                 // Get rid of the working copy
@@ -300,9 +300,9 @@ namespace ATL.test.IO
         public void TagIO_RW_Padding()
         {
             tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
-            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC -- TODO performance issue here
+            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
             tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
-            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 2048); // padded MP4 -- TODO performance issue here
+            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 17100); // padded MP4
         }
 
         [TestMethod]

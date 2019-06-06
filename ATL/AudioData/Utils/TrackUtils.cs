@@ -381,7 +381,12 @@ namespace ATL.AudioData
             long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
             // Padding size is constrained by either its initial size or the max size defined in settings
             if (initialPaddingOffset > -1)
-                paddingSizeToWrite = Math.Min(initialPaddingSize + deltaSize, Math.Max(Settings.PaddingSize, initialPaddingSize));
+            {
+                //paddingSizeToWrite = Math.Min(initialPaddingSize + deltaSize, Math.Max(Settings.PaddingSize, initialPaddingSize));
+                if (deltaSize <= 0) paddingSizeToWrite = Math.Max(0, initialPaddingSize + deltaSize);
+                else if (initialPaddingSize >= Settings.PaddingSize) paddingSizeToWrite = initialPaddingSize;
+                else paddingSizeToWrite = Math.Min(initialPaddingSize + deltaSize, Settings.PaddingSize);
+            }
             return paddingSizeToWrite;
         }
     }
