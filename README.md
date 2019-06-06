@@ -10,7 +10,7 @@ __Optimized with__ : [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet
 
 ## What is ATL .NET ?
 
-This library is aimed at giving .NET developers a managed, portable and easy-to-use library to **read and write metadata from various digital audio formats** with one single unified API, whatever the underlying format.
+This library is aimed at giving .NET developers a managed, portable and easy-to-use library to **read and write metadata from digital audio files and playlists** with one single unified API, whatever the underlying format.
 
 ```csharp
 using ATL.AudioData;
