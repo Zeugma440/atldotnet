@@ -330,7 +330,7 @@ namespace ATL
             result.Publisher = Publisher;
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
-            result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
+            if (!Date.Equals(DateTime.MinValue)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
             result.RecordingYear = Year.ToString();
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();
