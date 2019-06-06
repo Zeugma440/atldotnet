@@ -49,7 +49,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## Why would I want to use ATL while TagLib is out there ?
 
-* ATL is a __fully native C# implementation__, which makes portability trivial if your app is already based on .NET or Mono frameworks
+* ATL has a __full C# implementation__ and does not use any dependency, which makes portability trivial if your app is already based on .NET or Mono frameworks
 
 * ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
 
