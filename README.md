@@ -10,11 +10,23 @@ __Optimized with__ : [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet
 
 ## What is ATL .NET ?
 
-Audio Tools Library .NET is the C# port of [the original ATL](http://mac.sourceforge.net/atl/), written in Pascal by the MAC Team (Jürgen Faul, Gambit and contributors).
+This library is aimed at giving .NET developers a managed, portable and easy-to-use library to **read and write metadata from digital audio files and playlists** with one single unified API, whatever the underlying format.
 
-It is aimed at giving C# developers a native, portable and easy-to-use library to access and read data from various digital audio formats.
+```csharp
+using ATL.AudioData;
 
-As a showcase, I have used ATL.NET as a cornerstone to build [Ethos Cataloger](https://trello.com/b/ZAzRjbXZ/ethos-cataloger), a digital music cataloging software written entirely in C#.
+Track theTrack = new Track(audioFilePath);
+
+// Works the same way on any supported format (MP3, FLAC, WMA, SPC...)
+System.Console.WriteLine("Title : " + theTrack.Title);
+System.Console.WriteLine("Duration (ms) : " + theTrack.DurationMs);
+
+theTrack.Composer = "Oscar Wilde (アイドル)"; // Support for "exotic" charsets
+theTrack.AdditionalFields["customField"] = "fancyValue"; // Support for custom fields
+theTrack.Save();
+```
+
+You'll find more working code on the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets), including embedded picture (e.g. cover) management, chapters management or playlist management
 
 
 ## What is NOT ATL .NET ?
@@ -28,7 +40,7 @@ Audio Tools Library .NET is not
 
 ## Why open source ?
 
-ATL has been open source since its creation. The ATL 2.3 source written in Pascal language is still out there on Sourceforge !
+ATL has been open source since its creation. The original ATL 2.3 source written in Pascal language is still out there on Sourceforge !
 
 By publicly sharing the result of their work, the MAC team has helped many developers to gain tremendous time in creating audio tools.
 
@@ -37,7 +49,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## Why would I want to use ATL while TagLib is out there ?
 
-* ATL is a __fully native C# implementation__, which makes portability trivial if your app is already based on .NET or Mono frameworks
+* ATL has a __full C# implementation__ and does not use any dependency, which makes portability trivial if your app is already based on .NET or Mono frameworks
 
 * ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
 
