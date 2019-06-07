@@ -295,8 +295,8 @@ namespace ATL.test.IO
 
         private void tagIO_RW_AddPadding(string resource, int extraBytes = 0)
         {
-            bool initEnablePadding = Settings.EnablePadding;
-            Settings.EnablePadding = false;
+            bool initEnablePadding = Settings.AddNewPadding;
+            Settings.AddNewPadding = false;
 
             string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
@@ -307,7 +307,7 @@ namespace ATL.test.IO
 
             long initialLength = new FileInfo(testFileLocation).Length;
 
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
             try
             {
                 theTrack.Title = "b";
@@ -321,7 +321,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                Settings.EnablePadding = initEnablePadding;
+                Settings.AddNewPadding = initEnablePadding;
             }
         }
 
@@ -544,7 +544,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateKeepDataIntegrity()
         {
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
 
             try
             {
@@ -578,7 +578,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                Settings.EnablePadding = false;
+                Settings.AddNewPadding = false;
             }
         }
 

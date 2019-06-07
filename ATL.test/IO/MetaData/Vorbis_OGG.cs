@@ -229,7 +229,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
             Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
@@ -238,7 +238,7 @@ namespace ATL.test.IO.MetaData
 //                test_RW_Existing(notEmptyFile, 2, true, true);
             } finally
             {
-                Settings.EnablePadding = false;
+                Settings.AddNewPadding = false;
                 Settings.PaddingSize = 2048;
             }
         }
@@ -246,7 +246,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
             Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
@@ -254,7 +254,7 @@ namespace ATL.test.IO.MetaData
                 tagIO_RW_VorbisOGG_Existing("OGG/bigPicture.ogg", 3);
             } finally
             {
-                Settings.EnablePadding = false;
+                Settings.AddNewPadding = false;
                 Settings.PaddingSize = 2048;
             }
         }
@@ -367,14 +367,14 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_UpdateKeepTrackDiscZeroes()
         {
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
             try
             {
                 StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
                 test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
             } finally
             {
-                Settings.EnablePadding = false;
+                Settings.AddNewPadding = false;
             }
         }
 

@@ -175,7 +175,7 @@ namespace ATL.test.IO.MetaData
 
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
-            Settings.EnablePadding = true;
+            Settings.AddNewPadding = true;
             Settings.PaddingSize = 4063; // Default padding of the sample FLAC file
 
             try
@@ -261,7 +261,7 @@ namespace ATL.test.IO.MetaData
                 // Get rid of the working copy
                 if (deleteTempFile) File.Delete(testFileLocation);
             } finally {
-                Settings.EnablePadding = false;
+                Settings.AddNewPadding = false;
                 Settings.PaddingSize = 2048;
             }
         }

@@ -378,7 +378,7 @@ namespace ATL.AudioData
         // Delta > 0 => Metadata size has decreased => Padding should increase
         public static long ComputePaddingSize(long initialPaddingOffset, long initialPaddingSize, long deltaSize)
         {
-            long paddingSizeToWrite = Settings.EnablePadding ? Settings.PaddingSize : 0;
+            long paddingSizeToWrite = Settings.AddNewPadding ? Settings.PaddingSize : 0;
             // Padding size is constrained by either its initial size or the max size defined in settings
             if (initialPaddingOffset > -1)
             {

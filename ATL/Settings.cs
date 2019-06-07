@@ -10,7 +10,7 @@ namespace ATL
         /*
          * Global settings
          */
-        public static bool EnablePadding = false;                       // Used by OGG container; could be used by ID3v2 in the future
+        public static bool AddNewPadding = false;                       // Add padding to files that don't have it
         public static int PaddingSize = 2048;                           // Size of the initial padding to add; size of max padding to use
 
         public static readonly char InternalValueSeparator = '˵';       // Some obscure unicode character that hopefully won't be used anywhere in an actual tag

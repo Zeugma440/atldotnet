@@ -536,7 +536,7 @@ namespace ATL.AudioData.IO
                         if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "", blockEndOffset, 0, new byte[0], META_VORBIS_COMMENT));
                         if (!pictureFound) zones.Add(new Zone(META_PICTURE + "", blockEndOffset, 0, new byte[0], META_PICTURE));
                         // Padding must be the last block for it to correctly absorb size variations of the other blocks
-                        if (!paddingFound && Settings.EnablePadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], META_PADDING)); 
+                        if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], META_PADDING)); 
                     }
                 }
             }

@@ -1074,7 +1074,7 @@ namespace ATL.AudioData.IO
             }
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
 
-            if (readTagParams.PrepareForWriting && Settings.EnablePadding && !paddingFound)
+            if (readTagParams.PrepareForWriting && Settings.AddNewPadding && !paddingFound)
                 structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
         }
 
