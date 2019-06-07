@@ -164,7 +164,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateEmpty()
         {
-//            Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_NATIVE, AudioData.MetaDataIOFactory.TAG_ID3V2 };
+            //            Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_NATIVE, AudioData.MetaDataIOFactory.TAG_ID3V2 };
             try
             {
                 tagIO_RW_UpdateEmpty("MP3/empty.mp3"); // ID3v2
@@ -284,15 +284,44 @@ namespace ATL.test.IO
                     }
                 }
 
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.PaddingSize = 2048;
+            }
+        }
 
-                // B- Check that new padding is added to empty files when option is enabled
+        private void tagIO_RW_AddPadding(string resource, int extraBytes = 0)
+        {
+            bool initEnablePadding = Settings.EnablePadding;
+            Settings.EnablePadding = false;
 
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.Title = "a";
+            theTrack.Save();
+
+            long initialLength = new FileInfo(testFileLocation).Length;
+
+            Settings.EnablePadding = true;
+            try
+            {
+                theTrack.Title = "b";
+                theTrack.Save();
+
+                // B1- Check that the resulting file size has been increased by the size of the padding
+                Assert.AreEqual(initialLength + Settings.PaddingSize + extraBytes, new FileInfo(testFileLocation).Length);
 
                 // Get rid of the working copy
                 File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
-                Settings.PaddingSize = 2048;
+                Settings.EnablePadding = initEnablePadding;
             }
         }
 
@@ -300,9 +329,14 @@ namespace ATL.test.IO
         public void TagIO_RW_Padding()
         {
             tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
-            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
             tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
             tagIO_RW_UpdatePadding("AAC/mp4.m4a", 17100); // padded MP4
+            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
+
+            tagIO_RW_AddPadding("MP3/empty.mp3");
+            tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
+            tagIO_RW_AddPadding("AAC/empty.m4a");
+            tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
         }
 
         [TestMethod]

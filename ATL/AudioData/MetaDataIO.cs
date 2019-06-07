@@ -533,7 +533,7 @@ namespace ATL.AudioData.IO
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
-        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = FileStructureHelper.DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
+        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
             byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
@@ -551,28 +551,22 @@ namespace ATL.AudioData.IO
                     }
                 }
                 else if (TagData.TAG_FIELD_DISC_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = data.Length;
-                else if (TagData.TAG_FIELD_DISC_NUMBER_TOTAL == supportedMetaID)
+                else if (TagData.TAG_FIELD_DISC_NUMBER_TOTAL == supportedMetaID && data.Contains("/"))
                 {
-                    if (data.Contains("/"))
-                    {
-                        string[] parts = data.Split('/');
-                        if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
-                    }
+                    string[] parts = data.Split('/');
+                    if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
                 }
 
                 setMetaField(supportedMetaID, data);
             }
-            else if (readAllMetaFrames) // ...else store it in the additional fields Dictionary
+            else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
-                if (ID.Length > 0)
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
-                    MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
-                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
-                    {
-                        tagData.AdditionalFields.Remove(fieldInfo);
-                    }
-                    tagData.AdditionalFields.Add(fieldInfo);
+                    tagData.AdditionalFields.Remove(fieldInfo);
                 }
+                tagData.AdditionalFields.Add(fieldInfo);
             }
         }
 

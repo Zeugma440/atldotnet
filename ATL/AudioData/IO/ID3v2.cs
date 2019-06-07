@@ -1125,7 +1125,7 @@ namespace ATL.AudioData.IO
                     {
                         if (frameType == mapping[s])
                         {
-                            if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
+                            if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters                            
 
                             string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(w, s, value, tagEncoding);
@@ -1149,6 +1149,7 @@ namespace ATL.AudioData.IO
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
+                    if (fieldCode.Equals(VorbisTag.VENDOR_METADATA_ID)) continue; // Specific mandatory field exclusive to VorbisComment
 
                     // We're writing with ID3v2.4 standard. Some standard frame codes have to be converted from ID3v2.2/3 to ID3v4
                     if (4 == Settings.ID3v2_tagSubVersion)

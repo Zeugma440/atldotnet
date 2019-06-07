@@ -17,7 +17,7 @@ namespace ATL.AudioData.IO
     {
         private const string PICTURE_METADATA_ID_NEW = "METADATA_BLOCK_PICTURE";
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
-        private const string VENDOR_METADATA_ID = "VENDOR";
+        public const string VENDOR_METADATA_ID = "VORBIS-VENDOR";
 
         private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
 
