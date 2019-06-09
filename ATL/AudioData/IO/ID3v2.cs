@@ -361,11 +361,15 @@ namespace ATL.AudioData.IO
             public Encoding Encoding;           // Corresponding encoding
         }
 
-        private class CommentStructure
+        private class RichStructure
         {
+            // Comments and unsynch'ed lyrics
             public string LanguageCode;
             public string ContentDescriptor;
             public int Size;
+            // Synch'ed lyrics
+            public byte TimestampFormat;
+            public byte ContentType;
         }
 
         // ********************* Auxiliary functions & voids ********************
@@ -453,9 +457,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static CommentStructure readCommentStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
+        private static RichStructure readCommentStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
         {
-            CommentStructure result = new CommentStructure();
+            RichStructure result = new RichStructure();
             long initialPos = source.Position;
 
             // Langage ID
@@ -474,12 +478,45 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        private static RichStructure readSynchedLyricsStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
+        {
+            RichStructure result = new RichStructure();
+            long initialPos = source.Position;
+
+            // Langage ID
+            result.LanguageCode = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+            result.TimestampFormat = source.ReadByte();
+            result.ContentType = source.ReadByte();
+
+            // Content description
+            Encoding contentDescriptionEncoding = encoding;
+            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            {
+                BomProperties bom = readBOM(source);
+                if (bom.Found) contentDescriptionEncoding = bom.Encoding;
+            }
+            result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
+            result.Size = (int)(source.Position - initialPos);
+
+            return result;
+        }
+
+        private static LyricsInfo.LyricsPhrase readLyricsPhrase(BufferedBinaryReader source, Encoding encoding)
+        {
+            // Skip the newline char positioned by SYLT Editor
+            if (10 != source.ReadByte()) source.Position--;
+
+            string text = StreamUtils.ReadNullTerminatedString(source, encoding);
+            int timestamp = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            return new LyricsInfo.LyricsPhrase(timestamp, text);
+        }
+
         private bool readFrame(
-            BufferedBinaryReader source,
-            TagInfo tag,
-            ReadTagParams readTagParams,
-            ref IList<MetaFieldInfo> comments,
-            bool inChapter = false)
+        BufferedBinaryReader source,
+        TagInfo tag,
+        ReadTagParams readTagParams,
+        ref IList<MetaFieldInfo> comments,
+        bool inChapter = false)
         {
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
@@ -558,7 +595,7 @@ namespace ATL.AudioData.IO
             // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
             if (shortFrameId.Equals("COM") || shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
             {
-                CommentStructure structure = readCommentStructure(source, tagVersion, encodingCode, frameEncoding);
+                RichStructure structure = readCommentStructure(source, tagVersion, encodingCode, frameEncoding);
 
                 if (shortFrameId.Equals("COM"))
                 {
@@ -573,6 +610,16 @@ namespace ATL.AudioData.IO
                     tagData.Lyrics.Description = structure.ContentDescriptor;
                     inLyrics = true;
                 }
+
+                dataSize = dataSize - structure.Size;
+            }
+            else if ("SYL".Equals(shortFrameId)) // Synch'ed lyrics
+            {
+                RichStructure structure = readSynchedLyricsStructure(source, tagVersion, encodingCode, frameEncoding);
+                if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
+                tagData.Lyrics.LanguageCode = structure.LanguageCode;
+                tagData.Lyrics.Description = structure.ContentDescriptor;
+                tagData.Lyrics.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
 
                 dataSize = dataSize - structure.Size;
             }
@@ -675,6 +722,17 @@ namespace ATL.AudioData.IO
                             remainingData = dataSize - (source.Position - initPos);
                         } // End chapter frames loop
 
+                        strData = "";
+                    }
+                    else if ("SYL".Equals(shortFrameId)) // Synch'ed lyrics
+                    {
+                        long initPos = source.Position;
+                        long remainingData = dataSize - (source.Position - initPos);
+                        while (remainingData > 0)
+                        {
+                            tagData.Lyrics.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
+                            remainingData = dataSize - (source.Position - initPos);
+                        }
                         strData = "";
                     }
                     else if ("WXX".Equals(shortFrameId)) // Custom URL

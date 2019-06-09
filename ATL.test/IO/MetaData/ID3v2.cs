@@ -959,6 +959,46 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_SYLT()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_cn.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(theFile.ID3v2.Lyrics.LanguageCode, "eng");
+            Assert.AreEqual(theFile.ID3v2.Lyrics.Description, "CompuPhase SYLT Editor");
+            Assert.AreEqual(theFile.ID3v2.Lyrics.ContentType, LyricsInfo.LyricsType.LYRICS);
+            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics.Count, 58);
+
+            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics[0].Text, "成都");
+            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics[0].TimestampMs, 1340);
+
+
+            // Write
+            /*
+            TagData theTag = new TagData();
+            theTag.Lyrics = new LyricsInfo();
+            theTag.Lyrics.LanguageCode = "rus";
+            theTag.Lyrics.Description = "anthem";
+            theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
+            Assert.AreEqual(theTag.Lyrics.Description, theFile.ID3v2.Lyrics.Description);
+            Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.ID3v2.Lyrics.UnsynchronizedLyrics);
+            */
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_WriteID3v2_3()
         {
             Settings.ID3v2_tagSubVersion = 3;
