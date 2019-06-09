@@ -1625,27 +1625,15 @@ namespace ATL.AudioData.IO
             return Source.ReadByte();
         }
 
-        // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
-        // NB : This implementation _only_ works with UTF-16 BOMs defined in the ID3v2 specs ($FF FE 00 00 or $FE FF 00 00)
-        // TODO : this is crappy - use predefined BOMs (see BOM_CONSTS) and return an UNDEFINED value if needed (chars > 3)
-        /**
-         * Frames that allow different types of text encoding contains a text
-   encoding description byte. Possible encodings:
-
-     $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
-     $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
-           strings in the same frame SHALL have the same byteorder.
-           Terminated with $00 00.
-     $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
-           Terminated with $00 00.
-     $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
-
-   Strings dependent on encoding are represented in frame descriptions
-   as <text string according to encoding>, or <full text string
-   according to encoding> if newlines are allowed. Any empty strings of
-   type $01 which are NULL-terminated may have the Unicode BOM followed
-   by a Unicode NULL ($FF FE 00 00 or $FE FF 00 00).
-            */
+        /// <summary>
+        /// Read Unicode BOM and return the corresponding encoding
+        /// NB : This implementation _only_ works with UTF-16 BOMs defined in the ID3v2 specs ($FF FE 00 00 or $FE FF 00 00)
+        /// </summary>
+        /// <param name="fs">Source stream</param>
+        /// <returns>Properties of the BOM.
+        /// If it has been found, stream is positioned on the next byte just after the BOM.
+        /// If not, stream is positioned on its initial position before calling readBOM.
+        /// </returns>
         private BomProperties readBOM(BufferedBinaryReader fs)
         {
             BomProperties result = new BomProperties();
