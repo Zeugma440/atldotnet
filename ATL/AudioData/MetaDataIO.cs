@@ -421,6 +421,21 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public LyricsInfo Lyrics
+        {
+            get
+            {
+                if (tagData.Lyrics != null)
+                {
+                    return new LyricsInfo(tagData.Lyrics);
+                }
+                else
+                {
+                    return new LyricsInfo();
+                }
+            }
+        }
+
         public string ChaptersTableDescription
         {
             get { return Utils.ProtectValue(tagData.ChaptersTableDescription); }

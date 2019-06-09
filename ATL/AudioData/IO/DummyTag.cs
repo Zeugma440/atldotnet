@@ -133,6 +133,11 @@ namespace ATL.AudioData.IO
             get { return new List<ChapterInfo>(); }
         }
 
+        public LyricsInfo Lyrics
+        {
+            get { return new LyricsInfo(); }
+        }
+
         public IList<PictureInfo> EmbeddedPictures
         {
             get { return new List<PictureInfo>(); }

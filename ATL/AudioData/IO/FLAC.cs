@@ -323,6 +323,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public LyricsInfo Lyrics
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Lyrics;
+            }
+        }
+
         public IList<PictureInfo> EmbeddedPictures
         {
             get

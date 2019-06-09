@@ -150,6 +150,10 @@ namespace ATL
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
         public IList<ChapterInfo> Chapters;
+        /// <summary>
+        /// Synchronized and unsynchronized lyrics
+        /// </summary>
+        public LyricsInfo Lyrics;
 
 
         //=== PHYSICAL PROPERTIES
@@ -287,6 +291,7 @@ namespace ATL
             ChannelsArrangement = fileIO.ChannelsArrangement;
 
             Chapters = fileIO.Chapters;
+            Lyrics = fileIO.Lyrics;
 
             AdditionalFields = fileIO.AdditionalFields;
             initialAdditionalFields = fileIO.AdditionalFields.Keys;

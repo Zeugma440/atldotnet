@@ -42,6 +42,8 @@ namespace ATL
         public const byte TAG_FIELD_DISC_TOTAL = 22;
         public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 23;
         public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 24;
+        public const byte TAG_FIELD_LYRICS_UNSYNCH = 25;
+        public const byte TAG_FIELD_LYRICS_SYNCH = 26;
 #pragma warning disable S1104 // Fields should not have public accessibility
         // Values for 'classic' fields
         public string GeneralDescription = null;
@@ -75,6 +77,11 @@ namespace ATL
         /// NB : The whole chapter list is processed as a whole
         /// </summary>
         public IList<ChapterInfo> Chapters = null;
+
+        /// <summary>
+        /// Lyrics
+        /// </summary>
+        public LyricsInfo Lyrics = null;
 
 
         /// <summary>
@@ -339,6 +346,7 @@ namespace ATL
             DiscTotal = null;
             DiscNumberTotal = null;
             ChaptersTableDescription = null;
+            Lyrics = null;
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;

@@ -370,6 +370,14 @@ namespace ATL.AudioData
             }
         }
 
+        public LyricsInfo Lyrics
+        {
+            get
+            {
+                return metaData.Lyrics;
+            }
+        }
+
         public IList<PictureInfo> EmbeddedPictures
         {
             get

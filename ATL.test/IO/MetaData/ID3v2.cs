@@ -177,6 +177,36 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_WXXX_UnicodeNoDesc()
+        {
+            // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.4-WXX-UnicodeMarkerWithoutDescription.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual("http://remix.evillich.com", theFile.ID3v2.AdditionalFields["WXXX"].Split(Settings.InternalValueSeparator)[1]);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v2_USLT()
+        {
+            // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.4-USLT_JP_eng.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.IsTrue(theFile.ID3v2.Lyrics.UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v24_Extended()
         {
             ArrayLogger logger = new ArrayLogger();
@@ -371,21 +401,6 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_R_ID3v2_WXXX_UnicodeNoDesc()
-        {
-            // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.4-WXX-UnicodeMarkerWithoutDescription.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
-
-            // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
-
-            Assert.AreEqual("http://remix.evillich.com", theFile.ID3v2.AdditionalFields["WXXX"].Split(Settings.InternalValueSeparator)[1]);
         }
 
         [TestMethod]

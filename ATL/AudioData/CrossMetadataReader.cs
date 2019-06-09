@@ -458,6 +458,24 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Lyrics
+        /// </summary>
+        public LyricsInfo Lyrics
+        {
+            get
+            {
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.Lyrics != null)
+                    {
+                        return new LyricsInfo(reader.Lyrics);
+                    }
+                }
+                return new LyricsInfo();
+            }
+        }
+
+        /// <summary>
         /// Embedded pictures
         /// </summary>
         public IList<PictureInfo> EmbeddedPictures

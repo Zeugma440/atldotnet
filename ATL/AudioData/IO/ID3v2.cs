@@ -361,6 +361,13 @@ namespace ATL.AudioData.IO
             public Encoding Encoding;           // Corresponding encoding
         }
 
+        private class CommentStructure
+        {
+            public string LanguageCode;
+            public string ContentDescriptor;
+            public int Size;
+        }
+
         // ********************* Auxiliary functions & voids ********************
 
         static ID3v2()
@@ -446,6 +453,27 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        private static CommentStructure readCommentStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
+        {
+            CommentStructure result = new CommentStructure();
+            long initialPos = source.Position;
+
+            // Langage ID
+            result.LanguageCode = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+
+            // Content description
+            Encoding contentDescriptionEncoding = encoding;
+            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            {
+                BomProperties bom = readBOM(source);
+                if (bom.Found) contentDescriptionEncoding = bom.Encoding;
+            }
+            result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
+            result.Size = (int)(source.Position - initialPos);
+
+            return result;
+        }
+
         private bool readFrame(
             BufferedBinaryReader source,
             TagInfo tag,
@@ -463,6 +491,8 @@ namespace ATL.AudioData.IO
 
             ChapterInfo chapter = null;
             MetaFieldInfo comment = null;
+
+            bool inLyrics = false;
 
 
             // Read frame header and check frame ID
@@ -485,6 +515,8 @@ namespace ATL.AudioData.IO
             }
 
             if (tag.ActualEnd > -1) return false;
+
+            string shortFrameId = Frame.ID.Substring(0, 3);
 
             // Frame size measures number of bytes between end of flag and end of payload
             /* Frame size encoding conventions
@@ -519,31 +551,29 @@ namespace ATL.AudioData.IO
             }
             frameEncoding = decodeID3v2CharEncoding(encodingCode);
 
-            // COMM fields contain :
+            // COMM and USLT/ULT fields contain :
             //   a 3-byte langage ID
             //   a "short content description", as an encoded null-terminated string
-            //   the actual comment, as an encoded, null-terminated string
+            //   the actual data (i.e. comment or lyrics), as an encoded, null-terminated string
             // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
-            if ("COM".Equals(Frame.ID.Substring(0, 3)))
+            if (shortFrameId.Equals("COM") || shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
             {
-                long initialPos = source.Position;
-                if (null == comments) comments = new List<MetaFieldInfo>();
+                CommentStructure structure = readCommentStructure(source, tagVersion, encodingCode, frameEncoding);
 
-                comment = new MetaFieldInfo(getImplementedTagType(), "");
-
-                // Langage ID
-                comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
-
-                // Content description
-                Encoding contentDescriptionEncoding = frameEncoding;
-                if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+                if (shortFrameId.Equals("COM"))
                 {
-                    BomProperties bom = readBOM(source);
-                    if (bom.Found) contentDescriptionEncoding = bom.Encoding;
+                    if (null == comments) comments = new List<MetaFieldInfo>();
+                    comment = new MetaFieldInfo(getImplementedTagType(), "");
+                    comment.Language = structure.LanguageCode;
+                    comment.NativeFieldCode = structure.ContentDescriptor;
+                } else if (shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
+                {
+                    if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
+                    tagData.Lyrics.LanguageCode = structure.LanguageCode;
+                    inLyrics = true;
                 }
-                comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
 
-                dataSize = dataSize - (int)(source.Position - initialPos);
+                dataSize = dataSize - structure.Size;
             }
 
             // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
@@ -576,7 +606,6 @@ namespace ATL.AudioData.IO
                 if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
                 {
                     string strData;
-                    string shortFrameId = Frame.ID.Substring(0, 3);
 
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
                     if ("POP".Equals(shortFrameId))
@@ -665,7 +694,11 @@ namespace ATL.AudioData.IO
                         if ("TCO".Equals(shortFrameId)) strData = extractGenreFromID3v2Code(strData);
                     }
 
-                    if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
+                    if (inLyrics)
+                    {
+                        tagData.Lyrics.UnsynchronizedLyrics = strData;
+                    }
+                    else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
                         if (!inChapter) SetMetaField(Frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                         else
@@ -1629,21 +1662,21 @@ namespace ATL.AudioData.IO
         /// Read Unicode BOM and return the corresponding encoding
         /// NB : This implementation _only_ works with UTF-16 BOMs defined in the ID3v2 specs ($FF FE 00 00 or $FE FF 00 00)
         /// </summary>
-        /// <param name="fs">Source stream</param>
+        /// <param name="source">Source stream</param>
         /// <returns>Properties of the BOM.
         /// If it has been found, stream is positioned on the next byte just after the BOM.
         /// If not, stream is positioned on its initial position before calling readBOM.
         /// </returns>
-        private BomProperties readBOM(BufferedBinaryReader fs)
+        private static BomProperties readBOM(Stream source)
         {
             BomProperties result = new BomProperties();
-            long initialPos = fs.Position;
+            long initialPos = source.Position;
             result.Size = 1;
             result.Encoding = Encoding.Unicode;
 
             byte[] b = new byte[1];
 
-            fs.Read(b, 0, 1);
+            source.Read(b, 0, 1);
             bool first = true;
             bool foundFE = false;
             bool foundFF = false;
@@ -1669,12 +1702,12 @@ namespace ATL.AudioData.IO
                     first = false;
                 }
 
-                fs.Read(b, 0, 1);
+                source.Read(b, 0, 1);
                 result.Size++;
             }
 
-            if (!result.Found) fs.Position = initialPos;
-            else  result.Size = (int)(fs.Position - initialPos);
+            if (!result.Found) source.Position = initialPos;
+            else  result.Size = (int)(source.Position - initialPos);
 
             return result;
         }

@@ -204,6 +204,13 @@ namespace ATL.AudioData
         {
             get;
         }
+        /// <summary>
+        /// Lyrics
+        /// </summary>
+        LyricsInfo Lyrics
+        {
+            get;
+        }
 
         /// <summary>
         /// List of pictures stored in the tag

@@ -1,13 +1,11 @@
-﻿using Commons;
-
-namespace ATL
+﻿namespace ATL
 {
     public class ChapterInfo
     {
         public class UrlInfo
         {
-            public string Description;
-            public string Url;
+            public string Description { get; set; }
+            public string Url { get; set; }
 
             public UrlInfo(UrlInfo url)
             {
@@ -33,23 +31,35 @@ namespace ATL
             }
         }
 
-        public uint StartTime = 0;          // Start time (ms)
-        public uint EndTime = 0;            // End time (ms)
-        public uint StartOffset = 0;        // Start offset (bytes)
-        public uint EndOffset = 0;          // End offset (bytes)
-        public bool UseOffset = false;      // True if StartOffset / EndOffset are usable, false if not
+        public uint StartTime { get; set; }     // Start time (ms)
+        public uint EndTime { get; set; }       // End time (ms)
+        public uint StartOffset { get; set; }   // Start offset (bytes)
+        public uint EndOffset { get; set; }     // End offset (bytes)
+        public bool UseOffset { get; set; }     // True if StartOffset / EndOffset are usable, false if not
 
-        public string Title = "";
+        public string Title { get; set; }
 
-        public string UniqueID = ""; // Specific to ID3v2
-        public string Subtitle = ""; // Specific to ID3v2
-        public UrlInfo Url; // Specific to ID3v2
-        public PictureInfo Picture = null; // Specific to ID3v2
+        public string UniqueID { get; set; }    // Specific to ID3v2
+        public string Subtitle { get; set; }    // Specific to ID3v2
+        public UrlInfo Url { get; set; }        // Specific to ID3v2
+        public PictureInfo Picture { get; set; }// Specific to ID3v2
 
 
         // ---------------- CONSTRUCTORS
 
-        public ChapterInfo() { }
+        public ChapterInfo()
+        {
+            StartTime = 0;
+            EndTime = 0;
+            StartOffset = 0;
+            EndOffset = 0;
+            UseOffset = false;
+            Title = "";
+
+            UniqueID = "";
+            Subtitle = "";
+            Picture = null;
+        }
 
         public ChapterInfo(ChapterInfo chapter)
         {
