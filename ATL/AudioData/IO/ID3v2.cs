@@ -570,6 +570,7 @@ namespace ATL.AudioData.IO
                 {
                     if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
                     tagData.Lyrics.LanguageCode = structure.LanguageCode;
+                    tagData.Lyrics.Description = structure.ContentDescriptor;
                     inLyrics = true;
                 }
 
@@ -1153,6 +1154,12 @@ namespace ATL.AudioData.IO
                 nbFrames += writeChapters(w, Chapters, tagEncoding);
             }
 
+            // Lyrics
+            if (tag.Lyrics != null)
+            {
+                nbFrames += writeLyrics(w, tag.Lyrics, tagEncoding);
+            }
+
             // Other textual fields
             string fieldCode;
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
@@ -1247,7 +1254,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writeChaptersInternal(BinaryWriter writer, BinaryWriter w, IList<ChapterInfo> chapters, Encoding tagEncoding, long frameOffset)
+        private int writeChaptersInternal(BinaryWriter fileWriter, BinaryWriter frameWriter, IList<ChapterInfo> chapters, Encoding tagEncoding, long frameOffset)
         {
             Random randomGenerator = null;
             long frameSizePos, frameDataPos, finalFramePos;
@@ -1257,20 +1264,20 @@ namespace ATL.AudioData.IO
             // NB : Hierarchical table of contents is not supported; see implementation notes in the header
             if (Settings.ID3v2_alwaysWriteCTOCFrame && chapters.Count > 0)
             {
-                frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
-                writeFrameHeader(w, "CTOC", tagHeader.UsesUnsynchronisation);
+                frameSizePos = frameWriter.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+                writeFrameHeader(frameWriter, "CTOC", tagHeader.UsesUnsynchronisation);
 
                 // Default unique toc ID
-                frameDataPos = w.BaseStream.Position;
-                w.Write(Utils.Latin1Encoding.GetBytes("toc"));
-                w.Write('\0');
+                frameDataPos = frameWriter.BaseStream.Position;
+                frameWriter.Write(Utils.Latin1Encoding.GetBytes("toc"));
+                frameWriter.Write('\0');
 
                 // CTOC flags : no parents; chapters are in order
-                w.Write((byte)3);
+                frameWriter.Write((byte)3);
 
 
                 // Entry count
-                w.Write((byte)chapters.Count);
+                frameWriter.Write((byte)chapters.Count);
 
                 for (int i = 0; i < chapters.Count; i++)
                 {
@@ -1280,21 +1287,21 @@ namespace ATL.AudioData.IO
                         if (null == randomGenerator) randomGenerator = new Random();
                         chapters[i].UniqueID = randomGenerator.Next().ToString();
                     }
-                    w.Write(Utils.Latin1Encoding.GetBytes(chapters[i].UniqueID));
-                    w.Write('\0');
+                    frameWriter.Write(Utils.Latin1Encoding.GetBytes(chapters[i].UniqueID));
+                    frameWriter.Write('\0');
                 }
 
                 // CTOC description
                 if (Utils.ProtectValue(ChaptersTableDescription).Length > 0)
-                    writeTextFrame(w, "TIT2", ChaptersTableDescription, tagEncoding, "", true);
+                    writeTextFrame(frameWriter, "TIT2", ChaptersTableDescription, tagEncoding, "", "", true);
 
                 // Go back to frame size location to write its actual size 
-                finalFramePos = w.BaseStream.Position;
-                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                finalFramePos = frameWriter.BaseStream.Position;
+                frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
-                if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
-                else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
-                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+                if (4 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeSynchSafeInt32(size));
+                else if (3 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeBEInt32(size));
+                frameWriter.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
                 result++;
             }
@@ -1302,10 +1309,10 @@ namespace ATL.AudioData.IO
             // Write individual chapters
             foreach (ChapterInfo chapter in chapters)
             {
-                frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
-                writeFrameHeader(w, "CHAP", tagHeader.UsesUnsynchronisation);
+                frameSizePos = frameWriter.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+                writeFrameHeader(frameWriter, "CHAP", tagHeader.UsesUnsynchronisation);
 
-                frameDataPos = w.BaseStream.Position;
+                frameDataPos = frameWriter.BaseStream.Position;
 
                 // Generate a chapter ID if none has been given
                 if (0 == chapter.UniqueID.Length)
@@ -1314,45 +1321,58 @@ namespace ATL.AudioData.IO
                     chapter.UniqueID = randomGenerator.Next().ToString();
                 }
 
-                w.Write(Utils.Latin1Encoding.GetBytes(chapter.UniqueID));
-                w.Write('\0');
+                frameWriter.Write(Utils.Latin1Encoding.GetBytes(chapter.UniqueID));
+                frameWriter.Write('\0');
 
-                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
-                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndTime));
-                w.Write(StreamUtils.EncodeBEUInt32(chapter.StartOffset));
-                w.Write(StreamUtils.EncodeBEUInt32(chapter.EndOffset));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.EndTime));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.StartOffset));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.EndOffset));
 
                 if (chapter.Title != null && chapter.Title.Length > 0)
                 {
-                    writeTextFrame(w, "TIT2", chapter.Title, tagEncoding, "", true);
+                    writeTextFrame(frameWriter, "TIT2", chapter.Title, tagEncoding, "", "", true);
                 }
                 if (chapter.Subtitle != null && chapter.Subtitle.Length > 0)
                 {
-                    writeTextFrame(w, "TIT3", chapter.Subtitle, tagEncoding, "", true);
+                    writeTextFrame(frameWriter, "TIT3", chapter.Subtitle, tagEncoding, "", "", true);
                 }
                 if (chapter.Url != null)
                 {
-                    writeTextFrame(w, "WXXX", chapter.Url.ToString(), tagEncoding, "", true);
+                    writeTextFrame(frameWriter, "WXXX", chapter.Url.ToString(), tagEncoding, "", "", true);
                 }
                 if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
                 {
-                    writePictureFrame(w, chapter.Picture.PictureData, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
+                    writePictureFrame(frameWriter, chapter.Picture.PictureData, ImageUtils.GetMimeTypeFromImageFormat(chapter.Picture.NativeFormat), chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
                 }
 
                 // Go back to frame size location to write its actual size 
-                finalFramePos = w.BaseStream.Position;
-                w.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
+                finalFramePos = frameWriter.BaseStream.Position;
+                frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
-                if (4 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
-                else if (3 == Settings.ID3v2_tagSubVersion) writer.Write(StreamUtils.EncodeBEInt32(size));
-                w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+                if (4 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeSynchSafeInt32(size));
+                else if (3 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeBEInt32(size));
+                frameWriter.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
             }
 
             result += chapters.Count;
             return result;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", bool isInsideUnsynch = false)
+        private int writeLyrics(BinaryWriter writer, LyricsInfo lyrics, Encoding tagEncoding)
+        {
+            int result = 0;
+
+            if (lyrics.UnsynchronizedLyrics.Length > 0)
+            {
+                writeTextFrame(writer, "USLT", lyrics.UnsynchronizedLyrics, tagEncoding, lyrics.LanguageCode, lyrics.Description);
+                result++;
+            }
+
+            return result;
+        }
+
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", string description = "", bool isInsideUnsynch = false)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos, frameDataPos, finalFramePos, frameOffset;
@@ -1361,7 +1381,7 @@ namespace ATL.AudioData.IO
 
             bool writeValue = true;
             bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
-            bool writeNullTermination = true; // Required by specs; see paragraph4, concerning $03 encoding
+            bool writeNullTermination = true; // Required by specs; see paragraph 4, concerning $03 encoding
 
             ICollection<string> standardFrames = standardFrames_v24;
             if (3 == Settings.ID3v2_tagSubVersion) standardFrames = standardFrames_v23;
@@ -1424,6 +1444,21 @@ namespace ATL.AudioData.IO
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode));
                 }
+                w.Write(getNullTerminatorFromEncoding(tagEncoding));
+
+                writeTextEncoding = false;
+            }
+            else if (shortCode.Equals("USL")) // Unsynched lyrics frame specifics
+            {
+                // Encoding according to ID3v2 specs
+                w.Write(encodeID3v2CharEncoding(tagEncoding));
+
+                // Language ID (ISO-639-2)
+                if (language != null) language = Utils.BuildStrictLengthString(language, 3, '\0');
+                w.Write(Utils.Latin1Encoding.GetBytes(language));
+
+                // Short content description
+                w.Write(Utils.Latin1Encoding.GetBytes(description));
                 w.Write(getNullTerminatorFromEncoding(tagEncoding));
 
                 writeTextEncoding = false;

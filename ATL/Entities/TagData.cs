@@ -269,6 +269,9 @@ namespace ATL
                     Chapters.Add(new ChapterInfo(chapter));
                 }
             }
+
+            if (data.Lyrics != null)
+                Lyrics = new LyricsInfo(data.Lyrics);
         }
 
         /// <summary>

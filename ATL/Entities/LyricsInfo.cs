@@ -4,6 +4,7 @@ namespace ATL
 {
     public class LyricsInfo
     {
+        public string Description { get; set; }
         public string LanguageCode { get; set; }
         public string UnsynchronizedLyrics { get; set; }
         public IList<string> SynchronizedLyrics { get; set; }
@@ -12,6 +13,7 @@ namespace ATL
 
         public LyricsInfo()
         {
+            Description = "";
             LanguageCode = "";
             UnsynchronizedLyrics = "";
             SynchronizedLyrics = new List<string>();
@@ -19,6 +21,7 @@ namespace ATL
 
         public LyricsInfo(LyricsInfo info)
         {
+            Description = info.Description;
             LanguageCode = info.LanguageCode;
             UnsynchronizedLyrics = info.UnsynchronizedLyrics;
             SynchronizedLyrics = new List<string>(info.SynchronizedLyrics);

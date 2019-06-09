@@ -192,21 +192,6 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_ID3v2_USLT()
-        {
-            // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
-            String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.4-USLT_JP_eng.mp3";
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
-
-            // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
-
-            Assert.IsTrue(theFile.ID3v2.Lyrics.UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
-        }
-
-        [TestMethod]
         public void TagIO_RW_ID3v24_Extended()
         {
             ArrayLogger logger = new ArrayLogger();
@@ -867,7 +852,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ID3v2.Exists);
 
             Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
-            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+            Assert.AreEqual("http://auphonic.com/", theFile.ID3v2.AdditionalFields["WPUB"]);
 
             // Check if URLs are persisted properly, i.e. without encoding byte
             TagData theTag = new TagData();
@@ -877,12 +862,9 @@ namespace ATL.test.IO.MetaData
 
             // 1/ Check value through ATL
             Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("WPUB"));
-            Assert.AreEqual(theFile.ID3v2.AdditionalFields["WPUB"], "http://auphonic.com/");
+            Assert.AreEqual("http://auphonic.com/", theFile.ID3v2.AdditionalFields["WPUB"]);
 
             // 2/ Check absence of encoding field in the file itself
-            byte[] readBytes = new byte[4];
-            byte[] expected = Utils.Latin1Encoding.GetBytes("WPUB");
-
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
             {
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("WPUB")));
@@ -943,6 +925,37 @@ namespace ATL.test.IO.MetaData
             // Supported fields
             Assert.AreEqual(0, theFile.ID3v2.Disc);
             Assert.AreEqual(0, theFile.ID3v2.Track);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_USLT()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.IsTrue(theFile.ID3v2.Lyrics.UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
+
+            // Write
+            TagData theTag = new TagData();
+            theTag.Lyrics = new LyricsInfo();
+            theTag.Lyrics.LanguageCode = "rus";
+            theTag.Lyrics.Description = "anthem";
+            theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
+            Assert.AreEqual(theTag.Lyrics.Description, theFile.ID3v2.Lyrics.Description);
+            Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.ID3v2.Lyrics.UnsynchronizedLyrics);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
         [TestMethod]
