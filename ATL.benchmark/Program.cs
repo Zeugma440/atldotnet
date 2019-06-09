@@ -21,11 +21,9 @@ namespace ATL.benchmark
 
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
-
             //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
 
-            readAt(@"E:\temp\id3v2\Testband - Copy - Copy - Copy.mp3");
+            //readAt(@"E:\temp\id3v2\Testband - Copy - Copy - Copy.mp3");
 
 
             //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
@@ -33,9 +31,9 @@ namespace ATL.benchmark
 
             //compareInfo(@"E:\Music\VGM");
 
-            //browseFor(@"E:\temp\", "*.it");
+            browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"FLAC/flac.flac");
+            //writeAt(@"FLAC/flac.flac");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
@@ -72,6 +70,7 @@ namespace ATL.benchmark
 
             ff.FF_RecursiveExplore(rootDir, filter);
 
+            Console.WriteLine(">>> BROWSE : END");
             Console.ReadLine();
         }
 

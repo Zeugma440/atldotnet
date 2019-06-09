@@ -31,19 +31,29 @@ namespace ATL.benchmark
             return result;
         }
 
+        private string lookForLyrics(Track t, string key)
+        {
+            string value = t.AdditionalFields[key];
+            if (value.Length > 50) return key; else return "";
+        }
+
         public void FF_RecursiveExplore(string dirName, string filter)
         {
-            /*String dirName = "E:/Music/XXX";
-            string dirName = "E:/temp/";
-            string filter = "*.mid";
-            */
-
             DirectoryInfo dirInfo = new DirectoryInfo(dirName);
 
-            foreach (FileInfo f in dirInfo.EnumerateFiles(filter,SearchOption.AllDirectories))
+            foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.AllDirectories))
             {
                 Track t = new Track(f.FullName);
-                System.Console.WriteLine(f.FullName);
+                string found = "";
+                if (t.AdditionalFields != null)
+                {
+                    if (t.AdditionalFields.Keys.Contains("uslt")) found = lookForLyrics(t, "uslt");
+                    if (t.AdditionalFields.Keys.Contains("USLT")) found = lookForLyrics(t, "USLT");
+                    if (t.AdditionalFields.Keys.Contains("sylt")) found = lookForLyrics(t, "sylt");
+                    if (t.AdditionalFields.Keys.Contains("SYLT")) found = lookForLyrics(t, "uslt");
+
+                    if (found.Length > 0) Console.WriteLine("FOUND " + found + " IN " + f.FullName);
+                }
             }
         }
 
@@ -58,7 +68,7 @@ namespace ATL.benchmark
             FF_BrowseATLAudioFiles(null);
         }
 
-        public void FF_BrowseATLAudioFiles(string path, bool fetchPicture = false, bool display=true)
+        public void FF_BrowseATLAudioFiles(string path, bool fetchPicture = false, bool display = true)
         {
             //string folder = TestUtils.GetResourceLocationRoot();
             string folder = (null == path) ? @"E:\temp\wma" : path;
@@ -97,7 +107,7 @@ namespace ATL.benchmark
                     if (display)
                     {
                         Console.WriteLine(tagFile.Name + "......." + tagFile.Properties.Duration + " | " + tagFile.Properties.AudioSampleRate + " (" + tagFile.Properties.AudioBitrate + " kpbs)");// + (tagFile. ? " VBR)" : ")"));
-                        Console.WriteLine(Utils.BuildStrictLengthString("", tagFile.Name.Length, '.') + "......." + tagFile.Tag.Disc + " | " + tagFile.Tag.Track + " | " + tagFile.Tag.Title + " | " + tagFile.Tag.FirstPerformer + " | " + tagFile.Tag.Album + " | " + tagFile.Tag.Year +  ((tagFile.Tag.Pictures != null && tagFile.Tag.Pictures.Length > 0) ? " (" + tagFile.Tag.Pictures.Length + " picture(s))" : ""));
+                        Console.WriteLine(Utils.BuildStrictLengthString("", tagFile.Name.Length, '.') + "......." + tagFile.Tag.Disc + " | " + tagFile.Tag.Track + " | " + tagFile.Tag.Title + " | " + tagFile.Tag.FirstPerformer + " | " + tagFile.Tag.Album + " | " + tagFile.Tag.Year + ((tagFile.Tag.Pictures != null && tagFile.Tag.Pictures.Length > 0) ? " (" + tagFile.Tag.Pictures.Length + " picture(s))" : ""));
                     }
                 }
             }
