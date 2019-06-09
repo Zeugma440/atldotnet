@@ -354,8 +354,9 @@ namespace ATL.AudioData.IO
         }
 
         // Unicode BOM properties
-        private class BOMProperties
+        private class BomProperties
         {
+            public bool Found = false;          // BOM found
             public int Size = 0;                // Size of BOM
             public Encoding Encoding;           // Corresponding encoding
         }
@@ -533,47 +534,24 @@ namespace ATL.AudioData.IO
                 // Langage ID
                 comment.Language = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
 
-                BOMProperties contentDescriptionBOM = new BOMProperties();
-                // Skip BOM if ID3v2.3+ and UTF-16 with BOM present
+                // Content description
+                Encoding contentDescriptionEncoding = frameEncoding;
                 if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
                 {
-                    contentDescriptionBOM = readBOM(source);
+                    BomProperties bom = readBOM(source);
+                    if (bom.Found) contentDescriptionEncoding = bom.Encoding;
                 }
-
-                if (contentDescriptionBOM.Size <= 3)
-                {
-                    // Skip content description
-                    comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-                }
-                else
-                {
-                    // If content description BOM > 3 bytes, there might not be any BOM
-                    // for content description, and the algorithm might have bumped into
-                    // the comment BOM => backtrack just after langage tag
-                    source.Seek(initialPos + 3, SeekOrigin.Begin);
-                }
+                comment.NativeFieldCode = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
 
                 dataSize = dataSize - (int)(source.Position - initialPos);
             }
 
             // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
-            // http://en.wikipedia.org/wiki/Byte_order_mark
-            //    3-byte BOM : FF 00 FE
-            //    2-byte BOM : FE FF (UTF-16 Big Endian)
-            //    2-byte BOM : FF FE (UTF-16 Little Endian)
-            //    Other variants...
             if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
             {
-                long initialPos = source.Position;
-                BOMProperties bom = readBOM(source);
+                BomProperties bom = readBOM(source);
 
-                // A BOM has been read, but it lies outside the current frame
-                // => Backtrack and directly read data without BOM
-                if (bom.Size > dataSize)
-                {
-                    source.Seek(initialPos, SeekOrigin.Begin);
-                }
-                else
+                if (bom.Found)
                 {
                     frameEncoding = bom.Encoding;
                     dataSize = dataSize - bom.Size;
@@ -1648,10 +1626,30 @@ namespace ATL.AudioData.IO
         }
 
         // Specific to ID3v2 : read Unicode BOM and return the corresponding encoding
-        // NB : This implementation only works with UTF-16 BOMs (i.e. UTF-8 and UTF-32 BOMs will not be detected)
-        private BOMProperties readBOM(BufferedBinaryReader fs)
+        // NB : This implementation _only_ works with UTF-16 BOMs defined in the ID3v2 specs ($FF FE 00 00 or $FE FF 00 00)
+        // TODO : this is crappy - use predefined BOMs (see BOM_CONSTS) and return an UNDEFINED value if needed (chars > 3)
+        /**
+         * Frames that allow different types of text encoding contains a text
+   encoding description byte. Possible encodings:
+
+     $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
+     $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
+           strings in the same frame SHALL have the same byteorder.
+           Terminated with $00 00.
+     $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
+           Terminated with $00 00.
+     $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+
+   Strings dependent on encoding are represented in frame descriptions
+   as <text string according to encoding>, or <full text string
+   according to encoding> if newlines are allowed. Any empty strings of
+   type $01 which are NULL-terminated may have the Unicode BOM followed
+   by a Unicode NULL ($FF FE 00 00 or $FE FF 00 00).
+            */
+        private BomProperties readBOM(BufferedBinaryReader fs)
         {
-            BOMProperties result = new BOMProperties();
+            BomProperties result = new BomProperties();
+            long initialPos = fs.Position;
             result.Size = 1;
             result.Encoding = Encoding.Unicode;
 
@@ -1664,11 +1662,17 @@ namespace ATL.AudioData.IO
 
             while (0 == b[0] || 0xFF == b[0] || 0xFE == b[0])
             {
+                if (result.Size > 3) break; // Useful (unsynchronized) BOM can't be longer than 3 chars => detection failed
+
                 // All UTF-16 BOMs either start or end with 0xFE or 0xFF
                 // => Having them both read means that the entirety of the UTF-16 BOM has been read
                 foundFE = foundFE || (0xFE == b[0]);
                 foundFF = foundFF || (0xFF == b[0]);
-                if (foundFE && foundFF) break;
+                if (foundFE && foundFF)
+                {
+                    result.Found = true;
+                    break;
+                }
 
                 if (first && b[0] > 0)
                 {
@@ -1680,6 +1684,9 @@ namespace ATL.AudioData.IO
                 fs.Read(b, 0, 1);
                 result.Size++;
             }
+
+            if (!result.Found) fs.Position = initialPos;
+            else  result.Size = (int)(fs.Position - initialPos);
 
             return result;
         }
