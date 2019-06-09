@@ -9,7 +9,7 @@ namespace Commons
     public static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
-        public static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
+        public readonly static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
 
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && !(s[i] == '-') ) return false;
+                    if (!char.IsDigit(s[i]) && (s[i] != '-') ) return false;
                 }
             }
 
