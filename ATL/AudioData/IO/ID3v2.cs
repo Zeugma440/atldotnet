@@ -620,6 +620,7 @@ namespace ATL.AudioData.IO
                 tagData.Lyrics.LanguageCode = structure.LanguageCode;
                 tagData.Lyrics.Description = structure.ContentDescriptor;
                 tagData.Lyrics.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
+                inLyrics = true;
 
                 dataSize = dataSize - structure.Size;
             }
@@ -755,7 +756,7 @@ namespace ATL.AudioData.IO
 
                     if (inLyrics)
                     {
-                        tagData.Lyrics.UnsynchronizedLyrics = strData;
+                        if (strData.Length > 0) tagData.Lyrics.UnsynchronizedLyrics = strData;
                     }
                     else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
@@ -1426,8 +1427,56 @@ namespace ATL.AudioData.IO
                 writeTextFrame(writer, "USLT", lyrics.UnsynchronizedLyrics, tagEncoding, lyrics.LanguageCode, lyrics.Description);
                 result++;
             }
+            if (lyrics.SynchronizedLyrics.Count > 0)
+            {
+                writeSynchedLyrics(writer, lyrics, tagEncoding);
+                result++;
+            }
 
             return result;
+        }
+
+        private void writeSynchedLyrics(BinaryWriter w, LyricsInfo lyrics, Encoding tagEncoding)
+        {
+            long frameSizePos, frameDataPos, finalFramePos;
+
+            frameSizePos = w.BaseStream.Position + 4; // Frame size location to be rewritten in a few lines (NB : Always + 4 because all frame codes are 4 chars long)
+            writeFrameHeader(w, "SYLT", tagHeader.UsesUnsynchronisation);
+
+            frameDataPos = w.BaseStream.Position;
+
+            // Encoding according to ID3v2 specs
+            w.Write(encodeID3v2CharEncoding(tagEncoding));
+
+            // Language ID (ISO-639-2)
+            w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(lyrics.LanguageCode, 3, '\0')));
+
+            // Timestamp format (ATL : always absolute milliseconds)
+            w.Write((byte)2);
+
+            // Content type
+            w.Write((byte)lyrics.ContentType);
+
+            // Short content description
+            w.Write(Utils.Latin1Encoding.GetBytes(lyrics.Description));
+            w.Write(getNullTerminatorFromEncoding(tagEncoding));
+
+            // Lyrics
+            foreach(LyricsInfo.LyricsPhrase phrase in lyrics.SynchronizedLyrics)
+            {
+                w.Write((byte)10); // Emulate SyltEdit's behaviour that seems to be the de facto standard
+                w.Write(tagEncoding.GetBytes(phrase.Text));
+                w.Write(getNullTerminatorFromEncoding(tagEncoding));
+                w.Write(StreamUtils.EncodeBEInt32(phrase.TimestampMs));
+            }
+
+            // Go back to frame size location to write its actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            int size = (int)(finalFramePos - frameDataPos);
+            if (4 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeSynchSafeInt32(size));
+            else if (3 == Settings.ID3v2_tagSubVersion) w.Write(StreamUtils.EncodeBEInt32(size));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", string description = "", bool isInsideUnsynch = false)
@@ -1701,7 +1750,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="iGenre">String representation of genre according to various ID3v1/v2 conventions</param>
         /// <returns>Genre name</returns>
-        private static String extractGenreFromID3v2Code(String iGenre)
+        private static string extractGenreFromID3v2Code(string iGenre)
         {
             if (null == iGenre) return "";
 

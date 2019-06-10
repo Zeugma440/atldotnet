@@ -969,30 +969,36 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            Assert.AreEqual(theFile.ID3v2.Lyrics.LanguageCode, "eng");
-            Assert.AreEqual(theFile.ID3v2.Lyrics.Description, "CompuPhase SYLT Editor");
-            Assert.AreEqual(theFile.ID3v2.Lyrics.ContentType, LyricsInfo.LyricsType.LYRICS);
-            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics.Count, 58);
+            Assert.AreEqual("eng", theFile.ID3v2.Lyrics.LanguageCode);
+            Assert.AreEqual("CompuPhase SYLT Editor", theFile.ID3v2.Lyrics.Description);
+            Assert.AreEqual(LyricsInfo.LyricsType.LYRICS, theFile.ID3v2.Lyrics.ContentType);
+            Assert.AreEqual(58, theFile.ID3v2.Lyrics.SynchronizedLyrics.Count);
 
-            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics[0].Text, "成都");
-            Assert.AreEqual(theFile.ID3v2.Lyrics.SynchronizedLyrics[0].TimestampMs, 1340);
+            Assert.AreEqual("成都", theFile.ID3v2.Lyrics.SynchronizedLyrics[0].Text);
+            Assert.AreEqual(1340, theFile.ID3v2.Lyrics.SynchronizedLyrics[0].TimestampMs);
 
 
             // Write
-            /*
             TagData theTag = new TagData();
             theTag.Lyrics = new LyricsInfo();
-            theTag.Lyrics.LanguageCode = "rus";
-            theTag.Lyrics.Description = "anthem";
-            theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
+            theTag.Lyrics.ContentType = LyricsInfo.LyricsType.OTHER;
+            theTag.Lyrics.LanguageCode = "jap";
+            theTag.Lyrics.Description = "song";
+            theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "世の"));
+            theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(18000, "中を"));
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
+            Assert.AreEqual(theTag.Lyrics.ContentType, theFile.ID3v2.Lyrics.ContentType);
             Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
             Assert.AreEqual(theTag.Lyrics.Description, theFile.ID3v2.Lyrics.Description);
-            Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.ID3v2.Lyrics.UnsynchronizedLyrics);
-            */
+            Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics.Count, theFile.ID3v2.Lyrics.SynchronizedLyrics.Count);
+            for (int i =0; i<theTag.Lyrics.SynchronizedLyrics.Count; i++)
+            {
+                Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics[i].TimestampMs, theFile.ID3v2.Lyrics.SynchronizedLyrics[i].TimestampMs);
+                Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics[i].Text, theFile.ID3v2.Lyrics.SynchronizedLyrics[i].Text);
+            }
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
