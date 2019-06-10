@@ -26,7 +26,7 @@ theTrack.AdditionalFields["customField"] = "fancyValue"; // Support for custom f
 theTrack.Save();
 ```
 
-You'll find more working code on the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets), including embedded picture (e.g. cover) management, chapters management or playlist management
+You'll find more working code on the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets), including what you need to manage embedded pictures (e.g. cover), chapters , lyrics and playlists
 
 
 ## What is NOT ATL .NET ?
