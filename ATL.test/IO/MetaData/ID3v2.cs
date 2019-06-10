@@ -928,7 +928,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_USLT()
+        public void TagIO_RW_ID3v2_Lyrics_Unsynched()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
@@ -959,7 +959,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_ID3v2_SYLT()
+        public void TagIO_RW_ID3v2_Lyrics_Synched()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_cn.mp3");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
