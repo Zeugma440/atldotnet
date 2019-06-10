@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
-using ATL.PlaylistReaders;
 using ATL.CatalogDataReaders;
 using ATL.Logging;
 using System.Collections.Generic;
