@@ -354,6 +354,11 @@ namespace ATL
                 }
             }
 
+            if (Lyrics != null)
+            {
+                result.Lyrics = new LyricsInfo(Lyrics);
+            }
+
             foreach (string s in AdditionalFields.Keys)
             {
                 result.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
