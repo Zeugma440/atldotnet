@@ -981,7 +981,7 @@ namespace ATL.test.IO.MetaData
             // Write
             TagData theTag = new TagData();
             theTag.Lyrics = new LyricsInfo();
-            theTag.Lyrics.ContentType = LyricsInfo.LyricsType.OTHER;
+            theTag.Lyrics.ContentType = LyricsInfo.LyricsType.LYRICS;
             theTag.Lyrics.LanguageCode = "jap";
             theTag.Lyrics.Description = "song";
             theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "世の"));
