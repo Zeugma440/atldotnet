@@ -5,6 +5,7 @@ using ATL.CatalogDataReaders;
 using ATL.Logging;
 using System.Collections.Generic;
 using ATL.Playlist;
+using Commons;
 
 namespace ATL.test.CodeSnippets
 {
@@ -177,6 +178,37 @@ namespace ATL.test.CodeSnippets
 	        {
 		        System.Console.WriteLine(chap.Title + "(" + chap.StartTime + ")");
 	        }
+        }
+
+        [TestMethod, TestCategory("snippets")]
+        public void CS_WriteLyrics()
+        {
+            Track theFile = new Track(audioFilePath);
+
+            theFile.Lyrics = new LyricsInfo();
+            theFile.Lyrics.LanguageCode = "eng";
+            theFile.Lyrics.Description = "song";
+
+            // Option A : Unsynchronized lyrics
+            theFile.Lyrics.UnsynchronizedLyrics = "I'm the one\r\n中を";
+
+            // Option B : Synchronized lyrics
+            theFile.Lyrics.ContentType = LyricsInfo.LyricsType.LYRICS;
+            theFile.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "I'm the one")); // 12s timestamp
+            theFile.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase("00:00:45", "中を"));   // 45s timestamp
+
+            // Persists the chapters
+            theFile.Save();
+
+            // Reads the file again
+            theFile = new Track(audioFilePath);
+
+            // Display lyrics
+            System.Console.WriteLine(theFile.Lyrics.UnsynchronizedLyrics);
+            foreach (LyricsInfo.LyricsPhrase phrase in theFile.Lyrics.SynchronizedLyrics)
+            {
+                System.Console.WriteLine("[" + Utils.EncodeTimecode_ms(phrase.TimestampMs) + "] " + phrase.Text);
+            }
         }
 
         [TestMethod, TestCategory("snippets")]
