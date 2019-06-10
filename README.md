@@ -128,7 +128,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 ### DETECTED FIELDS
 
 * __Audio properties (from audio data)__ : Bitrate, Sample rate, Duration, VBR, Codec family, Channels count and arrangement
-* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized Lyrics
+* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics
 * __Custom Metadata__ : any other field that might be in the tag is readable __and__ editable by ATL
 
 
@@ -147,7 +147,6 @@ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for synchronized lyrics fields
 * Support for Broadcast wave metadata : aXML and XMP
 * Support for other audio file formats : Speex, Theora, Audible
 * Connectors to __other library file formats__ (e.g. iTunes)
