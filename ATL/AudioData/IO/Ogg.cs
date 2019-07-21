@@ -716,38 +716,48 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
-                            if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
-                            if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID)))
+                            if (CONTENTS_VORBIS == contents)
                             {
-                                info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
-                                info.CommentHeaderEnd = info.SetupHeaderStart;
-
-                                // Determine over how many OGG pages Comment and Setup pages span
-                                if (pageOffsets.Count > 1)
+                                // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
+                                if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
+                                if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID)))
                                 {
-                                    int firstSetupPage = -1;
-                                    for (int i = 1; i < pageOffsets.Count; i++)
+                                    info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
+                                    info.CommentHeaderEnd = info.SetupHeaderStart;
+
+                                    // Determine over how many OGG pages Comment and Setup pages span
+                                    if (pageOffsets.Count > 1)
                                     {
-                                        if (info.CommentHeaderEnd < pageOffsets[i])
+                                        int firstSetupPage = -1;
+                                        for (int i = 1; i < pageOffsets.Count; i++)
                                         {
-                                            info.CommentHeaderSpanPages = i - 1;
-                                            firstSetupPage = i - 1;
+                                            if (info.CommentHeaderEnd < pageOffsets[i])
+                                            {
+                                                info.CommentHeaderSpanPages = i - 1;
+                                                firstSetupPage = i - 1;
+                                            }
+                                            if (info.SetupHeaderEnd < pageOffsets[i]) info.SetupHeaderSpanPages = i - firstSetupPage;
                                         }
-                                        if (info.SetupHeaderEnd < pageOffsets[i]) info.SetupHeaderSpanPages = i - firstSetupPage;
+                                        // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
+                                        if (-1 == firstSetupPage)
+                                        {
+                                            info.CommentHeaderSpanPages = pageOffsets.Count;
+                                            info.SetupHeaderSpanPages = 1;
+                                        }
                                     }
-                                    // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
-                                    if (-1 == firstSetupPage)
+                                    else
                                     {
-                                        info.CommentHeaderSpanPages = pageOffsets.Count;
+                                        info.CommentHeaderSpanPages = 1;
                                         info.SetupHeaderSpanPages = 1;
                                     }
                                 }
-                                else
-                                {
-                                    info.CommentHeaderSpanPages = 1;
-                                    info.SetupHeaderSpanPages = 1;
-                                }
+                            }
+                            else if (CONTENTS_OPUS == contents)
+                            {
+                                info.SetupHeaderStart = info.SetupHeaderEnd;
+                                info.CommentHeaderEnd = info.SetupHeaderStart;
+                                info.CommentHeaderSpanPages = pageOffsets.Count;
+                                info.SetupHeaderSpanPages = 0;
                             }
                         }
 
@@ -901,33 +911,41 @@ namespace ATL.AudioData.IO
             // Create the "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream stream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
-                stream.Write(Utils.Latin1Encoding.GetBytes(VORBIS_TAG_ID), 0, VORBIS_TAG_ID.Length);
+                if (CONTENTS_VORBIS == contents)
+                    stream.Write(Utils.Latin1Encoding.GetBytes(VORBIS_TAG_ID), 0, VORBIS_TAG_ID.Length);
+                else if (CONTENTS_OPUS == contents)
+                    stream.Write(Utils.Latin1Encoding.GetBytes(OPUS_TAG_ID), 0, OPUS_TAG_ID.Length);
+
                 vorbisTag.Write(stream, tag);
 
                 long newTagSize = stream.Position;
-                int setupHeaderSize;
 
-                // Append the setup header in the "unpaged" virtual stream
-                r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
-                if (1 == info.SetupHeaderSpanPages)
-                {
-                    setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                    StreamUtils.CopyStream(r.BaseStream, stream, setupHeaderSize);
-                }
-                else
-                {
-                    // TODO - handle case where initial setup header spans across two pages
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ATL does not yet handle the case where Vorbis setup header spans across two OGG pages");
-                    return false;
-                }
+                int setupHeaderSize = 0;
+                int setupHeader_nbSegments = 0;
+                byte setupHeader_remainingBytesInLastSegment = 0;
 
+                // VORBIS: Append the setup header in the "unpaged" virtual stream
+                if (CONTENTS_VORBIS == contents)
+                {
+                    r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
+                    if (1 == info.SetupHeaderSpanPages)
+                    {
+                        setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
+                        StreamUtils.CopyStream(r.BaseStream, stream, setupHeaderSize);
+                    }
+                    else
+                    {
+                        // TODO - handle case where initial setup header spans across two pages
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ATL does not yet handle the case where Vorbis setup header spans across two OGG pages");
+                        return false;
+                    }
+                    setupHeader_nbSegments = (int)Math.Ceiling(1.0 * setupHeaderSize / 255);
+                    setupHeader_remainingBytesInLastSegment = (byte)(setupHeaderSize % 255);
+                }
 
                 // Construct the entire segments table
                 int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
                 byte commentsHeader_remainingBytesInLastSegment = (byte)(newTagSize % 255);
-
-                int setupHeader_nbSegments = (int)Math.Ceiling(1.0 * setupHeaderSize / 255);
-                byte setupHeader_remainingBytesInLastSegment = (byte)(setupHeaderSize % 255);
 
                 byte[] entireSegmentsTable = new byte[commentsHeader_nbSegments + setupHeader_nbSegments];
                 for (int i = 0; i < commentsHeader_nbSegments - 1; i++)
@@ -935,14 +953,17 @@ namespace ATL.AudioData.IO
                     entireSegmentsTable[i] = 255;
                 }
                 entireSegmentsTable[commentsHeader_nbSegments - 1] = commentsHeader_remainingBytesInLastSegment;
-                for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
+                if (CONTENTS_VORBIS == contents)
                 {
-                    entireSegmentsTable[i] = 255;
+                    for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
+                    {
+                        entireSegmentsTable[i] = 255;
+                    }
+                    entireSegmentsTable[commentsHeader_nbSegments + setupHeader_nbSegments - 1] = setupHeader_remainingBytesInLastSegment;
                 }
-                entireSegmentsTable[commentsHeader_nbSegments + setupHeader_nbSegments - 1] = setupHeader_remainingBytesInLastSegment;
 
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
-                int totalPageHeadersSize = (nbPageHeaders * 27) + setupHeader_nbSegments + commentsHeader_nbSegments;
+                int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
 
                 // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
