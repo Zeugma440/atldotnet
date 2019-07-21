@@ -612,36 +612,6 @@ namespace ATL.AudioData.IO
             return source.ReadUInt64();
         }
 
-        private void readAllBlocks(BufferedBinaryReader source)
-        {
-            OggHeader header = new OggHeader();
-
-            // Start from the 1st page following headers
-            byte typeFlag;
-            byte nbLacingValues;
-            byte[] lacingValues = new byte[255];
-            long nextPageOffset = 0;
-            ulong lastAbsPosition = 0;
-
-            source.Seek(info.SetupHeaderEnd, SeekOrigin.Begin);
-
-            // Iterate until last page is encountered
-            do
-            {
-                source.Seek(nextPageOffset, SeekOrigin.Current);
-
-                header.ReadFromStream(source);
-
-                nbLacingValues = header.Segments;
-                typeFlag = header.TypeFlag;
-                nextPageOffset = header.GetPageLength();
-
-                System.Console.WriteLine(header.AbsolutePosition - lastAbsPosition + ";" + nextPageOffset);
-                lastAbsPosition = header.AbsolutePosition;
-
-            } while (0 == (typeFlag & 0x04)); // 0x04 marks the last page of the logical bitstream
-        }
-
         private bool getInfo(BufferedBinaryReader source, FileInfo info, ReadTagParams readTagParams)
         {
             // Get info from file
@@ -710,7 +680,7 @@ namespace ATL.AudioData.IO
                 if (isValidHeader)
                 {
                     info.CommentHeaderStart = source.Position;
-                    IList<long> pagePos = new List<long>();
+                    IList<long> pageOffsets = new List<long>();
 
                     // Reads all related Vorbis pages that describe Comment and Setup headers
                     // and concatenate their content into a single, continuous data stream
@@ -739,40 +709,39 @@ namespace ATL.AudioData.IO
                                 info.CommentHeader.Segments = source.ReadByte();
                                 info.CommentHeader.LacingValues = source.ReadBytes(info.CommentHeader.Segments);
                                 s.Write(source.ReadBytes(info.CommentHeader.GetPageLength()), 0, info.CommentHeader.GetPageLength());
-                                pagePos.Add(info.SetupHeaderEnd);
+                                pageOffsets.Add(info.SetupHeaderEnd);
                             }
                             first = false;
                         }
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            if (pagePos.Count > 1) source.Position = pagePos[pagePos.Count - 2]; else source.Position = pagePos[0];
-
-                            // Determine the boundaries of 3rd header (Setup header) by searching from last-but-one page
+                            // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
+                            if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
                             if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID)))
                             {
                                 info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
                                 info.CommentHeaderEnd = info.SetupHeaderStart;
 
-                                if (pagePos.Count > 1)
+                                // Determine over how many OGG pages Comment and Setup pages span
+                                if (pageOffsets.Count > 1)
                                 {
                                     int firstSetupPage = -1;
-                                    for (int i = 1; i < pagePos.Count; i++)
+                                    for (int i = 1; i < pageOffsets.Count; i++)
                                     {
-                                        if (info.CommentHeaderEnd < pagePos[i])
+                                        if (info.CommentHeaderEnd < pageOffsets[i])
                                         {
                                             info.CommentHeaderSpanPages = i - 1;
                                             firstSetupPage = i - 1;
                                         }
-                                        if (info.SetupHeaderEnd < pagePos[i]) info.SetupHeaderSpanPages = i - firstSetupPage;
+                                        if (info.SetupHeaderEnd < pageOffsets[i]) info.SetupHeaderSpanPages = i - firstSetupPage;
                                     }
-                                    /// Not found yet => comment header takes up all pages, and setup header is on the end of the last page
+                                    // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
                                     if (-1 == firstSetupPage)
                                     {
-                                        info.CommentHeaderSpanPages = pagePos.Count;
+                                        info.CommentHeaderSpanPages = pageOffsets.Count;
                                         info.SetupHeaderSpanPages = 1;
                                     }
-
                                 }
                                 else
                                 {
@@ -831,8 +800,7 @@ namespace ATL.AudioData.IO
                     result = 0;
             else
                 if ((bitRateNominal > 0) && (channelsArrangement.NbChannels > 0))
-                result = (1000.0 * (double)sizeInfo.FileSize - sizeInfo.ID3v2Size) /
-                    (double)bitRateNominal / channelsArrangement.NbChannels / 125.0 * 2;
+                result = (1000.0 * (double)sizeInfo.FileSize - sizeInfo.ID3v2Size) / (double)bitRateNominal / channelsArrangement.NbChannels / 125.0 * 2;
             else
                 result = 0;
 
@@ -930,19 +898,20 @@ namespace ATL.AudioData.IO
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
 
-            // Get "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
+            // Create the "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream stream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 stream.Write(Utils.Latin1Encoding.GetBytes(VORBIS_TAG_ID), 0, VORBIS_TAG_ID.Length);
                 vorbisTag.Write(stream, tag);
 
                 long newTagSize = stream.Position;
-                int setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
+                int setupHeaderSize;
 
                 // Append the setup header in the "unpaged" virtual stream
                 r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                 if (1 == info.SetupHeaderSpanPages)
                 {
+                    setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
                     StreamUtils.CopyStream(r.BaseStream, stream, setupHeaderSize);
                 }
                 else
