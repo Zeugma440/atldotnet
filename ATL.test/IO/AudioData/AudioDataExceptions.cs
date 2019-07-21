@@ -1,16 +1,14 @@
-﻿using ATL.AudioData;
-using ATL.Logging;
+﻿using ATL.Logging;
 using Commons;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.Logging.Log;
 
-namespace ATL.test
+namespace ATL.test.IO
 {
     [TestClass]
-    public class AudioDataIOExceptions
+    public class AudioDataExceptions
     {
         private void audio_X_AAC_MP4_Atom(string atom, string atomCaption = null)
         {
@@ -44,13 +42,13 @@ namespace ATL.test
             audio_X_AAC_MP4_Atom("mvhd");
             audio_X_AAC_MP4_Atom("trak");
             audio_X_AAC_MP4_Atom("mdia");
-//            audio_X_AAC_MP4_Atom("mdhd", "mdia.mdhd");
+            //            audio_X_AAC_MP4_Atom("mdhd", "mdia.mdhd");
             audio_X_AAC_MP4_Atom("hdlr", "mdia.hdlr");
             audio_X_AAC_MP4_Atom("minf", "mdia.minf");
             audio_X_AAC_MP4_Atom("stbl", "mdia.minf.stbl");
             audio_X_AAC_MP4_Atom("stsd");
-//            audio_X_AAC_MP4_Atom("stts");
-//            audio_X_AAC_MP4_Atom("stsc");
+            //            audio_X_AAC_MP4_Atom("stts");
+            //            audio_X_AAC_MP4_Atom("stsc");
             audio_X_AAC_MP4_Atom("stsz");
             audio_X_AAC_MP4_Atom("udta");
             audio_X_AAC_MP4_Atom("ilst");

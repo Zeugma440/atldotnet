@@ -61,7 +61,7 @@
     <Compile Include="ArrayLogger.cs" />
     <Compile Include="CodeSnippets\CodeSnippets.cs" />
     <Compile Include="IO\AudioData\AudioDataExceptions.cs" />
-    <Compile Include="IO\AudioData\AudioDataTest.cs" />
+    <Compile Include="IO\AudioData\AudioData.cs" />
     <Compile Include="IO\Factories.cs" />
     <Compile Include="IO\Obsolete.cs" />
     <Compile Include="IO\MetaData\ID3v2_WAV.cs" />

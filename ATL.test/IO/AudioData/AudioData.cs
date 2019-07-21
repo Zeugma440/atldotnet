@@ -3,10 +3,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using static ATL.ChannelsArrangements;
 
-namespace ATL.test
+namespace ATL.test.IO
 {
     [TestClass]
-    public class AudioDataIOTest
+    public class AudioDataTest
     {
         [TestMethod]
         public void Audio_FallbackToDummy()
