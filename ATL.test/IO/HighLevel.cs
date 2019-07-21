@@ -130,6 +130,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateNeutral("DSF/dsf.dsf"); // ID3v2 in DSF
             tagIO_RW_UpdateNeutral("FLAC/flac.flac"); // Vorbis-FLAC
             tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
+            tagIO_RW_UpdateNeutral("OPUS/opus.opus"); // OPUS
             tagIO_RW_UpdateNeutral("MP3/APE.mp3"); // APE
             // Native formats
             tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
@@ -171,6 +172,7 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateEmpty("DSF/empty.dsf"); // ID3v2 in DSF
                 tagIO_RW_UpdateEmpty("FLAC/empty.flac"); // Vorbis-FLAC
                 tagIO_RW_UpdateEmpty("OGG/empty.ogg"); // Vorbis-OGG
+                tagIO_RW_UpdateEmpty("OPUS/opus.opus"); // Opus
                 tagIO_RW_UpdateEmpty("MP3/empty.mp3"); // APE
                 // Native formats
                 tagIO_RW_UpdateEmpty("VQF/empty.vqf");

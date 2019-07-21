@@ -843,7 +843,7 @@ namespace ATL
                 read = source.Read(data, 0, BUFFERSIZE);
             }
 
-            return readTotal;
+            return initialPos + readTotal;
         }
     }
 }
