@@ -79,7 +79,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_Opus()
         {
-            testGenericAudio("OPUS/01_2_32.opus", 30959, 33, 48000, true, AudioDataIOFactory.CF_LOSSY, STEREO);
+            testGenericAudio("OPUS/opus.opus", 30959, 33, 48000, true, AudioDataIOFactory.CF_LOSSY, STEREO);
         }
 
         [TestMethod]

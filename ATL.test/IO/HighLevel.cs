@@ -221,6 +221,7 @@ namespace ATL.test.IO
             tagIO_RW_UpdateTagBaseField("DSF/dsf.dsf"); // ID3v2 in DSF
             tagIO_RW_UpdateTagBaseField("FLAC/flac.flac"); // Vorbis-FLAC
             tagIO_RW_UpdateTagBaseField("OGG/ogg.ogg"); // Vorbis-OGG
+            tagIO_RW_UpdateTagBaseField("OPUS/opus.opus"); // Opus
             tagIO_RW_UpdateTagBaseField("MP3/APE.mp3"); // APE
             // Specific formats
             tagIO_RW_UpdateTagBaseField("VQF/vqf.vqf", false, false);
