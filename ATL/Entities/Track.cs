@@ -192,6 +192,12 @@ namespace ATL
 		/// Duration (milliseconds)
 		/// </summary>
 		public double DurationMs;
+
+        /// <summary>
+        /// TimeOffSet for Cue (millisecond)
+        /// </summary>
+        public double TimeOffSet;
+
         /// <summary>
 		/// Channels arrangement
 		/// </summary>

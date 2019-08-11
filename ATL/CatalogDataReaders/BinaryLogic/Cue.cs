@@ -64,10 +64,11 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             return s.Substring(1, s.Length - 2);
         }
 
-        static private int decodeTimecodeToMs(string timeCode)
+        // For increasing the time calculation accuracy.
+        static private double decodeTimecodeToMs(string timeCode)
         {
-            int result = -1;
-            bool valid = false;
+            // int to double
+            double result = -1;
 
             int frames = 0;
             int minutes = 0;
@@ -75,18 +76,16 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
             if (timeCode.Contains(":"))
             {
-                valid = true;
                 string[] parts = timeCode.Split(':');
                 if (parts.Length >= 1) frames = int.Parse(parts[parts.Length - 1]);
                 if (parts.Length >= 2) seconds = int.Parse(parts[parts.Length - 2]);
                 if (parts.Length >= 3) minutes = int.Parse(parts[parts.Length - 3]);
 
-                result = (int)Math.Round(frames / 75.0); // 75 frames per seconds (CD sectors)
+                // For perfect digit calculations.
+                result = frames / 75.0; // 75 frames per seconds (CD sectors)
                 result += seconds;
                 result += minutes * 60;
             }
-
-            if (!valid) result = -1;
 
             return result * 1000;
         }
@@ -102,8 +101,13 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
                 Track currentTrack = null;
                 Track previousTrack = null;
-                int previousTimeOffset = 0;
-                int indexRelativePosition = 0;
+
+                double previousTimeOffset = 0;
+                double indexRelativePosition = 0;
+
+                // 정정해라!
+                double timeOffSet = 0;
+                double realPrev = 0;
 
                 while (s != null)
                 {
@@ -207,21 +211,25 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         }
                         else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && trackInfo.Length > 1)
                         {
-                            int timeOffset = decodeTimecodeToMs(trackInfo[2]);
-
-                            if (0 == indexRelativePosition && previousTrack != null)
+                            if (trackInfo.Length > 1)
                             {
-                                previousTrack.DurationMs += timeOffset - previousTimeOffset;
-                            }
-                            else
-                            {
-                                currentTrack.DurationMs += timeOffset - previousTimeOffset;
-                            }
-                            previousTimeOffset = timeOffset;
+                                timeOffSet = decodeTimecodeToMs(trackInfo[2]);
+                                if (0 == indexRelativePosition && previousTrack != null)
+                                {
+                                    previousTrack.DurationMs += timeOffSet - previousTimeOffset;
 
-                            indexRelativePosition++;
+                                    realPrev = timeOffSet;
+                                }
+                                else
+                                {
+                                    currentTrack.TimeOffSet = timeOffSet - previousTimeOffset;
+                                    currentTrack.DurationMs += timeOffSet - previousTimeOffset;
+                                }
+                                previousTimeOffset = timeOffSet;
+
+                                indexRelativePosition++;
+                            }
                         }
-
                     }
 
                     s = source.ReadLine();
@@ -238,11 +246,18 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                         if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
                         currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
+                        currentTrack.TimeOffSet = timeOffSet - realPrev;
                     }
 
                     tracks.Add(currentTrack);
                 }
             } // using
+
+            // Calculate Time
+            foreach (var data in tracks)
+            {
+                data.DurationMs -= data.TimeOffSet;
+            }
 
         } // read method
 
