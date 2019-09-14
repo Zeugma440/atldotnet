@@ -9,9 +9,6 @@ namespace ATL
 	/// </summary>
 	public static class StreamUtils
 	{	
-		// Size of the buffer used by memory stream copy methods
-		private const int BUFFERSIZE = 512;
-
         /// <summary>
         /// Handler signature to be used when needing to process a MemoryStream
         /// </summary>
@@ -73,7 +70,7 @@ namespace ATL
         /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the 'from' stream)</param>
         public static void CopyStream(Stream from, Stream to, int length = 0)
         {
-            byte[] data = new byte[BUFFERSIZE];
+            byte[] data = new byte[Settings.FileBufferSize];
             int bytesToRead;
             int totalBytesRead = 0;
 
@@ -81,11 +78,11 @@ namespace ATL
             {
                 if (length > 0)
                 {
-                    if (totalBytesRead + BUFFERSIZE < length) bytesToRead = BUFFERSIZE; else bytesToRead = length - totalBytesRead;
+                    if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = length - totalBytesRead;
                 }
                 else
                 {
-                    bytesToRead = BUFFERSIZE;
+                    bytesToRead = Settings.FileBufferSize;
                 }
                 int bytesRead = from.Read(data, 0, bytesToRead);
                 if (bytesRead == 0)
@@ -97,7 +94,12 @@ namespace ATL
             }
         }
 
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize = BUFFERSIZE)
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length)
+        {
+            CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize);
+        }
+
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize)
         {
             if (offsetFrom == offsetTo) return;
 
@@ -828,11 +830,11 @@ namespace ATL
         public static long TraversePadding(Stream source)
         {
             // Read until there's something else than zeroes
-            byte[] data = new byte[BUFFERSIZE];
+            byte[] data = new byte[Settings.FileBufferSize];
             long initialPos = source.Position;
             int read, readTotal = 0;
 
-            read = source.Read(data, 0, BUFFERSIZE);
+            read = source.Read(data, 0, Settings.FileBufferSize);
             while (read > 0)
             {
                 for (int i = 0; i < read; i++)
@@ -840,7 +842,7 @@ namespace ATL
                     if (data[i] > 0) return initialPos + readTotal + i;
                 }
                 readTotal += read;
-                read = source.Read(data, 0, BUFFERSIZE);
+                read = source.Read(data, 0, Settings.FileBufferSize);
             }
 
             return initialPos + readTotal;

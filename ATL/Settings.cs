@@ -8,6 +8,11 @@ namespace ATL
     public static class Settings
     {
         /*
+         * Technical settings
+         */
+        public static int FileBufferSize = 512;                         // Buffer size used for I/O operations. Change it at your own risk !
+
+        /*
          * Global settings
          */
         public static bool AddNewPadding = false;                       // Add padding to files that don't have it
