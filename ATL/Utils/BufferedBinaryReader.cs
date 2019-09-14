@@ -16,7 +16,7 @@ namespace ATL
     /// 
     /// NB3 : This class implements Stream in order to be reusable in methods that take Stream as an input
     /// </summary>
-    public class BufferedBinaryReader : Stream, IDisposable
+    public sealed class BufferedBinaryReader : Stream, IDisposable
     {
         private const int DEFAULT_BUFFER_SIZE = 512;
 
