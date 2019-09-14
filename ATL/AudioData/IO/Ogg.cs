@@ -560,12 +560,23 @@ namespace ATL.AudioData.IO
             byte[] lacingValues = new byte[255];
             byte nbLacingValues = 0;
             long nextPageOffset = 0;
+            double seekDistanceRatio = 0.5;
 
-            // TODO - fine tune seekSize value
-            int seekSize = (int)Math.Round(MAX_PAGE_SIZE * 0.75);
-            if (seekSize > source.Length) seekSize = (int)Math.Round(source.Length * 0.5);
-            source.Seek(-seekSize, SeekOrigin.End);
-            if (!StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID)))
+            int seekDistance = (int)Math.Round(MAX_PAGE_SIZE * 0.75);
+            if (seekDistance > source.Length) seekDistance = (int)Math.Round(source.Length * seekDistanceRatio);
+
+            bool found = false;
+            while (!found && seekDistanceRatio <= 1)
+            {
+                source.Seek(-seekDistance, SeekOrigin.End);
+                found = StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID));
+                if (!found) // Increase seek distance if not found
+                {
+                    seekDistanceRatio += 0.1;
+                    seekDistance = (int)Math.Round(source.Length * seekDistanceRatio); 
+                }
+            }
+            if (!found)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "No OGG header found; aborting read operation"); // Throw exception ?
                 return 0;
