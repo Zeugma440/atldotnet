@@ -689,7 +689,7 @@ namespace ATL.AudioData.IO
                     using (MemoryStream s = new MemoryStream())
                     {
                         // Reconstruct the whole Comment header from OGG pages to a MemoryStream
-                        while (loop)
+                        while (loop && source.Position < source.Length)
                         {
                             info.SetupHeaderEnd = source.Position; // When the loop stops, cursor is starting to read a brand new page located after Comment _and_ Setup headers
                             info.CommentHeader.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
