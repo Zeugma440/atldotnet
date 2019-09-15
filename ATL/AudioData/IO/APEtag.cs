@@ -1,3 +1,4 @@
+using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
@@ -128,7 +129,7 @@ namespace ATL.AudioData.IO
             tagID = Utils.Latin1Encoding.GetString(SourceFile.ReadBytes(3));
             if (ID3v1.ID3V1_ID.Equals(tagID)) Tag.DataShift = ID3v1.ID3V1_TAG_SIZE;
 
-            // Read footer data
+            // Read APEtag footer data
             SourceFile.BaseStream.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
 
             Tag.ID = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(8));
@@ -148,7 +149,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readFrames(BinaryReader source, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
+        private bool readFrames(BinaryReader source, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
             string strValue;
@@ -165,6 +166,12 @@ namespace ATL.AudioData.IO
                 frameName = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
                 valuePosition = source.BaseStream.Position;
+
+                if (frameDataSize < 0 || valuePosition + frameDataSize > Tag.FileSize)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Invalid value found while reading APEtag frame");
+                    return false;
+                }
 
                 if ((frameDataSize > 0) && (frameDataSize <= 500))
                 {
@@ -220,6 +227,8 @@ namespace ATL.AudioData.IO
                 }
                 source.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
             }
+
+            return true;
         }
 
         private static PictureInfo.PIC_TYPE decodeAPEPictureType(string picCode)
@@ -267,7 +276,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(tagOffset, tagSize);
 
                 // Get information from fields
-                readFrames(source, Tag, readTagParams);
+                result = readFrames(source, Tag, readTagParams);
             }
 
             return result;

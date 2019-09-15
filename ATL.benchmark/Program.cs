@@ -27,11 +27,11 @@ namespace ATL.benchmark
 
 
             //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
-            //readAt(@"E:\temp\aac\mp4\chapters\chapters_QT.m4a");
+            readAt(@"E:\temp\mp3\04+-+.mp3");
 
             //compareInfo(@"E:\Music\VGM");
 
-            browseFor(@"E:\Music\", "*.mp3");
+            //browseFor(@"E:\Music\", "*.mp3");
 
             //writeAt(@"FLAC/flac.flac");
         }

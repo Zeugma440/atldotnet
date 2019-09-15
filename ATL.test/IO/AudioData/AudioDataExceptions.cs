@@ -16,7 +16,6 @@ namespace ATL.test.IO
 
             ArrayLogger log = new ArrayLogger();
             string resource = "AAC/mp4.m4a";
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
@@ -25,7 +24,7 @@ namespace ATL.test.IO
                 fs.Seek(-1, SeekOrigin.Current);
                 fs.WriteByte(0);
 
-                Track theTrack = new Track(fs, ".mp4");
+                new Track(fs, ".mp4");
                 IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
                 Assert.AreEqual(1, logItems.Count);
                 Assert.AreEqual(atomCaption + " atom could not be found; aborting read", logItems[0].Message);
@@ -53,6 +52,20 @@ namespace ATL.test.IO
             audio_X_AAC_MP4_Atom("udta");
             audio_X_AAC_MP4_Atom("ilst");
             audio_X_AAC_MP4_Atom("mdat");
+        }
+
+        [TestMethod]
+        public void Audio_X_APE_invalid()
+        {
+            // Source : APE with invalid header
+            ArrayLogger log = new ArrayLogger();
+            string location = TestUtils.GetResourceLocationRoot() + "MP3/invalidApeHeader.mp3";
+
+            new Track(location);
+
+            IList<LogItem> logItems = log.GetAllItems(LV_ERROR);
+            Assert.AreEqual(1, logItems.Count);
+            Assert.AreEqual("Invalid value found while reading APEtag frame", logItems[0].Message);
         }
     }
 }
