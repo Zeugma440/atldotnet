@@ -16,7 +16,7 @@ namespace ATL.AudioData
 
         public static readonly int NB_CODEC_FAMILIES = 4;
 
-        public const int MAX_ALTERNATES = 10;   // Max number of alternate formats having the same file extension
+        public const int MAX_ALTERNATES = 2;   // Max number of alternate formats having the same file extension
 
         // The instance of this factory
         private static AudioDataIOFactory theFactory = null;
