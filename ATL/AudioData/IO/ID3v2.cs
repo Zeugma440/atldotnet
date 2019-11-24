@@ -650,7 +650,7 @@ namespace ATL.AudioData.IO
 
             dataPosition = source.Position;
 
-            if (dataSize > 0)
+            if (dataSize > 0 && dataSize < source.Length)
             {
                 if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
                 {
