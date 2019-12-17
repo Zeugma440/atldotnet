@@ -49,6 +49,7 @@ namespace ATL.test.IO.MetaData
         protected string notEmptyFile;
         protected int tagType;
         protected TagData testData;
+        protected bool supportsDateOrYear = false;
         protected bool supportsInternationalChars = true;
         protected bool canMetaNotExist = true;
 
@@ -413,13 +414,27 @@ namespace ATL.test.IO.MetaData
             if (testData.Artist != null) Assert.AreEqual("Artist", meta.Artist);
             if (testData.AlbumArtist != null) Assert.AreEqual("Mike", meta.AlbumArtist);
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
-            if (testData.RecordingDate != null)
+            if (!supportsDateOrYear)
             {
-                DateTime date;
-                Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
-                Assert.AreEqual(date, meta.Date);
+                if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
+                if (testData.RecordingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
+                    Assert.AreEqual(date, meta.Date);
+                }
             }
-            if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
+            else
+            {
+                Assert.IsTrue(meta.Year != null || (meta.Date != null && meta.Date > DateTime.MinValue));
+                if (meta.Year != null && testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
+                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
+                    Assert.AreEqual(date, meta.Date);
+                }
+            }
             if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
             if (testData.Rating != null) Assert.AreEqual((float)(2.5 / 5), meta.Popularity);
             if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
@@ -659,12 +674,25 @@ namespace ATL.test.IO.MetaData
             if (testData.Artist != null) Assert.AreEqual(testData.Artist, meta.Artist);
             if (testData.AlbumArtist != null) Assert.AreEqual(testData.AlbumArtist, meta.AlbumArtist);
             if (testData.Comment != null) Assert.AreEqual(testData.Comment, meta.Comment);
-            if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
-            if (testData.RecordingDate != null)
+            if (!supportsDateOrYear)
             {
-                DateTime date;
-                Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
-                Assert.AreEqual(date, meta.Date);
+                if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
+                if (testData.RecordingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
+                    Assert.AreEqual(date, meta.Date);
+                }
+            } else
+            {
+                Assert.IsTrue(meta.Year != null || (meta.Date != null && meta.Date > DateTime.MinValue));
+                if (meta.Year != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
+                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
+                    Assert.AreEqual(date, meta.Date);
+                }
             }
             if (testData.Genre != null) Assert.AreEqual(testData.Genre, meta.Genre);
             if (testData.Rating != null)

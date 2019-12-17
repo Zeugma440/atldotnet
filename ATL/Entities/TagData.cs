@@ -26,24 +26,25 @@ namespace ATL
         public const byte TAG_FIELD_ALBUM = 6;
         public const byte TAG_FIELD_RECORDING_YEAR = 7;
         public const byte TAG_FIELD_RECORDING_DATE = 8;
-        public const byte TAG_FIELD_RECORDING_TIME = 9;
-        public const byte TAG_FIELD_RECORDING_DAYMONTH = 10;
-        public const byte TAG_FIELD_TRACK_NUMBER = 11;
-        public const byte TAG_FIELD_DISC_NUMBER = 12;
-        public const byte TAG_FIELD_RATING = 13;
-        public const byte TAG_FIELD_ORIGINAL_ARTIST = 14;
-        public const byte TAG_FIELD_ORIGINAL_ALBUM = 15;
-        public const byte TAG_FIELD_COPYRIGHT = 16;
-        public const byte TAG_FIELD_ALBUM_ARTIST = 17;
-        public const byte TAG_FIELD_PUBLISHER = 18;
-        public const byte TAG_FIELD_CONDUCTOR = 19;
-        public const byte TAG_FIELD_TRACK_TOTAL = 20;
-        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 21;
-        public const byte TAG_FIELD_DISC_TOTAL = 22;
-        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 23;
-        public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 24;
-        public const byte TAG_FIELD_LYRICS_UNSYNCH = 25;
-        public const byte TAG_FIELD_LYRICS_SYNCH = 26;
+        public const byte TAG_FIELD_RECORDING_YEAR_OR_DATE = 9;
+        public const byte TAG_FIELD_RECORDING_TIME = 10;
+        public const byte TAG_FIELD_RECORDING_DAYMONTH = 11;
+        public const byte TAG_FIELD_TRACK_NUMBER = 12;
+        public const byte TAG_FIELD_DISC_NUMBER = 13;
+        public const byte TAG_FIELD_RATING = 14;
+        public const byte TAG_FIELD_ORIGINAL_ARTIST = 15;
+        public const byte TAG_FIELD_ORIGINAL_ALBUM = 16;
+        public const byte TAG_FIELD_COPYRIGHT = 17;
+        public const byte TAG_FIELD_ALBUM_ARTIST = 18;
+        public const byte TAG_FIELD_PUBLISHER = 19;
+        public const byte TAG_FIELD_CONDUCTOR = 20;
+        public const byte TAG_FIELD_TRACK_TOTAL = 21;
+        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 22;
+        public const byte TAG_FIELD_DISC_TOTAL = 23;
+        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 24;
+        public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 25;
+        public const byte TAG_FIELD_LYRICS_UNSYNCH = 26;
+        public const byte TAG_FIELD_LYRICS_SYNCH = 27;
 #pragma warning disable S1104 // Fields should not have public accessibility
         // Values for 'classic' fields
         public string GeneralDescription = null;
@@ -154,6 +155,13 @@ namespace ATL
                 // Numeric fields (a value at zero mean nothing has been valued -> field should be empty)
                 case TAG_FIELD_RECORDING_DATE: RecordingDate = emptyIfZero(value); break;
                 case TAG_FIELD_RECORDING_YEAR: RecordingYear = emptyIfZero(value); break;
+                case TAG_FIELD_RECORDING_YEAR_OR_DATE:
+                    if (value != null)
+                    {
+                        if (value.Length < 5) RecordingYear = emptyIfZero(value);
+                        else RecordingDate = emptyIfZero(value);
+                    }
+                    break;
                 case TAG_FIELD_RECORDING_DAYMONTH: RecordingDayMonth = emptyIfZero(value); break;
                 case TAG_FIELD_RECORDING_TIME: RecordingTime = emptyIfZero(value); break;
                 case TAG_FIELD_TRACK_NUMBER: TrackNumber = emptyIfZero(value); break;
@@ -291,6 +299,8 @@ namespace ATL
             addIfConsistent(Album, TAG_FIELD_ALBUM, result);
             addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, result);
             addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, result);
+            addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_YEAR_OR_DATE, result);
+            addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR_OR_DATE, result);
             addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, result);
             addIfConsistent(RecordingTime, TAG_FIELD_RECORDING_TIME, result);
             addIfConsistent(Genre, TAG_FIELD_GENRE, result);

@@ -68,9 +68,9 @@ namespace ATL.test.IO.MetaData
             testData.TrackTotal = "2";
             testData.DiscNumber = "3";
             testData.DiscTotal = "4";
+            testData.RecordingDate = "1997-06-20T00:00:00"; // No timestamp in MP4 date format
             testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
             testData.Publisher = null;
-            testData.RecordingDate = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
 
             testData.AdditionalFields.Clear();
@@ -82,6 +82,8 @@ namespace ATL.test.IO.MetaData
             pic.PictureData = data;
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
+
+            supportsDateOrYear = true;
         }
 
 
@@ -90,10 +92,14 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
+            // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            readExistingTagsOnFile(theFile, 1);
 
+
+            location = TestUtils.GetResourceLocationRoot() + "AAC/mp4_date_in_©day.m4a";
+            theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
         }
 

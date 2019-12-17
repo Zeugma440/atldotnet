@@ -74,7 +74,7 @@ namespace ATL.AudioData.IO
             { "©art", TagData.TAG_FIELD_ARTIST },
             { "©ART", TagData.TAG_FIELD_ARTIST },
             { "©cmt", TagData.TAG_FIELD_COMMENT },
-            { "©day", TagData.TAG_FIELD_RECORDING_YEAR },
+            { "©day", TagData.TAG_FIELD_RECORDING_YEAR_OR_DATE },
             { "©gen", TagData.TAG_FIELD_GENRE },
             { "gnre", TagData.TAG_FIELD_GENRE },
             { "trkn", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },

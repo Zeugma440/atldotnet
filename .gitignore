@@ -203,3 +203,4 @@ $RECYCLE.BIN/
 *.trx
 *.dll
 /opencover.xml
+/ATL/upload to github package.bat
