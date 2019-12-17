@@ -91,6 +91,7 @@ namespace ATL.AudioData.IO
         // Recording date <== de facto standard behind the "date" field on most taggers
         //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
         //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+        //   NB : Some loose implementations actually use TDRC inside ID3v2.3 headers (MediaMonkey, I'm looking at you...)
         //   ID3v2.4 : TDRC (timestamp)
 
         // Mapping between standard fields and ID3v2.2 identifiers
@@ -1184,6 +1185,7 @@ namespace ATL.AudioData.IO
                         map[TagData.TAG_FIELD_RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
                     }
                 }
+                map.Remove(TagData.TAG_FIELD_RECORDING_DATE);
             }
 
             IDictionary<string, byte> mapping = frameMapping_v24;
