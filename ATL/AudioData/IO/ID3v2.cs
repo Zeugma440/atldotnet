@@ -132,6 +132,7 @@ namespace ATL.AudioData.IO
                 { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
                 { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
                 { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
+                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE }, // Not part of ID3v2.3 standard, but sometimes found there anyway (MediaMonkey, I'm looking at you...)
                 { "TIME", TagData.TAG_FIELD_RECORDING_TIME },
                 { "COMM", TagData.TAG_FIELD_COMMENT },
                 { "TCOM", TagData.TAG_FIELD_COMPOSER },
