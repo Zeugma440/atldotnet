@@ -680,12 +680,15 @@ namespace ATL.AudioData.IO
                 }
 
                 source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
+
                 // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
-                if (0 == lookForMP4Atom(source.BaseStream, "stsz"))
+                atomSize = lookForMP4Atom(source.BaseStream, "stsz");
+                if (0 == atomSize)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsz atom could not be found; aborting read");
                     return;
                 }
+                atomPosition = source.BaseStream.Position;
                 source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                 uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
@@ -740,7 +743,7 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-
+                source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
                 // "Physical" audio chunks are referenced by position (offset) in  moov.trak.mdia.minf.stbl.stco / co64
                 // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
                 if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTrack)
