@@ -107,6 +107,7 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".aac");
                 tempFmt.AddExtension(".mp4");
                 tempFmt.AddExtension(".m4a");
+                tempFmt.AddExtension(".m4b");
                 tempFmt.AddExtension(".m4v");
                 theFactory.addFormat(tempFmt);
 
