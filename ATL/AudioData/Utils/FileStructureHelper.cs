@@ -236,14 +236,20 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Declare a zone in advance; useful when reading header frames of containing upper frames, without having reached tag frame itself
+        /// </summary>
+        /// <param name="zone"></param>
+        public void DeclareZone(string zone)
+        {
+            AddZone(0, 0, zone);
+        }
+
+        /// <summary>
         /// Record a new header using the given fields and attach it to the zone of given name
         /// </summary>
         private void addZoneHeader(string zone, byte type, long position, object value, bool isLittleEndian)
         {
-            if (!zones.ContainsKey(zone)) // Might happen when reading header frames of containing upper frames, without having reached tag frame itself
-            {
-                AddZone(0, 0, zone);
-            }
+            if (!zones.ContainsKey(zone)) DeclareZone(zone);
             zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
         }
 
@@ -364,7 +370,8 @@ namespace ATL.AudioData
         {
             bool result = true;
             long delta;
-            long offsetCorrection;
+            long offsetPositionCorrection;
+            long offsetValueCorrection = 0;
             byte[] value;
             object updatedValue;
 
@@ -372,11 +379,15 @@ namespace ATL.AudioData
             {
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
-                    offsetCorrection = -globalOffsetCorrection;
+                    offsetPositionCorrection = -globalOffsetCorrection;
                     delta = 0;
                     foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
                     {
-                        if (header.Position >= offsetDelta.Key) offsetCorrection += offsetDelta.Value;
+                        if (header.Position >= offsetDelta.Key)
+                        {
+                            offsetPositionCorrection += offsetDelta.Value;
+                            offsetValueCorrection += offsetDelta.Value;
+                        }
                     }
 
                     if (FrameHeader.TYPE_COUNTER == header.Type)
@@ -400,7 +411,7 @@ namespace ATL.AudioData
 
                     if ((FrameHeader.TYPE_COUNTER == header.Type || FrameHeader.TYPE_SIZE == header.Type) && (delta != 0))
                     {
-                        w.BaseStream.Seek(header.Position + offsetCorrection, SeekOrigin.Begin);
+                        w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 
                         value = addToValue(header.Value, delta, out updatedValue);
 
@@ -415,7 +426,7 @@ namespace ATL.AudioData
                     }
                     else if (FrameHeader.TYPE_INDEX == header.Type || FrameHeader.TYPE_RINDEX == header.Type)
                     {
-                        long headerPosition = header.Position + offsetCorrection;
+                        long headerPosition = header.Position + offsetPositionCorrection;
                         w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
                         value = null;
 
@@ -425,11 +436,15 @@ namespace ATL.AudioData
                         {
                             if (header.Value is long)
                             {
-                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetCorrection - headerOffsetCorrection);
+                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection);
                             }
                             else if (header.Value is int)
                             {
-                                value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetCorrection - headerOffsetCorrection));
+                                value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
+                            }
+                            else if (header.Value is uint)
+                            {
+                                value = BitConverter.GetBytes((uint)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
                             }
 
                             if (!header.IsLittleEndian) Array.Reverse(value);
@@ -443,6 +458,10 @@ namespace ATL.AudioData
                             else if (header.Value is int)
                             {
                                 value = BitConverter.GetBytes((int)0);
+                            }
+                            else if (header.Value is uint)
+                            {
+                                value = BitConverter.GetBytes((uint)0);
                             }
                         }
 

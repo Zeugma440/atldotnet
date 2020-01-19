@@ -65,6 +65,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
         private const string ZONE_MP4_NEROCHAPTERS = "neroChapters";
+        private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";
 
         // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameMapping_mp4 = new Dictionary<string, byte>() {
@@ -373,19 +374,12 @@ namespace ATL.AudioData.IO
         /// <param name="readTagParams">Reading parameters</param>
         private void readMP4(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            long iListSize = 0;
-            long iListPosition = 0;
-            uint metadataSize = 0;
-            byte dataClass = 0;
-
             long moovPosition, udtaPosition, trakPosition;
             int globalTimeScale;
             int mediaTimeScale = 1000;
 
-            ushort int16Data = 0;
             uint int32Data = 0;
 
-            string strData = "";
             uint atomSize;
             long atomPosition;
 
@@ -416,6 +410,10 @@ namespace ATL.AudioData.IO
             moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
+                structureHelper.DeclareZone(DEFAULT_ZONE_NAME);
+                structureHelper.DeclareZone(ZONE_MP4_NEROCHAPTERS);
+                structureHelper.DeclareZone(PADDING_ZONE_NAME);
+
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
             }
@@ -586,6 +584,7 @@ namespace ATL.AudioData.IO
                     }
                 }
 
+                // Read Quicktime chapters
                 if (isCurrentTrackFirstChapterTrack)
                 {
                     source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
@@ -677,7 +676,7 @@ namespace ATL.AudioData.IO
                         }
                         chunkIndex++;
                     }
-                }
+                } // End read Quicktime chapters
 
                 source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
 
@@ -804,9 +803,13 @@ namespace ATL.AudioData.IO
                         }
 
                         // A size-type header is used here instead of an absolute index-type header because size variation has to be recorded, and not zone position
-                        // (those chunks do not even point to metadata zones but to the physical media stream)
-                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj);
-                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS);
+                        // (those chunks do not even point to metadata zones but to the physical media stream located after all metadata)
+                        //                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj);
+                        //                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS);
+                        //structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj);
+                        //structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_NEROCHAPTERS);
+                        structureHelper.AddZone(valueLong, 0, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
+                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
                     } // Chunk offsets
                 }
 
@@ -879,179 +882,7 @@ namespace ATL.AudioData.IO
             if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
             source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
 
-            if (readTagParams.ReadTag)
-            {
-                atomPosition = source.BaseStream.Position;
-                atomSize = lookForMP4Atom(source.BaseStream, "hdlr"); // Metadata handler
-                if (0 == atomSize)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "hdlr atom could not be found; aborting read");
-                    return;
-                }
-                long hdlrPosition = source.BaseStream.Position - 8;
-                source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
-                strData = Utils.Latin1Encoding.GetString(source.ReadBytes(4)); // Meta data type
-
-                if (!strData.Equals("mdir"))
-                {
-                    string errMsg = "ATL does not support ";
-                    if (strData.Equals("mp7t")) errMsg += "MPEG-7 XML metadata";
-                    else if (strData.Equals("mp7b")) errMsg += "MPEG-7 binary XML metadata";
-                    else errMsg = "Unrecognized metadata format";
-
-                    throw new NotSupportedException(errMsg);
-                }
-                source.BaseStream.Seek(atomSize + hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
-
-                iListSize = lookForMP4Atom(source.BaseStream, "ilst"); // === Metadata list
-                if (0 == iListSize)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ilst atom could not be found; aborting read");
-                    return;
-                }
-                structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
-
-                if (8 == Size) // Core minimal size
-                {
-                    tagExists = false;
-                    return;
-                }
-                else
-                {
-                    tagExists = true;
-                }
-
-                string atomHeader;
-                // Browse all metadata
-                while (iListPosition < iListSize - 8)
-                {
-                    atomSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                    atomHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-
-                    if ("----".Equals(atomHeader)) // Custom text metadata
-                    {
-                        metadataSize = lookForMP4Atom(source.BaseStream, "mean"); // "issuer" of the field
-                        if (0 == metadataSize)
-                        {
-                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mean atom could not be found; aborting read");
-                            return;
-                        }
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                        atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
-
-                        metadataSize = lookForMP4Atom(source.BaseStream, "name"); // field type
-                        if (0 == metadataSize)
-                        {
-                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "name atom could not be found; aborting read");
-                            return;
-                        }
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                        atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
-                    }
-
-                    // Having a 'data' header here means we're still on the same field, with a 2nd value
-                    // (e.g. multiple embedded pictures)
-                    if (!"data".Equals(atomHeader))
-                    {
-                        metadataSize = lookForMP4Atom(source.BaseStream, "data");
-                        if (0 == metadataSize)
-                        {
-                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "data atom could not be found; aborting read");
-                            return;
-                        }
-                        atomPosition = source.BaseStream.Position - 8;
-                    }
-                    else
-                    {
-                        metadataSize = atomSize;
-                    }
-
-                    // We're only looking for the last byte of the flag
-                    source.BaseStream.Seek(3, SeekOrigin.Current);
-                    dataClass = source.ReadByte();
-
-                    // 4-byte NULL space
-                    source.BaseStream.Seek(4, SeekOrigin.Current);
-
-                    addFrameClass(atomHeader, dataClass);
-
-                    if (1 == dataClass) // UTF-8 Text
-                    {
-                        strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
-                        SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
-                    }
-                    else if (21 == dataClass) // uint8
-                    {
-                        int16Data = source.ReadByte();
-                        //                        Source.BaseStream.Seek(atomPosition+metadataSize, SeekOrigin.Begin); // The rest are padding bytes
-                        SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
-                    }
-                    else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
-                    {
-                        PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic; // TODO - to check : this seems to prevent ATL from detecting multiple images from the same type, as for a file with two "Front Cover" images; only one image will be detected
-
-                        int picturePosition;
-                        addPictureToken(picType);
-                        picturePosition = takePicturePosition(picType);
-
-                        if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
-                        {
-                            // Peek the next 3 bytes to know the picture type
-                            ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(source.ReadBytes(3));
-                            if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
-                            source.BaseStream.Seek(-3, SeekOrigin.Current);
-
-                            PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), dataClass, picturePosition);
-                            picInfo.PictureData = new byte[metadataSize - 16];
-                            source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize - 16);
-
-                            tagData.Pictures.Add(picInfo);
-
-                            if (readTagParams.PictureStreamHandler != null)
-                            {
-                                MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                                readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                                mem.Close();
-                            }
-                        }
-                        else
-                        {
-                            //                            Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                        }
-                    }
-                    else if (0 == dataClass) // Special cases : gnre, trkn, disk
-                    {
-                        if ("trkn".Equals(atomHeader) || "disk".Equals(atomHeader))
-                        {
-                            source.BaseStream.Seek(2, SeekOrigin.Current);
-                            ushort number = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Current track/disc number
-                            ushort total = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Total number of tracks/discs
-                            SetMetaField(atomHeader, number.ToString() + "/" + total.ToString(), readTagParams.ReadAllMetaFrames);
-                        }
-                        else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
-                        {
-                            int16Data = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
-
-                            strData = "";
-                            if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
-
-                            SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
-                        }
-                        else
-                        { // Other unhandled cases
-                            //                          Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                        }
-                    }
-                    else // Other unhandled cases
-                    {
-                        //                        Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                    }
-
-                    source.BaseStream.Seek(atomPosition + metadataSize, SeekOrigin.Begin);
-                    iListPosition += atomSize;
-                }
-            }
+            if (readTagParams.ReadTag) readTag(source, readTagParams);
 
             bool paddingFound = false;
             // Seek the generic padding atom
@@ -1062,6 +893,7 @@ namespace ATL.AudioData.IO
                 if (initialPaddingSize > 0)
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
                     paddingFound = true;
                 }
             }
@@ -1078,7 +910,196 @@ namespace ATL.AudioData.IO
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
 
             if (readTagParams.PrepareForWriting && Settings.AddNewPadding && !paddingFound)
+            {
                 structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+                structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+            }
+        }
+
+        private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        {
+            long iListSize = 0;
+            long iListPosition = 0;
+            uint metadataSize = 0;
+            byte dataClass = 0;
+
+            ushort int16Data = 0;
+            string strData = "";
+
+            uint atomSize;
+            long atomPosition;
+
+
+            atomPosition = source.BaseStream.Position;
+            atomSize = lookForMP4Atom(source.BaseStream, "hdlr"); // Metadata handler
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "hdlr atom could not be found; aborting read");
+                return;
+            }
+            long hdlrPosition = source.BaseStream.Position - 8;
+            source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+            source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
+            strData = Utils.Latin1Encoding.GetString(source.ReadBytes(4)); // Meta data type
+
+            if (!strData.Equals("mdir"))
+            {
+                string errMsg = "ATL does not support ";
+                if (strData.Equals("mp7t")) errMsg += "MPEG-7 XML metadata";
+                else if (strData.Equals("mp7b")) errMsg += "MPEG-7 binary XML metadata";
+                else errMsg = "Unrecognized metadata format";
+
+                throw new NotSupportedException(errMsg);
+            }
+            source.BaseStream.Seek(atomSize + hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
+
+            iListSize = lookForMP4Atom(source.BaseStream, "ilst"); // === Metadata list
+            if (0 == iListSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ilst atom could not be found; aborting read");
+                return;
+            }
+            structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
+
+            if (8 == Size) // Core minimal size
+            {
+                tagExists = false;
+                return;
+            }
+            else
+            {
+                tagExists = true;
+            }
+
+            string atomHeader;
+            // Browse all metadata
+            while (iListPosition < iListSize - 8)
+            {
+                atomSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                atomHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+
+                if ("----".Equals(atomHeader)) // Custom text metadata
+                {
+                    metadataSize = lookForMP4Atom(source.BaseStream, "mean"); // "issuer" of the field
+                    if (0 == metadataSize)
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mean atom could not be found; aborting read");
+                        return;
+                    }
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                    atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
+
+                    metadataSize = lookForMP4Atom(source.BaseStream, "name"); // field type
+                    if (0 == metadataSize)
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "name atom could not be found; aborting read");
+                        return;
+                    }
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                    atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
+                }
+
+                // Having a 'data' header here means we're still on the same field, with a 2nd value
+                // (e.g. multiple embedded pictures)
+                if (!"data".Equals(atomHeader))
+                {
+                    metadataSize = lookForMP4Atom(source.BaseStream, "data");
+                    if (0 == metadataSize)
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "data atom could not be found; aborting read");
+                        return;
+                    }
+                    atomPosition = source.BaseStream.Position - 8;
+                }
+                else
+                {
+                    metadataSize = atomSize;
+                }
+
+                // We're only looking for the last byte of the flag
+                source.BaseStream.Seek(3, SeekOrigin.Current);
+                dataClass = source.ReadByte();
+
+                // 4-byte NULL space
+                source.BaseStream.Seek(4, SeekOrigin.Current);
+
+                addFrameClass(atomHeader, dataClass);
+
+                if (1 == dataClass) // UTF-8 Text
+                {
+                    strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
+                    SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                }
+                else if (21 == dataClass) // uint8
+                {
+                    int16Data = source.ReadByte();
+                    //                        Source.BaseStream.Seek(atomPosition+metadataSize, SeekOrigin.Begin); // The rest are padding bytes
+                    SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                }
+                else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
+                {
+                    PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic; // TODO - to check : this seems to prevent ATL from detecting multiple images from the same type, as for a file with two "Front Cover" images; only one image will be detected
+
+                    int picturePosition;
+                    addPictureToken(picType);
+                    picturePosition = takePicturePosition(picType);
+
+                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                    {
+                        // Peek the next 3 bytes to know the picture type
+                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(source.ReadBytes(3));
+                        if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
+                        source.BaseStream.Seek(-3, SeekOrigin.Current);
+
+                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), dataClass, picturePosition);
+                        picInfo.PictureData = new byte[metadataSize - 16];
+                        source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize - 16);
+
+                        tagData.Pictures.Add(picInfo);
+
+                        if (readTagParams.PictureStreamHandler != null)
+                        {
+                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
+                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
+                            mem.Close();
+                        }
+                    }
+                    else
+                    {
+                        //                            Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
+                    }
+                }
+                else if (0 == dataClass) // Special cases : gnre, trkn, disk
+                {
+                    if ("trkn".Equals(atomHeader) || "disk".Equals(atomHeader))
+                    {
+                        source.BaseStream.Seek(2, SeekOrigin.Current);
+                        ushort number = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Current track/disc number
+                        ushort total = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Total number of tracks/discs
+                        SetMetaField(atomHeader, number.ToString() + "/" + total.ToString(), readTagParams.ReadAllMetaFrames);
+                    }
+                    else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
+                    {
+                        int16Data = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+
+                        strData = "";
+                        if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
+
+                        SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                    }
+                    else
+                    { // Other unhandled cases
+                      //                          Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
+                    }
+                }
+                else // Other unhandled cases
+                {
+                    //                        Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
+                }
+
+                source.BaseStream.Seek(atomPosition + metadataSize, SeekOrigin.Begin);
+                iListPosition += atomSize;
+            }
         }
 
         /// <summary>
@@ -1180,11 +1201,17 @@ namespace ATL.AudioData.IO
 
                 if (paddingSizeToWrite > 0)
                 {
-                    w.Write(StreamUtils.EncodeBEUInt32((uint)paddingSizeToWrite));
+                    //                    w.Write(StreamUtils.EncodeBEUInt32((uint)paddingSizeToWrite));
+                    // Placeholder; size is written by FileStructureHelper
+                    w.Write((int)0);
                     w.Write(Utils.Latin1Encoding.GetBytes("free"));
-                        for (int i = 0; i < paddingSizeToWrite - 8; i++) w.Write((byte)0);
+                    for (int i = 0; i < paddingSizeToWrite - 8; i++) w.Write((byte)0);
                     result = 1;
                 }
+            }
+            else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
+            {
+                result = 1; // Needs to appear active in case the headers need to be rewritten
             }
 
             return result;

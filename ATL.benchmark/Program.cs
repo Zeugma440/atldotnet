@@ -65,12 +65,20 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
 
-        static private void writeAt(String fileName)
+        static private void writeOnTmpResource(String fileName)
         {
             Writing w = new Writing();
             w.Setup(fileName);
             w.Perf_Write();
             w.Cleanup();
+
+            Console.ReadLine();
+        }
+
+        static private void writeAt(String fileName)
+        {
+            Writing w = new Writing();
+            w.performWrite(fileName);
 
             Console.ReadLine();
         }

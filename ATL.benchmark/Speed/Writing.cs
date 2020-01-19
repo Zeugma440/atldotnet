@@ -48,15 +48,17 @@ namespace ATL.benchmark
         private void performWrite()
         {
             // Mass-read resulting files
-            foreach (string s in tempFiles)
-            {
-                IProgress<float> progress = new Progress<float>(displayProgress);
-                Track t = new Track(s, progress);
+            foreach (string s in tempFiles) performWrite(s);
+        }
 
-                t.AdditionalFields.Add(new KeyValuePair<string, string>("test","aaa"));
+        public void performWrite(String filePath)
+        {
+            IProgress<float> progress = new Progress<float>(displayProgress);
+            Track t = new Track(filePath, progress);
 
-                t.Save();
-            }
+            t.AdditionalFields.Add(new KeyValuePair<string, string>("test", "aaa"));
+
+            t.Save();
         }
     }
 }
