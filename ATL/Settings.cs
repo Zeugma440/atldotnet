@@ -44,6 +44,8 @@ namespace ATL
         public static bool ID3v2_useExtendedHeaderRestrictions = false;
         public static bool ID3v2_alwaysWriteCTOCFrame = true;           // Always write CTOC frame when metadata contain at least one chapter
         public static byte ID3v2_tagSubVersion = 4;                     // Write metadata in ID3v2.<ID3v2_tagSubVersion> format (only 3 and 4 are supported so far - resp. ID3v2.3 and ID3v2.4)
+        public static bool ID3v2_forceAPICEncodingToLatin1 = true;      // Force the encoding of the APIC frame to ISO-8859-1/Latin-1 for Windows to be able to display the cover picture
+                                                                        // Disable it to be able to write picture descriptions using non-western characters (japanese, cyrillic...)
 
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 

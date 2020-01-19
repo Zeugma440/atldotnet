@@ -1642,6 +1642,7 @@ namespace ATL.AudioData.IO
             long finalFramePos;
             long finalFramePosRaw;
             bool useDataSize = (4 == Settings.ID3v2_tagSubVersion);
+            Encoding usedTagEncoding = (Settings.ID3v2_forceAPICEncodingToLatin1 ? Utils.Latin1Encoding : tagEncoding);
 
             // Unsynchronization management
             BinaryWriter w;
@@ -1651,7 +1652,7 @@ namespace ATL.AudioData.IO
             if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
                 s = new MemoryStream(Size);
-                w = new BinaryWriter(s, tagEncoding);
+                w = new BinaryWriter(s, usedTagEncoding);
                 frameOffset = writer.BaseStream.Position;
             }
             else
@@ -1672,7 +1673,7 @@ namespace ATL.AudioData.IO
             }
 
             // Beginning of APIC frame data
-            w.Write(encodeID3v2CharEncoding(tagEncoding));
+            w.Write(encodeID3v2CharEncoding(usedTagEncoding));
 
             // Application of ID3v2 extended header restrictions
             if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions)
@@ -1711,9 +1712,9 @@ namespace ATL.AudioData.IO
             w.Write(pictureTypeCode);
 
             // Picture description
-            w.Write(getBomFromEncoding(tagEncoding));
+            w.Write(getBomFromEncoding(usedTagEncoding));
             if (picDescription.Length > 0) w.Write(picDescription);
-            w.Write(getNullTerminatorFromEncoding(tagEncoding)); // Description should be null-terminated
+            w.Write(getNullTerminatorFromEncoding(usedTagEncoding)); // Description should be null-terminated
 
             w.Write(pictureData);
 
