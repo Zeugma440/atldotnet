@@ -27,13 +27,13 @@ namespace ATL.benchmark
 
 
             //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
-            readAt(@"E:\temp\mp3\04+-+.mp3");
+            //readAt(@"E:\temp\mp3\04+-+.mp3");
 
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            //writeAt(@"FLAC/flac.flac");
+            writeAt(@"FLAC/flac.flac");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)

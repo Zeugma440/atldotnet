@@ -55,6 +55,7 @@ namespace ATL.AudioData
         private readonly Stream stream;
 
         private readonly SizeInfo sizeInfo = new SizeInfo();
+        private readonly IProgress<float> writeProgress;
 
 
         private string fileName
@@ -80,16 +81,18 @@ namespace ATL.AudioData
 
 
 
-        public AudioDataManager(IAudioDataIO audioDataReader)
+        public AudioDataManager(IAudioDataIO audioDataReader, IProgress<float> writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
             this.stream = null;
+            this.writeProgress = writeProgress;
         }
 
-        public AudioDataManager(IAudioDataIO audioDataReader, Stream stream)
+        public AudioDataManager(IAudioDataIO audioDataReader, Stream stream, IProgress<float> writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
             this.stream = stream;
+            this.writeProgress = writeProgress;
         }
 
 
@@ -267,7 +270,7 @@ namespace ATL.AudioData
                             theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
                         }
 
-                        result = theMetaIO.Write(r, w, theTag);
+                        result = theMetaIO.Write(r, w, theTag, writeProgress);
                         if (result) setMeta(theMetaIO);
                     } finally
                     {

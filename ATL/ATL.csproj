@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net30;netstandard2.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;netcoreapp2.0</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
     <Company />
     <AssemblyVersion>2.17.0.0</AssemblyVersion>

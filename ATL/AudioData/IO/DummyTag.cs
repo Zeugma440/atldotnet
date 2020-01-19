@@ -143,7 +143,7 @@ namespace ATL.AudioData.IO
             get { return new List<PictureInfo>(); }
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             return true;
         }

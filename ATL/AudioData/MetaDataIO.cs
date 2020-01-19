@@ -642,7 +642,7 @@ namespace ATL.AudioData.IO
             return new FileSurgeon.WriteResult(FileSurgeon.WriteMode.REPLACE, write(tag, w, zone.Name));
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
 
@@ -706,7 +706,7 @@ namespace ATL.AudioData.IO
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
             dataToWrite.Cleanup();
 
-            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset());
+            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
             result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read

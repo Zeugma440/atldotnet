@@ -243,8 +243,9 @@ namespace ATL.AudioData
         /// <param name="r">Reader to the resource to edit</param>
         /// <param name="w">Writer to the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
+        /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(BinaryReader r, BinaryWriter w, TagData tag);
+        bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null);
 
         /// <summary>
         /// Remove current tag

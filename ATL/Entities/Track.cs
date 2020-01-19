@@ -22,10 +22,11 @@ namespace ATL
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="Path">Path of the local file to be loaded</param>
-        public Track(string Path, bool load = true)
+        public Track(string Path, IProgress<float> writeProgress = null, bool load = true)
         {
             this.Path = Path;
             stream = null;
+            this.writeProgress = writeProgress;
             if (load) Update();
         }
 
@@ -34,11 +35,12 @@ namespace ATL
         /// </summary>
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
-        public Track(Stream stream, string mimeType)
+        public Track(Stream stream, string mimeType, IProgress<float> writeProgress = null)
         {
             this.stream = stream;
             this.mimeType = mimeType;
             Path = "In-memory";
+            this.writeProgress = writeProgress;
             Update();
         }
 
@@ -206,6 +208,11 @@ namespace ATL
         private IList<PictureInfo> currentEmbeddedPictures = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
+
+        //=== TECHNICAL
+        private readonly IProgress<float> writeProgress;
+
+
         /// <summary>
         /// List of pictures stored in the tag
         /// NB1 : PictureInfo.PictureData (raw binary picture data) is valued
@@ -251,8 +258,8 @@ namespace ATL
             if ((null == Path) || (0 == Path.Length)) return;
 
             // TODO when tag is not available, customize by naming options // tracks (...)
-            if (null == stream) fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames);
-            else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames);
+            if (null == stream) fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
+            else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title))

@@ -28,6 +28,10 @@ namespace ATL.AudioData.IO
         private readonly int implementedTagType;
         private readonly int defaultTagOffset;
 
+        private readonly IProgress<float> writeProgress;
+        private float currentProgress;
+        private int totalProgressSteps;
+
         public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
 
 
@@ -48,12 +52,14 @@ namespace ATL.AudioData.IO
             FileStructureHelper structureHelper,
             IMetaDataEmbedder embedder,
             int implementedTagType,
-            int defaultTagOffset)
+            int defaultTagOffset,
+            IProgress<float> writeProgress)
         {
             this.structureHelper = structureHelper;
             this.embedder = embedder;
             this.implementedTagType = implementedTagType;
             this.defaultTagOffset = defaultTagOffset;
+            this.writeProgress = writeProgress;
         }
 
 
@@ -67,6 +73,9 @@ namespace ATL.AudioData.IO
             ZoneManagement mode;
             if (1 == zones.Count) mode = ZoneManagement.ON_DISK;
             else mode = ZoneManagement.BUFFERED;
+
+            currentProgress = 0;
+            totalProgressSteps = 0;
 
             if (ZoneManagement.ON_DISK == mode) return RewriteZonesDirect(w, write, zones, dataToWrite, tagExists);
             else return RewriteZonesBuffered(w, write, zones, dataToWrite, tagExists);
@@ -86,6 +95,9 @@ namespace ATL.AudioData.IO
             long cumulativeDelta = 0;
             bool result = true;
 
+            if (writeProgress != null) writeProgress.Report(0);
+
+            totalProgressSteps += zones.Count;
             foreach (Zone zone in zones)
             {
                 oldTagSize = zone.Size;
@@ -196,6 +208,7 @@ namespace ATL.AudioData.IO
 
                     zone.Size = (int)newTagSize;
                 }
+                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
             } // Loop through zones
 
             return result;
@@ -209,6 +222,7 @@ namespace ATL.AudioData.IO
             bool tagExists)
         {
             bool result = true;
+            totalProgressSteps += 3;
 
             // Load the 'interesting' part of the file in memory
             // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC)
@@ -229,6 +243,8 @@ namespace ATL.AudioData.IO
             using (MemoryStream chunk = new MemoryStream((int)initialChunkLength))
             {
                 StreamUtils.CopyStream(w.BaseStream, chunk, (int)initialChunkLength);
+                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
+
                 using (BinaryWriter msw = new BinaryWriter(chunk, Settings.DefaultTextEncoding))
                 {
                     result = RewriteZonesDirect(msw, write, zones, dataToWrite, tagExists, chunkBeginOffset, true);
@@ -248,12 +264,14 @@ namespace ATL.AudioData.IO
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (chunk.Length - initialChunkLength) + ")");
                         StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialChunkLength - chunk.Length));
                     }
+                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
 
                     // Copy tag contents to the new slot
                     w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
                     chunk.Seek(0, SeekOrigin.Begin);
 
                     StreamUtils.CopyStream(chunk, w.BaseStream);
+                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
                 }
             }
 

@@ -26,20 +26,20 @@ namespace ATL.AudioData
         /// <param name="path">Path of the file to be parsed</param>
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
-        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false)
+        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;
 
             audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-            audioManager = new AudioDataManager(audioData);
+            audioManager = new AudioDataManager(audioData, writeProgress);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-                audioManager = new AudioDataManager(audioData);
+                audioManager = new AudioDataManager(audioData, writeProgress);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
@@ -54,21 +54,21 @@ namespace ATL.AudioData
         /// <param name="stream">Stream to access in-memory data to be parsed</param>
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
-        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false)
+        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;
 
             audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
 
-            audioManager = new AudioDataManager(audioData, stream);
+            audioManager = new AudioDataManager(audioData, stream, writeProgress);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
-                audioManager = new AudioDataManager(audioData, stream);
+                audioManager = new AudioDataManager(audioData, stream, writeProgress);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
@@ -412,9 +412,9 @@ namespace ATL.AudioData
             return metaData.Read(source, readTagParams);
         }
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
-            return metaData.Write(r, w, tag);
+            return metaData.Write(r, w, tag, writeProgress);
         }
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

@@ -559,7 +559,7 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -578,7 +578,7 @@ namespace ATL.AudioData.IO
 
             adjustPictureZones(dataToWrite.Pictures);
 
-            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TAG_NATIVE, TO_BUILTIN);
+            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TAG_NATIVE, TO_BUILTIN, writeProgress);
             surgeon.RewriteZones(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
 
             // Set the 'isLast' bit on the actual last block

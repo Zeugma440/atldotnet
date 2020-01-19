@@ -1,9 +1,7 @@
-﻿using ATL.AudioData;
-using System.IO;
-using BenchmarkDotNet.Running;
+﻿using System.IO;
 using BenchmarkDotNet.Attributes;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
+using System;
 
 namespace ATL.benchmark
 {
@@ -42,12 +40,18 @@ namespace ATL.benchmark
             performWrite();
         }
 
+        private void displayProgress(float progress)
+        {
+            Console.WriteLine(progress + "%");
+        }
+
         private void performWrite()
         {
             // Mass-read resulting files
             foreach (string s in tempFiles)
             {
-                Track t = new Track(s);
+                IProgress<float> progress = new Progress<float>(displayProgress);
+                Track t = new Track(s, progress);
 
                 t.AdditionalFields.Add(new KeyValuePair<string, string>("test","aaa"));
 
