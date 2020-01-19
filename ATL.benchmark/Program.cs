@@ -18,22 +18,13 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\OGG\ogg.ogg");
-
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP3\id3v2.4_UTF8.mp3");
-
-            //readAt(@"E:\temp\id3v2\Testband - Copy - Copy - Copy.mp3");
-
-
-            //readAt(@"E:\temp\aac\mp4\chapters\multiTrack & chapters QT.m4a");
-            //readAt(@"E:\temp\mp3\04+-+.mp3");
+            //readAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
 
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"FLAC/flac.flac");
+            writeAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
@@ -78,7 +69,7 @@ namespace ATL.benchmark
         {
             Writing w = new Writing();
             w.Setup(fileName);
-            w.Perf_WriteFLAC();
+            w.Perf_Write();
             w.Cleanup();
 
             Console.ReadLine();

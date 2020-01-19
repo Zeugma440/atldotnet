@@ -35,7 +35,7 @@ namespace ATL.benchmark
         }
 
         [Benchmark(Baseline = true)]
-        public void Perf_WriteFLAC()
+        public void Perf_Write()
         {
             performWrite();
         }
