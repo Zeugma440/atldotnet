@@ -197,9 +197,13 @@ namespace ATL.AudioData.IO
                         int action;
                         bool isTagWritten = (writeResult.WrittenFields > 0);
 
-                        if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION_ADD;
-                        else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
-                        else action = ACTION_EDIT;
+                        if (0 == delta) action = ACTION_EDIT; // Zone content has not changed; headers might need to be rewritten (e.g. offset changed)
+                        else
+                        {
+                            if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION_ADD;
+                            else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION_DELETE;
+                            else action = ACTION_EDIT;
+                        }
 
                         result = structureHelper.RewriteHeaders(w, delta, action, zone.Name, globalOffsetCorrection);
                     }
