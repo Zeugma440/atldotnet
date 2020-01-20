@@ -1416,7 +1416,7 @@ namespace ATL.AudioData.IO
 
                 foreach (ChapterInfo chapter in chapters)
                 {
-                    w.Write(StreamUtils.EncodeBEUInt64(chapter.StartTime * 10000));
+                    w.Write(StreamUtils.EncodeBEUInt64((ulong)chapter.StartTime * 10000));
                     strData = Encoding.UTF8.GetBytes(chapter.Title);
                     strDataLength = (byte)Math.Min(255, strData.Length);
                     w.Write(strDataLength);
