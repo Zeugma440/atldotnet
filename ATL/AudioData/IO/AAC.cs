@@ -802,7 +802,7 @@ namespace ATL.AudioData.IO
                             }
                         }
 
-                        structureHelper.AddZone(valueLong, 0, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
+                        structureHelper.AddZone(valueLong, 0, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i, false);
                         structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
                     } // Chunk offsets
                 }

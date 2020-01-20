@@ -79,6 +79,10 @@ namespace ATL.AudioData
             /// </summary>
             public byte[] CoreSignature;
             /// <summary>
+            /// Indicates whether the zone contents are deletable by ATL (e.g. non-metadata zone is not deletable)
+            /// </summary>
+            public bool IsDeletable;
+            /// <summary>
             /// Generic usage flag for storing information
             /// </summary>
             public byte Flag;
@@ -90,9 +94,9 @@ namespace ATL.AudioData
             /// <summary>
             /// Construct a new Zone using the given field values
             /// </summary>
-            public Zone(string name, long offset, int size, byte[] coreSignature, byte flag = 0)
+            public Zone(string name, long offset, int size, byte[] coreSignature, bool isDeletable = true, byte flag = 0)
             {
-                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; Flag = flag;
+                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag;
                 Headers = new List<FrameHeader>();
             }
 
@@ -188,19 +192,19 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME)
+        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true)
         {
-            AddZone(offset, size, new byte[0], name);
+            AddZone(offset, size, new byte[0], name, isDeletable);
         }
 
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME)
+        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true)
         {
             if (!zones.ContainsKey(zone))
             {
-                zones.Add(zone, new Zone(zone, offset, size, coreSignature));
+                zones.Add(zone, new Zone(zone, offset, size, coreSignature, isDeletable));
             }
             else // Existing zone might already contain headers
             {
@@ -208,6 +212,7 @@ namespace ATL.AudioData
                 zones[zone].Offset = offset;
                 zones[zone].Size = size;
                 zones[zone].CoreSignature = coreSignature;
+                zones[zone].IsDeletable = isDeletable;
             }
         }
 
@@ -358,6 +363,18 @@ namespace ATL.AudioData
             }
         }
 
+        private static bool isValueGT(object value, long comparison)
+        {
+            if (value is int)
+                return (int)value >= comparison;
+            else if (value is uint)
+                return (uint)value >= comparison;
+            else if (value is long)
+                return (long)value >= comparison;
+            else
+                throw new NotSupportedException("Value type not supported in comparison");
+        }
+
         /// <summary>
         /// Rewrite all zone headers in the given stream according to the given size evolution and the given action
         /// </summary>
@@ -383,11 +400,9 @@ namespace ATL.AudioData
                     delta = 0;
                     foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
                     {
-                        if (header.Position >= offsetDelta.Key)
-                        {
-                            offsetPositionCorrection += offsetDelta.Value;
-                            offsetValueCorrection += offsetDelta.Value;
-                        }
+                        if (header.Position >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+
+                        if ((FrameHeader.TYPE_INDEX == header.Type || FrameHeader.TYPE_RINDEX == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                     }
 
                     if (FrameHeader.TYPE_COUNTER == header.Type)

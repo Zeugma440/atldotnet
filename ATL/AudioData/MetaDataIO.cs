@@ -734,16 +734,25 @@ namespace ATL.AudioData.IO
             {
                 if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
                 {
-                    if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-
-                    if (zone.CoreSignature.Length > 0)
+                    if (zone.IsDeletable)
                     {
-                        w.BaseStream.Position = zone.Offset - cumulativeDelta;
-                        w.Write(zone.CoreSignature);
-                    }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)) result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, ACTION_DELETE, zone.Name);
+                        if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
-                    cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                        if (zone.CoreSignature.Length > 0)
+                        {
+                            w.BaseStream.Position = zone.Offset - cumulativeDelta;
+                            w.Write(zone.CoreSignature);
+                        }
+                    }
+                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2))
+                    {
+                        if (zone.IsDeletable)
+                            result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, ACTION_DELETE, zone.Name);
+                        else
+                            result = result && structureHelper.RewriteHeaders(w, 0, ACTION_EDIT, zone.Name);
+                    }
+
+                    if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
             }
 
