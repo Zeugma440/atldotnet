@@ -192,7 +192,7 @@ namespace ATL.AudioData.IO
                     cumulativeDelta += delta;
 
                     // Edit wrapping size markers and frame counters if needed
-                    if (structureHelper != null && (delta != 0 || globalOffsetCorrection != 0) && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
+                    if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
                     {
                         int action;
                         bool isTagWritten = (writeResult.WrittenFields > 0);

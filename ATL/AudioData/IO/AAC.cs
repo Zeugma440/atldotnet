@@ -802,12 +802,6 @@ namespace ATL.AudioData.IO
                             }
                         }
 
-                        // A size-type header is used here instead of an absolute index-type header because size variation has to be recorded, and not zone position
-                        // (those chunks do not even point to metadata zones but to the physical media stream located after all metadata)
-                        //                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj);
-                        //                        structureHelper.AddSize(source.BaseStream.Position - nbBytes, valueObj, ZONE_MP4_NEROCHAPTERS);
-                        //structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj);
-                        //structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_NEROCHAPTERS);
                         structureHelper.AddZone(valueLong, 0, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
                         structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
                     } // Chunk offsets
