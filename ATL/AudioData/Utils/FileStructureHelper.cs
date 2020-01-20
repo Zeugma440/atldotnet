@@ -366,11 +366,11 @@ namespace ATL.AudioData
         private static bool isValueGT(object value, long comparison)
         {
             if (value is int)
-                return (int)value >= comparison;
+                return (int)value > comparison;
             else if (value is uint)
-                return (uint)value >= comparison;
+                return (uint)value > comparison;
             else if (value is long)
-                return (long)value >= comparison;
+                return (long)value > comparison;
             else
                 throw new NotSupportedException("Value type not supported in comparison");
         }
