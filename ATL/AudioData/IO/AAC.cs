@@ -864,7 +864,7 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS);
+                structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS); // TODO create a proper "chpl" header when writing over an empty file
             }
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
@@ -872,7 +872,7 @@ namespace ATL.AudioData.IO
             if (0 == atomSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
-                structureHelper.RemoveZone(DEFAULT_ZONE_NAME);
+                structureHelper.AddZone(udtaPosition, 0, new byte[0]); // TODO create a proper "meta" header when writing over an empty file
             }
             else
             {

@@ -106,7 +106,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Empty()
         {
-            test_RW_Empty(emptyFile, true, false, false); // TODO - restore padding to be able to test the file has been kept intact
+            test_RW_Empty(emptyFile, true, true, true);
         }
 
         [TestMethod]
@@ -361,6 +361,9 @@ namespace ATL.test.IO.MetaData
 
             // Modify elements
             TagData theTag = new TagData();
+
+            theTag.Title = "test_meta_atom";
+
             theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();
 
@@ -385,6 +388,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
+            Assert.AreEqual("test_meta_atom", theFile.NativeTag.Title);
             Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
 
             // Check if values are the same

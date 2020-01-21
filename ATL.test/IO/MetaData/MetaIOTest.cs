@@ -376,6 +376,9 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.getMeta(tagType));
             if (canMetaNotExist) Assert.IsFalse(theFile.getMeta(tagType).Exists);
 
+            long initialPaddingSize = theFile.getMeta(tagType).PaddingSize;
+
+
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
             // Construct a new tag
@@ -466,6 +469,13 @@ namespace ATL.test.IO.MetaData
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
+
+            if (initialPaddingSize > 0)
+            {
+                TagData paddingRestore = new TagData();
+                paddingRestore.PaddingSize = initialPaddingSize;
+                Assert.IsTrue(theFile.UpdateTagInFile(paddingRestore, tagType));
+            }
 
             Assert.IsTrue(theFile.ReadFromFile());
 
