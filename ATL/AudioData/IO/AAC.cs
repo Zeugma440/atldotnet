@@ -410,8 +410,8 @@ namespace ATL.AudioData.IO
             moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.DeclareZone(DEFAULT_ZONE_NAME);
                 structureHelper.DeclareZone(ZONE_MP4_NEROCHAPTERS);
+                structureHelper.DeclareZone(DEFAULT_ZONE_NAME);
                 structureHelper.DeclareZone(PADDING_ZONE_NAME);
 
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
@@ -832,11 +832,12 @@ namespace ATL.AudioData.IO
             }
 
             // Look for Nero chapters
-            int32Data = lookForMP4Atom(source.BaseStream, "chpl");
-            if (int32Data > 0)
+            atomPosition = source.BaseStream.Position;
+            atomSize = lookForMP4Atom(source.BaseStream, "chpl");
+            if (atomSize > 0)
             {
                 tagExists = true;
-                structureHelper.AddZone(source.BaseStream.Position - 8, (int)int32Data, new byte[0], ZONE_MP4_NEROCHAPTERS);
+                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_NEROCHAPTERS);
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                 source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
@@ -863,12 +864,16 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                structureHelper.AddZone(source.BaseStream.Position, 0, new byte[0], ZONE_MP4_NEROCHAPTERS);
+                structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS);
             }
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(source.BaseStream, "meta");
-            if (0 == atomSize) LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
+                structureHelper.RemoveZone(DEFAULT_ZONE_NAME);
+            }
             else
             {
                 if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
@@ -876,28 +881,31 @@ namespace ATL.AudioData.IO
                 if (readTagParams.ReadTag) readTag(source, readTagParams);
             }
 
-            bool paddingFound = false;
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
-            if (initialPaddingSize > 0)
+            if (initialPaddingSize > 0) tagData.PaddingSize = initialPaddingSize;
+
+            if (readTagParams.PrepareForWriting)
             {
-                if (readTagParams.PrepareForWriting)
+                // Padding atom found
+                if (initialPaddingSize > 0)
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
                     structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
                 }
-                tagData.PaddingSize = initialPaddingSize;
-                paddingFound = true;
-            }
-            if (readTagParams.PrepareForWriting && Settings.AddNewPadding && !paddingFound)
-            {
-                structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-                structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-            }
-            else
-            {
-                structureHelper.RemoveZone(PADDING_ZONE_NAME);
+                else // Padding atom not found
+                {
+                    if (Settings.AddNewPadding) // Create a virtual position to insert a new padding zone
+                    {
+                        structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+                        structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+                    }
+                    else // Un-reserve the padding zone because it doesn't exist
+                    {
+                        structureHelper.RemoveZone(PADDING_ZONE_NAME);
+                    }
+                }
             }
 
             // Seek audio data segment to calculate mean bitrate 
