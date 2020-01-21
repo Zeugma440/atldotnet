@@ -339,6 +339,14 @@ namespace ATL.AudioData.IO
         {
             get { return Utils.ProtectValue(tagData.Conductor); }
         }
+        /// <summary>
+        /// Size of padding zone, if any
+        /// </summary>
+        public long PaddingSize
+        {
+            get { return tagData.PaddingSize; }
+        }
+
 
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
@@ -457,7 +465,6 @@ namespace ATL.AudioData.IO
         {
             get { return RC_ID3v2; }
         }
-
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
 

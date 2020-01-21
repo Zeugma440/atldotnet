@@ -370,6 +370,7 @@ namespace ATL.AudioData.IO
                 {
                     initialPaddingOffset = streamPos;
                     initialPaddingSize = StreamUtils.TraversePadding(source.BaseStream) - initialPaddingOffset;
+                    tagData.PaddingSize = initialPaddingSize;
                 }
             }
 
@@ -425,7 +426,9 @@ namespace ATL.AudioData.IO
             // Write the remaining padding bytes, if any detected during initial reading
             if (managePadding)
             {
-                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
+                long paddingSizeToWrite;
+                if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
                 if (paddingSizeToWrite > 0)
                     for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
             }

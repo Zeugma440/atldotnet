@@ -880,16 +880,17 @@ namespace ATL.AudioData.IO
 
             bool paddingFound = false;
             // Seek the generic padding atom
-            if (readTagParams.PrepareForWriting)
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
+            if (initialPaddingSize > 0)
             {
-                source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-                uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
-                if (initialPaddingSize > 0)
+                if (readTagParams.PrepareForWriting)
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
                     structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
-                    paddingFound = true;
                 }
+                tagData.PaddingSize = initialPaddingSize;
+                paddingFound = true;
             }
 
             // Seek audio data segment to calculate mean bitrate 
@@ -1191,11 +1192,12 @@ namespace ATL.AudioData.IO
             else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
             {
                 Zone z = structureHelper.GetZone(zone);
-                long paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, -tag.DataSizeDelta);
+                long paddingSizeToWrite;
+                if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, -tag.DataSizeDelta);
 
                 if (paddingSizeToWrite > 0)
                 {
-                    //                    w.Write(StreamUtils.EncodeBEUInt32((uint)paddingSizeToWrite));
                     // Placeholder; size is written by FileStructureHelper
                     w.Write((int)0);
                     w.Write(Utils.Latin1Encoding.GetBytes("free"));

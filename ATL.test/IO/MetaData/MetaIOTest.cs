@@ -116,6 +116,9 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(meta2);
             Assert.IsFalse(meta2.Exists);
 
+            long initialPaddingSize1 = meta1.PaddingSize;
+
+
             // Construct a new tag with the most basic options (no un supported fields, no pictures)
             TagData theTag1 = new TagData();
             theTag1.Title = "Test1";
@@ -173,6 +176,11 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsNotNull(meta2);
             Assert.IsFalse(meta2.Exists);
+
+            // Restore initial padding
+            TagData theTagFinal = new TagData();
+            theTagFinal.PaddingSize = initialPaddingSize1;
+            Assert.IsTrue(theFile.UpdateTagInFile(theTagFinal, tagType1));
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);

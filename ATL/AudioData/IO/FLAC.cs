@@ -283,6 +283,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public long PaddingSize
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).PaddingSize;
+            }
+        }
+
         public IList<PictureInfo> PictureTokens
         {
             get

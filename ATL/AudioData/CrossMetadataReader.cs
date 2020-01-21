@@ -378,6 +378,18 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        /// <summary>
+        /// Size of the padding area, if any
+        /// </summary>
+        public long PaddingSize
+        {
+            get
+            {
+                long result = 0;
+                foreach (IMetaDataIO reader in metaReaders) result += reader.PaddingSize;
+                return result;
+            }
+        }
         public string ChaptersTableDescription
         {
             get

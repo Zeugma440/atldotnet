@@ -197,6 +197,13 @@ namespace ATL.AudioData
         {
             get { return processString(metaData.OriginalAlbum); }
         }
+        /// <summary>
+        /// Size of the padding zone, if any
+        /// </summary>
+        public long PaddingSize
+        {
+            get { return metaData.PaddingSize; }
+        }
 
         /// <summary>
         /// Comments

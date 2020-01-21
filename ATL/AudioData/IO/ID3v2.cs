@@ -974,6 +974,8 @@ namespace ATL.AudioData.IO
             ResetData();
             bool result = readHeader(reader, tagHeader, offset);
 
+            tagData.PaddingSize = tagHeader.GetPaddingSize();
+
             // Process data if loaded and header valid
             if (result && StreamUtils.StringEqualsArr(ID3V2_ID, tagHeader.ID))
             {
@@ -1060,10 +1062,12 @@ namespace ATL.AudioData.IO
 
             // PADDING MANAGEMENT
             // TODO - if footer support is added, don't write padding since they are mutually exclusive (see specs)
-            long paddingSizeToWrite = TrackUtils.ComputePaddingSize(
-                tagHeader.PaddingOffset,  // Initial tag size
-                tagHeader.GetPaddingSize(),                        // Initial padding offset
-                tagHeader.PaddingOffset - tagHeader.HeaderEnd,                     // Initial padding size
+            long paddingSizeToWrite;
+            if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
+            else paddingSizeToWrite = TrackUtils.ComputePaddingSize(
+                tagHeader.PaddingOffset,                        // Initial tag size
+                tagHeader.GetPaddingSize(),                     // Initial padding offset
+                tagHeader.PaddingOffset - tagHeader.HeaderEnd,  // Initial padding size
                 w.BaseStream.Position - headerEnd);             // Current tag size
             if (paddingSizeToWrite > 0)
             {

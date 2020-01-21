@@ -111,6 +111,11 @@ namespace ATL
         /// </summary>
         public long DataSizeDelta = 0;
 
+        /// <summary>
+        /// Size of padding area, if any (target size of padding area, if used as input)
+        /// </summary>
+        public long PaddingSize = -1;
+
 #pragma warning restore S1104 // Fields should not have public accessibility
 
         public TagData()
@@ -187,6 +192,9 @@ namespace ATL
             {
                 IntegrateValue(key, newData[key]);
             }
+
+            // Force to input value, if any
+            if (data.PaddingSize > -1) PaddingSize = data.PaddingSize; else PaddingSize = -1;
 
             // Pictures
             if (integratePictures && data.Pictures != null)
@@ -363,6 +371,8 @@ namespace ATL
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;
+
+            PaddingSize = -1;
         }
 
         public void Cleanup()

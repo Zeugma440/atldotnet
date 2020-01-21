@@ -118,6 +118,11 @@ namespace ATL.AudioData.IO
             get { return ""; }
         }
 
+        public long PaddingSize
+        {
+            get { return 0; }
+        }
+
         public string ChaptersTableDescription
         {
             get { return ""; }
