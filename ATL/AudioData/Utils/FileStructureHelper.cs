@@ -217,6 +217,14 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Remove the zone identified with the given name
+        /// </summary>
+        public void RemoveZone(string name)
+        {
+            zones.Remove(name);
+        }
+
+        /// <summary>
         /// Record a new Counter-type header using the given fields and attach it to the zone of given name
         /// </summary>
         public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME)

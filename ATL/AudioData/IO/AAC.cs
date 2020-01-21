@@ -868,15 +868,13 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(source.BaseStream, "meta");
-            if (0 == atomSize)
+            if (0 == atomSize) LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
+            else
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "meta atom could not be found");
-                return;
+                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
+                source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                if (readTagParams.ReadTag) readTag(source, readTagParams);
             }
-            if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
-            source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-
-            if (readTagParams.ReadTag) readTag(source, readTagParams);
 
             bool paddingFound = false;
             // Seek the generic padding atom
@@ -892,6 +890,15 @@ namespace ATL.AudioData.IO
                 tagData.PaddingSize = initialPaddingSize;
                 paddingFound = true;
             }
+            if (readTagParams.PrepareForWriting && Settings.AddNewPadding && !paddingFound)
+            {
+                structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+                structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+            }
+            else
+            {
+                structureHelper.RemoveZone(PADDING_ZONE_NAME);
+            }
 
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
@@ -903,12 +910,6 @@ namespace ATL.AudioData.IO
                 return;
             }
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
-
-            if (readTagParams.PrepareForWriting && Settings.AddNewPadding && !paddingFound)
-            {
-                structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-                structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-            }
         }
 
         private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
