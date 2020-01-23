@@ -138,7 +138,9 @@ namespace ATL.AudioData
         {
             get
             {
-                return zones.Values.OrderBy(zone => zone.Offset).ToList();
+                // 1. Ignore zones declared but not added
+                // 2. Sort by offset
+                return zones.Values.Where(zone => zone.Offset > -1).OrderBy(zone => zone.Offset).ToList();
             }
         }
 
@@ -258,7 +260,7 @@ namespace ATL.AudioData
         /// <param name="zone"></param>
         public void DeclareZone(string zone)
         {
-            AddZone(0, 0, zone);
+            AddZone(-1, 0, zone);
         }
 
         /// <summary>
