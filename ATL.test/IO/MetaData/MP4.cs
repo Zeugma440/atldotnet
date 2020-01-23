@@ -411,12 +411,12 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Nero_Create()
+        public void TagIO_RW_MP4_Chapters_Nero_Create()
         {
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : file without 'chpl' atom
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.mp4");
+            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -475,7 +475,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Chapters_meta_Create()
+        public void TagIO_RW_MP4_meta_Create()
         {
             ConsoleLogger log = new ConsoleLogger();
 
