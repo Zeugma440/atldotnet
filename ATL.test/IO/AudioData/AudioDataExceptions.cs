@@ -49,8 +49,8 @@ namespace ATL.test.IO
             //            audio_X_AAC_MP4_Atom("stts");
             //            audio_X_AAC_MP4_Atom("stsc");
             audio_X_AAC_MP4_Atom("stsz");
-            audio_X_AAC_MP4_Atom("udta");
-            audio_X_AAC_MP4_Atom("ilst");
+//            audio_X_AAC_MP4_Atom("udta"); optional atim
+//            audio_X_AAC_MP4_Atom("ilst"); optional atom
             audio_X_AAC_MP4_Atom("mdat");
         }
 

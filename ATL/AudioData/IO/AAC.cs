@@ -817,64 +817,67 @@ namespace ATL.AudioData.IO
             atomSize = lookForMP4Atom(source.BaseStream, "udta");
             if (0 == atomSize)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "udta atom could not be found; aborting read");
-                return;
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "udta atom could not be found");
             }
-            udtaPosition = source.BaseStream.Position;
-            if (readTagParams.PrepareForWriting)
+            else
             {
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
-            }
-
-            // Look for Nero chapters
-            atomPosition = source.BaseStream.Position;
-            atomSize = lookForMP4Atom(source.BaseStream, "chpl");
-            if (atomSize > 0)
-            {
-                tagExists = true;
-                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_NEROCHAPTERS);
-
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
-                source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
-                source.BaseStream.Read(data32, 0, 4);
-                uint chapterCount = StreamUtils.DecodeBEUInt32(data32);
-
-                if (chapterCount > 0)
+                udtaPosition = source.BaseStream.Position;
+                if (readTagParams.PrepareForWriting)
                 {
-                    if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
-                    byte stringSize;
-                    ChapterInfo chapter;
+                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
+                }
 
-                    for (int i = 0; i < chapterCount; i++)
+                // Look for Nero chapters
+                atomPosition = source.BaseStream.Position;
+                atomSize = lookForMP4Atom(source.BaseStream, "chpl");
+                if (atomSize > 0)
+                {
+                    tagExists = true;
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_NEROCHAPTERS);
+
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+                    source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
+                    source.BaseStream.Read(data32, 0, 4);
+                    uint chapterCount = StreamUtils.DecodeBEUInt32(data32);
+
+                    if (chapterCount > 0)
                     {
-                        chapter = new ChapterInfo();
-                        tagData.Chapters.Add(chapter);
+                        if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
+                        byte stringSize;
+                        ChapterInfo chapter;
 
-                        source.BaseStream.Read(data64, 0, 8);
-                        chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
-                        stringSize = source.ReadByte();
-                        chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
+                        for (int i = 0; i < chapterCount; i++)
+                        {
+                            chapter = new ChapterInfo();
+                            tagData.Chapters.Add(chapter);
+
+                            source.BaseStream.Read(data64, 0, 8);
+                            chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
+                            stringSize = source.ReadByte();
+                            chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
+                        }
                     }
                 }
-            }
-            else
-            {
-                structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS); // TODO create a proper "chpl" header when writing over an empty file
-            }
+                else
+                {
+                    structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS); // TODO create a proper "chpl" header when writing over an empty file
+                }
 
-            source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
-            atomSize = lookForMP4Atom(source.BaseStream, "meta");
-            if (0 == atomSize)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
-                structureHelper.AddZone(udtaPosition, 0, new byte[0]); // TODO create a proper "meta" header when writing over an empty file
-            }
-            else
-            {
-                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
-                source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                if (readTagParams.ReadTag) readTag(source, readTagParams);
+                source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
+                atomSize = lookForMP4Atom(source.BaseStream, "meta");
+                if (0 == atomSize)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
+                    // Allow creating the 'meta' atom from scratch
+                    structureHelper.AddZone(udtaPosition, 0, new byte[0]);
+                }
+                else
+                {
+                    if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+                    if (readTagParams.ReadTag) readTag(source, readTagParams);
+                }
             }
 
             // Seek the generic padding atom
@@ -952,7 +955,7 @@ namespace ATL.AudioData.IO
             iListSize = lookForMP4Atom(source.BaseStream, "ilst"); // === Metadata list
             if (0 == iListSize)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ilst atom could not be found; aborting read");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ilst atom could not be found");
                 return;
             }
             structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
