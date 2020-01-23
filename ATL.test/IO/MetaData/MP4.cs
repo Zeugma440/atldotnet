@@ -419,9 +419,10 @@ namespace ATL.test.IO.MetaData
             String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
             AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            Assert.IsFalse(theFile.getMeta(tagType).Exists);
 
             // Modify elements
             TagData theTag = new TagData();
