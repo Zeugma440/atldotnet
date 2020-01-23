@@ -305,7 +305,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Chapters_Nero()
+        public void TagIO_RW_MP4_Chapters_Nero_Edit()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -362,8 +362,6 @@ namespace ATL.test.IO.MetaData
             // Modify elements
             TagData theTag = new TagData();
 
-            theTag.Title = "test_meta_atom";
-
             theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();
 
@@ -388,7 +386,6 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            Assert.AreEqual("test_meta_atom", theFile.NativeTag.Title);
             Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
 
             // Check if values are the same
@@ -408,6 +405,102 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(2, found);
 
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Nero_Create()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : file without 'chpl' atom
+            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.mp4");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            // Modify elements
+            TagData theTag = new TagData();
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.Title = "aaa";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.Title = "aaa0";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+            // Check if values are the same
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Chapters_meta_Create()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : file without 'chpl' atom
+            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
+            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            // Modify elements
+            TagData theTag = new TagData();
+
+            theTag.Title = "test_meta_atom";
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual("test_meta_atom", theFile.NativeTag.Title);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
