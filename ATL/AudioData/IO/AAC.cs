@@ -62,10 +62,12 @@ namespace ATL.AudioData.IO
                                                         24000, 22050, 16000, 12000, 11025, 8000,
                                                         0, 0, 0, 0 };
 
-        private static readonly byte[] CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
+        private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
-        private const string ZONE_MP4_NEROCHAPTERS = "neroChapters";
-        private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";
+        private const string ZONE_MP4_NOMETA = "nometa";        // When the whole 'meta' atom is missing
+        private const string ZONE_MP4_ILST = "ilst";            // When editing a file with an existing 'meta' atom
+        private const string ZONE_MP4_CHPL = "chpl";            // Nero chapters
+        private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk"; // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameMapping_mp4 = new Dictionary<string, byte>() {
@@ -410,8 +412,9 @@ namespace ATL.AudioData.IO
             moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_CHPL);
             }
 
             // === Physical data header
@@ -798,8 +801,9 @@ namespace ATL.AudioData.IO
                             }
                         }
 
-                        structureHelper.AddZone(valueLong, 0, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i, false);
-                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i);
+                        string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
+                        structureHelper.AddZone(valueLong, 0, zoneName, false);
+                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
                     } // Chunk offsets
                 }
 
@@ -815,17 +819,15 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(source.BaseStream, "udta");
-            if (0 == atomSize)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "udta atom could not be found");
-            }
+            if (0 == atomSize) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "udta atom could not be found");
             else
             {
                 udtaPosition = source.BaseStream.Position;
                 if (readTagParams.PrepareForWriting)
                 {
-                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
-                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_CHPL);
                 }
 
                 // Look for Nero chapters
@@ -834,7 +836,7 @@ namespace ATL.AudioData.IO
                 if (atomSize > 0)
                 {
                     tagExists = true;
-                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_NEROCHAPTERS);
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_CHPL);
 
                     source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                     source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
@@ -861,7 +863,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_NEROCHAPTERS); // TODO create a proper "chpl" header when writing over an empty file
+                    structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_CHPL); // TODO create a proper "chpl" header when writing over an empty file
                 }
 
                 source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
@@ -870,11 +872,11 @@ namespace ATL.AudioData.IO
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
                     // Allow creating the 'meta' atom from scratch
-                    structureHelper.AddZone(udtaPosition, 0, new byte[0]);
+                    structureHelper.AddZone(udtaPosition, 0, new byte[0], ZONE_MP4_NOMETA);
                 }
                 else
                 {
-                    if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
+                    if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                     if (readTagParams.ReadTag) readTag(source, readTagParams);
                 }
@@ -956,9 +958,10 @@ namespace ATL.AudioData.IO
             if (0 == iListSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ilst atom could not be found");
+                // TODO handle the case where 'meta' exists, but not 'ilst'
                 return;
             }
-            structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, CORE_SIGNATURE);
+            structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, ILST_CORE_SIGNATURE, ZONE_MP4_ILST);
 
             if (8 == Size) // Core minimal size
             {
@@ -1168,14 +1171,14 @@ namespace ATL.AudioData.IO
             uint tagSize;
             int result = 0;
 
-            if (DEFAULT_ZONE_NAME.Equals(zone))
+            if (ZONE_MP4_ILST.Equals(zone))
             {
                 // ============
                 // == HEADER ==
                 // ============
                 // Keep position in mind to calculate final size and come back here to write it
                 tagSizePos = w.BaseStream.Position;
-                w.Write(CORE_SIGNATURE);
+                w.Write(ILST_CORE_SIGNATURE);
 
                 // ============
                 // == FRAMES ==
@@ -1189,7 +1192,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.ReverseUInt32(tagSize));
                 w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
             }
-            else if (ZONE_MP4_NEROCHAPTERS.Equals(zone)) // Nero chapters
+            else if (ZONE_MP4_CHPL.Equals(zone)) // Nero chapters
             {
                 result = writeNeroChapters(w, Chapters);
             }
