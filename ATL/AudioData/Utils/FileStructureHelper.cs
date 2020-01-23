@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ATL.AudioData
 {
@@ -135,7 +136,10 @@ namespace ATL.AudioData
         /// </summary>
         public ICollection<Zone> Zones
         {
-            get { return zones.Values; }
+            get
+            {
+                return zones.Values.OrderBy(zone => zone.Offset).ToList();
+            }
         }
 
 

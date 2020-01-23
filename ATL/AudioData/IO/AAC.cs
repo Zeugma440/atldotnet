@@ -410,10 +410,6 @@ namespace ATL.AudioData.IO
             moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.DeclareZone(ZONE_MP4_NEROCHAPTERS);
-                structureHelper.DeclareZone(DEFAULT_ZONE_NAME);
-                structureHelper.DeclareZone(PADDING_ZONE_NAME);
-
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize);
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NEROCHAPTERS);
             }
@@ -900,10 +896,6 @@ namespace ATL.AudioData.IO
                     {
                         structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
                         structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-                    }
-                    else // Un-reserve the padding zone because it doesn't exist
-                    {
-                        structureHelper.RemoveZone(PADDING_ZONE_NAME);
                     }
                 }
             }
