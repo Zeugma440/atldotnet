@@ -918,7 +918,8 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                structureHelper.AddZone(atomPosition, 0, new byte[0], ZONE_MP4_CHPL + currentTrakIndex); // TODO create a proper "chpl" header when writing over an empty file
+                // Allow creating the 'chpl' atom from scratch
+                structureHelper.AddZone(atomPosition, 0, ZONE_MP4_CHPL + currentTrakIndex);
             }
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
