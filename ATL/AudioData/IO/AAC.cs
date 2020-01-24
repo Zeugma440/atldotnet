@@ -1400,9 +1400,9 @@ namespace ATL.AudioData.IO
             // Go back to frame size locations to write their actual size 
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
-            writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
+            writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
-            writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+            writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
@@ -1432,7 +1432,7 @@ namespace ATL.AudioData.IO
             else if (picFormat.Equals(ImageFormat.Png)) frameClass = 14;
             else frameClass = 0;
 
-            writer.Write(StreamUtils.ReverseInt32(frameClass));
+            writer.Write(StreamUtils.EncodeBEInt32(frameClass));
             writer.Write(frameFlags);
 
             writer.Write(pictureData);
@@ -1442,10 +1442,10 @@ namespace ATL.AudioData.IO
             if (firstPicture)
             {
                 writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
-                writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
+                writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
             }
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
-            writer.Write(StreamUtils.ReverseUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+            writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
