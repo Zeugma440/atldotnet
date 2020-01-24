@@ -126,17 +126,17 @@ namespace ATL.AudioData.IO
             int stringLen;
 
             BinaryReader r = new BinaryReader(s);
-            result.nativePicCode = StreamUtils.ReverseInt32(r.ReadInt32());
+            result.nativePicCode = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.picType = ID3v2.DecodeID3v2PictureType(result.nativePicCode);
-            stringLen = StreamUtils.ReverseInt32(r.ReadInt32());
+            stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.mimeType = Utils.Latin1Encoding.GetString(r.ReadBytes(stringLen));
-            stringLen = StreamUtils.ReverseInt32(r.ReadInt32());
+            stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.description = Encoding.UTF8.GetString(r.ReadBytes(stringLen));
-            result.width = StreamUtils.ReverseInt32(r.ReadInt32());
-            result.height = StreamUtils.ReverseInt32(r.ReadInt32());
-            result.colorDepth = StreamUtils.ReverseInt32(r.ReadInt32());
-            result.colorNum = StreamUtils.ReverseInt32(r.ReadInt32());
-            result.picDataLength = StreamUtils.ReverseInt32(r.ReadInt32());
+            result.width = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.height = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.colorDepth = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.colorNum = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.picDataLength = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
 
             result.picDataOffset = 4 + 4 + result.mimeType.Length + 4 + result.description.Length + 4 + 4 + 4 + 4 + 4;
 
@@ -568,27 +568,27 @@ namespace ATL.AudioData.IO
 
         public void WritePicture(BinaryWriter picW, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
         {
-            picW.Write(StreamUtils.ReverseInt32(pictureTypeCode));
-            picW.Write(StreamUtils.ReverseInt32(mimeType.Length));
+            picW.Write(StreamUtils.EncodeBEInt32(pictureTypeCode));
+            picW.Write(StreamUtils.EncodeBEInt32(mimeType.Length));
             picW.Write(Utils.Latin1Encoding.GetBytes(mimeType));
-            picW.Write(StreamUtils.ReverseInt32(picDescription.Length));
+            picW.Write(StreamUtils.EncodeBEInt32(picDescription.Length));
             picW.Write(Encoding.UTF8.GetBytes(picDescription));
 
             ImageProperties props = ImageUtils.GetImageProperties(pictureData);
 
-            picW.Write(StreamUtils.ReverseInt32(props.Width));
-            picW.Write(StreamUtils.ReverseInt32(props.Height));
-            picW.Write(StreamUtils.ReverseInt32(props.ColorDepth));
+            picW.Write(StreamUtils.EncodeBEInt32(props.Width));
+            picW.Write(StreamUtils.EncodeBEInt32(props.Height));
+            picW.Write(StreamUtils.EncodeBEInt32(props.ColorDepth));
             if (props.Format.Equals(ImageFormat.Gif))
             {
-                picW.Write(StreamUtils.ReverseInt32(props.NumColorsInPalette));    // Color num
+                picW.Write(StreamUtils.EncodeBEInt32(props.NumColorsInPalette));    // Color num
             }
             else
             {
                 picW.Write(0);
             }
 
-            picW.Write(StreamUtils.ReverseInt32(pictureData.Length));
+            picW.Write(StreamUtils.EncodeBEInt32(pictureData.Length));
             picW.Write(pictureData);
         }
 

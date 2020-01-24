@@ -449,7 +449,7 @@ namespace ATL.AudioData.IO
                     row = pattern[pattern.Count - 1];
                     for (int c = 0; c < nbChannels; c++) // Channels loop
                     {
-                        row.Add( StreamUtils.ReverseInt32(source.ReadInt32()) );
+                        row.Add( StreamUtils.DecodeBEInt32(source.ReadBytes(4)) );
                     } // end channels loop
                 } // end rows loop
             } // end patterns loop

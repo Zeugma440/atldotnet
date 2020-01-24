@@ -468,7 +468,7 @@ namespace ATL.AudioData.IO
                 }
 
                 // trackSize is stored in big endian -> needs inverting
-                trackSize = StreamUtils.ReverseInt32(source.ReadInt32());
+                trackSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
 
                 tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
                 nbTrack++;
