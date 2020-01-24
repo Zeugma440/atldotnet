@@ -362,26 +362,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an unsigned Int32 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static uint ReverseUInt32(uint n)
-        {
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-
-            b0 = (byte)((n & 0x000000FF) >> 0);
-            b1 = (byte)((n & 0x0000FF00) >> 8);
-            b2 = (byte)((n & 0x00FF0000) >> 16);
-            b3 = (byte)((n & 0xFF000000) >> 24);
-
-            return (uint)((b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0));
-        }
-
-        /// <summary>
         /// Switches the format of a signed Int32 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>

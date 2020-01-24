@@ -168,13 +168,13 @@ namespace ATL.AudioData.IO
             // Read header and get file size
             Header.ID = source.ReadChars(4);
             Header.Version = source.ReadChars(8);
-            Header.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             Header.Common.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            Header.Common.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
-            Header.ChannelMode = StreamUtils.ReverseUInt32(source.ReadUInt32());
-            Header.BitRate = StreamUtils.ReverseUInt32(source.ReadUInt32());
-            Header.SampleRate = StreamUtils.ReverseUInt32(source.ReadUInt32());
-            Header.SecurityLevel = StreamUtils.ReverseUInt32(source.ReadUInt32());
+            Header.Common.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.ChannelMode = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.BitRate = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.SampleRate = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.SecurityLevel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
             return result;
         }
@@ -235,7 +235,7 @@ namespace ATL.AudioData.IO
             {
                 // Read chunk header (length : 8 bytes)
                 chunk.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                chunk.Size = StreamUtils.ReverseUInt32(source.ReadUInt32());
+                chunk.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
                 // Read chunk data and set tag item if chunk header valid
                 if (headerEndReached(chunk)) break;
@@ -311,12 +311,9 @@ namespace ATL.AudioData.IO
             // 1st pass to gather date information
             foreach (byte frameType in map.Keys)
             {
-                if (map[frameType].Length > 0) // No frame with empty value
+                if (map[frameType].Length > 0 && TagData.TAG_FIELD_RECORDING_YEAR == frameType) // No frame with empty value
                 {
-                    if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
-                    {
-                        recordingYear = map[frameType];
-                    }
+                    recordingYear = map[frameType];
                 }
             }
             if (recordingYear.Length > 0)
@@ -360,7 +357,7 @@ namespace ATL.AudioData.IO
         {
             writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             byte[] textBytes = Encoding.UTF8.GetBytes(text);
-            writer.Write(StreamUtils.ReverseUInt32((uint)textBytes.Length));
+            writer.Write(StreamUtils.EncodeBEUInt32((uint)textBytes.Length));
             writer.Write(textBytes);
         }
 
