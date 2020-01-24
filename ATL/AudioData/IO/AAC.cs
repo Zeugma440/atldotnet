@@ -1087,10 +1087,7 @@ namespace ATL.AudioData.IO
                             mem.Close();
                         }
                     }
-                    else
-                    {
-                        //                            Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                    }
+                    // else - Other unhandled cases ?
                 }
                 else if (0 == dataClass) // Special cases : gnre, trkn, disk
                 {
@@ -1110,15 +1107,9 @@ namespace ATL.AudioData.IO
 
                         SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                     }
-                    else
-                    { // Other unhandled cases
-                      //                          Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                    }
+                    // else - Other unhandled cases ?
                 }
-                else // Other unhandled cases
-                {
-                    //                        Source.BaseStream.Seek(metadataSize - 16, SeekOrigin.Current);
-                }
+                // else - Other unhandled cases ?
 
                 source.BaseStream.Seek(atomPosition + metadataSize, SeekOrigin.Begin);
                 iListPosition += atomSize;
@@ -1189,26 +1180,25 @@ namespace ATL.AudioData.IO
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             long tagSizePos;
-            uint tagSize;
             int result = 0;
 
             if (zone.StartsWith(ZONE_MP4_NOMETA)) // Create a META atom from scratch
             {
                 // Keep position in mind to calculate final size and come back here to write it
                 long metaSizePos = w.BaseStream.Position;
-                w.Write((int)0);
+                w.Write(0);
                 w.Write(Utils.Latin1Encoding.GetBytes("meta"));
-                w.Write((int)0); // version and flags
+                w.Write(0); // version and flags
 
                 // Handler
                 w.Write(StreamUtils.EncodeBEUInt32(33));
                 w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
-                w.Write((int)0); // version and flags
-                w.Write((int)0); // quicktime type
+                w.Write(0); // version and flags
+                w.Write(0); // quicktime type
                 w.Write(Utils.Latin1Encoding.GetBytes("mdir")); // quicktime subtype = "APPLE meta data iTunes reader"
                 w.Write(Utils.Latin1Encoding.GetBytes("appl")); // manufacturer
-                w.Write((int)0); // component flags
-                w.Write((int)0); // component flags mask
+                w.Write(0); // component flags
+                w.Write(0); // component flags mask
                 w.Write((byte)0); // component name string end (no name here -> end byte follows flags mask)
 
                 long ilstSizePos = w.BaseStream.Position;
@@ -1256,7 +1246,7 @@ namespace ATL.AudioData.IO
                 if (paddingSizeToWrite > 0)
                 {
                     // Placeholder; size is written by FileStructureHelper
-                    w.Write((int)0);
+                    w.Write(0);
                     w.Write(Utils.Latin1Encoding.GetBytes("free"));
                     for (int i = 0; i < paddingSizeToWrite - 8; i++) w.Write((byte)0);
                     result = 1;
@@ -1334,7 +1324,7 @@ namespace ATL.AudioData.IO
 
             // == METADATA HEADER ==
             frameSizePos1 = writer.BaseStream.Position;
-            writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             if (frameCode.StartsWith("----")) // Specific metadata
             {
                 string[] frameCodeComponents = frameCode.Split(':');
@@ -1360,7 +1350,7 @@ namespace ATL.AudioData.IO
 
             // == METADATA VALUE ==
             frameSizePos2 = writer.BaseStream.Position;
-            writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
 
             int frameClass = 1;
@@ -1459,7 +1449,7 @@ namespace ATL.AudioData.IO
                 result = chapters.Count;
 
                 frameSizePos = w.BaseStream.Position;
-                w.Write((int)0); // To be rewritten at the end of the method
+                w.Write(0); // To be rewritten at the end of the method
                 w.Write(Utils.Latin1Encoding.GetBytes("chpl"));
 
                 w.Write(new byte[5] { 1, 0, 0, 0, 0 }); // Version, flags and reserved byte
