@@ -136,10 +136,10 @@ namespace ATL.AudioData.IO
         };
 
 
-    // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-    // AudioDataIO
-    public int SampleRate // Sample rate (hz)
+        // AudioDataIO
+        public int SampleRate // Sample rate (hz)
         {
             get { return this.sampleRate; }
         }
@@ -213,25 +213,9 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class ExtendedItem
-        {
-            public byte ID;
-            public byte Type;
-            public int Size;
-            public object Data; // String or int32
-
-            public void Reset()
-            {
-                ID = 0;
-                Type = 0;
-                Size = 0;
-                Data = null;
-            }
-        }
-
         private class SPCExTags
         {
-            public String FooterTag;                    // Extended info tag (should be XTENDED_TAG)
+            public string FooterTag;                    // Extended info tag (should be XTENDED_TAG)
             public uint FooterSize;                     // Chunk size
 
             public void Reset()
@@ -315,13 +299,11 @@ namespace ATL.AudioData.IO
                 {
                     bin = false;
                 }
-                else
-                    if (0 == dateRes)                   //No date
+                else if (0 == dateRes)                   //No date
                 {
                     bin = PREFER_BIN;               //Times could still be binary (ex. 56 bin = '8' txt)
                 }
-                else
-                    if (-1 == dateRes)                  //Date contains invalid characters
+                else if (-1 == dateRes)                  //Date contains invalid characters
                 {
                     bin = true;
                     for (int i = 4; i < 8; i++)
