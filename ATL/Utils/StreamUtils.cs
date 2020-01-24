@@ -402,22 +402,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Switches the format of an unsigned Int16 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static ushort ReverseUInt16(ushort n)
-        {
-            byte b0;
-            byte b1;
-
-            b0 = (byte)((n & 0x00FF) >> 0);
-            b1 = (byte)((n & 0xFF00) >> 8);
-
-            return (ushort)((b0 << 8) | (b1 << 0));
-        }
-
-        /// <summary>
         /// Guesses the encoding from the file Byte Order Mark (BOM)
         /// http://en.wikipedia.org/wiki/Byte_order_mark 
         /// NB : This obviously only works for files that actually start with a BOM

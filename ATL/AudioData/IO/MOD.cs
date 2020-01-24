@@ -396,11 +396,11 @@ namespace ATL.AudioData.IO
                 sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 22).Trim();
                 sample.Name = sample.Name.Replace("\0", "");
                 sample.Name = sample.Name.Replace(charOne, "");
-                sample.Size = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
+                sample.Size = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
                 sample.Finetune = source.ReadSByte();
                 sample.Volume = source.ReadByte();
-                sample.RepeatOffset = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
-                sample.RepeatLength = StreamUtils.ReverseUInt16(source.ReadUInt16())*2;
+                sample.RepeatOffset = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
+                sample.RepeatLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
                 FSamples.Add(sample);
             }
 
