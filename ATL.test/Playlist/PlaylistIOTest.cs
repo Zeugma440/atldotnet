@@ -10,6 +10,21 @@ namespace ATL.test.IO.Playlist
     public class PlaylistIOTest
     {
         [TestMethod]
+        public void PLIO_Format_Init()
+        {
+            PlaylistFormat tempFmt = new PlaylistFormat(0, "M3U");
+            tempFmt.AddMimeType("blah");
+            tempFmt.AddExtension(".m3u");
+
+            PlaylistFormat testFmt = new PlaylistFormat(tempFmt);
+            Assert.AreEqual(tempFmt.ID, testFmt.ID);
+            Assert.AreEqual(tempFmt.Name, testFmt.Name);
+            Assert.AreEqual(tempFmt.LocationFormat, testFmt.LocationFormat);
+            Assert.AreEqual(tempFmt.MimeList.Count, testFmt.MimeList.Count);
+            Assert.AreEqual(tempFmt.Readable, testFmt.Readable);
+        }
+
+        [TestMethod]
         public void PLIO_R_NoFormat()
         {
             IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.xyz");
