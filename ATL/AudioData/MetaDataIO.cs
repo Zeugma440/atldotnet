@@ -464,12 +464,12 @@ namespace ATL.AudioData.IO
 
         protected void addPictureToken(int tagType, byte nativePicCode)
         {
-            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
         }
 
         protected void addPictureToken(int tagType, string nativePicCode)
         {
-            pictureTokens.Add(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
         }
 
         protected int takePicturePosition(PictureInfo.PIC_TYPE picType)
@@ -479,12 +479,12 @@ namespace ATL.AudioData.IO
 
         protected int takePicturePosition(int tagType, byte nativePicCode)
         {
-            return takePicturePosition(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new PictureInfo(tagType, nativePicCode));
         }
 
         protected int takePicturePosition(int tagType, string nativePicCode)
         {
-            return takePicturePosition(new PictureInfo(ImageFormat.Undefined, tagType, nativePicCode));
+            return takePicturePosition(new PictureInfo(tagType, nativePicCode));
         }
 
         protected int takePicturePosition(PictureInfo picInfo)

@@ -154,9 +154,23 @@ namespace ATL
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
         }
-
-        public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
-        public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativePicCode = -1; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+        public PictureInfo(int tagType, byte nativePicCode, int position = 1)
+        {
+            PicType = PIC_TYPE.Unsupported;
+            NativePicCode = nativePicCode;
+            NativeFormat = ImageFormat.Undefined;
+            TagType = tagType;
+            Position = position;
+        }
+        public PictureInfo(int tagType, string nativePicCode, int position = 1)
+        {
+            PicType = PIC_TYPE.Unsupported;
+            NativePicCodeStr = nativePicCode;
+            NativePicCode = -1;
+            NativeFormat = ImageFormat.Undefined;
+            TagType = tagType;
+            Position = position;
+        }
 
         public uint ComputePicHash()
         {

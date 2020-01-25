@@ -5,6 +5,7 @@ using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using Commons;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -405,11 +406,9 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0x0A);
             theTag.Pictures.Add(picInfo);
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0B);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0x0B);
             theTag.Pictures.Add(picInfo);
 
 
@@ -460,7 +459,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            picInfo = new PictureInfo(MetaDataIOFactory.TAG_NATIVE, 0x0A);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 

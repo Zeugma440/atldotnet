@@ -5,6 +5,7 @@ using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -77,9 +78,7 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));
 
             testData.Pictures.Clear();
-            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, 13);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            pic.PictureData = data;
+            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 13);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
@@ -208,11 +207,17 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TES2", "This is another test 父"));
 
             // Add new unsupported pictures
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, "1234");
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+            PictureInfo picInfo = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"),
+                PIC_TYPE.Unsupported,
+                MetaDataIOFactory.TAG_NATIVE,
+                "1234");
             theTag.Pictures.Add(picInfo);
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_NATIVE, "5678");
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            picInfo = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"),
+                PIC_TYPE.Unsupported,
+                MetaDataIOFactory.TAG_NATIVE,
+                "5678");
             theTag.Pictures.Add(picInfo);
 
 

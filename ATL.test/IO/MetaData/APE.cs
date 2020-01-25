@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
 using Commons;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -22,15 +23,19 @@ namespace ATL.test.IO.MetaData
 
             // Initialize specific test data (Picture native codes are strings)
             testData.Pictures.Clear();
-            PictureInfo pic = new PictureInfo(Commons.ImageFormat.Jpeg, MetaDataIOFactory.TAG_ANY, "COVER ART (FRONT)");
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            pic.PictureData = data;
+            PictureInfo pic = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), 
+                PIC_TYPE.Unsupported, 
+                MetaDataIOFactory.TAG_ANY, 
+                "COVER ART (FRONT)");
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
-            pic = new PictureInfo(Commons.ImageFormat.Png, MetaDataIOFactory.TAG_ANY, "COVER ART (BACK)");
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
-            pic.PictureData = data;
+            pic = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"),
+                PIC_TYPE.Unsupported,
+                MetaDataIOFactory.TAG_ANY,
+                "COVER ART (BACK)");
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
         }
