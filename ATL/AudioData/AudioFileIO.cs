@@ -17,6 +17,7 @@ namespace ATL.AudioData
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
         private readonly AudioDataManager audioManager;
+        private readonly IProgress<float> writeProgress;
 
         // ------------------------------------------------------------------------------------------
 
@@ -33,6 +34,7 @@ namespace ATL.AudioData
 
             audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
             audioManager = new AudioDataManager(audioData, writeProgress);
+            this.writeProgress = writeProgress;
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
@@ -62,6 +64,7 @@ namespace ATL.AudioData
             audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
 
             audioManager = new AudioDataManager(audioData, stream, writeProgress);
+            this.writeProgress = writeProgress;
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
@@ -89,9 +92,12 @@ namespace ATL.AudioData
                 }
             }
 
+            float written = 0;
+            if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
             foreach (int meta in availableMetas)
             {
                 audioManager.UpdateTagInFile(data, meta);
+                if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
             }
         }
 
@@ -107,9 +113,12 @@ namespace ATL.AudioData
                 metasToRemove = new List<int>() { tagType };
             }
 
-            foreach(int meta in metasToRemove)
+            float written = 0;
+            if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
+            foreach (int meta in metasToRemove)
             {
                 audioManager.RemoveTagFromFile(meta);
+                if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
             }
         }
 

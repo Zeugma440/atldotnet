@@ -42,7 +42,7 @@ namespace ATL.benchmark
 
         private void displayProgress(float progress)
         {
-            Console.WriteLine(progress + "%");
+            Console.WriteLine(progress * 100 + "%");
         }
 
         private void performWrite()

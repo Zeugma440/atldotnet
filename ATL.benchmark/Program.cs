@@ -26,6 +26,8 @@ namespace ATL.benchmark
 
             //writeAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
 
+            writeAt(@"E:\temp\mp3\test - Copie.mp3");
+
             //displayVersionInfo();
         }
 

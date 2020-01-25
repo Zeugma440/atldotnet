@@ -923,7 +923,7 @@ namespace ATL.AudioData.IO
             long nextPageOffset = 0;
             float currentProgress = 0;
 
-            if (writeProgress != null) writeProgress.Report(currentProgress / 4);
+//            if (writeProgress != null) writeProgress.Report(currentProgress / 4);
 
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -1059,7 +1059,7 @@ namespace ATL.AudioData.IO
                     virtualW.Write(crc);
                 }
 
-                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
+//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
 
                 /// Insert the virtual paged stream into the actual file
@@ -1074,14 +1074,14 @@ namespace ATL.AudioData.IO
                 {
                     StreamUtils.ShortenStream(w.BaseStream, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
-                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
+//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
                 // Rewrite Comment and Setup headers
                 w.BaseStream.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
                 StreamUtils.CopyStream(memStream, w.BaseStream);
-                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
+//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             }
@@ -1131,7 +1131,7 @@ namespace ATL.AudioData.IO
                     }
 
                 } while (0 == (header.TypeFlag & 0x04));  // 0x04 marks the last page of the logical bitstream
-                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
+//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
             }
 
             return result;
