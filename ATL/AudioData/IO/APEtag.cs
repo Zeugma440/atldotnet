@@ -201,7 +201,7 @@ namespace ATL.AudioData.IO
                         picturePosition = takePicturePosition(picType);
                     }
 
-                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures)
                     {
                         // Description seems to be a null-terminated ANSI string containing 
                         //    * The frame name
@@ -216,13 +216,6 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Read(picInfo.PictureData, 0, frameDataSize - description.Length - 1);
 
                         tagData.Pictures.Add(picInfo);
-
-                        if (readTagParams.PictureStreamHandler != null)
-                        {
-                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                            mem.Close();
-                        }
                     }
                 }
                 source.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);

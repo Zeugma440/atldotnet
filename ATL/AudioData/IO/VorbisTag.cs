@@ -229,7 +229,7 @@ namespace ATL.AudioData.IO
                 int picturePosition = takePicturePosition(PictureInfo.PIC_TYPE.Generic);
                 PictureInfo picInfo = new PictureInfo(ImageFormat.Undefined, PictureInfo.PIC_TYPE.Generic, getImplementedTagType(), 0, picturePosition);
 
-                if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                if (readTagParams.ReadPictures)
                 {
                     size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
                     // Make sure total size is a multiple of 4
@@ -245,13 +245,6 @@ namespace ATL.AudioData.IO
                     picInfo.NativeFormat = imgFormat;
 
                     tagData.Pictures.Add(picInfo);
-
-                    if (readTagParams.PictureStreamHandler != null)
-                    {
-                        MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                        readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                        mem.Close();
-                    }
                 }
             }
         }
@@ -273,7 +266,7 @@ namespace ATL.AudioData.IO
                 picturePosition = takePicturePosition(block.picType);
             }
 
-            if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+            if (readTagParams.ReadPictures)
             {
                 PictureInfo picInfo = new PictureInfo(ImageUtils.GetImageFormatFromMimeType(block.mimeType), block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
                 picInfo.Description = block.description;
@@ -284,14 +277,6 @@ namespace ATL.AudioData.IO
                 tagData.Pictures.Add(picInfo);
 
                 if (!tagExists) tagExists = true;
-
-
-                if (readTagParams.PictureStreamHandler != null)
-                {
-                    MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                    readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                    mem.Close();
-                }
             }
         }
 

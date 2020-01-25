@@ -48,11 +48,6 @@ namespace ATL.AudioData.IO
             public bool ReadPictures = false;
 
             /// <summary>
-            /// Handler to call when reading embedded picture binary data. If the handler is null, embedded pictures binary data will _not_ be read.
-            /// </summary>
-            public TagData.PictureStreamHandlerDelegate PictureStreamHandler = null;
-
-            /// <summary>
             /// True : read all data that will be useful for writing; False : only read metadata values
             /// </summary>
             public bool PrepareForWriting = false;
@@ -61,12 +56,6 @@ namespace ATL.AudioData.IO
             /// File offset to start reading metadata from (bytes)
             /// </summary>
             public long offset = 0;
-
-            [Obsolete("Use ReadTagParams(bool readPictures, bool readAllMetaFrames)")]
-            public ReadTagParams(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames)
-            {
-                PictureStreamHandler = pictureStreamHandler; ReadAllMetaFrames = readAllMetaFrames;
-            }
 
             public ReadTagParams(bool readPictures, bool readAllMetaFrames)
             {

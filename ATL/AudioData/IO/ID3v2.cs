@@ -848,7 +848,7 @@ namespace ATL.AudioData.IO
                     if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                     string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
-                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures)
                     {
                         int picSize = dataSize - (int)(source.Position - position);
 
@@ -868,13 +868,6 @@ namespace ATL.AudioData.IO
                         if (!inChapter)
                         {
                             tagData.Pictures.Add(picInfo);
-
-                            if (readTagParams.PictureStreamHandler != null)
-                            {
-                                MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                                readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                                mem.Close();
-                            }
                         }
                         else
                         {

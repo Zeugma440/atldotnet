@@ -178,39 +178,6 @@ namespace ATL.AudioData
             
         }
 
-        [Obsolete("Use ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)")]
-        public bool ReadFromFile(TagData.PictureStreamHandlerDelegate pictureStreamHandler, bool readAllMetaFrames = false)
-        {
-            bool result = false;
-            LogDelegator.GetLocateDelegate()(fileName);
-
-            resetData();
-
-            try
-            {
-                // Open file, read first block of data and search for a frame
-                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
-                BinaryReader source = new BinaryReader(s);
-                try
-                {
-                    result = read(source, pictureStreamHandler, readAllMetaFrames);
-                }
-                finally
-                {
-                    if (null == stream) source.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e.Message);
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
-                result = false;
-            }
-
-            return result;
-        }
-
         public bool ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)
         {
             bool result = false;
@@ -342,18 +309,6 @@ namespace ATL.AudioData
 
             sizeInfo.FileSize = source.BaseStream.Length;
             MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(readEmbeddedPictures, readAllMetaFrames);
-            readTagParams.PrepareForWriting = prepareForWriting;
-
-            return read(source, readTagParams);
-        }
-
-        [Obsolete("Use read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)")]
-        private bool read(BinaryReader source, TagData.PictureStreamHandlerDelegate pictureStreamHandler = null, bool readAllMetaFrames = false, bool prepareForWriting = false)
-        {
-            sizeInfo.ResetData();
-
-            sizeInfo.FileSize = source.BaseStream.Length;
-            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(pictureStreamHandler, readAllMetaFrames);
             readTagParams.PrepareForWriting = prepareForWriting;
 
             return read(source, readTagParams);

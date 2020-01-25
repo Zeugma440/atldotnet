@@ -18,7 +18,7 @@ namespace ATL
 		public Track() { }
 
         /// <summary>
-        /// Loads the file at the given pathg
+        /// Loads the file at the given path
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="Path">Path of the local file to be loaded</param>
@@ -27,6 +27,19 @@ namespace ATL
             this.Path = Path;
             stream = null;
             this.writeProgress = writeProgress;
+            if (load) Update();
+        }
+
+        /// <summary>
+        /// Loads the file at the given path
+        /// Only works with local paths; http, ftp and the like do not work.
+        /// </summary>
+        /// <param name="Path">Path of the local file to be loaded</param>
+        public Track(string Path, bool load)
+        {
+            this.Path = Path;
+            stream = null;
+            this.writeProgress = null;
             if (load) Update();
         }
 

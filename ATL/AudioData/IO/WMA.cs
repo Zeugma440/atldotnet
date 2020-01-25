@@ -452,7 +452,7 @@ namespace ATL.AudioData.IO
                         picturePosition = takePicturePosition(picType);
                     }
 
-                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures)
                     {
                         int picSize = source.ReadInt32();
                         string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
@@ -464,13 +464,6 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Read(picInfo.PictureData, 0, picSize);
 
                         tagData.Pictures.Add(picInfo);
-
-                        if (readTagParams.PictureStreamHandler != null)
-                        {
-                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                            mem.Close();
-                        }
                     }
                     setMeta = false;
                 }

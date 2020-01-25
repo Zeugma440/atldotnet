@@ -1067,7 +1067,7 @@ namespace ATL.AudioData.IO
                     addPictureToken(picType);
                     picturePosition = takePicturePosition(picType);
 
-                    if (readTagParams.ReadPictures || readTagParams.PictureStreamHandler != null)
+                    if (readTagParams.ReadPictures)
                     {
                         // Peek the next 3 bytes to know the picture type
                         ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(source.ReadBytes(3));
@@ -1079,13 +1079,6 @@ namespace ATL.AudioData.IO
                         source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize - 16);
 
                         tagData.Pictures.Add(picInfo);
-
-                        if (readTagParams.PictureStreamHandler != null)
-                        {
-                            MemoryStream mem = new MemoryStream(picInfo.PictureData);
-                            readTagParams.PictureStreamHandler(ref mem, picInfo.PicType, picInfo.NativeFormat, picInfo.TagType, picInfo.NativePicCode, picInfo.Position);
-                            mem.Close();
-                        }
                     }
                     // else - Other unhandled cases ?
                 }
