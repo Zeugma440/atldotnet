@@ -458,10 +458,8 @@ namespace ATL.AudioData.IO
                         string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
                         string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
 
-                        PictureInfo picInfo = new PictureInfo(ImageUtils.GetImageFormatFromMimeType(mimeType), picType, getImplementedTagType(), picCode, picturePosition);
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, picSize, picType, getImplementedTagType(), picCode, picturePosition);
                         picInfo.Description = description;
-                        picInfo.PictureData = new byte[picSize];
-                        source.BaseStream.Read(picInfo.PictureData, 0, picSize);
 
                         tagData.Pictures.Add(picInfo);
                     }

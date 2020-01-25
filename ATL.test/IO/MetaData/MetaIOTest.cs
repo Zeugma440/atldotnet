@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -551,11 +552,12 @@ namespace ATL.test.IO.MetaData
 
             if (handleUnsupportedPictures)
             {
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode1);
-                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+                byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+                picInfo = PictureInfo.fromBinaryData(data, PIC_TYPE.Unsupported, tagType, pictureCode1);
                 theTag.Pictures.Add(picInfo);
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode2);
-                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+
+                data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+                picInfo = PictureInfo.fromBinaryData(data, PIC_TYPE.Unsupported, tagType, pictureCode2);
                 theTag.Pictures.Add(picInfo);
             }
 

@@ -1,6 +1,8 @@
 ﻿using ATL.Logging;
 using Commons;
 using HashDepot;
+using System;
+using System.IO;
 
 namespace ATL
 {
@@ -57,6 +59,24 @@ namespace ATL
         /// </summary>
         public int TransientFlag;
 
+        // ---------------- STATIC CONSTRUCTORS
+
+        public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+        {
+            if (null == data || data.Length < 3) throw new ArgumentException("Data should not be null and be at least 3 bytes long");
+
+            return new PictureInfo(tagType, nativePicCode, picType, position, data);
+        }
+
+        public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+        {
+            if (null == stream || length < 3) throw new ArgumentException("Stream should not be null and be at least 3 bytes long");
+
+            byte[] data = new byte[length];
+            stream.Read(data, 0, length);
+            return new PictureInfo(tagType, nativePicCode, picType, position, data);
+        }
+
         // ---------------- CONSTRUCTORS
 
         public PictureInfo(PictureInfo picInfo, bool copyPictureData = true)
@@ -77,9 +97,14 @@ namespace ATL
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
             this.TransientFlag = picInfo.TransientFlag;
         }
-        public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+
+
+
+        private PictureInfo(int tagType, object nativePicCode, PIC_TYPE picType, int position, byte[] binaryData)
         {
-            PicType = picType; NativeFormat = nativeFormat; TagType = tagType; Position = position;
+            PicType = picType;
+            TagType = tagType;
+            Position = position;
             if (nativePicCode is string)
             {
                 NativePicCodeStr = (string)nativePicCode;
@@ -97,7 +122,18 @@ namespace ATL
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
+            PictureData = binaryData;
+            NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(binaryData);
         }
+
+
+
+
+
+
+
+
+
         public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int position = 1) { PicType = picType; NativeFormat = nativeFormat; Position = position; }
         public PictureInfo(ImageFormat nativeFormat, int tagType, object nativePicCode, int position = 1)
         {
@@ -122,6 +158,12 @@ namespace ATL
         }
         public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
         public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativePicCode = -1; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
+
+        public uint ComputePicHash()
+        {
+            PictureHash = Fnv1a.Hash32(PictureData);
+            return PictureHash;
+        }
 
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
@@ -158,12 +200,6 @@ namespace ATL
 
             // Call the implementation from IEquatable
             return this.ToString().Equals(obj.ToString());
-        }
-
-        public uint ComputePicHash()
-        {
-            PictureHash = Fnv1a.Hash32(PictureData);
-            return PictureHash;
         }
     }
 }

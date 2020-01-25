@@ -1069,15 +1069,7 @@ namespace ATL.AudioData.IO
 
                     if (readTagParams.ReadPictures)
                     {
-                        // Peek the next 3 bytes to know the picture type
-                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(source.ReadBytes(3));
-                        if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
-                        source.BaseStream.Seek(-3, SeekOrigin.Current);
-
-                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), dataClass, picturePosition);
-                        picInfo.PictureData = new byte[metadataSize - 16];
-                        source.BaseStream.Read(picInfo.PictureData, 0, (int)metadataSize - 16);
-
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, (int)(metadataSize - 16), picType, getImplementedTagType(), dataClass, picturePosition);
                         tagData.Pictures.Add(picInfo);
                     }
                     // else - Other unhandled cases ?

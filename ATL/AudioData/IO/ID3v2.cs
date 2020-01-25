@@ -804,16 +804,17 @@ namespace ATL.AudioData.IO
                 else // Picture frame
                 {
                     long position = source.Position;
-                    ImageFormat imgFormat;
+//                    ImageFormat imgFormat;
                     if (TAG_VERSION_2_2 == tagVersion)
                     {
                         // Image format
                         string imageFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(3)).ToUpper();
-
+/*
                         if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
                         else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
                         else if ("GIF".Equals(imageFormat)) imgFormat = ImageFormat.Gif;
                         else imgFormat = ImageFormat.Jpeg;
+*/
                     }
                     else
                     {
@@ -821,7 +822,7 @@ namespace ATL.AudioData.IO
                         if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
                         // Mime-type
                         String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                        imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
+//                        imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
                     }
 
                     byte picCode = source.ReadByte();
@@ -852,18 +853,18 @@ namespace ATL.AudioData.IO
                     {
                         int picSize = dataSize - (int)(source.Position - position);
 
-                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), picCode, picturePosition);
-                        picInfo.Description = description;
-
+                        byte[] data;
                         if (tag.UsesUnsynchronisation)
                         {
-                            picInfo.PictureData = decodeUnsynchronizedStream(source, picSize);
+                            data = decodeUnsynchronizedStream(source, picSize);
                         }
                         else
                         {
-                            picInfo.PictureData = new byte[picSize];
-                            source.Read(picInfo.PictureData, 0, picSize);
+                            data = new byte[picSize];
+                            source.Read(data, 0, picSize);
                         }
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
+                        picInfo.Description = description;
 
                         if (!inChapter)
                         {

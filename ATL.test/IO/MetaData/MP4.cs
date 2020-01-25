@@ -124,8 +124,8 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Png, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TAG_ANY, 14);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TAG_ANY, 14);
             theTag.Pictures.Add(picInfo);
 
 

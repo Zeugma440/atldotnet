@@ -207,14 +207,9 @@ namespace ATL.AudioData.IO
                         //    * The frame name
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        String description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                        ImageFormat imgFormat = ImageUtils.GetImageFormatFromMimeType(description.Substring(description.Length - 3, 3));
-
-                        PictureInfo picInfo = new PictureInfo(imgFormat, picType, getImplementedTagType(), frameName, picturePosition);
+                        string description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, frameDataSize - description.Length - 1, picType, getImplementedTagType(), frameName, picturePosition);
                         picInfo.Description = description;
-                        picInfo.PictureData = new byte[frameDataSize - description.Length - 1];
-                        source.BaseStream.Read(picInfo.PictureData, 0, frameDataSize - description.Length - 1);
-
                         tagData.Pictures.Add(picInfo);
                     }
                 }

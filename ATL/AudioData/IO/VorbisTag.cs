@@ -226,8 +226,10 @@ namespace ATL.AudioData.IO
             }
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
-                int picturePosition = takePicturePosition(PictureInfo.PIC_TYPE.Generic);
-                PictureInfo picInfo = new PictureInfo(ImageFormat.Undefined, PictureInfo.PIC_TYPE.Generic, getImplementedTagType(), 0, picturePosition);
+                PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
+                int picturePosition = takePicturePosition(picType);
+
+                addPictureToken(picType);
 
                 if (readTagParams.ReadPictures)
                 {
@@ -238,12 +240,7 @@ namespace ATL.AudioData.IO
                     byte[] encodedData = new byte[size];
                     Source.Read(encodedData, 0, size);
 
-                    // Read the whole base64-encoded picture binary data
-                    picInfo.PictureData = Utils.DecodeFrom64(encodedData);
-                    ImageFormat imgFormat = ImageUtils.GetImageFormatFromPictureHeader(picInfo.PictureData);
-                    if (ImageFormat.Unsupported == imgFormat) imgFormat = ImageFormat.Png;
-                    picInfo.NativeFormat = imgFormat;
-
+                    PictureInfo picInfo = PictureInfo.fromBinaryData(Utils.DecodeFrom64(encodedData), picType, getImplementedTagType(), 0, picturePosition);
                     tagData.Pictures.Add(picInfo);
                 }
             }
@@ -268,12 +265,9 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.ReadPictures)
             {
-                PictureInfo picInfo = new PictureInfo(ImageUtils.GetImageFormatFromMimeType(block.mimeType), block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
-                picInfo.Description = block.description;
-                picInfo.PictureData = new byte[block.picDataLength];
                 s.Seek(initPosition + block.picDataOffset, SeekOrigin.Begin);
-                s.Read(picInfo.PictureData, 0, block.picDataLength);
-
+                PictureInfo picInfo = PictureInfo.fromBinaryData(s, block.picDataLength, block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
+                picInfo.Description = block.description;
                 tagData.Pictures.Add(picInfo);
 
                 if (!tagExists) tagExists = true;
