@@ -24,7 +24,9 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
+            //writeAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
+
+            //displayVersionInfo();
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
@@ -80,6 +82,12 @@ namespace ATL.benchmark
             Writing w = new Writing();
             w.performWrite(fileName);
 
+            Console.ReadLine();
+        }
+
+        static private void displayVersionInfo()
+        {
+            Console.WriteLine(ATL.Version.getVersion());
             Console.ReadLine();
         }
     }
