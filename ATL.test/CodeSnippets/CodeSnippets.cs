@@ -121,8 +121,7 @@ namespace ATL.test.CodeSnippets
             theTrack.EmbeddedPictures.RemoveAt(0);
 
             // Add 'CD' embedded picture
-            PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.CD);
-            newPicture.PictureData = System.IO.File.ReadAllBytes(imagePath);
+            PictureInfo newPicture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath), PictureInfo.PIC_TYPE.CD);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             // Save modifications on the disc
@@ -159,10 +158,7 @@ namespace ATL.test.CodeSnippets
 	        ch.Subtitle = "bbb0";
 	        ch.Url = new ChapterInfo.UrlInfo("ccc","ddd0");
             // Add a picture to the 2nd chapter
-            ch.Picture = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = System.IO.File.ReadAllBytes(imagePath);
-            ch.Picture.PictureData = data;
-
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath));
             theFile.Chapters.Add(ch);
 
             // Persists the chapters

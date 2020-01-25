@@ -212,13 +212,11 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
 
                 // Insert a large picture while tag restrictions specify that pictures shouldn't be larger than 64x64pixels AND tag size shouldn't be larger than 4 KB
-                PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
-                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+                PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.Back);
                 theTag.Pictures.Add(picInfo);
 
                 // Insert a gif picture while tag restrictions specify that pictures should be either jpeg or png
-                picInfo = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.Back);
-                picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+                picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.Back);
                 theTag.Pictures.Add(picInfo);
 
                 // Insert 20 garbage fields to raise the number of field above maximum required fields (30)
@@ -520,9 +518,7 @@ namespace ATL.test.IO.MetaData
             ch.Title = "aaa";
             ch.Subtitle = "bbb";
             ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
-            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            ch.Picture.PictureData = data;
+            ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             ch.Picture.ComputePicHash();
 
             theTag.Chapters.Add(ch);
@@ -674,9 +670,7 @@ namespace ATL.test.IO.MetaData
             ch.StartTime = 0;
             ch.Title = "Intro";
             ch.Url = new ChapterInfo.UrlInfo("chapter url", "https://auphonic.com/");
-            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg");
-            ch.Picture.PictureData = data;
+            ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "MP3/chapterImage1.jpg"));
             ch.Picture.ComputePicHash();
             expectedChaps.Add(ch.StartTime, ch);
 
@@ -769,9 +763,7 @@ namespace ATL.test.IO.MetaData
             ch.Title = "aaa";
             ch.Subtitle = "bbb";
             ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
-            ch.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            ch.Picture.PictureData = data;
+            ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             ch.Picture.ComputePicHash();
 
             theTag.Chapters.Add(ch);

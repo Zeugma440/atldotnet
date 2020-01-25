@@ -255,8 +255,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Conductor = "John Jackman";
 
-            PictureInfo picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
-            picInfo.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.Back);
             theTag.Pictures.Add(picInfo);
 
 
@@ -287,7 +286,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
+            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Back);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 

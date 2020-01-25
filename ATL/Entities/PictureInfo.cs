@@ -3,6 +3,7 @@ using Commons;
 using HashDepot;
 using System;
 using System.IO;
+using static ATL.AudioData.MetaDataIOFactory;
 
 namespace ATL
 {
@@ -61,9 +62,10 @@ namespace ATL
 
         // ---------------- STATIC CONSTRUCTORS
 
-        public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+        public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, int tagType = TAG_ANY, object nativePicCode = null, int position = 1)
         {
             if (null == data || data.Length < 3) throw new ArgumentException("Data should not be null and be at least 3 bytes long");
+            if (null == nativePicCode) nativePicCode = 0; // Can't default with 0 in params declaration
 
             return new PictureInfo(tagType, nativePicCode, picType, position, data);
         }
@@ -134,7 +136,12 @@ namespace ATL
 
 
 
-        public PictureInfo(ImageFormat nativeFormat, PIC_TYPE picType, int position = 1) { PicType = picType; NativeFormat = nativeFormat; Position = position; }
+        public PictureInfo(PIC_TYPE picType, int position = 1)
+        {
+            PicType = picType;
+            NativeFormat = ImageFormat.Undefined;
+            Position = position;
+        }
         public PictureInfo(ImageFormat nativeFormat, int tagType, object nativePicCode, int position = 1)
         {
             PicType = PIC_TYPE.Unsupported; NativeFormat = nativeFormat; TagType = tagType; Position = position;

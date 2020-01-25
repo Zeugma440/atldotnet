@@ -157,7 +157,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Back);
+            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Back);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -263,7 +263,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic, 1);
+            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Generic, 1);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 

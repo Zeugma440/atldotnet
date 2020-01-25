@@ -390,8 +390,7 @@ namespace ATL.test.IO
             theTrack.EmbeddedPictures.RemoveAt(1); // Remove Conductor; Front Cover remains
 
             // Add CD
-            PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Gif, PictureInfo.PIC_TYPE.CD);
-            newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+            PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.CD);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             theTrack.Save();
@@ -423,8 +422,7 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
 
             // Update Front picture
-            PictureInfo newPicture = new PictureInfo(Commons.ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Front);
-            newPicture.PictureData = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PictureInfo.PIC_TYPE.Front);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             theTrack.Save();
@@ -474,9 +472,7 @@ namespace ATL.test.IO
             chapter.EndTime = 880;
             chapter.EndOffset = 8800;
             chapter.UniqueID = "849849";
-            chapter.Picture = new PictureInfo(ImageFormat.Jpeg, PictureInfo.PIC_TYPE.Generic);
-            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg");
-            chapter.Picture.PictureData = data;
+            chapter.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             theTrack.Chapters.Add(chapter);
 
 
