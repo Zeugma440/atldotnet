@@ -173,7 +173,7 @@ namespace ATL.AudioData.IO
                     return false;
                 }
 
-                if ((frameDataSize > 0) && (frameDataSize <= 500))
+                if ((frameDataSize > 0) && (frameDataSize <= 1000))
                 {
                     /* 
                      * According to spec : "Items are not zero-terminated like in C / C++.
@@ -185,7 +185,7 @@ namespace ATL.AudioData.IO
                     strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
                     SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                 }
-                else if (frameDataSize > 0) // Size > 500 => Probably an embedded picture
+                else if (frameDataSize > 0 && !frameName.ToLower().Contains("lyrics")) // Size > 1000 => Probably an embedded picture
                 {
                     int picturePosition;
                     PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
