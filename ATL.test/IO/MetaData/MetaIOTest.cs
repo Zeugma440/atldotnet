@@ -627,7 +627,7 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             if (handleUnsupportedPictures)
             {
-                picInfo = new PictureInfo(Commons.ImageFormat.Jpeg, tagType, pictureCode1);
+                picInfo = new PictureInfo(tagType, pictureCode1);
                 picInfo.MarkedForDeletion = true;
                 theTag.Pictures.Add(picInfo);
             }

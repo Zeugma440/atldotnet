@@ -99,9 +99,6 @@ namespace ATL
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
             this.TransientFlag = picInfo.TransientFlag;
         }
-
-
-
         private PictureInfo(int tagType, object nativePicCode, PIC_TYPE picType, int position, byte[] binaryData)
         {
             PicType = picType;
@@ -127,24 +124,18 @@ namespace ATL
             PictureData = binaryData;
             NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(binaryData);
         }
-
-
-
-
-
-
-
-
-
         public PictureInfo(PIC_TYPE picType, int position = 1)
         {
             PicType = picType;
             NativeFormat = ImageFormat.Undefined;
             Position = position;
         }
-        public PictureInfo(ImageFormat nativeFormat, int tagType, object nativePicCode, int position = 1)
+        public PictureInfo(int tagType, object nativePicCode, int position = 1)
         {
-            PicType = PIC_TYPE.Unsupported; NativeFormat = nativeFormat; TagType = tagType; Position = position;
+            PicType = PIC_TYPE.Unsupported;
+            NativeFormat = ImageFormat.Undefined;
+            TagType = tagType;
+            Position = position;
             if (nativePicCode is string)
             {
                 NativePicCodeStr = (string)nativePicCode;
@@ -163,6 +154,7 @@ namespace ATL
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
         }
+
         public PictureInfo(ImageFormat nativeFormat, int tagType, byte nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCode = nativePicCode; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
         public PictureInfo(ImageFormat nativeFormat, int tagType, string nativePicCode, int position = 1) { PicType = PIC_TYPE.Unsupported; NativePicCodeStr = nativePicCode; NativePicCode = -1; NativeFormat = nativeFormat; TagType = tagType; Position = position; }
 
