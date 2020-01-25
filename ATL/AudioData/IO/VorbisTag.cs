@@ -486,7 +486,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture)
                     {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
+                        writePictureFrame(w, picInfo.PictureData, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
                         nbFrames++;
                     }
                 }
@@ -527,7 +527,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
             long frameSizePos;
             long finalFramePos;
@@ -540,7 +540,7 @@ namespace ATL.AudioData.IO
             using (MemoryStream picStream = new MemoryStream(pictureData.Length + 60))
             using (BinaryWriter picW = new BinaryWriter(picStream))
             {
-                WritePicture(picW, pictureData, picFormat, mimeType, pictureTypeCode, picDescription);
+                WritePicture(picW, pictureData, mimeType, pictureTypeCode, picDescription);
                 writer.Write(Utils.EncodeTo64(picStream.ToArray()));
             }
 
@@ -551,7 +551,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        public void WritePicture(BinaryWriter picW, byte[] pictureData, ImageFormat picFormat, string mimeType, int pictureTypeCode, string picDescription)
+        public void WritePicture(BinaryWriter picW, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
             picW.Write(StreamUtils.EncodeBEInt32(pictureTypeCode));
             picW.Write(StreamUtils.EncodeBEInt32(mimeType.Length));

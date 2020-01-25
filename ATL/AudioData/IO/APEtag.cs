@@ -363,7 +363,7 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType), picInfo.Description);
+                    writePictureFrame(w, picInfo.PictureData, ImageUtils.GetMimeTypeFromImageFormat(picInfo.NativeFormat), picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType));
                     nbFrames++;
                 }
             }
@@ -426,7 +426,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, string mimeType, string pictureTypeCode, String picDescription)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, string pictureTypeCode)
         {
             // Binary tag writing management
             long frameSizePos;
