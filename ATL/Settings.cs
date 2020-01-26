@@ -46,6 +46,7 @@ namespace ATL
         public static byte ID3v2_tagSubVersion = 4;                     // Write metadata in ID3v2.<ID3v2_tagSubVersion> format (only 3 and 4 are supported so far - resp. ID3v2.3 and ID3v2.4)
         public static bool ID3v2_forceAPICEncodingToLatin1 = true;      // Force the encoding of the APIC frame to ISO-8859-1/Latin-1 for Windows to be able to display the cover picture
                                                                         // Disable it to be able to write picture descriptions using non-western characters (japanese, cyrillic...)
+        public static bool ID3v2_forceUnsynchronization = false;        // Set to true to force unsynchronization when writing ID3v2.3 or ID3v2.4 tags
 
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 

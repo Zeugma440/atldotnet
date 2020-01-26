@@ -1040,11 +1040,15 @@ namespace ATL.AudioData.IO
             Encoding tagEncoding = Settings.DefaultTextEncoding;
             if (tagEncoding.Equals(Encoding.UTF8) && 3 == Settings.ID3v2_tagSubVersion) tagEncoding = Encoding.Unicode; // UTF-8 isn't available in ID3v2.4 -> fallback to unicode
 
-            // Flags : keep initial flags
-            // NB1 : Writing ID3v2.4 flags on an ID3v2.3 tag won't have any effect since v2.4 specific bits won't be exploited
-            // NB2 : Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers
+            // Flags : keep initial flags unless unsynchronization if forced
+            if (Settings.ID3v2_forceUnsynchronization) tagHeader.Flags = (byte)(tagHeader.Flags | FLAG_TAG_UNSYNCHRONIZED);
+
+            // Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers
             // Hence unsycnhronization is force-disabled when the encoding is Unicode
             if (tagHeader.UsesUnsynchronisation && tagEncoding.Equals(Encoding.Unicode)) tagHeader.Flags = (byte)(tagHeader.Flags & ~FLAG_TAG_UNSYNCHRONIZED);
+
+            // NB : Writing ID3v2.4 flags on an ID3v2.3 tag won't have any effect since v2.4 specific bits won't be exploited
+
             w.Write(tagHeader.Flags);
             // Keep position in mind to calculate final size and come back here to write it
             tagSizePos = w.BaseStream.Position;
