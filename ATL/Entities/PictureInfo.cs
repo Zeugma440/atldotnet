@@ -47,7 +47,6 @@ namespace ATL
         /// </summary>
         public byte[] PictureData { get; private set; }
 
-
         /// <summary>
         /// Hash of binary picture data
         /// </summary>
@@ -61,6 +60,12 @@ namespace ATL
         /// Freeform transient value to be used by other parts of the library
         /// </summary>
         public int TransientFlag;
+
+        public string MimeType
+        {
+            get { return ImageUtils.GetMimeTypeFromImageFormat(NativeFormat);  }
+        }
+
 
         // ---------------- STATIC CONSTRUCTORS
 

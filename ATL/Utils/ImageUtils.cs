@@ -57,6 +57,9 @@ namespace Commons
             else if (imageFormat.Equals(ImageFormat.Tiff))
             {
                 result += "tiff";
+            } else
+            {
+                result += "*";
             }
 
             return result;
