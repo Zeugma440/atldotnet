@@ -317,6 +317,10 @@ namespace ATL.AudioData.IO
             // QT chapters have been detected while browsing tracks
             if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
 
+            // Read user data which contains metadata and Nero chapters
+            source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+            readUserData(source, readTagParams);
+
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
@@ -417,11 +421,6 @@ namespace ATL.AudioData.IO
                 if (parsePreviousTracks)
                 {
                     source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-                    /*
-                    trakSize = lookForMP4Atom(source.BaseStream, "trak");
-                    currentTrakIndex = 1;
-                    trakPosition = source.BaseStream.Position - 8;
-                    */
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
                     return -1;
                 }
@@ -759,15 +758,12 @@ namespace ATL.AudioData.IO
                 } // Chunk offsets
             }
 
-            source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-            readUserData(source, readTagParams, currentTrakIndex);
-
             source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
 
             return trakSize;
         }
 
-        private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, int currentTrakIndex)
+        private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             long atomPosition, udtaPosition;
             uint atomSize;
@@ -786,9 +782,9 @@ namespace ATL.AudioData.IO
             udtaPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA + currentTrakIndex);
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST + currentTrakIndex);
-                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_CHPL + currentTrakIndex);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_CHPL);
             }
 
             // Look for Nero chapters
@@ -797,7 +793,7 @@ namespace ATL.AudioData.IO
             if (atomSize > 0)
             {
                 tagExists = true;
-                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_CHPL + currentTrakIndex);
+                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_CHPL);
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                 source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
@@ -825,7 +821,7 @@ namespace ATL.AudioData.IO
             else
             {
                 // Allow creating the 'chpl' atom from scratch
-                structureHelper.AddZone(atomPosition, 0, ZONE_MP4_CHPL + currentTrakIndex);
+                structureHelper.AddZone(atomPosition, 0, ZONE_MP4_CHPL);
             }
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
@@ -834,17 +830,17 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "meta atom could not be found");
                 // Allow creating the 'meta' atom from scratch
-                structureHelper.AddZone(udtaPosition, 0, ZONE_MP4_NOMETA + currentTrakIndex);
+                structureHelper.AddZone(udtaPosition, 0, ZONE_MP4_NOMETA);
             }
             else
             {
-                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST + currentTrakIndex);
+                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
                 source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                if (readTagParams.ReadTag) readTag(source, readTagParams, currentTrakIndex);
+                if (readTagParams.ReadTag) readTag(source, readTagParams);
             }
         }
 
-        private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, int currentTrakIndex)
+        private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             long iListSize = 0;
             long iListPosition = 0;
@@ -888,7 +884,7 @@ namespace ATL.AudioData.IO
                 // TODO handle the case where 'meta' exists, but not 'ilst'
                 return;
             }
-            structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, ILST_CORE_SIGNATURE, ZONE_MP4_ILST + currentTrakIndex);
+            structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, ILST_CORE_SIGNATURE, ZONE_MP4_ILST);
 
             if (8 == Size) // Core minimal size
             {
