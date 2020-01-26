@@ -257,20 +257,15 @@ namespace ATL.AudioData.IO
         /// <param name="readTagParams">Reading parameters</param>
         private void readMP4(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            long moovPosition, trakPosition;
+            long moovPosition;
             int globalTimeScale;
-            int mediaTimeScale = 1000;
-
-            uint int32Data = 0;
 
             uint atomSize;
-            long atomPosition;
 
             byte[] data32 = new byte[4];
-            byte[] data64 = new byte[8];
 
-            IDictionary<int, IList<int>> chapterTrackIndexes = null; // Key is track index (1-based); lists are chapter tracks indexes (1-based)
-            IList<MP4Sample> chapterTrackSamples = null;
+            IList<MP4Sample> chapterTrackSamples = new List<MP4Sample>();
+            IDictionary<int, IList<int>> chapterTrackIndexes = new Dictionary<int, IList<int>>(); // Key is track index (1-based); lists are chapter tracks indexes (1-based)
 
 
             // TODO PERF - try and cache the whole tree structure to optimize browsing through nodes
@@ -308,404 +303,19 @@ namespace ATL.AudioData.IO
             calculatedDuration = timeLengthPerSec * 1000.0 / globalTimeScale;
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-
-            uint trakSize = lookForMP4Atom(source.BaseStream, "trak");
             byte currentTrakIndex = 0;
-            bool isCurrentTrackFirstChapterTrack = false;
-            if (0 == trakSize)
+            long trakSize = 0;
+
+            // Loop through tracks
+            do
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "trak atom could not be found; aborting read");
-                return;
+                if (-1 == trakSize) currentTrakIndex = 0; // Convention to start reading from index 1 again
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, moovPosition, moovSize, chapterTrackSamples, chapterTrackIndexes);
             }
+            while (trakSize > 0) ;
 
-            while (trakSize > 0)
-            {
-                currentTrakIndex++;
-
-                if (readTagParams.PrepareForWriting)
-                {
-                    structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA + currentTrakIndex);
-                    structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST + currentTrakIndex);
-                    structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL + currentTrakIndex);
-                }
-
-                isCurrentTrackFirstChapterTrack = false;
-                trakPosition = source.BaseStream.Position - 8;
-
-                // Look for "chap" atom to detect QT chapters for current track
-                if (lookForMP4Atom(source.BaseStream, "tref") > 0 && null == chapterTrackIndexes)
-                {
-                    bool parsePreviousTracks = false;
-                    uint chapSize = lookForMP4Atom(source.BaseStream, "chap");
-                    if (chapSize > 8)
-                    {
-                        if (null == chapterTrackIndexes) chapterTrackIndexes = new Dictionary<int, IList<int>>();
-                        IList<int> thisTrackIndexes = new List<int>();
-                        for (int i = 0; i < (chapSize - 8) / 4; i++)
-                        {
-                            thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
-                        }
-                        chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
-
-                        foreach (int i in thisTrackIndexes)
-                        {
-                            if (i < currentTrakIndex)
-                            {
-                                parsePreviousTracks = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // If current track has declared a chapter track located at a previous index, come back to read it
-                    if (parsePreviousTracks)
-                    {
-                        source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-
-                        trakSize = lookForMP4Atom(source.BaseStream, "trak");
-                        currentTrakIndex = 1;
-                        trakPosition = source.BaseStream.Position - 8;
-                    }
-                }
-
-                source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
-                if (0 == lookForMP4Atom(source.BaseStream, "mdia"))
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "mdia atom could not be found; aborting read on track " + currentTrakIndex);
-
-                    source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                    trakSize = lookForMP4Atom(source.BaseStream, "trak");
-
-                    continue;
-                }
-
-                long mdiaPosition = source.BaseStream.Position;
-                if (chapterTrackIndexes != null)
-                {
-                    if (0 == lookForMP4Atom(source.BaseStream, "mdhd"))
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.mdhd atom could not be found; aborting read");
-                        return;
-                    }
-
-                    byte mdhdVersion = source.ReadByte();
-                    source.BaseStream.Seek(3, SeekOrigin.Current); // Flags
-
-                    if (0 == mdhdVersion) source.BaseStream.Seek(8, SeekOrigin.Current); else source.BaseStream.Seek(16, SeekOrigin.Current); // Creation and modification date
-
-                    mediaTimeScale = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-
-                    source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
-                }
-
-                if (0 == lookForMP4Atom(source.BaseStream, "hdlr"))
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.hdlr atom could not be found; aborting read");
-                    return;
-                }
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
-                string mediaType = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-
-                // Check if current track is the 1st chapter track
-                // NB : Per convention, we will admit that the 1st track referenced in the 'chap' atom
-                // contains the chapter names (as opposed to chapter URLs or chapter images)
-                if ("text".Equals(mediaType) && chapterTrackIndexes != null)
-                {
-                    foreach (IList<int> list in chapterTrackIndexes.Values)
-                    {
-                        if (currentTrakIndex == list[0])
-                        {
-                            isCurrentTrackFirstChapterTrack = true;
-                            break;
-                        }
-                    }
-                }
-
-                source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
-                if (0 == lookForMP4Atom(source.BaseStream, "minf"))
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf atom could not be found; aborting read");
-                    return;
-                }
-                if (0 == lookForMP4Atom(source.BaseStream, "stbl"))
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf.stbl atom could not be found; aborting read");
-                    return;
-                }
-                long stblPosition = source.BaseStream.Position;
-
-                // Look for sample rate
-                if (0 == lookForMP4Atom(source.BaseStream, "stsd"))
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsd atom could not be found; aborting read");
-                    return;
-                }
-                source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                uint nbDescriptions = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-
-                for (int i = 0; i < nbDescriptions; i++)
-                {
-                    int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // 4-byte description length
-                    string descFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-
-                    if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
-                    {
-                        source.BaseStream.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
-                        source.BaseStream.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
-
-                        source.BaseStream.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
-
-                        ushort channels = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Channel count
-                        channelsArrangement = GuessFromChannelNumber(channels);
-
-                        source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
-                        source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work if so...)
-
-                        sampleRate = (int)StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                    }
-                    else
-                    {
-                        source.BaseStream.Seek(int32Data - 4, SeekOrigin.Current);
-                    }
-                }
-
-                // Read Quicktime chapters
-                if (isCurrentTrackFirstChapterTrack)
-                {
-                    source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
-                    if (0 == lookForMP4Atom(source.BaseStream, "stts"))
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stts atom could not be found; aborting read");
-                        return;
-                    }
-                    source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
-                    int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
-                    if (int32Data > 0)
-                    {
-                        uint frameCount, sampleDuration;
-                        if (null == chapterTrackSamples) chapterTrackSamples = new List<MP4Sample>(); else chapterTrackSamples.Clear();
-
-                        for (int i = 0; i < int32Data; i++)
-                        {
-                            source.Read(data32, 0, 4);
-                            frameCount = StreamUtils.DecodeBEUInt32(data32);
-                            source.Read(data32, 0, 4);
-                            sampleDuration = StreamUtils.DecodeBEUInt32(data32);
-                            for (int j = 0; j < frameCount; j++)
-                            {
-                                MP4Sample sample = new MP4Sample();
-                                sample.Duration = sampleDuration * 1.0 / mediaTimeScale;
-                                chapterTrackSamples.Add(sample);
-                            }
-                        }
-                    }
-
-                    source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
-                    if (0 == lookForMP4Atom(source.BaseStream, "stsc"))
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsc atom could not be found; aborting read");
-                        return;
-                    }
-                    source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
-                    int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
-
-                    uint samplesPerChunk;
-                    int cumulatedSampleIndex = 0;
-                    uint chunkIndex = 0;
-                    uint previousChunkIndex = 0;
-                    uint previousSamplesPerChunk = 0;
-                    bool first = true;
-
-                    for (int i = 0; i < int32Data; i++)
-                    {
-                        source.Read(data32, 0, 4);
-                        chunkIndex = StreamUtils.DecodeBEUInt32(data32);
-                        source.Read(data32, 0, 4);
-                        samplesPerChunk = StreamUtils.DecodeBEUInt32(data32);
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // Sample description ID
-
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            for (uint j = previousChunkIndex; j < chunkIndex; j++)
-                            {
-                                for (int k = 0; k < previousSamplesPerChunk; k++)
-                                {
-                                    if (cumulatedSampleIndex < chapterTrackSamples.Count)
-                                    {
-                                        chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = j;
-                                        cumulatedSampleIndex++;
-                                    }
-                                }
-                            }
-                        }
-
-                        previousChunkIndex = chunkIndex;
-                        previousSamplesPerChunk = samplesPerChunk;
-                    }
-
-                    int remainingChunks = (int)Math.Ceiling((chapterTrackSamples.Count - cumulatedSampleIndex) * 1.0 / previousSamplesPerChunk);
-                    // Fill the rest of the in-memory table with the last pattern
-                    for (int j = 0; j < remainingChunks; j++)
-                    {
-                        for (int k = 0; k < previousSamplesPerChunk; k++)
-                        {
-                            if (cumulatedSampleIndex < chapterTrackSamples.Count)
-                            {
-                                chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = chunkIndex;
-                                cumulatedSampleIndex++;
-                            }
-                        }
-                        chunkIndex++;
-                    }
-                } // End read Quicktime chapters
-
-                source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
-
-                // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
-                atomSize = lookForMP4Atom(source.BaseStream, "stsz");
-                if (0 == atomSize)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsz atom could not be found; aborting read");
-                    return;
-                }
-                atomPosition = source.BaseStream.Position;
-                source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
-                {
-                    uint nbSizes = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                    uint max = 0;
-                    uint min = UInt32.MaxValue;
-
-                    for (int i = 0; i < nbSizes; i++)
-                    {
-                        source.Read(data32, 0, 4);
-                        int32Data = StreamUtils.DecodeBEUInt32(data32);
-                        min = Math.Min(min, int32Data);
-                        max = Math.Max(max, int32Data);
-
-                        if (isCurrentTrackFirstChapterTrack) chapterTrackSamples[i].Size = int32Data;
-                    }
-
-                    if ((min * 1.01) < max)
-                    {
-                        bitrateTypeID = MP4_BITRATE_TYPE_VBR;
-                    }
-                    else
-                    {
-                        bitrateTypeID = MP4_BITRATE_TYPE_CBR;
-                    }
-                }
-                else
-                {
-                    bitrateTypeID = MP4_BITRATE_TYPE_CBR;
-                    if (isCurrentTrackFirstChapterTrack) for (int i = 0; i < chapterTrackSamples.Count; i++) chapterTrackSamples[i].Size = blocByteSizeForAll;
-                }
-
-                // Adjust individual sample offsets using their size for those that are in position > 0 in the same chunk
-                if (isCurrentTrackFirstChapterTrack)
-                {
-                    uint currentChunkIndex = uint.MaxValue;
-                    uint cumulatedChunkOffset = 0;
-
-                    for (int i = 0; i < chapterTrackSamples.Count; i++)
-                    {
-                        if (chapterTrackSamples[i].ChunkIndex == currentChunkIndex)
-                        {
-                            chapterTrackSamples[i].RelativeOffset = cumulatedChunkOffset;
-                        }
-                        else
-                        {
-                            currentChunkIndex = chapterTrackSamples[i].ChunkIndex;
-                            cumulatedChunkOffset = 0;
-                        }
-                        cumulatedChunkOffset += chapterTrackSamples[i].Size;
-                    }
-                }
-
-                source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
-                // "Physical" audio chunks are referenced by position (offset) in  moov.trak.mdia.minf.stbl.stco / co64
-                // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
-                if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTrack)
-                {
-                    atomPosition = source.BaseStream.Position;
-                    byte nbBytes = 0;
-                    uint nbChunkOffsets = 0;
-                    object valueObj;
-                    long valueLong;
-
-                    // Chunk offsets
-                    if (lookForMP4Atom(source.BaseStream, "stco") > 0)
-                    {
-                        nbBytes = 4;
-                    }
-                    else
-                    {
-                        source.BaseStream.Seek(atomPosition, SeekOrigin.Begin);
-                        if (lookForMP4Atom(source.BaseStream, "co64") > 0)
-                        {
-                            nbBytes = 8;
-                        }
-                        else
-                        {
-                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, not co64 atoms could not be found; aborting read");
-                            return;
-                        }
-                    }
-
-                    source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
-                    nbChunkOffsets = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-
-                    for (int i = 0; i < nbChunkOffsets; i++)
-                    {
-                        if (4 == nbBytes)
-                        {
-                            source.Read(data32, 0, 4);
-                            valueLong = StreamUtils.DecodeBEUInt32(data32);
-                            valueObj = (uint)valueLong;
-
-                        }
-                        else
-                        {
-                            source.Read(data64, 0, 8);
-                            valueLong = StreamUtils.DecodeBEInt64(data64);
-                            valueObj = valueLong;
-                        }
-
-                        if (isCurrentTrackFirstChapterTrack) // Use the offsets to find position for QT chapter titles
-                        {
-                            for (int j = 0; j < chapterTrackSamples.Count; j++)
-                            {
-                                if (chapterTrackSamples[j].ChunkIndex == i + 1)
-                                {
-                                    chapterTrackSamples[j].ChunkOffset = valueLong;
-                                }
-                            }
-                        }
-
-                        string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
-                        structureHelper.AddZone(valueLong, 0, zoneName, false);
-                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
-                    } // Chunk offsets
-                }
-
-                source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-                readUserData(source, readTagParams, currentTrakIndex);
-
-                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                trakSize = lookForMP4Atom(source.BaseStream, "trak");
-            } // Loop through tracks
-
-            // Look for QT chapters
-            if (chapterTrackSamples != null && chapterTrackSamples.Count > 0) // QT chapters have been detected while browsing tracks
-            {
-                readQTChapters(source, chapterTrackSamples);
-            }
+            // QT chapters have been detected while browsing tracks
+            if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
 
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -740,6 +350,421 @@ namespace ATL.AudioData.IO
                 return;
             }
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
+        }
+
+        private long readTrack(
+            BinaryReader source,
+            MetaDataIO.ReadTagParams readTagParams,
+            int currentTrakIndex,
+            long moovPosition,
+            uint moovSize,
+            IList<MP4Sample> chapterTrackSamples,
+            IDictionary<int, IList<int>> chapterTrackIndexes)
+        {
+            long trakPosition;
+            int mediaTimeScale = 1000;
+
+            long atomPosition;
+            uint atomSize;
+
+            uint int32Data = 0;
+            byte[] data32 = new byte[4];
+            byte[] data64 = new byte[8];
+
+            bool isCurrentTrackFirstChapterTrack = false;
+
+            uint trakSize = lookForMP4Atom(source.BaseStream, "trak");
+            if (0 == trakSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "trak atom could not be found for index " + currentTrakIndex + "; aborting reading through tracks");
+                return 0;
+            }
+
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA + currentTrakIndex);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST + currentTrakIndex);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL + currentTrakIndex);
+            }
+
+            trakPosition = source.BaseStream.Position - 8;
+
+            // Look for "chap" atom to detect QT chapters for current track
+            if (lookForMP4Atom(source.BaseStream, "tref") > 0 && 0 == chapterTrackIndexes.Count)
+            {
+                bool parsePreviousTracks = false;
+                uint chapSize = lookForMP4Atom(source.BaseStream, "chap");
+                if (chapSize > 8)
+                {
+                    IList<int> thisTrackIndexes = new List<int>();
+                    for (int i = 0; i < (chapSize - 8) / 4; i++)
+                    {
+                        thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
+                    }
+                    chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
+
+                    foreach (int i in thisTrackIndexes)
+                    {
+                        if (i < currentTrakIndex)
+                        {
+                            parsePreviousTracks = true;
+                            break;
+                        }
+                    }
+                }
+
+                // If current track has declared a chapter track located at a previous index, come back to read it
+                if (parsePreviousTracks)
+                {
+                    source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+                    /*
+                    trakSize = lookForMP4Atom(source.BaseStream, "trak");
+                    currentTrakIndex = 1;
+                    trakPosition = source.BaseStream.Position - 8;
+                    */
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
+                    return -1;
+                }
+            }
+
+            source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
+            if (0 == lookForMP4Atom(source.BaseStream, "mdia"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "mdia atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+
+            long mdiaPosition = source.BaseStream.Position;
+            if (chapterTrackIndexes.Count > 0)
+            {
+                if (0 == lookForMP4Atom(source.BaseStream, "mdhd"))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.mdhd atom could not be found; aborting read on track " + currentTrakIndex);
+                    source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                    return trakSize;
+                }
+
+                byte mdhdVersion = source.ReadByte();
+                source.BaseStream.Seek(3, SeekOrigin.Current); // Flags
+
+                if (0 == mdhdVersion) source.BaseStream.Seek(8, SeekOrigin.Current); else source.BaseStream.Seek(16, SeekOrigin.Current); // Creation and modification date
+
+                mediaTimeScale = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+
+                source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
+            }
+
+            if (0 == lookForMP4Atom(source.BaseStream, "hdlr"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.hdlr atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+            source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
+            string mediaType = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+
+            // Check if current track is the 1st chapter track
+            // NB : Per convention, we will admit that the 1st track referenced in the 'chap' atom
+            // contains the chapter names (as opposed to chapter URLs or chapter images)
+            if ("text".Equals(mediaType) && chapterTrackIndexes.Count > 0)
+            {
+                foreach (IList<int> list in chapterTrackIndexes.Values)
+                {
+                    if (currentTrakIndex == list[0])
+                    {
+                        isCurrentTrackFirstChapterTrack = true;
+                        break;
+                    }
+                }
+            }
+
+            source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
+            if (0 == lookForMP4Atom(source.BaseStream, "minf"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            if (0 == lookForMP4Atom(source.BaseStream, "stbl"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf.stbl atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            long stblPosition = source.BaseStream.Position;
+
+            // Look for sample rate
+            if (0 == lookForMP4Atom(source.BaseStream, "stsd"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsd atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+            uint nbDescriptions = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+
+            for (int i = 0; i < nbDescriptions; i++)
+            {
+                int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // 4-byte description length
+                string descFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+
+                if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb"))
+                {
+                    source.BaseStream.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
+                    source.BaseStream.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
+
+                    source.BaseStream.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
+
+                    ushort channels = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Channel count
+                    channelsArrangement = GuessFromChannelNumber(channels);
+
+                    source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
+                    source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work if so...)
+
+                    sampleRate = (int)StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                }
+                else
+                {
+                    source.BaseStream.Seek(int32Data - 4, SeekOrigin.Current);
+                }
+            }
+
+            // Read Quicktime chapters
+            if (isCurrentTrackFirstChapterTrack)
+            {
+                source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
+                if (0 == lookForMP4Atom(source.BaseStream, "stts"))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stts atom could not be found; aborting read on track " + currentTrakIndex);
+                    source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                    return trakSize;
+                }
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+                int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
+                if (int32Data > 0)
+                {
+                    uint frameCount, sampleDuration;
+                    chapterTrackSamples.Clear();
+
+                    for (int i = 0; i < int32Data; i++)
+                    {
+                        source.Read(data32, 0, 4);
+                        frameCount = StreamUtils.DecodeBEUInt32(data32);
+                        source.Read(data32, 0, 4);
+                        sampleDuration = StreamUtils.DecodeBEUInt32(data32);
+                        for (int j = 0; j < frameCount; j++)
+                        {
+                            MP4Sample sample = new MP4Sample();
+                            sample.Duration = sampleDuration * 1.0 / mediaTimeScale;
+                            chapterTrackSamples.Add(sample);
+                        }
+                    }
+                }
+
+                source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
+                if (0 == lookForMP4Atom(source.BaseStream, "stsc"))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsc atom could not be found; aborting read on track " + currentTrakIndex);
+                    source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                    return trakSize;
+                }
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+                int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
+
+                uint samplesPerChunk;
+                int cumulatedSampleIndex = 0;
+                uint chunkIndex = 0;
+                uint previousChunkIndex = 0;
+                uint previousSamplesPerChunk = 0;
+                bool first = true;
+
+                for (int i = 0; i < int32Data; i++)
+                {
+                    source.Read(data32, 0, 4);
+                    chunkIndex = StreamUtils.DecodeBEUInt32(data32);
+                    source.Read(data32, 0, 4);
+                    samplesPerChunk = StreamUtils.DecodeBEUInt32(data32);
+                    source.BaseStream.Seek(4, SeekOrigin.Current); // Sample description ID
+
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        for (uint j = previousChunkIndex; j < chunkIndex; j++)
+                        {
+                            for (int k = 0; k < previousSamplesPerChunk; k++)
+                            {
+                                if (cumulatedSampleIndex < chapterTrackSamples.Count)
+                                {
+                                    chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = j;
+                                    cumulatedSampleIndex++;
+                                }
+                            }
+                        }
+                    }
+
+                    previousChunkIndex = chunkIndex;
+                    previousSamplesPerChunk = samplesPerChunk;
+                }
+
+                int remainingChunks = (int)Math.Ceiling((chapterTrackSamples.Count - cumulatedSampleIndex) * 1.0 / previousSamplesPerChunk);
+                // Fill the rest of the in-memory table with the last pattern
+                for (int j = 0; j < remainingChunks; j++)
+                {
+                    for (int k = 0; k < previousSamplesPerChunk; k++)
+                    {
+                        if (cumulatedSampleIndex < chapterTrackSamples.Count)
+                        {
+                            chapterTrackSamples[cumulatedSampleIndex].ChunkIndex = chunkIndex;
+                            cumulatedSampleIndex++;
+                        }
+                    }
+                    chunkIndex++;
+                }
+            } // End read Quicktime chapters
+
+            source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
+
+            // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
+            atomSize = lookForMP4Atom(source.BaseStream, "stsz");
+            if (0 == atomSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsz atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            atomPosition = source.BaseStream.Position;
+            source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
+            uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
+            {
+                uint nbSizes = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                uint max = 0;
+                uint min = UInt32.MaxValue;
+
+                for (int i = 0; i < nbSizes; i++)
+                {
+                    source.Read(data32, 0, 4);
+                    int32Data = StreamUtils.DecodeBEUInt32(data32);
+                    min = Math.Min(min, int32Data);
+                    max = Math.Max(max, int32Data);
+
+                    if (isCurrentTrackFirstChapterTrack) chapterTrackSamples[i].Size = int32Data;
+                }
+
+                if ((min * 1.01) < max)
+                {
+                    bitrateTypeID = MP4_BITRATE_TYPE_VBR;
+                }
+                else
+                {
+                    bitrateTypeID = MP4_BITRATE_TYPE_CBR;
+                }
+            }
+            else
+            {
+                bitrateTypeID = MP4_BITRATE_TYPE_CBR;
+                if (isCurrentTrackFirstChapterTrack) for (int i = 0; i < chapterTrackSamples.Count; i++) chapterTrackSamples[i].Size = blocByteSizeForAll;
+            }
+
+            // Adjust individual sample offsets using their size for those that are in position > 0 in the same chunk
+            if (isCurrentTrackFirstChapterTrack)
+            {
+                uint currentChunkIndex = uint.MaxValue;
+                uint cumulatedChunkOffset = 0;
+
+                for (int i = 0; i < chapterTrackSamples.Count; i++)
+                {
+                    if (chapterTrackSamples[i].ChunkIndex == currentChunkIndex)
+                    {
+                        chapterTrackSamples[i].RelativeOffset = cumulatedChunkOffset;
+                    }
+                    else
+                    {
+                        currentChunkIndex = chapterTrackSamples[i].ChunkIndex;
+                        cumulatedChunkOffset = 0;
+                    }
+                    cumulatedChunkOffset += chapterTrackSamples[i].Size;
+                }
+            }
+
+            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
+                                                                                   // "Physical" audio chunks are referenced by position (offset) in  moov.trak.mdia.minf.stbl.stco / co64
+                                                                                   // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
+            if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTrack)
+            {
+                atomPosition = source.BaseStream.Position;
+                byte nbBytes = 0;
+                uint nbChunkOffsets = 0;
+                object valueObj;
+                long valueLong;
+
+                // Chunk offsets
+                if (lookForMP4Atom(source.BaseStream, "stco") > 0)
+                {
+                    nbBytes = 4;
+                }
+                else
+                {
+                    source.BaseStream.Seek(atomPosition, SeekOrigin.Begin);
+                    if (lookForMP4Atom(source.BaseStream, "co64") > 0)
+                    {
+                        nbBytes = 8;
+                    }
+                    else
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, not co64 atoms could not be found; aborting read on track " + currentTrakIndex);
+                        source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                        return trakSize;
+                    }
+                }
+
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
+                nbChunkOffsets = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+
+                for (int i = 0; i < nbChunkOffsets; i++)
+                {
+                    if (4 == nbBytes)
+                    {
+                        source.Read(data32, 0, 4);
+                        valueLong = StreamUtils.DecodeBEUInt32(data32);
+                        valueObj = (uint)valueLong;
+
+                    }
+                    else
+                    {
+                        source.Read(data64, 0, 8);
+                        valueLong = StreamUtils.DecodeBEInt64(data64);
+                        valueObj = valueLong;
+                    }
+
+                    if (isCurrentTrackFirstChapterTrack) // Use the offsets to find position for QT chapter titles
+                    {
+                        for (int j = 0; j < chapterTrackSamples.Count; j++)
+                        {
+                            if (chapterTrackSamples[j].ChunkIndex == i + 1)
+                            {
+                                chapterTrackSamples[j].ChunkOffset = valueLong;
+                            }
+                        }
+                    }
+
+                    string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
+                    structureHelper.AddZone(valueLong, 0, zoneName, false);
+                    structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
+                } // Chunk offsets
+            }
+
+            source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+            readUserData(source, readTagParams, currentTrakIndex);
+
+            source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+
+            return trakSize;
         }
 
         private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, int currentTrakIndex)
