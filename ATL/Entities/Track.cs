@@ -365,13 +365,10 @@ namespace ATL
             result.ChaptersTableDescription = ChaptersTableDescription.ToString();
             result.Rating = (Popularity * 5).ToString();
 
-            if (Chapters.Count > 0)
+            result.Chapters = new List<ChapterInfo>();
+            foreach (ChapterInfo chapter in Chapters)
             {
-                result.Chapters = new List<ChapterInfo>();
-                foreach (ChapterInfo chapter in Chapters)
-                {
-                    result.Chapters.Add(new ChapterInfo(chapter));
-                }
+                result.Chapters.Add(new ChapterInfo(chapter));
             }
 
             if (Lyrics != null)
