@@ -45,7 +45,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_APE() // My deepest apologies for this dubious method name
         {
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager( AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(theFile);
         }

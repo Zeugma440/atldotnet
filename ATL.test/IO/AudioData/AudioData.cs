@@ -6,7 +6,7 @@ using static ATL.ChannelsArrangements;
 namespace ATL.test.IO
 {
     [TestClass]
-    public class AudioDataTest
+    public class AudioData
     {
         [TestMethod]
         public void Audio_FallbackToDummy()

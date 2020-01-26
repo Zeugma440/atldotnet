@@ -18,7 +18,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_DSF_ID3v2()
         {
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }

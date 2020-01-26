@@ -184,7 +184,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_ID3V2, AudioData.MetaDataIOFactory.TAG_NATIVE };
+                Settings.DefaultTagsWhenNoMetadata = new int[2] { ATL.AudioData.MetaDataIOFactory.TAG_ID3V2, ATL.AudioData.MetaDataIOFactory.TAG_NATIVE };
             }
         }
 

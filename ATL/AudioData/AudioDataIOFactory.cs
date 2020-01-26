@@ -48,8 +48,9 @@ namespace ATL.AudioData
         public const int CID_AIFF = 23;
         public const int CID_VGM = 24;
         public const int CID_GYM = 25;
+        public const int CID_MP4 = 26;
 
-        public const int NB_CODECS = 26;
+        public const int NB_CODECS = 27;
 
         // ------------------------------------------------------------------------------------------
 
@@ -101,13 +102,18 @@ namespace ATL.AudioData
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format(CID_AAC, "Advanced Audio Coding");
-                tempFmt.AddMimeType("audio/mp4");
                 tempFmt.AddMimeType("audio/aac");
-                tempFmt.AddMimeType("audio/mp4a-latm");
                 tempFmt.AddExtension(".aac");
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format(CID_MP4, "MPEG-4 Part 14");
+                tempFmt.AddMimeType("audio/mp4");
+                tempFmt.AddMimeType("audio/mp4a-latm");
                 tempFmt.AddExtension(".mp4");
                 tempFmt.AddExtension(".m4a");
                 tempFmt.AddExtension(".m4b");
+                tempFmt.AddExtension(".m4p");
+                tempFmt.AddExtension(".m4r");
                 tempFmt.AddExtension(".m4v");
                 theFactory.addFormat(tempFmt);
 
@@ -280,6 +286,9 @@ namespace ATL.AudioData
                 case CID_AAC:
                     theDataReader = new IO.AAC(path);
                     break;
+                case CID_MP4:
+                    theDataReader = new IO.MP4(path);
+                    break;
                 case CID_WMA:
                     theDataReader = new IO.WMA(path);
                     break;
@@ -382,6 +391,9 @@ namespace ATL.AudioData
                     break;
                 case CID_AAC:
                     theDataReader = new IO.AAC(path);
+                    break;
+                case CID_MP4:
+                    theDataReader = new IO.MP4(path);
                     break;
                 case CID_WMA:
                     theDataReader = new IO.WMA(path);

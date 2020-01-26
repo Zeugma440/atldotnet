@@ -93,12 +93,12 @@ namespace ATL.test.IO.MetaData
 
             // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
 
 
             location = TestUtils.GetResourceLocationRoot() + "AAC/mp4_date_in_©day.m4a";
-            theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
         }
 
@@ -115,7 +115,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -191,7 +191,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free M4A
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -316,7 +316,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -422,7 +422,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file without 'chpl' atom
             String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -487,7 +487,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file without 'chpl' atom
             String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -519,7 +519,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_QT.m4v");
-            AudioDataManager theFile = new AudioDataManager(AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
