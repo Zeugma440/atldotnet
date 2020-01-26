@@ -31,8 +31,13 @@ namespace ATL.test.IO
 
                 new Track(fs, ".mp4");
                 IList<LogItem> logItems = log.GetAllItems(logLevel);
-                Assert.AreEqual(1, logItems.Count);
-                Assert.IsTrue(logItems[0].Message.Contains(atomCaption + " atom could not be found"));
+                Assert.IsTrue(logItems.Count > 0);
+                bool found = false;
+                foreach(LogItem l in logItems)
+                {
+                    if (l.Message.Contains(atomCaption + " atom could not be found")) found = true;
+                }
+                Assert.IsTrue(found);
             }
 
             // Get rid of the working copy
