@@ -309,8 +309,12 @@ namespace ATL.AudioData.IO
             // Loop through tracks
             do
             {
-                if (-1 == trakSize) currentTrakIndex = 0; // Convention to start reading from index 1 again
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, moovPosition, moovSize, chapterTrackSamples, chapterTrackIndexes);
+                if (-1 == trakSize)
+                {
+                    currentTrakIndex = 0; // Convention to start reading from index 1 again
+                    source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+                }
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes);
             }
             while (trakSize > 0) ;
 
@@ -318,6 +322,12 @@ namespace ATL.AudioData.IO
             if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
 
             // Read user data which contains metadata and Nero chapters
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
+            }
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             readUserData(source, readTagParams);
 
@@ -360,8 +370,6 @@ namespace ATL.AudioData.IO
             BinaryReader source,
             MetaDataIO.ReadTagParams readTagParams,
             int currentTrakIndex,
-            long moovPosition,
-            uint moovSize,
             IList<MP4Sample> chapterTrackSamples,
             IDictionary<int, IList<int>> chapterTrackIndexes)
         {
@@ -382,13 +390,6 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "trak atom could not be found for index " + currentTrakIndex + "; aborting reading through tracks");
                 return 0;
-            }
-
-            if (readTagParams.PrepareForWriting)
-            {
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA + currentTrakIndex);
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST + currentTrakIndex);
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL + currentTrakIndex);
             }
 
             trakPosition = source.BaseStream.Position - 8;
@@ -420,7 +421,6 @@ namespace ATL.AudioData.IO
                 // If current track has declared a chapter track located at a previous index, come back to read it
                 if (parsePreviousTracks)
                 {
-                    source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
                     return -1;
                 }
