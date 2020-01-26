@@ -45,7 +45,9 @@ namespace ATL
         /// <summary>
         /// Binary picture data
         /// </summary>
-        public byte[] PictureData;
+        public byte[] PictureData { get; private set; }
+
+
         /// <summary>
         /// Hash of binary picture data
         /// </summary>
@@ -92,8 +94,8 @@ namespace ATL
             this.Description = picInfo.Description;
             if (copyPictureData && picInfo.PictureData != null)
             {
-                this.PictureData = new byte[picInfo.PictureData.Length];
-                picInfo.PictureData.CopyTo(this.PictureData, 0);
+                PictureData = new byte[picInfo.PictureData.Length];
+                picInfo.PictureData.CopyTo(PictureData, 0);
             }
             this.PictureHash = picInfo.PictureHash;
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
@@ -122,7 +124,7 @@ namespace ATL
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
             PictureData = binaryData;
-            NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(binaryData);
+            NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(PictureData);
         }
         public PictureInfo(PIC_TYPE picType, int position = 1)
         {
