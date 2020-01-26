@@ -70,7 +70,7 @@ The ATL library runs on .NET Core 2.0+ / .NET Standard 2.0+ / .NET Framework 3.0
 
 ATL unit tests run on .NET Framework 4.5+
 
-The library and its tests have been maintained on Visual Studio Express 2012, 2015 and 2017 Community
+The library and its tests have been maintained on Visual Studio Express 2012, 2015, 2017 Community and 2019 Community
 
 Please refer to the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets) for quick usage
 
