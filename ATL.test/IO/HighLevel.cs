@@ -411,6 +411,12 @@ namespace ATL.test.IO
             Assert.IsTrue(foundFront);
             Assert.IsTrue(foundCD);
 
+            // Remove all
+            theTrack.EmbeddedPictures.Clear();
+            theTrack.Save();
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(0, theTrack.EmbeddedPictures.Count);
+
             // Get rid of the working copy
             File.Delete(testFileLocation);
         }
@@ -508,6 +514,12 @@ namespace ATL.test.IO
                     Assert.AreEqual(chaptersSave[i].Picture.ComputePicHash(), readChapter.Picture.ComputePicHash());
                 }
             }
+
+            // Delete all
+            theTrack.Chapters.Clear();
+            theTrack.Save();
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(0, theTrack.Chapters.Count);
 
             // Get rid of the working copy
             File.Delete(testFileLocation);
