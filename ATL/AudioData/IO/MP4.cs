@@ -57,6 +57,7 @@ namespace ATL.AudioData.IO
             { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
             { "cprt", TagData.TAG_FIELD_COPYRIGHT },
             { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
+            { "©lyr", TagData.TAG_FIELD_LYRICS_UNSYNCH },
             { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
         };
 
@@ -316,7 +317,7 @@ namespace ATL.AudioData.IO
                 }
                 trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes);
             }
-            while (trakSize > 0) ;
+            while (trakSize > 0);
 
             // QT chapters have been detected while browsing tracks
             if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
@@ -388,7 +389,7 @@ namespace ATL.AudioData.IO
             uint trakSize = lookForMP4Atom(source.BaseStream, "trak");
             if (0 == trakSize)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "trak atom could not be found for index " + currentTrakIndex + "; aborting reading through tracks");
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak atom " + currentTrakIndex + "could not be found; aborting reading through tracks");
                 return 0;
             }
 
@@ -429,7 +430,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
             if (0 == lookForMP4Atom(source.BaseStream, "mdia"))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "mdia atom could not be found; aborting read on track " + currentTrakIndex);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }
@@ -439,7 +440,7 @@ namespace ATL.AudioData.IO
             {
                 if (0 == lookForMP4Atom(source.BaseStream, "mdhd"))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.mdhd atom could not be found; aborting read on track " + currentTrakIndex);
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.mdhd atom could not be found; aborting read on track " + currentTrakIndex);
                     source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                     return trakSize;
                 }
@@ -456,7 +457,7 @@ namespace ATL.AudioData.IO
 
             if (0 == lookForMP4Atom(source.BaseStream, "hdlr"))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.hdlr atom could not be found; aborting read on track " + currentTrakIndex);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.hdlr atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }
@@ -482,13 +483,13 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
             if (0 == lookForMP4Atom(source.BaseStream, "minf"))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf atom could not be found; aborting read on track " + currentTrakIndex);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.minf atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }
             if (0 == lookForMP4Atom(source.BaseStream, "stbl"))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdia.minf.stbl atom could not be found; aborting read on track " + currentTrakIndex);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.minf.stbl atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }
@@ -497,7 +498,7 @@ namespace ATL.AudioData.IO
             // Look for sample rate
             if (0 == lookForMP4Atom(source.BaseStream, "stsd"))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsd atom could not be found; aborting read on track " + currentTrakIndex);
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "stsd atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }

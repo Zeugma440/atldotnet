@@ -438,7 +438,7 @@ namespace ATL.AudioData
                         }
                     }
 
-                    if ((FrameHeader.TYPE_COUNTER == header.Type || FrameHeader.TYPE_SIZE == header.Type) && (delta != 0))
+                    if ((FrameHeader.TYPE_COUNTER == header.Type || FrameHeader.TYPE_SIZE == header.Type))
                     {
                         w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 

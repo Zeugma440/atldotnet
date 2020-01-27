@@ -49,18 +49,18 @@ namespace ATL.test.IO
         {
             audio_X_AAC_MP4_Atom("mp4.m4a","moov");
             audio_X_AAC_MP4_Atom("mp4.m4a", "mvhd");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "trak");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "mdia", Log.LV_WARNING);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "hdlr", Log.LV_ERROR, "mdia.hdlr");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "minf", Log.LV_ERROR, "mdia.minf");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "stbl", Log.LV_ERROR, "mdia.minf.stbl");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "stsd");
+//            audio_X_AAC_MP4_Atom("mp4.m4a", "trak", Log.LV_DEBUG);
+            audio_X_AAC_MP4_Atom("mp4.m4a", "mdia", Log.LV_DEBUG);
+            audio_X_AAC_MP4_Atom("mp4.m4a", "hdlr", Log.LV_DEBUG, "mdia.hdlr");
+            audio_X_AAC_MP4_Atom("mp4.m4a", "minf", Log.LV_DEBUG, "mdia.minf");
+            audio_X_AAC_MP4_Atom("mp4.m4a", "stbl", Log.LV_DEBUG, "mdia.minf.stbl");
+            audio_X_AAC_MP4_Atom("mp4.m4a", "stsd", Log.LV_DEBUG);
             audio_X_AAC_MP4_Atom("mp4.m4a", "stsz");
             audio_X_AAC_MP4_Atom("mp4.m4a", "udta", Log.LV_WARNING);
             audio_X_AAC_MP4_Atom("mp4.m4a", "ilst", Log.LV_WARNING);
             audio_X_AAC_MP4_Atom("mp4.m4a", "mdat");
 
-            audio_X_AAC_MP4_Atom("chapters_QT.m4v", "mdhd");
+            audio_X_AAC_MP4_Atom("chapters_QT.m4v", "mdhd", Log.LV_DEBUG);
             audio_X_AAC_MP4_Atom("chapters_QT.m4v", "stts");
             audio_X_AAC_MP4_Atom("chapters_QT.m4v", "stsc");
         }

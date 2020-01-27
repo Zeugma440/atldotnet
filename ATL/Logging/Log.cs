@@ -258,5 +258,17 @@ namespace ATL.Logging
             FlushQueue();
         }
 
+        public static string getLevelName(int level)
+        {
+            switch(level)
+            {
+                case LV_DEBUG: return "DEBUG";
+                case LV_INFO: return "INFO";
+                case LV_WARNING: return "WARNING";
+                case LV_ERROR: return "ERROR";
+                default: return "";
+            }
+        }
+
 	}
 }

@@ -618,6 +618,35 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Lyrics_Unsynched()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/lyrics.m4a");
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.IsTrue(theFile.NativeTag.Lyrics.UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
+
+            // Write
+            TagData theTag = new TagData();
+            theTag.Lyrics = new LyricsInfo();
+            theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_R_MP4_Rating()
         {
             assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp4", 0, MetaDataIOFactory.TAG_NATIVE);

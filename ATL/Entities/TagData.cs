@@ -174,6 +174,10 @@ namespace ATL
                 case TAG_FIELD_DISC_TOTAL: DiscTotal = emptyIfZero(value); break;
                 case TAG_FIELD_DISC_NUMBER_TOTAL: DiscNumberTotal = emptyIfZero(value); break;
                 case TAG_FIELD_CHAPTERS_TOC_DESCRIPTION: ChaptersTableDescription = emptyIfZero(value); break;
+                case TAG_FIELD_LYRICS_UNSYNCH:
+                    if (null == Lyrics) Lyrics = new LyricsInfo();
+                    Lyrics.UnsynchronizedLyrics = value;
+                    break;
             }
         }
 
@@ -326,6 +330,8 @@ namespace ATL
             addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
             addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
             addIfConsistent(ChaptersTableDescription, TAG_FIELD_CHAPTERS_TOC_DESCRIPTION, result);
+            if (Lyrics != null)
+                addIfConsistent(Lyrics.UnsynchronizedLyrics, TAG_FIELD_LYRICS_UNSYNCH, result);
 
             return result;
         }

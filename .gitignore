@@ -204,3 +204,4 @@ $RECYCLE.BIN/
 *.dll
 /opencover.xml
 /ATL/upload to github package.bat
+/ATL/msbuild_old.lnk

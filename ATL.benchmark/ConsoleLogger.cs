@@ -16,7 +16,7 @@ namespace ATL.benchmark
         public void DoLog(Log.LogItem anItem)
         {
             long delta_ms = (anItem.When.Ticks - previousTimestamp) / 10000; // Difference between last logging message, in ms
-            System.Console.WriteLine(anItem.Location+" | "+anItem.Message + " [Δ=" + delta_ms+" ms]");
+            System.Console.WriteLine("[" + Log.getLevelName(anItem.Level) + "] " + anItem.Location + " | " + anItem.Message + " [Δ=" + delta_ms + " ms]");
 
             previousTimestamp = anItem.When.Ticks;
         }
