@@ -14,8 +14,6 @@ namespace ATL.AudioData.IO
     /// 
     /// Implementation notes
     /// 
-    ///     1. MP4 files with their 'mdat' atom located before their 'moov' atom have not been tested
-    /// 
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
     {
