@@ -283,6 +283,8 @@ namespace ATL
                     PictureInfo initialPicInfo = new PictureInfo(picInfo, false);
                     initialEmbeddedPictures.Add(initialPicInfo);
                 }
+                // Don't overwrite all the other fields with their initial value 
+                // otherwise any value set by the user before calling EmbeddedPictures would be lost
                 return;
             }
 
