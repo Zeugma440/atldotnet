@@ -59,7 +59,6 @@ namespace ATL
 
         //=== METADATA
 
-#pragma warning disable S1104 // Fields should not have public accessibility
         /// <summary>
         /// Full path of the underlying file
         /// </summary>
@@ -67,108 +66,108 @@ namespace ATL
         /// <summary>
 		/// Title
 		/// </summary>
-		public string Title;
+		public string Title { get; set; }
         /// <summary>
 		/// Artist
 		/// </summary>
-		public string Artist;
+		public string Artist { get; set; }
         /// <summary>
         /// Composer
         /// </summary>
-        public string Composer;
+        public string Composer { get; set; }
         /// <summary>
         /// Comments
         /// </summary>
-        public string Comment;
+        public string Comment { get; set; }
         /// <summary>
 		/// Genre
 		/// </summary>
-		public string Genre;
+		public string Genre { get; set; }
         /// <summary>
 		/// Title of the album
 		/// </summary>
-		public string Album;
+		public string Album { get; set; }
         /// <summary>
         /// Title of the original album
         /// </summary>
-        public string OriginalAlbum;
+        public string OriginalAlbum { get; set; }
         /// <summary>
         /// Original artist
         /// </summary>
-        public string OriginalArtist;
+        public string OriginalArtist { get; set; }
         /// <summary>
         /// Copyright
         /// </summary>
-        public string Copyright;
+        public string Copyright { get; set; }
         /// <summary>
         /// General description
         /// </summary>
-        public string Description;
+        public string Description { get; set; }
         /// <summary>
         /// Publisher
         /// </summary>
-        public string Publisher;
+        public string Publisher { get; set; }
         /// <summary>
         /// Album Artist
         /// </summary>
-        public string AlbumArtist;
+        public string AlbumArtist { get; set; }
         /// <summary>
         /// Conductor
         /// </summary>
-        public string Conductor;
+        public string Conductor { get; set; }
         /// <summary>
 		/// Recording Date
 		/// </summary>
-        public DateTime Date;
+        public DateTime Date { get; set; }
         /// <summary>
 		/// Recording Year
 		/// </summary>
-        public int Year;
+        public int Year { get; set; }
         /// <summary>
 		/// Track number
 		/// </summary>
-        public int TrackNumber;
+        public int TrackNumber { get; set; }
         /// <summary>
 		/// Total track number
 		/// </summary>
-        public int TrackTotal;
+        public int TrackTotal { get; set; }
         /// <summary>
 		/// Disc number
 		/// </summary>
-        public int DiscNumber;
+        public int DiscNumber { get; set; }
         /// <summary>
 		/// Total disc number
 		/// </summary>
-        public int DiscTotal;
+        public int DiscTotal { get; set; }
         /// <summary>
 		/// Rating (1 to 5)
 		/// </summary>
         [Obsolete("Use Popularity")]
-        public int Rating;
+        public int Rating { get; set; }
         /// <summary>
 		/// Popularity (0% = 0 stars to 100% = 5 stars)
         /// e.g. 3.5 stars = 70%
 		/// </summary>
-        public float Popularity;
+        public float Popularity { get; set; }
         /// <summary>
         /// List of picture IDs stored in the tag
         ///     PictureInfo.PIC_TYPE : internal, normalized picture type
         ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
         ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
         /// </summary>
-        public IList<PictureInfo> PictureTokens = null;
+        public IList<PictureInfo> PictureTokens { get; set; } = null;
         /// <summary>
         /// Chapters table of content description
         /// </summary>
-        public string ChaptersTableDescription;
+        public string ChaptersTableDescription { get; set; }
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
-        public IList<ChapterInfo> Chapters;
+        public IList<ChapterInfo> Chapters { get; set; }
         /// <summary>
         /// Synchronized and unsynchronized lyrics
         /// </summary>
-        public LyricsInfo Lyrics;
+        public LyricsInfo Lyrics { get; set; }
 
 
         //=== PHYSICAL PROPERTIES
@@ -176,15 +175,15 @@ namespace ATL
         /// <summary>
         /// Bitrate (kilobytes per second)
         /// </summary>
-		public int Bitrate;
+		public int Bitrate { get; set; }
         /// <summary>
 		/// Sample rate (Hz)
 		/// </summary>
-        public double SampleRate;
+        public double SampleRate { get; set; }
         /// <summary>
         /// Returns true if the bitrate is variable; false if not
         /// </summary>
-        public bool IsVBR;
+        public bool IsVBR { get; set; }
         /// <summary>
         /// Family of the audio codec (See AudioDataIOFactory)
         /// 0=Streamed, lossy data
@@ -192,7 +191,7 @@ namespace ATL
         /// 2=Sequenced with embedded sound library
         /// 3=Sequenced with codec or hardware-dependent sound library
         /// </summary>
-		public int CodecFamily;
+		public int CodecFamily { get; set; }
         /// <summary>
         /// Duration (seconds)
         /// </summary>
@@ -206,19 +205,19 @@ namespace ATL
         /// <summary>
 		/// Duration (milliseconds)
 		/// </summary>
-		public double DurationMs;
+		public double DurationMs { get; set; }
         /// <summary>
 		/// Channels arrangement
 		/// </summary>
-		public ChannelsArrangement ChannelsArrangement;
+		public ChannelsArrangement ChannelsArrangement { get; set; }
 
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// </summary>
-        public IDictionary<string, string> AdditionalFields;
+        public IDictionary<string, string> AdditionalFields { get; set; }
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
 
-        private IList<PictureInfo> currentEmbeddedPictures = null;
+        private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
 
@@ -249,7 +248,7 @@ namespace ATL
         private readonly string mimeType;
         private AudioFileIO fileIO;
 
-#pragma warning restore S1104 // Fields should not have public accessibility
+
         // ========== METHODS
 
         // Used for pictures lazy loading
