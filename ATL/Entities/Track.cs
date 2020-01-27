@@ -259,19 +259,40 @@ namespace ATL
                 currentEmbeddedPictures = new List<PictureInfo>();
                 initialEmbeddedPictures = new List<PictureInfo>();
 
-                Update(true); // TODO - unexpected behaviour when calling getEmbeddedPictures after setting a few fields -> they are overwritten by the new call to Update() !
+                Update(true);
             }
 
             return currentEmbeddedPictures;
         }
 
-        protected void Update(bool readEmbeddedPictures = false)
+        protected void Update(bool onlyReadEmbeddedPictures = false)
         {
-            if ((null == Path) || (0 == Path.Length)) return;
+            if (string.IsNullOrEmpty(Path)) return;
 
             // TODO when tag is not available, customize by naming options // tracks (...)
-            if (null == stream) fileIO = new AudioFileIO(Path, readEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
-            else fileIO = new AudioFileIO(stream, mimeType, readEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
+            if (null == stream) fileIO = new AudioFileIO(Path, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
+            else fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
+
+            if (onlyReadEmbeddedPictures)
+            {
+                foreach (PictureInfo picInfo in fileIO.EmbeddedPictures)
+                {
+                    picInfo.ComputePicHash();
+                    currentEmbeddedPictures.Add(picInfo);
+
+                    PictureInfo initialPicInfo = new PictureInfo(picInfo, false);
+                    initialEmbeddedPictures.Add(initialPicInfo);
+                }
+                return;
+            }
+
+            if (currentEmbeddedPictures != null)
+            {
+                currentEmbeddedPictures.Clear();
+                initialEmbeddedPictures.Clear();
+                currentEmbeddedPictures = null;
+                initialEmbeddedPictures = null;
+            }
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title))
@@ -316,26 +337,6 @@ namespace ATL
             initialAdditionalFields = fileIO.AdditionalFields.Keys;
 
             PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
-
-            if (readEmbeddedPictures)
-            {
-                foreach (PictureInfo picInfo in fileIO.EmbeddedPictures)
-                {
-                    picInfo.ComputePicHash();
-                    currentEmbeddedPictures.Add(picInfo);
-
-                    PictureInfo initialPicInfo = new PictureInfo(picInfo, false);
-                    initialEmbeddedPictures.Add(initialPicInfo);
-                }
-            }
-
-            if (!readEmbeddedPictures && currentEmbeddedPictures != null)
-            {
-                currentEmbeddedPictures.Clear();
-                initialEmbeddedPictures.Clear();
-                currentEmbeddedPictures = null;
-                initialEmbeddedPictures = null;
-            }
         }
 
         private TagData toTagData()

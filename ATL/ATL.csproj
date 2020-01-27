@@ -15,6 +15,7 @@
     <FileVersion>2.17.0.0</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
     <Version>2.17</Version>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
     <DebugType>full</DebugType>

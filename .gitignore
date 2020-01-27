@@ -205,3 +205,4 @@ $RECYCLE.BIN/
 /opencover.xml
 /ATL/upload to github package.bat
 /ATL/msbuild_old.lnk
+/.editorconfig

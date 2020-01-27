@@ -54,9 +54,16 @@ namespace ATL.benchmark
         public void performWrite(String filePath)
         {
             IProgress<float> progress = new Progress<float>(displayProgress);
-            Track t = new Track(filePath, progress);
+            Track t = new Track(filePath/*, progress*/);
 
-            t.AdditionalFields.Add(new KeyValuePair<string, string>("test", "aaa"));
+            //t.AdditionalFields.Add(new KeyValuePair<string, string>("test", "aaa"));
+            // Modify metadata
+            t.Artist = "Hey ho";
+            t.Composer = "Oscar Wilde";
+            t.Album = "Fake album starts here and is longer than the original one";
+
+            if (t.EmbeddedPictures.Count > 0) t.EmbeddedPictures.Clear();
+            t.EmbeddedPictures.Add(PictureInfo.fromBinaryData(File.ReadAllBytes(@"E:\temp\mp3\windowsIcon\folder.jpg")));
 
             t.Save();
         }

@@ -18,15 +18,13 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            //readAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
+            //readAt(@"E:\temp\m4a-mp4\aaa.m4a");
 
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            //writeAt(@"E:\temp\m4a-mp4\test_audiobook_tmp.m4b");
-
-            writeAt(@"E:\temp\mp3\test - Copie.mp3");
+            writeAt(@"E:\temp\m4a-mp4\feastdaybylamardeuse.m4b");
 
             //displayVersionInfo();
         }
@@ -81,6 +79,8 @@ namespace ATL.benchmark
 
         static private void writeAt(String fileName)
         {
+            ConsoleLogger logger = new ConsoleLogger();
+
             Writing w = new Writing();
             w.performWrite(fileName);
 

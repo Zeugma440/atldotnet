@@ -812,25 +812,17 @@ namespace ATL.AudioData.IO
                 else // Picture frame
                 {
                     long position = source.Position;
-//                    ImageFormat imgFormat;
                     if (TAG_VERSION_2_2 == tagVersion)
                     {
                         // Image format
-                        string imageFormat = Utils.Latin1Encoding.GetString(source.ReadBytes(3)).ToUpper();
-/*
-                        if ("BMP".Equals(imageFormat)) imgFormat = ImageFormat.Bmp;
-                        else if ("PNG".Equals(imageFormat)) imgFormat = ImageFormat.Png;
-                        else if ("GIF".Equals(imageFormat)) imgFormat = ImageFormat.Gif;
-                        else imgFormat = ImageFormat.Jpeg;
-*/
+                        source.Seek(3, SeekOrigin.Current);
                     }
                     else
                     {
                         // mime-type always coded in ASCII
                         if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
                         // Mime-type
-                        String mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-//                        imgFormat = ImageUtils.GetImageFormatFromMimeType(mimeType);
+                        StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                     }
 
                     byte picCode = source.ReadByte();
@@ -857,7 +849,7 @@ namespace ATL.AudioData.IO
                     if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                     string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
-                    if (readTagParams.ReadPictures)
+                    if (readTagParams.ReadPictures || inChapter)
                     {
                         int picSize = dataSize - (int)(source.Position - position);
 

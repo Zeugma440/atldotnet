@@ -387,7 +387,7 @@ namespace ATL.AudioData.IO
             uint trakSize = lookForMP4Atom(source.BaseStream, "trak");
             if (0 == trakSize)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak atom " + currentTrakIndex + "could not be found; aborting reading through tracks");
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak atom " + currentTrakIndex + " could not be found; aborting reading through tracks");
                 return 0;
             }
 
