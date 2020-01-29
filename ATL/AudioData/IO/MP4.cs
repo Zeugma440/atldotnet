@@ -248,9 +248,10 @@ namespace ATL.AudioData.IO
         /// Read MP4 header data
         /// http://www.jiscdigitalmedia.ac.uk/guide/aac-audio-and-the-mp4-media-format
         /// http://atomicparsley.sourceforge.net/mpeg-4files.html
+        /// https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap2/qtff2.html
         /// - Metadata is located in the moov/udta/meta/ilst atom
-        /// - Physical information are located in the moov/trak atom (to be confirmed ?)
-        /// - Binary physical data are located in the mdat atom
+        /// - Physical metadata are located in the moov/trak atoms
+        /// - Binary physical data are located in the mdat atoms
         /// </summary>
         /// <param name="source">Source to read from</param>
         /// <param name="readTagParams">Reading parameters</param>
@@ -1358,6 +1359,109 @@ namespace ATL.AudioData.IO
             }
 
             return result;
+        }
+
+        private void writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
+        {
+            long mdatPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
+            foreach (ChapterInfo chapter in chapters)
+            {
+                w.Write(StreamUtils.EncodeBEInt16((short)chapter.Title.Length));
+                w.Write(Utils.Latin1Encoding.GetBytes(chapter.Title));
+                // Magic sequence (always the same)
+                w.Write(StreamUtils.EncodeBEInt32(12));
+                w.Write(Utils.Latin1Encoding.GetBytes("encd"));
+                w.Write(StreamUtils.EncodeBEInt32(256));
+            }
+            long finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(mdatPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
+        }
+
+        private void writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, int globalTimeScale, int duration)
+        {
+            // TRACK
+            long trakPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("trak"));
+
+            // TRACK HEADER BEGIN
+            w.Write(StreamUtils.EncodeBEInt32(92)); // Standard size
+            w.Write(Utils.Latin1Encoding.GetBytes("tkhd"));
+
+            w.Write((byte)0); // Version
+            w.Write((short)0); // Flags(bytes 2,3)
+            w.Write((byte)14); // Flags(byte 1) --> TrackEnabled = 1 ; TrackInMovie = 2 ; TrackInPreview = 4; TrackInPoster = 8
+
+            w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Creation date
+            w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Modification date
+
+            w.Write(StreamUtils.EncodeBEInt32(trackNum)); // Track number
+
+            w.Write(0); // Reserved
+
+            w.Write(StreamUtils.EncodeBEInt32(duration * globalTimeScale)); // Duration
+
+            w.Write((long)0); // Reserved
+            w.Write((short)0); // Layer
+            w.Write((short)0); // Alternate group
+            w.Write((short)0); // Volume
+            w.Write((short)0); // Reserved
+
+            // Matrix (keep values of sample file)
+            w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 }); // Reserved
+
+            w.Write(0); // Width
+            w.Write(0); // Height
+
+            // TRACK HEADER END
+
+
+            // MEDIA BEGIN
+            long mdiaPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("mdia"));
+            w.Write((byte)0); // Version
+
+
+            // MEDIA HEADER
+            w.Write(StreamUtils.EncodeBEInt32(32)); // Standard size
+            w.Write(Utils.Latin1Encoding.GetBytes("mdhd"));
+            w.Write(0); // Version and flags
+
+            w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Creation date
+            w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Modification date
+
+            w.Write(StreamUtils.EncodeBEInt32(44100)); // Track timescale
+
+            w.Write(StreamUtils.EncodeBEInt32(duration * 44100)); // Duration
+
+            // TODO : 16-byte ISO language code
+
+            w.Write((short)0); // Quicktime quality
+            // MEDIA HEADER END
+
+
+
+
+            // MEDIA END
+
+            long finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(mdiaPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdiaPos)));
+
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(trakPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - trakPos)));
+        }
+
+        private static uint getMacDateNow()
+        {
+            DateTime date = DateTime.UtcNow;
+            DateTime date1904 = DateTime.Parse("1/1/1904 0:00:00 AM");
+            return (uint)date.Subtract(date1904).TotalSeconds;
         }
     }
 }
