@@ -1369,7 +1369,7 @@ namespace ATL.AudioData.IO
             foreach (ChapterInfo chapter in chapters)
             {
                 w.Write(StreamUtils.EncodeBEInt16((short)chapter.Title.Length));
-                w.Write(Utils.Latin1Encoding.GetBytes(chapter.Title));
+                w.Write(Encoding.UTF8.GetBytes(chapter.Title));
                 // Magic sequence (always the same)
                 w.Write(StreamUtils.EncodeBEInt32(12));
                 w.Write(Utils.Latin1Encoding.GetBytes("encd"));
@@ -1380,8 +1380,10 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
         }
 
-        private void writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, int globalTimeScale, int duration)
+        private void writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, int globalTimeScale, int duration, long chapterDataOffset)
         {
+            uint trackTimescale = 44100;
+
             // TRACK
             long trakPos = w.BaseStream.Position;
             w.Write(0);
@@ -1411,7 +1413,7 @@ namespace ATL.AudioData.IO
             w.Write((short)0); // Reserved
 
             // Matrix (keep values of sample file)
-            w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 }); // Reserved
+            w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 });
 
             w.Write(0); // Width
             w.Write(0); // Height
@@ -1434,25 +1436,179 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Creation date
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Modification date
 
-            w.Write(StreamUtils.EncodeBEInt32(44100)); // Track timescale
+            w.Write(StreamUtils.EncodeBEUInt32(trackTimescale)); // Track timescale
 
-            w.Write(StreamUtils.EncodeBEInt32(duration * 44100)); // Duration
+            w.Write(StreamUtils.EncodeBEUInt32((uint)(duration * trackTimescale))); // Duration
 
-            // TODO : 16-byte ISO language code
+            w.Write(new byte[2] { 0x55, 0xc4 }); // Code for English - TODO : make that dynamic
 
             w.Write((short)0); // Quicktime quality
             // MEDIA HEADER END
 
+            // MEDIA HANDLER
+            w.Write(StreamUtils.EncodeBEInt32(33)); // Predetermined size
+            w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
+            w.Write(0); // Version and flags
+
+            w.Write(0); // Quicktime type
+            w.Write(Utils.Latin1Encoding.GetBytes("text")); // Subtype
+            w.Write(0); // Reserved
+            w.Write(0); // Reserved
+            w.Write(0); // Reserved
+            w.Write((byte)0); // End of empty string
+            // MEDIA HANDLER END
+
+            // MEDIA INFORMATION
+            long minfPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("minf"));
+            w.Write((byte)0); // Version
+
+            // BASE MEDIA INFORMATION HEADER
+            w.Write(StreamUtils.EncodeBEInt32(76)); // Standard size
+            w.Write(Utils.Latin1Encoding.GetBytes("gmhd"));
+
+            w.Write(StreamUtils.EncodeBEInt32(24)); // Standard size
+            w.Write(Utils.Latin1Encoding.GetBytes("gmin"));
+            w.Write(0); // Version and flags
+            w.Write(StreamUtils.EncodeBEInt16((short)64)); // Graphics mode
+            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 1
+            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 2
+            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 3
+            w.Write(0); // Balance + reserved
+
+            w.Write(StreamUtils.EncodeBEInt32(44)); // Standard size
+            w.Write(Utils.Latin1Encoding.GetBytes("text"));
+            // Matrix (keep values of sample file)
+            w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 });
+            // END BASE MEDIA INFORMATION HEADER
 
 
+            // DATA INFORMATION
+            w.Write(StreamUtils.EncodeBEInt32(36)); // Predetermined size
+            w.Write(Utils.Latin1Encoding.GetBytes("dinf"));
 
+            // DATA REFERENCE
+            w.Write(StreamUtils.EncodeBEInt32(28)); // Predetermined size
+            w.Write(Utils.Latin1Encoding.GetBytes("dref"));
+            w.Write(0); // Version and flags
+            w.Write(StreamUtils.EncodeBEInt32(1)); // Number of refs
+            w.Write(StreamUtils.EncodeBEInt32(12)); // Entry length
+            w.Write(Utils.Latin1Encoding.GetBytes("url ")); // Entry code
+            w.Write(StreamUtils.EncodeBEInt32(1)); // Entry data
+
+            // SAMPLE TABLE BEGIN
+            long stblPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stbl"));
+
+            // SAMPLE DESCRIPTION
+            w.Write(StreamUtils.EncodeBEInt32(75));  // TODO dynamic ?
+            w.Write(Utils.Latin1Encoding.GetBytes("stsd"));
+            w.Write(0); // Version and flags
+            w.Write(StreamUtils.EncodeBEInt32(1)); // Number of descriptions
+
+            w.Write(StreamUtils.EncodeBEInt32(59));  // TODO dynamic ?
+            w.Write(Utils.Latin1Encoding.GetBytes("text"));
+            w.Write(0); // Reserved
+            w.Write((short)0); // Reserved
+            w.Write(StreamUtils.EncodeBEInt16((short)1)); // Data reference index (TODO - is that dynamic ?)
+            // Text properties
+            w.Write(StreamUtils.EncodeBEInt32(1)); // Display flags
+            w.Write(StreamUtils.EncodeBEInt32(1)); // Text justification
+            w.Write(0); // Text background color
+            w.Write((short)0); // Text background color
+            w.Write((long)0); // Default text box
+            w.Write((long)0); // Reserved
+            w.Write((short)0); // Font number
+            w.Write((short)0); // Font face
+            w.Write((byte)0); // Reserved
+            w.Write((short)0); // Reserved
+            w.Write(0); // Foreground color
+            w.Write((short)0); // Foreground color
+                               //            w.Write((byte)0); // No text
+
+            // TIME TO SAMPLE START
+            long sttsPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stts"));
+            w.Write(0); // Version and flags
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            foreach (ChapterInfo chapter in chapters)
+            {
+                w.Write(StreamUtils.EncodeBEUInt32(1));
+                w.Write(StreamUtils.EncodeBEUInt32((chapter.EndTime - chapter.StartTime) * trackTimescale));
+            }
+            long finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(sttsPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - sttsPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            // TIME TO SAMPLE END
+
+            // SAMPLE SIZE START
+            long stszPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stsz"));
+            w.Write(0); // Version and flags
+            w.Write(0); // Different block sizes
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            foreach (ChapterInfo chapter in chapters)
+                w.Write(StreamUtils.EncodeBEUInt32((uint)(2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12)));
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(stszPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stszPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            // SAMPLE SIZE END
+
+            // SAMPLE <-> CHUNK START
+            long stscPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stsc"));
+            w.Write(0); // Version and flags
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            // Attach all samples to 1st chunk
+            w.Write(StreamUtils.EncodeBEInt32(1));
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            w.Write(StreamUtils.EncodeBEInt32(1));
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(stscPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stscPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            // SAMPLE <-> CHUNK END
+
+            // CHUNK OFFSET START
+            long stcoPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stco"));
+            w.Write(0); // Version and flags
+//            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            w.Write(StreamUtils.EncodeBEInt32(1));
+            long offset = chapterDataOffset;
+//            foreach (ChapterInfo chapter in chapters)
+//            {
+                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(offset))); // TODO - on some cases, switch to co64 ?
+//                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
+//            }
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stcoPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            // SAMPLE <-> CHUNK END
+
+            // SAMPLE TABLE END
+            // MEDIA INFORMATION END
             // MEDIA END
 
-            long finalFramePos = w.BaseStream.Position;
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(stblPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stblPos)));
+
+            w.BaseStream.Seek(minfPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - minfPos)));
+
             w.BaseStream.Seek(mdiaPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdiaPos)));
 
-            finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(trakPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - trakPos)));
         }
