@@ -78,6 +78,10 @@ namespace ATL.AudioData
             /// </summary>
             public long Offset;
             /// <summary>
+            /// Corrected offset in bytes
+            /// </summary>
+            public long CorrectedOffset;
+            /// <summary>
             /// Size in bytes
             /// </summary>
             public int Size;
@@ -105,6 +109,7 @@ namespace ATL.AudioData
             {
                 Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag;
                 Headers = new List<FrameHeader>();
+                CorrectedOffset = Offset;
             }
 
             /// <summary>
@@ -425,6 +430,18 @@ namespace ATL.AudioData
 
             if (zones.ContainsKey(zone))
             {
+                // Calculate the corrected offset of the current zone
+                offsetPositionCorrection = -globalOffsetCorrection;
+                foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
+                    if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+
+                zones[zone].CorrectedOffset = zones[zone].Offset + offsetPositionCorrection;
+
+                // Update dynamic offset
+                if (!dynamicOffsetCorrection.ContainsKey(zone))
+                    dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
+
+                // Update the current zone's headers
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
                     offsetPositionCorrection = -globalOffsetCorrection;
@@ -435,7 +452,7 @@ namespace ATL.AudioData
 
                         if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                     }
-
+                    
                     if (FrameHeader.TYPE.Counter == header.Type)
                     {
                         switch (action)
@@ -449,10 +466,12 @@ namespace ATL.AudioData
                     else if (FrameHeader.TYPE.Size == header.Type)
                     {
                         delta = deltaSize;
+                        /*
                         if (!dynamicOffsetCorrection.ContainsKey(zone))
                         {
                             dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
                         }
+                        */
                     }
 
                     if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))

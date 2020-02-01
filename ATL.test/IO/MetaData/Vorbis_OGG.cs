@@ -608,6 +608,7 @@ namespace ATL.test.IO.MetaData
 
             ch = new ChapterInfo();
             ch.StartTime = 1230;
+            ch.EndTime = 4000;
             ch.Title = "aaa0";
             ch.Url = new ChapterInfo.UrlInfo("ddd0");
 

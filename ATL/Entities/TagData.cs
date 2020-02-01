@@ -2,6 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 
 namespace ATL
@@ -263,7 +264,8 @@ namespace ATL
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
                     }
                 }
-            } else
+            }
+            else
             {
                 AdditionalFields = new List<MetaFieldInfo>(data.AdditionalFields);
             }
@@ -404,6 +406,29 @@ namespace ATL
             {
                 DiscNumberTotal = DiscNumber;
                 if (Utils.IsNumeric(DiscTotal)) DiscNumberTotal += "/" + DiscTotal;
+            }
+
+            if (Chapters != null && Chapters.Count > 0)
+            {
+                // Sort by start offset or time
+                if (Chapters[0].UseOffset)
+                    Chapters = Chapters.OrderBy(chapter => chapter.StartOffset).ToList();
+                else
+                    Chapters = Chapters.OrderBy(chapter => chapter.StartTime).ToList();
+
+                // Auto-fill end offsets or times except for final chapter
+                ChapterInfo previousChapter = null;
+                foreach (ChapterInfo chapter in Chapters)
+                {
+                    if (previousChapter != null)
+                    {
+                        if (chapter.UseOffset && 0 == previousChapter.EndOffset) previousChapter.EndOffset = chapter.StartOffset;
+                        else if (0 == previousChapter.EndTime) previousChapter.EndTime = chapter.StartTime;
+                    }
+                    previousChapter = chapter;
+                }
+                // Can't calculate duration of final chapter => is mandatory
+                if (0 == previousChapter.EndTime) throw new InvalidDataException("Last chapter must have its EndTime or EndOffset set");
             }
         }
 

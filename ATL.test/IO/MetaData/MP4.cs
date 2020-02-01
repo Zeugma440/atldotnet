@@ -314,105 +314,114 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.AreEqual(4, theFile.NativeTag.Chapters.Count);
-
-            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
-
-            ChapterInfo ch = new ChapterInfo();
-            ch.StartTime = 0;
-            ch.Title = "Chapter One";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 1139;
-            ch.Title = "Chapter 2";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 2728;
-            ch.Title = "Chapter 003";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 3269;
-            ch.Title = "Chapter 四";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            int found = 0;
-            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            Settings.MP4_createQuicktimeChapters = false;
+            try
             {
-                if (expectedChaps.ContainsKey(chap.StartTime))
+                // Source : MP3 with existing tag incl. chapters
+                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
+                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                // Check if the two fields are indeed accessible
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(4, theFile.NativeTag.Chapters.Count);
+
+                Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+                ChapterInfo ch = new ChapterInfo();
+                ch.StartTime = 0;
+                ch.Title = "Chapter One";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1139;
+                ch.Title = "Chapter 2";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 2728;
+                ch.Title = "Chapter 003";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 3269;
+                ch.EndTime = 4000;
+                ch.Title = "Chapter 四";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                int found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
                 {
-                    found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
                 }
-                else
+                Assert.AreEqual(4, found);
+
+
+                // Modify elements
+                TagData theTag = new TagData();
+
+                theTag.Chapters = new List<ChapterInfo>();
+                expectedChaps.Clear();
+
+                ch = new ChapterInfo();
+                ch.StartTime = 123;
+                ch.Title = "aaa";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1230;
+                ch.EndTime = 4000;
+                ch.Title = "aaa0";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
                 }
-            }
-            Assert.AreEqual(4, found);
+                Assert.AreEqual(2, found);
 
 
-            // Modify elements
-            TagData theTag = new TagData();
-
-            theTag.Chapters = new List<ChapterInfo>();
-            expectedChaps.Clear();
-
-            ch = new ChapterInfo();
-            ch.StartTime = 123;
-            ch.Title = "aaa";
-
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 1230;
-            ch.Title = "aaa0";
-
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
-
-            // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
-
-            // Check if values are the same
-            found = 0;
-            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            } finally
             {
-                if (expectedChaps.ContainsKey(chap.StartTime))
-                {
-                    found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                }
-                else
-                {
-                    System.Console.WriteLine(chap.StartTime);
-                }
+                Settings.MP4_createQuicktimeChapters = true;
             }
-            Assert.AreEqual(2, found);
-
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -420,64 +429,72 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : file without 'chpl' atom
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            Assert.IsTrue(theFile.ReadFromFile());
-
-            Assert.IsNotNull(theFile.getMeta(tagType));
-            Assert.IsFalse(theFile.getMeta(tagType).Exists);
-
-            // Modify elements
-            TagData theTag = new TagData();
-
-            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
-
-            theTag.Chapters = new List<ChapterInfo>();
-
-            ChapterInfo ch = new ChapterInfo();
-            ch.StartTime = 123;
-            ch.Title = "aaa";
-
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 1230;
-            ch.Title = "aaa0";
-
-            theTag.Chapters.Add(ch);
-            expectedChaps.Add(ch.StartTime, ch);
-
-            // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
-
-            // Check if values are the same
-            int found = 0;
-            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            Settings.MP4_createQuicktimeChapters = false;
+            try
             {
-                if (expectedChaps.ContainsKey(chap.StartTime))
-                {
-                    found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                }
-                else
-                {
-                    System.Console.WriteLine(chap.StartTime);
-                }
-            }
-            Assert.AreEqual(2, found);
+                // Source : file without 'chpl' atom
+                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
+                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
+                Assert.IsTrue(theFile.ReadFromFile());
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+                // Modify elements
+                TagData theTag = new TagData();
+
+                Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+                theTag.Chapters = new List<ChapterInfo>();
+
+                ChapterInfo ch = new ChapterInfo();
+                ch.StartTime = 123;
+                ch.Title = "aaa";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1230;
+                ch.EndTime = 4000;
+                ch.Title = "aaa0";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                int found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                {
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
+                }
+                Assert.AreEqual(2, found);
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            } finally
+            {
+                Settings.MP4_createQuicktimeChapters = true;
+            }
         }
 
         [TestMethod]
@@ -513,108 +530,116 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Chapters_QT()
+        public void TagIO_RW_MP4_Chapters_QT_Edit()
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. chapters
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_QT.m4v");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            // Check if the two fields are indeed accessible
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.AreEqual(4, theFile.NativeTag.Chapters.Count);
-
-            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
-
-            ChapterInfo ch = new ChapterInfo();
-            ch.StartTime = 0;
-            ch.Title = "Chapter One";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 1139;
-            ch.Title = "Chapter 2";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 2728;
-            ch.Title = "Chapter 003";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            ch = new ChapterInfo();
-            ch.StartTime = 3269;
-            ch.Title = "Chapter 四";
-            expectedChaps.Add(ch.StartTime, ch);
-
-            int found = 0;
-            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            Settings.MP4_createNeroChapters = false;
+            try
             {
-                if (expectedChaps.ContainsKey(chap.StartTime))
+                // Source : MP3 with existing tag incl. chapters
+                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_QT.m4v");
+                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                // Check if the two fields are indeed accessible
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(4, theFile.NativeTag.Chapters.Count);
+
+                Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+                ChapterInfo ch = new ChapterInfo();
+                ch.StartTime = 0;
+                ch.Title = "Chapter One";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1139;
+                ch.Title = "Chapter 2";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 2728;
+                ch.Title = "Chapter 003";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 3269;
+                ch.EndTime = 4000;
+                ch.Title = "Chapter 四";
+                expectedChaps.Add(ch.StartTime, ch);
+
+                int found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
                 {
-                    found++;
-                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
                 }
-                else
+                Assert.AreEqual(4, found);
+
+                // Modify elements
+                TagData theTag = new TagData();
+
+                theTag.Chapters = new List<ChapterInfo>();
+                expectedChaps.Clear();
+
+                ch = new ChapterInfo();
+                ch.StartTime = 0;
+                ch.Title = "aaa";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1230;
+                ch.Title = "aaa0";
+                ch.EndTime = 4000;
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
                 {
-                    System.Console.WriteLine(chap.StartTime);
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
                 }
+                Assert.AreEqual(2, found);
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            } finally
+            {
+                Settings.MP4_createNeroChapters = true;
             }
-            Assert.AreEqual(4, found);
-
-            /*
-                        // Modify elements -- not supported yet
-                        TagData theTag = new TagData();
-                        theTag.Chapters = new List<ChapterInfo>();
-                        expectedChaps.Clear();
-
-                        ch = new ChapterInfo();
-                        ch.StartTime = 123;
-                        ch.Title = "aaa";
-
-                        theTag.Chapters.Add(ch);
-                        expectedChaps.Add(ch.StartTime, ch);
-
-                        ch = new ChapterInfo();
-                        ch.StartTime = 1230;
-                        ch.Title = "aaa0";
-
-                        theTag.Chapters.Add(ch);
-                        expectedChaps.Add(ch.StartTime, ch);
-
-                        // Check if they are persisted properly
-                        Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
-
-                        Assert.IsTrue(theFile.ReadFromFile(false, true));
-                        Assert.IsNotNull(theFile.NativeTag);
-                        Assert.IsTrue(theFile.NativeTag.Exists);
-
-                        Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
-
-                        // Check if values are the same
-                        found = 0;
-                        foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
-                        {
-                            if (expectedChaps.ContainsKey(chap.StartTime))
-                            {
-                                found++;
-                                Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                                Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
-                            }
-                            else
-                            {
-                                System.Console.WriteLine(chap.StartTime);
-                            }
-                        }
-                        Assert.AreEqual(2, found);
-            */
-
-            // Get rid of the working copy
-            File.Delete(testFileLocation);
         }
 
         [TestMethod]
