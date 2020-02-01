@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Commons;
 using ATL.Logging;
 using static ATL.Logging.Log;
+using System.Linq;
 
 namespace ATL.test.IO
 {
@@ -511,6 +512,7 @@ namespace ATL.test.IO
 
 
             IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
+            chaptersSave = chaptersSave.OrderBy(chap => chap.StartTime).ToList();
 
             theTrack.Save();
 

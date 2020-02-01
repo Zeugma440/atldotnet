@@ -431,7 +431,7 @@ namespace ATL.AudioData
             if (zones.ContainsKey(zone))
             {
                 // Calculate the corrected offset of the current zone
-                offsetPositionCorrection = -globalOffsetCorrection;
+                offsetPositionCorrection = 0;
                 foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
                     if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
 
