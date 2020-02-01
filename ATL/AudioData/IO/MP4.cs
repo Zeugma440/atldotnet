@@ -14,6 +14,8 @@ namespace ATL.AudioData.IO
     /// 
     /// Implementation notes
     /// 
+    ///     TODO position trak.tref.chap
+    /// 
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
     {
@@ -34,6 +36,8 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_NOMETA = "nometa";        // When the whole 'meta' atom is missing
         private const string ZONE_MP4_ILST = "ilst";            // When editing a file with an existing 'meta' atom
         private const string ZONE_MP4_CHPL = "chpl";            // Nero chapters
+        private const string ZONE_MP4_QT_CHAP_TRAK = "qt_trak"; // Quicktime chapters track
+        private const string ZONE_MP4_QT_CHAP_MDAT = "qt_mdat"; // Quicktime chapters data
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk"; // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
@@ -84,6 +88,9 @@ namespace ATL.AudioData.IO
             public long ChunkOffset;
             public long RelativeOffset;
         }
+
+        private uint globalTimeScale;
+        private int qtChapterTrackNum;
 
         private byte headerTypeID;
         private byte bitrateTypeID;
@@ -174,6 +181,8 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             sampleRate = 0;
             calculatedDuration = 0;
+            globalTimeScale = 0;
+            qtChapterTrackNum = 0;
         }
 
         public MP4(string fileName)
@@ -258,13 +267,12 @@ namespace ATL.AudioData.IO
         private void readMP4(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             long moovPosition;
-            int globalTimeScale;
 
             uint atomSize;
 
             byte[] data32 = new byte[4];
 
-            IList<MP4Sample> chapterTrackSamples = new List<MP4Sample>();
+            IList<MP4Sample> chapterTrackSamples = new List<MP4Sample>(); // If non-empty, quicktime chapters have been detected
             IDictionary<int, IList<int>> chapterTrackIndexes = new Dictionary<int, IList<int>>(); // Key is track index (1-based); lists are chapter tracks indexes (1-based)
 
 
@@ -286,6 +294,13 @@ namespace ATL.AudioData.IO
             }
 
             moovPosition = source.BaseStream.Position;
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_TRAK);
+            }
 
             // === Physical data header
             if (0 == lookForMP4Atom(source.BaseStream, "mvhd"))
@@ -297,7 +312,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(3, SeekOrigin.Current); // 3-byte flags
             if (1 == version) source.BaseStream.Seek(16, SeekOrigin.Current); else source.BaseStream.Seek(8, SeekOrigin.Current);
 
-            globalTimeScale = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            globalTimeScale = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             long timeLengthPerSec;
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             calculatedDuration = timeLengthPerSec * 1000.0 / globalTimeScale;
@@ -318,16 +333,25 @@ namespace ATL.AudioData.IO
             }
             while (trakSize > 0);
 
+            // No QT chapter track found -> Assign free track ID
+            if (0 == qtChapterTrackNum) qtChapterTrackNum = currentTrakIndex;
+
             // QT chapters have been detected while browsing tracks
             if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
+            else if (readTagParams.PrepareForWriting) // Reserve zones to write QT chapters
+            {
+                // TRAK before UDTA
+                source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+                atomSize = lookForMP4Atom(source.BaseStream, "udta");
+                if (atomSize > 0 && Settings.MP4_createQuicktimeChapters)
+                {
+                    structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TRAK);
+                    // MDAT at the end of the file
+                    structureHelper.AddZone(source.BaseStream.Length - 1, 0, ZONE_MP4_QT_CHAP_MDAT);
+                }
+            }
 
             // Read user data which contains metadata and Nero chapters
-            if (readTagParams.PrepareForWriting)
-            {
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA);
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
-            }
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             readUserData(source, readTagParams);
 
@@ -356,14 +380,29 @@ namespace ATL.AudioData.IO
 
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
+
+            // === Audio binary data, chapter or subtitle data
+            // Per convention, audio binary data always seems to be in the 1st mdat atom of the file
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            uint mdatSize = lookForMP4Atom(source.BaseStream, "mdat"); // === Audio binary data
+            uint mdatSize = lookForMP4Atom(source.BaseStream, "mdat");
             if (0 == mdatSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return;
             }
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
+
+            // If QT chapters are present record the current zone for chapters data
+            if (chapterTrackSamples.Count > 0 && readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
+            {
+                long aChapterOffset = chapterTrackSamples[0].ChunkOffset;
+                do
+                {
+                    if (aChapterOffset >= source.BaseStream.Position && aChapterOffset < source.BaseStream.Position - 8 + mdatSize)
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)mdatSize, ZONE_MP4_QT_CHAP_MDAT);
+                    mdatSize = lookForMP4Atom(source.BaseStream, "mdat");
+                } while (mdatSize > 0);
+            }
         }
 
         private long readTrack(
@@ -544,6 +583,12 @@ namespace ATL.AudioData.IO
                 int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
                 if (int32Data > 0)
                 {
+                    qtChapterTrackNum = currentTrakIndex;
+
+                    // Memorize zone
+                    if (readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
+                        structureHelper.AddZone(trakPosition, (int)trakSize, ZONE_MP4_QT_CHAP_TRAK);
+
                     uint frameCount, sampleDuration;
                     chapterTrackSamples.Clear();
 
@@ -790,7 +835,7 @@ namespace ATL.AudioData.IO
             // Look for Nero chapters
             atomPosition = source.BaseStream.Position;
             atomSize = lookForMP4Atom(source.BaseStream, "chpl");
-            if (atomSize > 0)
+            if (atomSize > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createNeroChapters))
             {
                 tagExists = true;
                 structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_CHPL);
@@ -818,7 +863,7 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            else
+            else if (Settings.MP4_createNeroChapters)
             {
                 // Allow creating the 'chpl' atom from scratch
                 structureHelper.AddZone(atomPosition, 0, ZONE_MP4_CHPL);
@@ -1137,6 +1182,14 @@ namespace ATL.AudioData.IO
                     result = 1;
                 }
             }
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TRAK)) // Quicktime chapter track
+            {
+                result = writeQTChaptersTrack(w, qtChapterTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDuration));
+            }
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter data
+            {
+                result = writeQTChaptersData(w, Chapters);
+            }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
                 result = 1; // Needs to appear active in case the headers need to be rewritten
@@ -1361,8 +1414,10 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
+        private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
+            if (null == chapters || 0 == chapters.Count) return 0;
+
             long mdatPos = w.BaseStream.Position;
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
@@ -1378,11 +1433,15 @@ namespace ATL.AudioData.IO
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(mdatPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
+
+            return 1;
         }
 
-        private void writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, int globalTimeScale, int duration, long chapterDataOffset)
+        private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDuration)
         {
             uint trackTimescale = 44100;
+
+            if (null == chapters || 0 == chapters.Count) return 0;
 
             // TRACK
             long trakPos = w.BaseStream.Position;
@@ -1404,7 +1463,7 @@ namespace ATL.AudioData.IO
 
             w.Write(0); // Reserved
 
-            w.Write(StreamUtils.EncodeBEInt32(duration * globalTimeScale)); // Duration
+            w.Write(StreamUtils.EncodeBEUInt32(trackDuration * globalTimeScale)); // Duration
 
             w.Write((long)0); // Reserved
             w.Write((short)0); // Layer
@@ -1438,7 +1497,7 @@ namespace ATL.AudioData.IO
 
             w.Write(StreamUtils.EncodeBEUInt32(trackTimescale)); // Track timescale
 
-            w.Write(StreamUtils.EncodeBEUInt32((uint)(duration * trackTimescale))); // Duration
+            w.Write(StreamUtils.EncodeBEUInt32((uint)(trackDuration * trackTimescale))); // Duration
 
             w.Write(new byte[2] { 0x55, 0xc4 }); // Code for English - TODO : make that dynamic
 
@@ -1581,14 +1640,15 @@ namespace ATL.AudioData.IO
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("stco"));
             w.Write(0); // Version and flags
-//            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+                        //            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
             w.Write(StreamUtils.EncodeBEInt32(1));
-            long offset = chapterDataOffset;
-//            foreach (ChapterInfo chapter in chapters)
-//            {
-                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(offset))); // TODO - on some cases, switch to co64 ?
-//                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
-//            }
+            //            long offset = chapterDataOffset;
+            //            foreach (ChapterInfo chapter in chapters)
+            //            {
+            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset, false, ZONE_MP4_QT_CHAP_MDAT);
+            w.Write(StreamUtils.EncodeBEUInt32(0)); // TODO - on some cases, switch to co64 ?
+                                                                           //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
+                                                                           //            }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stcoPos)));
@@ -1611,6 +1671,8 @@ namespace ATL.AudioData.IO
 
             w.BaseStream.Seek(trakPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - trakPos)));
+
+            return 1;
         }
 
         private static uint getMacDateNow()

@@ -17,9 +17,12 @@ namespace ATL.AudioData
         public const string PADDING_ZONE_NAME = "padding"; // Zone name to be used for padding
 
         // Type of action to react to
-        public const int ACTION_EDIT = 0; // Existing zone is edited, and not removed
-        public const int ACTION_ADD = 1; // New zone is added
-        public const int ACTION_DELETE = 2; // Existing zone is removed
+        public enum ACTION
+        {
+            Edit = 0,       // Existing zone is edited, and not removed
+            Add = 1,        // New zone is added
+            Delete = 2      // Existing zone is removed
+        };
 
         /// <summary>
         /// Container class describing a frame header
@@ -27,15 +30,18 @@ namespace ATL.AudioData
         public class FrameHeader
         {
             // Header types
-            public const byte TYPE_COUNTER = 0;  // Counter : counts the underlying number of frames
-            public const byte TYPE_SIZE = 1;     // Size : documents the size of a given frame / group of frames
-            public const byte TYPE_INDEX = 2;    // Index (absolute) : documents the offset (position of 1st byte) of a given frame
-            public const byte TYPE_RINDEX = 3;   // Index (relative) : documents the offset (position of 1st byte) of a given frame, relative to the header's position
+            public enum TYPE
+            {
+                Counter = 0,        // Counter : counts the underlying number of frames
+                Size = 1,           // Size : documents the size of a given frame / group of frames
+                Index = 2,          // Index (absolute) : documents the offset (position of 1st byte) of a given frame
+                RelativeIndex = 3   // Index (relative) : documents the offset (position of 1st byte) of a given frame, relative to the header's position
+            };
 
             /// <summary>
             /// Header type (allowed values are TYPE_XXX within FrameHeader class)
             /// </summary>
-            public readonly byte Type;
+            public readonly TYPE Type;
             /// <summary>
             /// Position of the header
             /// </summary>
@@ -52,7 +58,7 @@ namespace ATL.AudioData
             /// <summary>
             /// Constructs a new frame header using the given field values
             /// </summary>
-            public FrameHeader(byte type, long position, object value, bool isLittleEndian = true)
+            public FrameHeader(TYPE type, long position, object value, bool isLittleEndian = true)
             {
                 Type = type; Position = position; Value = value; IsLittleEndian = isLittleEndian;
             }
@@ -235,7 +241,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
-            addZoneHeader(zone, FrameHeader.TYPE_COUNTER, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE.Counter, position, value, isLittleEndian);
         }
 
         /// <summary>
@@ -243,7 +249,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME)
         {
-            addZoneHeader(zone, FrameHeader.TYPE_SIZE, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, isLittleEndian);
         }
 
         /// <summary>
@@ -251,7 +257,15 @@ namespace ATL.AudioData
         /// </summary>
         public void AddIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME)
         {
-            addZoneHeader(zone, relative ? FrameHeader.TYPE_RINDEX : FrameHeader.TYPE_INDEX, position, value, isLittleEndian);
+            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian);
+        }
+
+        /// <summary>
+        /// Record a new Index-type header using the given fields and attach it to the zone of given name
+        /// </summary>
+        public void AddPendingIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME)
+        {
+            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian, true);
         }
 
         /// <summary>
@@ -266,10 +280,11 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new header using the given fields and attach it to the zone of given name
         /// </summary>
-        private void addZoneHeader(string zone, byte type, long position, object value, bool isLittleEndian)
+        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool isLittleEndian, bool isPending = false)
         {
             if (!zones.ContainsKey(zone)) DeclareZone(zone);
-            zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian));
+            long offset = isPending ? zones[zone].Offset + position : position;
+            zones[zone].Headers.Add(new FrameHeader(type, offset, value, isLittleEndian));
         }
 
         public long GetFirstRecordedOffset()
@@ -397,7 +412,7 @@ namespace ATL.AudioData
         /// <param name="action">Action applied to zone</param>
         /// <param name="zone">Name of zone</param>
         /// <returns></returns>
-        public bool RewriteHeaders(BinaryWriter w, long deltaSize, int action, string zone = DEFAULT_ZONE_NAME, long globalOffsetCorrection = 0)
+        public bool RewriteHeaders(BinaryWriter w, long deltaSize, ACTION action, string zone = DEFAULT_ZONE_NAME, long globalOffsetCorrection = 0)
         {
             bool result = true;
             long delta;
@@ -406,7 +421,9 @@ namespace ATL.AudioData
             byte[] value;
             object updatedValue;
 
-            if (zones != null && zones.ContainsKey(zone))
+            if (null == zones) return false;
+
+            if (zones.ContainsKey(zone))
             {
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
@@ -416,20 +433,20 @@ namespace ATL.AudioData
                     {
                         if (header.Position >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
 
-                        if ((FrameHeader.TYPE_INDEX == header.Type || FrameHeader.TYPE_RINDEX == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
+                        if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                     }
 
-                    if (FrameHeader.TYPE_COUNTER == header.Type)
+                    if (FrameHeader.TYPE.Counter == header.Type)
                     {
                         switch (action)
                         {
-                            case ACTION_ADD: delta = 1; break;
-                            case ACTION_DELETE: delta = -1; break;
+                            case ACTION.Add: delta = 1; break;
+                            case ACTION.Delete: delta = -1; break;
                             default: delta = 0; break;
                         }
 
                     }
-                    else if (FrameHeader.TYPE_SIZE == header.Type)
+                    else if (FrameHeader.TYPE.Size == header.Type)
                     {
                         delta = deltaSize;
                         if (!dynamicOffsetCorrection.ContainsKey(zone))
@@ -438,7 +455,7 @@ namespace ATL.AudioData
                         }
                     }
 
-                    if ((FrameHeader.TYPE_COUNTER == header.Type || FrameHeader.TYPE_SIZE == header.Type))
+                    if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
                     {
                         w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 
@@ -453,15 +470,15 @@ namespace ATL.AudioData
 
                         w.Write(value);
                     }
-                    else if (FrameHeader.TYPE_INDEX == header.Type || FrameHeader.TYPE_RINDEX == header.Type)
+                    else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
                     {
                         long headerPosition = header.Position + offsetPositionCorrection;
                         w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
                         value = null;
 
-                        long headerOffsetCorrection = (FrameHeader.TYPE_RINDEX == header.Type) ? headerPosition : 0;
+                        long headerOffsetCorrection = (FrameHeader.TYPE.RelativeIndex == header.Type) ? headerPosition : 0;
 
-                        if (action != ACTION_DELETE)
+                        if (action != ACTION.Delete)
                         {
                             if (header.Value is long)
                             {

@@ -126,18 +126,28 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateNeutral()
         {
-            tagIO_RW_UpdateNeutral("MP3/id3v2.4_UTF8.mp3"); // ID3v2
-            tagIO_RW_UpdateNeutral("DSF/dsf.dsf"); // ID3v2 in DSF
-            tagIO_RW_UpdateNeutral("FLAC/flac.flac"); // Vorbis-FLAC
-            tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
-            tagIO_RW_UpdateNeutral("OPUS/opus.opus"); // OPUS
-            tagIO_RW_UpdateNeutral("MP3/APE.mp3"); // APE
-            // Native formats
-            tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
-            tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
-            tagIO_RW_UpdateNeutral("SPC/spc.spc");
-            tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
-            tagIO_RW_UpdateNeutral("WMA/wma.wma");
+            Settings.MP4_createNeroChapters = false;
+            Settings.MP4_createQuicktimeChapters = false;
+            try
+            {
+                tagIO_RW_UpdateNeutral("MP3/id3v2.4_UTF8.mp3"); // ID3v2
+                tagIO_RW_UpdateNeutral("DSF/dsf.dsf"); // ID3v2 in DSF
+                tagIO_RW_UpdateNeutral("FLAC/flac.flac"); // Vorbis-FLAC
+                tagIO_RW_UpdateNeutral("OGG/ogg.ogg"); // Vorbis-OGG
+                tagIO_RW_UpdateNeutral("OPUS/opus.opus"); // OPUS
+                tagIO_RW_UpdateNeutral("MP3/APE.mp3"); // APE
+                // Native formats
+                tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
+                tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
+                tagIO_RW_UpdateNeutral("SPC/spc.spc");
+                tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
+                tagIO_RW_UpdateNeutral("WMA/wma.wma");
+            }
+            finally
+            {
+                Settings.MP4_createNeroChapters = true;
+                Settings.MP4_createQuicktimeChapters = true;
+            }
         }
 
         private void tagIO_RW_UpdateEmpty(string resource, bool supportsTrack = true)
@@ -219,18 +229,27 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateTagBaseField()
         {
-            tagIO_RW_UpdateTagBaseField("MP3/id3v2.4_UTF8.mp3"); // ID3v2
-            tagIO_RW_UpdateTagBaseField("DSF/dsf.dsf"); // ID3v2 in DSF
-            tagIO_RW_UpdateTagBaseField("FLAC/flac.flac"); // Vorbis-FLAC
-            tagIO_RW_UpdateTagBaseField("OGG/ogg.ogg"); // Vorbis-OGG
-            tagIO_RW_UpdateTagBaseField("OPUS/opus.opus"); // Opus
-            tagIO_RW_UpdateTagBaseField("MP3/APE.mp3"); // APE
-            // Specific formats
-            tagIO_RW_UpdateTagBaseField("VQF/vqf.vqf", false, false);
-            tagIO_RW_UpdateTagBaseField("VGM/vgm.vgm", false, false, false);
-            tagIO_RW_UpdateTagBaseField("SPC/spc.spc", false, false);
-            tagIO_RW_UpdateTagBaseField("AAC/mp4.m4a");
-            tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
+            Settings.MP4_createNeroChapters = false;
+            Settings.MP4_createQuicktimeChapters = false;
+            try
+            {
+                tagIO_RW_UpdateTagBaseField("MP3/id3v2.4_UTF8.mp3"); // ID3v2
+                tagIO_RW_UpdateTagBaseField("DSF/dsf.dsf"); // ID3v2 in DSF
+                tagIO_RW_UpdateTagBaseField("FLAC/flac.flac"); // Vorbis-FLAC
+                tagIO_RW_UpdateTagBaseField("OGG/ogg.ogg"); // Vorbis-OGG
+                tagIO_RW_UpdateTagBaseField("OPUS/opus.opus"); // Opus
+                tagIO_RW_UpdateTagBaseField("MP3/APE.mp3"); // APE
+                // Specific formats
+                tagIO_RW_UpdateTagBaseField("VQF/vqf.vqf", false, false);
+                tagIO_RW_UpdateTagBaseField("VGM/vgm.vgm", false, false, false);
+                tagIO_RW_UpdateTagBaseField("SPC/spc.spc", false, false);
+                tagIO_RW_UpdateTagBaseField("AAC/mp4.m4a");
+                tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
+            } finally
+            {
+                Settings.MP4_createNeroChapters = true;
+                Settings.MP4_createQuicktimeChapters = true;
+            }
         }
 
         private void tagIO_RW_UpdatePadding(string resource, int paddingSize = 2048)
@@ -331,15 +350,24 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_Padding()
         {
-            tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
-            tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
-            tagIO_RW_UpdatePadding("AAC/mp4.m4a", 17100); // padded MP4
-            tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
+            Settings.MP4_createNeroChapters = false;
+            Settings.MP4_createQuicktimeChapters = false;
+            try
+            {
+                tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
+                tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
+                tagIO_RW_UpdatePadding("AAC/mp4.m4a", 17100); // padded MP4
+                tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
 
-            tagIO_RW_AddPadding("MP3/empty.mp3");
-            tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
-            tagIO_RW_AddPadding("AAC/empty.m4a");
-            tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
+                tagIO_RW_AddPadding("MP3/empty.mp3");
+                tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
+                tagIO_RW_AddPadding("AAC/empty.m4a");
+                tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
+            } finally
+            {
+                Settings.MP4_createNeroChapters = true;
+                Settings.MP4_createQuicktimeChapters = true;
+            }
         }
 
         [TestMethod]

@@ -48,6 +48,11 @@ namespace ATL
                                                                         // Disable it to be able to write picture descriptions using non-western characters (japanese, cyrillic...)
         public static bool ID3v2_forceUnsynchronization = false;        // Set to true to force unsynchronization when writing ID3v2.3 or ID3v2.4 tags
 
+        public static bool MP4_createNeroChapters = true;               // Set to true to always create chapters in Nero format (chpl)
+        public static bool MP4_createQuicktimeChapters = true;          // Set to true to always create chapters in Quicktime format (chap)
+        public static bool MP4_keepExistingChapters = true;             // Set to true to keep existing chapters (i.e. Nero or Quicktime)
+                                                                        // regardless of the other chapter creation options
+
         public static bool ASF_keepNonWMFieldsWhenRemovingTag = false;
 
         public static int GYM_VGM_playbackRate = 0;                     // Playback rate (Hz) [0 = adjust to song properties]
