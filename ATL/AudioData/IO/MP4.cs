@@ -33,12 +33,14 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
-        private const string ZONE_MP4_NOMETA = "nometa";        // When the whole 'meta' atom is missing
-        private const string ZONE_MP4_ILST = "ilst";            // When editing a file with an existing 'meta' atom
-        private const string ZONE_MP4_CHPL = "chpl";            // Nero chapters
-        private const string ZONE_MP4_QT_CHAP_TRAK = "qt_trak"; // Quicktime chapters track
-        private const string ZONE_MP4_QT_CHAP_MDAT = "qt_mdat"; // Quicktime chapters data
-        private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk"; // Physical audio chunk referenced from stco or co64
+        private const string ZONE_MP4_NOMETA = "nometa";            // Placeholder for missing 'meta' atom
+        private const string ZONE_MP4_ILST = "ilst";                // When editing a file with an existing 'meta' atom
+        private const string ZONE_MP4_CHPL = "chpl";                // Nero chapters
+        private const string ZONE_MP4_QT_CHAP_NOTREF = "qt_notref"; // Placeholder for missing track reference atom
+        private const string ZONE_MP4_QT_CHAP_CHAP = "qt_chap";     // Quicktime chapters track reference
+        private const string ZONE_MP4_QT_CHAP_TRAK = "qt_trak";     // Quicktime chapters track
+        private const string ZONE_MP4_QT_CHAP_MDAT = "qt_mdat";     // Quicktime chapters data
+        private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";     // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameMapping_mp4 = new Dictionary<string, byte>() {
@@ -272,6 +274,7 @@ namespace ATL.AudioData.IO
 
             byte[] data32 = new byte[4];
 
+            IList<long> audioTrackOffsets = new List<long>(); // Offset of all detected audio/video tracks (tracks with a media type of 'soun' or 'vide')
             IList<MP4Sample> chapterTrackSamples = new List<MP4Sample>(); // If non-empty, quicktime chapters have been detected
             IDictionary<int, IList<int>> chapterTrackIndexes = new Dictionary<int, IList<int>>(); // Key is track index (1-based); lists are chapter tracks indexes (1-based)
 
@@ -300,6 +303,8 @@ namespace ATL.AudioData.IO
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_TRAK);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_NOTREF);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_CHAP);
             }
 
             // === Physical data header
@@ -329,7 +334,7 @@ namespace ATL.AudioData.IO
                     currentTrakIndex = 0; // Convention to start reading from index 1 again
                     source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
                 }
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes);
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes, audioTrackOffsets);
             }
             while (trakSize > 0);
 
@@ -410,7 +415,8 @@ namespace ATL.AudioData.IO
             MetaDataIO.ReadTagParams readTagParams,
             int currentTrakIndex,
             IList<MP4Sample> chapterTrackSamples,
-            IDictionary<int, IList<int>> chapterTrackIndexes)
+            IDictionary<int, IList<int>> chapterTrackIndexes,
+            IList<long> audioTrackOffsets)
         {
             long trakPosition;
             int mediaTimeScale = 1000;
@@ -433,38 +439,7 @@ namespace ATL.AudioData.IO
 
             trakPosition = source.BaseStream.Position - 8;
 
-            // Look for "chap" atom to detect QT chapters for current track
-            if (lookForMP4Atom(source.BaseStream, "tref") > 0 && 0 == chapterTrackIndexes.Count)
-            {
-                bool parsePreviousTracks = false;
-                uint chapSize = lookForMP4Atom(source.BaseStream, "chap");
-                if (chapSize > 8)
-                {
-                    IList<int> thisTrackIndexes = new List<int>();
-                    for (int i = 0; i < (chapSize - 8) / 4; i++)
-                    {
-                        thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
-                    }
-                    chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
-
-                    foreach (int i in thisTrackIndexes)
-                    {
-                        if (i < currentTrakIndex)
-                        {
-                            parsePreviousTracks = true;
-                            break;
-                        }
-                    }
-                }
-
-                // If current track has declared a chapter track located at a previous index, come back to read it
-                if (parsePreviousTracks)
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
-                    return -1;
-                }
-            }
-
+            // Detect the track type
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
             if (0 == lookForMP4Atom(source.BaseStream, "mdia"))
             {
@@ -517,6 +492,10 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
+            else if ("soun".Equals(mediaType) || "vide".Equals(mediaType))
+            {
+                audioTrackOffsets.Add(trakPosition);
+            }
 
             source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
             if (0 == lookForMP4Atom(source.BaseStream, "minf"))
@@ -567,6 +546,52 @@ namespace ATL.AudioData.IO
                 {
                     source.BaseStream.Seek(int32Data - 4, SeekOrigin.Current);
                 }
+            }
+
+            // Look for "trak.tref.chap" atom to detect QT chapters for current track
+            source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
+            uint trefSize = lookForMP4Atom(source.BaseStream, "tref");
+            if (trefSize > 0 && 0 == chapterTrackIndexes.Count)
+            {
+                long trefPosition = source.BaseStream.Position - 8;
+                bool parsePreviousTracks = false;
+                uint chapSize = lookForMP4Atom(source.BaseStream, "chap");
+                // TODO - handle the case where tref is present, but not chap
+                if (chapSize > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
+                {
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapSize, ZONE_MP4_QT_CHAP_CHAP);
+                    structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_CHAP);
+                    structureHelper.AddSize(trefPosition, trefSize, ZONE_MP4_QT_CHAP_CHAP);
+                }
+                if (chapSize > 8)
+                {
+                    IList<int> thisTrackIndexes = new List<int>();
+                    for (int i = 0; i < (chapSize - 8) / 4; i++)
+                    {
+                        thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
+                    }
+                    chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
+
+                    foreach (int i in thisTrackIndexes)
+                    {
+                        if (i < currentTrakIndex)
+                        {
+                            parsePreviousTracks = true;
+                            break;
+                        }
+                    }
+                }
+
+                // If current track has declared a chapter track located at a previous index, come back to read it
+                if (parsePreviousTracks)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
+                    return -1;
+                }
+            } else if (0 == trefSize && 1 == audioTrackOffsets.Count && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
+            {
+                structureHelper.AddZone(trakPosition + 8, 0, ZONE_MP4_QT_CHAP_NOTREF);
+                structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_NOTREF);
             }
 
             // Read Quicktime chapters
@@ -1182,6 +1207,14 @@ namespace ATL.AudioData.IO
                     result = 1;
                 }
             }
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_NOTREF)) // Write a new tref atom for quicktime chapters
+            {
+                result = writeQTChaptersTref(w, qtChapterTrackNum, Chapters);
+            }
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_CHAP)) // Reference to Quicktime chapter track from an audio/video track
+            {
+                result = writeQTChaptersChap(w, qtChapterTrackNum, Chapters);
+            }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TRAK)) // Quicktime chapter track
             {
                 result = writeQTChaptersTrack(w, qtChapterTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDuration));
@@ -1414,6 +1447,40 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        private int writeQTChaptersTref(BinaryWriter w, int qtChapterTrackNum, IList<ChapterInfo> chapters)
+        {
+            if (null == chapters || 0 == chapters.Count) return 0;
+
+            long trefPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("tref"));
+
+            writeQTChaptersChap(w, qtChapterTrackNum, chapters);
+
+            long finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(trefPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - trefPos)));
+
+            return 1;
+        }
+
+        private int writeQTChaptersChap(BinaryWriter w, int qtChapterTrackNum, IList<ChapterInfo> chapters)
+        {
+            if (null == chapters || 0 == chapters.Count) return 0;
+
+            long chapPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("chap"));
+
+            w.Write(StreamUtils.EncodeBEInt32(qtChapterTrackNum));
+
+            long finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(chapPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - chapPos)));
+
+            return 1;
+        }
+
         private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
@@ -1484,8 +1551,6 @@ namespace ATL.AudioData.IO
             long mdiaPos = w.BaseStream.Position;
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("mdia"));
-            w.Write((byte)0); // Version
-
 
             // MEDIA HEADER
             w.Write(StreamUtils.EncodeBEInt32(32)); // Standard size
@@ -1521,7 +1586,6 @@ namespace ATL.AudioData.IO
             long minfPos = w.BaseStream.Position;
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("minf"));
-            w.Write((byte)0); // Version
 
             // BASE MEDIA INFORMATION HEADER
             w.Write(StreamUtils.EncodeBEInt32(76)); // Standard size
@@ -1647,8 +1711,8 @@ namespace ATL.AudioData.IO
             //            {
             structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset, false, ZONE_MP4_QT_CHAP_MDAT);
             w.Write(StreamUtils.EncodeBEUInt32(0)); // TODO - on some cases, switch to co64 ?
-                                                                           //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
-                                                                           //            }
+                                                    //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
+                                                    //            }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stcoPos)));
