@@ -151,7 +151,7 @@ namespace ATL.AudioData
             {
                 // 1. Ignore zones declared but not added
                 // 2. Sort by offset
-                return zones.Values.Where(zone => zone.Offset > -1).OrderBy(zone => zone.Offset).ToList();
+                return zones.Values.Where(zone => zone.Offset > -1).OrderBy(zone => zone.Offset).ThenBy(zone => zone.Name).ToList();
             }
         }
 

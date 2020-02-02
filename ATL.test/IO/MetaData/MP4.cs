@@ -643,6 +643,80 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Chapters_QT_Create()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            Settings.MP4_createNeroChapters = false;
+            try
+            {
+                // Source : file without 'chpl' atom
+                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
+                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                Assert.IsTrue(theFile.ReadFromFile());
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+                // Modify elements
+                TagData theTag = new TagData();
+
+                Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+                theTag.Chapters = new List<ChapterInfo>();
+
+                ChapterInfo ch = new ChapterInfo();
+                ch.StartTime = 0;
+                ch.Title = "aaa";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 1230;
+                ch.EndTime = 4000;
+                ch.Title = "aaa0";
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                int found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                {
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
+                }
+                Assert.AreEqual(2, found);
+
+                // Get rid of the working copy
+                File.Delete(testFileLocation);
+            }
+            finally
+            {
+                Settings.MP4_createNeroChapters = true;
+            }
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Lyrics_Unsynched()
         {
             ConsoleLogger log = new ConsoleLogger();

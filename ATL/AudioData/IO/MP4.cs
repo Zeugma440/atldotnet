@@ -341,16 +341,16 @@ namespace ATL.AudioData.IO
 
             // QT chapters have been detected while browsing tracks
             if (chapterTrackSamples.Count > 0) readQTChapters(source, chapterTrackSamples);
-            else if (readTagParams.PrepareForWriting) // Reserve zones to write QT chapters
+            else if (readTagParams.PrepareForWriting && Settings.MP4_createQuicktimeChapters) // Reserve zones to write QT chapters
             {
                 // TRAK before UDTA
                 source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
                 atomSize = lookForMP4Atom(source.BaseStream, "udta");
-                if (atomSize > 0 && Settings.MP4_createQuicktimeChapters)
+                if (atomSize > 0)
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TRAK);
                     // MDAT at the end of the file
-                    structureHelper.AddZone(source.BaseStream.Length - 1, 0, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
                 }
             }
 
@@ -403,7 +403,7 @@ namespace ATL.AudioData.IO
                 {
                     if (aChapterOffset >= source.BaseStream.Position && aChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                         structureHelper.AddZone(source.BaseStream.Position - 8, (int)mdatSize, ZONE_MP4_QT_CHAP_MDAT);
-                    
+
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
                     mdatSize = lookForMP4Atom(source.BaseStream, "mdat");
                 } while (mdatSize > 0);
@@ -590,9 +590,10 @@ namespace ATL.AudioData.IO
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
                     return -1;
                 }
-            } else if (0 == trefSize && isCurrentTrackFirstAudioTrack && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
+            }
+            else if (0 == trefSize && isCurrentTrackFirstAudioTrack && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
             {
-                structureHelper.AddZone(trakPosition + 8, 0, ZONE_MP4_QT_CHAP_NOTREF);
+                structureHelper.AddZone(trakPosition + trakSize, 0, ZONE_MP4_QT_CHAP_NOTREF);
                 structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_NOTREF);
             }
 
@@ -1042,15 +1043,36 @@ namespace ATL.AudioData.IO
                     PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic; // TODO - to check : this seems to prevent ATL from detecting multiple images from the same type, as for a file with two "Front Cover" images; only one image will be detected
 
                     int picturePosition;
-                    addPictureToken(picType);
-                    picturePosition = takePicturePosition(picType);
+                    uint pictureSize = metadataSize;
+                    long lastLocation;
 
-                    if (readTagParams.ReadPictures)
+                    do
                     {
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, (int)(metadataSize - 16), picType, getImplementedTagType(), dataClass, picturePosition);
-                        tagData.Pictures.Add(picInfo);
-                    }
-                    // else - Other unhandled cases ?
+                        addPictureToken(picType);
+                        picturePosition = takePicturePosition(picType);
+
+                        if (readTagParams.ReadPictures)
+                        {
+                            PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, (int)(pictureSize - 16), picType, getImplementedTagType(), dataClass, picturePosition);
+                            tagData.Pictures.Add(picInfo);
+                        }
+
+                        // Look for other pictures within 'covr'
+                        lastLocation = source.BaseStream.Position;
+                        pictureSize = lookForMP4Atom(source.BaseStream, "data");
+                        if (pictureSize > 0)
+                        {
+                            // We're only looking for the last byte of the flag
+                            source.BaseStream.Seek(3, SeekOrigin.Current);
+                            dataClass = source.ReadByte();
+                            source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte NULL space
+
+                            metadataSize += pictureSize;
+                        }
+                    } while (pictureSize > 0);
+                    source.BaseStream.Seek(lastLocation, SeekOrigin.Begin);
+
+                    atomPosition = source.BaseStream.Position - 8;
                 }
                 else if (0 == dataClass) // Special cases : gnre, trkn, disk
                 {
@@ -1275,6 +1297,8 @@ namespace ATL.AudioData.IO
 
             // Picture fields
             bool firstPic = true;
+            bool hasPic = false;
+            long picHeaderPos = 0;
             foreach (PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
@@ -1285,10 +1309,26 @@ namespace ATL.AudioData.IO
 
                 if (doWritePicture)
                 {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat, firstPic);
+                    hasPic = true;
+                    if (firstPic)
+                    {
+                        // If multiples pictures are embedded, the 'covr' atom is not repeated; the 'data' atom is
+                        picHeaderPos = w.BaseStream.Position;
+                        w.Write(0); // Frame size placeholder to be rewritten in a few lines
+                        w.Write(Utils.Latin1Encoding.GetBytes("covr"));
+                        firstPic = false;
+                    }
+
+                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat);
                     counter++;
-                    firstPic = false;
                 }
+            }
+            if (hasPic)
+            {
+                long finalPos = w.BaseStream.Position;
+                w.BaseStream.Seek(picHeaderPos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalPos - picHeaderPos)));
+                w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
             }
 
             return counter;
@@ -1373,23 +1413,13 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat, bool firstPicture)
+        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat)
         {
-            long frameSizePos1 = 0;
             long frameSizePos2;
             long finalFramePos;
 
             int frameFlags = 0;
 
-            // == METADATA HEADER ==
-            if (firstPicture) // If multiples pictures are embedded, the 'covr' atom is not repeated; the 'data' atom is
-            {
-                frameSizePos1 = writer.BaseStream.Position;
-                writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-                writer.Write(Utils.Latin1Encoding.GetBytes("covr"));
-            }
-
-            // == METADATA VALUE ==
             frameSizePos2 = writer.BaseStream.Position;
             writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
@@ -1406,11 +1436,6 @@ namespace ATL.AudioData.IO
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = writer.BaseStream.Position;
-            if (firstPicture)
-            {
-                writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
-                writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
-            }
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -1694,7 +1719,7 @@ namespace ATL.AudioData.IO
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("stsc"));
             w.Write(0); // Version and flags
-            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            w.Write(StreamUtils.EncodeBEInt32(1));
             // Attach all samples to 1st chunk
             w.Write(StreamUtils.EncodeBEInt32(1));
             w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
@@ -1715,12 +1740,12 @@ namespace ATL.AudioData.IO
             //            long offset = chapterDataOffset;
             //            foreach (ChapterInfo chapter in chapters)
             //            {
-            
+
             // Only works when QT track is located _before_ QT mdat
             structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT);
             w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).CorrectedOffset + 8)); // TODO - on some cases, switch to co64 ?
-                                                    //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
-                                                    //            }
+                                                                                                                           //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
+                                                                                                                           //            }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stcoPos)));
