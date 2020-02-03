@@ -352,7 +352,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TRAK);
                     // MDAT at the end of the file
                     structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
-//                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
                 }
             }
 
@@ -410,7 +410,7 @@ namespace ATL.AudioData.IO
                     if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                     {
                         structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT); // Zone size = size of chapters
-//                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT); // Zone size header = actual size of the zone that may include audio data
+                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT); // Zone size header = actual size of the zone that may include audio data
                     }
 
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
@@ -901,7 +901,7 @@ namespace ATL.AudioData.IO
                         chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
                         previousChapter = chapter;
                     }
-                    previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDuration));
+                    if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDuration));
                 }
             }
             else if (Settings.MP4_createNeroChapters)
@@ -1452,37 +1452,36 @@ namespace ATL.AudioData.IO
 
         private int writeNeroChapters(BinaryWriter w, IList<ChapterInfo> chapters)
         {
+            if (null == chapters || 0 == chapters.Count) return 0;
+
             int result = 0;
             long frameSizePos, finalFramePos;
 
-            if (chapters != null && chapters.Count > 0)
+            result = chapters.Count;
+
+            frameSizePos = w.BaseStream.Position;
+            w.Write(0); // To be rewritten at the end of the method
+            w.Write(Utils.Latin1Encoding.GetBytes("chpl"));
+
+            w.Write(new byte[5] { 1, 0, 0, 0, 0 }); // Version, flags and reserved byte
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+
+            byte[] strData;
+            byte strDataLength;
+
+            foreach (ChapterInfo chapter in chapters)
             {
-                result = chapters.Count;
-
-                frameSizePos = w.BaseStream.Position;
-                w.Write(0); // To be rewritten at the end of the method
-                w.Write(Utils.Latin1Encoding.GetBytes("chpl"));
-
-                w.Write(new byte[5] { 1, 0, 0, 0, 0 }); // Version, flags and reserved byte
-                w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
-
-                byte[] strData;
-                byte strDataLength;
-
-                foreach (ChapterInfo chapter in chapters)
-                {
-                    w.Write(StreamUtils.EncodeBEUInt64((ulong)chapter.StartTime * 10000));
-                    strData = Encoding.UTF8.GetBytes(chapter.Title);
-                    strDataLength = (byte)Math.Min(255, strData.Length);
-                    w.Write(strDataLength);
-                    w.Write(strData, 0, strDataLength);
-                }
-
-                // Go back to frame size locations to write their actual size 
-                finalFramePos = w.BaseStream.Position;
-                w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
+                w.Write(StreamUtils.EncodeBEUInt64((ulong)chapter.StartTime * 10000));
+                strData = Encoding.UTF8.GetBytes(chapter.Title);
+                strDataLength = (byte)Math.Min(255, strData.Length);
+                w.Write(strDataLength);
+                w.Write(strData, 0, strDataLength);
             }
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
 
             return result;
         }
@@ -1523,9 +1522,13 @@ namespace ATL.AudioData.IO
 
         private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
-            if (null == chapters || 0 == chapters.Count) return 0;
+            if (null == chapters || 0 == chapters.Count)
+            {
+                structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT); // Current zone commits suicide so that its size header doesn't get written
+                return 0;
+            }
 
-            long mdatPos = w.BaseStream.Position;
+//            long mdatPos = w.BaseStream.Position;
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
             foreach (ChapterInfo chapter in chapters)
@@ -1537,11 +1540,11 @@ namespace ATL.AudioData.IO
                 w.Write(Utils.Latin1Encoding.GetBytes("encd"));
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
-            
+/*          
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(mdatPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
-            
+  */          
 
             return 1;
         }

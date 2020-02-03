@@ -437,13 +437,10 @@ namespace ATL.AudioData
 
                 zones[zone].CorrectedOffset = zones[zone].Offset + offsetPositionCorrection;
 
-                // Update dynamic offset
-                if (!dynamicOffsetCorrection.ContainsKey(zone))
-                    dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
-
-                // Update the current zone's headers
+                // == Update the current zone's headers
                 foreach (FrameHeader header in zones[zone].Headers)
                 {
+                    // === Update values
                     offsetPositionCorrection = -globalOffsetCorrection;
                     delta = 0;
                     foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
@@ -466,13 +463,12 @@ namespace ATL.AudioData
                     else if (FrameHeader.TYPE.Size == header.Type)
                     {
                         delta = deltaSize;
-                        /*
-                        if (!dynamicOffsetCorrection.ContainsKey(zone))
-                        {
-                            dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
-                        }
-                        */
                     }
+
+                    // === Rewrite headers
+
+                    // If we're going to delete the zone, and the header is located inside it, don't write it !
+                    if (header.Position >= zones[zone].CorrectedOffset && ACTION.Delete == action) continue;
 
                     if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
                     {
@@ -535,6 +531,10 @@ namespace ATL.AudioData
                         w.Write(value);
                     }
                 }
+
+                // Update dynamic offset
+                if (!dynamicOffsetCorrection.ContainsKey(zone))
+                    dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
             }
 
             return result;
