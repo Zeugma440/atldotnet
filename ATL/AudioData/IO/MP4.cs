@@ -6,6 +6,7 @@ using System.Text;
 using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -351,6 +352,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TRAK);
                     // MDAT at the end of the file
                     structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
+//                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
                 }
             }
 
@@ -398,11 +400,18 @@ namespace ATL.AudioData.IO
             // If QT chapters are present record the current zone for chapters data
             if (chapterTrackSamples.Count > 0 && readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
             {
-                long aChapterOffset = chapterTrackSamples[0].ChunkOffset;
+                long minChapterOffset = chapterTrackSamples.Min(sample => sample.ChunkOffset);
+                long chapterSize = chapterTrackSamples.Sum(sample => sample.Size);
                 do
                 {
-                    if (aChapterOffset >= source.BaseStream.Position && aChapterOffset < source.BaseStream.Position - 8 + mdatSize)
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)mdatSize, ZONE_MP4_QT_CHAP_MDAT);
+                    // On some files, there's a single mdat atom that contains both chapter references and audio data
+                    // => limit zone size to the actual size of the chapters
+                    // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
+                    if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
+                    {
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT); // Zone size = size of chapters
+//                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT); // Zone size header = actual size of the zone that may include audio data
+                    }
 
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
                     mdatSize = lookForMP4Atom(source.BaseStream, "mdat");
@@ -1528,9 +1537,11 @@ namespace ATL.AudioData.IO
                 w.Write(Utils.Latin1Encoding.GetBytes("encd"));
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
+            
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(mdatPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
+            
 
             return 1;
         }
@@ -1742,8 +1753,9 @@ namespace ATL.AudioData.IO
             //            {
 
             // Only works when QT track is located _before_ QT mdat
-            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT);
-            w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).CorrectedOffset + 8)); // TODO - on some cases, switch to co64 ?
+            Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
+            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT);
+            w.Write(StreamUtils.EncodeBEUInt32((uint)chapMdatZone.CorrectedOffset + 8)); // TODO - on some cases, switch to co64 ?
                                                                                                                            //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
                                                                                                                            //            }
             finalFramePos = w.BaseStream.Position;
