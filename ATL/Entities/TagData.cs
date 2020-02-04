@@ -114,6 +114,11 @@ namespace ATL
         /// </summary>
         public long PaddingSize = -1;
 
+        /// <summary>
+        /// Duration of audio track, in milliseconds
+        /// </summary>
+        public double DurationMs = 0;
+
 #pragma warning restore S1104 // Fields should not have public accessibility
 
         public TagData()
@@ -291,6 +296,8 @@ namespace ATL
 
             if (data.Lyrics != null)
                 Lyrics = new LyricsInfo(data.Lyrics);
+
+            DurationMs = data.DurationMs;
         }
 
         /// <summary>
@@ -378,6 +385,7 @@ namespace ATL
             DiscDigitsForLeadingZeroes = 0;
 
             PaddingSize = -1;
+            DurationMs = 0;
         }
 
         public void Cleanup()
@@ -427,8 +435,8 @@ namespace ATL
                     }
                     previousChapter = chapter;
                 }
-                // Can't calculate duration of final chapter => is mandatory
-                if (0 == previousChapter.EndTime) throw new InvalidDataException("Last chapter must have its EndTime or EndOffset set");
+                // Calculate duration of final chapter with duration of audio
+                if (previousChapter != null && 0 == previousChapter.EndTime) previousChapter.EndTime = (uint)Math.Round(DurationMs);
             }
         }
 

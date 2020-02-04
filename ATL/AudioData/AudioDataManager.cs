@@ -215,6 +215,7 @@ namespace ATL.AudioData
             bool result = true;
             IMetaDataIO theMetaIO;
             LogDelegator.GetLocateDelegate()(fileName);
+            theTag.DurationMs = audioDataIO.Duration;
 
             if (audioDataIO.IsMetaSupported(tagType))
             {

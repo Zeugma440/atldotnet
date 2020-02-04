@@ -419,7 +419,6 @@ namespace ATL.AudioData
         /// <returns></returns>
         public bool RewriteHeaders(BinaryWriter w, long deltaSize, ACTION action, string zone = DEFAULT_ZONE_NAME, long globalOffsetCorrection = 0)
         {
-            bool result = true;
             long delta;
             long offsetPositionCorrection;
             long offsetValueCorrection = 0;
@@ -427,117 +426,115 @@ namespace ATL.AudioData
             object updatedValue;
 
             if (null == zones) return false;
+            if (!zones.ContainsKey(zone)) return true; // No effect
 
-            if (zones.ContainsKey(zone))
+            // Calculate the corrected offset of the current zone
+            offsetPositionCorrection = 0;
+            foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
+                if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+
+            zones[zone].CorrectedOffset = zones[zone].Offset + offsetPositionCorrection;
+
+            // == Update the current zone's headers
+            foreach (FrameHeader header in zones[zone].Headers)
             {
-                // Calculate the corrected offset of the current zone
-                offsetPositionCorrection = 0;
+                // === Update values
+                offsetPositionCorrection = -globalOffsetCorrection;
+                delta = 0;
                 foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
-                    if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
-
-                zones[zone].CorrectedOffset = zones[zone].Offset + offsetPositionCorrection;
-
-                // == Update the current zone's headers
-                foreach (FrameHeader header in zones[zone].Headers)
                 {
-                    // === Update values
-                    offsetPositionCorrection = -globalOffsetCorrection;
-                    delta = 0;
-                    foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
-                    {
-                        if (header.Position >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+                    if (header.Position >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
 
-                        if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
-                    }
+                    if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
+                }
                     
-                    if (FrameHeader.TYPE.Counter == header.Type)
+                if (FrameHeader.TYPE.Counter == header.Type)
+                {
+                    switch (action)
                     {
-                        switch (action)
-                        {
-                            case ACTION.Add: delta = 1; break;
-                            case ACTION.Delete: delta = -1; break;
-                            default: delta = 0; break;
-                        }
-
-                    }
-                    else if (FrameHeader.TYPE.Size == header.Type)
-                    {
-                        delta = deltaSize;
+                        case ACTION.Add: delta = 1; break;
+                        case ACTION.Delete: delta = -1; break;
+                        default: delta = 0; break;
                     }
 
-                    // === Rewrite headers
-
-                    // If we're going to delete the zone, and the header is located inside it, don't write it !
-                    if (header.Position >= zones[zone].CorrectedOffset && ACTION.Delete == action) continue;
-
-                    if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
-                    {
-                        w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
-
-                        value = addToValue(header.Value, delta, out updatedValue);
-
-                        if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
-
-                        // The very same frame header is referenced from another frame and must be updated to its new value
-                        updateAllHeadersAtPosition(header.Position, updatedValue);
-
-                        if (!header.IsLittleEndian) Array.Reverse(value);
-
-                        w.Write(value);
-                    }
-                    else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
-                    {
-                        long headerPosition = header.Position + offsetPositionCorrection;
-                        w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
-                        value = null;
-
-                        long headerOffsetCorrection = (FrameHeader.TYPE.RelativeIndex == header.Type) ? headerPosition : 0;
-
-                        if (action != ACTION.Delete)
-                        {
-                            if (header.Value is long)
-                            {
-                                value = BitConverter.GetBytes((long)zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection);
-                            }
-                            else if (header.Value is int)
-                            {
-                                value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
-                            }
-                            else if (header.Value is uint)
-                            {
-                                value = BitConverter.GetBytes((uint)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
-                            }
-
-                            if (!header.IsLittleEndian) Array.Reverse(value);
-                        }
-                        else
-                        {
-                            if (header.Value is long)
-                            {
-                                value = BitConverter.GetBytes((long)0);
-                            }
-                            else if (header.Value is int)
-                            {
-                                value = BitConverter.GetBytes((int)0);
-                            }
-                            else if (header.Value is uint)
-                            {
-                                value = BitConverter.GetBytes((uint)0);
-                            }
-                        }
-
-                        if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
-
-                        w.Write(value);
-                    }
+                }
+                else if (FrameHeader.TYPE.Size == header.Type)
+                {
+                    delta = deltaSize;
                 }
 
-                // Update dynamic offset
-                if (!dynamicOffsetCorrection.ContainsKey(zone))
-                    dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
-            }
+                // === Rewrite headers
 
-            return result;
+                // If we're going to delete the zone, and the header is located inside it, don't write it !
+                if (header.Position >= zones[zone].CorrectedOffset && ACTION.Delete == action) continue;
+
+                if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
+                {
+                    w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
+
+                    value = addToValue(header.Value, delta, out updatedValue);
+
+                    if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
+
+                    // The very same frame header is referenced from another frame and must be updated to its new value
+                    updateAllHeadersAtPosition(header.Position, updatedValue);
+
+                    if (!header.IsLittleEndian) Array.Reverse(value);
+
+                    w.Write(value);
+                }
+                else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
+                {
+                    long headerPosition = header.Position + offsetPositionCorrection;
+                    w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
+                    value = null;
+
+                    long headerOffsetCorrection = (FrameHeader.TYPE.RelativeIndex == header.Type) ? headerPosition : 0;
+
+                    if (action != ACTION.Delete)
+                    {
+                        if (header.Value is long)
+                        {
+                            value = BitConverter.GetBytes((long)zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection);
+                        }
+                        else if (header.Value is int)
+                        {
+                            value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
+                        }
+                        else if (header.Value is uint)
+                        {
+                            value = BitConverter.GetBytes((uint)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
+                        }
+
+                        if (!header.IsLittleEndian) Array.Reverse(value);
+                    }
+                    else
+                    {
+                        if (header.Value is long)
+                        {
+                            value = BitConverter.GetBytes((long)0);
+                        }
+                        else if (header.Value is int)
+                        {
+                            value = BitConverter.GetBytes((int)0);
+                        }
+                        else if (header.Value is uint)
+                        {
+                            value = BitConverter.GetBytes((uint)0);
+                        }
+                    }
+
+                    if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
+
+                    w.Write(value);
+                } // Index & relative index types
+            } // Loop through headers
+
+            // Update dynamic offset
+            if (!dynamicOffsetCorrection.ContainsKey(zone))
+                dynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
+
+            return true;
         }
 
     }

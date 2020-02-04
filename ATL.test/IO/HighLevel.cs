@@ -526,13 +526,13 @@ namespace ATL.test.IO
             for (int i = 0; i < theTrack.Chapters.Count; i++)
             {
                 readChapter = theTrack.Chapters[i];
-                Assert.AreEqual(readChapter.StartOffset, chaptersSave[i].StartOffset);
-                Assert.AreEqual(readChapter.StartTime, chaptersSave[i].StartTime);
-                Assert.AreEqual(readChapter.EndOffset, chaptersSave[i].EndOffset);
-                Assert.AreEqual(readChapter.EndTime, chaptersSave[i].EndTime);
-                Assert.AreEqual(readChapter.Title, chaptersSave[i].Title);
-                Assert.AreEqual(readChapter.Subtitle, chaptersSave[i].Subtitle);
-                Assert.AreEqual(readChapter.UniqueID, chaptersSave[i].UniqueID);
+                Assert.AreEqual(chaptersSave[i].StartOffset, readChapter.StartOffset);
+                Assert.AreEqual(chaptersSave[i].StartTime, readChapter.StartTime);
+                Assert.AreEqual(chaptersSave[i].EndOffset, readChapter.EndOffset);
+                Assert.AreEqual(chaptersSave[i].EndTime, readChapter.EndTime);
+                Assert.AreEqual(chaptersSave[i].Title, readChapter.Title);
+                Assert.AreEqual(chaptersSave[i].Subtitle, readChapter.Subtitle);
+                Assert.AreEqual(chaptersSave[i].UniqueID, readChapter.UniqueID);
                 if (chaptersSave[i].Url != null)
                 {
                     Assert.AreEqual(chaptersSave[i].Url.Description, readChapter.Url.Description);

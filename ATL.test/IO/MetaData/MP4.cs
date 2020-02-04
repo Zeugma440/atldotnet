@@ -347,7 +347,6 @@ namespace ATL.test.IO.MetaData
 
                 ch = new ChapterInfo();
                 ch.StartTime = 3269;
-                ch.EndTime = 4000;
                 ch.Title = "Chapter 四";
                 expectedChaps.Add(ch.StartTime, ch);
 
@@ -383,7 +382,6 @@ namespace ATL.test.IO.MetaData
 
                 ch = new ChapterInfo();
                 ch.StartTime = 1230;
-                ch.EndTime = 4000;
                 ch.Title = "aaa0";
 
                 theTag.Chapters.Add(ch);
@@ -457,7 +455,6 @@ namespace ATL.test.IO.MetaData
 
                 ch = new ChapterInfo();
                 ch.StartTime = 1230;
-                ch.EndTime = 4000;
                 ch.Title = "aaa0";
 
                 theTag.Chapters.Add(ch);
@@ -567,7 +564,6 @@ namespace ATL.test.IO.MetaData
 
                 ch = new ChapterInfo();
                 ch.StartTime = 3269;
-                ch.EndTime = 4000;
                 ch.Title = "Chapter 四";
                 expectedChaps.Add(ch.StartTime, ch);
 
@@ -603,7 +599,6 @@ namespace ATL.test.IO.MetaData
                 ch = new ChapterInfo();
                 ch.StartTime = 1230;
                 ch.Title = "aaa0";
-                ch.EndTime = 4000;
 
                 theTag.Chapters.Add(ch);
                 expectedChaps.Add(ch.StartTime, ch);
@@ -675,7 +670,6 @@ namespace ATL.test.IO.MetaData
 
                 ch = new ChapterInfo();
                 ch.StartTime = 1230;
-                ch.EndTime = 4000;
                 ch.Title = "aaa0";
 
                 theTag.Chapters.Add(ch);
