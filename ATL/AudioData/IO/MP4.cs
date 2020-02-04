@@ -1516,6 +1516,7 @@ namespace ATL.AudioData.IO
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(chapPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - chapPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
             return 1;
         }
