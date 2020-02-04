@@ -90,8 +90,10 @@ namespace ATL.AudioData.IO
             public long RelativeOffset;
         }
 
+        // Inner technical information to remember for writing purposes
         private uint globalTimeScale;
         private int qtChapterTrackNum;
+        private byte[] chapterTrackEdits = null;
 
         private byte headerTypeID;
         private byte bitrateTypeID;
@@ -706,6 +708,16 @@ namespace ATL.AudioData.IO
                     }
                     chunkIndex++;
                 }
+
+                // Look for "trak.edts" atom and save it if it exists
+                source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
+                uint edtsSize = lookForMP4Atom(source.BaseStream, "edts");
+                if (edtsSize > 0)
+                {
+                    source.BaseStream.Seek(-8, SeekOrigin.Current);
+                    chapterTrackEdits = source.ReadBytes((int)edtsSize);
+                }
+
             } // End read Quicktime chapters
 
             source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
@@ -1591,6 +1603,14 @@ namespace ATL.AudioData.IO
             w.Write(0); // Height
 
             // TRACK HEADER END
+
+
+            // EDITS BEGIN (optional)
+            if (chapterTrackEdits != null)
+            {
+                w.Write(chapterTrackEdits);
+            }
+            // EDITS END (optional)
 
 
             // MEDIA BEGIN
