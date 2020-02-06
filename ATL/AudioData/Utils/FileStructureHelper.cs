@@ -504,18 +504,17 @@ namespace ATL.AudioData
 
                     if (action != ACTION.Delete)
                     {
-                        // TODO why zones[zone].Offset and not header.Value ??
                         if (header.Value is long)
                         {
-                            value = BitConverter.GetBytes((long)zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection);
+                            value = BitConverter.GetBytes((long)header.Value + offsetValueCorrection - headerOffsetCorrection);
                         }
                         else if (header.Value is int)
                         {
-                            value = BitConverter.GetBytes((int)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
+                            value = BitConverter.GetBytes((int)((int)header.Value + offsetValueCorrection - headerOffsetCorrection));
                         }
                         else if (header.Value is uint)
                         {
-                            value = BitConverter.GetBytes((uint)(zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection));
+                            value = BitConverter.GetBytes((uint)((uint)header.Value + offsetValueCorrection - headerOffsetCorrection));
                         }
 
                         if (!header.IsLittleEndian) Array.Reverse(value);

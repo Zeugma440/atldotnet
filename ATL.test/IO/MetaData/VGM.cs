@@ -57,7 +57,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            // Source : totally metadata-free SPC
+            // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));

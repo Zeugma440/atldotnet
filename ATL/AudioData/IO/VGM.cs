@@ -140,7 +140,7 @@ namespace ATL.AudioData.IO
                     else
                     {
                         structureHelper.AddZone(sizeInfo.FileSize, 0);
-                        structureHelper.AddIndex(source.BaseStream.Position - 4, 0, true);
+                        structureHelper.AddIndex(source.BaseStream.Position - 4, (int)sizeInfo.FileSize, true);
                     }
                 }
 
