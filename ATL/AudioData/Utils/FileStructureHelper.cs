@@ -397,14 +397,14 @@ namespace ATL.AudioData
             }
         }
 
-        private static bool isValueGT(object value, long comparison)
+        private static bool isValueGT(object value, long addition, long comparison)
         {
             if (value is int)
-                return (int)value > comparison;
+                return (int)value + addition > comparison;
             else if (value is uint)
-                return (uint)value > comparison;
+                return (uint)value + addition > comparison;
             else if (value is long)
-                return (long)value > comparison;
+                return (long)value + addition > comparison;
             else
                 throw new NotSupportedException("Value type not supported in comparison");
         }
@@ -456,9 +456,9 @@ namespace ATL.AudioData
 
                     if (header.Position >= offsetDelta.Key && !passedParentZone) offsetPositionCorrection += offsetDelta.Value;
 
-                    if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value, offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
+                    if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value, offsetValueCorrection, offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                 }
-                    
+
                 if (FrameHeader.TYPE.Counter == header.Type)
                 {
                     switch (action)
