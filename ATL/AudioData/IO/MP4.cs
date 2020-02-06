@@ -354,7 +354,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TRAK);
                     // MDAT at the end of the file
                     structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
-                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
                 }
             }
 
@@ -411,8 +411,10 @@ namespace ATL.AudioData.IO
                     // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
                     if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                     {
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT); // Zone size = size of chapters
-                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT); // Zone size header = actual size of the zone that may include audio data
+                        // Zone size = size of chapters
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT);
+                        // Zone size header = actual size of the zone that may include audio data
+                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT); 
                     }
 
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
@@ -1734,21 +1736,6 @@ namespace ATL.AudioData.IO
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
             // TIME TO SAMPLE END
 
-            // SAMPLE SIZE START
-            long stszPos = w.BaseStream.Position;
-            w.Write(0);
-            w.Write(Utils.Latin1Encoding.GetBytes("stsz"));
-            w.Write(0); // Version and flags
-            w.Write(0); // Different block sizes
-            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
-            foreach (ChapterInfo chapter in chapters)
-                w.Write(StreamUtils.EncodeBEUInt32((uint)(2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12)));
-            finalFramePos = w.BaseStream.Position;
-            w.BaseStream.Seek(stszPos, SeekOrigin.Begin);
-            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stszPos)));
-            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
-            // SAMPLE SIZE END
-
             // SAMPLE <-> CHUNK START
             long stscPos = w.BaseStream.Position;
             w.Write(0);
@@ -1765,6 +1752,21 @@ namespace ATL.AudioData.IO
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
             // SAMPLE <-> CHUNK END
 
+            // SAMPLE SIZE START
+            long stszPos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("stsz"));
+            w.Write(0); // Version and flags
+            w.Write(0); // Different block sizes
+            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+            foreach (ChapterInfo chapter in chapters)
+                w.Write(StreamUtils.EncodeBEUInt32((uint)(2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12)));
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(stszPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stszPos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            // SAMPLE SIZE END
+
             // CHUNK OFFSET START
             long stcoPos = w.BaseStream.Position;
             w.Write(0);
@@ -1778,8 +1780,8 @@ namespace ATL.AudioData.IO
 
             // Only works when QT track is located _before_ QT mdat
             Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
-            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT);
-            w.Write(StreamUtils.EncodeBEUInt32((uint)chapMdatZone.CorrectedOffset + 8)); // TODO - on some cases, switch to co64 ?
+            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK, ZONE_MP4_QT_CHAP_TRAK);
+            w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.getCorrectedOffset(ZONE_MP4_QT_CHAP_MDAT) + 8)); // TODO - on some cases, switch to co64 ?
                                                                                                                            //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
                                                                                                                            //            }
             finalFramePos = w.BaseStream.Position;

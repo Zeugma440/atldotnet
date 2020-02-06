@@ -51,6 +51,10 @@ namespace ATL.AudioData
             /// </summary>
             public readonly bool IsLittleEndian;
             /// <summary>
+            /// Zone where the header is located physically
+            /// </summary>
+            public readonly string ParentZone;
+            /// <summary>
             /// Current value of the header (counter : number of frames / size : frame size / index : frame index (absolute) / rindex : frame index (relative to header position))
             /// </summary>
             public object Value;
@@ -58,9 +62,9 @@ namespace ATL.AudioData
             /// <summary>
             /// Constructs a new frame header using the given field values
             /// </summary>
-            public FrameHeader(TYPE type, long position, object value, bool isLittleEndian = true)
+            public FrameHeader(TYPE type, long position, object value, bool isLittleEndian = true, string parentZone = "")
             {
-                Type = type; Position = position; Value = value; IsLittleEndian = isLittleEndian;
+                Type = type; Position = position; Value = value; IsLittleEndian = isLittleEndian; ParentZone = parentZone;
             }
         }
 
@@ -77,10 +81,6 @@ namespace ATL.AudioData
             /// Offset in bytes
             /// </summary>
             public long Offset;
-            /// <summary>
-            /// Corrected offset in bytes
-            /// </summary>
-            public long CorrectedOffset;
             /// <summary>
             /// Size in bytes
             /// </summary>
@@ -109,7 +109,6 @@ namespace ATL.AudioData
             {
                 Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag;
                 Headers = new List<FrameHeader>();
-                CorrectedOffset = Offset;
             }
 
             /// <summary>
@@ -244,33 +243,35 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new Counter-type header using the given fields and attach it to the zone of given name
         /// </summary>
-        public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME)
+        public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, FrameHeader.TYPE.Counter, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE.Counter, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
         /// Record a new Size-type header using the given fields and attach it to the zone of given name
         /// </summary>
-        public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME)
+        public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, isLittleEndian);
+            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
         /// Record a new Index-type header using the given fields and attach it to the zone of given name
         /// </summary>
-        public void AddIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME)
+        public void AddIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian);
+            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
-        /// Record a new Index-type header using the given fields and attach it to the zone of given name
+        /// Record a new Index-type header using the given fields and attach it to the zone of given name, using a position relative to the last zone's offset
         /// </summary>
-        public void AddPendingIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME)
+        public void AddPendingIndex(long pendingPosition, object value, bool relative, string zone, string positionZone, string parentZone = "")
         {
-            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian, true);
+            long finalPosition = zones[positionZone].Offset + pendingPosition;
+
+            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
@@ -285,11 +286,10 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new header using the given fields and attach it to the zone of given name
         /// </summary>
-        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool isLittleEndian, bool isPending = false)
+        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool isLittleEndian, string parentZone = "")
         {
             if (!zones.ContainsKey(zone)) DeclareZone(zone);
-            long offset = isPending ? zones[zone].Offset + position : position;
-            zones[zone].Headers.Add(new FrameHeader(type, offset, value, isLittleEndian));
+            zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian, parentZone));
         }
 
         public long GetFirstRecordedOffset()
@@ -409,6 +409,15 @@ namespace ATL.AudioData
                 throw new NotSupportedException("Value type not supported in comparison");
         }
 
+        public long getCorrectedOffset(string zone)
+        {
+            long offsetPositionCorrection = 0;
+            foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
+                if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+
+            return zones[zone].Offset + offsetPositionCorrection;
+        }
+
         /// <summary>
         /// Rewrite all zone headers in the given stream according to the given size evolution and the given action
         /// </summary>
@@ -421,31 +430,33 @@ namespace ATL.AudioData
         {
             long delta;
             long offsetPositionCorrection;
-            long offsetValueCorrection = 0;
+            long offsetValueCorrection;
             byte[] value;
             object updatedValue;
+            bool passedParentZone;
 
             if (null == zones) return false;
             if (!zones.ContainsKey(zone)) return true; // No effect
-
-            // Calculate the corrected offset of the current zone
-            offsetPositionCorrection = 0;
-            foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
-                if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
-
-            zones[zone].CorrectedOffset = zones[zone].Offset + offsetPositionCorrection;
 
             // == Update the current zone's headers
             foreach (FrameHeader header in zones[zone].Headers)
             {
                 // === Update values
                 offsetPositionCorrection = -globalOffsetCorrection;
+                offsetValueCorrection = 0;
                 delta = 0;
-                foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection.Values)
-                {
-                    if (header.Position >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+                passedParentZone = false;
 
-                    if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value,offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
+                foreach (string dynamicZone in dynamicOffsetCorrection.Keys)
+                {
+                    // Don't need to process zones located further than we are
+                    if (dynamicZone == header.ParentZone) passedParentZone = true;
+
+                    KeyValuePair<long, long> offsetDelta = dynamicOffsetCorrection[dynamicZone];
+
+                    if (header.Position >= offsetDelta.Key && !passedParentZone) offsetPositionCorrection += offsetDelta.Value;
+
+                    if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value, offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                 }
                     
                 if (FrameHeader.TYPE.Counter == header.Type)
@@ -466,7 +477,7 @@ namespace ATL.AudioData
                 // === Rewrite headers
 
                 // If we're going to delete the zone, and the header is located inside it, don't write it !
-                if (header.Position >= zones[zone].CorrectedOffset && ACTION.Delete == action) continue;
+                if (header.ParentZone == zone && ACTION.Delete == action) continue;
 
                 if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
                 {
@@ -493,6 +504,7 @@ namespace ATL.AudioData
 
                     if (action != ACTION.Delete)
                     {
+                        // TODO why zones[zone].Offset and not header.Value ??
                         if (header.Value is long)
                         {
                             value = BitConverter.GetBytes((long)zones[zone].Offset + offsetValueCorrection - headerOffsetCorrection);

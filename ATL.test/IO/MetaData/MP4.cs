@@ -691,8 +691,8 @@ namespace ATL.test.IO.MetaData
                     if (expectedChaps.ContainsKey(chap.StartTime))
                     {
                         found++;
-                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
                     }
                     else
                     {

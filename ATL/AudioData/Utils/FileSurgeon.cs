@@ -227,7 +227,7 @@ namespace ATL.AudioData.IO
             //            totalProgressSteps += 3;
 
             // Load the 'interesting' part of the file in memory
-            // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC)
+            // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC, certain MP4s where useful zones are at the very end)
             long chunkBeginOffset = getFirstRecordedOffset(zones);
             long chunkEndOffset = getLastRecordedOffset(zones);
 
