@@ -373,14 +373,14 @@ namespace ATL.AudioData.IO
                 if (initialPaddingSize > 0)
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
-                    structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
+                    structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME, PADDING_ZONE_NAME);
                 }
                 else // Padding atom not found
                 {
                     if (Settings.AddNewPadding) // Create a virtual position to insert a new padding zone
                     {
                         structureHelper.AddZone(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
-                        structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME);
+                        structureHelper.AddSize(source.BaseStream.Position - 8, 0, PADDING_ZONE_NAME, PADDING_ZONE_NAME);
                     }
                 }
             }
