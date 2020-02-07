@@ -1080,6 +1080,9 @@ namespace ATL.AudioData.IO
                         {
                             PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, (int)(pictureSize - 16), picType, getImplementedTagType(), dataClass, picturePosition);
                             tagData.Pictures.Add(picInfo);
+                        } else
+                        {
+                            source.BaseStream.Seek(pictureSize - 16, SeekOrigin.Current);
                         }
 
                         // Look for other pictures within 'covr'
@@ -1096,8 +1099,6 @@ namespace ATL.AudioData.IO
                         }
                     } while (pictureSize > 0);
                     source.BaseStream.Seek(lastLocation, SeekOrigin.Begin);
-
-                    atomPosition = source.BaseStream.Position - 8;
                 }
                 else if (0 == dataClass) // Special cases : gnre, trkn, disk
                 {
