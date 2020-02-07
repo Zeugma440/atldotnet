@@ -847,10 +847,12 @@ namespace ATL.AudioData.IO
                             }
                         }
                     }
-
-                    string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
-                    structureHelper.AddZone(valueLong, 0, zoneName, false);
-                    structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
+                    else // Don't need to save chunks for chapters since they are entirely rewritten
+                    {
+                        string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
+                        structureHelper.AddZone(valueLong, 0, zoneName, false);
+                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
+                    }
                 } // Chunk offsets
             }
 
