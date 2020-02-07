@@ -404,6 +404,20 @@ namespace ATL.AudioData.IO
             {
                 long minChapterOffset = chapterTrackSamples.Min(sample => sample.ChunkOffset);
                 long chapterSize = chapterTrackSamples.Sum(sample => sample.Size);
+
+                long previousEndOffset = 0;
+                foreach(MP4Sample sample in chapterTrackSamples)
+                {
+                    if (0 == previousEndOffset) previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
+                    else if (previousEndOffset == sample.ChunkOffset + sample.RelativeOffset)
+                    {
+                        previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
+                    } else
+                    {
+                        throw new InvalidDataException("ATL does not support writing non-contiguous chapters (e.g. chapter data interleaved with audio data)");
+                    }
+                }
+
                 do
                 {
                     // On some files, there's a single mdat atom that contains both chapter references and audio data
