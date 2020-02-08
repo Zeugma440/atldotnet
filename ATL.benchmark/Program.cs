@@ -18,13 +18,13 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            //readAt(@"E:\temp\m4a-mp4\aaa.m4a");
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\AAC\chapters_QT.m4v");
 
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\feastdaybylamardeuse.m4b");
+            writeAt(@"E:\temp\m4a-mp4\Harmonics_librivox.m4b");
 
             //displayVersionInfo();
         }
@@ -83,6 +83,7 @@ namespace ATL.benchmark
 
             Writing w = new Writing();
             w.performWrite(fileName);
+            Console.WriteLine(">>> WRITE : END");
 
             Console.ReadLine();
         }
