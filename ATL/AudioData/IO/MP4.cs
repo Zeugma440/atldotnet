@@ -1567,7 +1567,6 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            //            long mdatPos = w.BaseStream.Position;
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
             foreach (ChapterInfo chapter in chapters)
@@ -1579,11 +1578,6 @@ namespace ATL.AudioData.IO
                 w.Write(Utils.Latin1Encoding.GetBytes("encd"));
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
-            /*          
-                        long finalFramePos = w.BaseStream.Position;
-                        w.BaseStream.Seek(mdatPos, SeekOrigin.Begin);
-                        w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - mdatPos)));
-              */
 
             return 1;
         }
@@ -1796,18 +1790,14 @@ namespace ATL.AudioData.IO
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("stco"));
             w.Write(0); // Version and flags
-                        //            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+
             w.Write(StreamUtils.EncodeBEInt32(1));
-            //            long offset = chapterDataOffset;
-            //            foreach (ChapterInfo chapter in chapters)
-            //            {
 
             // Only works when QT track is located _before_ QT mdat
             Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
             structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK, ZONE_MP4_QT_CHAP_TRAK);
             w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.getCorrectedOffset(ZONE_MP4_QT_CHAP_MDAT) + 8)); // TODO - on some cases, switch to co64 ?
-                                                                                                                      //                offset += 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
-                                                                                                                      //            }
+
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - stcoPos)));
