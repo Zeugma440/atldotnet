@@ -60,7 +60,6 @@ namespace ATL.AudioData.IO
         private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
-        private double calculatedDuration;
         private int sampleRate;
         private ChannelsArrangement channelsArrangement;
 
@@ -114,7 +113,6 @@ namespace ATL.AudioData.IO
 
             bitrate = 0;
             sampleRate = 0;
-            calculatedDuration = 0;
         }
 
         public AAC(string fileName)
