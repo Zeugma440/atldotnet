@@ -98,7 +98,7 @@ namespace ATL.AudioData.IO
         private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
-        private double calculatedDuration;
+        private double calculatedDurationMs; // Calculated track duration, in milliseconds
         private int sampleRate;
         private ChannelsArrangement channelsArrangement;
 
@@ -183,7 +183,7 @@ namespace ATL.AudioData.IO
 
             bitrate = 0;
             sampleRate = 0;
-            calculatedDuration = 0;
+            calculatedDurationMs = 0;
             globalTimeScale = 0;
             qtChapterTrackNum = 0;
         }
@@ -206,7 +206,7 @@ namespace ATL.AudioData.IO
         {
             if (headerTypeID == MP4_HEADER_TYPE_MP4)
             {
-                return calculatedDuration;
+                return calculatedDurationMs;
             }
             else
             {
@@ -321,7 +321,7 @@ namespace ATL.AudioData.IO
             globalTimeScale = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             long timeLengthPerSec;
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            calculatedDuration = timeLengthPerSec * 1000.0 / globalTimeScale;
+            calculatedDurationMs = timeLengthPerSec * 1000.0 / globalTimeScale;
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
@@ -397,7 +397,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return;
             }
-            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDuration * 1000.0, 0);
+            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
 
             // If QT chapters are present record the current zone for chapters data
             if (chapterTrackSamples.Count > 0 && readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
@@ -937,7 +937,7 @@ namespace ATL.AudioData.IO
                         chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
                         previousChapter = chapter;
                     }
-                    if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDuration));
+                    if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
                 }
             }
             else if (Settings.MP4_createNeroChapters)
@@ -1292,7 +1292,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TRAK)) // Quicktime chapter track
             {
-                result = writeQTChaptersTrack(w, qtChapterTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDuration));
+                result = writeQTChaptersTrack(w, qtChapterTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs));
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter data
             {
@@ -1588,7 +1588,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDuration)
+        private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDurationMs)
         {
             uint trackTimescale = 44100;
 
@@ -1614,7 +1614,7 @@ namespace ATL.AudioData.IO
 
             w.Write(0); // Reserved
 
-            w.Write(StreamUtils.EncodeBEUInt32(trackDuration * globalTimeScale)); // Duration
+            w.Write(StreamUtils.EncodeBEUInt32(trackDurationMs / 1000 * globalTimeScale)); // Duration (sec)
 
             w.Write((long)0); // Reserved
             w.Write((short)0); // Layer
@@ -1654,7 +1654,7 @@ namespace ATL.AudioData.IO
 
             w.Write(StreamUtils.EncodeBEUInt32(trackTimescale)); // Track timescale
 
-            w.Write(StreamUtils.EncodeBEUInt32((uint)(trackDuration * trackTimescale))); // Duration
+            w.Write(StreamUtils.EncodeBEUInt32((uint)(trackDurationMs / 1000 * trackTimescale))); // Duration (sec)
 
             w.Write(new byte[2] { 0x55, 0xc4 }); // Code for English - TODO : make that dynamic
 
