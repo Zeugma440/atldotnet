@@ -140,11 +140,6 @@ namespace ATL
 		/// </summary>
         public int DiscTotal { get; set; }
         /// <summary>
-		/// Rating (1 to 5)
-		/// </summary>
-        [Obsolete("Use Popularity")]
-        public int Rating { get; set; }
-        /// <summary>
 		/// Popularity (0% = 0 stars to 100% = 5 stars)
         /// e.g. 3.5 stars = 70%
 		/// </summary>
@@ -324,9 +319,6 @@ namespace ATL
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             DurationMs = fileIO.Duration;
-#pragma warning disable CS0618 // Obsolete
-            Rating = fileIO.Rating;
-#pragma warning restore CS0618 // Obsolete
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
@@ -365,7 +357,6 @@ namespace ATL
             result.DiscNumber = DiscNumber.ToString();
             result.DiscTotal = DiscTotal.ToString();
             result.ChaptersTableDescription = ChaptersTableDescription.ToString();
-            result.Rating = (Popularity * 5).ToString();
 
             result.Chapters = new List<ChapterInfo>();
             foreach (ChapterInfo chapter in Chapters)

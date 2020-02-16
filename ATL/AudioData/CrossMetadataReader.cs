@@ -352,19 +352,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        public ushort Rating
-        {
-            get
-            {
-                ushort rating = 0;
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    rating = reader.Rating;
-                    if (rating != 0) break;
-                }
-                return rating;
-            }
-        }
+        
         public float Popularity
         {
             get

@@ -8,8 +8,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void Factories_FormatCpy()
         {
-            Format f1 = new Format("AAA");
-            f1.ID = 1;
+            Format f1 = new Format(1, "AAA");
             f1.AddMimeType("ab/cd");
             f1.AddExtension("aa");
 

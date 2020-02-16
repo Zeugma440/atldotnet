@@ -415,14 +415,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public ushort Rating
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Rating;
-            }
-        }
-
         public float Popularity
         {
             get

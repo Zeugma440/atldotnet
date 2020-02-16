@@ -212,14 +212,6 @@ namespace ATL.AudioData.IO
             }
         }
         /// <summary>
-        /// Rating, from 0 to 5
-        /// </summary>
-        [Obsolete("Use Popularity")]
-        public ushort Rating
-        {
-            get { return (ushort)Math.Round(Popularity * 5); }
-        }
-        /// <summary>
         /// Rating, from 0 to 100%
         /// </summary>
         public float Popularity

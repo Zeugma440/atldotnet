@@ -102,14 +102,6 @@ namespace ATL.AudioData
 			get;
 		}
         /// <summary>
-        /// Rating of the track, from 1 to 5
-        /// </summary>
-        [Obsolete("Use Popularity")]
-        ushort Rating
-        {
-            get;
-        }
-        /// <summary>
         /// Rating of the track, from 0% to 100%
         /// </summary>
         float Popularity

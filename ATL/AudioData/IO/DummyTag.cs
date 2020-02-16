@@ -66,10 +66,6 @@ namespace ATL.AudioData.IO
 		{
 			get { return ""; }
 		}
-        public ushort Rating
-        {
-            get { return 0; }
-        }
         public float Popularity
         {
             get { return 0; }
