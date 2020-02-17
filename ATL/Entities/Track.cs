@@ -345,6 +345,7 @@ namespace ATL
             result.OriginalArtist = OriginalArtist;
             result.OriginalAlbum = OriginalAlbum;
             result.GeneralDescription = Description;
+            result.Rating = (Popularity * 5).ToString();
             result.Copyright = Copyright;
             result.Publisher = Publisher;
             result.AlbumArtist = AlbumArtist;
