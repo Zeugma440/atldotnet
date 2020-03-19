@@ -172,14 +172,14 @@ namespace ATL
                 }
 
                 // Then retrieve the rest by reading the stream
-                stream.Read(buffer, offset + availableBytes, count - availableBytes);
+                int readBytes = stream.Read(buffer, offset + availableBytes, count - availableBytes);
 
-                streamPosition += count - availableBytes;
+                streamPosition += readBytes;
                 stream.Position = streamPosition;
 
-                cursorPosition += count; // Virtual position outside buffer zone
+                cursorPosition += availableBytes + readBytes; // Virtual position outside buffer zone
 
-                return count;
+                return (availableBytes + readBytes);
             }
         }
 
