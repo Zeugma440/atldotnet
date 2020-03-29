@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0;netcoreapp2.0</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company />
     <AssemblyVersion>3.3.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
@@ -13,7 +14,7 @@
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
     <FileVersion>3.3.0.0</FileVersion>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>Documentation included</PackageReleaseNotes>
     <Version>3.03</Version>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
   </PropertyGroup>
