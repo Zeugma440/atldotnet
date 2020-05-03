@@ -160,6 +160,18 @@ namespace ATL
             }
         }
 
+        public static sbyte DecodeSignedByte(byte[] data)
+        {
+            if (data.Length < 1) throw new InvalidDataException("Data should be at least 1 bytes long; found " + data.Length + " bytes");
+            return (sbyte)(data[0]);
+        }
+
+        public static byte DecodeUByte(byte[] data)
+        {
+            if (data.Length < 1) throw new InvalidDataException("Data should be at least 1 bytes long; found " + data.Length + " bytes");
+            return data[0];
+        }
+
         /// <summary>
         /// Decodes an unsigned Big-Endian 16-bit integer from the given array of bytes
         /// </summary>

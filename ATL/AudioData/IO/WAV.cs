@@ -37,6 +37,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_FORMAT = "fmt ";
         private const string CHUNK_FACT = "fact";
         private const string CHUNK_DATA = "data";
+        private const string CHUNK_SAMPLE = SampleTag.CHUNK_SAMPLE;
 
         // Broadcast Wave metadata sub-chunk
         private const string CHUNK_BEXT = BextTag.CHUNK_BEXT;
@@ -241,6 +242,7 @@ namespace ATL.AudioData.IO
             string subChunkId;
             uint chunkSize;
             long chunkDataPos;
+            bool foundSample = false;
             bool foundBext = false;
             bool foundInfo = false;
             bool foundIXml = false;
@@ -292,7 +294,7 @@ namespace ATL.AudioData.IO
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleNumber = StreamUtils.DecodeInt32(data); else sampleNumber = StreamUtils.DecodeBEInt32(data);
                 }
-                else if (subChunkId.Equals(CHUNK_BEXT))
+                else if (subChunkId.Equals(CHUNK_SAMPLE))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -301,6 +303,16 @@ namespace ATL.AudioData.IO
                     tagExists = true;
 
                     BextTag.FromStream(source, this, readTagParams);
+                }
+                else if (subChunkId.Equals(CHUNK_BEXT))
+                {
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
+
+                    foundSample = true;
+                    tagExists = true;
+
+                    SampleTag.FromStream(source, this, readTagParams);
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
@@ -354,6 +366,11 @@ namespace ATL.AudioData.IO
             // Add zone placeholders for future tag writing
             if (readTagParams.PrepareForWriting)
             {
+                if (!foundSample)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_SAMPLE);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_SAMPLE);
+                }
                 if (!foundBext)
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_BEXT);
@@ -435,7 +452,8 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
+            if (zone.Equals(CHUNK_SAMPLE) && SampleTag.IsDataEligible(this)) result += SampleTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_INFO) && InfoTag.IsDataEligible(this)) result += InfoTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
 

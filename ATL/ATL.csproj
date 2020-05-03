@@ -6,7 +6,7 @@
     <Company />
     <AssemblyVersion>3.3.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
-	<PackageVersion>3.2.0</PackageVersion>
+	<PackageVersion>3.3.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>audio metadata tag mp3 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
     <PackageLicenseUrl></PackageLicenseUrl>
