@@ -299,20 +299,20 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
-                    foundBext = true;
+                    foundSample = true;
                     tagExists = true;
 
-                    BextTag.FromStream(source, this, readTagParams);
+                    SampleTag.FromStream(source, this, readTagParams);
                 }
                 else if (subChunkId.Equals(CHUNK_BEXT))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
 
-                    foundSample = true;
+                    foundBext = true;
                     tagExists = true;
 
-                    SampleTag.FromStream(source, this, readTagParams);
+                    BextTag.FromStream(source, this, readTagParams);
                 }
                 else if (subChunkId.Equals(CHUNK_INFO))
                 {
