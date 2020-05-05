@@ -137,26 +137,26 @@ namespace ATL.test.CodeSnippets
 
             theFile.Chapters = new System.Collections.Generic.List<ChapterInfo>();
 
-	        ChapterInfo ch = new ChapterInfo();
+            ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 123;
-	        ch.StartOffset = 456;
-	        ch.EndTime = 789;
-	        ch.EndOffset = 101112;
-	        ch.UniqueID = "";
-	        ch.Title = "aaa";
-	        ch.Subtitle = "bbb";
-	        ch.Url = new ChapterInfo.UrlInfo("ccc","ddd");
+            ch.StartOffset = 456;
+            ch.EndTime = 789;
+            ch.EndOffset = 101112;
+            ch.UniqueID = "";
+            ch.Title = "aaa";
+            ch.Subtitle = "bbb";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
             theFile.Chapters.Add(ch);
 
-	        ch = new ChapterInfo();
+            ch = new ChapterInfo();
             ch.StartTime = 1230;
-	        ch.StartOffset = 4560;
-	        ch.EndTime = 7890;
-	        ch.EndOffset = 1011120;
-	        ch.UniqueID = "002";
-	        ch.Title = "aaa0";
-	        ch.Subtitle = "bbb0";
-	        ch.Url = new ChapterInfo.UrlInfo("ccc","ddd0");
+            ch.StartOffset = 4560;
+            ch.EndTime = 7890;
+            ch.EndOffset = 1011120;
+            ch.UniqueID = "002";
+            ch.Title = "aaa0";
+            ch.Subtitle = "bbb0";
+            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
             // Add a picture to the 2nd chapter
             ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath));
             theFile.Chapters.Add(ch);
@@ -170,9 +170,9 @@ namespace ATL.test.CodeSnippets
 
             // Display chapters
             foreach (ChapterInfo chap in theFile.Chapters)
-	        {
-		        System.Console.WriteLine(chap.Title + "(" + chap.StartTime + ")");
-	        }
+            {
+                System.Console.WriteLine(chap.Title + "(" + chap.StartTime + ")");
+            }
         }
 
         [TestMethod, TestCategory("snippets")]
@@ -228,6 +228,54 @@ namespace ATL.test.CodeSnippets
             theTrack.AdditionalFields["bext.originator"] = "Dave Johnson";
             theTrack.AdditionalFields["info.IENG"] = "John Jackman";
             theTrack.AdditionalFields["ixml.SCENE"] = "42";
+            theTrack.Save();
+        }
+
+        [TestMethod, TestCategory("snippets")]
+        public void CS_WaveSample()
+        {
+            // Load audio file information into memory
+            Track theTrack = new Track(audioFilePath);
+
+
+            // Display general data
+            int manufacturer = 0;
+            if (theTrack.AdditionalFields.ContainsKey("sample.manufacturer")) manufacturer = int.Parse(theTrack.AdditionalFields["sample.manufacturer"]);
+            int midiUnityNote = 0;
+            if (theTrack.AdditionalFields.ContainsKey("sample.MIDIUnityNote")) midiUnityNote = int.Parse(theTrack.AdditionalFields["sample.MIDIUnityNote"]);
+
+            System.Console.WriteLine("Manufacturer : " + manufacturer);
+            System.Console.WriteLine("MIDI Unity note : " + midiUnityNote);
+
+            // Display loop points data
+            int nbLoopPoints = 0;
+            if (theTrack.AdditionalFields.ContainsKey("sample.NumSampleLoops")) nbLoopPoints = int.Parse(theTrack.AdditionalFields["sample.NumSampleLoops"]);
+
+            for (int i = 0; i < nbLoopPoints; i++)
+            {
+                int type = 0;
+                if (theTrack.AdditionalFields.ContainsKey("sample.SampleLoop[" + i + "].Type")) type = int.Parse(theTrack.AdditionalFields["sample.SampleLoop[" + i + "].Type"]);
+                int start = 0;
+                if (theTrack.AdditionalFields.ContainsKey("sample.SampleLoop[" + i + "].Start")) start = int.Parse(theTrack.AdditionalFields["sample.SampleLoop[" + i + "].Start"]);
+                int end = 0;
+                if (theTrack.AdditionalFields.ContainsKey("sample.SampleLoop[" + i + "].End")) end = int.Parse(theTrack.AdditionalFields["sample.SampleLoop[" + i + "].End"]);
+
+                System.Console.WriteLine("Sample[" + i + "] : Type " + type + " : " + start + "->" + end);
+            }
+
+            // Modify data
+            theTrack.AdditionalFields["sample.MIDIUnityNote"] = "61";
+            theTrack.AdditionalFields["sample.SampleLoop[0].Start"] = "1000";
+            theTrack.AdditionalFields["sample.SampleLoop[0].End"] = "2000";
+            
+            // Add new sample loop
+            theTrack.AdditionalFields["sample.SampleLoop[1].Start"] = "3000";
+            theTrack.AdditionalFields["sample.SampleLoop[1].End"] = "4000";
+            
+            // Remove sample loop (all sub-fields after [x] should be removed)
+            theTrack.AdditionalFields.Remove("sample.SampleLoop[2].Start");
+            theTrack.AdditionalFields.Remove("sample.SampleLoop[2].End");
+
             theTrack.Save();
         }
 
@@ -303,6 +351,6 @@ namespace ATL.test.CodeSnippets
             tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
             tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
             pls.Tracks = tracksToWrite;
-        }        
+        }
     }
 }
