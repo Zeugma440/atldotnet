@@ -142,8 +142,8 @@ namespace ATL.AudioData.IO
             foreach(string s in additionalFields.Keys)
             {
                 if (s.StartsWith("sample.SampleLoop")) {
-                    string key = s.Substring(0, s.IndexOf("]"));
-                    if (!keys.Contains(s)) keys.Add(s);
+                    string key = s.Substring(0, s.IndexOf("]") + 1);
+                    if (!keys.Contains(key)) keys.Add(key);
                 }
             }
             w.Write(keys.Count);
@@ -153,7 +153,7 @@ namespace ATL.AudioData.IO
             w.Write(0); // Placeholder for data size that will be rewritten at the end of the method
 
             // Sample loops data
-            foreach (string key in keys) // TODO to test
+            foreach (string key in keys)
             {
                 writeFieldIntValue(key+ ".CuePointId", additionalFields, w, 0);
                 writeFieldIntValue(key + ".Type", additionalFields, w, 0);

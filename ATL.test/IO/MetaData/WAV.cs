@@ -10,6 +10,7 @@ namespace ATL.test.IO.MetaData
         private string notEmptyFile_bext = "WAV/broadcastwave_bext.wav";
         private string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
         private string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
+        private string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
 
         public WAV()
         {
@@ -84,6 +85,31 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
         }
 
+        private void initSampleTestData()
+        {
+            notEmptyFile = notEmptyFile_sample;
+
+            testData = new TagData();
+
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.manufacturer", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.product", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.period", "3"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.MIDIUnityNote", "4"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.MIDIPitchFraction", "5"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEFormat", "24"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Hours", "-1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Minutes", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Seconds", "20"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Frames", "30"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].CuePointId", "11"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Type", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Start", "123"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].End", "456"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Fraction", "8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].PlayCount", "2"));
+        }
+
         [TestMethod]
         public void TagIO_R_WAV_BEXT_simple()
         {
@@ -142,6 +168,13 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_WAV_Sample_Empty()
+        {
+            initSampleTestData();
+            test_RW_Empty(emptyFile, true, true, true);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WAV_BEXT_Existing()
         {
             initBextTestData();
@@ -161,6 +194,15 @@ namespace ATL.test.IO.MetaData
             initIXmlTestData();
             test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
         }
+
+        /* Should find a tool to edit all these informations manually to create a test file
+        [TestMethod]
+        public void TagIO_RW_WAV_Sample_Existing()
+        {
+            initSampleTestData();
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
+        */
 
     }
 }
