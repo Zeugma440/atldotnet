@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
-using System;
-using System.Data;
 
 namespace ATL.AudioData.IO
 {
