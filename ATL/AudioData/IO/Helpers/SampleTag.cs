@@ -16,34 +16,22 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Manufacturer
-            source.Read(data, 0, 4);
-            int intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.manufacturer", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.manufacturer", data, readTagParams.ReadAllMetaFrames);
 
             // Product
-            source.Read(data, 0, 4);
-            intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.product", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.product", data, readTagParams.ReadAllMetaFrames);
 
             // Period
-            source.Read(data, 0, 4);
-            intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.period", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.period", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI unity note
-            source.Read(data, 0, 4);
-            intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.MIDIUnityNote", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.MIDIUnityNote", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI pitch fraction
-            source.Read(data, 0, 4);
-            intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.MIDIPitchFraction", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.MIDIPitchFraction", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE format
-            source.Read(data, 0, 4);
-            intData = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.SMPTEFormat", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            readInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE offsets
             source.Read(data, 0, 1);
@@ -60,9 +48,7 @@ namespace ATL.AudioData.IO
             meta.SetMetaField("sample.SMPTEOffset.Frames", byteData.ToString(), readTagParams.ReadAllMetaFrames);
 
             // Num sample loops
-            source.Read(data, 0, 4);
-            int numSampleLoops = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("sample.NumSampleLoops", intData.ToString(), readTagParams.ReadAllMetaFrames);
+            int numSampleLoops = readInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);
 
             // Sample loops size (not useful here)
             source.Seek(4, SeekOrigin.Current);
@@ -70,35 +56,31 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < numSampleLoops; i++)
             {
                 // Cue point ID
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].CuePointId", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Type
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].Type", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
 
                 // Start
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].Start", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
 
                 // End
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].End", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
 
                 // Fraction
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].Fraction", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
 
                 // Play count
-                source.Read(data, 0, 4);
-                intData = StreamUtils.DecodeInt32(data);
-                meta.SetMetaField("sample.SampleLoop[" + i + "].PlayCount", intData.ToString(), readTagParams.ReadAllMetaFrames);
+                readInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
             }
+        }
+
+        private static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
+        {
+            source.Read(buffer, 0, 4);
+            int value = StreamUtils.DecodeInt32(buffer);
+            meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
+            return value;
         }
 
         public static bool IsDataEligible(MetaDataIO meta)
