@@ -4,7 +4,7 @@
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company />
-    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <AssemblyVersion>3.4.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
 	<PackageVersion>3.3.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -13,9 +13,9 @@
     <PackageProjectUrl>https://github.com/Zeugma440/atldotnet</PackageProjectUrl>
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
-    <FileVersion>3.3.0.0</FileVersion>
-    <PackageReleaseNotes>Documentation included</PackageReleaseNotes>
-    <Version>3.03</Version>
+    <FileVersion>3.4.0.0</FileVersion>
+    <PackageReleaseNotes>WAV : Support for sample metadata (including loop points)</PackageReleaseNotes>
+    <Version>3.04</Version>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
