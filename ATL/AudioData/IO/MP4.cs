@@ -94,6 +94,8 @@ namespace ATL.AudioData.IO
         // Inner technical information to remember for writing purposes
         private uint globalTimeScale;
         private int qtChapterTrackNum;
+        private long initialPaddingOffset;
+        private uint initialPaddingSize;
         private byte[] chapterTrackEdits = null;
 
         private byte headerTypeID;
@@ -186,6 +188,8 @@ namespace ATL.AudioData.IO
             calculatedDurationMs = 0;
             globalTimeScale = 0;
             qtChapterTrackNum = 0;
+            initialPaddingSize = 0;
+            initialPaddingOffset = -1;
         }
 
         public MP4(string fileName)
@@ -364,7 +368,7 @@ namespace ATL.AudioData.IO
 
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            uint initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
+            initialPaddingSize = lookForMP4Atom(source.BaseStream, "free");
             if (initialPaddingSize > 0) tagData.PaddingSize = initialPaddingSize;
 
             if (readTagParams.PrepareForWriting)
@@ -372,6 +376,7 @@ namespace ATL.AudioData.IO
                 // Padding atom found
                 if (initialPaddingSize > 0)
                 {
+                    initialPaddingOffset = source.BaseStream.Position - 8;
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME);
                     structureHelper.AddSize(source.BaseStream.Position - 8, (int)initialPaddingSize, PADDING_ZONE_NAME, PADDING_ZONE_NAME);
                 }
@@ -1263,7 +1268,7 @@ namespace ATL.AudioData.IO
                 Zone z = structureHelper.GetZone(zone);
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
-                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(z.Offset, z.Size, -tag.DataSizeDelta);
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -tag.DataSizeDelta);
 
                 if (paddingSizeToWrite > 0)
                 {

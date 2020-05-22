@@ -362,7 +362,7 @@ namespace ATL.test.IO
 
                 tagIO_RW_AddPadding("MP3/empty.mp3");
                 tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
-                tagIO_RW_AddPadding("AAC/empty.m4a");
+                tagIO_RW_AddPadding("AAC/chapters_NERO.mp4");
                 tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
             } finally
             {
