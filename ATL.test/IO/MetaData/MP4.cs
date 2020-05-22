@@ -60,7 +60,7 @@ namespace ATL.test.IO.MetaData
     {
         public MP4()
         {
-            emptyFile = "AAC/empty.m4a";
+            emptyFile = "AAC/empty.m4a"; // Has empty udta/meta tags
             notEmptyFile = "AAC/mp4.m4a";
             tagType = MetaDataIOFactory.TAG_NATIVE;
 
@@ -106,6 +106,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_Empty()
         {
             test_RW_Empty(emptyFile, true, true, true);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Empty_no_udta()
+        {
+            test_RW_Empty("AAC/no_udta.m4a", true, false, false); // ATL leaves an empty udta/meta structure, which is more "standard" than wiping the entire udta branch
         }
 
         [TestMethod]
