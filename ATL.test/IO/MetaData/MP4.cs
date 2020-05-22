@@ -772,12 +772,13 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
         }
-
+        /* No longer supported
         [TestMethod]
         public void TagIO_RW_MP4_ID3v2()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
         }
+        */
 
         [TestMethod]
         public void TagIO_RW_MP4_APE()

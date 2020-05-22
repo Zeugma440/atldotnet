@@ -32,6 +32,7 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
+        private const string ZONE_MP4_NOUDTA = "noudta";            // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";            // Placeholder for missing 'meta' atom
         private const string ZONE_MP4_ILST = "ilst";                // When editing a file with an existing 'meta' atom
         private const string ZONE_MP4_CHPL = "chpl";                // Nero chapters
@@ -135,8 +136,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(int metaDataType)
         {
-            // NB : MP4/M4A theoretically doesn't support ID3v2
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
         public ChannelsArrangement ChannelsArrangement
         {
@@ -300,6 +300,7 @@ namespace ATL.AudioData.IO
             moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOUDTA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
@@ -359,8 +360,7 @@ namespace ATL.AudioData.IO
             }
 
             // Read user data which contains metadata and Nero chapters
-            source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-            readUserData(source, readTagParams);
+            readUserData(source, readTagParams, moovPosition, moovSize);
 
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -881,7 +881,7 @@ namespace ATL.AudioData.IO
             return trakSize;
         }
 
-        private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, long moovPosition, uint moovSize)
         {
             long atomPosition, udtaPosition;
             uint atomSize;
@@ -889,11 +889,19 @@ namespace ATL.AudioData.IO
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
-
+            source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(source.BaseStream, "udta");
             if (0 == atomSize)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "udta atom could not be found");
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, "udta atom could not be found");
+                // Create a placeholder to create a new udta atom from scratch
+                if (readTagParams.PrepareForWriting)
+                {
+                    structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_NOMETA);
+                    structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_ILST);
+                    structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_CHPL);
+                    structureHelper.AddZone(moovPosition - 8 + moovSize, 0, ZONE_MP4_NOUDTA);
+                }
                 return;
             }
 
@@ -1212,41 +1220,25 @@ namespace ATL.AudioData.IO
             long tagSizePos;
             int result = 0;
 
-            if (zone.StartsWith(ZONE_MP4_NOMETA)) // Create a META atom from scratch
+            if (zone.StartsWith(ZONE_MP4_NOUDTA)) // Create an UDTA atom from scratch
             {
                 // Keep position in mind to calculate final size and come back here to write it
-                long metaSizePos = w.BaseStream.Position;
+                long udtaSizePos = w.BaseStream.Position;
                 w.Write(0);
-                w.Write(Utils.Latin1Encoding.GetBytes("meta"));
-                w.Write(0); // version and flags
+                w.Write(Utils.Latin1Encoding.GetBytes("udta"));
 
-                // Handler
-                w.Write(StreamUtils.EncodeBEUInt32(33));
-                w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
-                w.Write(0); // version and flags
-                w.Write(0); // quicktime type
-                w.Write(Utils.Latin1Encoding.GetBytes("mdir")); // quicktime subtype = "APPLE meta data iTunes reader"
-                w.Write(Utils.Latin1Encoding.GetBytes("appl")); // manufacturer
-                w.Write(0); // component flags
-                w.Write(0); // component flags mask
-                w.Write((byte)0); // component name string end (no name here -> end byte follows flags mask)
-
-                long ilstSizePos = w.BaseStream.Position;
-                w.Write(ILST_CORE_SIGNATURE);
-
-                result = writeFrames(tag, w);
+                result = writeMeta(tag, w);
 
                 // Record final size of tag into "tag size" fields of header
                 long finalTagPos = w.BaseStream.Position;
 
-                w.BaseStream.Seek(metaSizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalTagPos - metaSizePos)));
+                w.BaseStream.Seek(udtaSizePos, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalTagPos - udtaSizePos)));
 
-                w.BaseStream.Seek(ilstSizePos, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalTagPos - ilstSizePos)));
-
-                w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
-
+            }
+            else if (zone.StartsWith(ZONE_MP4_NOMETA)) // Create a META atom from scratch
+            {
+                result = writeMeta(tag, w);
             }
             else if (zone.StartsWith(ZONE_MP4_ILST)) // Edit an existing ILST atom
             {
@@ -1302,6 +1294,44 @@ namespace ATL.AudioData.IO
             {
                 result = 1; // Needs to appear active in case the headers need to be rewritten
             }
+
+            return result;
+        }
+
+        private int writeMeta(TagData tag, BinaryWriter w)
+        {
+            // Keep position in mind to calculate final size and come back here to write it
+            long metaSizePos = w.BaseStream.Position;
+            w.Write(0);
+            w.Write(Utils.Latin1Encoding.GetBytes("meta"));
+            w.Write(0); // version and flags
+
+            // Handler
+            w.Write(StreamUtils.EncodeBEUInt32(33));
+            w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
+            w.Write(0); // version and flags
+            w.Write(0); // quicktime type
+            w.Write(Utils.Latin1Encoding.GetBytes("mdir")); // quicktime subtype = "APPLE meta data iTunes reader"
+            w.Write(Utils.Latin1Encoding.GetBytes("appl")); // manufacturer
+            w.Write(0); // component flags
+            w.Write(0); // component flags mask
+            w.Write((byte)0); // component name string end (no name here -> end byte follows flags mask)
+
+            long ilstSizePos = w.BaseStream.Position;
+            w.Write(ILST_CORE_SIGNATURE);
+
+            int result = writeFrames(tag, w);
+
+            // Record final size of tag into "tag size" fields of header
+            long finalTagPos = w.BaseStream.Position;
+
+            w.BaseStream.Seek(metaSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalTagPos - metaSizePos)));
+
+            w.BaseStream.Seek(ilstSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalTagPos - ilstSizePos)));
+
+            w.BaseStream.Seek(finalTagPos, SeekOrigin.Begin);
 
             return result;
         }

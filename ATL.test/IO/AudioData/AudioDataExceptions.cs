@@ -56,7 +56,7 @@ namespace ATL.test.IO
             audio_X_AAC_MP4_Atom("mp4.m4a", "stbl", Log.LV_DEBUG, "mdia.minf.stbl");
             audio_X_AAC_MP4_Atom("mp4.m4a", "stsd", Log.LV_DEBUG);
             audio_X_AAC_MP4_Atom("mp4.m4a", "stsz");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "udta", Log.LV_WARNING);
+            audio_X_AAC_MP4_Atom("mp4.m4a", "udta", Log.LV_INFO);
             audio_X_AAC_MP4_Atom("mp4.m4a", "ilst", Log.LV_WARNING);
             audio_X_AAC_MP4_Atom("mp4.m4a", "mdat");
 
