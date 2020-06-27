@@ -384,7 +384,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Parses the given string into a Double value; returns 0 if parsing fails
+        /// Parses the given string into a float value; returns 0 if parsing fails
         /// </summary>
         /// <param name="s">String to be parsed</param>
         /// <returns>Parsed value; 0 if a parsing issue has been encountered</returns>

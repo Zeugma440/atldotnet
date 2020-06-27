@@ -300,6 +300,11 @@ namespace ATL
             DurationMs = data.DurationMs;
         }
 
+        public bool hasValue(byte id)
+        {
+            return ToMap().ContainsKey(id);
+        }
+
         /// <summary>
         /// Converts non-null 'classic' fields values into a properties Map
         /// 

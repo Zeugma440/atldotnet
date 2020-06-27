@@ -82,7 +82,7 @@ namespace ATL.AudioData.IO
         // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
         // their ID will not appear as is in the WMA header. 
         // Their info is contained in the standard Content Description block at the very beginning of the file
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
+        public static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
         {
             { "WM/TITLE", TagData.TAG_FIELD_TITLE },
             { "WM/AlbumTitle", TagData.TAG_FIELD_ALBUM },

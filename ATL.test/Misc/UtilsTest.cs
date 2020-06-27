@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Commons;
 using System.Text;
+using System;
 
 namespace ATL.test
 {
@@ -138,6 +139,5 @@ namespace ATL.test
             Assert.AreEqual(0, Utils.ParseDouble("a"));
             Assert.AreEqual(0, Utils.ParseDouble("1.11.1"));
         }
-
     }
 }

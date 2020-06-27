@@ -54,18 +54,60 @@ namespace ATL.benchmark
         public void performWrite(String filePath)
         {
             IProgress<float> progress = new Progress<float>(displayProgress);
-            Track t = new Track(filePath/*, progress*/);
+            Track theTrack = new Track(filePath, progress);
 
-            //t.AdditionalFields.Add(new KeyValuePair<string, string>("test", "aaa"));
             // Modify metadata
-            t.Artist = "Hey ho";
-            t.Composer = "Oscar Wilde";
-            t.Album = "Fake album starts here and is longer than the original one";
+            theTrack.Artist = "Hey ho";
+            theTrack.Composer = "Oscar Wilde";
+            theTrack.Album = "Fake album starts here and is longer than the original one";
 
-            if (t.EmbeddedPictures.Count > 0) t.EmbeddedPictures.Clear();
-            t.EmbeddedPictures.Add(PictureInfo.fromBinaryData(File.ReadAllBytes(@"E:\temp\mp3\windowsIcon\folder.jpg")));
+            /*
+            if (theTrack.EmbeddedPictures.Count > 0) theTrack.EmbeddedPictures.Clear();
 
-            t.Save();
+            byte[] data = File.ReadAllBytes(@"E:\temp\mp3\windowsIcon\folder.jpg");
+            PictureInfo newPicture = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Front);
+            theTrack.EmbeddedPictures.Add(newPicture);
+            
+            //Settings.ID3v2_tagSubVersion = 3;
+            //Settings.ID3v2_forceUnsynchronization = true;
+            theTrack.Chapters = new System.Collections.Generic.List<ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.StartOffset = 0;
+            ch.EndTime = 12519;
+            ch.EndOffset = 12519;
+            ch.UniqueID = "";
+            ch.Title = "malarky1";
+            ch.Subtitle = "bobs your uncle now";
+            theTrack.Chapters.Add(ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 12519;
+            ch.StartOffset = 12519;
+            ch.EndTime = 102519;
+            ch.EndOffset = 102519;
+            ch.UniqueID = "";
+            ch.Title = "malarky2";
+            ch.Subtitle = "bobs your uncle now";
+            theTrack.Chapters.Add(ch);
+
+
+            ch = new ChapterInfo();
+            ch.StartTime = 102519;
+            ch.StartOffset = 102519;
+            ch.EndTime = 3002519;
+            ch.EndOffset = 3002519;
+            ch.UniqueID = "";
+            ch.Title = "malarky3";
+            ch.Subtitle = "bobs your uncle now";
+            theTrack.Chapters.Add(ch);
+            */
+
+
+            // Save modifications on the disc
+
+            theTrack.Save();
         }
     }
 }

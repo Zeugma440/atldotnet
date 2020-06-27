@@ -28,20 +28,20 @@ namespace ATL.test
         public void TrackUtils_DecodePopularity()
         {
             // Classic behaviour (more cases in metadata-specific test classes such as ID3v2, APE...)
-            Assert.AreEqual((float)0.1, TrackUtils.DecodePopularity(((char)15).ToString(), MetaDataIO.RC_ID3v2));
-            Assert.AreEqual((float)0.4, TrackUtils.DecodePopularity(((char)117).ToString(), MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(0.1, TrackUtils.DecodePopularity(((char)15).ToString(), MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(0.4, TrackUtils.DecodePopularity(((char)117).ToString(), MetaDataIO.RC_ID3v2));
 
             // Star ratings (very rare)
             // Assert.AreEqual((float)1.0 /5,  TrackUtils.DecodePopularity("*", MetaDataIO.RC_ID3v2));  <-- case not handled (see comments in code)
-            Assert.AreEqual((float)2.0 /5,  TrackUtils.DecodePopularity("**", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual((float)3.0 /5,  TrackUtils.DecodePopularity("***", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual((float)4.0 /5,  TrackUtils.DecodePopularity("****", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(2.0 /5,  TrackUtils.DecodePopularity("**", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(3.0 /5,  TrackUtils.DecodePopularity("***", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(4.0 /5,  TrackUtils.DecodePopularity("****", MetaDataIO.RC_ID3v2));
             Assert.AreEqual(1,              TrackUtils.DecodePopularity("*****", MetaDataIO.RC_ID3v2));
 
             // Fringe cases not covered by test data in metadata-specific test classes
             Assert.AreEqual(0,              TrackUtils.DecodePopularity("0", MetaDataIO.RC_ASF));
             Assert.AreEqual(0,              TrackUtils.DecodePopularity("7", MetaDataIO.RC_APE));
-            Assert.AreEqual((float)6.0 /10, TrackUtils.DecodePopularity("6", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(6.0 /10, TrackUtils.DecodePopularity("6", MetaDataIO.RC_ID3v2));
             Assert.AreEqual(1,              TrackUtils.DecodePopularity("10", MetaDataIO.RC_ID3v2));
 
             // Error cases

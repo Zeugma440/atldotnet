@@ -7,6 +7,7 @@ using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
+using System.Data.SqlTypes;
 
 namespace ATL.AudioData.IO
 {
@@ -36,6 +37,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_NOMETA = "nometa";            // Placeholder for missing 'meta' atom
         private const string ZONE_MP4_ILST = "ilst";                // When editing a file with an existing 'meta' atom
         private const string ZONE_MP4_CHPL = "chpl";                // Nero chapters
+        private const string ZONE_MP4_XTRA = "Xtra";                // Specific fields (e.g. rating) inserted by Windows instead of using standard MP4 fields
         private const string ZONE_MP4_QT_CHAP_NOTREF = "qt_notref"; // Placeholder for missing track reference atom
         private const string ZONE_MP4_QT_CHAP_CHAP = "qt_chap";     // Quicktime chapters track reference
         private const string ZONE_MP4_QT_CHAP_TRAK = "qt_trak";     // Quicktime chapters track
@@ -973,6 +975,14 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                 if (readTagParams.ReadTag) readTag(source, readTagParams);
             }
+
+            source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
+            atomSize = lookForMP4Atom(source.BaseStream, "Xtra");
+            if (atomSize > 0)
+            {
+                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_XTRA);
+                if (readTagParams.ReadTag) readXtraTag(source, readTagParams, atomSize - 8);
+            }
         }
 
         private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
@@ -1161,6 +1171,44 @@ namespace ATL.AudioData.IO
             }
         }
 
+        // Called _after_ reading standard MP4 tag
+        private void readXtraTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, long atomDataSize)
+        {
+            IList<KeyValuePair<string, string>> wmaFields = WMAHelper.ReadFields(source, atomDataSize);
+            foreach (KeyValuePair<string, string> field in wmaFields)
+                setXtraField(field.Key, field.Value, readTagParams.ReadAllMetaFrames || readTagParams.PrepareForWriting);
+        }
+
+        private void setXtraField(string ID, string data, bool readAllMetaFrames)
+        {
+            // Finds the ATL field identifier
+            byte supportedMetaID = WMAHelper.getCodeForFrame(ID);
+
+            // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
+            if (supportedMetaID < 255 && !tagData.hasValue(supportedMetaID))
+            {
+                // Hack to format popularity tag with MP4's convention rather than the ASF convention that Xtra uses
+                // so that it is parsed properly by MetaDataIO's default mechanisms
+                if (TagData.TAG_FIELD_RATING == supportedMetaID)
+                {
+                    double popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
+                    data = TrackUtils.EncodePopularity(popularity * 5, ratingConvention) + "";
+                }
+
+                setMetaField(supportedMetaID, data);
+            }
+            
+            if (readAllMetaFrames && ID.Length > 0) // Store it in the additional fields Dictionary
+            {
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
+                {
+                    tagData.AdditionalFields.Remove(fieldInfo);
+                }
+                tagData.AdditionalFields.Add(fieldInfo);
+            }
+        }
+
         /// <summary>
         /// Looks for the atom segment starting with the given key, at the current atom level
         /// Returns with Source positioned right after the atom header, on the 1st byte of data
@@ -1262,6 +1310,10 @@ namespace ATL.AudioData.IO
             else if (zone.StartsWith(ZONE_MP4_CHPL)) // Nero chapters
             {
                 result = writeNeroChapters(w, Chapters);
+            }
+            else if (zone.StartsWith(ZONE_MP4_XTRA)) // Extra WMA-like fields written by Windows
+            {
+                result = writeXtra(tag, w);
             }
             else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
             {
@@ -1521,6 +1573,44 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+        }
+
+        private int writeXtra(TagData tag, BinaryWriter w)
+        {
+            IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
+
+            if (0 == xtraTags.Count()) return 0;
+
+            // Start writing the atom
+            long frameSizePos, finalFramePos;
+            frameSizePos = w.BaseStream.Position;
+
+            w.Write(0); // To be rewritten at the end of the method
+            w.Write(Utils.Latin1Encoding.GetBytes("Xtra"));
+
+            // Write all fields
+            foreach (MetaFieldInfo fieldInfo in xtraTags)
+            {
+                string value = fieldInfo.Value;
+                bool isNumeric = false;
+                // Hack to format popularity tag with the ASF convention rather than the convention that MP4 uses
+                // so that it is parsed properly by Windows
+                if ("wm/shareduserrating" == fieldInfo.NativeFieldCode.ToLower())
+                {
+                    double popularity = TrackUtils.DecodePopularity(value, ratingConvention);
+                    value = TrackUtils.EncodePopularity(popularity * 5, MetaDataIO.RC_ASF) + "";
+                    isNumeric = true;
+                }
+
+                WMAHelper.WriteField(w, fieldInfo.NativeFieldCode, value, isNumeric);
+            }
+
+            // Go back to frame size locations to write their actual size 
+            finalFramePos = w.BaseStream.Position;
+            w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
+
+            return xtraTags.Count();
         }
 
         private int writeNeroChapters(BinaryWriter w, IList<ChapterInfo> chapters)

@@ -41,7 +41,6 @@ namespace ATL.AudioData.IO
     ///     It seems there's a magic formula to do that because MP3tag does it well. So far I haven't found it.
     ///     => If you want to save ID3v2 tags and view the embedded pictures on Windows Explorer, please save the tag using ID3v2.3
     ///     (set Settings.ID3v2_tagSubVersion = 3)
-
     /// 
     /// </summary>
     public class ID3v2 : MetaDataIO

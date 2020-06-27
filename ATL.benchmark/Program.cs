@@ -24,7 +24,11 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\Harmonics_librivox.m4b");
+            writeAt(@"E:\temp\m4a-mp4\sample.original.edited - Copie.mp4");
+
+            //readAt(@"E:\temp\m4a-mp4\sample.original - Copie.mp4");
+
+            //readAt(@"E:\temp\wav\loop_points.wav");
 
             //displayVersionInfo();
         }

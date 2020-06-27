@@ -774,6 +774,27 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_MP4_XtraFields()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+
+            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/xtraField.m4a");
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual((float)(4.0 / 5), theFile.NativeTag.Popularity);
+            Assert.AreEqual("conductor", theFile.NativeTag.Conductor);
+            Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/SharedUserRating"));
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
+            Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);

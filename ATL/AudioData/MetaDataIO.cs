@@ -216,7 +216,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public float Popularity
         {
-            get { return TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
+            get { return (float)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
         }
         /// <summary>
         /// Release year
@@ -573,7 +573,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void setMetaField(byte ID, string data)
+        protected void setMetaField(byte ID, string data)
         {
             tagData.IntegrateValue(ID, data);
         }

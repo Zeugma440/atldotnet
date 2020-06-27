@@ -984,7 +984,7 @@ namespace ATL.AudioData.IO
                 memStream.SetLength(memStream.Position + totalPageHeadersSize);
 
 
-                /// Repage comments header & setup header within the virtual stream
+                // Repage comments header & setup header within the virtual stream
                 memStream.Seek(0, SeekOrigin.Begin);
 
                 OggHeader header = new OggHeader()
