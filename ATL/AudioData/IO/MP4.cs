@@ -7,7 +7,6 @@ using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
-using System.Data.SqlTypes;
 
 namespace ATL.AudioData.IO
 {
@@ -1585,7 +1584,7 @@ namespace ATL.AudioData.IO
         {
             IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
 
-            if (0 == xtraTags.Count()) return 0;
+            if (!xtraTags.Any()) return 0;
 
             // Start writing the atom
             long frameSizePos, finalFramePos;

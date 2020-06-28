@@ -300,6 +300,11 @@ namespace ATL
             DurationMs = data.DurationMs;
         }
 
+        /// <summary>
+        /// Indicate whether the current TagData stores a value for the given ATL field code
+        /// </summary>
+        /// <param name="id">Field code to search for</param>
+        /// <returns>True if the current TagData stores a value for the given ATL field code; false if not</returns>
         public bool hasKey(byte id)
         {
             return ToMap().ContainsKey(id);

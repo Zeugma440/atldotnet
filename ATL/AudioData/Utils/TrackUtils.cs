@@ -208,6 +208,12 @@ namespace ATL.AudioData
             double rating = Utils.ParseDouble(ratingStr);
             return EncodePopularity(rating, convention);
         }
+        /// <summary>
+        /// Returns the given popularity encoded with the given convention
+        /// </summary>
+        /// <param name="rating">Popularity (note 0-5)</param>
+        /// <param name="convention">Convention type (See MetaDataIO.RC_XXX constants)</param>
+        /// <returns>Popularity encoded with the given convention</returns>
         public static int EncodePopularity(double rating, int convention)
         {
             switch (convention)
