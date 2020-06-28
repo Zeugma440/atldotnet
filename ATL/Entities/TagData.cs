@@ -300,7 +300,7 @@ namespace ATL
             DurationMs = data.DurationMs;
         }
 
-        public bool hasValue(byte id)
+        public bool hasKey(byte id)
         {
             return ToMap().ContainsKey(id);
         }

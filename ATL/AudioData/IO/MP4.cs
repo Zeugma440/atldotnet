@@ -309,6 +309,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOUDTA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOMETA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_XTRA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_TRAK);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_NOTREF);
@@ -907,6 +908,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_NOMETA);
                     structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_ILST);
                     structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_CHPL);
+                    structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_XTRA);
                     structureHelper.AddZone(moovPosition - 8 + moovSize, 0, ZONE_MP4_NOUDTA);
                 }
                 return;
@@ -918,6 +920,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA);
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_ILST);
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_CHPL);
+                structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_XTRA);
             }
 
             // Look for Nero chapters
@@ -980,7 +983,10 @@ namespace ATL.AudioData.IO
             atomSize = lookForMP4Atom(source.BaseStream, "Xtra");
             if (atomSize > 0)
             {
-                if (readTagParams.PrepareForWriting) structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_XTRA);
+                if (readTagParams.PrepareForWriting)
+                {
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_XTRA);
+                }
                 if (readTagParams.ReadTag) readXtraTag(source, readTagParams, atomSize - 8);
             }
         }
@@ -1182,19 +1188,19 @@ namespace ATL.AudioData.IO
         private void setXtraField(string ID, string data, bool readAllMetaFrames)
         {
             // Finds the ATL field identifier
-            byte supportedMetaID = WMAHelper.getCodeForFrame(ID);
+            byte supportedMetaID = WMAHelper.getAtlCodeForFrame(ID);
+
+            // Hack to format popularity tag with MP4's convention rather than the ASF convention that Xtra uses
+            // so that it is parsed properly by MetaDataIO's default mechanisms
+            if (TagData.TAG_FIELD_RATING == supportedMetaID)
+            {
+                double popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
+                data = TrackUtils.EncodePopularity(popularity * 5, ratingConvention) + "";
+            }
 
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
-            if (supportedMetaID < 255 && !tagData.hasValue(supportedMetaID))
+            if (supportedMetaID < 255 && !tagData.hasKey(supportedMetaID))
             {
-                // Hack to format popularity tag with MP4's convention rather than the ASF convention that Xtra uses
-                // so that it is parsed properly by MetaDataIO's default mechanisms
-                if (TagData.TAG_FIELD_RATING == supportedMetaID)
-                {
-                    double popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
-                    data = TrackUtils.EncodePopularity(popularity * 5, ratingConvention) + "";
-                }
-
                 setMetaField(supportedMetaID, data);
             }
             
@@ -1313,7 +1319,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_XTRA)) // Extra WMA-like fields written by Windows
             {
-                result = writeXtra(tag, w);
+                result = writeXtraFrames(tag, w);
             }
             else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
             {
@@ -1575,7 +1581,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private int writeXtra(TagData tag, BinaryWriter w)
+        private int writeXtraFrames(TagData tag, BinaryWriter w)
         {
             IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
 
@@ -1591,7 +1597,11 @@ namespace ATL.AudioData.IO
             // Write all fields
             foreach (MetaFieldInfo fieldInfo in xtraTags)
             {
-                string value = fieldInfo.Value;
+                // Write the value of the "master" field contained in TagData
+                string value = WMAHelper.getValueFromTagData(fieldInfo.NativeFieldCode, tag);
+                // if no "master" field is set, write the extra field's own value
+                if (null == value || 0 == value.Length) value = fieldInfo.Value;
+
                 bool isNumeric = false;
                 // Hack to format popularity tag with the ASF convention rather than the convention that MP4 uses
                 // so that it is parsed properly by Windows

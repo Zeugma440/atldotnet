@@ -47,7 +47,7 @@ namespace ATL.AudioData
             frameSizePos = w.BaseStream.Position;
 
             w.Write(0); // To be rewritten at the end of the method
-            w.Write(fieldName.Length);
+            w.Write(StreamUtils.EncodeBEInt32(fieldName.Length));
             w.Write(Utils.Latin1Encoding.GetBytes(fieldName));
             w.Write((ushort)0); // Frame class ?
             w.Write(StreamUtils.EncodeBEInt16(1)); // ? (always 1)
@@ -72,14 +72,27 @@ namespace ATL.AudioData
 
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
+            w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        public static byte getCodeForFrame(string frame)
+        public static byte getAtlCodeForFrame(string frame)
         {
             if (WMA.frameMapping.ContainsKey(frame))
                 return WMA.frameMapping[frame];
             else return 255;
 
         }
+
+        public static string getValueFromTagData(string frame, TagData tagData)
+        {
+            byte atlCode = getAtlCodeForFrame(frame);
+            if (atlCode < 255)
+            {
+                IDictionary<byte, string> dataMap = tagData.ToMap();
+                if (dataMap.ContainsKey(atlCode)) return dataMap[atlCode];
+            }
+            return "";
+        }
+
     }
 }

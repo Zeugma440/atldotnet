@@ -422,7 +422,8 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
                 Settings.MP4_createQuicktimeChapters = true;
             }
@@ -494,7 +495,8 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
                 Settings.MP4_createQuicktimeChapters = true;
             }
@@ -637,7 +639,8 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
                 Settings.MP4_createNeroChapters = true;
             }
@@ -774,7 +777,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_MP4_XtraFields()
+        public void TagIO_RW_MP4_XtraFields()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -790,8 +793,26 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("conductor", theFile.NativeTag.Conductor);
             Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/SharedUserRating"));
+            Assert.AreEqual("80", theFile.NativeTag.AdditionalFields["WM/SharedUserRating"]); // ASF (MP4) convention
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
             Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
+
+            // Write
+            TagData theTag = new TagData();
+            theTag.Rating = 3.0 + "";
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/SharedUserRating"));
+            Assert.AreEqual("60", theFile.NativeTag.AdditionalFields["WM/SharedUserRating"]);  // ASF (MP4) convention
+            Assert.AreEqual((float)3.0 / 5, theFile.NativeTag.Popularity);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
+            Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
+
+            // Get rid of the working copy
+            File.Delete(testFileLocation);
         }
 
         [TestMethod]
