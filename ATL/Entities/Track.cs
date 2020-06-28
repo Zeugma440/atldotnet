@@ -439,13 +439,20 @@ namespace ATL
 
             return result;
         }
-
+        /// <summary>
+        /// Save current Track to disk
+        /// </summary>
         public void Save()
         {
             fileIO.Save(toTagData());
             Update();
         }
 
+        /// <summary>
+        /// Remove the given tag type from the Track
+        /// </summary>
+        /// <param name="tagType">Tag type to remove (see MetaDataIOFactory.TAG_XX values)</param>
+        /// <see cref="MetaDataIOFactory"/>
         public void Remove(int tagType = MetaDataIOFactory.TAG_ANY)
         {
             fileIO.Remove(tagType);
