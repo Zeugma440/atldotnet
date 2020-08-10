@@ -83,13 +83,20 @@ namespace ATL.AudioData
         public void Save(TagData data)
         {
             IList<int> availableMetas = audioManager.getAvailableMetas();
+            IList<int> supportedMetas = audioManager.getSupportedMetas();
 
+            // File has no existing metadata
+            // => Try writing with one of the metas set in the Settings
             if (0 == availableMetas.Count)
             {
                 foreach (int i in Settings.DefaultTagsWhenNoMetadata)
                 {
-                    availableMetas.Add(i);
+                    if (supportedMetas.Contains(i)) availableMetas.Add(i);
                 }
+
+                // File does not support any of the metas we want to write
+                // => Use the first supported meta available
+                if (0 == availableMetas.Count && supportedMetas.Count > 0) availableMetas.Add(supportedMetas[0]);
             }
 
             float written = 0;
@@ -108,7 +115,8 @@ namespace ATL.AudioData
             if (MetaDataIOFactory.TAG_ANY == tagType)
             {
                 metasToRemove = audioManager.getAvailableMetas();
-            } else
+            }
+            else
             {
                 metasToRemove = new List<int>() { tagType };
             }

@@ -17,8 +17,18 @@ namespace ATL.AudioData
         // Count of the types defined above, excluding "any" type
         public static readonly int TAG_TYPE_COUNT = 4;
 
-        // Defines the default reading priority of the metadata
-        private int[] tagPriority;
+		public enum TagType
+		{
+			ID3V1 = TAG_ID3V1,
+			ID3V2 = TAG_ID3V2,
+			APE = TAG_APE,
+			NATIVE = TAG_NATIVE,
+			ANY = TAG_ANY
+		}
+
+
+		// Defines the default reading priority of the metadata
+		private int[] tagPriority;
 
 		// Defines whether the next created metadatareaders should use cross-tag reading
 		private bool m_enableCrossReading = true;
