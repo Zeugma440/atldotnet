@@ -1598,12 +1598,30 @@ namespace ATL.AudioData.IO
             }
             else if (shortCode.Equals("WXX")) // User-defined URL
             {
+                byte[] desc;
+                byte[] url;
+                // Case 1 : Field read by ATL from a file
                 string[] parts = text.Split(Settings.InternalValueSeparator);
+                // Case 2 : User-defined value with the ID3v2 specs separator
+                // NB : Keeps a remaining null char when the desc is encoded with UTF-16, which is rare
+                if (1 == parts.Length) parts = text.Split('\0');
+                // Case 3 : User-defined value without separator
+                if (1 == parts.Length)
+                {
+                    desc = new byte[0];
+                    url = Utils.Latin1Encoding.GetBytes(parts[0]);
+                } else
+                {
+                    desc = Utils.Latin1Encoding.GetBytes(parts[0]);
+                    url = Utils.Latin1Encoding.GetBytes(parts[1]);
+                }
+                
+                // Write the field
                 w.Write(encodeID3v2CharEncoding(Utils.Latin1Encoding));     // ISO-8859-1 seems to be the de facto norm, although spec allows fancier encodings
-                                                                            //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
-                w.Write(Utils.Latin1Encoding.GetBytes(parts[0]));
+                //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
+                w.Write(desc);
                 w.Write(getNullTerminatorFromEncoding(Utils.Latin1Encoding));
-                w.Write(Utils.Latin1Encoding.GetBytes(parts[1]));
+                w.Write(url);
 
                 writeValue = false;
             }
