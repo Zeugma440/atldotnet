@@ -192,6 +192,31 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_WXXX_ManualUpdate()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            TagData theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "WXXX", "http://justtheurl.com");
+            theTag.AdditionalFields.Add(info);
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.IsTrue(meta.AdditionalFields.ContainsKey("WXXX"));
+            Assert.AreEqual("http://justtheurl.com", meta.AdditionalFields["WXXX"].Split(Settings.InternalValueSeparator)[1]);
+
+            File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v24_Extended()
         {
             ArrayLogger logger = new ArrayLogger();
