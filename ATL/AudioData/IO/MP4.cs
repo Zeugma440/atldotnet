@@ -1718,7 +1718,7 @@ namespace ATL.AudioData.IO
 
         private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDurationMs)
         {
-            uint trackTimescale = 44100;
+            long trackTimescale = 44100;
 
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -1780,7 +1780,7 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Creation date
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Modification date
 
-            w.Write(StreamUtils.EncodeBEUInt32(trackTimescale)); // Track timescale
+            w.Write(StreamUtils.EncodeBEUInt32((uint)trackTimescale)); // Track timescale
 
             w.Write(StreamUtils.EncodeBEUInt32((uint)(trackDurationMs / 1000 * trackTimescale))); // Duration (sec)
 
@@ -1880,7 +1880,7 @@ namespace ATL.AudioData.IO
             foreach (ChapterInfo chapter in chapters)
             {
                 w.Write(StreamUtils.EncodeBEUInt32(1));
-                w.Write(StreamUtils.EncodeBEUInt32((chapter.EndTime - chapter.StartTime) * trackTimescale / 1000));
+                w.Write(StreamUtils.EncodeBEUInt32((uint)Math.Round((chapter.EndTime - chapter.StartTime) * trackTimescale / 1000.0)));
             }
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(sttsPos, SeekOrigin.Begin);
