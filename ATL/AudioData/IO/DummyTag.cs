@@ -103,6 +103,10 @@ namespace ATL.AudioData.IO
         {
             get { return ""; }
         }
+        public DateTime PublishingDate
+        {
+            get { return DateTime.MinValue; }
+        }
 
         public string AlbumArtist
         {

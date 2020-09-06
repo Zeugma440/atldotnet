@@ -173,6 +173,13 @@ namespace ATL.AudioData
             get { return processString(metaData.Publisher); }
         }
         /// <summary>
+        /// Publishing Date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime PublishingDate
+        {
+            get { return metaData.PublishingDate; }
+        }
+        /// <summary>
         /// Conductor
         /// </summary>
         public string Conductor
@@ -328,7 +335,7 @@ namespace ATL.AudioData
             get { return metaData.Exists; }
         }
         /// <summary>
-        /// Release date (DateTime.MinValue if field does not exist)
+        /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         public DateTime Date
         {

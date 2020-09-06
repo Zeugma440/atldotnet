@@ -463,6 +463,14 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public DateTime PublishingDate
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).PublishingDate;
+            }
+        }
+
         public string AlbumArtist
         {
             get

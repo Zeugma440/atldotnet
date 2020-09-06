@@ -43,6 +43,7 @@ namespace ATL
         public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 25;
         public const byte TAG_FIELD_LYRICS_UNSYNCH = 26;
         public const byte TAG_FIELD_LYRICS_SYNCH = 27;
+        public const byte TAG_FIELD_PUBLISHING_DATE = 28;
 #pragma warning disable S1104 // Fields should not have public accessibility
         // Values for 'classic' fields
         public string GeneralDescription = null;
@@ -70,6 +71,7 @@ namespace ATL
         public string DiscTotal = null;
         public string DiscNumberTotal = null;
         public string ChaptersTableDescription = null;
+        public string PublishingDate = null;
 
         /// <summary>
         /// Chapters 
@@ -184,6 +186,7 @@ namespace ATL
                     if (null == Lyrics) Lyrics = new LyricsInfo();
                     Lyrics.UnsynchronizedLyrics = value;
                     break;
+                case TAG_FIELD_PUBLISHING_DATE: PublishingDate = emptyIfZero(value); break;
             }
         }
 
@@ -351,6 +354,7 @@ namespace ATL
             addIfConsistent(ChaptersTableDescription, TAG_FIELD_CHAPTERS_TOC_DESCRIPTION, result);
             if (Lyrics != null)
                 addIfConsistent(Lyrics.UnsynchronizedLyrics, TAG_FIELD_LYRICS_UNSYNCH, result);
+            addIfConsistent(PublishingDate, TAG_FIELD_PUBLISHING_DATE, result);
 
             return result;
         }
@@ -390,6 +394,7 @@ namespace ATL
             DiscNumberTotal = null;
             ChaptersTableDescription = null;
             Lyrics = null;
+            PublishingDate = null;
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;

@@ -232,7 +232,7 @@ namespace ATL.AudioData.IO
             }
         }
         /// <summary>
-        /// Release date (DateTime.MinValue if field does not exist)
+        /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         public DateTime Date
         {
@@ -261,6 +261,19 @@ namespace ATL.AudioData.IO
                     }
                     if (!success) result = DateTime.MinValue;
                 }
+                return result;
+            }
+        }
+        /// <summary>
+        /// Publishing date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime PublishingDate
+        {
+            get
+            {
+                DateTime result;
+                if (!DateTime.TryParse(tagData.PublishingDate, out result))
+                    result = DateTime.MinValue;
                 return result;
             }
         }

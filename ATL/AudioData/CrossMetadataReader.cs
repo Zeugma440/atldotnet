@@ -193,7 +193,7 @@ namespace ATL.AudioData
             }
         }
         /// <summary>
-        /// Release date (DateTime.MinValue if field does not exist)
+        /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         public DateTime Date
         {
@@ -302,6 +302,22 @@ namespace ATL.AudioData
                     if (result != "") break;
                 }
                 return result;
+            }
+        }
+        /// <summary>
+        /// Publishing date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        public DateTime PublishingDate
+        {
+            get
+            {
+                DateTime date = DateTime.MinValue;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    date = reader.PublishingDate;
+                    if (date != DateTime.MinValue) break;
+                }
+                return date;
             }
         }
         /// <summary>

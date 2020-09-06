@@ -49,8 +49,9 @@ namespace ATL.AudioData
         public const int CID_VGM = 24;
         public const int CID_GYM = 25;
         public const int CID_MP4 = 26;
+        public const int CID_AA = 27;
 
-        public const int NB_CODECS = 27;
+        public const int NB_CODECS = 28;
 
         // ------------------------------------------------------------------------------------------
 
@@ -109,6 +110,7 @@ namespace ATL.AudioData
                 tempFmt = new Format(CID_MP4, "MPEG-4 Part 14");
                 tempFmt.AddMimeType("audio/mp4");
                 tempFmt.AddMimeType("audio/mp4a-latm");
+                tempFmt.AddMimeType("audio/vnd.audible.aax");
                 tempFmt.AddExtension(".mp4");
                 tempFmt.AddExtension(".m4a");
                 tempFmt.AddExtension(".m4b");
@@ -262,6 +264,12 @@ namespace ATL.AudioData
                 tempFmt.AddMimeType("audio/x-gym"); // Unofficial
                 tempFmt.AddExtension(".gym");
                 theFactory.addFormat(tempFmt);
+
+                tempFmt = new Format(CID_AA, "Audible Format 4");
+                tempFmt.AddMimeType("audio/audible");
+                tempFmt.AddMimeType("audio/x-pn-audibleaudio");
+                tempFmt.AddExtension(".aa");
+                theFactory.addFormat(tempFmt);
             }
 
             return theFactory;
@@ -361,6 +369,9 @@ namespace ATL.AudioData
                     break;
                 case CID_GYM:
                     theDataReader = new IO.GYM(path);
+                    break;
+                case CID_AA:
+                    theDataReader = new IO.AA(path);
                     break;
                 default:
                     theDataReader = new IO.DummyReader(path);
@@ -467,6 +478,9 @@ namespace ATL.AudioData
                     break;
                 case CID_GYM:
                     theDataReader = new IO.GYM(path);
+                    break;
+                case CID_AA:
+                    theDataReader = new IO.AA(path);
                     break;
                 default:
                     theDataReader = new IO.DummyReader(path);

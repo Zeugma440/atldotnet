@@ -81,14 +81,14 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// Release date (DateTime.MinValue if field does not exist)
+        /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         DateTime Date
         {
             get;
         }
         /// <summary>
-        /// Year
+        /// Recording Year
         /// </summary>
         string Year
 		{
@@ -140,6 +140,13 @@ namespace ATL.AudioData
         /// Publisher
         /// </summary>
         string Publisher
+        {
+            get;
+        }
+        /// <summary>
+        /// Publishing Date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        DateTime PublishingDate
         {
             get;
         }
