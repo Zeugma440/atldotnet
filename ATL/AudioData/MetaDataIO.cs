@@ -536,6 +536,12 @@ namespace ATL.AudioData.IO
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
+        /// <summary>
+        /// True : prevent duplicate additional fields by removing the existing one first; False : do not prevent duplicates, just add them
+        /// Setting this to true will lead to a serious performance problem.
+        /// </summary>
+        private const bool _preventDuplicateAdditionalFields = false;
+        
         public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
@@ -565,9 +571,15 @@ namespace ATL.AudioData.IO
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
+                if (_preventDuplicateAdditionalFields)
                 {
-                    tagData.AdditionalFields.Remove(fieldInfo);
+                    // The code below (the .Contains() + the .Remove() cause a serious performance issue when reading WAV files of +/- 75 MB
+                    // Reading 10 of those WAV files takes MINUTES.
+                    // Disabling this check improves performance by a huge factor
+                    if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
+                    {
+                        tagData.AdditionalFields.Remove(fieldInfo);
+                    }
                 }
                 tagData.AdditionalFields.Add(fieldInfo);
             }
