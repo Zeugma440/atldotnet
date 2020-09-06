@@ -115,6 +115,7 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".m4p");
                 tempFmt.AddExtension(".m4r");
                 tempFmt.AddExtension(".m4v");
+                tempFmt.AddExtension(".aax");
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new Format(CID_AC3, "Dolby Digital");
