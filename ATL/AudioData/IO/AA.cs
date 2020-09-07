@@ -217,6 +217,29 @@ namespace ATL.AudioData.IO
             tagData.Pictures.Add(picInfo);
         }
 
+        private void readChapters(BinaryReader source, long offset, long size)
+        {
+            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
+            double cumulatedDuration = 0;
+            int idx = 1;
+            while (source.BaseStream.Position < offset + size)
+            {
+                uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                source.BaseStream.Seek(chapterSize, SeekOrigin.Current);
+
+                ChapterInfo chapter = new ChapterInfo();
+
+                chapter.Title = "Chapter " + idx++;
+                chapter.StartTime = (uint)Math.Round(cumulatedDuration);
+                cumulatedDuration += chapterSize / (BitRate * 1000);
+                chapter.EndTime = (uint)Math.Round(cumulatedDuration);
+
+                tagData.Chapters.Add(chapter);
+            }
+        }
+
         // Read data from file
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -242,6 +265,7 @@ namespace ATL.AudioData.IO
                 else
                     addPictureToken(PictureInfo.PIC_TYPE.Generic);
             }
+            readChapters(source, toc[TOC_AUDIO].Item1, toc[TOC_AUDIO].Item2);
 
             return result;
         }
