@@ -88,7 +88,8 @@ R= Read / W= Write
 
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support (1) | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
-Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A | R/W | R/W | R/W | R/W
+Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A, .M4B | R/W | R/W | R/W | R/W
+Audible | .AAX | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
 Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
