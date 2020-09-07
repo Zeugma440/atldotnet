@@ -1,11 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Commons;
 using static ATL.ChannelsArrangements;
-using static ATL.AudioData.FileStructureHelper;
 using System.Collections.Generic;
-using System.Xml.Schema;
 
 namespace ATL.AudioData.IO
 {
@@ -27,10 +24,10 @@ namespace ATL.AudioData.IO
         public const int TOC_AUDIO = 10;
         public const int TOC_COVER_ART = 11;
 
-        // Sample rate values
-        private static readonly int[] SAMPLE_RATE = {   96000, 88200, 64000, 48000, 44100, 32000,
-                                                        24000, 22050, 16000, 12000, 11025, 8000,
-                                                        0, 0, 0, 0 };
+        public const string CODEC_MP332 = "mp332";
+        public const string CODEC_ACELP85 = "acelp85";
+        public const string CODEC_ACELP16 = "acelp16";
+
 
         // Mapping between MP4 frame codes and ATL frame codes
         private static Dictionary<string, byte> frameMapping = new Dictionary<string, byte>() {
@@ -47,9 +44,8 @@ namespace ATL.AudioData.IO
 
 
         private bool isValid;
-        private double bitrate;
-        private int sampleRate;
-        private ChannelsArrangement channelsArrangement;
+        private long audioSize;
+        private string codec;
 
         private AudioDataManager.SizeInfo sizeInfo;
         private readonly string fileName;
@@ -70,7 +66,20 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return bitrate / 1000.0; }
+            get
+            {
+                switch (codec)
+                {
+                    case CODEC_MP332:
+                        return 32 / 8.0;
+                    case CODEC_ACELP16:
+                        return 16 / 8.0;
+                    case CODEC_ACELP85:
+                        return 8.5 / 8.0;
+                    default:
+                        return 1;
+                }
+            }
         }
         public double Duration
         {
@@ -78,7 +87,20 @@ namespace ATL.AudioData.IO
         }
         public int SampleRate
         {
-            get { return sampleRate; }
+            get
+            {
+                switch (codec)
+                {
+                    case CODEC_MP332:
+                        return 22050;
+                    case CODEC_ACELP16:
+                        return 16000;
+                    case CODEC_ACELP85:
+                        return 8500;
+                    default:
+                        return 1;
+                }
+            }
         }
         public string FileName
         {
@@ -90,7 +112,7 @@ namespace ATL.AudioData.IO
         }
         public ChannelsArrangement ChannelsArrangement
         {
-            get { return channelsArrangement; }
+            get { return MONO; }
         }
 
         // MetaDataIO
@@ -118,8 +140,8 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            bitrate = 0;
-            sampleRate = 0;
+            codec = "";
+            audioSize = 0;
             isValid = false;
         }
 
@@ -134,10 +156,10 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (0 == bitrate)
+            if (0 == BitRate)
                 return 0;
             else
-                return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
+                return audioSize / (BitRate * 1000);
         }
 
         // Read header data
@@ -149,7 +171,8 @@ namespace ATL.AudioData.IO
 
             isValid = true;
             int tocSize = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-            Source.BaseStream.Seek(4, SeekOrigin.Current);
+            Source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
+
             // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
             toc = new Dictionary<int, Tuple<long, long>>();
             for (int i = 0; i < tocSize; i++)
@@ -159,7 +182,8 @@ namespace ATL.AudioData.IO
                 long size = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
                 Tuple<long, long> data = new Tuple<long, long>(offset, size);
                 toc[section] = data;
-
+                if (TOC_AUDIO == section)
+                    audioSize = size;
             }
         }
 
@@ -175,6 +199,10 @@ namespace ATL.AudioData.IO
                 string key = Encoding.UTF8.GetString(Source.ReadBytes(keyLength));
                 string value = Encoding.UTF8.GetString(Source.ReadBytes(valueLength)).Trim();
                 SetMetaField(key, value, readTagParams.ReadAllMetaFrames);
+                if ("codec".Equals(key))
+                {
+                    codec = value;
+                }
             }
         }
 
