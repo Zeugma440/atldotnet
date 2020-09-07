@@ -163,23 +163,23 @@ namespace ATL.AudioData.IO
         }
 
         // Read header data
-        private void readHeader(BinaryReader Source)
+        private void readHeader(BinaryReader source)
         {
-            Source.BaseStream.Seek(4, SeekOrigin.Begin); // File size
-            int magicNumber = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+            source.BaseStream.Seek(4, SeekOrigin.Begin); // File size
+            int magicNumber = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             if (magicNumber != AA_MAGIC_NUMBER) return;
 
             isValid = true;
-            int tocSize = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-            Source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
+            int tocSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
 
             // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
             toc = new Dictionary<int, Tuple<long, long>>();
             for (int i = 0; i < tocSize; i++)
             {
-                int section = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-                long offset = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-                long size = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+                int section = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                long offset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                long size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                 Tuple<long, long> data = new Tuple<long, long>(offset, size);
                 toc[section] = data;
                 if (TOC_AUDIO == section)
@@ -187,23 +187,34 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readTags(BinaryReader Source, long offset, long size, ReadTagParams readTagParams)
+        private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
-            Source.BaseStream.Seek(offset, SeekOrigin.Begin);
-            int nbTags = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            int nbTags = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             for (int i = 0; i < nbTags; i++)
             {
-                Source.BaseStream.Seek(1, SeekOrigin.Current); // No idea what this byte is
-                int keyLength = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-                int valueLength = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
-                string key = Encoding.UTF8.GetString(Source.ReadBytes(keyLength));
-                string value = Encoding.UTF8.GetString(Source.ReadBytes(valueLength)).Trim();
+                source.BaseStream.Seek(1, SeekOrigin.Current); // No idea what this byte is
+                int keyLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                int valueLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                string key = Encoding.UTF8.GetString(source.ReadBytes(keyLength));
+                string value = Encoding.UTF8.GetString(source.ReadBytes(valueLength)).Trim();
                 SetMetaField(key, value, readTagParams.ReadAllMetaFrames);
                 if ("codec".Equals(key))
                 {
                     codec = value;
                 }
             }
+        }
+
+        private void readCover(BinaryReader source, long offset, PictureInfo.PIC_TYPE pictureType)
+        {
+            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            int pictureSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            int picOffset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            source.BaseStream.Seek(picOffset, SeekOrigin.Begin);
+
+            PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, pictureSize, pictureType, getImplementedTagType(), TOC_COVER_ART);
+            tagData.Pictures.Add(picInfo);
         }
 
         // Read data from file
@@ -222,7 +233,14 @@ namespace ATL.AudioData.IO
             readHeader(source);
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
-                readTags(source, toc[TOC_CONTENT_TAGS].Item1, toc[TOC_CONTENT_TAGS].Item2, readTagParams);
+                readTags(source, toc[TOC_CONTENT_TAGS].Item1, readTagParams);
+            }
+            if (toc.ContainsKey(TOC_COVER_ART))
+            {
+                if (readTagParams.ReadPictures)
+                    readCover(source, toc[TOC_COVER_ART].Item1, PictureInfo.PIC_TYPE.Generic);
+                else
+                    addPictureToken(PictureInfo.PIC_TYPE.Generic);
             }
 
             return result;
