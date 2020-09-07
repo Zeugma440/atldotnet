@@ -17,7 +17,7 @@ namespace ATL.AudioData.IO
             long initialPos = position;
             string key, value;
             int size;
-            byte[] data = new byte[256];
+            byte[] data = new byte[chunkSize];
 
             while (source.Position < initialPos + chunkSize - 4) // 4 being the "INFO" purpose that belongs to the chunk
             {
@@ -27,12 +27,14 @@ namespace ATL.AudioData.IO
                 // Size
                 source.Read(data, 0, 4);
                 size = StreamUtils.DecodeInt32(data);
-                // Value
-                value = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-
-                if (value.Length > 0) meta.SetMetaField("info." + key, value, readTagParams.ReadAllMetaFrames);
-
-                position = source.Position;
+                if (size > 0)
+                {
+                    source.Read(data, 0, size);
+                    // Manage parasite zeroes at the end of data
+                    if (source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
+                    value = Utils.Latin1Encoding.GetString(data, 0, size);
+                    meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
+                }
             }
         }
 
@@ -86,7 +88,7 @@ namespace ATL.AudioData.IO
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
 
             string shortKey;
-            foreach(string key in additionalFields.Keys)
+            foreach (string key in additionalFields.Keys)
             {
                 if (key.StartsWith("info."))
                 {
@@ -118,7 +120,8 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; cropping");
                 key = Utils.BuildStrictLengthString(key, 4, ' ');
-            } else if (key.Length < 4)
+            }
+            else if (key.Length < 4)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; completing with whitespaces");
                 key = Utils.BuildStrictLengthString(key, 4, ' ');
@@ -130,7 +133,7 @@ namespace ATL.AudioData.IO
             w.Write(buffer);
             w.Write((byte)0); // String is null-terminated
 
-            writtenFields.Add("info."+key, value);
+            writtenFields.Add("info." + key, value);
         }
     }
 }
