@@ -152,23 +152,30 @@ namespace ATL.AudioData.IO
             Source.BaseStream.Seek(4, SeekOrigin.Current);
             // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
             toc = new Dictionary<int, Tuple<long, long>>();
-            for (int i=0; i<tocSize; i++)
+            for (int i = 0; i < tocSize; i++)
             {
                 int section = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
                 long offset = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
                 long size = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
                 Tuple<long, long> data = new Tuple<long, long>(offset, size);
                 toc[section] = data;
-                /*
-                if (!toc.ContainsKey(section))
-                    toc.Add(section, data);
-                */
+
             }
         }
 
-        private void readTags(BinaryReader Source)
+        private void readTags(BinaryReader Source, long offset, long size, ReadTagParams readTagParams)
         {
-            
+            Source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            int nbTags = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+            for (int i = 0; i < nbTags; i++)
+            {
+                Source.BaseStream.Seek(1, SeekOrigin.Current); // No idea what this byte is
+                int keyLength = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+                int valueLength = StreamUtils.DecodeBEInt32(Source.ReadBytes(4));
+                string key = Encoding.UTF8.GetString(Source.ReadBytes(keyLength));
+                string value = Encoding.UTF8.GetString(Source.ReadBytes(valueLength)).Trim();
+                SetMetaField(key, value, readTagParams.ReadAllMetaFrames);
+            }
         }
 
         // Read data from file
@@ -183,9 +190,12 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
 
-            resetData();
+            ResetData();
             readHeader(source);
-            readTags(source);
+            if (toc.ContainsKey(TOC_CONTENT_TAGS))
+            {
+                readTags(source, toc[TOC_CONTENT_TAGS].Item1, toc[TOC_CONTENT_TAGS].Item2, readTagParams);
+            }
 
             return result;
         }
