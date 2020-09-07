@@ -231,7 +231,7 @@ namespace ATL.AudioData.IO
 
                 ChapterInfo chapter = new ChapterInfo();
 
-                chapter.Title = "Chapter " + idx++;
+                chapter.Title = "Chapter " + idx++; // Chapters have no title metatada in the AA format
                 chapter.StartTime = (uint)Math.Round(cumulatedDuration);
                 cumulatedDuration += chapterSize / (BitRate * 1000);
                 chapter.EndTime = (uint)Math.Round(cumulatedDuration);
