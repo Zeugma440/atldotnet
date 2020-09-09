@@ -239,6 +239,7 @@
     <Content Include="Resources\AAC\xtraField.m4a" />
     <Content Include="Resources\AAC\mp4_date_in_©day.m4a" />
     <Content Include="Resources\AAC\no_udta.m4a" />
+    <Content Include="Resources\AA\aa.aa" />
     <Content Include="Resources\AC3\empty.ac3" />
     <Content Include="Resources\AIF\aifc_tagged.aif" />
     <Content Include="Resources\AIF\aiff.aiff" />
