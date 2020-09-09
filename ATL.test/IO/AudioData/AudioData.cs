@@ -243,5 +243,11 @@ namespace ATL.test.IO
         {
             testGenericAudio("GYM/gym.gym", 73000, 37, 44100, false, AudioDataIOFactory.CF_SEQ_WAV, STEREO);
         }
+
+        [TestMethod]
+        public void Audio_AA()
+        {
+            testGenericAudio("AA/aa.aa", 2967, 1, 8500, false, AudioDataIOFactory.CF_LOSSY, MONO);
+        }
     }
 }
