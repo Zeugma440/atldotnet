@@ -41,7 +41,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_AIF_simple()
+        public void TagIO_R_AA_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
 
@@ -52,7 +52,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_AIF_Existing()
+        public void TagIO_RW_AA_Existing()
         {
             // Filesize comparison not possible due to the empty "user_alias" tag disappearing upon rewrite
             // Bit-per-bit comparison not possible yet due to field order differences
