@@ -8,7 +8,7 @@ using System.Globalization;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Audible Format 4 files manipulation (extensions : .AA)
+    /// Class for Audible Formats 2 to 4 files manipulation (extensions : .AA)
     /// 
     /// Implementation notes
     /// 

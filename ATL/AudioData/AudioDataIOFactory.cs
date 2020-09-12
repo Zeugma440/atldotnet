@@ -265,7 +265,7 @@ namespace ATL.AudioData
                 tempFmt.AddExtension(".gym");
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new Format(CID_AA, "Audible Format 4");
+                tempFmt = new Format(CID_AA, "Audible (legacy)");
                 tempFmt.AddMimeType("audio/audible");
                 tempFmt.AddMimeType("audio/x-pn-audibleaudio");
                 tempFmt.AddExtension(".aa");
