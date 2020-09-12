@@ -171,7 +171,8 @@ namespace ATL.AudioData.IO
                 { "TCON", TagData.TAG_FIELD_GENRE },
                 { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
                 { "TPUB", TagData.TAG_FIELD_PUBLISHER },
-                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
+                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION },
+                { "TDRL", TagData.TAG_FIELD_PUBLISHING_DATE }
             };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions

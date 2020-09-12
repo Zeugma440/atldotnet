@@ -22,6 +22,9 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/id3v2.3_UTF16.mp3";
+
+            testData.PublishingDate = "1997-06-22T05:05:05";
+
             tagType = MetaDataIOFactory.TAG_ID3V2;
         }
 
@@ -159,10 +162,13 @@ namespace ATL.test.IO.MetaData
             try
             {
                 testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
+                testData.PublishingDate = null; // No publishing date in ID3v2.3
                 readExistingTagsOnFile(theFile);
-            } finally
+            }
+            finally
             {
                 testData.RecordingDate = "1997-06-20T04:04:04";
+                testData.PublishingDate = "1997-06-22T05:05:05";
             }
         }
 
@@ -225,13 +231,15 @@ namespace ATL.test.IO.MetaData
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8_extendedTag.mp3");
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-            // Check that the presence of an extended tag does not disrupt field reading
-            readExistingTagsOnFile(theFile);
-
-            Settings.ID3v2_useExtendedHeaderRestrictions = true;
-
             try
             {
+                testData.PublishingDate = null; // Don't wanna re-edit the test file manually to add this one; it has been tested elsewhere
+
+                // Check that the presence of an extended tag does not disrupt field reading
+                readExistingTagsOnFile(theFile);
+
+                Settings.ID3v2_useExtendedHeaderRestrictions = true;
+
                 // Insert a very long field while tag restrictions specify that string shouldn't be longer than 30 characters
                 TagData theTag = new TagData();
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
@@ -275,6 +283,7 @@ namespace ATL.test.IO.MetaData
             }
             finally
             {
+                testData.PublishingDate = "1997-06-22T05:05:05";
                 Settings.ID3v2_useExtendedHeaderRestrictions = false;
             }
 
@@ -640,9 +649,9 @@ namespace ATL.test.IO.MetaData
                 Assert.IsFalse(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("CTOC")));
             }
 
-            
+
             //Case 2. If Settings.ID3v2_alwaysWriteCTOCFrame to true and at least 1 chapter without setting Track.ChaptersTableDescription shouldn't write any TIT2 subframe
-            
+
             // Set a chapter but no description
             ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 123;
@@ -1011,7 +1020,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
             Assert.AreEqual(theTag.Lyrics.Description, theFile.ID3v2.Lyrics.Description);
             Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics.Count, theFile.ID3v2.Lyrics.SynchronizedLyrics.Count);
-            for (int i =0; i<theTag.Lyrics.SynchronizedLyrics.Count; i++)
+            for (int i = 0; i < theTag.Lyrics.SynchronizedLyrics.Count; i++)
             {
                 Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics[i].TimestampMs, theFile.ID3v2.Lyrics.SynchronizedLyrics[i].TimestampMs);
                 Assert.AreEqual(theTag.Lyrics.SynchronizedLyrics[i].Text, theFile.ID3v2.Lyrics.SynchronizedLyrics[i].Text);
@@ -1044,6 +1053,7 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
                 testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
+                testData.PublishingDate = null; // No publising date in ID3v2.3
                 readExistingTagsOnFile(theFile);
 
                 // Get rid of the working copy
@@ -1053,6 +1063,7 @@ namespace ATL.test.IO.MetaData
             {
                 Settings.ID3v2_tagSubVersion = 4;
                 testData.RecordingDate = "1997-06-20T04:04:04";
+                testData.PublishingDate = "1997-06-22T05:05:05";
             }
         }
 

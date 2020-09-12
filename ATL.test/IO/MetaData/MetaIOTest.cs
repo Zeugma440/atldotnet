@@ -386,6 +386,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) theTag.Comment = "This is a test";
             if (testData.RecordingYear != null) theTag.RecordingYear = "2008";
             if (testData.RecordingDate != null) theTag.RecordingDate = "2008/01/01";
+            if (testData.PublishingDate != null) theTag.PublishingDate = "2007/02/02";
             if (testData.Genre != null) theTag.Genre = "Merengue";
             if (testData.Rating != null) theTag.Rating = 2.5.ToString();
             if (testData.TrackNumber != null) theTag.TrackNumber = "01";
@@ -429,6 +430,12 @@ namespace ATL.test.IO.MetaData
                     DateTime date;
                     Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
                     Assert.AreEqual(date, meta.Date);
+                }
+                if (testData.PublishingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse("2007/02/02", out date));
+                    Assert.AreEqual(date, meta.PublishingDate);
                 }
             }
             else
@@ -697,6 +704,12 @@ namespace ATL.test.IO.MetaData
                     DateTime date;
                     Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
                     Assert.AreEqual(date, meta.Date);
+                }
+                if (testData.PublishingDate != null)
+                {
+                    DateTime date;
+                    Assert.IsTrue(DateTime.TryParse(testData.PublishingDate, out date));
+                    Assert.AreEqual(date, meta.PublishingDate);
                 }
             } else
             {
