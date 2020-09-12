@@ -64,6 +64,7 @@
     <Compile Include="IO\AudioData\AudioDataExceptions.cs" />
     <Compile Include="IO\AudioData\AudioData.cs" />
     <Compile Include="IO\Factories.cs" />
+    <Compile Include="IO\MetaData\AA.cs" />
     <Compile Include="IO\Obsolete.cs" />
     <Compile Include="IO\MetaData\ID3v2_WAV.cs" />
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
@@ -240,6 +241,7 @@
     <Content Include="Resources\AAC\mp4_date_in_©day.m4a" />
     <Content Include="Resources\AAC\no_udta.m4a" />
     <Content Include="Resources\AA\aa.aa" />
+    <Content Include="Resources\AA\aa.jpg" />
     <Content Include="Resources\AC3\empty.ac3" />
     <Content Include="Resources\AIF\aifc_tagged.aif" />
     <Content Include="Resources\AIF\aiff.aiff" />

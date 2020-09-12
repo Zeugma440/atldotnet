@@ -3,16 +3,14 @@ using System.IO;
 using System.Text;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Audible Format 4 files manipulation (extensions : .AA)
-    /// 
-    /// Implementation notes
-    /// 
-    ///     1. TODO
-    /// 
     /// </summary>
 	class AA : MetaDataIO, IAudioDataIO
     {
@@ -27,6 +25,10 @@ namespace ATL.AudioData.IO
         public const string CODEC_MP332 = "mp332";
         public const string CODEC_ACELP85 = "acelp85";
         public const string CODEC_ACELP16 = "acelp16";
+
+        public const string ZONE_TOC = "toc";
+        public const string ZONE_TAGS = "2";
+        public const string ZONE_IMAGE = "11";
 
 
         // Mapping between MP4 frame codes and ATL frame codes
@@ -43,14 +45,13 @@ namespace ATL.AudioData.IO
         };
 
 
-        private bool isValid;
         private long audioSize;
         private string codec;
 
         private AudioDataManager.SizeInfo sizeInfo;
         private readonly string fileName;
 
-        private Dictionary<int, Tuple<long, long>> toc;
+        private Dictionary<int, Tuple<uint, uint>> toc;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -134,6 +135,10 @@ namespace ATL.AudioData.IO
 
             return supportedMetaId;
         }
+        protected override bool isLittleEndian
+        {
+            get { return false; }
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -142,7 +147,6 @@ namespace ATL.AudioData.IO
         {
             codec = "";
             audioSize = 0;
-            isValid = false;
         }
 
         public AA(string fileName)
@@ -165,29 +169,44 @@ namespace ATL.AudioData.IO
         // Read header data
         private void readHeader(BinaryReader source)
         {
-            source.BaseStream.Seek(4, SeekOrigin.Begin); // File size
+            uint fileSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             int magicNumber = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             if (magicNumber != AA_MAGIC_NUMBER) return;
 
-            isValid = true;
+            tagExists = true;
             int tocSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
 
             // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
-            toc = new Dictionary<int, Tuple<long, long>>();
+            toc = new Dictionary<int, Tuple<uint, uint>>();
             for (int i = 0; i < tocSize; i++)
             {
                 int section = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                long offset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                long size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                Tuple<long, long> data = new Tuple<long, long>(offset, size);
+                uint tocEntryOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                uint tocEntrySize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                Tuple<uint, uint> data = new Tuple<uint, uint>(tocEntryOffset, tocEntrySize);
                 toc[section] = data;
+                structureHelper.AddZone(tocEntryOffset, (int)tocEntrySize, section.ToString());
+                structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
                 if (TOC_AUDIO == section)
-                    audioSize = size;
+                {
+                    audioSize = tocEntrySize;
+                }
+                if (TOC_CONTENT_TAGS == section)
+                {
+                    structureHelper.AddSize(source.BaseStream.Position - 4, tocEntrySize, section.ToString());
+                    structureHelper.AddSize(0, fileSize, section.ToString());
+                }
+                if (TOC_COVER_ART == section)
+                {
+                    structureHelper.AddSize(source.BaseStream.Position - 4, tocEntrySize, section.ToString());
+                    structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
+                    structureHelper.AddSize(0, fileSize, section.ToString());
+                }
             }
         }
 
-        private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
+        private void readTags(BinaryReader source, long offset, long size, ReadTagParams readTagParams)
         {
             source.BaseStream.Seek(offset, SeekOrigin.Begin);
             int nbTags = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
@@ -199,10 +218,7 @@ namespace ATL.AudioData.IO
                 string key = Encoding.UTF8.GetString(source.ReadBytes(keyLength));
                 string value = Encoding.UTF8.GetString(source.ReadBytes(valueLength)).Trim();
                 SetMetaField(key, value, readTagParams.ReadAllMetaFrames);
-                if ("codec".Equals(key))
-                {
-                    codec = value;
-                }
+                if ("codec".Equals(key)) codec = value;
             }
         }
 
@@ -211,6 +227,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(offset, SeekOrigin.Begin);
             int pictureSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             int picOffset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            structureHelper.AddIndex(source.BaseStream.Position - 4, (uint)picOffset, false, ZONE_IMAGE);
             source.BaseStream.Seek(picOffset, SeekOrigin.Begin);
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, pictureSize, pictureType, getImplementedTagType(), TOC_COVER_ART);
@@ -227,16 +244,17 @@ namespace ATL.AudioData.IO
             {
                 uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                source.BaseStream.Seek(chapterSize, SeekOrigin.Current);
+                structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx);
+                structureHelper.AddIndex(source.BaseStream.Position - 4, chapterOffset, false, "chp" + idx);
 
                 ChapterInfo chapter = new ChapterInfo();
-
                 chapter.Title = "Chapter " + idx++; // Chapters have no title metatada in the AA format
                 chapter.StartTime = (uint)Math.Round(cumulatedDuration);
                 cumulatedDuration += chapterSize / (BitRate * 1000);
                 chapter.EndTime = (uint)Math.Round(cumulatedDuration);
-
                 tagData.Chapters.Add(chapter);
+
+                source.BaseStream.Seek(chapterSize, SeekOrigin.Current);
             }
         }
 
@@ -256,7 +274,7 @@ namespace ATL.AudioData.IO
             readHeader(source);
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
-                readTags(source, toc[TOC_CONTENT_TAGS].Item1, readTagParams);
+                readTags(source, toc[TOC_CONTENT_TAGS].Item1, toc[TOC_CONTENT_TAGS].Item2, readTagParams);
             }
             if (toc.ContainsKey(TOC_COVER_ART))
             {
@@ -270,9 +288,100 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        protected new string formatBeforeWriting(byte frameType, TagData tag, IDictionary<byte, string> map)
+        {
+            string result = base.formatBeforeWriting(frameType, tag, map);
+
+            // Convert to expected date format
+            if (TagData.TAG_FIELD_PUBLISHING_DATE == frameType)
+            {
+                DateTime date = DateTime.Parse(result);
+                result = date.ToString("dd-MMM-yyyy", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
+            }
+
+            return result;
+        }
+
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
-            throw new NotImplementedException();
+            int result = -1; // Default : leave as is
+
+            if (zone.Equals(ZONE_TAGS))
+            {
+                long nbTagsOffset = w.BaseStream.Position;
+                w.Write(0); // Number of tags; will be rewritten at the end of the method
+
+                // Mapped textual fields
+                IDictionary<byte, string> map = tag.ToMap();
+                foreach (byte frameType in map.Keys)
+                {
+                    if (map[frameType].Length > 0) // No frame with empty value
+                    {
+                        foreach (string s in frameMapping.Keys)
+                        {
+                            if (frameType == frameMapping[s])
+                            {
+                                string value = formatBeforeWriting(frameType, tag, map);
+                                writeTagField(w, s, value);
+                                result++;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Other textual fields
+                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                {
+                    if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                    {
+                        writeTagField(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                        result++;
+                    }
+                }
+
+                w.BaseStream.Seek(nbTagsOffset, SeekOrigin.Begin);
+                w.Write(StreamUtils.EncodeBEInt32(result)); // Number of tags
+            }
+            if (zone.Equals(ZONE_IMAGE))
+            {
+                result = 0;
+                foreach (PictureInfo picInfo in tag.Pictures)
+                {
+                    // Picture has either to be supported, or to come from the right tag standard
+                    bool doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                    // It also has not to be marked for deletion
+                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+
+                    if (doWritePicture)
+                    {
+                        writePictureFrame(w, picInfo.PictureData);
+                        return 1; // Stop here; there can only be one picture in an AA file
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private void writeTagField(BinaryWriter w, string key, string value)
+        {
+            w.Write('\0'); // Unknown byte; always zero
+            byte[] keyB = Encoding.UTF8.GetBytes(key);
+            byte[] valueB = Encoding.UTF8.GetBytes(value);
+            w.Write(StreamUtils.EncodeBEInt32(keyB.Length)); // Key length
+            w.Write(StreamUtils.EncodeBEInt32(valueB.Length)); // Value length
+            w.Write(keyB);
+            w.Write(valueB);
+        }
+
+        private void writePictureFrame(BinaryWriter w, byte[] pictureData)
+        {
+            w.Write(StreamUtils.EncodeBEInt32(pictureData.Length)); // Pic size
+            w.Write(0); // Pic data absolute offset; to be rewritten later
+
+            w.Write(pictureData);
         }
     }
 }

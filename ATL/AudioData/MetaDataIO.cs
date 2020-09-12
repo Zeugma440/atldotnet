@@ -593,8 +593,8 @@ namespace ATL.AudioData.IO
 
         protected string formatBeforeWriting(byte frameType, TagData tag, IDictionary<byte, string> map)
         {
-            string value = "";
-            string total = "";
+            string value;
+            string total;
             switch (frameType)
             {
                 case TagData.TAG_FIELD_RATING: return TrackUtils.EncodePopularity(map[frameType], ratingConvention).ToString();
@@ -640,7 +640,9 @@ namespace ATL.AudioData.IO
 
         private FileSurgeon.WriteResult writeAdapter(BinaryWriter w, TagData tag, Zone zone)
         {
-            return new FileSurgeon.WriteResult(FileSurgeon.WriteMode.REPLACE, write(tag, w, zone.Name));
+            int result = write(tag, w, zone.Name);
+            FileSurgeon.WriteMode writeMode = (result > -1) ? FileSurgeon.WriteMode.REPLACE : FileSurgeon.WriteMode.OVERWRITE;
+            return new FileSurgeon.WriteResult(writeMode, result);
         }
 
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
