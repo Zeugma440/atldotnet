@@ -89,7 +89,7 @@ R= Read / W= Write
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support (1) | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
 Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A, .M4B | R/W | R/W | R/W | R/W
-Audible | .AAX | R/W | R/W | R/W | R/W
+Audible | .AAX, .AA | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
 Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
@@ -129,7 +129,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 ### DETECTED FIELDS
 
 * __Audio properties (from audio data)__ : Bitrate, Sample rate, Duration, VBR, Codec family, Channels count and arrangement
-* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics
+* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Publishing Date, Copyright, Original album, Original artist, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics
 * __Custom Metadata__ : any other field that might be in the tag is readable __and__ editable by ATL
 
 
@@ -149,7 +149,7 @@ CUE
 ## What is the roadmap of ATL.NET ?
 
 * Support for Broadcast wave metadata : aXML and XMP
-* Support for other audio file formats : Speex, Theora, Audible
+* Support for other audio file formats : Speex, Theora
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 NB : Any user request that can be granted quickly will take priority over the roadmap
