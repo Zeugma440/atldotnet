@@ -3,14 +3,18 @@ using System.IO;
 using System.Text;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
-using Commons;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Audible Format 4 files manipulation (extensions : .AA)
+    /// 
+    /// Implementation notes
+    /// 
+    ///   - Only the editing of existing zones has been tested, not the adding of new zones (e.g. tagging a tagless AA, adding a picture to a pictureless AA)
+    ///   due to the lack of empty test files
+    ///   
     /// </summary>
 	class AA : MetaDataIO, IAudioDataIO
     {
