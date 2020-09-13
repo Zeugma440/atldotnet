@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Commons;
+using System.Threading;
 
 namespace ATL.benchmark
 {
@@ -54,6 +55,21 @@ namespace ATL.benchmark
 
                     if (found.Length > 0) Console.WriteLine("FOUND " + found + " IN " + f.FullName);
                 }
+            }
+        }
+
+        public void FF_RecursiveExplore(string dirName, string filter, int nbThreads)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(dirName);
+
+            int nb = 0;
+            foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.AllDirectories))
+            {
+                ReadThread thread = new ReadThread(f.FullName);
+                Thread t = new Thread(new ThreadStart(thread.ThreadProc));
+                t.Start();
+                nb++;
+                if (nbThreads == nb) break;
             }
         }
 
@@ -113,5 +129,25 @@ namespace ATL.benchmark
             }
         }
 
+    }
+
+    public class ReadThread
+    {
+        // State information used in the task.
+        private string fileName;
+
+        // The constructor obtains the state information.
+        public ReadThread(string fileName)
+        {
+            this.fileName = fileName;
+        }
+
+        // The thread procedure performs the task, such as formatting
+        // and printing a document.
+        public void ThreadProc()
+        {
+            Track t = new Track(fileName);
+            System.Console.WriteLine(t.Title + "[" + Utils.EncodeTimecode_s(t.Duration) + "]");
+        }
     }
 }
