@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace ATL.AudioData
 {
@@ -63,6 +64,7 @@ namespace ATL.AudioData
 		/// Gets the instance of this factory (Singleton pattern) 
 		/// </summary>
 		/// <returns>Instance of the MetaReaderFactory of the application</returns>
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public static MetaDataIOFactory GetInstance()
 		{
             if (!BitConverter.IsLittleEndian) throw new PlatformNotSupportedException("Big-endian based platforms are not supported by ATL");

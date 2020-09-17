@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace ATL.CatalogDataReaders
 {
@@ -14,7 +15,7 @@ namespace ATL.CatalogDataReaders
         // The instance of this factory
         private static CatalogDataReaderFactory theFactory = null;
 
-
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static CatalogDataReaderFactory GetInstance()
         {
             if (null == theFactory)

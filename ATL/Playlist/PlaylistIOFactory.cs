@@ -1,5 +1,6 @@
 ﻿using ATL.Playlist.IO;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace ATL.Playlist
 {
@@ -20,7 +21,7 @@ namespace ATL.Playlist
         // The instance of this factory
         private static PlaylistIOFactory theFactory = null;
 
-
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static PlaylistIOFactory GetInstance()
         {
             if (null == theFactory)
