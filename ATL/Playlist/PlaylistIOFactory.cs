@@ -1,6 +1,5 @@
 ﻿using ATL.Playlist.IO;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace ATL.Playlist
 {
@@ -21,60 +20,65 @@ namespace ATL.Playlist
         // The instance of this factory
         private static PlaylistIOFactory theFactory = null;
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
+        private static readonly object _lockable = new object();
+
+
         public static PlaylistIOFactory GetInstance()
         {
-            if (null == theFactory)
+            lock (_lockable)
             {
-                theFactory = new PlaylistIOFactory();
-                theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
+                if (null == theFactory)
+                {
+                    theFactory = new PlaylistIOFactory();
+                    theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
 
-                PlaylistFormat tempFmt = new PlaylistFormat(PL_M3U, "M3U");
-                tempFmt.AddExtension(".m3u");
-                tempFmt.AddExtension(".m3u8");
-                theFactory.addFormat(tempFmt);
+                    PlaylistFormat tempFmt = new PlaylistFormat(PL_M3U, "M3U");
+                    tempFmt.AddExtension(".m3u");
+                    tempFmt.AddExtension(".m3u8");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_PLS, "PLS");
-                tempFmt.AddExtension(".pls");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_PLS, "PLS");
+                    tempFmt.AddExtension(".pls");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
-                tempFmt.AddExtension(".fpl");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)");
+                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
+                    tempFmt.AddExtension(".fpl");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
-                tempFmt.AddExtension(".xspf");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
+                    tempFmt.AddExtension(".xspf");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_SMIL, "SMIL");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
-                tempFmt.AddExtension(".smil");
-                tempFmt.AddExtension(".smi");
-                tempFmt.AddExtension(".zpl");
-                tempFmt.AddExtension(".wpl");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_SMIL, "SMIL");
+                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
+                    tempFmt.AddExtension(".smil");
+                    tempFmt.AddExtension(".smi");
+                    tempFmt.AddExtension(".zpl");
+                    tempFmt.AddExtension(".wpl");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_ASX, "ASX");
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
-                tempFmt.AddExtension(".asx");
-                tempFmt.AddExtension(".wax");
-                tempFmt.AddExtension(".wvx");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_ASX, "ASX");
+                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
+                    tempFmt.AddExtension(".asx");
+                    tempFmt.AddExtension(".wax");
+                    tempFmt.AddExtension(".wvx");
+                    theFactory.addFormat(tempFmt);
 
-                tempFmt = new PlaylistFormat(PL_B4S, "B4S");
-                tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
-                tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
-                tempFmt.AddExtension(".b4s");
-                theFactory.addFormat(tempFmt);
+                    tempFmt = new PlaylistFormat(PL_B4S, "B4S");
+                    tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
+                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
+                    tempFmt.AddExtension(".b4s");
+                    theFactory.addFormat(tempFmt);
+                }
             }
 
             return theFactory;
         }
 
         public IPlaylistIO GetPlaylistIO(
-            string path, 
-            PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined, 
+            string path,
+            PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined,
             PlaylistFormat.FileEncoding fileEncoding = PlaylistFormat.FileEncoding.Undefined,
             int alternate = 0)
         {
