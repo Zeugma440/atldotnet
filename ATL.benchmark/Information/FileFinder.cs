@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using Commons;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ATL.benchmark
 {
@@ -58,7 +59,7 @@ namespace ATL.benchmark
             }
         }
 
-        public void FF_RecursiveExplore(string dirName, string filter, int nbThreads)
+        public void FF_RecursiveRead(string dirName, string filter, int nbThreads)
         {
             DirectoryInfo dirInfo = new DirectoryInfo(dirName);
 
@@ -66,6 +67,25 @@ namespace ATL.benchmark
             foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.AllDirectories))
             {
                 ReadThread thread = new ReadThread(f.FullName);
+                Thread t = new Thread(new ThreadStart(thread.ThreadProc));
+                t.Start();
+                nb++;
+                if (nbThreads == nb) break;
+            }
+        }
+
+        public void FF_WriteAllInFolder(string dirName, string filter, int nbThreads)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(dirName);
+
+            ATL.Settings.ID3v2_tagSubVersion = 3;
+            ATL.Settings.MP4_createNeroChapters = true;
+            ATL.Settings.MP4_createQuicktimeChapters = true;
+
+            int nb = 0;
+            foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.TopDirectoryOnly))
+            {
+                WriteThread thread = new WriteThread(f.FullName);
                 Thread t = new Thread(new ThreadStart(thread.ThreadProc));
                 t.Start();
                 nb++;
@@ -133,21 +153,48 @@ namespace ATL.benchmark
 
     public class ReadThread
     {
-        // State information used in the task.
         private string fileName;
 
-        // The constructor obtains the state information.
         public ReadThread(string fileName)
         {
             this.fileName = fileName;
         }
 
-        // The thread procedure performs the task, such as formatting
-        // and printing a document.
         public void ThreadProc()
         {
             Track t = new Track(fileName);
             System.Console.WriteLine(t.Title + "[" + Utils.EncodeTimecode_s(t.Duration) + "]");
+        }
+    }
+
+
+    public class WriteThread
+    {
+        private string fileName;
+
+        public WriteThread(string fileName)
+        {
+            this.fileName = fileName;
+        }
+
+        public void ThreadProc()
+        {
+            Track t = new Track(fileName);
+            System.Console.WriteLine(t.Title + "[" + Utils.EncodeTimecode_s(t.Duration) + "]");
+
+            t.Chapters.Clear();
+
+            for (int i = 0; i < 20; i++)
+            {
+                ChapterInfo chi = new ATL.ChapterInfo();
+                chi.StartTime = (uint)Math.Round(t.DurationMs / 20.0 * i);
+                chi.EndTime = (uint)Math.Round(t.DurationMs / 20.0 * i + 1);
+                chi.Title = "Chap" + (i + 1);
+                t.Chapters.Add(chi);
+            }
+
+            t.Save();
+            System.Console.WriteLine(t.Title + "[" + Utils.EncodeTimecode_s(t.Duration) + "] -> DONE");
         }
     }
 }

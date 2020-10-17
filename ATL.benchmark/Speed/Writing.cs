@@ -67,7 +67,8 @@ namespace ATL.benchmark
             byte[] data = File.ReadAllBytes(@"E:\temp\mp3\windowsIcon\folder.jpg");
             PictureInfo newPicture = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Front);
             theTrack.EmbeddedPictures.Add(newPicture);
-            
+            */
+
             //Settings.ID3v2_tagSubVersion = 3;
             //Settings.ID3v2_forceUnsynchronization = true;
             theTrack.Chapters = new System.Collections.Generic.List<ChapterInfo>();
@@ -102,8 +103,6 @@ namespace ATL.benchmark
             ch.Title = "malarky3";
             ch.Subtitle = "bobs your uncle now";
             theTrack.Chapters.Add(ch);
-            */
-
 
             // Save modifications on the disc
 

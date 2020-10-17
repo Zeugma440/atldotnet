@@ -24,9 +24,9 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            //writeAt(@"E:\temp\m4a-mp4\sample.original.edited - Copie.mp4");
+            writeAt(@"E:\temp\m4a-mp4\issue 71\dragon_maiden.m4b");
 
-            browseForMultithread(@"E:\temp\m4a-mp4", "*.*", 40);
+            //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
             //readAt(@"E:\temp\m4a-mp4\sample.original - Copie.mp4");
 
@@ -77,7 +77,7 @@ namespace ATL.benchmark
         {
             FileFinder ff = new FileFinder();
 
-            ff.FF_RecursiveExplore(rootDir, filter, threads);
+            ff.FF_WriteAllInFolder(rootDir, filter, threads);
 
             Console.WriteLine(">>> BROWSE : END");
             Console.ReadLine();
