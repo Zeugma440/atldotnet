@@ -307,7 +307,6 @@ namespace ATL.AudioData.IO
             // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC, certain MP4s where useful zones are at the very end)
 
             ICollection<Zone> resizableZones = zones.Where(zone => zone.Resizable).ToList();
-            ICollection<Zone> staticZones = zones.Where(zone => !zone.Resizable).ToList();
 
             long chunkBeginOffset = getFirstRecordedOffset(resizableZones);
             long chunkEndOffset = getLastRecordedOffset(resizableZones);
