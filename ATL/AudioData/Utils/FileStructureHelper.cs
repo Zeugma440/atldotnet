@@ -101,13 +101,17 @@ namespace ATL.AudioData
             /// Size descriptors and item counters referencing the zone elsehwere on the file
             /// </summary>
             public IList<FrameHeader> Headers;
+            /// <summary>
+            /// True if the zone might shrink or enlarge, false if it must keep its original size
+            /// </summary>
+            public bool Resizable;
 
             /// <summary>
             /// Construct a new Zone using the given field values
             /// </summary>
-            public Zone(string name, long offset, int size, byte[] coreSignature, bool isDeletable = true, byte flag = 0)
+            public Zone(string name, long offset, int size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
             {
-                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag;
+                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; Resizable = resizable;
                 Headers = new List<FrameHeader>();
             }
 
@@ -208,19 +212,19 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true)
+        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
-            AddZone(offset, size, new byte[0], name, isDeletable);
+            AddZone(offset, size, new byte[0], name, isDeletable, resizable);
         }
 
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true)
+        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
             if (!zones.ContainsKey(zone))
             {
-                zones.Add(zone, new Zone(zone, offset, size, coreSignature, isDeletable));
+                zones.Add(zone, new Zone(zone, offset, size, coreSignature, isDeletable, 0, resizable));
             }
             else // Existing zone might already contain headers
             {

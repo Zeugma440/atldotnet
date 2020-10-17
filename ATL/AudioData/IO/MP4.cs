@@ -877,7 +877,7 @@ namespace ATL.AudioData.IO
                     else // Don't need to save chunks for chapters since they are entirely rewritten
                     {
                         string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
-                        structureHelper.AddZone(valueLong, 0, zoneName, false);
+                        structureHelper.AddZone(valueLong, 0, zoneName, false, false);
                         structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
                     }
                 } // Chunk offsets
@@ -1354,7 +1354,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
-                result = 1; // Needs to appear active in case the headers need to be rewritten
+                result = 1; // Needs to appear active in case their headers need to be rewritten (e.g. chunk enlarged somewhere -> all physical chunks are X bytes ahead of their initial position)
             }
 
             return result;
