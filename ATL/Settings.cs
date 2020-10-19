@@ -11,6 +11,8 @@ namespace ATL
          * Technical settings
          */
         public static int FileBufferSize = 512;                         // Buffer size used for I/O operations. Change it at your own risk !
+        public static bool ForceDiskIO = false;                         // Force high-level I/O operations to be performed without zone buffering,
+                                                                        // resulting in higher disk usage, but lower RAM usage
 
         /*
          * Global settings
