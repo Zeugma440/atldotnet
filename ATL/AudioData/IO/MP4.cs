@@ -1322,7 +1322,6 @@ namespace ATL.AudioData.IO
             }
             else if (PADDING_ZONE_NAME.Equals(zone)) // Padding
             {
-                Zone z = structureHelper.GetZone(zone);
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
                 else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -tag.DataSizeDelta);

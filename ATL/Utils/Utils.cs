@@ -452,7 +452,7 @@ namespace Commons
             // Divide by 1024 to get fractional value
             readable = (readable / 1024);
             // Return formatted number with suffix
-            return readable.ToString("0.### ") + suffix;
+            return readable.ToString("0.## ") + suffix;
         }
     }
 }
