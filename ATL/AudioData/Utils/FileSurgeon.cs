@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Commons;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.FileStructureHelper;
@@ -21,6 +22,22 @@ namespace ATL.AudioData.IO
             BUFFERED = 1    // Modifications are performed in a memory buffer, then written on disk in one go
         }
 
+        private class ZoneRegion
+        {
+            public bool IsBufferable = true;
+            public IList<Zone> Zones = new List<Zone>();
+
+            public long StartOffset => FileSurgeon.getFirstRecordedOffset(Zones);
+
+            public long EndOffset => FileSurgeon.getLastRecordedOffset(Zones);
+
+            public int Size => (int)(EndOffset - StartOffset);
+
+            public override string ToString()
+            {
+                return StartOffset + "->" + EndOffset + " (" + Utils.GetBytesReadable(Size) + ") IsBufferable=" + IsBufferable;
+            }
+        }
 
         private readonly FileStructureHelper structureHelper;
         private readonly IMetaDataEmbedder embedder;
@@ -59,7 +76,6 @@ namespace ATL.AudioData.IO
             this.embedder = embedder;
             this.implementedTagType = implementedTagType;
             this.defaultTagOffset = defaultTagOffset;
-            //            this.writeProgress = writeProgress;
         }
 
 
@@ -74,149 +90,239 @@ namespace ATL.AudioData.IO
             if (1 == zones.Count || Settings.ForceDiskIO) mode = ZoneManagement.ON_DISK;
             else mode = ZoneManagement.BUFFERED;
 
-            //            currentProgress = 0;
-            //            totalProgressSteps = 0;
 
+//            mode = ZoneManagement.ON_DISK;
+
+            /*
             if (ZoneManagement.ON_DISK == mode) return RewriteZonesDirect(w, write, zones, dataToWrite, tagExists);
-            else return RewriteZonesBuffered(w, write, zones, dataToWrite, tagExists);
+            else return RewriteZonesHybrid(w, write, zones, dataToWrite, tagExists);
+            */
+            return RewriteZones(w, write, zones, dataToWrite, tagExists, mode == ZoneManagement.BUFFERED);
         }
 
-        private bool RewriteZonesDirect(
+        private bool RewriteZones(
             BinaryWriter w,
             WriteDelegate write,
             ICollection<Zone> zones,
             TagData dataToWrite,
             bool tagExists,
-            long globalOffsetCorrection = 0,
-            bool buffered = false)
+            bool useBuffer)
         {
             long oldTagSize;
             long newTagSize;
+            long globalOffsetCorrection;
             long cumulativeDelta = 0;
             bool result = true;
 
-            //            totalProgressSteps += zones.Count;
-            foreach (Zone zone in zones)
+            IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
+            BinaryWriter writer = w;
+
+            if (useBuffer)
             {
-                oldTagSize = zone.Size;
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");
+                foreach (ZoneRegion region in zoneRegions) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, region.ToString());
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
+            }
 
-                // Write new tag to a MemoryStream
-                using (MemoryStream s = new MemoryStream(zone.Size))
-                using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
+            int regionIndex = 0;
+            foreach (ZoneRegion region in zoneRegions)
+            {
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------------ REGION " + regionIndex++);
+
+                int initialBufferSize = region.Size;
+                MemoryStream buffer = null;
+                try
                 {
-                    dataToWrite.DataSizeDelta = cumulativeDelta;
-                    WriteResult writeResult = write(msw, dataToWrite, zone);
-
-                    if (WriteMode.REPLACE == writeResult.RequiredMode)
+                    if (useBuffer && region.IsBufferable)
                     {
-                        if (writeResult.WrittenFields > 0)
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
+                        buffer = new MemoryStream(initialBufferSize);
+
+                        // Copy file data to buffer
+                        if (initialBufferSize > 0)
                         {
-                            newTagSize = s.Length;
-
-                            if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
-                            {
-                                StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                s.Position = 0;
-                                embedder.WriteID3v2EmbeddingHeader(msw, newTagSize);
-
-                                newTagSize = s.Length;
-                            }
+                            w.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
+                            StreamUtils.CopyStream(w.BaseStream, buffer, initialBufferSize);
                         }
-                        else
-                        {
-                            newTagSize = zone.CoreSignature.Length;
-                        }
-                    }
-                    else // Overwrite mode
-                    {
-                        newTagSize = zone.Size;
-                    }
 
-                    // -- Adjust tag slot to new size in file --
-                    long tagBeginOffset, tagEndOffset;
-
-                    if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
-                    {
-                        tagBeginOffset = zone.Offset + cumulativeDelta - globalOffsetCorrection;
-                        tagEndOffset = tagBeginOffset + zone.Size;
-                    }
-                    else // A brand new tag has been added to the file
-                    {
-                        if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
-                        {
-                            tagBeginOffset = embedder.Id3v2Zone.Offset - globalOffsetCorrection;
-                        }
-                        else
-                        {
-                            switch (defaultTagOffset)
-                            {
-                                case MetaDataIO.TO_EOF: tagBeginOffset = w.BaseStream.Length; break;
-                                case MetaDataIO.TO_BOF: tagBeginOffset = 0; break;
-                                case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
-                                default: tagBeginOffset = -1; break;
-                            }
-                            tagBeginOffset -= globalOffsetCorrection;
-                        }
-                        tagEndOffset = tagBeginOffset + zone.Size;
-                    }
-
-                    if (WriteMode.REPLACE == writeResult.RequiredMode)
-                    {
-                        // Need to build a larger file
-                        if (newTagSize > zone.Size)
-                        {
-                            if (!buffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (newTagSize - zone.Size) + ")");
-                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(newTagSize - zone.Size));
-                        }
-                        else if (newTagSize < zone.Size) // Need to reduce file size
-                        {
-                            if (!buffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (newTagSize - zone.Size) + ")");
-                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(zone.Size - newTagSize));
-                        }
-                    }
-
-                    // Copy tag contents to the new slot
-                    w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                    s.Seek(0, SeekOrigin.Begin);
-
-                    if (writeResult.WrittenFields > 0)
-                    {
-                        StreamUtils.CopyStream(s, w.BaseStream);
+                        writer = new BinaryWriter(buffer, Settings.DefaultTextEncoding);
+                        globalOffsetCorrection = region.StartOffset;
                     }
                     else
                     {
-                        if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                        writer = w;
+                        globalOffsetCorrection = 0;
                     }
 
-                    long delta = newTagSize - oldTagSize;
-                    cumulativeDelta += delta;
-
-                    // Edit wrapping size markers and frame counters if needed
-                    if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
+                    foreach (Zone zone in region.Zones)
                     {
-                        ACTION action;
-                        bool isTagWritten = (writeResult.WrittenFields > 0);
+                        oldTagSize = zone.Size;
 
-                        if (0 == delta) action = ACTION.Edit; // Zone content has not changed; headers might need to be rewritten (e.g. offset changed)
-                        else
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name);
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
+
+                        // Write new tag to a MemoryStream
+                        using (MemoryStream s = new MemoryStream(zone.Size))
+                        using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                         {
-                            if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION.Add;
-                            else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION.Delete;
-                            else action = ACTION.Edit;
+                            dataToWrite.DataSizeDelta = cumulativeDelta;
+                            WriteResult writeResult = write(msw, dataToWrite, zone);
+
+                            if (WriteMode.REPLACE == writeResult.RequiredMode)
+                            {
+                                if (writeResult.WrittenFields > 0)
+                                {
+                                    newTagSize = s.Length;
+
+                                    if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                    {
+                                        StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                        s.Position = 0;
+                                        embedder.WriteID3v2EmbeddingHeader(msw, newTagSize);
+
+                                        newTagSize = s.Length;
+                                    }
+                                }
+                                else
+                                {
+                                    newTagSize = zone.CoreSignature.Length;
+                                }
+                            }
+                            else // Overwrite mode
+                            {
+                                newTagSize = zone.Size;
+                            }
+
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "newTagSize : " + Utils.GetBytesReadable(newTagSize));
+
+                            // -- Adjust tag slot to new size in file --
+                            long tagBeginOffset, tagEndOffset;
+
+                            if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
+                            {
+                                tagBeginOffset = zone.Offset + cumulativeDelta - globalOffsetCorrection;
+                                tagEndOffset = tagBeginOffset + zone.Size;
+                            }
+                            else // A brand new tag has been added to the file
+                            {
+                                if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+                                {
+                                    tagBeginOffset = embedder.Id3v2Zone.Offset - globalOffsetCorrection;
+                                }
+                                else
+                                {
+                                    switch (defaultTagOffset)
+                                    {
+                                        case MetaDataIO.TO_EOF: tagBeginOffset = writer.BaseStream.Length; break;
+                                        case MetaDataIO.TO_BOF: tagBeginOffset = 0; break;
+                                        case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
+                                        default: tagBeginOffset = -1; break;
+                                    }
+                                    tagBeginOffset -= globalOffsetCorrection;
+                                }
+                                tagEndOffset = tagBeginOffset + zone.Size;
+                            }
+
+                            if (WriteMode.REPLACE == writeResult.RequiredMode)
+                            {
+                                // Need to build a larger file
+                                if (newTagSize > zone.Size)
+                                {
+                                    uint deltaBytes = (uint)(newTagSize - zone.Size);
+                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
+
+                                    StreamUtils.LengthenStream(writer.BaseStream, tagEndOffset, deltaBytes);
+                                }
+                                else if (newTagSize < zone.Size) // Need to reduce file size
+                                {
+                                    uint deltaBytes = (uint)(zone.Size - newTagSize);
+                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
+
+                                    StreamUtils.ShortenStream(writer.BaseStream, tagEndOffset, deltaBytes);
+                                }
+                            }
+
+                            // Copy tag contents to the new slot
+                            writer.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                            s.Seek(0, SeekOrigin.Begin);
+
+                            if (writeResult.WrittenFields > 0)
+                            {
+                                StreamUtils.CopyStream(s, writer.BaseStream);
+                            }
+                            else
+                            {
+                                if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                            }
+
+                            long delta = newTagSize - oldTagSize;
+                            cumulativeDelta += delta;
+
+                            // Edit wrapping size markers and frame counters if needed
+                            if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
+                            {
+                                ACTION action;
+                                bool isTagWritten = (writeResult.WrittenFields > 0);
+
+                                if (0 == delta) action = ACTION.Edit; // Zone content has not changed; headers might need to be rewritten (e.g. offset changed)
+                                else
+                                {
+                                    if (oldTagSize == zone.CoreSignature.Length && isTagWritten) action = ACTION.Add;
+                                    else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) action = ACTION.Delete;
+                                    else action = ACTION.Edit;
+                                }
+                                // Use plain writer here on purpose because its zone contains headers for the zones adressed by the static writer
+                                result = structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection);
+                            }
+
+                            zone.Size = (int)newTagSize;
+                        } // MemoryStream used to process current zone
+                    } // Loop through zones
+
+                    if (buffer != null)
+                    {
+                        // -- Adjust file slot to new size of buffer --
+                        long tagEndOffset = region.StartOffset + initialBufferSize;
+
+                        // Need to build a larger file
+                        if (buffer.Length > initialBufferSize)
+                        {
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize));
+                        }
+                        else if (buffer.Length < initialBufferSize) // Need to reduce file size
+                        {
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length));
                         }
 
-                        result = structureHelper.RewriteHeaders(w, delta, action, zone.Name, globalOffsetCorrection);
-                    }
+                        // Copy tag contents to the new slot
+                        w.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
+                        buffer.Seek(0, SeekOrigin.Begin);
 
-                    zone.Size = (int)newTagSize;
+                        StreamUtils.CopyStream(buffer, w.BaseStream);
+                    }
                 }
-                //                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-            } // Loop through zones
+                finally // Make sure buffers are properly disallocated
+                {
+                    if (buffer != null)
+                    {
+                        buffer.Close();
+                        buffer = null;
+                    }
+                }
+                
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");
+            } // Loop through zone regions
 
             return result;
         }
 
-        private bool RewriteZonesBuffered(
+        /*
+        private bool RewriteZonesHybrid(
             BinaryWriter w,
             WriteDelegate write,
             ICollection<Zone> zones,
@@ -224,58 +330,204 @@ namespace ATL.AudioData.IO
             bool tagExists)
         {
             bool result = true;
-            //            totalProgressSteps += 3;
 
             // Load the 'interesting' part of the file in memory
             // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC, certain MP4s where useful zones are at the very end)
-            long chunkBeginOffset = getFirstRecordedOffset(zones);
-            long chunkEndOffset = getLastRecordedOffset(zones);
 
-            if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+            /*
+            ICollection<Zone> resizableZones = zones.Where(zone => zone.IsResizable).ToList();
+            IDictionary<int, Tuple<long, long>> bufferMap = new Dictionary<int, Tuple<long, long>>();
+
+            //            long chunkBeginOffset = getFirstRecordedOffset(resizableZones);
+            //            long chunkEndOffset = getLastRecordedOffset(resizableZones);
+
+            int bufferIndex = 0;
+            long bufferBeginOffset = 0;
+            long bufferEndOffset = 0;
+
+            long previousZoneEndOffset = -1;
+
+            foreach (Zone zone in resizableZones)
             {
-                chunkBeginOffset = Math.Min(chunkBeginOffset, embedder.Id3v2Zone.Offset);
-                chunkEndOffset = Math.Max(chunkEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
-            }
+                long zoneBeginOffset = getFirstRecordedOffset(zone);
+                long zoneEndOffset = getLastRecordedOffset(zone);
 
-            long initialChunkLength = chunkEndOffset - chunkBeginOffset;
-
-
-            w.BaseStream.Seek(chunkBeginOffset, SeekOrigin.Begin);
-
-            using (MemoryStream chunk = new MemoryStream((int)initialChunkLength))
-            {
-                StreamUtils.CopyStream(w.BaseStream, chunk, (int)initialChunkLength);
-                //                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-
-                using (BinaryWriter msw = new BinaryWriter(chunk, Settings.DefaultTextEncoding))
+                if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
                 {
-                    result = RewriteZonesDirect(msw, write, zones, dataToWrite, tagExists, chunkBeginOffset, true);
-
-                    // -- Adjust file slot to new size of chunk --
-                    long tagBeginOffset = chunkBeginOffset;
-                    long tagEndOffset = tagBeginOffset + initialChunkLength;
-
-                    // Need to build a larger file
-                    if (chunk.Length > initialChunkLength)
-                    {
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (chunk.Length - initialChunkLength) + ")");
-                        StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(chunk.Length - initialChunkLength));
-                    }
-                    else if (chunk.Length < initialChunkLength) // Need to reduce file size
-                    {
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (chunk.Length - initialChunkLength) + ")");
-                        StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialChunkLength - chunk.Length));
-                    }
-                    //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-
-                    // Copy tag contents to the new slot
-                    w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                    chunk.Seek(0, SeekOrigin.Begin);
-
-                    StreamUtils.CopyStream(chunk, w.BaseStream);
-                    //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
+                    zoneBeginOffset = Math.Min(zoneBeginOffset, embedder.Id3v2Zone.Offset);
+                    zoneEndOffset = Math.Max(zoneEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
                 }
+
+                // If current zone is distant to the previous by more than 20% of total file size, create another buffer
+                if (previousZoneEndOffset > -1 && zoneBeginOffset - previousZoneEndOffset > w.BaseStream.Length * 0.2)
+                {
+                    bufferEndOffset = previousZoneEndOffset;
+                    bufferMap.Add(bufferIndex, new Tuple<long, long>(bufferBeginOffset, bufferEndOffset));
+
+                    bufferIndex++;
+                    bufferBeginOffset = zoneBeginOffset;
+                }
+                previousZoneEndOffset = zoneEndOffset;
+                zone.BufferIndex = bufferIndex;
             }
+
+            // Finalize current buffer
+            bufferEndOffset = previousZoneEndOffset;
+            bufferMap.Add(bufferIndex, new Tuple<long, long>(bufferBeginOffset, bufferEndOffset));
+
+            //            long initialChunkLength = chunkEndOffset - chunkBeginOffset;
+            */
+        /*
+
+        IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
+
+        try
+        {
+            foreach (int bufferKey in bufferMap.Keys)
+            {
+                bufferBeginOffset = bufferMap[bufferKey].Item1;
+                int bufferSize = (int)(bufferMap[bufferKey].Item2 - bufferBeginOffset);
+                bufferBeginOffsets.Add(bufferBeginOffset);
+
+                // Allocate buffer
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "RewriteZonesHybrid : Allocating " + Utils.GetBytesReadable(bufferSize));
+                MemoryStream buffer = new MemoryStream(bufferSize);
+                buffers.Add(buffer);
+                writers.Add(new BinaryWriter(buffer, Settings.DefaultTextEncoding));
+
+                // Copy file data to buffer
+                w.BaseStream.Seek(bufferBeginOffset, SeekOrigin.Begin);
+                StreamUtils.CopyStream(w.BaseStream, buffer, bufferSize);
+            }
+
+            result = RewriteZonesDirect(writers, w, write, zones, dataToWrite, tagExists, bufferBeginOffsets, true);
+
+            foreach (int bufferKey in bufferMap.Keys)
+            {
+                // -- Adjust file slot to new size of chunk --
+                MemoryStream buffer = buffers[bufferKey];
+                long tagBeginOffset = bufferMap[bufferKey].Item1;
+                long initialBufferSize = bufferMap[bufferKey].Item2 - tagBeginOffset;
+                long tagEndOffset = tagBeginOffset + initialBufferSize;
+
+                // Need to build a larger file
+                if (buffer.Length > initialBufferSize)
+                {
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer #" + bufferKey + ") : Lengthening (Δ=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                    StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize));
+                }
+                else if (buffer.Length < initialBufferSize) // Need to reduce file size
+                {
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer #" + bufferKey + ") : Shortening (Δ=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                    StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length));
+                }
+
+                // Copy tag contents to the new slot
+                w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                buffer.Seek(0, SeekOrigin.Begin);
+
+                StreamUtils.CopyStream(buffer, w.BaseStream);
+            }
+        }
+        finally // Make sure everything's properly disallocated
+        {
+            foreach (MemoryStream stream in buffers) stream.Close();
+        }
+        */
+
+
+        /*
+        w.BaseStream.Seek(chunkBeginOffset, SeekOrigin.Begin);
+
+        using (MemoryStream chunk = new MemoryStream((int)initialChunkLength))
+        {
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "RewriteZonesBuffered : Allocating " + Utils.GetBytesReadable(initialChunkLength));
+
+            StreamUtils.CopyStream(w.BaseStream, chunk, (int)initialChunkLength);
+            //                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
+
+            using (BinaryWriter msw = new BinaryWriter(chunk, Settings.DefaultTextEncoding))
+            {
+                result = RewriteZonesDirect(msw, w, write, zones, dataToWrite, tagExists, chunkBeginOffset, true);
+
+                // -- Adjust file slot to new size of chunk --
+                long tagBeginOffset = chunkBeginOffset;
+                long tagEndOffset = tagBeginOffset + initialChunkLength;
+
+                // Need to build a larger file
+                if (chunk.Length > initialChunkLength)
+                {
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (chunk.Length - initialChunkLength) + ")");
+                    StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(chunk.Length - initialChunkLength));
+                }
+                else if (chunk.Length < initialChunkLength) // Need to reduce file size
+                {
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (chunk.Length - initialChunkLength) + ")");
+                    StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialChunkLength - chunk.Length));
+                }
+                //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
+
+                // Copy tag contents to the new slot
+                w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                chunk.Seek(0, SeekOrigin.Begin);
+
+                StreamUtils.CopyStream(chunk, w.BaseStream);
+                //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
+            }
+        }
+
+
+        return result;
+    }
+*/
+
+        private IList<ZoneRegion> computeZoneRegions(ICollection<Zone> zones, long fileSize)
+        {
+            IList<ZoneRegion> result = new List<ZoneRegion>();
+
+            bool isFirst = true;
+            bool embedderProcessed = false;
+
+            bool previousIsResizable = false;
+            long previousZoneEndOffset = -1;
+            ZoneRegion region = new ZoneRegion();
+
+            foreach (Zone zone in zones)
+            {
+                if (isFirst) region.IsBufferable = zone.IsResizable;
+
+                long zoneBeginOffset = getFirstRecordedOffset(zone);
+                long zoneEndOffset = getLastRecordedOffset(zone);
+
+                if (embedder != null && !embedderProcessed && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+                {
+                    zoneBeginOffset = Math.Min(zoneBeginOffset, embedder.Id3v2Zone.Offset);
+                    zoneEndOffset = Math.Max(zoneEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
+                    embedderProcessed = true;
+                }
+
+                // If current zone is distant to the previous by more than 20% of total file size, create another region
+                // If current zone has not the same IsResizable value as the previous, create another region
+                if (!isFirst &&
+                    (
+                        (zone.IsResizable && zoneBeginOffset - previousZoneEndOffset > fileSize * 0.2)
+                        || (previousIsResizable != zone.IsResizable)
+                    )
+                    )
+                {
+                    result.Add(region);
+                    region = new ZoneRegion();
+                    region.IsBufferable = zone.IsResizable;
+                }
+
+                previousZoneEndOffset = zoneEndOffset;
+                previousIsResizable = zone.IsResizable;
+                region.Zones.Add(zone);
+                isFirst = false;
+            }
+
+            // Finalize current region
+            result.Add(region);
 
             return result;
         }
@@ -285,11 +537,20 @@ namespace ATL.AudioData.IO
             long result = long.MaxValue;
             if (zones != null)
                 foreach (Zone zone in zones)
-                {
-                    result = Math.Min(result, zone.Offset);
-                    foreach (FrameHeader header in zone.Headers)
-                        result = Math.Min(result, header.Position);
-                }
+                    result = Math.Min(result, getFirstRecordedOffset(zone));
+
+            return result;
+        }
+
+        private static long getFirstRecordedOffset(Zone zone)
+        {
+            long result = long.MaxValue;
+            if (zone != null)
+            {
+                result = Math.Min(result, zone.Offset);
+                foreach (FrameHeader header in zone.Headers)
+                    result = Math.Min(result, header.Position);
+            }
             return result;
         }
 
@@ -298,11 +559,20 @@ namespace ATL.AudioData.IO
             long result = 0;
             if (zones != null)
                 foreach (Zone zone in zones)
-                {
-                    result = Math.Max(result, zone.Offset + zone.Size);
-                    foreach (FrameHeader header in zone.Headers)
-                        result = Math.Max(result, header.Position);
-                }
+                    result = Math.Max(result, getLastRecordedOffset(zone));
+
+            return result;
+        }
+
+        private static long getLastRecordedOffset(Zone zone)
+        {
+            long result = 0;
+            if (zone != null)
+            {
+                result = Math.Max(result, zone.Offset + zone.Size);
+                foreach (FrameHeader header in zone.Headers)
+                    result = Math.Max(result, header.Position);
+            }
             return result;
         }
     }

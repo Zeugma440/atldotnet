@@ -13,15 +13,32 @@ namespace ATL.AudioData
     /// </summary>
     public class FileStructureHelper
     {
-        public const string DEFAULT_ZONE_NAME = "default"; // Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
-        public const string PADDING_ZONE_NAME = "padding"; // Zone name to be used for padding
+        /// <summary>
+        /// Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
+        /// </summary>
+        public const string DEFAULT_ZONE_NAME = "default";
+        /// <summary>
+        /// Zone name to be used for padding
+        /// </summary>
+        public const string PADDING_ZONE_NAME = "padding";
 
-        // Type of action to react to
+        /// <summary>
+        /// Type of action to react to
+        /// </summary>
         public enum ACTION
         {
-            Edit = 0,       // Existing zone is edited, and not removed
-            Add = 1,        // New zone is added
-            Delete = 2      // Existing zone is removed
+            /// <summary>
+            /// Existing zone is edited, and not removed
+            /// </summary>
+            Edit = 0,
+            /// <summary>
+            /// New zone is added
+            /// </summary>
+            Add = 1,
+            /// <summary>
+            /// Existing zone is removed
+            /// </summary>
+            Delete = 2
         };
 
         /// <summary>
@@ -29,13 +46,27 @@ namespace ATL.AudioData
         /// </summary>
         public class FrameHeader
         {
-            // Header types
+            /// <summary>
+            /// Header types
+            /// </summary>
             public enum TYPE
             {
-                Counter = 0,        // Counter : counts the underlying number of frames
-                Size = 1,           // Size : documents the size of a given frame / group of frames
-                Index = 2,          // Index (absolute) : documents the offset (position of 1st byte) of a given frame
-                RelativeIndex = 3   // Index (relative) : documents the offset (position of 1st byte) of a given frame, relative to the header's position
+                /// <summary>
+                /// Counter : counts the underlying number of frames
+                /// </summary>
+                Counter = 0,
+                /// <summary>
+                /// Size : documents the size of a given frame / group of frames
+                /// </summary>
+                Size = 1,
+                /// <summary>
+                /// Index (absolute) : documents the offset (position of 1st byte) of a given frame
+                /// </summary>
+                Index = 2,
+                /// <summary>
+                /// Index (relative) : documents the offset (position of 1st byte) of a given frame, relative to the header's position
+                /// </summary>
+                RelativeIndex = 3
             };
 
             /// <summary>
@@ -104,14 +135,18 @@ namespace ATL.AudioData
             /// <summary>
             /// True if the zone might shrink or enlarge, false if it must keep its original size
             /// </summary>
-            public bool Resizable;
+            public bool IsResizable;
+            /// <summary>
+            /// Only used by FileSurgeon when editing the file; indicates the buffer the zone is located into
+            /// </summary>
+            public int BufferIndex = -1;
 
             /// <summary>
             /// Construct a new Zone using the given field values
             /// </summary>
             public Zone(string name, long offset, int size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
             {
-                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; Resizable = resizable;
+                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; IsResizable = resizable;
                 Headers = new List<FrameHeader>();
             }
 
@@ -146,7 +181,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Recorded zones
+        /// Recorded zones, sorted by offset
         /// </summary>
         public ICollection<Zone> Zones
         {
@@ -294,32 +329,6 @@ namespace ATL.AudioData
         {
             if (!zones.ContainsKey(zone)) DeclareZone(zone);
             zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian, parentZone));
-        }
-
-        public long GetFirstRecordedOffset()
-        {
-            long result = long.MaxValue;
-            if (zones != null)
-                foreach (Zone zone in zones.Values)
-                {
-                    result = Math.Min(result, zone.Offset);
-                    foreach (FrameHeader header in zone.Headers)
-                        result = Math.Min(result, header.Position);
-                }
-            return result;
-        }
-
-        public long GetLastRecordedOffset()
-        {
-            long result = 0;
-            if (zones != null)
-                foreach (Zone zone in zones.Values)
-                {
-                    result = Math.Max(result, zone.Offset + zone.Size);
-                    foreach (FrameHeader header in zone.Headers)
-                        result = Math.Max(result, header.Position);
-                }
-            return result;
         }
 
         /// <summary>
