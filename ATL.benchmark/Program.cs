@@ -24,7 +24,7 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\issue 71\dragon_maiden.m4b");
+            writeAt(@"E:\temp\m4a-mp4\issue 71\sample_reprocessed.m4b");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
@@ -47,7 +47,7 @@ namespace ATL.benchmark
                 Track t = new Track(filePath);
                 //t.GetEmbeddedPicture(useOldImplementation, false);
 
-                                Console.WriteLine(t.Title);
+                Console.WriteLine(t.Title);
             }
             else if (Directory.Exists(filePath))
             {
@@ -93,15 +93,24 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
 
-        static private void writeAt(String fileName)
+        static private void writeAt(String filePath)
         {
-            ConsoleLogger logger = new ConsoleLogger();
+            string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
+            try
+            {
+                ConsoleLogger logger = new ConsoleLogger();
+                Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
 
-            Writing w = new Writing();
-            w.performWrite(fileName);
-            Console.WriteLine(">>> WRITE : END");
+                Writing w = new Writing();
+                w.performWrite(testFileLocation);
+                Console.WriteLine(">>> WRITE : END");
 
-            Console.ReadLine();
+                Console.ReadLine();
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
+            }
         }
 
         static private void displayVersionInfo()
@@ -111,6 +120,6 @@ namespace ATL.benchmark
         }
     }
 
-    
+
 
 }
