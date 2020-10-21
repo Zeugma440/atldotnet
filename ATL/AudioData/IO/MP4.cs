@@ -1202,7 +1202,7 @@ namespace ATL.AudioData.IO
             {
                 setMetaField(supportedMetaID, data);
             }
-            
+
             if (readAllMetaFrames && ID.Length > 0) // Store it in the additional fields Dictionary
             {
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
@@ -1324,7 +1324,7 @@ namespace ATL.AudioData.IO
             {
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
-                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -tag.DataSizeDelta);
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, structureHelper.GetZone(zone).Offset - structureHelper.getCorrectedOffset(zone));
 
                 if (paddingSizeToWrite > 0)
                 {

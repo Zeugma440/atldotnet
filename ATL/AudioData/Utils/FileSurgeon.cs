@@ -24,6 +24,12 @@ namespace ATL.AudioData.IO
 
         private class ZoneRegion
         {
+            public ZoneRegion(int id)
+            {
+                Id = id;
+            }
+
+            public readonly int Id;
             public bool IsBufferable = true;
             public IList<Zone> Zones = new List<Zone>();
 
@@ -35,7 +41,7 @@ namespace ATL.AudioData.IO
 
             public override string ToString()
             {
-                return StartOffset + "->" + EndOffset + " (" + Utils.GetBytesReadable(Size) + ") IsBufferable=" + IsBufferable;
+                return "#" + Id + " : " + StartOffset + "->" + EndOffset + "(" + Utils.GetBytesReadable(Size) + ") IsBufferable = " + IsBufferable;
             }
         }
 
@@ -91,7 +97,7 @@ namespace ATL.AudioData.IO
             else mode = ZoneManagement.BUFFERED;
 
 
-//            mode = ZoneManagement.ON_DISK;
+            //            mode = ZoneManagement.ON_DISK;
 
             /*
             if (ZoneManagement.ON_DISK == mode) return RewriteZonesDirect(w, write, zones, dataToWrite, tagExists);
@@ -111,8 +117,9 @@ namespace ATL.AudioData.IO
             long oldTagSize;
             long newTagSize;
             long globalOffsetCorrection;
-            long cumulativeDelta = 0;
+            long globalCumulativeDelta = 0;
             bool result = true;
+            bool isBuffered = false;
 
             IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
             BinaryWriter writer = w;
@@ -128,6 +135,7 @@ namespace ATL.AudioData.IO
             int regionIndex = 0;
             foreach (ZoneRegion region in zoneRegions)
             {
+                long regionCumulativeDelta = 0;
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------------ REGION " + regionIndex++);
 
                 int initialBufferSize = region.Size;
@@ -136,13 +144,14 @@ namespace ATL.AudioData.IO
                 {
                     if (useBuffer && region.IsBufferable)
                     {
+                        isBuffered = true;
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
                         buffer = new MemoryStream(initialBufferSize);
 
                         // Copy file data to buffer
                         if (initialBufferSize > 0)
                         {
-                            w.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
+                            w.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
                             StreamUtils.CopyStream(w.BaseStream, buffer, initialBufferSize);
                         }
 
@@ -151,6 +160,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
+                        isBuffered = false;
                         writer = w;
                         globalOffsetCorrection = 0;
                     }
@@ -166,7 +176,8 @@ namespace ATL.AudioData.IO
                         using (MemoryStream s = new MemoryStream(zone.Size))
                         using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                         {
-                            dataToWrite.DataSizeDelta = cumulativeDelta;
+                            // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
+                            dataToWrite.DataSizeDelta = globalCumulativeDelta + regionCumulativeDelta;
                             WriteResult writeResult = write(msw, dataToWrite, zone);
 
                             if (WriteMode.REPLACE == writeResult.RequiredMode)
@@ -201,7 +212,7 @@ namespace ATL.AudioData.IO
 
                             if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
                             {
-                                tagBeginOffset = zone.Offset + cumulativeDelta - globalOffsetCorrection;
+                                tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta) - globalOffsetCorrection;
                                 tagEndOffset = tagBeginOffset + zone.Size;
                             }
                             else // A brand new tag has been added to the file
@@ -216,7 +227,7 @@ namespace ATL.AudioData.IO
                                     {
                                         case MetaDataIO.TO_EOF: tagBeginOffset = writer.BaseStream.Length; break;
                                         case MetaDataIO.TO_BOF: tagBeginOffset = 0; break;
-                                        case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + cumulativeDelta; break;
+                                        case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta); break;
                                         default: tagBeginOffset = -1; break;
                                     }
                                     tagBeginOffset -= globalOffsetCorrection;
@@ -259,7 +270,7 @@ namespace ATL.AudioData.IO
                             }
 
                             long delta = newTagSize - oldTagSize;
-                            cumulativeDelta += delta;
+                            regionCumulativeDelta += delta;
 
                             // Edit wrapping size markers and frame counters if needed
                             if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
@@ -275,7 +286,7 @@ namespace ATL.AudioData.IO
                                     else action = ACTION.Edit;
                                 }
                                 // Use plain writer here on purpose because its zone contains headers for the zones adressed by the static writer
-                                result = structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection);
+                                result = structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
                             }
 
                             zone.Size = (int)newTagSize;
@@ -314,7 +325,9 @@ namespace ATL.AudioData.IO
                         buffer = null;
                     }
                 }
-                
+
+                globalCumulativeDelta += regionCumulativeDelta;
+
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");
             } // Loop through zone regions
 
@@ -490,7 +503,8 @@ namespace ATL.AudioData.IO
 
             bool previousIsResizable = false;
             long previousZoneEndOffset = -1;
-            ZoneRegion region = new ZoneRegion();
+            int regionId = 0;
+            ZoneRegion region = new ZoneRegion(regionId++);
 
             foreach (Zone zone in zones)
             {
@@ -516,7 +530,7 @@ namespace ATL.AudioData.IO
                     )
                 {
                     result.Add(region);
-                    region = new ZoneRegion();
+                    region = new ZoneRegion(regionId++);
                     region.IsBufferable = zone.IsResizable;
                 }
 
