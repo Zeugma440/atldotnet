@@ -107,7 +107,9 @@ namespace ATL
         public int DiscDigitsForLeadingZeroes = 0;
 
         /// <summary>
-        /// Current delta of written data size vs. initial data size
+        /// Current difference between written data size vs. initial data size
+        /// Used to calculate padding size variation when FileStructureHelper is unavailable
+        /// TODO - this is ugly, remove that when FLAC has been redesigned to use a FileStructureHelper
         /// </summary>
         public long DataSizeDelta = 0;
 

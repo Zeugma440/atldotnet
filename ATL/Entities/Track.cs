@@ -21,10 +21,12 @@ namespace ATL
         /// Loads the file at the given path
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
-        /// <param name="Path">Path of the local file to be loaded</param>
-        public Track(string Path, IProgress<float> writeProgress = null, bool load = true)
+        /// <param name="path">Path of the local file to be loaded</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <param name="load">True to load the file when running this constructor (default : true)</param>
+        public Track(string path, IProgress<float> writeProgress = null, bool load = true)
         {
-            this.Path = Path;
+            this.Path = path;
             stream = null;
             this.writeProgress = writeProgress;
             if (load) Update();
@@ -34,10 +36,11 @@ namespace ATL
         /// Loads the file at the given path
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
-        /// <param name="Path">Path of the local file to be loaded</param>
-        public Track(string Path, bool load)
+        /// <param name="path">Path of the local file to be loaded</param>
+        /// <param name="load">True to load the file when running this constructor (default : true)</param>
+        public Track(string path, bool load)
         {
-            this.Path = Path;
+            this.Path = path;
             stream = null;
             this.writeProgress = null;
             if (load) Update();
@@ -48,6 +51,7 @@ namespace ATL
         /// </summary>
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         public Track(Stream stream, string mimeType, IProgress<float> writeProgress = null)
         {
             this.stream = stream;
