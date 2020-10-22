@@ -124,13 +124,10 @@ namespace ATL.AudioData.IO
             IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
             BinaryWriter writer = w;
 
-            if (useBuffer)
-            {
-                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
-                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");
-                foreach (ZoneRegion region in zoneRegions) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, region.ToString());
-                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
-            }
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");
+            foreach (ZoneRegion region in zoneRegions) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, region.ToString());
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
 
             int regionIndex = 0;
             foreach (ZoneRegion region in zoneRegions)
@@ -169,7 +166,7 @@ namespace ATL.AudioData.IO
                     {
                         oldTagSize = zone.Size;
 
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name);
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
@@ -177,7 +174,7 @@ namespace ATL.AudioData.IO
                         using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                         {
                             // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
-                            dataToWrite.DataSizeDelta = globalCumulativeDelta + regionCumulativeDelta;
+                            dataToWrite.DataSizeDelta = globalCumulativeDelta;
                             WriteResult writeResult = write(msw, dataToWrite, zone);
 
                             if (WriteMode.REPLACE == writeResult.RequiredMode)
@@ -271,6 +268,7 @@ namespace ATL.AudioData.IO
 
                             long delta = newTagSize - oldTagSize;
                             regionCumulativeDelta += delta;
+                            globalCumulativeDelta += delta;
 
                             // Edit wrapping size markers and frame counters if needed
                             if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
@@ -325,8 +323,6 @@ namespace ATL.AudioData.IO
                         buffer = null;
                     }
                 }
-
-                globalCumulativeDelta += regionCumulativeDelta;
 
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");
             } // Loop through zone regions
