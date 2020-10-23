@@ -12,10 +12,12 @@ namespace ATL
     /// </summary>
     public class Track
     {
+        private const string InMemoryPath = "In-memory";
+
         /// <summary>
         /// Basic constructor; does nothing else than instanciating the Track object
         /// </summary>
-		public Track() { }
+        public Track() { }
 
         /// <summary>
         /// Loads the file at the given path
@@ -52,7 +54,7 @@ namespace ATL
         {
             this.stream = stream;
             this.mimeType = mimeType;
-            Path = "In-memory";
+            Path = InMemoryPath;
             this.writeProgress = writeProgress;
             Update();
         }
@@ -296,7 +298,7 @@ namespace ATL
             }
 
             Title = fileIO.Title;
-            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title))
+            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) && Path != InMemoryPath)
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
