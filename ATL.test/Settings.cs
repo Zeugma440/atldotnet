@@ -8,6 +8,12 @@
     /// </summary>
     public static class Settings
     {
+        /// <summary>
+        /// Delete test files after test success
+        /// Default : true
+        /// 
+        /// Do not change unless you want to open final test files with a 3rd party app
+        /// </summary>
         public static bool DeleteAfterSuccess = true;
     }
 
