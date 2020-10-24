@@ -80,7 +80,7 @@ namespace ATL
                 {
                     if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = length - totalBytesRead;
                 }
-                else
+                else // Read everything we can
                 {
                     bytesToRead = Settings.FileBufferSize;
                 }
