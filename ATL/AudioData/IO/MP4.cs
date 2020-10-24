@@ -1926,6 +1926,7 @@ namespace ATL.AudioData.IO
 
             w.Write(StreamUtils.EncodeBEInt32(1));
 
+            // Calculate chunk offset and feed it to FileStructureHelper as a header to the MDAT zone
             // Only works when QT track is located _before_ QT mdat
             Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
             structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK, ZONE_MP4_QT_CHAP_TRAK);

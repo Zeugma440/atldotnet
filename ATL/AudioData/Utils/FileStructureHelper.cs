@@ -311,7 +311,8 @@ namespace ATL.AudioData
         /// </summary>
         public void AddPendingIndex(long pendingPosition, object value, bool relative, string zone, string positionZone, string parentZone = "")
         {
-            long finalPosition = getCorrectedOffset(positionZone) + pendingPosition;
+            //long finalPosition = getCorrectedOffset(positionZone) + pendingPosition;
+            long finalPosition = zones[zone].Offset + pendingPosition;
 
             addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone);
         }
@@ -427,11 +428,16 @@ namespace ATL.AudioData
 
         public long getCorrectedOffset(string zone)
         {
+            return getCorrectedOffset(zones[zone].Offset);
+        }
+
+        public long getCorrectedOffset(long offset)
+        {
             long offsetPositionCorrection = 0;
             foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection[-1].Values) // Search in global repo
-                if (zones[zone].Offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+                if (offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
 
-            return zones[zone].Offset + offsetPositionCorrection;
+            return offset + offsetPositionCorrection;
         }
 
         /// <summary>
