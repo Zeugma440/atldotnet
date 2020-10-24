@@ -6,36 +6,74 @@ using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Helper class called to write into files, optimizing memory and I/O speed according to the rewritten areas
+    /// </summary>
     class FileSurgeon
     {
-        // Modes for zone block modification
+        /// <summary>
+        /// Modes for zone block modification
+        /// </summary>
         public enum WriteMode
         {
-            REPLACE = 0,   // Replace : existing block is replaced by written data
-            OVERWRITE = 1  // Overwrite : written data overwrites existing block (non-overwritten parts are kept as is)
+            /// <summary>
+            /// Replace : existing block is replaced by written data
+            /// </summary>
+            REPLACE = 0,
+            /// <summary>
+            /// Overwrite : written data overwrites existing block (non-overwritten parts are kept as is)
+            /// </summary>
+            OVERWRITE = 1
         }
 
-        // Modes for zone management
+        /// <summary>
+        /// Modes for zone management
+        /// NB : ON_DISK mode can be forced client-side by using <see cref="Settings.ForceDiskIO"/>
+        /// </summary>
         public enum ZoneManagement
         {
-            ON_DISK = 0,    // Modifications are performed directly on disk; adapted for small files or single zones
-            BUFFERED = 1    // Modifications are performed in a memory buffer, then written on disk in one go
+            /// <summary>
+            /// Modifications are performed directly on disk; adapted for small files or single zones
+            /// </summary>
+            ON_DISK = 0,
+            /// <summary>
+            /// Modifications are performed in a memory buffer, then written on disk in one go
+            /// </summary>
+            BUFFERED = 1
         }
 
+        /// <summary>
+        /// Buffering region
+        /// Describes a group of overlapping, contiguous or neighbouring <see cref="FileStructureHelper.Zone"/>s that can be buffered together for I/O optimization
+        /// Two Zones stop belonging to the same region if they are distant by more than <see cref="REGION_DISTANCE_THRESHOLD"/>% of the total file size
+        /// </summary>
         private class ZoneRegion
         {
             public ZoneRegion(int id)
             {
+                if (-1 == id) throw new ArgumentException("-1 is a reserved value that cannot be attributed");
                 Id = id;
             }
 
+            /// <summary>
+            /// ID of the region
+            /// Used for computation purposes only
+            /// Must be unique 
+            /// Must be different than -1 which is a reserved value for "unbuffered area" used in <see cref="FileStructureHelper"/>
+            /// </summary>
             public readonly int Id;
+            /// <summary>
+            /// True if the region is bufferable; false if not (i.e. non-resizable zones)
+            /// </summary>
             public bool IsBufferable = true;
+            /// <summary>
+            /// Zones belonging to the region
+            /// </summary>
             public IList<Zone> Zones = new List<Zone>();
 
-            public long StartOffset => FileSurgeon.getFirstRecordedOffset(Zones);
+            public long StartOffset => FileSurgeon.getLowestOffset(Zones);
 
-            public long EndOffset => FileSurgeon.getLastRecordedOffset(Zones);
+            public long EndOffset => FileSurgeon.getHighestOffset(Zones);
 
             public int Size => (int)(EndOffset - StartOffset);
 
@@ -45,15 +83,16 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// % of total stream (~file) size under which two neighbouring Zones can be grouped into the same Region
+        /// </summary>
+        private static readonly double REGION_DISTANCE_THRESHOLD = 0.2;
+
         private readonly FileStructureHelper structureHelper;
         private readonly IMetaDataEmbedder embedder;
 
         private readonly int implementedTagType;
         private readonly int defaultTagOffset;
-
-        //        private readonly IProgress<float> writeProgress;
-        //        private float currentProgress;
-        //        private int totalProgressSteps;
 
         public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
 
@@ -96,16 +135,22 @@ namespace ATL.AudioData.IO
             if (1 == zones.Count || Settings.ForceDiskIO) mode = ZoneManagement.ON_DISK;
             else mode = ZoneManagement.BUFFERED;
 
-
-            //            mode = ZoneManagement.ON_DISK;
-
-            /*
-            if (ZoneManagement.ON_DISK == mode) return RewriteZonesDirect(w, write, zones, dataToWrite, tagExists);
-            else return RewriteZonesHybrid(w, write, zones, dataToWrite, tagExists);
-            */
             return RewriteZones(w, write, zones, dataToWrite, tagExists, mode == ZoneManagement.BUFFERED);
         }
 
+        /// <summary>
+        /// Rewrites zones that have to be rewritten
+        ///     - Works region after region, buffering them if needed
+        ///     - Put each zone into memory and update them using the given WriteDelegate
+        ///     - Adjust file size and region headers accordingly
+        /// </summary>
+        /// <param name="w">BinaryWriter opened on the data stream (usually, contents of an audio file) to be rewritten</param>
+        /// <param name="write">Delegate to the write method of the <see cref="IMetaDataIO"/> to be used to update the data stream</param>
+        /// <param name="zones">Zones to rewrite</param>
+        /// <param name="dataToWrite">Metadata to update the zones with</param>
+        /// <param name="tagExists">True if the tag already exists on the current data stream; false if not</param>
+        /// <param name="useBuffer">True if I/O has to be buffered. Makes I/O faster but consumes more RAM.</param>
+        /// <returns>True if the operation succeeded; false if it something unexpected happened during the processing</returns>
         private bool RewriteZones(
             BinaryWriter w,
             WriteDelegate write,
@@ -285,7 +330,7 @@ namespace ATL.AudioData.IO
                                     else action = ACTION.Edit;
                                 }
                                 // Use plain writer here on purpose because its zone contains headers for the zones adressed by the static writer
-                                result = structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
+                                result &= structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
                             }
 
                             zone.Size = (int)newTagSize;
@@ -331,167 +376,13 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        /*
-        private bool RewriteZonesHybrid(
-            BinaryWriter w,
-            WriteDelegate write,
-            ICollection<Zone> zones,
-            TagData dataToWrite,
-            bool tagExists)
-        {
-            bool result = true;
-
-            // Load the 'interesting' part of the file in memory
-            // TODO - detect and fine-tune cases when block at the extreme ends of the file are considered (e.g. SPC, certain MP4s where useful zones are at the very end)
-
-            /*
-            ICollection<Zone> resizableZones = zones.Where(zone => zone.IsResizable).ToList();
-            IDictionary<int, Tuple<long, long>> bufferMap = new Dictionary<int, Tuple<long, long>>();
-
-            //            long chunkBeginOffset = getFirstRecordedOffset(resizableZones);
-            //            long chunkEndOffset = getLastRecordedOffset(resizableZones);
-
-            int bufferIndex = 0;
-            long bufferBeginOffset = 0;
-            long bufferEndOffset = 0;
-
-            long previousZoneEndOffset = -1;
-
-            foreach (Zone zone in resizableZones)
-            {
-                long zoneBeginOffset = getFirstRecordedOffset(zone);
-                long zoneEndOffset = getLastRecordedOffset(zone);
-
-                if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
-                {
-                    zoneBeginOffset = Math.Min(zoneBeginOffset, embedder.Id3v2Zone.Offset);
-                    zoneEndOffset = Math.Max(zoneEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
-                }
-
-                // If current zone is distant to the previous by more than 20% of total file size, create another buffer
-                if (previousZoneEndOffset > -1 && zoneBeginOffset - previousZoneEndOffset > w.BaseStream.Length * 0.2)
-                {
-                    bufferEndOffset = previousZoneEndOffset;
-                    bufferMap.Add(bufferIndex, new Tuple<long, long>(bufferBeginOffset, bufferEndOffset));
-
-                    bufferIndex++;
-                    bufferBeginOffset = zoneBeginOffset;
-                }
-                previousZoneEndOffset = zoneEndOffset;
-                zone.BufferIndex = bufferIndex;
-            }
-
-            // Finalize current buffer
-            bufferEndOffset = previousZoneEndOffset;
-            bufferMap.Add(bufferIndex, new Tuple<long, long>(bufferBeginOffset, bufferEndOffset));
-
-            //            long initialChunkLength = chunkEndOffset - chunkBeginOffset;
-            */
-        /*
-
-        IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
-
-        try
-        {
-            foreach (int bufferKey in bufferMap.Keys)
-            {
-                bufferBeginOffset = bufferMap[bufferKey].Item1;
-                int bufferSize = (int)(bufferMap[bufferKey].Item2 - bufferBeginOffset);
-                bufferBeginOffsets.Add(bufferBeginOffset);
-
-                // Allocate buffer
-                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "RewriteZonesHybrid : Allocating " + Utils.GetBytesReadable(bufferSize));
-                MemoryStream buffer = new MemoryStream(bufferSize);
-                buffers.Add(buffer);
-                writers.Add(new BinaryWriter(buffer, Settings.DefaultTextEncoding));
-
-                // Copy file data to buffer
-                w.BaseStream.Seek(bufferBeginOffset, SeekOrigin.Begin);
-                StreamUtils.CopyStream(w.BaseStream, buffer, bufferSize);
-            }
-
-            result = RewriteZonesDirect(writers, w, write, zones, dataToWrite, tagExists, bufferBeginOffsets, true);
-
-            foreach (int bufferKey in bufferMap.Keys)
-            {
-                // -- Adjust file slot to new size of chunk --
-                MemoryStream buffer = buffers[bufferKey];
-                long tagBeginOffset = bufferMap[bufferKey].Item1;
-                long initialBufferSize = bufferMap[bufferKey].Item2 - tagBeginOffset;
-                long tagEndOffset = tagBeginOffset + initialBufferSize;
-
-                // Need to build a larger file
-                if (buffer.Length > initialBufferSize)
-                {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer #" + bufferKey + ") : Lengthening (Δ=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                    StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize));
-                }
-                else if (buffer.Length < initialBufferSize) // Need to reduce file size
-                {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer #" + bufferKey + ") : Shortening (Δ=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                    StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length));
-                }
-
-                // Copy tag contents to the new slot
-                w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                buffer.Seek(0, SeekOrigin.Begin);
-
-                StreamUtils.CopyStream(buffer, w.BaseStream);
-            }
-        }
-        finally // Make sure everything's properly disallocated
-        {
-            foreach (MemoryStream stream in buffers) stream.Close();
-        }
-        */
-
-
-        /*
-        w.BaseStream.Seek(chunkBeginOffset, SeekOrigin.Begin);
-
-        using (MemoryStream chunk = new MemoryStream((int)initialChunkLength))
-        {
-            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "RewriteZonesBuffered : Allocating " + Utils.GetBytesReadable(initialChunkLength));
-
-            StreamUtils.CopyStream(w.BaseStream, chunk, (int)initialChunkLength);
-            //                if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-
-            using (BinaryWriter msw = new BinaryWriter(chunk, Settings.DefaultTextEncoding))
-            {
-                result = RewriteZonesDirect(msw, w, write, zones, dataToWrite, tagExists, chunkBeginOffset, true);
-
-                // -- Adjust file slot to new size of chunk --
-                long tagBeginOffset = chunkBeginOffset;
-                long tagEndOffset = tagBeginOffset + initialChunkLength;
-
-                // Need to build a larger file
-                if (chunk.Length > initialChunkLength)
-                {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Lengthening (delta=" + (chunk.Length - initialChunkLength) + ")");
-                    StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(chunk.Length - initialChunkLength));
-                }
-                else if (chunk.Length < initialChunkLength) // Need to reduce file size
-                {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation : Shortening (delta=" + (chunk.Length - initialChunkLength) + ")");
-                    StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialChunkLength - chunk.Length));
-                }
-                //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-
-                // Copy tag contents to the new slot
-                w.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                chunk.Seek(0, SeekOrigin.Begin);
-
-                StreamUtils.CopyStream(chunk, w.BaseStream);
-                //                    if (writeProgress != null) writeProgress.Report(++currentProgress / totalProgressSteps);
-            }
-        }
-
-
-        return result;
-    }
-*/
-
-        private IList<ZoneRegion> computeZoneRegions(ICollection<Zone> zones, long fileSize)
+        /// <summary>
+        /// Build buffering Regions according to the given zones and total stream (usually file) size
+        /// </summary>
+        /// <param name="zones">Zones to calculate Regions from, ordered by their offset</param>
+        /// <param name="streamSize">Total size of the corresponding file, in bytes</param>
+        /// <returns>Buffering Regions containing the given zones</returns>
+        private IList<ZoneRegion> computeZoneRegions(ICollection<Zone> zones, long streamSize)
         {
             IList<ZoneRegion> result = new List<ZoneRegion>();
 
@@ -507,8 +398,8 @@ namespace ATL.AudioData.IO
             {
                 if (isFirst) region.IsBufferable = zone.IsResizable;
 
-                long zoneBeginOffset = getFirstRecordedOffset(zone);
-                long zoneEndOffset = getLastRecordedOffset(zone);
+                long zoneBeginOffset = getLowestOffset(zone);
+                long zoneEndOffset = getHighestOffset(zone);
 
                 if (embedder != null && !embedderProcessed && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
                 {
@@ -521,7 +412,7 @@ namespace ATL.AudioData.IO
                 // If current zone has not the same IsResizable value as the previous, create another region
                 if (!isFirst &&
                     (
-                        (zone.IsResizable && zoneBeginOffset - previousZoneEndOffset > fileSize * 0.2)
+                        (zone.IsResizable && zoneBeginOffset - previousZoneEndOffset > streamSize * REGION_DISTANCE_THRESHOLD)
                         || (previousIsResizable != zone.IsResizable)
                     )
                     )
@@ -543,17 +434,29 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static long getFirstRecordedOffset(ICollection<Zone> zones)
+        /// <summary>
+        /// Get the lowest offset among the given zones
+        /// Searches through zone offsets _and_ header offsets
+        /// </summary>
+        /// <param name="zones">Zones to examine</param>
+        /// <returns>Lowest offset value among the given zones' zone offsets and header offsets</returns>
+        private static long getLowestOffset(ICollection<Zone> zones)
         {
             long result = long.MaxValue;
             if (zones != null)
                 foreach (Zone zone in zones)
-                    result = Math.Min(result, getFirstRecordedOffset(zone));
+                    result = Math.Min(result, getLowestOffset(zone));
 
             return result;
         }
 
-        private static long getFirstRecordedOffset(Zone zone)
+        /// <summary>
+        /// Get the lowest offset among the given zone
+        /// Searches through zone offsets _and_ header offsets
+        /// </summary>
+        /// <param name="zone">Zone to examine</param>
+        /// <returns>Lowest offset value among the given zone's zone offsets and header offsets</returns>
+        private static long getLowestOffset(Zone zone)
         {
             long result = long.MaxValue;
             if (zone != null)
@@ -565,17 +468,29 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static long getLastRecordedOffset(ICollection<Zone> zones)
+        /// <summary>
+        /// Get the highest offset among the given zones
+        /// Searches through zone offsets _and_ header offsets
+        /// </summary>
+        /// <param name="zones">Zones to examine</param>
+        /// <returns>Highest offset value among the given zones' zone offsets and header offsets</returns>
+        private static long getHighestOffset(ICollection<Zone> zones)
         {
             long result = 0;
             if (zones != null)
                 foreach (Zone zone in zones)
-                    result = Math.Max(result, getLastRecordedOffset(zone));
+                    result = Math.Max(result, getHighestOffset(zone));
 
             return result;
         }
 
-        private static long getLastRecordedOffset(Zone zone)
+        /// <summary>
+        /// Get the highest offset among the given zone
+        /// Searches through zone offsets _and_ header offsets
+        /// </summary>
+        /// <param name="zone">Zone to examine</param>
+        /// <returns>Highest offset value among the given zone's zone offsets and header offsets</returns>
+        private static long getHighestOffset(Zone zone)
         {
             long result = 0;
             if (zone != null)

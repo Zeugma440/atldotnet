@@ -1,5 +1,8 @@
 ﻿namespace ATL
 {
+    /// <summary>
+    /// Class used to perform CRC calculations for OGG format
+    /// </summary>
     public static class OggCRC32
     {
         // CRC table for checksum calculating according to OGG specifics

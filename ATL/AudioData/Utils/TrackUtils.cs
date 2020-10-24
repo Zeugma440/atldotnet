@@ -308,7 +308,15 @@ namespace ATL.AudioData
             return "";
         }
 
-        // TODO doc
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="total"></param>
+        /// <param name="digitsForLeadingZeroes"></param>
+        /// <param name="useLeadingZeroes"></param>
+        /// <param name="overrideExistingLeadingZeroesFormat"></param>
+        /// <returns></returns>
         public static string ApplyLeadingZeroes(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
         {
             if (value.Contains("/"))

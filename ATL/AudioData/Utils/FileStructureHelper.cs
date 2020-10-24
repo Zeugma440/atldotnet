@@ -164,7 +164,6 @@ namespace ATL.AudioData
         //      KVP Key         : initial end offset of given zone (i.e. position of last byte within zone)
         //      KVP Value       : variation applied to given zone (can be positive or negative)
         private readonly IDictionary<int, IDictionary<string, KeyValuePair<long, long>>> dynamicOffsetCorrection = new Dictionary<int, IDictionary<string, KeyValuePair<long, long>>>();
-        private int currentDynamicCorrectionIndex = -1;
 
         // True if attached file uses little-endian convention for number representation; false if big-endian
         private readonly bool isLittleEndian;
@@ -220,7 +219,6 @@ namespace ATL.AudioData
             }
             dynamicOffsetCorrection.Clear();
             dynamicOffsetCorrection.Add(-1, new Dictionary<string, KeyValuePair<long, long>>());
-            currentDynamicCorrectionIndex = -1;
         }
 
         /// <summary>
@@ -307,11 +305,10 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Record a new Index-type header using the given fields and attach it to the zone of given name, using a position relative to the given zone's offset
+        /// Record a new Index-type header using the given fields and attach it to the zone of given name, using a position relative to that zone's offset
         /// </summary>
-        public void AddPendingIndex(long pendingPosition, object value, bool relative, string zone, string positionZone, string parentZone = "")
+        public void AddPendingIndex(long pendingPosition, object value, bool relative, string zone, string parentZone = "")
         {
-            //long finalPosition = getCorrectedOffset(positionZone) + pendingPosition;
             long finalPosition = zones[zone].Offset + pendingPosition;
 
             addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone);
@@ -426,11 +423,23 @@ namespace ATL.AudioData
                 throw new NotSupportedException("Value type not supported in comparison");
         }
 
+        /// <summary>
+        /// Return the the given zone's offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders(BinaryWriter, long, ACTION, string, long, int)"/>
+        /// e.g. if offset is 30 and 10 bytes have been inserted at position 15, corrected offset will be 40
+        /// </summary>
+        /// <param name="zone">Name of the zone to get the corrected offset for</param>
+        /// <returns>Corrected offset of the zone with the given name</returns>
         public long getCorrectedOffset(string zone)
         {
             return getCorrectedOffset(zones[zone].Offset);
         }
 
+        /// <summary>
+        /// Return the the given offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders(BinaryWriter, long, ACTION, string, long, int)"/>
+        /// e.g. if offset is 30 and 10 bytes have been inserted at position 15, corrected offset will be 40
+        /// </summary>
+        /// <param name="offset">Offset to correct</param>
+        /// <returns>Corrected offset</returns>
         public long getCorrectedOffset(long offset)
         {
             long offsetPositionCorrection = 0;
@@ -446,7 +455,9 @@ namespace ATL.AudioData
         /// <param name="w">Stream to write modifications to</param>
         /// <param name="deltaSize">Evolution of zone size (in bytes; positive or negative)</param>
         /// <param name="action">Action applied to zone</param>
-        /// <param name="zone">Name of zone</param>
+        /// <param name="zone">Name of zone to process</param>
+        /// <param name="globalOffsetCorrection">Offset correction to apply to the zone to process</param>
+        /// <param name="regionId">ID of the current buffer region; -1 if working on the file itself (global offset correction)</param>
         /// <returns></returns>
         public bool RewriteHeaders(
             BinaryWriter w,
