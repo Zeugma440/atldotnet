@@ -189,7 +189,7 @@ namespace ATL.test.IO.MetaData
                         Assert.IsTrue(originalMD5.Equals(testMD5));
             */
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -312,7 +312,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -320,7 +320,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            Settings.MP4_createQuicktimeChapters = false;
+            ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
                 // Source : MP3 with existing tag incl. chapters
@@ -421,11 +421,11 @@ namespace ATL.test.IO.MetaData
 
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.MP4_createQuicktimeChapters = true;
+                ATL.Settings.MP4_createQuicktimeChapters = true;
             }
         }
 
@@ -434,7 +434,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            Settings.MP4_createQuicktimeChapters = false;
+            ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
                 // Source : file without 'chpl' atom
@@ -494,11 +494,11 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(2, found);
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.MP4_createQuicktimeChapters = true;
+                ATL.Settings.MP4_createQuicktimeChapters = true;
             }
         }
 
@@ -531,7 +531,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("test_meta_atom", theFile.NativeTag.Title);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -539,7 +539,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            Settings.MP4_createNeroChapters = false;
+            ATL.Settings.MP4_createNeroChapters = false;
             try
             {
                 // Source : MP3 with existing tag incl. chapters
@@ -638,11 +638,11 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(2, found);
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.MP4_createNeroChapters = true;
+                ATL.Settings.MP4_createNeroChapters = true;
             }
         }
 
@@ -651,7 +651,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            Settings.MP4_createNeroChapters = false;
+            ATL.Settings.MP4_createNeroChapters = false;
             try
             {
                 // Source : file without 'chpl' atom
@@ -711,11 +711,11 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(2, found);
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.MP4_createNeroChapters = true;
+                ATL.Settings.MP4_createNeroChapters = true;
             }
         }
 
@@ -745,7 +745,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -812,7 +812,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

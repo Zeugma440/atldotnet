@@ -153,7 +153,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -210,14 +210,14 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            Settings.ASF_keepNonWMFieldsWhenRemovingTag = true;
+            ATL.Settings.ASF_keepNonWMFieldsWhenRemovingTag = true;
             try
             {
                 Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
             }
             finally
             {
-                Settings.ASF_keepNonWMFieldsWhenRemovingTag = false;
+                ATL.Settings.ASF_keepNonWMFieldsWhenRemovingTag = false;
             }
 
             Assert.IsTrue(theFile.ReadFromFile());
@@ -237,7 +237,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -313,7 +313,7 @@ namespace ATL.test.IO.MetaData
                         Assert.IsTrue(originalMD5.Equals(testMD5));
             */
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -428,7 +428,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

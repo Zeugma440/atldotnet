@@ -27,7 +27,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
+            string comment = theFile.NativeTag.Comment.Replace(ATL.Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("The Music Shoppe - Path to God/base/Midi of the Week/The Music Shoppe/http://cctr.umkc.edu/user/dschmid/midiweek.htm/816 373.1710", comment);

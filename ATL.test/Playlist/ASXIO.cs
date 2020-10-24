@@ -27,7 +27,7 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 
@@ -124,7 +124,7 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 

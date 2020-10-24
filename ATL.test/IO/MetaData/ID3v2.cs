@@ -194,7 +194,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            Assert.AreEqual("http://remix.evillich.com", theFile.ID3v2.AdditionalFields["WXXX"].Split(Settings.InternalValueSeparator)[1]);
+            Assert.AreEqual("http://remix.evillich.com", theFile.ID3v2.AdditionalFields["WXXX"].Split(ATL.Settings.InternalValueSeparator)[1]);
         }
 
         [TestMethod]
@@ -217,9 +217,9 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(meta.Exists);
 
             Assert.IsTrue(meta.AdditionalFields.ContainsKey("WXXX"));
-            Assert.AreEqual("http://justtheurl.com", meta.AdditionalFields["WXXX"].Split(Settings.InternalValueSeparator)[1]);
+            Assert.AreEqual("http://justtheurl.com", meta.AdditionalFields["WXXX"].Split(ATL.Settings.InternalValueSeparator)[1]);
 
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -238,7 +238,7 @@ namespace ATL.test.IO.MetaData
                 // Check that the presence of an extended tag does not disrupt field reading
                 readExistingTagsOnFile(theFile);
 
-                Settings.ID3v2_useExtendedHeaderRestrictions = true;
+                ATL.Settings.ID3v2_useExtendedHeaderRestrictions = true;
 
                 // Insert a very long field while tag restrictions specify that string shouldn't be longer than 30 characters
                 TagData theTag = new TagData();
@@ -279,12 +279,12 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
                 testData.PublishingDate = "1997-06-22T05:05:05";
-                Settings.ID3v2_useExtendedHeaderRestrictions = false;
+                ATL.Settings.ID3v2_useExtendedHeaderRestrictions = false;
             }
 
             bool isAlertFieldLength = false;
@@ -417,7 +417,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -503,20 +503,20 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_Chapters_v3()
         {
-            Settings.ID3v2_tagSubVersion = 3;
+            ATL.Settings.ID3v2_tagSubVersion = 3;
             try
             {
                 TagIO_RW_ID3v2_Chapters();
             }
             finally
             {
-                Settings.ID3v2_tagSubVersion = 4;
+                ATL.Settings.ID3v2_tagSubVersion = 4;
             }
         }
 
@@ -615,7 +615,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, found);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -678,7 +678,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -860,7 +860,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, found);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -899,7 +899,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -981,7 +981,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.ID3v2.Lyrics.UnsynchronizedLyrics);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -1027,13 +1027,13 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_WriteID3v2_3()
         {
-            Settings.ID3v2_tagSubVersion = 3;
+            ATL.Settings.ID3v2_tagSubVersion = 3;
             try
             {
                 string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
@@ -1057,11 +1057,11 @@ namespace ATL.test.IO.MetaData
                 readExistingTagsOnFile(theFile);
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.ID3v2_tagSubVersion = 4;
+                ATL.Settings.ID3v2_tagSubVersion = 4;
                 testData.RecordingDate = "1997-06-20T04:04:04";
                 testData.PublishingDate = "1997-06-22T05:05:05";
             }

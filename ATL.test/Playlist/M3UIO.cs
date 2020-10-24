@@ -35,7 +35,7 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 
@@ -46,12 +46,12 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("aaa.mp3");
             pathsToWrite.Add("bbb.mp3");
 
-            bool defaultSetting = Settings.M3U_useExtendedFormat;
+            bool defaultSetting = ATL.Settings.M3U_useExtendedFormat;
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
             try
             {
-                Settings.M3U_useExtendedFormat = false;
+                ATL.Settings.M3U_useExtendedFormat = false;
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
                 pls.FilePaths = pathsToWrite;
 
@@ -79,15 +79,15 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                File.Delete(testFileLocation);
-                Settings.M3U_useExtendedFormat = defaultSetting;
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.M3U_useExtendedFormat = defaultSetting;
             }
         }
 
         [TestMethod]
         public void PLIO_W_M3U_Extended()
         {
-            bool defaultSetting = Settings.M3U_useExtendedFormat;
+            bool defaultSetting = ATL.Settings.M3U_useExtendedFormat;
 
             IList<string> pathsToWrite = new List<string>();
             pathsToWrite.Add("aaa.mp3");
@@ -101,7 +101,7 @@ namespace ATL.test.IO.Playlist
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
             try
             {
-                Settings.M3U_useExtendedFormat = true;
+                ATL.Settings.M3U_useExtendedFormat = true;
 
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
@@ -150,8 +150,8 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                File.Delete(testFileLocation);
-                Settings.M3U_useExtendedFormat = defaultSetting;
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.M3U_useExtendedFormat = defaultSetting;
             }
         }
     }

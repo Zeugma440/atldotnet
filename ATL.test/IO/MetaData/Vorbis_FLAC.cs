@@ -165,7 +165,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -176,8 +176,8 @@ namespace ATL.test.IO.MetaData
 
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
-            Settings.AddNewPadding = true;
-            Settings.PaddingSize = 4063; // Default padding of the sample FLAC file
+            ATL.Settings.AddNewPadding = true;
+            ATL.Settings.PaddingSize = 4063; // Default padding of the sample FLAC file
 
             try
             {
@@ -259,10 +259,10 @@ namespace ATL.test.IO.MetaData
                 */
 
                 // Get rid of the working copy
-                if (deleteTempFile) File.Delete(testFileLocation);
+                if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             } finally {
-                Settings.AddNewPadding = false;
-                Settings.PaddingSize = 2048;
+                ATL.Settings.AddNewPadding = false;
+                ATL.Settings.PaddingSize = 2048;
             }
         }
 
@@ -425,7 +425,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

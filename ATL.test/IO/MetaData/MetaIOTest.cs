@@ -191,7 +191,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(originalMD5, testMD5);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         protected void test_RW_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
@@ -303,17 +303,17 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            if (deleteTempFile) File.Delete(testFileLocation);
+            if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         protected void test_RW_UpdateTrackDiscZeroes(string fileName, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat, StreamDelegate checkDelegate, bool deleteTempFile = true)
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            bool settingsInit1 = Settings.UseLeadingZeroes;
-            Settings.UseLeadingZeroes = useLeadingZeroes;
-            bool settingsInit2 = Settings.OverrideExistingLeadingZeroesFormat;
-            Settings.OverrideExistingLeadingZeroesFormat = overrideExistingLeadingZeroesFormat;
+            bool settingsInit1 = ATL.Settings.UseLeadingZeroes;
+            ATL.Settings.UseLeadingZeroes = useLeadingZeroes;
+            bool settingsInit2 = ATL.Settings.OverrideExistingLeadingZeroesFormat;
+            ATL.Settings.OverrideExistingLeadingZeroesFormat = overrideExistingLeadingZeroesFormat;
 
             try
             {
@@ -347,12 +347,12 @@ namespace ATL.test.IO.MetaData
                 }
 
                 // Get rid of the working copy
-                if (deleteTempFile) File.Delete(testFileLocation);
+                if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.UseLeadingZeroes = settingsInit1;
-                Settings.OverrideExistingLeadingZeroesFormat = settingsInit2;
+                ATL.Settings.UseLeadingZeroes = settingsInit1;
+                ATL.Settings.OverrideExistingLeadingZeroesFormat = settingsInit2;
             }
         }
 
@@ -504,7 +504,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            if (deleteTempFile) File.Delete(testFileLocation);
+            if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         public void test_RW_Unsupported_Empty(string fileName, bool deleteTempFile = true)
@@ -679,7 +679,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Get rid of the working copy
-            if (deleteTempFile) File.Delete(testFileLocation);
+            if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         protected void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)

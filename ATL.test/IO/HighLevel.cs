@@ -93,7 +93,7 @@ namespace ATL.test.IO
             Assert.AreEqual(0, theTrack.Year); // Empty on the ID3v1 tag => should really come empty since ID3v2 tag has been removed
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         /// <summary>
@@ -121,14 +121,14 @@ namespace ATL.test.IO
             // NB : Due to field order differences, MD5 comparison is not possible yet
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void TagIO_RW_UpdateNeutral()
         {
-            Settings.MP4_createNeroChapters = false;
-            Settings.MP4_createQuicktimeChapters = false;
+            ATL.Settings.MP4_createNeroChapters = false;
+            ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
                 tagIO_RW_UpdateNeutral("MP3/id3v2.4_UTF8.mp3"); // ID3v2
@@ -146,8 +146,8 @@ namespace ATL.test.IO
             }
             finally
             {
-                Settings.MP4_createNeroChapters = true;
-                Settings.MP4_createQuicktimeChapters = true;
+                ATL.Settings.MP4_createNeroChapters = true;
+                ATL.Settings.MP4_createQuicktimeChapters = true;
             }
         }
 
@@ -170,7 +170,7 @@ namespace ATL.test.IO
             if (supportsTrack) Assert.AreEqual(10, theTrack.TrackNumber);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -195,7 +195,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                Settings.DefaultTagsWhenNoMetadata = new int[2] { ATL.AudioData.MetaDataIOFactory.TAG_ID3V2, ATL.AudioData.MetaDataIOFactory.TAG_NATIVE };
+                ATL.Settings.DefaultTagsWhenNoMetadata = new int[2] { ATL.AudioData.MetaDataIOFactory.TAG_ID3V2, ATL.AudioData.MetaDataIOFactory.TAG_NATIVE };
             }
         }
 
@@ -224,14 +224,14 @@ namespace ATL.test.IO
             if (supportsTotalTracksDiscs) Assert.AreEqual(40, theTrack.DiscTotal);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void TagIO_RW_UpdateTagBaseField()
         {
-            Settings.MP4_createNeroChapters = false;
-            Settings.MP4_createQuicktimeChapters = false;
+            ATL.Settings.MP4_createNeroChapters = false;
+            ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
                 tagIO_RW_UpdateTagBaseField("MP3/id3v2.4_UTF8.mp3"); // ID3v2
@@ -248,14 +248,14 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
             } finally
             {
-                Settings.MP4_createNeroChapters = true;
-                Settings.MP4_createQuicktimeChapters = true;
+                ATL.Settings.MP4_createNeroChapters = true;
+                ATL.Settings.MP4_createQuicktimeChapters = true;
             }
         }
 
         private void tagIO_RW_UpdatePadding(string resource, int paddingSize = 2048)
         {
-            Settings.PaddingSize = paddingSize;
+            ATL.Settings.PaddingSize = paddingSize;
             try
             {
                 ArrayLogger log = new ArrayLogger();
@@ -308,18 +308,18 @@ namespace ATL.test.IO
                 }
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.PaddingSize = 2048;
+                ATL.Settings.PaddingSize = 2048;
             }
         }
 
         private void tagIO_RW_AddPadding(string resource, int extraBytes = 0)
         {
-            bool initEnablePadding = Settings.AddNewPadding;
-            Settings.AddNewPadding = false;
+            bool initEnablePadding = ATL.Settings.AddNewPadding;
+            ATL.Settings.AddNewPadding = false;
 
             string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
@@ -330,29 +330,29 @@ namespace ATL.test.IO
 
             long initialLength = new FileInfo(testFileLocation).Length;
 
-            Settings.AddNewPadding = true;
+            ATL.Settings.AddNewPadding = true;
             try
             {
                 theTrack.Title = "b";
                 theTrack.Save();
 
                 // B1- Check that the resulting file size has been increased by the size of the padding
-                Assert.AreEqual(initialLength + Settings.PaddingSize + extraBytes, new FileInfo(testFileLocation).Length);
+                Assert.AreEqual(initialLength + ATL.Settings.PaddingSize + extraBytes, new FileInfo(testFileLocation).Length);
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.AddNewPadding = initEnablePadding;
+                ATL.Settings.AddNewPadding = initEnablePadding;
             }
         }
 
         [TestMethod]
         public void TagIO_RW_Padding()
         {
-            Settings.MP4_createNeroChapters = false;
-            Settings.MP4_createQuicktimeChapters = false;
+            ATL.Settings.MP4_createNeroChapters = false;
+            ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
                 tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
@@ -363,11 +363,11 @@ namespace ATL.test.IO
                 tagIO_RW_AddPadding("MP3/empty.mp3");
                 tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
                 tagIO_RW_AddPadding("MP4/chapters_NERO.mp4");
-                tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
+                tagIO_RW_AddPadding("FLAC/empty.flac", ATL.Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
             } finally
             {
-                Settings.MP4_createNeroChapters = true;
-                Settings.MP4_createQuicktimeChapters = true;
+                ATL.Settings.MP4_createNeroChapters = true;
+                ATL.Settings.MP4_createQuicktimeChapters = true;
             }
         }
 
@@ -388,7 +388,7 @@ namespace ATL.test.IO
             Assert.AreEqual("efgh", theTrack.AdditionalFields["ABCD"]);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -407,7 +407,7 @@ namespace ATL.test.IO
             Assert.AreEqual("update test", theTrack.AdditionalFields["TENC"]);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -447,7 +447,7 @@ namespace ATL.test.IO
             Assert.AreEqual(0, theTrack.EmbeddedPictures.Count);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -488,7 +488,7 @@ namespace ATL.test.IO
             Assert.IsTrue(foundConductor);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -552,7 +552,7 @@ namespace ATL.test.IO
             Assert.AreEqual(0, theTrack.Chapters.Count);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -579,13 +579,13 @@ namespace ATL.test.IO
             Assert.AreEqual(chapter.Url.Url, theTrack.Chapters[2].Url.Url);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
         public void TagIO_RW_UpdateKeepDataIntegrity()
         {
-            Settings.AddNewPadding = true;
+            ATL.Settings.AddNewPadding = true;
 
             try
             {
@@ -615,11 +615,11 @@ namespace ATL.test.IO
                                 Assert.IsTrue(originalMD5.Equals(testMD5));
                 */
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
-                Settings.AddNewPadding = false;
+                ATL.Settings.AddNewPadding = false;
             }
         }
 
@@ -642,7 +642,7 @@ namespace ATL.test.IO
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
 
@@ -661,7 +661,7 @@ namespace ATL.test.IO
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -679,7 +679,7 @@ namespace ATL.test.IO
             }
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
     }

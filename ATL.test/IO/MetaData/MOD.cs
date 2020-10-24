@@ -23,7 +23,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
+            string comment = theFile.NativeTag.Comment.Replace(ATL.Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("THALAMUSIC-SP", theFile.NativeTag.Title);
@@ -83,7 +83,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(originalMD5, testMD5);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -124,7 +124,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("", theFile.NativeTag.Title);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
         
 
@@ -135,7 +135,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
+            string comment = theFile.NativeTag.Comment.Replace(ATL.Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("original by r.hubbard/convert by m.simmonds/sonic projects 1991", comment);

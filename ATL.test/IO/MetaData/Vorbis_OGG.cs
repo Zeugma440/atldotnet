@@ -215,7 +215,7 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(originalMD5.Equals(testMD5));
 
                 // Get rid of the working copy
-                File.Delete(testFileLocation);
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             } else
             {
                 Assert.AreEqual(stream.Length, streamCopy.Length);
@@ -230,8 +230,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
-            Settings.AddNewPadding = true;
-            Settings.PaddingSize = 2042; // Padding size in OGG test files
+            ATL.Settings.AddNewPadding = true;
+            ATL.Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
@@ -239,24 +239,24 @@ namespace ATL.test.IO.MetaData
 //                test_RW_Existing(notEmptyFile, 2, true, true);
             } finally
             {
-                Settings.AddNewPadding = false;
-                Settings.PaddingSize = 2048;
+                ATL.Settings.AddNewPadding = false;
+                ATL.Settings.PaddingSize = 2048;
             }
         }
 
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
-            Settings.AddNewPadding = true;
-            Settings.PaddingSize = 2042; // Padding size in OGG test files
+            ATL.Settings.AddNewPadding = true;
+            ATL.Settings.PaddingSize = 2042; // Padding size in OGG test files
 
             try
             {
                 tagIO_RW_VorbisOGG_Existing("OGG/bigPicture.ogg", 3);
             } finally
             {
-                Settings.AddNewPadding = false;
-                Settings.PaddingSize = 2048;
+                ATL.Settings.AddNewPadding = false;
+                ATL.Settings.PaddingSize = 2048;
             }
         }
 
@@ -334,7 +334,7 @@ namespace ATL.test.IO.MetaData
             //Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            if (deleteTempFile) File.Delete(testFileLocation);
+            if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         private void checkTrackDiscZeroes(FileStream fs)
@@ -367,14 +367,14 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_UpdateKeepTrackDiscZeroes()
         {
-            Settings.AddNewPadding = true;
+            ATL.Settings.AddNewPadding = true;
             try
             {
                 StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
                 test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
             } finally
             {
-                Settings.AddNewPadding = false;
+                ATL.Settings.AddNewPadding = false;
             }
         }
 
@@ -497,7 +497,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -646,7 +646,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, found);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

@@ -112,7 +112,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -160,7 +160,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(originalMD5.Equals(testMD5));
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         private void readExistingTagsOnFile(AudioDataManager theFile, string yearStr = "1992")

@@ -23,7 +23,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
+            string comment = theFile.NativeTag.Comment.Replace(ATL.Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual("Chrono Trigger", theFile.NativeTag.Title);
@@ -83,7 +83,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(originalMD5, testMD5);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -124,7 +124,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("", theFile.NativeTag.Title);
 
             // Get rid of the working copy
-            File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
         
 
@@ -135,7 +135,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            string comment = theFile.NativeTag.Comment.Replace(Settings.InternalValueSeparator, '/');
+            string comment = theFile.NativeTag.Comment.Replace(ATL.Settings.InternalValueSeparator, '/');
 
             // Supported fields
             Assert.AreEqual(@"@Copyright    97-05-16/DreamWorks Design/presents/VeritaS/""Chrono Trigger""/(Ending Theme)/Rendered for the/truth of sequence/music disk./----< STEREO >----/----< Greetz >----/SquareSoft (of course)/Mr.Zenap/DWD/Kenneth.S/Sorry, no more greetz!/----< Se Ya >----/Just close your eyes/and let your mind/float away with the/Music. Let the sounds/create a fantasy world/for you in your mind./----<Enjoy!!!!!!>----/If you want info on/DreamWorks Design/or other releases on/the net. Please/contact me at:/fredrik.lundgren@/mbox302.swipnet.se/---< The enD >---/\I//\I//\I//\I//\I//\I//\I//\I//\I//\I//Remember!!!!!/Use STEREO!!!!!", comment);
