@@ -107,23 +107,23 @@ namespace ATL.test
         public void TrackUtils_ApplyLeadingZeroes()
         {
             // Use existing track format
-            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "", 1, false, false));
-            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 1, false, false));
-            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 1, true, false));
-            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, true, false));
-            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, false, false));
-            Assert.AreEqual("01/01", TrackUtils.ApplyLeadingZeroes("1/1", "1", 2, false, false));
-            Assert.AreEqual("01/01", TrackUtils.ApplyLeadingZeroes("01/1", "1", 2, false, false));
+            Assert.AreEqual("1", TrackUtils.FormatWithLeadingZeroes("1", false, 1, false, ""));
+            Assert.AreEqual("1", TrackUtils.FormatWithLeadingZeroes("1", false, 1, false, "10"));
+            Assert.AreEqual("1", TrackUtils.FormatWithLeadingZeroes("1", false, 1, true, "10"));
+            Assert.AreEqual("01", TrackUtils.FormatWithLeadingZeroes("1", false, 2, true, "1"));
+            Assert.AreEqual("01", TrackUtils.FormatWithLeadingZeroes("1", false, 2, false, "1"));
+            Assert.AreEqual("01/01", TrackUtils.FormatWithLeadingZeroes("1/1", false, 2, false, "1"));
+            Assert.AreEqual("01/01", TrackUtils.FormatWithLeadingZeroes("01/1", false, 2, false, "1"));
 
             // Override existing track format
-            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "10", 2, false, true));
-            Assert.AreEqual("1", TrackUtils.ApplyLeadingZeroes("1", "1", 2, false, true));
-            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 2, true, true));
-            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "10", 2, true, true));
-            Assert.AreEqual("01", TrackUtils.ApplyLeadingZeroes("1", "1", 0, true, true));
-            Assert.AreEqual("01/01", TrackUtils.ApplyLeadingZeroes("1/1", "1", 0, true, true));
-            Assert.AreEqual("01/01", TrackUtils.ApplyLeadingZeroes("1/01", "1", 0, true, true));
-            Assert.AreEqual("001", TrackUtils.ApplyLeadingZeroes("1", "100", 0, true, true));
+            Assert.AreEqual("1", TrackUtils.FormatWithLeadingZeroes("1", true, 2, false, "10"));
+            Assert.AreEqual("1", TrackUtils.FormatWithLeadingZeroes("1", true, 2, false, "1"));
+            Assert.AreEqual("01", TrackUtils.FormatWithLeadingZeroes("1", true, 2, true, "1"));
+            Assert.AreEqual("01", TrackUtils.FormatWithLeadingZeroes("1", true, 2, true, "10"));
+            Assert.AreEqual("01", TrackUtils.FormatWithLeadingZeroes("1", true, 0, true, "1"));
+            Assert.AreEqual("01/01", TrackUtils.FormatWithLeadingZeroes("1/1", true, 0, true, "1"));
+            Assert.AreEqual("01/01", TrackUtils.FormatWithLeadingZeroes("1/01", true, 0, true, "1"));
+            Assert.AreEqual("001", TrackUtils.FormatWithLeadingZeroes("1", true, 0, true, "100"));
         }
     }
 }

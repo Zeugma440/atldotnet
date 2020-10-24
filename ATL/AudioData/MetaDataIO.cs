@@ -601,27 +601,27 @@ namespace ATL.AudioData.IO
                 case TagData.TAG_FIELD_TRACK_NUMBER:
                     value = map[TagData.TAG_FIELD_TRACK_NUMBER];
                     map.TryGetValue(TagData.TAG_FIELD_TRACK_TOTAL, out total);
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case TagData.TAG_FIELD_TRACK_TOTAL:
                     value = map[TagData.TAG_FIELD_TRACK_TOTAL];
                     total = value;
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case TagData.TAG_FIELD_TRACK_NUMBER_TOTAL:
                     value = map[TagData.TAG_FIELD_TRACK_NUMBER_TOTAL];
                     total = value;
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case TagData.TAG_FIELD_DISC_NUMBER:
                     value = map[TagData.TAG_FIELD_DISC_NUMBER];
                     map.TryGetValue(TagData.TAG_FIELD_DISC_TOTAL, out total);
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case TagData.TAG_FIELD_DISC_TOTAL:
                     value = map[TagData.TAG_FIELD_DISC_TOTAL];
                     total = value;
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case TagData.TAG_FIELD_DISC_NUMBER_TOTAL:
                     value = map[TagData.TAG_FIELD_DISC_NUMBER_TOTAL];
                     total = value;
-                    return TrackUtils.ApplyLeadingZeroes(value, total, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, Settings.OverrideExistingLeadingZeroesFormat);
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 default: return map[frameType];
             }
         }

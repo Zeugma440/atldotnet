@@ -14,7 +14,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Extract the track number from the given string
         /// </summary>
-        /// <param name="TrackString">Raw "track" field in string form</param>
+        /// <param name="str">Raw "track" field in string form</param>
         /// <returns>Track number, in integer form; 0 if no track number has been found</returns>
         public static ushort ExtractTrackNumber(string str)
         {
@@ -60,7 +60,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Extract the total track number from the given string
         /// </summary>
-        /// <param name="TrackString">Raw "track" field in string form</param>
+        /// <param name="str">Raw "track" field in string form</param>
         /// <returns>Total track number, in integer form; 0 if no total track number has been found</returns>
         public static ushort ExtractTrackTotal(string str)
         {
@@ -198,7 +198,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Returns the given popularity encoded with the given convention
+        /// Return the given popularity encoded with the given convention
         /// </summary>
         /// <param name="ratingStr">Popularity (note 0-5), represented in String form (e.g. "2.5")</param>
         /// <param name="convention">Convention type (See MetaDataIO.RC_XXX constants)</param>
@@ -209,7 +209,7 @@ namespace ATL.AudioData
             return EncodePopularity(rating, convention);
         }
         /// <summary>
-        /// Returns the given popularity encoded with the given convention
+        /// Return the given popularity encoded with the given convention
         /// </summary>
         /// <param name="rating">Popularity (note 0-5)</param>
         /// <param name="convention">Convention type (See MetaDataIO.RC_XXX constants)</param>
@@ -268,7 +268,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-		/// Finds a year (4 consecutive numeric chars) in a string
+		/// Find a year (4 consecutive numeric chars) in a string
 		/// </summary>
 		/// <param name="str">String to search the year into</param>
 		/// <returns>Found year in string form; "" if no year has been found</returns>
@@ -309,33 +309,49 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// 
+        /// Format the given track or disc number string according to the given parameters
+        ///     - If a single figure is given, result is a single figure
+        ///     - If two figures are given separated by "/" (e.g. "3/5"), result is both figures formatted and separated by "/"
+        /// The number of digits and leading zeroes to use can be customized.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="total"></param>
-        /// <param name="digitsForLeadingZeroes"></param>
-        /// <param name="useLeadingZeroes"></param>
-        /// <param name="overrideExistingLeadingZeroesFormat"></param>
-        /// <returns></returns>
-        public static string ApplyLeadingZeroes(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
+        /// <param name="value">Value to format; may contain separators. Examples of valid values : "1", "03/5", "4/005"...</param>
+        /// <param name="overrideExistingFormat">If false, the given value will be formatted using <c>existingDigits</c></param>
+        /// <param name="existingDigits">Target number of digits for each of the formatted values; 0 if no constraint</param>
+        /// <param name="useLeadingZeroes">If true, and <c>overrideExistingFormat</c> is also true, the given value will be formatted using <c>total</c></param>
+        /// <param name="total">Total number of tracks/albums to align the given value with while formatting. The length of the string will be used, not its value</param>
+        /// <returns>Given track or disc number(s) formatted according to the given paramaters</returns>
+        public static string FormatWithLeadingZeroes(string value, bool overrideExistingFormat, int existingDigits, bool useLeadingZeroes, string total)
         {
             if (value.Contains("/"))
             {
                 string[] parts = value.Split('/');
-                return applyLeadingZeroesInternal(parts[0], parts[1], digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat) + "/" + applyLeadingZeroesInternal(parts[1], parts[1], digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat);
+                return formatWithLeadingZeroesInternal(parts[0], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]) + "/" + formatWithLeadingZeroesInternal(parts[1], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]);
             }
-            else return applyLeadingZeroesInternal(value, total, digitsForLeadingZeroes, useLeadingZeroes, overrideExistingLeadingZeroesFormat);
+            else return formatWithLeadingZeroesInternal(value, overrideExistingFormat, existingDigits, useLeadingZeroes, total);
         }
 
-        private static string applyLeadingZeroesInternal(string value, string total, int digitsForLeadingZeroes, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat)
+        /// <summary>
+        /// Format the given value according to the given parameters
+        /// </summary>
+        /// <param name="value">Value to format; should not contain separators</param>
+        /// <param name="overrideExistingFormat">If false, the given value will be formatted using <c>existingDigits</c></param>
+        /// <param name="existingDigits">Target number of digits for the formatted value; 0 if no constraint</param>
+        /// <param name="useLeadingZeroes">If true, and <c>overrideExistingFormat</c> is also true, the given value will be formatted using <c>total</c></param>
+        /// <param name="total">Total number of tracks/albums to align the given value with while formatting. The length of the string will be used, not its value</param>
+        /// <returns>Given track or disc number(s) formatted according to the given paramaters</returns>
+        private static string formatWithLeadingZeroesInternal(string value, bool overrideExistingFormat, int existingDigits, bool useLeadingZeroes, string total)
         {
-            if (!overrideExistingLeadingZeroesFormat && digitsForLeadingZeroes > 0) return Utils.BuildStrictLengthString(value, digitsForLeadingZeroes, '0', false);
+            if (!overrideExistingFormat && existingDigits > 0) return Utils.BuildStrictLengthString(value, existingDigits, '0', false);
             int totalLength = (total != null && total.Length > 1) ? total.Length : 2;
             return useLeadingZeroes ? Utils.BuildStrictLengthString(value, totalLength, '0', false) : value;
         }
 
-        // TODO doc
-        // subset of ISO 8601 : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        /// <summary>
+        /// Format the given DateTime to the most concise human-readable string
+        /// Subsets of ISO 8601 will be used : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        /// </summary>
+        /// <param name="dateTime">DateTime to format</param>
+        /// <returns>Human-readable string representation of the given DateTime with relevant information only</returns>
         public static string FormatISOTimestamp(DateTime dateTime)
         {
             bool includeTime = (dateTime.Hour > 0 || dateTime.Minute > 0 || dateTime.Second > 0);
@@ -349,6 +365,15 @@ namespace ATL.AudioData
             );
         }
 
+        /// <summary>
+        /// Format the given elemnts to the most concise human-readable string
+        /// Subsets of ISO 8601 will be used : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        /// </summary>
+        /// </summary>
+        /// <param name="year">Year</param>
+        /// <param name="dayMonth">Day and month (DDMM format)</param>
+        /// <param name="time">Time (hhmm format)</param>
+        /// <returns>Human-readable string representation of the given DateTime with relevant information only</returns>
         public static string FormatISOTimestamp(string year, string dayMonth, string time)
         {
             string day = "";
@@ -362,7 +387,7 @@ namespace ATL.AudioData
 
             string hour = "";
             string minutes = "";
-            string seconds = "";
+            string seconds = ""; // TODO - WTF happened to seconds ?
             if (Utils.IsNumeric(time) && (4 == time.Length))
             {
                 hour = dayMonth.Substring(0, 2);
@@ -372,6 +397,17 @@ namespace ATL.AudioData
             return FormatISOTimestamp(year, day, month, hour, minutes, seconds);
         }
 
+        /// <summary>
+        /// Format the given elemnts to the most concise human-readable string
+        /// Subsets of ISO 8601 will be used : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
+        /// </summary>
+        /// <param name="year">Year</param>
+        /// <param name="day">Day</param>
+        /// <param name="month">Month</param>
+        /// <param name="hour">Hours</param>
+        /// <param name="minutes">Minutes</param>
+        /// <param name="seconds">Seconds</param>
+        /// <returns>Human-readable string representation of the given DateTime with relevant information only</returns>
         public static string FormatISOTimestamp(string year, string day, string month, string hour, string minutes, string seconds)
         {
             StringBuilder result = new StringBuilder();
@@ -386,14 +422,29 @@ namespace ATL.AudioData
             return result.ToString();
         }
 
-        // TODO Doc
+        /// <summary>
+        /// Compute new size of the padding area according to the given parameters
+        /// </summary>
+        /// <param name="initialPaddingOffset">Initial offset of the padding zone</param>
+        /// <param name="initialPaddingSize">Initial size of the padding zone</param>
+        /// <param name="initialTagSize">Initial size of the tag area</param>
+        /// <param name="currentTagSize">Current size of the tag area</param>
+        /// <returns>New size to give to the padding area</returns>
         public static long ComputePaddingSize(long initialPaddingOffset, long initialPaddingSize, long initialTagSize, long currentTagSize)
         {
             return ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialTagSize - currentTagSize);
         }
 
-        // Delta < 0 => Metadata size has increased => Padding should decrease
-        // Delta > 0 => Metadata size has decreased => Padding should increase
+        /// <summary>
+        /// Compute new size of the padding area according to the given parameters
+        /// </summary>
+        /// <param name="initialPaddingOffset">Initial offset of the padding zone</param>
+        /// <param name="initialPaddingSize">Initial size of the padding zone</param>
+        /// <param name="deltaSize">Variation of padding zone size
+        ///     lower than 0 => Metadata size has increased => Padding should decrease
+        ///     higher than 0 => Metadata size has decreased => Padding should increase
+        /// </param>
+        /// <returns>New size to give to the padding area</returns>
         public static long ComputePaddingSize(long initialPaddingOffset, long initialPaddingSize, long deltaSize)
         {
             long paddingSizeToWrite = Settings.AddNewPadding ? Settings.PaddingSize : 0;
