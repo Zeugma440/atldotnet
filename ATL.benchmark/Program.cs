@@ -18,13 +18,13 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\AAC\chapters_QT.m4v");
+            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP4\chapters_QT.m4v");
 
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\issue 71\sample_reprocessed.m4b");
+            writeAt(@"E:\temp\m4a-mp4\issue 71\sample_reprocessed_orig.m4b");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
@@ -98,6 +98,9 @@ namespace ATL.benchmark
             string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
             try
             {
+                //Settings.ForceDiskIO = true;
+                Settings.FileBufferSize = 2 * 1024 * 1024;
+
                 ConsoleLogger logger = new ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
 

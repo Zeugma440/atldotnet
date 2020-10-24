@@ -10,12 +10,12 @@ namespace ATL.test.IO
     [TestClass]
     public class AudioDataExceptions
     {
-        private void audio_X_AAC_MP4_Atom(string resourceName, string atom, int logLevel = Log.LV_ERROR, string atomCaption = null)
+        private void audio_X_MP4_Atom(string resourceName, string atom, int logLevel = Log.LV_ERROR, string atomCaption = null)
         {
             if (null == atomCaption) atomCaption = atom;
 
             ArrayLogger log = new ArrayLogger();
-            string resource = "AAC/" + resourceName;
+            string resource = "MP4/" + resourceName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
@@ -45,24 +45,24 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void Audio_X_AAC_MP4()
+        public void Audio_X_MP4()
         {
-            audio_X_AAC_MP4_Atom("mp4.m4a","moov");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "mvhd");
-//            audio_X_AAC_MP4_Atom("mp4.m4a", "trak", Log.LV_DEBUG);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "mdia", Log.LV_DEBUG);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "hdlr", Log.LV_DEBUG, "mdia.hdlr");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "minf", Log.LV_DEBUG, "mdia.minf");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "stbl", Log.LV_DEBUG, "mdia.minf.stbl");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "stsd", Log.LV_DEBUG);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "stsz");
-            audio_X_AAC_MP4_Atom("mp4.m4a", "udta", Log.LV_INFO);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "ilst", Log.LV_WARNING);
-            audio_X_AAC_MP4_Atom("mp4.m4a", "mdat");
+            audio_X_MP4_Atom("mp4.m4a","moov");
+            audio_X_MP4_Atom("mp4.m4a", "mvhd");
+//            audio_X_MP4_Atom("mp4.m4a", "trak", Log.LV_DEBUG);
+            audio_X_MP4_Atom("mp4.m4a", "mdia", Log.LV_DEBUG);
+            audio_X_MP4_Atom("mp4.m4a", "hdlr", Log.LV_DEBUG, "mdia.hdlr");
+            audio_X_MP4_Atom("mp4.m4a", "minf", Log.LV_DEBUG, "mdia.minf");
+            audio_X_MP4_Atom("mp4.m4a", "stbl", Log.LV_DEBUG, "mdia.minf.stbl");
+            audio_X_MP4_Atom("mp4.m4a", "stsd", Log.LV_DEBUG);
+            audio_X_MP4_Atom("mp4.m4a", "stsz");
+            audio_X_MP4_Atom("mp4.m4a", "udta", Log.LV_INFO);
+            audio_X_MP4_Atom("mp4.m4a", "ilst", Log.LV_WARNING);
+            audio_X_MP4_Atom("mp4.m4a", "mdat");
 
-            audio_X_AAC_MP4_Atom("chapters_QT.m4v", "mdhd", Log.LV_DEBUG);
-            audio_X_AAC_MP4_Atom("chapters_QT.m4v", "stts");
-            audio_X_AAC_MP4_Atom("chapters_QT.m4v", "stsc");
+            audio_X_MP4_Atom("chapters_QT.m4v", "mdhd", Log.LV_DEBUG);
+            audio_X_MP4_Atom("chapters_QT.m4v", "stts");
+            audio_X_MP4_Atom("chapters_QT.m4v", "stsc");
         }
 
         [TestMethod]

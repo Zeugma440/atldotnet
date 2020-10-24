@@ -141,7 +141,7 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateNeutral("VQF/vqf.vqf");
                 tagIO_RW_UpdateNeutral("VGM/vgm.vgm");
                 tagIO_RW_UpdateNeutral("SPC/spc.spc");
-                tagIO_RW_UpdateNeutral("AAC/mp4.m4a");
+                tagIO_RW_UpdateNeutral("MP4/mp4.m4a");
                 tagIO_RW_UpdateNeutral("WMA/wma.wma");
             }
             finally
@@ -190,7 +190,7 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateEmpty("VGM/empty.vgm", false);
                 tagIO_RW_UpdateEmpty("SPC/empty.spc");
 
-                tagIO_RW_UpdateEmpty("AAC/empty.m4a");
+                tagIO_RW_UpdateEmpty("MP4/empty.m4a");
                 tagIO_RW_UpdateEmpty("WMA/empty_full.wma");
             }
             finally
@@ -244,7 +244,7 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateTagBaseField("VQF/vqf.vqf", false, false);
                 tagIO_RW_UpdateTagBaseField("VGM/vgm.vgm", false, false, false);
                 tagIO_RW_UpdateTagBaseField("SPC/spc.spc", false, false);
-                tagIO_RW_UpdateTagBaseField("AAC/mp4.m4a");
+                tagIO_RW_UpdateTagBaseField("MP4/mp4.m4a");
                 tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
             } finally
             {
@@ -357,12 +357,12 @@ namespace ATL.test.IO
             {
                 tagIO_RW_UpdatePadding("MP3/id3v2.4_UTF8.mp3"); // padded ID3v2
                 tagIO_RW_UpdatePadding("OGG/ogg.ogg"); // padded Vorbis-OGG
-                tagIO_RW_UpdatePadding("AAC/mp4.m4a", 17100); // padded MP4
+                tagIO_RW_UpdatePadding("MP4/mp4.m4a", 17100); // padded MP4
                 tagIO_RW_UpdatePadding("FLAC/flac.flac", 4063); // padded Vorbis-FLAC
 
                 tagIO_RW_AddPadding("MP3/empty.mp3");
                 tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
-                tagIO_RW_AddPadding("AAC/chapters_NERO.mp4");
+                tagIO_RW_AddPadding("MP4/chapters_NERO.mp4");
                 tagIO_RW_AddPadding("FLAC/empty.flac", Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
             } finally
             {

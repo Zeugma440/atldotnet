@@ -10,7 +10,7 @@ namespace ATL.benchmark
     [InliningDiagnoser]
     public class PictureReading
     {
-        [Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/ID3v2.2 3 pictures.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/OGG/bigPicture.ogg", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/FLAC/flac.flac", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/WMA/wma.wma", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/APE/ape.ape", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/AAC/mp4.m4a")]
+        [Params("E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP3/ID3v2.2 3 pictures.mp3", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/OGG/bigPicture.ogg", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/FLAC/flac.flac", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/WMA/wma.wma", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/APE/ape.ape", "E:/Dev/Source/Repos/atldotnet/ATL.test/Resources/MP4/mp4.m4a")]
         public string path;
 
         FileFinder ff = new FileFinder();

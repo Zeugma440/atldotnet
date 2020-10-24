@@ -10,7 +10,7 @@
 			</extension>
 		</track>
 		<track>
-			<location>file:///$PATH/AAC/mp4.m4a</location>
+			<location>file:///$PATH/MP4/mp4.m4a</location>
 			<title>aa父bb</title>
 			<creator>FATHER</creator>
 			<album>Papa rules</album>

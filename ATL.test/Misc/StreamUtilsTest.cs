@@ -146,7 +146,7 @@ namespace ATL.test
             string sequence2 = "trak";
             string sequence3 = "jstsd";
 
-            using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "AAC/mp4.m4a", FileMode.Open, FileAccess.Read))
+            using (FileStream fs = new FileStream(TestUtils.GetResourceLocationRoot() + "MP4/mp4.m4a", FileMode.Open, FileAccess.Read))
             {
                 Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes(sequence1)));
                 Assert.AreEqual(12, fs.Position);

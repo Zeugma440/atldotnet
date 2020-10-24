@@ -60,8 +60,8 @@ namespace ATL.test.IO.MetaData
     {
         public MP4()
         {
-            emptyFile = "AAC/empty.m4a"; // Has empty udta/meta tags
-            notEmptyFile = "AAC/mp4.m4a";
+            emptyFile = "MP4/empty.m4a"; // Has empty udta/meta tags
+            notEmptyFile = "MP4/mp4.m4a";
             tagType = MetaDataIOFactory.TAG_NATIVE;
 
             // MP4 does not support leading zeroes
@@ -97,7 +97,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(theFile, 1);
 
 
-            location = TestUtils.GetResourceLocationRoot() + "AAC/mp4_date_in_©day.m4a";
+            location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
             theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
         }
@@ -111,7 +111,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Empty_no_udta()
         {
-            test_RW_Empty("AAC/no_udta.m4a", true, false, false); // ATL leaves an empty udta/meta structure, which is more "standard" than wiping the entire udta branch
+            test_RW_Empty("MP4/no_udta.m4a", true, false, false); // ATL leaves an empty udta/meta structure, which is more "standard" than wiping the entire udta branch
         }
 
         [TestMethod]
@@ -324,7 +324,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 // Source : MP3 with existing tag incl. chapters
-                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
+                String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_NERO.mp4");
                 AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
@@ -438,7 +438,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 // Source : file without 'chpl' atom
-                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
+                String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
                 AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -508,7 +508,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             // Source : file without 'chpl' atom
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_NERO.mp4");
+            String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_NERO.mp4");
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
@@ -543,7 +543,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 // Source : MP3 with existing tag incl. chapters
-                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/chapters_QT.m4v");
+                String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_QT.m4v");
                 AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
@@ -655,7 +655,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 // Source : file without 'chpl' atom
-                String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/empty.m4a");
+                String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
                 AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -724,7 +724,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/lyrics.m4a");
+            String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/lyrics.m4a");
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
@@ -781,7 +781,7 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
 
-            String testFileLocation = TestUtils.CopyAsTempTestFile("AAC/xtraField.m4a");
+            String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xtraField.m4a");
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read

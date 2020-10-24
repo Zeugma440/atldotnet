@@ -47,9 +47,9 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void Audio_AAC_MP4()
+        public void Audio_MP4()
         {
-            testGenericAudio("AAC/mp4.m4a", 14053, 75, 48000, true, AudioDataIOFactory.CF_LOSSY, ISO_3_4_1);
+            testGenericAudio("MP4/mp4.m4a", 14053, 75, 48000, true, AudioDataIOFactory.CF_LOSSY, ISO_3_4_1);
         }
 
         [TestMethod]

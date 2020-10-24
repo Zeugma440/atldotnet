@@ -228,18 +228,18 @@
   <ItemGroup>
     <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
     <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
-    <Content Include="Resources\AAC\chapters_NERO.mp4" />
-    <Content Include="Resources\AAC\chapters_QT.m4v" />
-    <Content Include="Resources\AAC\empty.m4a" />
+    <Content Include="Resources\MP4\chapters_NERO.mp4" />
+    <Content Include="Resources\MP4\chapters_QT.m4v" />
+    <Content Include="Resources\MP4\empty.m4a" />
     <Content Include="Resources\AAC\latmMcp0_CBR88_8s.aac" />
     <Content Include="Resources\AAC\latmMcp1_CBR88_8s.aac" />
     <Content Include="Resources\AAC\loasLatm_CBR88_8s.aac" />
-    <Content Include="Resources\AAC\lyrics.m4a" />
-    <Content Include="Resources\AAC\mdat_before_moov.m4a" />
-    <Content Include="Resources\AAC\mp4.m4a" />
-    <Content Include="Resources\AAC\xtraField.m4a" />
-    <Content Include="Resources\AAC\mp4_date_in_©day.m4a" />
-    <Content Include="Resources\AAC\no_udta.m4a" />
+    <Content Include="Resources\MP4\lyrics.m4a" />
+    <Content Include="Resources\MP4\mdat_before_moov.m4a" />
+    <Content Include="Resources\MP4\mp4.m4a" />
+    <Content Include="Resources\MP4\xtraField.m4a" />
+    <Content Include="Resources\MP4\mp4_date_in_©day.m4a" />
+    <Content Include="Resources\MP4\no_udta.m4a" />
     <Content Include="Resources\AA\aa.aa" />
     <Content Include="Resources\AA\aa.jpg" />
     <Content Include="Resources\AC3\empty.ac3" />
