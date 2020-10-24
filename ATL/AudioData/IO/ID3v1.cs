@@ -180,42 +180,45 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            // Read tag
-            source.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
+			if (source.Length >= ID3V1_TAG_SIZE)
+			{
+				// Read tag
+				source.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
 
-            // ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
-            byte[] data = new byte[ID3V1_TAG_SIZE];
-            source.Read(data, 0, ID3V1_TAG_SIZE);
+				// ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
+				byte[] data = new byte[ID3V1_TAG_SIZE];
+				source.Read(data, 0, ID3V1_TAG_SIZE);
 
-            string header = Utils.Latin1Encoding.GetString(data, 0, 3);
-            if (header.Equals(ID3V1_ID))
-            {
-                byte[] endComment = new byte[2];
-                structureHelper.AddZone(source.Position-ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
+				string header = Utils.Latin1Encoding.GetString(data, 0, 3);
+				if (header.Equals(ID3V1_ID))
+				{
+					byte[] endComment = new byte[2];
+					structureHelper.AddZone(source.Position - ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
-                tagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
-                tagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
-                tagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
-                tagData.RecordingYear = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
-                tagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
+					tagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
+					tagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
+					tagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
+					tagData.RecordingYear = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
+					tagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
 
-                Array.Copy(data, 125, endComment, 0, 2);
-                tagVersion = GetTagVersion(endComment);
+					Array.Copy(data, 125, endComment, 0, 2);
+					tagVersion = GetTagVersion(endComment);
 
-                // Fill properties using tag data
-                if (TAG_VERSION_1_0 == tagVersion)
-                {
-                    tagData.Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
-                }
-                else
-                {
-                    tagData.TrackNumber = endComment[1].ToString();
-                }
+					// Fill properties using tag data
+					if (TAG_VERSION_1_0 == tagVersion)
+					{
+						tagData.Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+					}
+					else
+					{
+						tagData.TrackNumber = endComment[1].ToString();
+					}
 
-                tagData.Genre = (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "";
+					tagData.Genre = (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "";
 
-                result = true;
-            }
+					result = true;
+				}
+			}
 
             return result;
 		}

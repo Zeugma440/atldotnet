@@ -18,8 +18,8 @@ namespace ATL.AudioData.IO
             string key, value;
             int size;
             byte[] data = new byte[chunkSize];
-
-            while (source.Position < initialPos + chunkSize - 4) // 4 being the "INFO" purpose that belongs to the chunk
+            long maxPos = initialPos + chunkSize - 4; // 4 being the "INFO" purpose that belongs to the chunk
+            while (source.Position < maxPos) 
             {
                 // Key
                 source.Read(data, 0, 4);
@@ -31,7 +31,7 @@ namespace ATL.AudioData.IO
                 {
                     source.Read(data, 0, size);
                     // Manage parasite zeroes at the end of data
-                    if (source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
+                    if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
                     value = Utils.Latin1Encoding.GetString(data, 0, size);
                     meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
                 }
