@@ -1930,7 +1930,7 @@ namespace ATL.AudioData.IO
             // Only works when QT track is located _before_ QT mdat
             Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
             structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK, ZONE_MP4_QT_CHAP_TRAK);
-            w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.getCorrectedOffset(ZONE_MP4_QT_CHAP_MDAT) + 8)); // TODO - on some cases, switch to co64 ?
+            w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset + 8)); // TODO - on some cases, switch to co64 ?
 
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stcoPos, SeekOrigin.Begin);
