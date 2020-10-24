@@ -148,7 +148,8 @@ namespace ATL.AudioData.IO
                         // Copy file data to buffer
                         if (initialBufferSize > 0)
                         {
-                            w.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
+                            w.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
+                            //w.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin); <-- won't work for classes that don't use FileStructureHelper (FLAC)
                             StreamUtils.CopyStream(w.BaseStream, buffer, initialBufferSize);
                         }
 
