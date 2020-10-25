@@ -16,14 +16,28 @@ namespace ATL.Logging
 		public const int LV_WARNING		= 0x00000002;
 		public const int LV_ERROR		= 0x00000001;
 
-		
-		// Definition of a message ("a line of the log") 
-		public struct LogItem
+
+        /// <summary>
+        /// Definition of a message ("a line of the log")  
+        /// </summary>
+        public struct LogItem
 		{
-			public DateTime When;	// Date of the message
-			public int Level;		// Logging level
-            public string Location; // Location of the message (e.g. filename, line, module...)
-			public string Message;	// Contents of the message
+            /// <summary>
+            /// Date of the message
+            /// </summary>
+			public DateTime When;
+            /// <summary>
+            /// Logging level
+            /// </summary>
+			public int Level;
+            /// <summary>
+            /// Location of the message (e.g. filename, line, module...)
+            /// </summary>
+            public string Location;
+            /// <summary>
+            /// Contents of the message
+            /// </summary>
+			public string Message;
 		}
 
 
@@ -62,7 +76,7 @@ namespace ATL.Logging
 		}
 
 		/// <summary>
-		/// Logs the provided message with the LV_DEBUG logging level
+		/// Log the provided message with the LV_DEBUG logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
 		public void Debug(String msg)
@@ -71,7 +85,7 @@ namespace ATL.Logging
 		}
 
 		/// <summary>
-		/// Logs the provided message with the LV_INFO logging level
+		/// Log the provided message with the LV_INFO logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
 		public void Info(String msg)
@@ -80,7 +94,7 @@ namespace ATL.Logging
 		}
 
 		/// <summary>
-		/// Logs the provided message with the LV_WARNING logging level
+		/// Log the provided message with the LV_WARNING logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
 		public void Warning(String msg)
@@ -89,7 +103,7 @@ namespace ATL.Logging
 		}
 
 		/// <summary>
-		/// Logs the provided message with the LV_ERROR logging level
+		/// Log the provided message with the LV_ERROR logging level
 		/// </summary>
 		/// <param name="msg">Contents of the message</param>
 		public void Error(String msg)
@@ -115,11 +129,10 @@ namespace ATL.Logging
 
 
         /// <summary>
-        /// Logs the provided message with the provided logging level
+        /// Log the provided message with the provided logging level
         /// </summary>
         /// <param name="level">Logging level of the new message</param>
         /// <param name="msg">Contents of the new message</param>
-        /// <param name="forceDisplay">If true, forces all registered ILogDevices to immediately log the message, even if asynchoronous logging is enabled</param>
         public void Write(int level, String msg)
         {
             write(level, msg, false);
@@ -145,7 +158,7 @@ namespace ATL.Logging
         }
 
         /// <summary>
-        /// Logs the provided message with the provided logging level
+        /// Log the provided message with the provided logging level
         /// </summary>
         /// <param name="theItem">Message to log</param>
         /// <param name="forceDisplay">If true, forces all registered ILogDevices to immediately log the message, even if asynchoronous logging is enabled</param>
@@ -170,7 +183,7 @@ namespace ATL.Logging
 
 		
 		/// <summary>
-		/// Clears the whole list of logged items
+		/// Clear the whole list of logged items
 		/// </summary>
 		public void ClearAll()
 		{
@@ -182,7 +195,7 @@ namespace ATL.Logging
 
 
 		/// <summary>
-		/// Gets all the logged items 
+		/// Get all the logged items 
 		/// </summary>
 		/// <returns>List of all the logged items</returns>
 		public IList<LogItem> GetAllItems()
@@ -192,7 +205,7 @@ namespace ATL.Logging
 
 		 
 		/// <summary>
-		/// Gets the logged items whose logging level matches the provided mask 
+		/// Get the logged items whose logging level matches the provided mask 
 		/// </summary>
 		/// <param name="levelMask">Logging level mask</param>
 		/// <returns>List of the matching logged items</returns>
@@ -215,7 +228,7 @@ namespace ATL.Logging
 
 
 		/// <summary>
-		/// Registers a LogDevice
+		/// Register a LogDevice
 		/// A registered LogDevice will be called each time a new LogItem is received
 		/// (see Write method) 
 		/// </summary>
@@ -226,7 +239,7 @@ namespace ATL.Logging
 		}
 
         /// <summary>
-        /// Marks logging as asynchronous : no call will be made
+        /// Mark logging as asynchronous : no call will be made
         /// to LogDevice.DoLog until FlushQueue or Release are called
         /// </summary>
         public void SwitchAsync()
@@ -235,7 +248,7 @@ namespace ATL.Logging
         }
 
         /// <summary>
-        /// Flushes all queued LogItems through call to LogDevice.DoLog
+        /// Flush all queued LogItems through call to LogDevice.DoLog
         /// </summary>
         public void FlushQueue()
         {
@@ -250,7 +263,7 @@ namespace ATL.Logging
         }
 
         /// <summary>
-        /// Makes logging synchronous again and flushes remaining LogItems in queue
+        /// Make logging synchronous again and flushes remaining LogItems in queue
         /// </summary>
         public void SwitchSync()
         {
@@ -258,6 +271,11 @@ namespace ATL.Logging
             FlushQueue();
         }
 
+        /// <summary>
+        /// Get the name of the given logging level in english
+        /// </summary>
+        /// <param name="level">Logging level</param>
+        /// <returns>Name of the given logging level</returns>
         public static string getLevelName(int level)
         {
             switch(level)
