@@ -613,7 +613,8 @@ namespace ATL.AudioData.IO
                     comment = new MetaFieldInfo(getImplementedTagType(), "");
                     comment.Language = structure.LanguageCode;
                     comment.NativeFieldCode = structure.ContentDescriptor;
-                } else if (shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
+                }
+                else if (shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
                 {
                     if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
                     tagData.Lyrics.LanguageCode = structure.LanguageCode;
@@ -1388,13 +1389,31 @@ namespace ATL.AudioData.IO
                 frameWriter.Write(Utils.Latin1Encoding.GetBytes(chapter.UniqueID));
                 frameWriter.Write('\0');
 
-                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.StartTime));
-                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.EndTime));
-                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.StartOffset));
-                frameWriter.Write(StreamUtils.EncodeBEUInt32(chapter.EndOffset));
+                uint startValue = chapter.StartTime;
+                uint endValue = chapter.EndTime;
+                // As per specs, unused value should be encoded as 0xFF to be ignored
+                if (0 == startValue + endValue)
+                {
+                    startValue = uint.MaxValue;
+                    endValue = uint.MaxValue;
+                }
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(startValue));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(endValue));
+
+                startValue = chapter.StartOffset;
+                endValue = chapter.EndOffset;
+                // As per specs, unused value should be encoded as 0xFF to be ignored
+                if (0 == startValue + endValue)
+                {
+                    startValue = uint.MaxValue;
+                    endValue = uint.MaxValue;
+                }
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(startValue));
+                frameWriter.Write(StreamUtils.EncodeBEUInt32(endValue));
 
                 if (chapter.Title != null && chapter.Title.Length > 0)
                 {
+                    // TODO FFmpeg uses Latin-1
                     writeTextFrame(frameWriter, "TIT2", chapter.Title, tagEncoding, "", "", true);
                 }
                 if (chapter.Subtitle != null && chapter.Subtitle.Length > 0)
@@ -1467,7 +1486,7 @@ namespace ATL.AudioData.IO
             w.Write(getNullTerminatorFromEncoding(tagEncoding));
 
             // Lyrics
-            foreach(LyricsInfo.LyricsPhrase phrase in lyrics.SynchronizedLyrics)
+            foreach (LyricsInfo.LyricsPhrase phrase in lyrics.SynchronizedLyrics)
             {
                 w.Write((byte)10); // Emulate SyltEdit's behaviour that seems to be the de facto standard
                 w.Write(tagEncoding.GetBytes(phrase.Text));
@@ -1611,12 +1630,13 @@ namespace ATL.AudioData.IO
                 {
                     desc = new byte[0];
                     url = Utils.Latin1Encoding.GetBytes(parts[0]);
-                } else
+                }
+                else
                 {
                     desc = Utils.Latin1Encoding.GetBytes(parts[0]);
                     url = Utils.Latin1Encoding.GetBytes(parts[1]);
                 }
-                
+
                 // Write the field
                 w.Write(encodeID3v2CharEncoding(Utils.Latin1Encoding));     // ISO-8859-1 seems to be the de facto norm, although spec allows fancier encodings
                 //w.Write(getBomFromEncoding(tagEncoding));                 // No BOM for ISO-8859-1
@@ -1873,7 +1893,7 @@ namespace ATL.AudioData.IO
             }
 
             if (!result.Found) source.Position = initialPos;
-            else  result.Size = (int)(source.Position - initialPos);
+            else result.Size = (int)(source.Position - initialPos);
 
             return result;
         }
@@ -2031,6 +2051,5 @@ namespace ATL.AudioData.IO
             else if (encoding.Equals(Encoding.UTF8)) return NULLTERMINATOR;
             else return NULLTERMINATOR; // Default = ISO-8859-1 / ISO Latin-1
         }
-
     }
 }
