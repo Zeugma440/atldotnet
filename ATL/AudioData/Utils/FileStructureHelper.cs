@@ -424,7 +424,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Return the the given zone's offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders(BinaryWriter, long, ACTION, string, long, int)"/>
+        /// Return the the given zone's offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders"/>
         /// e.g. if offset is 30 and 10 bytes have been inserted at position 15, corrected offset will be 40
         /// </summary>
         /// <param name="zone">Name of the zone to get the corrected offset for</param>
@@ -435,7 +435,7 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Return the the given offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders(BinaryWriter, long, ACTION, string, long, int)"/>
+        /// Return the the given offset corrected according to the position shifts already applied by previous calls to <see cref="RewriteHeaders"/>
         /// e.g. if offset is 30 and 10 bytes have been inserted at position 15, corrected offset will be 40
         /// </summary>
         /// <param name="offset">Offset to correct</param>
@@ -516,6 +516,7 @@ namespace ATL.AudioData
                 else if (header.Position + offsetPositionCorrection < 0 || header.Position + offsetPositionCorrection > bufferedWriter.BaseStream.Length)
                 {
                     if (null == fullScopeWriter) throw new InvalidDataException("Trying to write outside the buffered writer");
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Trying to write outside the buffered writer - switching to full-scope writer");
                     w = fullScopeWriter;
                     offsetPositionCorrection = 0;
                 }
