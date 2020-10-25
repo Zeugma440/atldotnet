@@ -57,7 +57,7 @@ namespace ATL
 
         public override int GetHashCode()
         {
-            return (int)Fnv1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
+            return (int)FNV1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
         }
 
         public bool EqualsWithoutZone(object obj)

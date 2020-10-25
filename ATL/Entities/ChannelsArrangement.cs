@@ -1,5 +1,6 @@
 ﻿namespace ATL
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible members
     public class ChannelsArrangements
     {
         public static readonly ChannelsArrangement UNKNOWN = new ChannelsArrangement(0, "Unknown");
@@ -71,7 +72,9 @@
             }
         }
 
-
+        /// <summary>
+        /// Describes a specific arrangement of audio channels
+        /// </summary>
         public class ChannelsArrangement
         {
             public ChannelsArrangement(int nbChannels, string description)
@@ -91,8 +94,15 @@
                 return Description;
             }
 
+            /// <summary>
+            /// Description of the arrangement, in english
+            /// </summary>
             public string Description { get; set; }
+            /// <summary>
+            /// Number of channels involved
+            /// </summary>
             public int NbChannels { get; set; }
         }
     }
 }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible members

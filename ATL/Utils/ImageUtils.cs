@@ -5,31 +5,81 @@ using System.IO;
 
 namespace Commons
 {
-    public enum ImageFormat { Unsupported = 99, Undefined = 98, Jpeg = 1, Gif = 2, Png = 3, Bmp = 4, Tiff = 5 };
+    /// <summary>
+    /// Describe an image format
+    /// </summary>
+    public enum ImageFormat { 
+        /// <summary>
+        /// Unsupported (i.e. none of the other supported formats in the enum)
+        /// </summary>
+        Unsupported = 99,
+        /// <summary>
+        /// Undefined
+        /// </summary>
+        Undefined = 98,
+        /// <summary>
+        /// JPEG
+        /// </summary>
+        Jpeg = 1,
+        /// <summary>
+        /// GIF
+        /// </summary>
+        Gif = 2,
+        /// <summary>
+        /// PNG
+        /// </summary>
+        Png = 3,
+        /// <summary>
+        /// Bitmap
+        /// </summary>
+        Bmp = 4,
+        /// <summary>
+        /// TIFF
+        /// </summary>
+        Tiff = 5 
+    };
 
+    /// <summary>
+    /// Struct class definining the properties of an image
+    /// </summary>
+#pragma warning disable S1104 // Fields should not have public accessibility
     public class ImageProperties
     {
+        /// <summary>
+        /// Image format
+        /// </summary>
         public ImageFormat Format = ImageFormat.Undefined;
+        /// <summary>
+        /// Width, in pixels
+        /// </summary>
         public int Width = 0;
+        /// <summary>
+        /// Height, in pixels
+        /// </summary>
         public int Height = 0;
+        /// <summary>
+        /// Color depth, in bits
+        /// </summary>
         public int ColorDepth = 0;
+        /// <summary>
+        /// Number of colors supported by the palette
+        /// </summary>
         public int NumColorsInPalette = 0;
     }
+#pragma warning restore S1104 // Fields should not have public accessibility
 
-    /*
-     * Helper methods for reading basic image properties without System.Drawing
-     * This class has been created to reach .NET Core 2.0 compatibility
-     * 
-     * Implementation notes :
-     * 
-     *  - If a TIFF file has multiple images, only the properties of the 1st image will be read
-     *  - BMPs with color palettes are not supported
-     * 
-     */
+    /// <summary>
+    /// Helper methods for reading basic image properties without System.Drawing
+    /// This class has been created to reach .NET Core 2.0 compatibility
+    /// 
+    /// Implementation notes :
+    ///   - If a TIFF file has multiple images, only the properties of the 1st image will be read
+    ///   - BMPs with color palettes are not supported
+    /// </summary>
     public static class ImageUtils
     {
         /// <summary>
-        /// Returns the mime-type of the given .NET image format
+        /// Return the mime-type of the given .NET image format
         /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
         /// </summary>
         /// <param name="imageFormat">Image format whose mime-type to obtain</param>
@@ -97,45 +147,6 @@ namespace Commons
         }
 
         /// <summary>
-        /// Resizes the given image to the given dimensions
-        /// </summary>
-        /// <param name="image">Image to resize</param>
-        /// <param name="size">Target dimensions</param>
-        /// <param name="preserveAspectRatio">True if the resized image has to keep the same aspect ratio as the given image; false if not (optional; default value = true)</param>
-        /// <returns>Resized image</returns>
-        /*
-         * Requires an external lib compatible with .net Core
-         * 
-        public static Image ResizeImage(Image image, Size size, bool preserveAspectRatio = true)
-        {
-            int newWidth;
-            int newHeight;
-            if (preserveAspectRatio)
-            {
-                int originalWidth = image.Width;
-                int originalHeight = image.Height;
-                float percentWidth = (float)size.Width / originalWidth;
-                float percentHeight = (float)size.Height / originalHeight;
-                float percent = percentHeight < percentWidth ? percentHeight : percentWidth;
-                newWidth = Convert.ToInt32(Math.Round(originalWidth * percent, 0));
-                newHeight = Convert.ToInt32(Math.Round(originalHeight * percent, 0));
-            }
-            else
-            {
-                newWidth = size.Width;
-                newHeight = size.Height;
-            }
-            Image newImage = new Bitmap(newWidth, newHeight);
-            using (Graphics graphicsHandle = Graphics.FromImage(newImage))
-            {
-                graphicsHandle.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
-            }
-            return newImage;
-        }
-        */
-
-        /// <summary>
         /// Detects image format from the given signature
         /// </summary>
         /// <param name="header">Binary signature; must be at least 3-bytes long</param>
@@ -153,6 +164,12 @@ namespace Commons
             else return ImageFormat.Unsupported;
         }
 
+        /// <summary>
+        /// Detect the properties of the given image
+        /// </summary>
+        /// <param name="imageData">Raw picture data</param>
+        /// <param name="format">Format of the picture (optional; will try to find it if not set)</param>
+        /// <returns>Properties of the given image</returns>
         public static ImageProperties GetImageProperties(byte[] imageData, ImageFormat format = ImageFormat.Undefined)
         {
             ImageProperties props = new ImageProperties();
@@ -180,7 +197,7 @@ namespace Commons
 
                         int nbIFDEntries = readInt16(r, isBigEndian);
 
-                        long initialPos = s.Position;
+                        long initialPos;
                         int IFDtag, IFDFieldType, IFDNbValues, IFDValue32, IFDValue16;
                         byte[] IFDValueBinary;
                         int photometricInterpretation = 0;

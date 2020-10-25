@@ -3,7 +3,6 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 
 namespace ATL
 {
@@ -15,6 +14,7 @@ namespace ATL
     public class TagData
     {
         // Identifiers for 'classic' fields
+#pragma warning disable CS1591 // Missing XML comment for publicly visible members
         public const byte TAG_FIELD_GENERAL_DESCRIPTION = 0;
         public const byte TAG_FIELD_TITLE = 1;
         public const byte TAG_FIELD_ARTIST = 2;
@@ -72,6 +72,7 @@ namespace ATL
         public string DiscNumberTotal = null;
         public string ChaptersTableDescription = null;
         public string PublishingDate = null;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible members
 
         /// <summary>
         /// Chapters 
@@ -125,12 +126,19 @@ namespace ATL
 
 #pragma warning restore S1104 // Fields should not have public accessibility
 
+        /// <summary>
+        /// Construct an empty TagData
+        /// </summary>
         public TagData()
         {
             Pictures = new List<PictureInfo>();
             AdditionalFields = new List<MetaFieldInfo>();
         }
 
+        /// <summary>
+        /// Construct a TagData by copying the properties of the given TagData
+        /// </summary>
+        /// <param name="tagData">TagData to copy properties from</param>
         public TagData(TagData tagData)
         {
             Pictures = new List<PictureInfo>();
@@ -196,6 +204,8 @@ namespace ATL
         /// Merge given TagData object with current TagData object
         /// </summary>
         /// <param name="data">TagData object to merge</param>
+        /// <param name="integratePictures">Set to true to merge picture information (default : true)</param>
+        /// <param name="mergeAdditionalData">Set to true to merge additional (i.e. non-TagData) fields (default : true)</param>
         public void IntegrateValues(TagData data, bool integratePictures = true, bool mergeAdditionalData = true)
         {
             // String values
@@ -316,7 +326,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Converts non-null 'classic' fields values into a properties Map
+        /// Convert non-null 'classic' fields values into a properties Map
         /// 
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
@@ -362,7 +372,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Clears all values stored in TagData object
+        /// Clear all values stored in TagData object
         /// </summary>
         public void Clear()
         {
@@ -405,6 +415,9 @@ namespace ATL
             DurationMs = 0;
         }
 
+        /// <summary>
+        /// Cleanup field values that need to be reformatted : track and disc numbers, chapter data
+        /// </summary>
         public void Cleanup()
         {
             if (TrackNumber != null && TrackNumber.Contains("/"))
@@ -458,7 +471,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Adds given value to given map if value is not null
+        /// Add given value to given map if value is not null
         /// </summary>
         /// <param name="data">Value to add to the map</param>
         /// <param name="id">Key to add to the map</param>
@@ -469,7 +482,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Converts given value to empty string ("") if null or zero ("0")
+        /// Convert given value to empty string ("") if null or zero ("0")
         /// </summary>
         /// <param name="s">Value to convert</param>
         /// <returns>If null or zero ("0"), empty string (""); else initial value</returns>
@@ -483,7 +496,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Builds a map containing the position of each picture in the Pictures field, based on the PictureInfo.Position fields
+        /// Build a map containing the position of each picture in the Pictures field, based on the PictureInfo.Position fields
         /// 
         /// NB : This method does not calculate any position; it just generates the map
         /// </summary>

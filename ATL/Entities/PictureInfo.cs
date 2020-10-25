@@ -7,9 +7,36 @@ using static ATL.AudioData.MetaDataIOFactory;
 
 namespace ATL
 {
+    /// <summary>
+    /// Information about an embedded picture
+    /// </summary>
     public class PictureInfo
     {
-        public enum PIC_TYPE { Unsupported = 99, Generic = 1, Front = 2, Back = 3, CD = 4 };
+        /// <summary>
+        /// Type of the embedded picture
+        /// </summary>
+        public enum PIC_TYPE { 
+            /// <summary>
+            /// Unsupported (i.e. none of the supported values in the enum)
+            /// </summary>
+            Unsupported = 99,
+            /// <summary>
+            /// Generic
+            /// </summary>
+            Generic = 1,
+            /// <summary>
+            /// Front cover
+            /// </summary>
+            Front = 2,
+            /// <summary>
+            /// Back cover
+            /// </summary>
+            Back = 3,
+            /// <summary>
+            /// Picture of disc
+            /// </summary>
+            CD = 4 
+        };
 
         /// <summary>
         /// Normalized picture type (see enum)
@@ -61,33 +88,60 @@ namespace ATL
         /// </summary>
         public int TransientFlag;
 
+        /// <summary>
+        /// Get the MIME-type associated with the picture
+        /// </summary>
         public string MimeType
         {
-            get { return ImageUtils.GetMimeTypeFromImageFormat(NativeFormat);  }
+            get { return ImageUtils.GetMimeTypeFromImageFormat(NativeFormat); }
         }
 
 
         // ---------------- STATIC CONSTRUCTORS
 
+        /// <summary>
+        /// Construct picture information from its raw, binary data
+        /// </summary>
+        /// <param name="data">Raw picture data</param>
+        /// <param name="picType">Type of the picture (default : Generic)</param>
+        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/>(default : TAG_ANY)</param>
+        /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs (default : not set)</param>
+        /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
+        /// <returns></returns>
         public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, int tagType = TAG_ANY, object nativePicCode = null, int position = 1)
         {
             if (null == data || data.Length < 3) throw new ArgumentException("Data should not be null and be at least 3 bytes long");
             if (null == nativePicCode) nativePicCode = 0; // Can't default with 0 in params declaration
 
-            return new PictureInfo(tagType, nativePicCode, picType, position, data);
+            return new PictureInfo(picType, tagType, nativePicCode, position, data);
         }
 
+        /// <summary>
+        /// Construct picture information from its raw, binary data
+        /// </summary>
+        /// <param name="stream">Stream containing raw picture data, positioned at the beginning of picture data</param>
+        /// <param name="length">Length of the picture data to read inside the given stream</param>
+        /// <param name="picType">Type of the picture (default : Generic)</param>
+        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/>(default : TAG_ANY)</param>
+        /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs (default : not set)</param>
+        /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
+        /// <returns></returns>
         public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
         {
             if (null == stream || length < 3) throw new ArgumentException("Stream should not be null and be at least 3 bytes long");
 
             byte[] data = new byte[length];
             stream.Read(data, 0, length);
-            return new PictureInfo(tagType, nativePicCode, picType, position, data);
+            return new PictureInfo(picType, tagType, nativePicCode, position, data);
         }
 
         // ---------------- CONSTRUCTORS
 
+        /// <summary>
+        /// Construct picture information by copying data from another PictureInfo object
+        /// </summary>
+        /// <param name="picInfo">PictureInfo object to copy data from</param>
+        /// <param name="copyPictureData">If true, copy raw picture data; if false only copy properties</param>
         public PictureInfo(PictureInfo picInfo, bool copyPictureData = true)
         {
             this.PicType = picInfo.PicType;
@@ -106,7 +160,16 @@ namespace ATL
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
             this.TransientFlag = picInfo.TransientFlag;
         }
-        private PictureInfo(int tagType, object nativePicCode, PIC_TYPE picType, int position, byte[] binaryData)
+
+        /// <summary>
+        /// Construct picture information from its parts
+        /// </summary>
+        /// <param name="picType">Type of the picture</param>
+        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/></param>
+        /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs</param>
+        /// <param name="position">Position of the picture among the other pictures of the same file</param>
+        /// <param name="binaryData">Raw binary data of the picture</param>
+        private PictureInfo(PIC_TYPE picType, int tagType, object nativePicCode, int position, byte[] binaryData)
         {
             PicType = picType;
             TagType = tagType;
@@ -133,12 +196,25 @@ namespace ATL
             PictureData = binaryData;
             NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(PictureData);
         }
+
+        /// <summary>
+        /// Construct picture information from its parts
+        /// </summary>
+        /// <param name="picType">Type of the picture</param>
+        /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
         public PictureInfo(PIC_TYPE picType, int position = 1)
         {
             PicType = picType;
             NativeFormat = ImageFormat.Undefined;
             Position = position;
         }
+
+        /// <summary>
+        /// Construct picture information from its parts
+        /// </summary>
+        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/></param>
+        /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs</param>
+        /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
         public PictureInfo(int tagType, object nativePicCode, int position = 1)
         {
             PicType = PIC_TYPE.Unsupported;
@@ -166,15 +242,23 @@ namespace ATL
             }
         }
 
+        /// <summary>
+        /// Calculate the hash of the raw, binary data of this picture, using FNV-1a
+        /// </summary>
+        /// <returns>FNV-1a hash of the raw binary data</returns>
         public uint ComputePicHash()
         {
-            PictureHash = Fnv1a.Hash32(PictureData);
+            PictureHash = FNV1a.Hash32(PictureData);
             return PictureHash;
         }
 
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
 
+        /// <summary>
+        /// Return the string representation of the object
+        /// </summary>
+        /// <returns>String representation of the object</returns>
         public override string ToString()
         {
             string result = Utils.BuildStrictLengthString(Position.ToString(), 2, '0', false) + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false);
@@ -192,11 +276,20 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Return the hash of the object
+        /// </summary>
+        /// <returns>Hash of the object</returns>
         public override int GetHashCode()
         {
-            return (int)Fnv1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
+            return (int)FNV1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
         }
 
+        /// <summary>
+        /// Equals override
+        /// </summary>
+        /// <param name="obj">Object to test comparison with</param>
+        /// <returns>Result of the comparison</returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

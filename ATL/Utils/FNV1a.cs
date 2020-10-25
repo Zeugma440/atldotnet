@@ -6,7 +6,7 @@ namespace HashDepot
     /// <summary>
     /// FNV-1a Hash functions
     /// </summary>
-    public static class Fnv1a
+    public static class FNV1a
     {
         /// <summary>
         /// Calculate 32-bit FNV-1a hash value
