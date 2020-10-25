@@ -144,7 +144,7 @@ namespace ATL.AudioData.IO
         ///     - Put each zone into memory and update them using the given WriteDelegate
         ///     - Adjust file size and region headers accordingly
         /// </summary>
-        /// <param name="w">BinaryWriter opened on the data stream (usually, contents of an audio file) to be rewritten</param>
+        /// <param name="fullScopeWriter">BinaryWriter opened on the data stream (usually, contents of an audio file) to be rewritten</param>
         /// <param name="write">Delegate to the write method of the <see cref="IMetaDataIO"/> to be used to update the data stream</param>
         /// <param name="zones">Zones to rewrite</param>
         /// <param name="dataToWrite">Metadata to update the zones with</param>
@@ -152,7 +152,7 @@ namespace ATL.AudioData.IO
         /// <param name="useBuffer">True if I/O has to be buffered. Makes I/O faster but consumes more RAM.</param>
         /// <returns>True if the operation succeeded; false if it something unexpected happened during the processing</returns>
         private bool RewriteZones(
-            BinaryWriter w,
+            BinaryWriter fullScopeWriter,
             WriteDelegate write,
             ICollection<Zone> zones,
             TagData dataToWrite,
@@ -166,8 +166,8 @@ namespace ATL.AudioData.IO
             bool result = true;
             bool isBuffered = false;
 
-            IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, w.BaseStream.Length);
-            BinaryWriter writer = w;
+            IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, fullScopeWriter.BaseStream.Length);
+            BinaryWriter writer;
 
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");
@@ -193,9 +193,9 @@ namespace ATL.AudioData.IO
                         // Copy file data to buffer
                         if (initialBufferSize > 0)
                         {
-                            w.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
+                            fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
                             //w.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin); <-- won't work for classes that don't use FileStructureHelper (FLAC)
-                            StreamUtils.CopyStream(w.BaseStream, buffer, initialBufferSize);
+                            StreamUtils.CopyStream(fullScopeWriter.BaseStream, buffer, initialBufferSize);
                         }
 
                         writer = new BinaryWriter(buffer, Settings.DefaultTextEncoding);
@@ -204,7 +204,7 @@ namespace ATL.AudioData.IO
                     else
                     {
                         isBuffered = false;
-                        writer = w;
+                        writer = fullScopeWriter;
                         globalOffsetCorrection = 0;
                     }
 
@@ -330,7 +330,7 @@ namespace ATL.AudioData.IO
                                     else action = ACTION.Edit;
                                 }
                                 // Use plain writer here on purpose because its zone contains headers for the zones adressed by the static writer
-                                result &= structureHelper.RewriteHeaders(writer, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
+                                result &= structureHelper.RewriteHeaders(fullScopeWriter, isBuffered ? writer : null, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
                             }
 
                             zone.Size = (int)newTagSize;
@@ -346,19 +346,19 @@ namespace ATL.AudioData.IO
                         if (buffer.Length > initialBufferSize)
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                            StreamUtils.LengthenStream(w.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize));
+                            StreamUtils.LengthenStream(fullScopeWriter.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize));
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                            StreamUtils.ShortenStream(w.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length));
+                            StreamUtils.ShortenStream(fullScopeWriter.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length));
                         }
 
                         // Copy tag contents to the new slot
-                        w.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
+                        fullScopeWriter.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
                         buffer.Seek(0, SeekOrigin.Begin);
 
-                        StreamUtils.CopyStream(buffer, w.BaseStream);
+                        StreamUtils.CopyStream(buffer, fullScopeWriter.BaseStream);
                     }
                 }
                 finally // Make sure buffers are properly disallocated

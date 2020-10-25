@@ -452,7 +452,8 @@ namespace ATL.AudioData
         /// <summary>
         /// Rewrite all zone headers in the given stream according to the given size evolution and the given action
         /// </summary>
-        /// <param name="w">Stream to write modifications to</param>
+        /// <param name="fullScopeWriter">Full stream to write modifications to</param>
+        /// <param name="bufferedWriter">Buffered stream to write modifications to</param>
         /// <param name="deltaSize">Evolution of zone size (in bytes; positive or negative)</param>
         /// <param name="action">Action applied to zone</param>
         /// <param name="zone">Name of zone to process</param>
@@ -460,7 +461,8 @@ namespace ATL.AudioData
         /// <param name="regionId">ID of the current buffer region; -1 if working on the file itself (global offset correction)</param>
         /// <returns></returns>
         public bool RewriteHeaders(
-            BinaryWriter w,
+            BinaryWriter fullScopeWriter,
+            BinaryWriter bufferedWriter,
             long deltaSize,
             ACTION action,
             string zone = DEFAULT_ZONE_NAME,
@@ -507,6 +509,18 @@ namespace ATL.AudioData
 
                     if ((FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type) && isValueGT(header.Value, 0, offsetDelta.Key)) offsetValueCorrection += offsetDelta.Value;
                 }
+
+                // If we're about to write outside the buffered writer and the full-scope writer is available, switch to it
+                BinaryWriter w;
+                if (null == bufferedWriter) w = fullScopeWriter;
+                else if (header.Position + offsetPositionCorrection < 0 || header.Position + offsetPositionCorrection > bufferedWriter.BaseStream.Length)
+                {
+                    if (null == fullScopeWriter) throw new InvalidDataException("Trying to write outside the buffered writer");
+                    w = fullScopeWriter;
+                    offsetPositionCorrection = 0;
+                }
+                else w = bufferedWriter;
+
 
                 if (FrameHeader.TYPE.Counter == header.Type)
                 {

@@ -750,9 +750,9 @@ namespace ATL.AudioData.IO
                     if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2))
                     {
                         if (zone.IsDeletable)
-                            result = result && structureHelper.RewriteHeaders(w, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
+                            result = result && structureHelper.RewriteHeaders(w, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
                         else
-                            result = result && structureHelper.RewriteHeaders(w, 0, ACTION.Edit, zone.Name);
+                            result = result && structureHelper.RewriteHeaders(w, null, 0, ACTION.Edit, zone.Name);
                     }
 
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
