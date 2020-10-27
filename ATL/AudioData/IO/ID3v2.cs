@@ -1413,7 +1413,7 @@ namespace ATL.AudioData.IO
 
                 if (chapter.Title != null && chapter.Title.Length > 0)
                 {
-                    // TODO FFmpeg uses Latin-1
+                    // NB : FFmpeg uses Latin-1
                     writeTextFrame(frameWriter, "TIT2", chapter.Title, tagEncoding, "", "", true);
                 }
                 if (chapter.Subtitle != null && chapter.Subtitle.Length > 0)
