@@ -166,7 +166,7 @@ ATL.NET is based on :
 
 ## Special thanks for their contributions to...
 
-[leglubert](https://github.com/leglubert), [tarrats](https://github.com/tarrats), [DividedSE](https://github.com/DividedSE)
+[leglubert](https://github.com/leglubert), [tarrats](https://github.com/tarrats), [DividedSE](https://github.com/DividedSE), [audiamus](https://github.com/audiamus)
 
 
 ## Find this library useful? :heart:
