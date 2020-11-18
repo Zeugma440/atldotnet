@@ -352,17 +352,6 @@ namespace ATL.AudioData.IO
                 source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
             }
 
-            if (-1 == id3v2Offset)
-            {
-                id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
-
-                if (readTagParams.PrepareForWriting)
-                {
-                    id3v2StructureHelper.AddZone(source.Position, 0, CHUNK_ID3);
-                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_ID3);
-                }
-            }
-
             // Add zone placeholders for future tag writing
             if (readTagParams.PrepareForWriting)
             {
@@ -385,6 +374,18 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_IXML);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_IXML);
+                }
+            }
+
+            // ID3 zone should be set as the very last one for Windows to be able to read it properly
+            if (-1 == id3v2Offset)
+            {
+                id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
+
+                if (readTagParams.PrepareForWriting)
+                {
+                    id3v2StructureHelper.AddZone(source.Position, 0, CHUNK_ID3);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_ID3);
                 }
             }
 
@@ -465,11 +466,11 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_ID3));
             if (isLittleEndian)
             {
-                w.Write((int)(tagSize));
+                w.Write((int)tagSize);
             }
             else
             {
-                w.Write(StreamUtils.EncodeBEInt32((int)(tagSize)));
+                w.Write(StreamUtils.EncodeBEInt32((int)tagSize));
             }
         }
 
