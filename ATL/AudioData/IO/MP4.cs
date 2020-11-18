@@ -80,7 +80,11 @@ namespace ATL.AudioData.IO
             { "egid", 0 },
             { "tvsn", 21 },
             { "tves", 21 },
-            { "pgap", 21 }
+            { "pgap", 21 },
+            { "shwm", 21 },
+            { "hdvd", 21 },
+            { "©mvc", 21 },
+            { "©mvi", 21 }
         };
 
         private class MP4Sample
