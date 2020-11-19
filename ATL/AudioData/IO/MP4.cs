@@ -1001,7 +1001,7 @@ namespace ATL.AudioData.IO
             uint metadataSize = 0;
             byte dataClass = 0;
 
-            ushort int16Data = 0;
+            uint intData = 0;
             string strData = "";
 
             uint atomSize;
@@ -1109,11 +1109,14 @@ namespace ATL.AudioData.IO
                     strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
                     SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                 }
-                else if (21 == dataClass) // uint8
+                else if (21 == dataClass) // uint8-16-24-32
                 {
-                    int16Data = source.ReadByte();
-                    //                        Source.BaseStream.Seek(atomPosition+metadataSize, SeekOrigin.Begin); // The rest are padding bytes
-                    SetMetaField(atomHeader, int16Data.ToString(), readTagParams.ReadAllMetaFrames);
+                    uint fieldSize = metadataSize - 16;
+                    if (fieldSize > 3) intData = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                    else if (fieldSize > 2) intData = StreamUtils.DecodeBEUInt24(source.ReadBytes(3));
+                    else if (fieldSize > 1) intData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                    else intData = source.ReadByte();
+                    SetMetaField(atomHeader, intData.ToString(), readTagParams.ReadAllMetaFrames);
                 }
                 else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                 {
@@ -1164,10 +1167,10 @@ namespace ATL.AudioData.IO
                     }
                     else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                     {
-                        int16Data = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                        intData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                         strData = "";
-                        if (int16Data < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[int16Data - 1];
+                        if (intData < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[intData - 1];
 
                         SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                     }
@@ -1541,9 +1544,13 @@ namespace ATL.AudioData.IO
             {
                 writer.Write(Encoding.UTF8.GetBytes(text));
             }
-            else if (21 == frameClass) // uint8
+            else if (21 == frameClass) // uint8-16-24-32, depending on the value
             {
-                writer.Write(Convert.ToByte(text));
+                uint value = Convert.ToUInt32(text);
+                if (value > 0xffff) writer.Write(value);
+                // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                else if (value > 0xff) writer.Write(Convert.ToUInt16(text));
+                else writer.Write(Convert.ToByte(text));
             }
 
             // Go back to frame size locations to write their actual size 
