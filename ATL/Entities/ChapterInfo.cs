@@ -123,14 +123,14 @@
         /// <summary>
         /// Construct an empty structure
         /// </summary>
-        public ChapterInfo()
+        public ChapterInfo(uint startTime = 0, string title = "")
         {
-            StartTime = 0;
+            StartTime = startTime;
             EndTime = 0;
             StartOffset = 0;
             EndOffset = 0;
             UseOffset = false;
-            Title = "";
+            Title = title;
 
             UniqueID = "";
             Subtitle = "";
