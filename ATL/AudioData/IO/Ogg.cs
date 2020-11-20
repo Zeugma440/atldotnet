@@ -1062,7 +1062,7 @@ namespace ATL.AudioData.IO
 //                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
 
-                /// Insert the virtual paged stream into the actual file
+                // Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
                 long newHeadersSize = memStream.Length;
 

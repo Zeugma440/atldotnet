@@ -292,11 +292,11 @@ namespace Commons
         }
 
         /// <summary>
-        /// The method to Decode your Base64 strings.
-        /// </summary>
-        /// <param name="encodedData">The String containing the characters to decode.</param>
-        /// <param name="s">The Stream where the resulting decoded data will be written.</param>
+        /// Decode the given Base64 string
         /// Source : http://blogs.microsoft.co.il/blogs/mneiter/archive/2009/03/22/how-to-encoding-and-decoding-base64-strings-in-c.aspx
+        /// </summary>
+        /// <param name="encodedData">String containing the characters to decode</param>
+        /// <returns>Decoded data</returns>
         public static byte[] DecodeFrom64(byte[] encodedData)
         {
             if (encodedData.Length % 4 > 0) throw new FormatException("Size must me multiple of 4");
@@ -405,9 +405,13 @@ namespace Commons
             }
         }
 
-        // Returns the human-readable file size for an arbitrary, 64-bit file size 
-        // The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB"
-        // Source : https://www.somacon.com/p576.php
+        /// <summary>
+        /// Returns the human-readable file size for an arbitrary, 64-bit file size 
+        /// The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB"
+        /// Source : https://www.somacon.com/p576.php
+        /// </summary>
+        /// <param name="i">Size to display in a human-readable form</param>
+        /// <returns>Given size displayed in a human-readable form</returns>
         public static string GetBytesReadable(long i)
         {
             // Get absolute value

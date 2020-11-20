@@ -288,7 +288,7 @@ namespace ATL.AudioData.IO
             initialPaddingOffset = -1;
             initialPaddingSize = 0;
 
-            /// TODO - check if still useful
+            // TODO - check if still useful
             if (readTagParams.PrepareForWriting && !readTagParams.ReadPictures)
             {
                 readTagParams.ReadPictures = true;
