@@ -1715,8 +1715,9 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
             foreach (ChapterInfo chapter in chapters)
             {
-                w.Write(StreamUtils.EncodeBEInt16((short)chapter.Title.Length));
-                w.Write(Encoding.UTF8.GetBytes(chapter.Title));
+                byte[] titleBytes = Encoding.UTF8.GetBytes(chapter.Title);
+                w.Write(StreamUtils.EncodeBEInt16((short)titleBytes.Length));
+                w.Write(titleBytes);
                 // Magic sequence (always the same)
                 w.Write(StreamUtils.EncodeBEInt32(12));
                 w.Write(Utils.Latin1Encoding.GetBytes("encd"));
