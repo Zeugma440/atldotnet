@@ -133,6 +133,8 @@ namespace ATL.test.IO.MetaData
             PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TAG_ANY, 14);
             theTag.Pictures.Add(picInfo);
 
+            theTag.Chapters = theFile.NativeTag.Chapters;
+            theTag.Chapters.Add(new ChapterInfo(3000, "Chapter 2"));
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
@@ -156,6 +158,12 @@ namespace ATL.test.IO.MetaData
             }
 
             Assert.AreEqual(2, nbFound);
+
+            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+            Assert.AreEqual((uint)55, theFile.NativeTag.Chapters[0].StartTime);
+            Assert.AreEqual("aa父bb", theFile.NativeTag.Chapters[0].Title);
+            Assert.AreEqual((uint)3000, theFile.NativeTag.Chapters[1].StartTime);
+            Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
 
             // Remove the additional supported field
             theTag = new TagData();
