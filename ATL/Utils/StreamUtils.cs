@@ -4,45 +4,45 @@ using System.Text;
 
 namespace ATL
 {
-	/// <summary>
-	/// Misc. utilities used by binary readers
-	/// </summary>
-	public static class StreamUtils
-	{	
+    /// <summary>
+    /// Misc. utilities used by binary readers
+    /// </summary>
+    public static class StreamUtils
+    {
         /// <summary>
         /// Handler signature to be used when needing to process a MemoryStream
         /// </summary>
         public delegate void StreamHandlerDelegate(ref MemoryStream stream);
 
 
-		/// <summary>
-		/// Determines if the contents of a string (character by character) is the same
-		/// as the contents of a char array
-		/// </summary>
-		/// <param name="a">String to be tested</param>
-		/// <param name="b">Char array to be tested</param>
-		/// <returns>True if both contain the same character sequence; false if not</returns>
-		public static bool StringEqualsArr(String a, char[] b)
-		{
+        /// <summary>
+        /// Determines if the contents of a string (character by character) is the same
+        /// as the contents of a char array
+        /// </summary>
+        /// <param name="a">String to be tested</param>
+        /// <param name="b">Char array to be tested</param>
+        /// <returns>True if both contain the same character sequence; false if not</returns>
+        public static bool StringEqualsArr(String a, char[] b)
+        {
             return ArrEqualsArr(a.ToCharArray(), b);
-		}
+        }
 
 
-		/// <summary>
-		/// Determines if two char arrays have the same contents
-		/// </summary>
-		/// <param name="a">First array to be tested</param>
-		/// <param name="b">Second array to be tested</param>
-		/// <returns>True if both arrays have the same contents; false if not</returns>
-		private static bool ArrEqualsArr(char[] a, char[] b)
-		{			
-			if (b.Length != a.Length) return false;
-			for (int i=0; i<b.Length; i++)
-			{
-				if (a[i] != b[i]) return false;
-			}
-			return true;
-		}
+        /// <summary>
+        /// Determines if two char arrays have the same contents
+        /// </summary>
+        /// <param name="a">First array to be tested</param>
+        /// <param name="b">Second array to be tested</param>
+        /// <returns>True if both arrays have the same contents; false if not</returns>
+        private static bool ArrEqualsArr(char[] a, char[] b)
+        {
+            if (b.Length != a.Length) return false;
+            for (int i = 0; i < b.Length; i++)
+            {
+                if (a[i] != b[i]) return false;
+            }
+            return true;
+        }
 
         /// <summary>
         /// Determines if two byte arrays have the same contents
@@ -115,8 +115,9 @@ namespace ATL
                 {
                     s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
                     s.Read(data, 0, bufSize);
-                    s.Seek(offsetTo + length - written -bufSize, SeekOrigin.Begin);
-                } else
+                    s.Seek(offsetTo + length - written - bufSize, SeekOrigin.Begin);
+                }
+                else
                 {
                     s.Seek(offsetFrom + written, SeekOrigin.Begin);
                     s.Read(data, 0, bufSize);
@@ -133,7 +134,7 @@ namespace ATL
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
         /// <param name="endOffset">End offset of the portion of bytes to remove</param>
         /// <param name="delta">Number of bytes to remove</param>
-        public static void ShortenStream(Stream s, long endOffset, uint delta) 
+        public static void ShortenStream(Stream s, long endOffset, uint delta)
         {
             CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset));
 
@@ -359,7 +360,7 @@ namespace ATL
         public static long DecodeBEInt64(byte[] data)
         {
             if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
-            return  ((long)data[0] << 56) | ((long)data[1] << 48) | ((long)data[2] << 40) | ((long)data[3] << 32) | ((long)data[4] << 24) | ((long)data[5] << 16) | ((long)data[6] << 8) | ((long)data[7] << 0) ;
+            return ((long)data[0] << 56) | ((long)data[1] << 48) | ((long)data[2] << 40) | ((long)data[3] << 32) | ((long)data[4] << 24) | ((long)data[5] << 16) | ((long)data[6] << 8) | ((long)data[7] << 0);
         }
 
         /// <summary>
@@ -379,18 +380,18 @@ namespace ATL
         /// <param name="n">value to convert</param>
         /// <returns>converted value</returns>
         public static int ReverseInt32(int n)
-		{
-			byte b0;
-			byte b1;
-			byte b2;
-			byte b3;
+        {
+            byte b0;
+            byte b1;
+            byte b2;
+            byte b3;
 
-			b0 = (byte)((n & 0x000000FF) >> 0); 
-			b1 = (byte)((n & 0x0000FF00) >> 8); 
-			b2 = (byte)((n & 0x00FF0000) >> 16); 
-			b3 = (byte)((n & 0xFF000000) >> 24); 
-			
-			return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
+            b0 = (byte)((n & 0x000000FF) >> 0);
+            b1 = (byte)((n & 0x0000FF00) >> 8);
+            b2 = (byte)((n & 0x00FF0000) >> 16);
+            b3 = (byte)((n & 0xFF000000) >> 24);
+
+            return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
         }
 
         /// <summary>
@@ -484,16 +485,16 @@ namespace ATL
             long initialPos = r.Position;
             long streamPos = initialPos;
 
-            while (streamPos < streamLength && ( (0 == limit) || (nbRead < limit) ) )
+            while (streamPos < streamLength && ((0 == limit) || (nbRead < limit)))
             {
                 // Read the size of a character
                 r.Read(buffer, 0, nbChars);
 
-                if ( (1 == nbChars) && (0 == buffer[0]) ) // Null character read for single-char encodings
+                if ((1 == nbChars) && (0 == buffer[0])) // Null character read for single-char encodings
                 {
                     break;
                 }
-                else if ( (2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1]) ) // Null character read for two-char encodings
+                else if ((2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1])) // Null character read for two-char encodings
                 {
                     break;
                 }
@@ -502,7 +503,7 @@ namespace ATL
                     if (readBytes.Length < nbRead + nbChars) Array.Resize<byte>(ref readBytes, readBytes.Length + 100);
 
                     readBytes[nbRead] = buffer[0];
-                    if (2 == nbChars) readBytes[nbRead+1] = buffer[1];
+                    if (2 == nbChars) readBytes[nbRead + 1] = buffer[1];
                     nbRead += nbChars;
                     streamPos += nbChars;
                 }
@@ -510,7 +511,7 @@ namespace ATL
 
             if (moveStreamToLimit) r.Seek(initialPos + limit, SeekOrigin.Begin);
 
-            return encoding.GetString(readBytes,0,nbRead);
+            return encoding.GetString(readBytes, 0, nbRead);
         }
 
         /// <summary>
@@ -542,9 +543,9 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt32(byte[] bytes)
         {
-            if (bytes.Length != 4) throw new ArgumentException("Array length has to be 4 bytes; found : "+bytes.Length+" bytes");
+            if (bytes.Length != 4) throw new ArgumentException("Array length has to be 4 bytes; found : " + bytes.Length + " bytes");
 
-            return                 
+            return
                 bytes[0] * 0x200000 +   //2^21
                 bytes[1] * 0x4000 +     //2^14
                 bytes[2] * 0x80 +       //2^7
@@ -567,7 +568,7 @@ namespace ATL
             for (int i = 0; i < nbBytes; i++)
             {
                 range = (7 * (nbBytes - 1 - i));
-                result[i] = (byte)( (value & (0x7F << range)) >> range);
+                result[i] = (byte)((value & (0x7F << range)) >> range);
             }
 
             return result;
