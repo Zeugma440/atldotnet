@@ -243,6 +243,8 @@ namespace ATL.AudioData.IO
         private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTrackSamples)
         {
             tagExists = true;
+            if (2 == Settings.MP4_readChaptersExclusive) return;
+
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
             double cumulatedDuration = 0;
 
@@ -939,7 +941,7 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Read(data32, 0, 4);
                 uint chapterCount = StreamUtils.DecodeBEUInt32(data32);
 
-                if (chapterCount > 0)
+                if (chapterCount > 0 && Settings.MP4_readChaptersExclusive != 1)
                 {
                     if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
                     byte stringSize;

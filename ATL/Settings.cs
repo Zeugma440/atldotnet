@@ -156,6 +156,16 @@ namespace ATL
         /// </summary>
         public static bool MP4_keepExistingChapters = true;
 
+        /// <summary>
+        /// MP4 : Set to read chapters :
+        ///   - 0 : From any available format
+        ///   - 1 : Only from Quicktime format (chap)
+        ///   - 2 : Only from Nero format (chpl)
+        ///   
+        /// Warning : Using a value > 0 while updating files may delete the tag you've not chosen to read
+        /// Default : 0
+        /// </summary>
+        public static int MP4_readChaptersExclusive = 0;
 
         /// <summary>
         /// ASF/WMA : Keep non-"WM" fields when removing the tag

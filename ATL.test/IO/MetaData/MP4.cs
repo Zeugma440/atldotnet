@@ -139,6 +139,33 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
+
+            try
+            {
+                // Read Quicktime chapters specifically
+                ATL.Settings.MP4_readChaptersExclusive = 1;
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+                Assert.AreEqual((uint)0, theFile.NativeTag.Chapters[0].StartTime); // 1st Quicktime chapter can't start at position > 0
+                Assert.AreEqual("aa父bb", theFile.NativeTag.Chapters[0].Title);
+                Assert.AreEqual((uint)2945, theFile.NativeTag.Chapters[1].StartTime); // Approximate due to the way timecodes are formatted in the MP4 format
+                Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
+
+                // Read Nero chapters specifically
+                ATL.Settings.MP4_readChaptersExclusive = 2;
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+                Assert.AreEqual((uint)55, theFile.NativeTag.Chapters[0].StartTime);
+                Assert.AreEqual("aa父bb", theFile.NativeTag.Chapters[0].Title);
+                Assert.AreEqual((uint)3000, theFile.NativeTag.Chapters[1].StartTime);
+                Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
+            } finally
+            {
+                ATL.Settings.MP4_readChaptersExclusive = 0;
+            }
+
+
+            // Read the rest supported fields
             readExistingTagsOnFile(theFile, 2);
 
             // Additional supported field
@@ -158,12 +185,6 @@ namespace ATL.test.IO.MetaData
             }
 
             Assert.AreEqual(2, nbFound);
-
-            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
-            Assert.AreEqual((uint)55, theFile.NativeTag.Chapters[0].StartTime);
-            Assert.AreEqual("aa父bb", theFile.NativeTag.Chapters[0].Title);
-            Assert.AreEqual((uint)3000, theFile.NativeTag.Chapters[1].StartTime);
-            Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
 
             // Remove the additional supported field
             theTag = new TagData();
