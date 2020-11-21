@@ -591,7 +591,6 @@ namespace ATL.test.IO.MetaData
                     if (1 == found) Assert.AreNotEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID); // ID of first chapter was empty; ATL has generated a random ID for it
                     else Assert.AreEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID);
                     Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.EndTime, expectedChaps[chap.StartTime].EndTime);
                     Assert.AreEqual(chap.StartOffset, expectedChaps[chap.StartTime].StartOffset);
                     Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
@@ -791,7 +790,6 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 123;
             ch.StartOffset = 456;
-            ch.EndTime = 789;
             ch.EndOffset = 101112;
             ch.UniqueID = "";
             ch.Title = "aaa";
@@ -806,7 +804,6 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 1230;
             ch.StartOffset = 4560;
-            ch.EndTime = 7890;
             ch.EndOffset = 1011120;
             ch.UniqueID = "002";
             ch.Title = "aaa0";
@@ -836,7 +833,6 @@ namespace ATL.test.IO.MetaData
                     if (1 == found) Assert.AreNotEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID); // ID of first chapter was empty; ATL has generated a random ID for it
                     else Assert.AreEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID);
                     Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
-                    Assert.AreEqual(chap.EndTime, expectedChaps[chap.StartTime].EndTime);
                     Assert.AreEqual(chap.StartOffset, expectedChaps[chap.StartTime].StartOffset);
                     Assert.AreEqual(chap.EndOffset, expectedChaps[chap.StartTime].EndOffset);
                     Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);

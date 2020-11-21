@@ -193,8 +193,11 @@ namespace ATL.AudioData.IO
                         // Copy file data to buffer
                         if (initialBufferSize > 0)
                         {
-                            fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
-                            //w.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin); <-- won't work for classes that don't use FileStructureHelper (FLAC)
+                            if (structureHelper != null)
+                                fullScopeWriter.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
+                            else // for classes that don't use FileStructureHelper(FLAC)
+                                fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
+
                             StreamUtils.CopyStream(fullScopeWriter.BaseStream, buffer, initialBufferSize);
                         }
 
@@ -372,6 +375,13 @@ namespace ATL.AudioData.IO
 
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");
             } // Loop through zone regions
+
+            // Post-processing changes
+            if (structureHelper != null && structureHelper.ZoneNames.Contains(FileStructureHelper.POST_PROCESSING_ZONE_NAME))
+            {
+                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Post-processing");
+                structureHelper.PostProcessing(fullScopeWriter);
+            }
 
             return result;
         }

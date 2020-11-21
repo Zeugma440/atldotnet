@@ -460,8 +460,8 @@ namespace ATL
                 {
                     if (previousChapter != null)
                     {
-                        if (chapter.UseOffset && (0 == previousChapter.EndOffset || previousChapter.EndOffset > chapter.StartOffset)) previousChapter.EndOffset = chapter.StartOffset;
-                        else if (0 == previousChapter.EndTime || previousChapter.EndTime > chapter.StartTime) previousChapter.EndTime = chapter.StartTime;
+                        if (chapter.UseOffset && (0 == previousChapter.EndOffset || previousChapter.EndOffset != chapter.StartOffset)) previousChapter.EndOffset = chapter.StartOffset;
+                        else if (0 == previousChapter.EndTime || previousChapter.EndTime != chapter.StartTime) previousChapter.EndTime = chapter.StartTime;
                     }
                     previousChapter = chapter;
                 }

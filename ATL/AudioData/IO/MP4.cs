@@ -1938,10 +1938,12 @@ namespace ATL.AudioData.IO
 
             w.Write(StreamUtils.EncodeBEInt32(1));
 
-            // Calculate chunk offset and feed it to FileStructureHelper as a header to the MDAT zone
-            // Only works when QT track is located _before_ QT mdat
+            // Calculate chunk offset and feed it to FileStructureHelper as a header to the MDAT zone 
+            //   - Physically located in the TRAK zone
+            //   - Child of the TRAK zone (i.e. won't be useful to process if the TRAK zone is deleted)
+            // NB : Only works when QT track is located _before_ QT mdat
             Zone chapMdatZone = structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT);
-            structureHelper.AddPendingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK);
+            structureHelper.AddPostProcessingIndex(w.BaseStream.Position, (uint)chapMdatZone.Offset + 8, false, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_TRAK, ZONE_MP4_QT_CHAP_TRAK);
             w.Write(StreamUtils.EncodeBEUInt32((uint)structureHelper.GetZone(ZONE_MP4_QT_CHAP_MDAT).Offset + 8)); // TODO - on some cases, switch to co64 ?
 
             finalFramePos = w.BaseStream.Position;

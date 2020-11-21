@@ -246,7 +246,8 @@ namespace ATL.test.IO
                 tagIO_RW_UpdateTagBaseField("SPC/spc.spc", false, false);
                 tagIO_RW_UpdateTagBaseField("MP4/mp4.m4a");
                 tagIO_RW_UpdateTagBaseField("WMA/wma.wma");
-            } finally
+            }
+            finally
             {
                 ATL.Settings.MP4_createNeroChapters = true;
                 ATL.Settings.MP4_createQuicktimeChapters = true;
@@ -364,7 +365,8 @@ namespace ATL.test.IO
                 tagIO_RW_AddPadding("OGG/empty.ogg", 8); // 8 extra bytes for the segments table extension
                 tagIO_RW_AddPadding("MP4/chapters_NERO.mp4");
                 tagIO_RW_AddPadding("FLAC/empty.flac", ATL.Settings.PaddingSize + 4); // Additional padding for the ID3v2 tag + 4 bytes for VorbisComment's PADDING block header
-            } finally
+            }
+            finally
             {
                 ATL.Settings.MP4_createNeroChapters = true;
                 ATL.Settings.MP4_createQuicktimeChapters = true;
@@ -510,11 +512,8 @@ namespace ATL.test.IO
             chapter.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             theTrack.Chapters.Add(chapter);
 
-
-            IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
-            chaptersSave = chaptersSave.OrderBy(chap => chap.StartTime).ToList();
-
             theTrack.Save();
+            IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
 
             theTrack = new Track(testFileLocation);
             IList<PictureInfo> pics = theTrack.EmbeddedPictures; // Hack to load chapter pictures
@@ -529,7 +528,7 @@ namespace ATL.test.IO
                 Assert.AreEqual(chaptersSave[i].StartOffset, readChapter.StartOffset);
                 Assert.AreEqual(chaptersSave[i].StartTime, readChapter.StartTime);
                 Assert.AreEqual(chaptersSave[i].EndOffset, readChapter.EndOffset);
-                Assert.AreEqual(chaptersSave[i].EndTime, readChapter.EndTime);
+                if (i < theTrack.Chapters.Count - 1) Assert.AreEqual(chaptersSave[i + 1].StartTime, readChapter.EndTime);
                 Assert.AreEqual(chaptersSave[i].Title, readChapter.Title);
                 Assert.AreEqual(chaptersSave[i].Subtitle, readChapter.Subtitle);
                 Assert.AreEqual(chaptersSave[i].UniqueID, readChapter.UniqueID);

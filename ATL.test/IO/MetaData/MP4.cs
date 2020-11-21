@@ -563,24 +563,16 @@ namespace ATL.test.IO.MetaData
 
                 Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
 
-                ChapterInfo ch = new ChapterInfo();
-                ch.StartTime = 0;
-                ch.Title = "Chapter One";
+                ChapterInfo ch = new ChapterInfo(0, "Chapter One");
                 expectedChaps.Add(ch.StartTime, ch);
 
-                ch = new ChapterInfo();
-                ch.StartTime = 1139;
-                ch.Title = "Chapter 2";
+                ch = new ChapterInfo(1139, "Chapter 2");
                 expectedChaps.Add(ch.StartTime, ch);
 
-                ch = new ChapterInfo();
-                ch.StartTime = 2728;
-                ch.Title = "Chapter 003";
+                ch = new ChapterInfo(2728, "Chapter 003");
                 expectedChaps.Add(ch.StartTime, ch);
 
-                ch = new ChapterInfo();
-                ch.StartTime = 3269;
-                ch.Title = "Chapter 四";
+                ch = new ChapterInfo(3269, "Chapter 四");
                 expectedChaps.Add(ch.StartTime, ch);
 
                 int found = 0;
@@ -605,17 +597,11 @@ namespace ATL.test.IO.MetaData
                 theTag.Chapters = new List<ChapterInfo>();
                 expectedChaps.Clear();
 
-                ch = new ChapterInfo();
-                ch.StartTime = 0;
-                ch.Title = "aaa";
-
+                ch = new ChapterInfo(0, "aaa");
                 theTag.Chapters.Add(ch);
                 expectedChaps.Add(ch.StartTime, ch);
 
-                ch = new ChapterInfo();
-                ch.StartTime = 1230;
-                ch.Title = "aaa0";
-
+                ch = new ChapterInfo(1230, "aaa0四");
                 theTag.Chapters.Add(ch);
                 expectedChaps.Add(ch.StartTime, ch);
 
