@@ -399,7 +399,7 @@ namespace ATL.AudioData
             }
             else if (value is long)
             {
-                updatedValue = (long)((long)value + delta);
+                updatedValue = (long)value + delta;
                 return BitConverter.GetBytes((long)updatedValue);
             }
             else if (value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
@@ -459,6 +459,10 @@ namespace ATL.AudioData
             return offset + offsetPositionCorrection;
         }
 
+        /// <summary>
+        /// Perform post-processing modifications to the given stream
+        /// </summary>
+        /// <param name="writer">Stream to write modifications to</param>
         public void PostProcessing(BinaryWriter writer)
         {
             RewriteHeaders(writer, null, 0, ACTION.Edit, POST_PROCESSING_ZONE_NAME);

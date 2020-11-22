@@ -369,7 +369,6 @@ namespace ATL.AudioData
         /// Format the given elemnts to the most concise human-readable string
         /// Subsets of ISO 8601 will be used : yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss
         /// </summary>
-        /// </summary>
         /// <param name="year">Year</param>
         /// <param name="dayMonth">Day and month (DDMM format)</param>
         /// <param name="time">Time (hhmm format)</param>
