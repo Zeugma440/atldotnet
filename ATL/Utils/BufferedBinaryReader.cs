@@ -37,32 +37,41 @@ namespace ATL
         private long streamPosition;
         private int bufferSize; // NB : bufferSize can be < DEFAULT_BUFFER_SIZE when bufferOffset nears the end of the stream (not enough remaining bytes to fill the whole buffer space)
 
+        /// Mandatory override to Stream.Position
         public override long Position
         {
             get { return bufferOffset + cursorPosition; }
             set { Seek(value, SeekOrigin.Begin); }
         }
 
+        /// Mandatory override to Stream.Length
         public override long Length
         {
             get { return streamSize; }
         }
 
+        /// Mandatory override to Stream.CanRead
         public override bool CanRead
         {
             get { return true; }
         }
 
+        /// Mandatory override to Stream.CanSeek
         public override bool CanSeek
         {
             get { return true; }
         }
 
+        /// Mandatory override to Stream.CanWrite
         public override bool CanWrite
         {
             get { return false; }
         }
 
+        /// <summary>
+        /// Construct a new instance of BufferedBinaryReader using the given Stream
+        /// </summary>
+        /// <param name="stream">Stream to read</param>
         public BufferedBinaryReader(Stream stream)
         {
             this.stream = stream;
@@ -73,6 +82,11 @@ namespace ATL
             bufferOffset = streamPosition;
         }
 
+        /// <summary>
+        /// Construct a new instance of BufferedBinaryReader using the given Stream and buffer size
+        /// </summary>
+        /// <param name="stream">Stream to read</param>
+        /// <param name="bufferSize">Buffer size to use</param>
         public BufferedBinaryReader(Stream stream, int bufferSize)
         {
             this.stream = stream;
@@ -87,7 +101,7 @@ namespace ATL
         private bool fillBuffer(int previousBytesToKeep = 0)
         {
             if (previousBytesToKeep > 0) Array.Copy(buffer, cursorPosition, buffer, 0, previousBytesToKeep);
-            int bytesToRead = (int)Math.Min(bufferDefaultSize-previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep);
+            int bytesToRead = (int)Math.Min(bufferDefaultSize - previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep);
 
             if (bytesToRead > 0)
             {
@@ -110,6 +124,7 @@ namespace ATL
             }
         }
 
+        /// Mandatory override to Stream.Seek
         public override long Seek(long offset, SeekOrigin origin)
         {
             long delta = 0; // Distance between absolute cursor position and specified position in bytes
@@ -131,16 +146,19 @@ namespace ATL
                 if ((cursorPosition + delta < bufferSize) && (cursorPosition + delta >= 0))
                 {
                     cursorPosition += (int)delta;
-                } else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
+                }
+                else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
                 {
                     streamPosition = bufferOffset + cursorPosition + delta;
                     stream.Position = streamPosition;
                     fillBuffer();
                 }
-            } else if (cursorPosition + delta < bufferSize) // Jump within buffer
+            }
+            else if (cursorPosition + delta < bufferSize) // Jump within buffer
             {
                 cursorPosition += (int)delta;
-            } else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
+            }
+            else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
             {
                 streamPosition = bufferOffset + cursorPosition + delta;
                 stream.Position = streamPosition;
@@ -149,6 +167,7 @@ namespace ATL
             return Position;
         }
 
+        /// Mandatory override to Stream.Read
         public override int Read([In, Out] byte[] buffer, int offset, int count)
         {
             // Bytes to read are all already buffered
@@ -166,7 +185,8 @@ namespace ATL
                 if (availableBytes > 0)
                 {
                     Array.Copy(this.buffer, cursorPosition, buffer, offset, availableBytes);
-                } else
+                }
+                else
                 {
                     availableBytes = 0;
                 }
@@ -183,6 +203,11 @@ namespace ATL
             }
         }
 
+        /// <summary>
+        /// Read an array of bytes of the given length from the current position
+        /// </summary>
+        /// <param name="nbBytes">Number of bytes to read</param>
+        /// <returns>Array of bytes of the given length read from the current position</returns>
         public byte[] ReadBytes(int nbBytes)
         {
             byte[] buf = new byte[nbBytes];
@@ -192,6 +217,10 @@ namespace ATL
             return buf;
         }
 
+        /// <summary>
+        /// Read a single byte from the current position
+        /// </summary>
+        /// <returns>Byte read from the current position</returns>
         public new byte ReadByte()
         {
             prepareBuffer(1);
@@ -200,6 +229,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single unsigned Int16 from the current position
+        /// </summary>
+        /// <returns>Unsigned Int16 read from the current position</returns>
         public ushort ReadUInt16()
         {
             prepareBuffer(2);
@@ -208,6 +241,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single signed Int16 from the current position
+        /// </summary>
+        /// <returns>Signed Int16 read from the current position</returns>
         public short ReadInt16()
         {
             prepareBuffer(2);
@@ -216,6 +253,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single unsigned Int32 from the current position
+        /// </summary>
+        /// <returns>Unsigned Int32 read from the current position</returns>
         public uint ReadUInt32()
         {
             prepareBuffer(4);
@@ -224,6 +265,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single signed Int32 from the current position
+        /// </summary>
+        /// <returns>Signed Int32 read from the current position</returns>
         public int ReadInt32()
         {
             prepareBuffer(4);
@@ -232,6 +277,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single unsigned Int64 from the current position
+        /// </summary>
+        /// <returns>Unsigned Int64 read from the current position</returns>
         public ulong ReadUInt64()
         {
             prepareBuffer(8);
@@ -240,6 +289,10 @@ namespace ATL
             return val;
         }
 
+        /// <summary>
+        /// Read a single signed Int64 from the current position
+        /// </summary>
+        /// <returns>Signed Int64 read from the current position</returns>
         public long ReadInt64()
         {
             prepareBuffer(8);
@@ -248,27 +301,29 @@ namespace ATL
             return val;
         }
 
+        /// Override to IDisposable.Dispose
         public new void Dispose()
         {
             Flush();
             stream.Close();
         }
 
+        /// Mandatory override to Stream.Flush
         public override void Flush()
         {
             buffer = null;
         }
 
-        // This class is a reader helper only
+        /// Mandatory override to Stream.SetLength
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // This class is a _reader_ helper only
         }
 
-        // This class is a reader helper only
+        /// Mandatory override to Stream.Write
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // This class is a _reader_ helper only
         }
     }
 }
