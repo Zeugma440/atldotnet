@@ -374,7 +374,7 @@ namespace ATL.AudioData
         /// <param name="dayMonth">Day and month (DDMM format)</param>
         /// <param name="time">Time (hhmm format)</param>
         /// <returns>Human-readable string representation of the given DateTime with relevant information only</returns>
-        public static string FormatISOTimestamp(string year, string dayMonth, string time)
+        public static string FormatISOTimestamp(string year, string dayMonth, string hoursMinutesSeconds)
         {
             string day = "";
             string month = "";
@@ -387,11 +387,18 @@ namespace ATL.AudioData
 
             string hour = "";
             string minutes = "";
-            string seconds = ""; // TODO - WTF happened to seconds ?
-            if (Utils.IsNumeric(time) && (4 == time.Length))
+            string seconds = "";
+            if (Utils.IsNumeric(hoursMinutesSeconds))
             {
-                hour = dayMonth.Substring(0, 2);
-                minutes = dayMonth.Substring(2, 2);
+                if (hoursMinutesSeconds.Length >= 4)
+                {
+                    hour = hoursMinutesSeconds.Substring(0, 2);
+                    minutes = hoursMinutesSeconds.Substring(2, 2);
+                } 
+                if (hoursMinutesSeconds.Length >= 6)
+                {
+                    seconds = hoursMinutesSeconds.Substring(4, 2);
+                }
             }
 
             return FormatISOTimestamp(year, day, month, hour, minutes, seconds);

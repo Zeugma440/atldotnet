@@ -125,5 +125,13 @@ namespace ATL.test
             Assert.AreEqual("01/01", TrackUtils.FormatWithLeadingZeroes("1/01", true, 0, true, "1"));
             Assert.AreEqual("001", TrackUtils.FormatWithLeadingZeroes("1", true, 0, true, "100"));
         }
+
+        [TestMethod]
+        public void TrackUtils_FormatISOTimestamp()
+        {
+            Assert.AreEqual("1990-04-01", TrackUtils.FormatISOTimestamp("1990", "0104", ""));
+            Assert.AreEqual("1990-04-01T04:12", TrackUtils.FormatISOTimestamp("1990","0104","0412"));
+            Assert.AreEqual("1990-04-01T04:12:44", TrackUtils.FormatISOTimestamp("1990", "0104", "041244"));
+        }
     }
 }
