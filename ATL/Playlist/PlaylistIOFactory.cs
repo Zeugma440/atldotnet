@@ -8,13 +8,34 @@ namespace ATL.Playlist
     /// </summary>
     public class PlaylistIOFactory : Factory
     {
-        // Defines the supported formats
+        // Supported playilst formats
+        /// <summary>
+        /// M3U format
+        /// </summary>
         public const int PL_M3U = 0;
+        /// <summary>
+        /// PLS format
+        /// </summary>
         public const int PL_PLS = 1;
+        /// <summary>
+        /// FPL format
+        /// </summary>
         public const int PL_FPL = 2;
+        /// <summary>
+        /// XSPF format
+        /// </summary>
         public const int PL_XSPF = 3;
+        /// <summary>
+        /// SMIL format
+        /// </summary>
         public const int PL_SMIL = 4;
+        /// <summary>
+        /// ASX format
+        /// </summary>
         public const int PL_ASX = 5;
+        /// <summary>
+        /// B4S format
+        /// </summary>
         public const int PL_B4S = 6;
 
         // The instance of this factory
@@ -22,7 +43,10 @@ namespace ATL.Playlist
 
         private static readonly object _lockable = new object();
 
-
+        /// <summary>
+        /// Get an instance of the factory
+        /// </summary>
+        /// <returns>Instance of the playlist factory</returns>
         public static PlaylistIOFactory GetInstance()
         {
             lock (_lockable)
@@ -76,6 +100,14 @@ namespace ATL.Playlist
             return theFactory;
         }
 
+        /// <summary>
+        /// Create a new playlist management object from the given parameters
+        /// </summary>
+        /// <param name="path">Path of the playlist file to open</param>
+        /// <param name="locationFormatting">Formatting of paths within the playlist</param>
+        /// <param name="fileEncoding">Encoding of the file</param>
+        /// <param name="alternate">Internal use; should be zero when called from outside</param>
+        /// <returns></returns>
         public IPlaylistIO GetPlaylistIO(
             string path,
             PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined,
@@ -106,6 +138,11 @@ namespace ATL.Playlist
             return result;
         }
 
+        /// <summary>
+        /// Create a new playlist management object from the given playlist format code (see public constants in PlaylistIOFactory)
+        /// </summary>
+        /// <param name="formatId">Playlist format code of the object to create</param>
+        /// <returns>New playlist management object correspondingf to the given code</returns>
         public IPlaylistIO GetPlaylistIO(int formatId)
         {
             IPlaylistIO theReader = null;

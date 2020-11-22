@@ -7,8 +7,11 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// PLS playlist manager
     /// </summary>
+#pragma warning disable S101 // Types should be named in PascalCase
     public class PLSIO : PlaylistIO
+#pragma warning restore S101 // Types should be named in PascalCase
     {
+        /// Mandatory override of PlaylistIO.getFiles
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
@@ -31,7 +34,8 @@ namespace ATL.Playlist.IO
             }
         }
 
-        protected override void setTracks(FileStream fs, IList<Track> values)
+        /// Mandatory override of PlaylistIO.setTracks
+        protected override void setTracks(FileStream fs, IList<Track> result)
         {
             Encoding encoding = UTF8_NO_BOM;
 
@@ -40,7 +44,7 @@ namespace ATL.Playlist.IO
                 w.WriteLine("[playlist]");
 
                 int counter = 1;
-                foreach (Track t in values)
+                foreach (Track t in result)
                 {
                     string label = "";
                     if (t.Title != null && t.Title.Length > 0) label = t.Title;
@@ -69,7 +73,7 @@ namespace ATL.Playlist.IO
                 w.WriteLine("");
 
                 w.Write("NumberOfEntries=");
-                w.WriteLine(values.Count);
+                w.WriteLine(result.Count);
 
                 w.Write("Version=2");
             }

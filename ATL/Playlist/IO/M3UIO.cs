@@ -7,7 +7,9 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// M3U/M3U8 playlist manager
     /// </summary>
+#pragma warning disable S101 // Types should be named in PascalCase
     public class M3UIO : PlaylistIO
+#pragma warning restore S101 // Types should be named in PascalCase
     {
         private Encoding getEncoding(FileStream fs)
         {
@@ -24,6 +26,7 @@ namespace ATL.Playlist.IO
             }
         }
 
+        /// Mandatory override of PlaylistIO.getFiles
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             Encoding encoding = getEncoding(fs);
@@ -43,7 +46,8 @@ namespace ATL.Playlist.IO
             }
         }
 
-        protected override void setTracks(FileStream fs, IList<Track> values)
+        /// Mandatory override of PlaylistIO.setTracks
+        protected override void setTracks(FileStream fs, IList<Track> result)
         {
             Encoding encoding = getEncoding(fs);
 
@@ -51,7 +55,7 @@ namespace ATL.Playlist.IO
             {
                 if (Settings.M3U_useExtendedFormat) w.WriteLine("#EXTM3U");
 
-                foreach (Track t in values)
+                foreach (Track t in result)
                 {
                     if (Settings.M3U_useExtendedFormat)
                     {
@@ -64,7 +68,8 @@ namespace ATL.Playlist.IO
                         if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
                         w.WriteLine(label);
                         w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
-                    } else
+                    }
+                    else
                     {
                         w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
                     }

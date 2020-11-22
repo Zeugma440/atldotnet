@@ -10,8 +10,11 @@ namespace ATL.Playlist.IO
     /// 
     /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
+#pragma warning disable S101 // Types should be named in PascalCase
     public class XSPFIO : PlaylistIO
+#pragma warning restore S101 // Types should be named in PascalCase
     {
+        /// Mandatory override of PlaylistIO.getFiles
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             using (XmlReader source = XmlReader.Create(fs))
@@ -35,9 +38,10 @@ namespace ATL.Playlist.IO
             if (source.NodeType == XmlNodeType.Text) result.Add(decodeLocation(source.Value));
         }
 
-        protected override void setTracks(FileStream fs, IList<Track> values)
+        /// Mandatory override of PlaylistIO.setTracks
+        protected override void setTracks(FileStream fs, IList<Track> result)
         {
-            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
+            XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());
             writer.WriteStartElement("playlist", "http://xspf.org/ns/0/");
 
             // Write the title.
@@ -47,7 +51,7 @@ namespace ATL.Playlist.IO
 
             // Open tracklist
             writer.WriteStartElement("trackList");
-            foreach (Track t in values)
+            foreach (Track t in result)
             {
                 writer.WriteStartElement("track");
 

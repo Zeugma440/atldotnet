@@ -12,8 +12,11 @@ namespace ATL.Playlist.IO
     /// 
     /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
+#pragma warning disable S101 // Types should be named in PascalCase
     public class SMILIO : PlaylistIO
+#pragma warning restore S101 // Types should be named in PascalCase
     {
+        /// Mandatory override of PlaylistIO.getFiles
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             using (XmlReader source = XmlReader.Create(fs))
@@ -55,9 +58,10 @@ namespace ATL.Playlist.IO
             return null;
         }
 
-        protected override void setTracks(FileStream fs, IList<Track> values)
+        /// Mandatory override of PlaylistIO.setTracks
+        protected override void setTracks(FileStream fs, IList<Track> result)
         {
-            XmlWriter writer = XmlWriter.Create(fs, getWriterSettings());
+            XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());
             writer.WriteStartElement("smil");
 
             writer.WriteStartElement("head");
@@ -67,7 +71,7 @@ namespace ATL.Playlist.IO
             writer.WriteStartElement("seq");
             writer.WriteAttributeString("repeatCount", "indefinite");
 
-            foreach (Track t in values)
+            foreach (Track t in result)
             {
                 writer.WriteStartElement("media");
                 writer.WriteAttributeString("src", encodeLocation(t.Path));

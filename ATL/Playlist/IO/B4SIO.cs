@@ -8,8 +8,11 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// B4S playlist manager
     /// </summary>
+#pragma warning disable S101 // Types should be named in PascalCase
     public class B4SIO : PlaylistIO
+#pragma warning restore S101 // Types should be named in PascalCase
     {
+        /// Mandatory override of PlaylistIO.getFiles
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             using (XmlReader source = XmlReader.Create(fs))
@@ -25,9 +28,10 @@ namespace ATL.Playlist.IO
             }
         }
 
-        protected override void setTracks(FileStream fs, IList<Track> values)
+        /// Mandatory override of PlaylistIO.setTracks
+        protected override void setTracks(FileStream fs, IList<Track> result)
         {
-            XmlWriterSettings settings = getWriterSettings();
+            XmlWriterSettings settings = generateWriterSettings();
             settings.OmitXmlDeclaration = false;
             settings.ConformanceLevel = ConformanceLevel.Document;
 
@@ -36,11 +40,11 @@ namespace ATL.Playlist.IO
             writer.WriteStartElement("WinampXML");
 
             writer.WriteStartElement("playlist");
-            writer.WriteAttributeString("num_entries", values.Count.ToString());
+            writer.WriteAttributeString("num_entries", result.Count.ToString());
             writer.WriteAttributeString("label", "Playlist");
 
             // Open tracklist
-            foreach (Track t in values)
+            foreach (Track t in result)
             {
                 writer.WriteStartElement("entry");
                 // Although the unofficial standard is "file:" followed by the filepath, URI seems to work best with Winamp and VLC

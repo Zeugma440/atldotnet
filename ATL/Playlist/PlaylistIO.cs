@@ -14,28 +14,70 @@ namespace ATL.Playlist
     /// </summary>
     public abstract class PlaylistIO : IPlaylistIO
     {
+        /// <summary>
+        /// Byte Order Mark of UTF-8 files
+        /// </summary>
         public static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+        /// <summary>
+        /// .NET Encoding for UTF-8 with no Byte Order Mark
+        /// </summary>
         protected static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
+        /// <summary>
+        /// Latin-1 encoding used as ANSI
+        /// </summary>
         protected static readonly Encoding ANSI = Utils.Latin1Encoding;
 
+        /// <summary>
+        /// File Path of the playlist file
+        /// </summary>
         public string Path { get; set; }
+        /// <summary>
+        /// Formatting of the track locations (file paths) within the playlist
+        /// </summary>
         public PlaylistFormat.LocationFormatting LocationFormatting { get; set; }
+        /// <summary>
+        /// String encoding used within the playlist file
+        /// </summary>
         public PlaylistFormat.FileEncoding Encoding { get; set; }
 
+        /// <summary>
+        /// Paths of the track files described by the playlist
+        /// </summary>
         public IList<string> FilePaths
         {
             get => getFiles();
             set => setFiles(value);
         }
+
+        /// <summary>
+        /// Track files described by the playlist
+        /// </summary>
         public IList<Track> Tracks
         {
             get => getTracks();
             set => setTracks(value);
         }
 
+        /// <summary>
+        /// Read the paths of the track files described by the playlist using the given Stream
+        /// and put them into the given list
+        /// </summary>
+        /// <param name="fs">FileStream to use to read the values</param>
+        /// <param name="result">List that will receive the values</param>
         abstract protected void getFiles(FileStream fs, IList<string> result);
-        abstract protected void setTracks(FileStream fs, IList<Track> values);
 
+        /// <summary>
+        /// Read the tracks described by the playlist using the given Stream
+        /// and put them into the given list
+        /// </summary>
+        /// <param name="fs">FileStream to use to read the tracks</param>
+        /// <param name="result">List that will receive the tracks</param>
+        abstract protected void setTracks(FileStream fs, IList<Track> result);
+
+        /// <summary>
+        /// Read the paths of the track files described by the playlist
+        /// </summary>
+        /// <returns>List of the paths</returns>
         public IList<string> getFiles()
         {
             IList<string> result = new List<string>();
@@ -57,6 +99,10 @@ namespace ATL.Playlist
             return result;
         }
 
+        /// <summary>
+        /// Read the tracks described by the playlist
+        /// </summary>
+        /// <returns>List of the tracks</returns>
         public IList<Track> getTracks()
         {
             IList<Track> result = new List<Track>();
@@ -64,7 +110,7 @@ namespace ATL.Playlist
             try
             {
                 IList<string> files = getFiles();
-                foreach(string s in files)
+                foreach (string s in files)
                 {
                     result.Add(new Track(s));
                 }
@@ -78,6 +124,10 @@ namespace ATL.Playlist
             return result;
         }
 
+        /// <summary>
+        /// Modify playlist by replacing all file paths by the given file paths
+        /// </summary>
+        /// <param name="fileList">List of file paths to write in the playlist, replacing current ones</param>
         public void setFiles(IList<string> fileList)
         {
             IList<Track> trackList = new List<Track>();
@@ -91,6 +141,10 @@ namespace ATL.Playlist
             setTracks(trackList);
         }
 
+        /// <summary>
+        /// Modify playlist by replacing all tracks by the given tracks
+        /// </summary>
+        /// <param name="trackList">List of tracks to write in the playlist, replacing current ones</param>
         public void setTracks(IList<Track> trackList)
         {
             LogDelegator.GetLocateDelegate()(Path);
@@ -109,11 +163,15 @@ namespace ATL.Playlist
             }
         }
 
-        protected XmlWriterSettings getWriterSettings()
+        /// <summary>
+        /// Generate XmlWriterSettings from the current file's and global settings
+        /// </summary>
+        /// <returns>New instance of XmlWriterSettings</returns>
+        protected XmlWriterSettings generateWriterSettings()
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.CloseOutput = true;
-            switch(Encoding)
+            switch (Encoding)
             {
                 case (PlaylistFormat.FileEncoding.ANSI):
                     settings.Encoding = ANSI;
@@ -186,7 +244,7 @@ namespace ATL.Playlist
                         else
                         {
                             // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
-                            return uri.LocalPath.Replace(""+System.IO.Path.DirectorySeparatorChar+System.IO.Path.DirectorySeparatorChar, ""+System.IO.Path.DirectorySeparatorChar);
+                            return uri.LocalPath.Replace("" + System.IO.Path.DirectorySeparatorChar + System.IO.Path.DirectorySeparatorChar, "" + System.IO.Path.DirectorySeparatorChar);
                         }
                     }
                 }
@@ -195,7 +253,7 @@ namespace ATL.Playlist
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, hrefUri + " is not a valid URI [" + Path + "]");
                 }
             }
-            
+
             href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "");
             if (!System.IO.Path.IsPathRooted(href))
             {
