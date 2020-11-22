@@ -9,11 +9,14 @@ namespace Commons
     public static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+        /// <summary>
+        /// 'ZERO WIDTH NO-BREAK SPACE' invisible character, sometimes used by certain tagging softwares
+        /// </summary>
         public readonly static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
 
 
         /// <summary>
-        /// Defines a delegate that does not carry any argument (useful for "pinging")
+        /// Define a delegate that does not carry any argument (useful for "pinging")
         /// </summary>
         public delegate void voidDelegate();
 
@@ -24,7 +27,7 @@ namespace Commons
 
 
         /// <summary>
-        /// Transforms the given string so that is becomes non-null
+        /// Transform the given string so that is becomes non-null
         /// </summary>
         /// <param name="value">String to protect</param>
         /// <returns>Given string if non-null; else empty string</returns>
@@ -104,7 +107,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Converts the duration of the given timecode to milliseconds
+        /// Convert the duration of the given timecode to milliseconds
         /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd
         /// </summary>
         /// <param name="timeCode">Timecode to convert</param>
@@ -171,7 +174,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Strips the given string from all ending null '\0' characters
+        /// Strip the given string from all ending null '\0' characters
         /// </summary>
         /// <param name="iStr">String to process</param>
         /// <returns>Given string, without any ending null character</returns>
@@ -185,11 +188,11 @@ namespace Commons
         }
 
         /// <summary>
-        /// Transforms the given string to format with the given length, expressed in number of characters
+        /// Transform the given number to format with the given length, expressed in number of characters
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
         ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given character
         /// </summary>
-        /// <param name="value">String to transform</param>
+        /// <param name="value">Value to transform</param>
         /// <param name="length">Target length of the final string</param>
         /// <param name="paddingChar">Character to use if padding is needed</param>
         /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
@@ -199,6 +202,17 @@ namespace Commons
         {
             return BuildStrictLengthString(value.ToString(), length, paddingChar, padRight);
         }
+        /// <summary>
+        /// Transform the given string to format with the given length, expressed in number of characters
+        ///  - If the given length is shorter than the actual length of the string, it will be truncated
+        ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given character
+        /// </summary>
+        /// <param name="value">Value to transform</param>
+        /// <param name="length">Target length of the final string</param>
+        /// <param name="paddingChar">Character to use if padding is needed</param>
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// false if the padding has to be done on the left-side (optional; default value = true)</param>
+        /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
             string result = (null == value) ? "" : value;
@@ -214,7 +228,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Transforms the given string to format with the given length, expressed in number of bytes
+        /// Transform the given string to format with the given length, expressed in number of bytes
         ///  - If the given length is shorter than the actual length of the string, it will be truncated
         ///  - If the given length is longer than the actual length of the string, it will be right/left-padded with a given byte
         /// </summary>
@@ -249,7 +263,8 @@ namespace Commons
                     Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
                     for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
                 }
-            } else
+            }
+            else
             {
                 result = data;
             }
@@ -258,7 +273,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Coverts given string value to boolean.
+        /// Covert given string value to boolean.
         ///   - Returns true if string represents a non-null numeric value or the word "true"
         ///   - Returns false if not
         ///   
@@ -333,7 +348,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Indicates if the given string is exclusively composed of digital charachers
+        /// Indicate if the given string is exclusively composed of digital charachers
         /// 
         /// NB1 : decimal separators '.' and ',' are tolerated except if allowsOnlyIntegers argument is set to True
         /// NB2 : whitespaces ' ' are not tolerated
@@ -354,7 +369,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && (s[i] != '-') ) return false;
+                    if (!char.IsDigit(s[i]) && (s[i] != '-')) return false;
                 }
             }
 
@@ -362,7 +377,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Indicates if the given string is hexadecimal notation
+        /// Indicate if the given string is hexadecimal notation
         /// </summary>
         /// <param name="s">String to analyze</param>
         /// <returns>True if the string is a hexadecimal notation; false if not</returns>
@@ -377,14 +392,14 @@ namespace Commons
             for (int i = 0; i < s.Length; i++)
             {
                 c = char.ToUpper(s[i]);
-                if (!char.IsDigit(c) && c!='A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
+                if (!char.IsDigit(c) && c != 'A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
             }
 
             return true;
         }
 
         /// <summary>
-        /// Parses the given string into a float value; returns 0 if parsing fails
+        /// Parse the given string into a float value; returns 0 if parsing fails
         /// </summary>
         /// <param name="s">String to be parsed</param>
         /// <returns>Parsed value; 0 if a parsing issue has been encountered</returns>
@@ -406,7 +421,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Returns the human-readable file size for an arbitrary, 64-bit file size 
+        /// Return the human-readable file size for an arbitrary, 64-bit file size 
         /// The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB"
         /// Source : https://www.somacon.com/p576.php
         /// </summary>

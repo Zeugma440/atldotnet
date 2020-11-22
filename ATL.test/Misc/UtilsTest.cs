@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Commons;
 using System.Text;
-using System;
 
 namespace ATL.test
 {
@@ -13,7 +12,7 @@ namespace ATL.test
         {
             string s = "abc\0def\0\0";
 
-            Assert.AreEqual(Utils.StripEndingZeroChars(s), "abc\0def");
+            Assert.AreEqual("abc\0def", Utils.StripEndingZeroChars(s));
         }
 
         [TestMethod]
