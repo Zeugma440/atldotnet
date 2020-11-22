@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 
-#pragma warning disable S125 // Sections of code should not be commented out
 namespace ATL.Playlist.IO
 {
     /// <summary>
@@ -17,9 +16,7 @@ namespace ATL.Playlist.IO
             }
             set
             {
-
-
-                // Nothing;
+                // Nothing here, it's a dummy method
             }
         }
 
@@ -29,7 +26,7 @@ namespace ATL.Playlist.IO
             get => new List<string>();
             set
             {
-                // Nothing;
+                // Nothing here, it's a dummy method
             }
         }
 
@@ -39,7 +36,7 @@ namespace ATL.Playlist.IO
             get => new List<Track>();
             set
             {
-                // Nothing;
+                // Nothing here, it's a dummy method
             }
         }
 
@@ -49,7 +46,7 @@ namespace ATL.Playlist.IO
             get => PlaylistFormat.LocationFormatting.Undefined;
             set
             {
-                // Nothing;
+                // Nothing here, it's a dummy method
             }
         }
 
@@ -59,9 +56,8 @@ namespace ATL.Playlist.IO
             get => PlaylistFormat.FileEncoding.Undefined;
             set
             {
-                // Nothing;
+                // Nothing here, it's a dummy method
             }
         }
     }
 }
-#pragma warning restore S125 // Sections of code should not be commented out
