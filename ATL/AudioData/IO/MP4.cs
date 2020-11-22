@@ -825,6 +825,7 @@ namespace ATL.AudioData.IO
                                                                                    // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
             if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTrack)
             {
+                source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
                 atomPosition = source.BaseStream.Position;
                 byte nbBytes = 0;
                 uint nbChunkOffsets = 0;
@@ -845,7 +846,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, not co64 atoms could not be found; aborting read on track " + currentTrakIndex);
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, nor co64 atoms could not be found; aborting read on track " + currentTrakIndex);
                         source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                         return trakSize;
                     }
