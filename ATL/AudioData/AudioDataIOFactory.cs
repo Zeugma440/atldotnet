@@ -74,7 +74,7 @@ namespace ATL.AudioData
                     theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
                     theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
 
-                    Format tempFmt = new Format(CID_MP3, "MPEG Audio Layer");
+                    Format tempFmt = new Format(CID_MP3, "MPEG Audio");
                     tempFmt.AddMimeType("audio/mp3");
                     tempFmt.AddMimeType("audio/mpeg");
                     tempFmt.AddMimeType("audio/x-mpeg");
@@ -220,13 +220,13 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".tta");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(CID_TAK, "Tom's lossless Audio Kompressor (TAK)");
+                    tempFmt = new Format(CID_TAK, "Tom's lossless Audio Kompressor");
                     tempFmt.AddMimeType("audio/tak");   // Unofficial
                     tempFmt.AddMimeType("audio/x-tak"); // Unofficial
                     tempFmt.AddExtension(".tak");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(CID_MOD, "Noisetracker/Soundtracker/Protracker Module");
+                    tempFmt = new Format(CID_MOD, "Tracker Module");
                     tempFmt.AddMimeType("audio/x-mod");
                     tempFmt.AddExtension(".mod");
                     theFactory.addFormat(tempFmt);
@@ -248,7 +248,7 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".it");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(CID_AIFF, "Audio Interchange File Format: (Audio IFF)");
+                    tempFmt = new Format(CID_AIFF, "Audio Interchange File Format (Audio IFF)");
                     tempFmt.AddMimeType("audio/x-aiff");
                     tempFmt.AddExtension(".aif");
                     tempFmt.AddExtension(".aiff");
