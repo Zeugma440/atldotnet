@@ -46,6 +46,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_ID3 = "id3 ";
 
 
+        private ushort formatId;
         private ChannelsArrangement channelsArrangement;
         private uint sampleRate;
         private uint bytesPerSecond;
@@ -58,6 +59,7 @@ namespace ATL.AudioData.IO
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
+        private readonly Format audioFormat;
 
         private bool _isLittleEndian;
 
@@ -82,10 +84,6 @@ namespace ATL.AudioData.IO
 
 
         /* Unused for now
-        public ushort FormatID // Format type code
-		{
-			get { return this.formatID; }
-		}	
 		public ushort BlockAlign // Block alignment
 		{
 			get { return this.blockAlign; }
@@ -103,6 +101,15 @@ namespace ATL.AudioData.IO
         public bool IsVBR
         {
             get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get
+            {
+                Format f = new Format(audioFormat);
+                f.Name = f.Name + " (" + getFormat() + ")";
+                return f;
+            }
         }
         public int CodecFamily
         {
@@ -179,6 +186,7 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
 
+            formatId = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
             bitsPerSample = 0;
@@ -191,9 +199,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public WAV(string filePath)
+        public WAV(string filePath, Format format)
         {
             this.filePath = filePath;
+            this.audioFormat = format;
             resetData();
         }
 
@@ -268,7 +277,8 @@ namespace ATL.AudioData.IO
 
                 if (subChunkId.Equals(CHUNK_FORMAT))
                 {
-                    source.Seek(2, SeekOrigin.Current); // FormatId
+                    source.Read(data, 0, 2);
+                    if (isLittleEndian) formatId = StreamUtils.DecodeUInt16(data); else formatId = StreamUtils.DecodeBEUInt16(data);
 
                     source.Read(data, 0, 2);
                     if (isLittleEndian) channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(StreamUtils.DecodeUInt16(data));
@@ -377,7 +387,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            // ID3 zone should be set as the very last one for Windows to be able to read it properly
+            // ID3 zone should be set as the very last one for Windows to be able to read the LIST INFO zone properly
             if (-1 == id3v2Offset)
             {
                 id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
@@ -392,22 +402,20 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        /* Unused for now
-		private String getFormat()
-		{
-			// Get format type name
-			switch (formatID)
-			{
-				case 1: return WAV_FORMAT_PCM;
-				case 2: return WAV_FORMAT_ADPCM;
-				case 6: return WAV_FORMAT_ALAW;
-				case 7: return WAV_FORMAT_MULAW;
-				case 17: return WAV_FORMAT_DVI_IMA_ADPCM;
-				case 85: return WAV_FORMAT_MP3;
-				default : return "";  
-			}
-		}
-        */
+        private string getFormat()
+        {
+            // Get format type name
+            switch (formatId)
+            {
+                case 1: return WAV_FORMAT_PCM;
+                case 2: return WAV_FORMAT_ADPCM;
+                case 6: return WAV_FORMAT_ALAW;
+                case 7: return WAV_FORMAT_MULAW;
+                case 17: return WAV_FORMAT_DVI_IMA_ADPCM;
+                case 85: return WAV_FORMAT_MP3;
+                default: return "Unknown";
+            }
+        }
 
         private double getDuration()
         {

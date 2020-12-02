@@ -37,6 +37,7 @@ namespace ATL.AudioData.IO
 
         private const int PSF_DEFAULT_DURATION = 180000; // 3 minutes
 
+        private byte version;
         private int sampleRate;
         private double bitrate;
         private double duration;
@@ -44,6 +45,7 @@ namespace ATL.AudioData.IO
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
+        private readonly Format audioFormat;
 
         // Mapping between PSF frame codes and ATL frame codes
         private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
@@ -79,6 +81,15 @@ namespace ATL.AudioData.IO
         public bool IsVBR
         {
             get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get
+            {
+                Format f = new Format(audioFormat);
+                f.Name = f.Name + " (" + subformat() + ")";
+                return f;
+            }
         }
         public int CodecFamily
         {
@@ -161,20 +172,36 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             sampleRate = 44100; // Seems to be de facto value for all PSF files, even though spec doesn't say anything about it
+            version = 0;
             bitrate = 0;
             duration = 0;
 
             ResetData();
         }
 
-        public PSF(string filePath)
+        public PSF(string filePath, Format format)
         {
             this.filePath = filePath;
+            this.audioFormat = format;
             resetData();
         }
 
 
         // ---------- SUPPORT METHODS
+
+        private string subformat()
+        {
+            switch (version)
+            {
+                case 0x01: return PSF_FORMAT_PSF1;
+                case 0x02: return PSF_FORMAT_PSF2;
+                case 0x11: return PSF_FORMAT_SSF;
+                case 0x12: return PSF_FORMAT_DSF;
+                case 0x21: return PSF_FORMAT_USF;
+                case 0x41: return PSF_FORMAT_QSF;
+                default: return PSF_FORMAT_UNKNOWN;
+            }
+        }
 
         private bool readHeader(BinaryReader source, ref PSFHeader header)
         {
@@ -374,6 +401,7 @@ namespace ATL.AudioData.IO
                 tagExists = true;
             }
 
+            version = header.VersionByte;
             bitrate = (sizeInfo.FileSize - tag.size) * 8 / duration;
 
             return result;

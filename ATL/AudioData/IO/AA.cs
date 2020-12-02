@@ -54,6 +54,7 @@ namespace ATL.AudioData.IO
 
         private AudioDataManager.SizeInfo sizeInfo;
         private readonly string fileName;
+        private readonly Format audioFormat;
 
         private Dictionary<int, Tuple<uint, uint>> toc;
 
@@ -64,6 +65,18 @@ namespace ATL.AudioData.IO
         public bool IsVBR
         {
             get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get
+            {
+                Format f = new Format(audioFormat);
+                if (codec.Length > 0)
+                    f.Name = f.Name + " (" + codec + ")";
+                else
+                    f.Name = f.Name + " (Unknown)";
+                return f;
+            }
         }
         public int CodecFamily
         {
@@ -153,9 +166,10 @@ namespace ATL.AudioData.IO
             audioSize = 0;
         }
 
-        public AA(string fileName)
+        public AA(string fileName, Format format)
         {
             this.fileName = fileName;
+            this.audioFormat = format;
             resetData();
         }
 

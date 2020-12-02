@@ -314,6 +314,13 @@ namespace ATL.AudioData
             get { return metaData.Popularity; }
         }
         /// <summary>
+        /// Format of audio data
+        /// </summary>
+        public Format AudioFormat
+        {
+            get { return audioData.AudioFormat; }
+        }
+        /// <summary>
         /// Codec family
         /// </summary>
         public int CodecFamily

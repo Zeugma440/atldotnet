@@ -133,6 +133,10 @@ namespace ATL.AudioData.IO
         {
             get { return this.isVBR; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get
@@ -190,9 +194,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public WMA(string filePath)
+        public WMA(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

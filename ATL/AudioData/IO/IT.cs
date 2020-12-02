@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using ATL.Logging;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -55,6 +54,10 @@ namespace ATL.AudioData.IO
         public bool IsVBR
         {
             get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get;
         }
         public int CodecFamily
         {
@@ -113,9 +116,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public IT(string filePath)
+        public IT(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

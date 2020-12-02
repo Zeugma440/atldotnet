@@ -121,6 +121,10 @@ namespace ATL.AudioData.IO
         {
             get { return (MP4_BITRATE_TYPE_VBR == bitrateTypeID); }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -197,9 +201,10 @@ namespace ATL.AudioData.IO
             initialPaddingOffset = -1;
         }
 
-        public MP4(string fileName)
+        public MP4(string fileName, Format format)
         {
             this.fileName = fileName;
+            AudioFormat = format;
             resetData();
         }
 

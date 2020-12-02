@@ -45,6 +45,13 @@ namespace ATL.AudioData
 			get;
 		}
         /// <summary>
+        /// Format of the audio data
+        /// </summary>
+        Format AudioFormat
+        {
+            get;
+        }
+        /// <summary>
         /// Family of the audio codec (see AudioDataIOFactory for the list of codec families)
         /// </summary>
         int CodecFamily

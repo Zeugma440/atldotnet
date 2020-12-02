@@ -121,6 +121,10 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
@@ -366,9 +370,10 @@ namespace ATL.AudioData.IO
             initialPaddingSize = 0;
         }
 
-        public FLAC(string path)
+        public FLAC(string path, Format format)
         {
             filePath = path;
+            AudioFormat = format;
             header = new FlacHeader();
             resetData();
         }
@@ -551,7 +556,7 @@ namespace ATL.AudioData.IO
                         if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "", blockEndOffset, 0, new byte[0], true, META_VORBIS_COMMENT));
                         if (!pictureFound) zones.Add(new Zone(META_PICTURE + "", blockEndOffset, 0, new byte[0], true, META_PICTURE));
                         // Padding must be the last block for it to correctly absorb size variations of the other blocks
-                        if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], true, META_PADDING)); 
+                        if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], true, META_PADDING));
                     }
                 }
             }

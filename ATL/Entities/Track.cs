@@ -198,6 +198,14 @@ namespace ATL
         /// </summary>
 		public int CodecFamily { get; set; }
         /// <summary>
+        /// Format of the audio data
+        /// </summary>
+        public Format AudioFormat { get; set; }
+        /// <summary>
+        /// Format of the tagging systems
+        /// </summary>
+        public List<Format> TaggingFormats { get; }
+        /// <summary>
         /// Duration (seconds)
         /// </summary>
         public int Duration
@@ -329,6 +337,8 @@ namespace ATL
 
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
+            AudioFormat = fileIO.AudioFormat;
+                
             DurationMs = fileIO.Duration;
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;

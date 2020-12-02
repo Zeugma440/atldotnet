@@ -65,6 +65,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_SEQ_WAV; }
@@ -155,9 +159,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public S3M(string filePath)
+        public S3M(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

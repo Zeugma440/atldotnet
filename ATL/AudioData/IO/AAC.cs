@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using Commons;
 using static ATL.ChannelsArrangements;
-using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
 {
@@ -74,6 +72,10 @@ namespace ATL.AudioData.IO
         {
             get { return (AAC_BITRATE_TYPE_VBR == bitrateTypeID); }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -115,9 +117,10 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
         }
 
-        public AAC(string fileName)
+        public AAC(string fileName, Format format)
         {
             this.fileName = fileName;
+            AudioFormat = format;
             resetData();
         }
 

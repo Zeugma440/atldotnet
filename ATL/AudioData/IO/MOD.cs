@@ -9,12 +9,12 @@ using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
 {
-	/// <summary>
+    /// <summary>
     /// Class for Noisetracker/Soundtracker/Protracker Module files manipulation (extensions : .MOD)
     /// Based on info obtained from Thunder's readme (MODFIL10.TXT - Version 1.0)
-	/// </summary>
-	class MOD : MetaDataIO, IAudioDataIO
-	{
+    /// </summary>
+    class MOD : MetaDataIO, IAudioDataIO
+    {
         private const string ZONE_TITLE = "title";
 
         private const string SIG_POWERPACKER = "PP20";
@@ -27,14 +27,14 @@ namespace ATL.AudioData.IO
         // Effects
         private const byte EFFECT_POSITION_JUMP = 0xB;
         private const byte EFFECT_PATTERN_BREAK = 0xD;
-        private const byte EFFECT_SET_SPEED     = 0xF;
-        private const byte EFFECT_EXTENDED      = 0xE;
+        private const byte EFFECT_SET_SPEED = 0xF;
+        private const byte EFFECT_EXTENDED = 0xE;
 
         private const byte EFFECT_EXTENDED_LOOP = 0x6;
-        private const byte EFFECT_NOTE_CUT      = 0xC;
-        private const byte EFFECT_NOTE_DELAY    = 0xD;
+        private const byte EFFECT_NOTE_CUT = 0xC;
+        private const byte EFFECT_NOTE_DELAY = 0xD;
         private const byte EFFECT_PATTERN_DELAY = 0xE;
-        private const byte EFFECT_INVERT_LOOP   = 0xF;
+        private const byte EFFECT_INVERT_LOOP = 0xF;
 
         private static IDictionary<String, ModFormat> modFormats = new Dictionary<string, ModFormat>()
         {
@@ -94,23 +94,36 @@ namespace ATL.AudioData.IO
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
+        private readonly Format audioFormat;
 
-        
+
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
         public int SampleRate // Sample rate (hz)
-		{
-			get { return 0; }
-		}
+        {
+            get { return 0; }
+        }
         public bool IsVBR
-		{
-			get { return false; }
-		}
-		public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_SEQ_WAV; }
-		}
+        {
+            get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get
+            {
+                Format f = new Format(audioFormat);
+                if (modFormats.ContainsKey(formatTag))
+                    f.Name = f.Name + " (" + modFormats[formatTag].Name + ")";
+                else
+                    f.Name = f.Name + " (Unknown)";
+                return f;
+            }
+        }
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_SEQ_WAV; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -150,7 +163,7 @@ namespace ATL.AudioData.IO
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
         internal class Sample
-		{
+        {
             public string Name;
             public int Size;
             public SByte Finetune;
@@ -159,17 +172,17 @@ namespace ATL.AudioData.IO
             public int RepeatOffset;
             public int RepeatLength;
 
-			public void Reset()
-			{
+            public void Reset()
+            {
                 Name = "";
                 Size = 0;
                 Finetune = 0;
                 Volume = 0;
-                
+
                 RepeatLength = 0;
                 RepeatOffset = 0;
             }
-		}
+        }
 
         internal class ModFormat
         {
@@ -203,9 +216,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public MOD(string filePath)
-		{
+        public MOD(string filePath, Format format)
+        {
             this.filePath = filePath;
+            this.audioFormat = format;
             resetData();
         }
 
@@ -231,7 +245,7 @@ namespace ATL.AudioData.IO
             double loopDuration = 0;
 
             IList<int> row;
-            
+
             int temp;
             double ticksPerRow = DEFAULT_TICKS_PER_ROW;
             double bpm = DEFAULT_BPM;
@@ -289,7 +303,7 @@ namespace ATL.AudioData.IO
                                 if (arg2.Equals(0)) // Beginning of loop
                                 {
                                     loopDuration = 0;
-                                    isInsideLoop = true; 
+                                    isInsideLoop = true;
                                 }
                                 else // End of loop + nb. repeat indicator
                                 {
@@ -300,10 +314,10 @@ namespace ATL.AudioData.IO
                         }
                         if (positionJump || patternBreak) break;
                     } // end channels loop
-                    
+
                     result += 60 * (ticksPerRow / (24 * bpm));
                     if (isInsideLoop) loopDuration += 60 * (ticksPerRow / (24 * bpm));
-                    
+
                     if (positionJump || patternBreak) break;
 
                     currentRow++;
@@ -388,7 +402,7 @@ namespace ATL.AudioData.IO
 
             // == SAMPLES ==
             nbSamples = detectNbSamples(source);
-            string charOne = Utils.Latin1Encoding.GetString( new byte[] { 1 } );
+            string charOne = Utils.Latin1Encoding.GetString(new byte[] { 1 });
 
             for (int i = 0; i < nbSamples; i++)
             {
@@ -422,7 +436,7 @@ namespace ATL.AudioData.IO
                 nbChannels = NB_CHANNELS_DEFAULT;
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "MOD format tag '" + formatTag + "'not recognized");
             }
-            
+
             // == PATTERNS ==
             // Some extra information about the "FLT8" -type MOD's:
             //
@@ -435,10 +449,10 @@ namespace ATL.AudioData.IO
             // 4-channel pattern. Got it? ;-).
             // If you convert all the 4 channel patterns to 8 channel patterns, do not
             // forget to divide each pattern nr by 2 in the pattern sequence table!
-           
+
             foreach (byte b in FPatternTable) maxPatterns = Math.Max(maxPatterns, b);
 
-            for (int p = 0; p < maxPatterns+1; p++) // Patterns loop
+            for (int p = 0; p < maxPatterns + 1; p++) // Patterns loop
             {
                 FPatterns.Add(new List<IList<int>>());
                 pattern = FPatterns[FPatterns.Count - 1];
@@ -449,7 +463,7 @@ namespace ATL.AudioData.IO
                     row = pattern[pattern.Count - 1];
                     for (int c = 0; c < nbChannels; c++) // Channels loop
                     {
-                        row.Add( StreamUtils.DecodeBEInt32(source.ReadBytes(4)) );
+                        row.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
                     } // end channels loop
                 } // end rows loop
             } // end patterns loop
@@ -470,7 +484,7 @@ namespace ATL.AudioData.IO
             bitrate = sizeInfo.FileSize / duration;
 
             return result;
-		}
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {

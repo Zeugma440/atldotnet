@@ -101,6 +101,10 @@ namespace ATL.AudioData.IO
         {
             get { return true; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -143,9 +147,10 @@ namespace ATL.AudioData.IO
             profileID = MPP_PROFILE_UNKNOWN;
         }
 
-        public MPEGplus(string filePath)
+        public MPEGplus(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

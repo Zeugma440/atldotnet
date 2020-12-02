@@ -290,6 +290,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_SEQ; }
@@ -340,9 +344,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public Midi(string filePath)
+        public Midi(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

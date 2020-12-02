@@ -177,6 +177,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return codecFamily; }
@@ -221,9 +225,10 @@ namespace ATL.AudioData.IO
             bSamples = 0;
         }
 
-        public WAVPack(string filePath)
+        public WAVPack(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

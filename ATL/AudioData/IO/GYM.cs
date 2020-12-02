@@ -22,7 +22,7 @@ namespace ATL.AudioData.IO
     /// 
     /// </summary>
     class GYM : MetaDataIO, IAudioDataIO
-	{
+    {
         private const string GYM_SIGNATURE = "GYMX";
 
         private const int GYM_HEADER_SIZE = 428;
@@ -48,17 +48,21 @@ namespace ATL.AudioData.IO
 
         // AudioDataIO
         public int SampleRate // Sample rate (hz)
-		{
-			get { return sampleRate; }
-		}	
+        {
+            get { return sampleRate; }
+        }
         public bool IsVBR
-		{
-			get { return false; }
-		}
-		public int CodecFamily
-		{
-			get { return AudioDataIOFactory.CF_SEQ_WAV; }
-		}
+        {
+            get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get;
+        }
+        public int CodecFamily
+        {
+            get { return AudioDataIOFactory.CF_SEQ_WAV; }
+        }
         public string FileName
         {
             get { return filePath; }
@@ -109,21 +113,22 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public GYM(string filePath)
+        public GYM(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 
 
-		// === PRIVATE METHODS ===
+        // === PRIVATE METHODS ===
 
-		private bool readHeader(BufferedBinaryReader source, ReadTagParams readTagParams)
-		{
+        private bool readHeader(BufferedBinaryReader source, ReadTagParams readTagParams)
+        {
             string str;
 
             if (GYM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GYM_SIGNATURE.Length))))
-			{
+            {
                 if (readTagParams.PrepareForWriting)
                 {
                     structureHelper.AddZone(source.Position, 416, CORE_SIGNATURE);
@@ -131,7 +136,7 @@ namespace ATL.AudioData.IO
 
                 tagExists = true;
 
-                str = Utils.StripEndingZeroChars( Encoding.UTF8.GetString(source.ReadBytes(32)) ).Trim();
+                str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM, str);
@@ -154,13 +159,13 @@ namespace ATL.AudioData.IO
                 }
 
                 return true;
-			}
+            }
             else
-			{
+            {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Not a GYM file");
                 return false;
-			}
-		}
+            }
+        }
 
         private uint calculateDuration(BufferedBinaryReader source, uint loopStart, uint nbLoops)
         {
@@ -183,7 +188,7 @@ namespace ATL.AudioData.IO
                         nbTicks_all++;
                         if (loopReached) nbTicks_loop++;
                         break;
-                    case (0x01): 
+                    case (0x01):
                     case (0x02): source.Seek(2, SeekOrigin.Current); break;
                     case (0x03): source.Seek(1, SeekOrigin.Current); break;
                 }
@@ -202,7 +207,7 @@ namespace ATL.AudioData.IO
 
             return result;
         }
-        
+
 
         // === PUBLIC METHODS ===
 
@@ -229,7 +234,7 @@ namespace ATL.AudioData.IO
             }
 
             return result;
-		}
+        }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {

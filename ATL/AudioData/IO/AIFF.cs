@@ -110,6 +110,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return (compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE)) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
@@ -202,10 +206,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public AIFF(string filePath)
+        public AIFF(string filePath, Format format)
         {
             this.filePath = filePath;
-
+            AudioFormat = format;
             resetData();
         }
 

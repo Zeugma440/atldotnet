@@ -296,15 +296,20 @@ namespace ATL.AudioData.IO
             info.Reset();
         }
 
-        public Ogg(string filePath)
+        public Ogg(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }

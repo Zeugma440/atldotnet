@@ -46,6 +46,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -87,9 +91,10 @@ namespace ATL.AudioData.IO
             isValid = false;
         }
 
-        public DTS(string filePath)
+        public DTS(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

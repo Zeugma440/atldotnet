@@ -55,6 +55,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
@@ -94,9 +98,10 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
         }
 
-        public TAK(string filePath)
+        public TAK(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

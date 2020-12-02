@@ -56,6 +56,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
@@ -110,10 +114,10 @@ namespace ATL.AudioData.IO
             id3v2StructureHelper.Clear();
         }
 
-        public DSF(string filePath)
+        public DSF(string filePath, Format format)
         {
             this.filePath = filePath;
-
+            AudioFormat = format;
             resetData();
         }
 

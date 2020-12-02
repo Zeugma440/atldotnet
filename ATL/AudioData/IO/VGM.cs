@@ -52,6 +52,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_SEQ_WAV; }
@@ -107,9 +111,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public VGM(string filePath)
+        public VGM(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

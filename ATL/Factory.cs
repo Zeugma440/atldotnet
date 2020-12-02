@@ -8,16 +8,23 @@ namespace ATL
     /// </summary>
     public abstract class Factory
     {
-        public readonly Format UNKNOWN_FORMAT = new Format(-1, "Unknown");
+        /// <summary>
+        /// Represents an unknown generic format
+        /// </summary>
+        public static readonly Format UNKNOWN_FORMAT = new Format(-1, "Unknown");
 
-        // List of all formats supported by this kind of data reader
-        // They are indexed by file extension to speed up matching
+        /// <summary>
+        /// List of all formats supported by this kind of data reader
+        /// They are indexed by file extension to speed up matching
+        /// </summary>
         protected IDictionary<String, IList<ATL.Format>> formatListByExt;
 
-        // List of all formats supported by this kind of data reader
-        // They are indexed by MIME-type to speed up matching
+        /// <summary>
+        /// List of all formats supported by this kind of data reader 
+        /// They are indexed by MIME-type to speed up matching
+        /// </summary>
         protected IDictionary<String, IList<ATL.Format>> formatListByMime;
-   
+
 
 
         /// <summary>

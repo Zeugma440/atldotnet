@@ -224,6 +224,7 @@ namespace ATL.AudioData.IO
         private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
         private readonly String filePath;
+        private readonly Format audioFormat;
 
 
         /* Unused for now
@@ -299,14 +300,24 @@ public String Encoder // Guessed encoder name
             HeaderFrame.Reset();
         }
 
-        public MPEGaudio(string filePath)
+        public MPEGaudio(string filePath, Format format)
         {
             this.filePath = filePath;
+            this.audioFormat = format;
             resetData();
         }
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
+        public Format AudioFormat
+        {
+            get
+            {
+                Format f = new Format(audioFormat);
+                f.Name = f.Name + " (" + getLayer() + ")";
+                return f;
+            }
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -485,6 +496,13 @@ public String Encoder // Guessed encoder name
             return result;
         }
 
+        // Get MPEG layer name
+
+        private String getLayer()
+        {
+            return MPEG_LAYER[HeaderFrame.LayerID];
+        }
+
         private static byte getVBRDeviation(FrameHeader Frame)
         {
             // Calculate VBR deviation
@@ -655,12 +673,6 @@ public String Encoder // Guessed encoder name
                 {
                     // Get MPEG version name
                     return MPEG_VERSION[HeaderFrame.VersionID];
-                }
-
-                private String getLayer()
-                {
-                    // Get MPEG layer name
-                    return MPEG_LAYER[HeaderFrame.LayerID];
                 }
 
                 private String getChannelMode()

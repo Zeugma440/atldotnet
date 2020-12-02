@@ -42,6 +42,7 @@ namespace ATL.AudioData.IO
         {
             get { return samplesSize; }
         }
+        /*
         public uint CRC32
         {
             get { return cRC32; }
@@ -50,6 +51,7 @@ namespace ATL.AudioData.IO
         {
             get { return audioFormat; }
         }
+        */
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -61,6 +63,10 @@ namespace ATL.AudioData.IO
         public bool IsVBR
         {
             get { return false; }
+        }
+        public Format AudioFormat
+        {
+            get;
         }
         public int CodecFamily
         {
@@ -103,9 +109,10 @@ namespace ATL.AudioData.IO
             cRC32 = 0;
         }
 
-        public TTA(string filePath)
+        public TTA(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

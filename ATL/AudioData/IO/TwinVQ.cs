@@ -96,6 +96,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -152,9 +156,10 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public TwinVQ(string filePath)
+        public TwinVQ(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

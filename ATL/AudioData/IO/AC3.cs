@@ -39,6 +39,10 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
+        public Format AudioFormat
+        {
+            get;
+        }
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_LOSSY; }
@@ -82,9 +86,10 @@ namespace ATL.AudioData.IO
             bitrate = 0;
         }
 
-        public AC3(string filePath)
+        public AC3(string filePath, Format format)
         {
             this.filePath = filePath;
+            AudioFormat = format;
             resetData();
         }
 

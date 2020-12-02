@@ -24,13 +24,13 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\m4a-mp4\issue 71\sample_reprocessed_orig.m4b");
+            //writeAt(@"E:\temp\wav\74\empty_tagged_audacity.wav");
+
+            info(@"E:\temp\wav\74\empty_tagged_audacity.wav");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            //readAt(@"E:\temp\m4a-mp4\sample.original - Copie.mp4");
-
-            //readAt(@"E:\temp\wav\loop_points.wav");
+            //readAt(@"E:\temp\m4a-mp4\60\intense-8-min-abs-workout.mp4");
 
             //displayVersionInfo();
         }
@@ -100,6 +100,7 @@ namespace ATL.benchmark
             {
                 //Settings.ForceDiskIO = true;
                 Settings.FileBufferSize = 2 * 1024 * 1024;
+                Settings.ID3v2_tagSubVersion = 3;
 
                 ConsoleLogger logger = new ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
@@ -116,6 +117,18 @@ namespace ATL.benchmark
             }
         }
 
+        static private void info(String filePath)
+        {
+            ConsoleLogger logger = new ConsoleLogger();
+            Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
+
+            AudioData.IAudioDataIO dataIO = ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(filePath);
+            
+            Console.WriteLine(">>> WRITE : END");
+
+            Console.ReadLine();
+        }
+
         static private void displayVersionInfo()
         {
             Console.WriteLine(ATL.Version.getVersion());
@@ -126,3 +139,4 @@ namespace ATL.benchmark
 
 
 }
+
