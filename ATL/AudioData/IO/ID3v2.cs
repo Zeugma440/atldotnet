@@ -395,11 +395,11 @@ namespace ATL.AudioData.IO
         // --------------- OPTIONAL INFORMATIVE OVERRIDES
 
         /// <inheritdoc/>
-        public new IList<Format> TaggingFormats
+        public override IList<Format> MetadataFormats
         {
             get
             {
-                Format format = MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v2")[0];
+                Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v2")[0]);
                 format.Name = format.Name + "." + tagVersion;
                 format.ID += tagVersion;
                 return new List<Format>(new Format[1] { format });

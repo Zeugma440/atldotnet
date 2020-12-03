@@ -89,11 +89,11 @@ namespace ATL.AudioData.IO
         // --------------- OPTIONAL INFORMATIVE OVERRIDES
 
         /// <inheritdoc/>
-        public new IList<Format> TaggingFormats
+        public override IList<Format> MetadataFormats
         {
             get
             {
-                Format format = MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0];
+                Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0]);
                 format.Name = format.Name + " v" + tagVersion / 1000f;
                 format.ID += tagVersion / 10; // e.g. 1250 -> 125
                 return new List<Format>(new Format[1] { format });

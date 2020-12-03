@@ -309,7 +309,7 @@ namespace ATL
                 initialEmbeddedPictures = null;
             }
 
-            MetadataFormats = fileIO.MetadataFormats;
+            MetadataFormats = new List<Format>(fileIO.MetadataFormats);
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) && Path != InMemoryPath)

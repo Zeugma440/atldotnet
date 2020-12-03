@@ -328,7 +328,7 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                Format nativeFormat = MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0];
+                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
                 nativeFormat.Name = "Native / Vorbis (OGG)";
                 nativeFormat.ID += AudioFormat.ID;
                 return new List<Format>(new Format[1] { nativeFormat });

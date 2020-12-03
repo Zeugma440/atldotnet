@@ -4,10 +4,7 @@ using System.IO;
 using System.Drawing;
 using ATL.test.IO.MetaData;
 using System.Collections.Generic;
-using Commons;
-using ATL.Logging;
 using static ATL.Logging.Log;
-using System.Linq;
 
 namespace ATL.test.IO
 {
@@ -79,6 +76,33 @@ namespace ATL.test.IO
 
             // Check if _all_ embedded pictures are accessible from Track
             Assert.AreEqual(3, theTrack.EmbeddedPictures.Count);
+        }
+
+        [TestMethod]
+        public void TagIO_R_MetaFormat()
+        {
+            Track theTrack = new Track(TestUtils.GetResourceLocationRoot() + "AA/aa.aa");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("Native / AA", theTrack.MetadataFormats[0].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/APE.mp3");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("APEtag v2", theTrack.MetadataFormats[0].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("ID3v2.2", theTrack.MetadataFormats[0].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/id3v1.mp3");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("ID3v1.1", theTrack.MetadataFormats[0].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "MP3/01 - Title Screen.mp3");
+            Assert.AreEqual(2, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("ID3v2.3", theTrack.MetadataFormats[0].Name);
+            Assert.AreEqual("ID3v1.1", theTrack.MetadataFormats[1].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "OGG/ogg.ogg");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("Native / Vorbis (OGG)", theTrack.MetadataFormats[0].Name);
+            theTrack = new Track(TestUtils.GetResourceLocationRoot() + "FLAC/flac.flac");
+            Assert.AreEqual(1, theTrack.MetadataFormats.Count);
+            Assert.AreEqual("Native / Vorbis (FLAC)", theTrack.MetadataFormats[0].Name);
         }
 
         [TestMethod]

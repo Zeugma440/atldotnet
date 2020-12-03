@@ -88,11 +88,11 @@ namespace ATL.AudioData.IO
             get { return this.tagExists; }
         }
         /// <inheritdoc/>
-        public IList<Format> MetadataFormats
+        public virtual IList<Format> MetadataFormats
         {
             get
             {
-                Format nativeFormat = MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0];
+                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
                 if (this is IAudioDataIO iO)
                 {
                     nativeFormat.Name = nativeFormat.Name + " / " + iO.AudioFormat.ShortName;
