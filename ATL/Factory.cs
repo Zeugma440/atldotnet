@@ -72,10 +72,14 @@ namespace ATL
         /// <param name="path">Path of the file which format to recognize</param>
         /// <returns>List of the valid formats matching the extension of the given file, 
         /// or null if none recognized or the file does not exist</returns>
-        protected IList<ATL.Format> getFormatsFromPath(string path)
+        public IList<ATL.Format> getFormatsFromPath(string path)
         {
             IList<ATL.Format> result = null;
-            string extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower();
+            string extension;
+            if (path.Contains("."))
+                extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower();
+            else
+                extension = path;
 
             if (formatListByExt.ContainsKey(extension))
             {
@@ -95,7 +99,7 @@ namespace ATL
         /// <param name="mimeType">MIME-type to recognize</param>
         /// <returns>List of the valid formats matching the MIME-type of the given file, 
         /// or null if none recognized</returns>
-        protected IList<ATL.Format> getFormatsFromMimeType(string mimeType)
+        public IList<ATL.Format> getFormatsFromMimeType(string mimeType)
         {
             IList<ATL.Format> result = null;
             string mime = mimeType.ToLower();

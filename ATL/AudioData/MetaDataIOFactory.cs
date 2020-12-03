@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 namespace ATL.AudioData
 {
     /// <summary>
     /// Factory for metadata (tag) I/O classes
     /// </summary>
-    public class MetaDataIOFactory
+    public class MetaDataIOFactory : Factory
     {
         // Defines the types of supported "cross-format" metadata
         public const int TAG_ID3V1 = 0;
@@ -77,6 +78,25 @@ namespace ATL.AudioData
                     theFactory.tagPriority[1] = TAG_APE;
                     theFactory.tagPriority[2] = TAG_NATIVE;
                     theFactory.tagPriority[3] = TAG_ID3V1;
+
+                    theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
+                    theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
+
+                    Format tempFmt = new Format(TAG_ID3V1 * 1000, "ID3v1");
+                    tempFmt.AddExtension("id3v1");
+                    theFactory.addFormat(tempFmt);
+
+                    tempFmt = new Format(TAG_ID3V2 * 1000, "ID3v2");
+                    tempFmt.AddExtension("id3v2");
+                    theFactory.addFormat(tempFmt);
+
+                    tempFmt = new Format(TAG_APE * 1000, "APEtag");
+                    tempFmt.AddExtension("ape");
+                    theFactory.addFormat(tempFmt);
+
+                    tempFmt = new Format(TAG_NATIVE * 1000, "Native");
+                    tempFmt.AddExtension("native");
+                    theFactory.addFormat(tempFmt);
                 }
             }
 

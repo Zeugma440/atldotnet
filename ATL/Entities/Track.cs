@@ -204,7 +204,7 @@ namespace ATL
         /// <summary>
         /// Format of the tagging systems
         /// </summary>
-        public List<Format> TaggingFormats { get; }
+        public IList<Format> MetadataFormats { get; set;  }
         /// <summary>
         /// Duration (seconds)
         /// </summary>
@@ -308,6 +308,8 @@ namespace ATL
                 currentEmbeddedPictures = null;
                 initialEmbeddedPictures = null;
             }
+
+            MetadataFormats = fileIO.MetadataFormats;
 
             Title = fileIO.Title;
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) && Path != InMemoryPath)

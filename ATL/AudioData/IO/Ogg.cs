@@ -323,6 +323,17 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).Exists;
             }
         }
+        /// <inheritdoc/>
+        public IList<Format> MetadataFormats
+        {
+            get
+            {
+                Format nativeFormat = MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0];
+                nativeFormat.Name = "Native / Vorbis (OGG)";
+                nativeFormat.ID += AudioFormat.ID;
+                return new List<Format>(new Format[1] { nativeFormat });
+            }
+        }
 
         public string Title
         {

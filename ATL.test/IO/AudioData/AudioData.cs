@@ -238,13 +238,13 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_AIFF()
         {
-            testGenericAudio("AIF/aiff_empty.aif", 2937, 512, 8000, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "Audio Interchange File Format (Audio IFF)");
+            testGenericAudio("AIF/aiff_empty.aif", 2937, 512, 8000, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "Audio Interchange File Format");
         }
 
         [TestMethod]
         public void Audio_AIFC()
         {
-            testGenericAudio("AIF/aifc_tagged.aif", 2937, 128, 8000, false, AudioDataIOFactory.CF_LOSSY, STEREO, "Audio Interchange File Format (Audio IFF)");
+            testGenericAudio("AIF/aifc_tagged.aif", 2937, 128, 8000, false, AudioDataIOFactory.CF_LOSSY, STEREO, "Audio Interchange File Format");
         }
 
         [TestMethod]

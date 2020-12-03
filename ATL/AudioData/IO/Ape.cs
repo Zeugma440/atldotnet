@@ -112,11 +112,7 @@ namespace ATL.AudioData.IO
 
         public int Version
         {
-            get { return this.version; }
-        }
-        public string VersionStr
-        {
-            get { return this.versionStr; }
+            get { return version; }
         }
         public ChannelsArrangement ChannelsArrangement
         {
@@ -124,51 +120,51 @@ namespace ATL.AudioData.IO
         }
         public int Bits
         {
-            get { return this.bits; }
+            get { return bits; }
         }
         public uint PeakLevel
         {
-            get { return this.peakLevel; }
+            get { return peakLevel; }
         }
         public double PeakLevelRatio
         {
-            get { return this.peakLevelRatio; }
+            get { return peakLevelRatio; }
         }
         public long TotalSamples
         {
-            get { return this.totalSamples; }
+            get { return totalSamples; }
         }
         public int CompressionMode
         {
-            get { return this.compressionMode; }
+            get { return compressionMode; }
         }
         public string CompressionModeStr
         {
-            get { return this.compressionModeStr; }
+            get { return compressionModeStr; }
         }
 
         // FormatFlags, only used with Monkey's <= 3.97
         public int FormatFlags
         {
-            get { return this.formatFlags; }
+            get { return formatFlags; }
         }
         public bool HasPeakLevel
         {
-            get { return this.hasPeakLevel; }
+            get { return hasPeakLevel; }
         }
         public bool HasSeekElements
         {
-            get { return this.hasSeekElements; }
+            get { return hasSeekElements; }
         }
         public bool WavNotStored
         {
-            get { return this.wavNotStored; }
+            get { return wavNotStored; }
         }
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
         public int SampleRate
         {
-            get { return this.sampleRate; }
+            get { return sampleRate; }
         }
         public bool IsVBR
         {
@@ -254,9 +250,7 @@ namespace ATL.AudioData.IO
             this.sizeInfo = sizeInfo;
             resetData();
 
-            // reading data from file
-            LoadSuccess = false;
-
+            // Read data from file
             readCommonHeader(source);
 
             if (StreamUtils.StringEqualsArr("MAC ", header.cID))

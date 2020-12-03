@@ -7,7 +7,7 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class DummyIO : IPlaylistIO
     {
-        /// Mandatory override to IPlaylistIO
+        /// <inheritdoc/>
         public string Path
         {
             get
@@ -20,7 +20,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override to IPlaylistIO
+        /// <inheritdoc/>
         public IList<string> FilePaths
         {
             get => new List<string>();
@@ -30,7 +30,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override to IPlaylistIO
+        /// <inheritdoc/>
         public IList<Track> Tracks
         {
             get => new List<Track>();
@@ -40,7 +40,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override to IPlaylistIO
+        /// <inheritdoc/>
         public PlaylistFormat.LocationFormatting LocationFormatting
         {
             get => PlaylistFormat.LocationFormatting.Undefined;
@@ -50,7 +50,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override to IPlaylistIO
+        /// <inheritdoc/>
         public PlaylistFormat.FileEncoding Encoding
         {
             get => PlaylistFormat.FileEncoding.Undefined;

@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace ATL.AudioData.IO
@@ -9,15 +10,28 @@ namespace ATL.AudioData.IO
     /// </summary>
 	public class ID3v1 : MetaDataIO
 	{
-		public const int MAX_MUSIC_GENRES = 148;        // Max. number of music genres
-        public const int DEFAULT_GENRE = 255;               // Index for default genre
+		/// <summary>
+		/// Max. number of music genres
+		/// </summary>
+		public const int MAX_MUSIC_GENRES = 148;
 
-        public const int ID3V1_TAG_SIZE = 128;
-        public const string ID3V1_ID = "TAG";
+		/// <summary>
+		/// Standard size of an ID3v1 tag
+		/// </summary>
+		public const int ID3V1_TAG_SIZE = 128;
+		/// <summary>
+		/// Magic number of an ID3v1 tag
+		/// </summary>
+		public const string ID3V1_ID = "TAG";
 
-		// Used with VersionID property
-		public const byte TAG_VERSION_1_0 = 1;                // Index for ID3v1.0 tag
-		public const byte TAG_VERSION_1_1 = 2;                // Index for ID3v1.1 tag
+		/// <summary>
+		/// Index for ID3v1.0 tag
+		/// </summary>
+		private const byte TAG_VERSION_1_0 = 1;
+		/// <summary>
+		/// Index for ID3v1.1 tag
+		/// </summary>
+		private const byte TAG_VERSION_1_1 = 2;
 
 		#region music genres
 		public static readonly string[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
@@ -173,10 +187,47 @@ namespace ATL.AudioData.IO
 			"Synthpop"
 		};
 		#endregion
-			
+
+
+		// --------------- OPTIONAL INFORMATIVE OVERRIDES
+
+		/// <inheritdoc/>
+		public new IList<Format> TaggingFormats
+		{
+			get
+			{
+				Format format = MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v1")[0];
+				format.Name = format.Name + "." + (tagVersion - 1);
+				format.ID += tagVersion - 1;
+				return new List<Format>(new Format[1] { format });
+			}
+		}
+
+
+		// --------------- MANDATORY INFORMATIVE OVERRIDES
+
+		/// <inheritdoc/>
+		protected override int getDefaultTagOffset()
+		{
+			return TO_EOF;
+		}
+
+		/// <inheritdoc/>
+		protected override int getImplementedTagType()
+		{
+			return MetaDataIOFactory.TAG_ID3V1;
+		}
+
+		/// <inheritdoc/>
+		protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+		{
+			throw new NotImplementedException();
+		}
+
+
 		// ********************* Auxiliary functions & voids ********************
 
-        private bool ReadTag(BufferedBinaryReader source)
+		private bool ReadTag(BufferedBinaryReader source)
         {
             bool result = false;
 
@@ -233,6 +284,9 @@ namespace ATL.AudioData.IO
 
 			return result;
 		}
+
+
+
 
 		// ********************** Public functions & voids **********************
 
@@ -303,21 +357,6 @@ namespace ATL.AudioData.IO
             w.Write(genre);
 
             return 7;
-        }
-
-        protected override int getDefaultTagOffset()
-        {
-            return TO_EOF;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_ID3V1;
-        }
-
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -93,11 +93,11 @@
         /// <summary>
         /// Initialize the current object with the given ID and Name
         /// </summary>
-        /// <param name="ID">Format ID</param>
-        /// <param name="Name">Format name</param>
-        protected override void init(int ID, string Name)
+        /// <param name="id">Format ID</param>
+        /// <param name="name">Format name</param>
+        protected override void init(int id, string name)
         {
-            base.init(ID, Name);
+            base.init(id, name);
             LocationFormat = LocationFormatting.FilePath;
             Encoding = FileEncoding.UTF8_BOM;
         }

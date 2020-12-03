@@ -17,6 +17,13 @@ namespace ATL.AudioData
 		{
 			get;
 		}
+        /// <summary>
+        /// Available metadata formats
+        /// </summary>
+        IList<Format> MetadataFormats
+        {
+            get;
+        }
 		/// <summary>
 		/// Title of the track
 		/// </summary>

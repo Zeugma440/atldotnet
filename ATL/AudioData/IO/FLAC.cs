@@ -105,6 +105,17 @@ namespace ATL.AudioData.IO
         {
             get { return vorbisTag.Exists; }
         }
+        /// <inheritdoc/>
+        public IList<Format> MetadataFormats
+        {
+            get
+            {
+                Format nativeFormat = MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0];
+                nativeFormat.Name = "Native / Vorbis (FLAC)";
+                nativeFormat.ID += AudioFormat.ID;
+                return new List<Format>(new Format[1] { nativeFormat });
+            }
+        }
         public string FileName
         {
             get { return filePath; }

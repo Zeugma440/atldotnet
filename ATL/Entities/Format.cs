@@ -20,11 +20,12 @@ namespace ATL
         /// <summary>
         /// Construct a format
         /// </summary>
-        /// <param name="ID">Unique ID</param>
-        /// <param name="Name">Name</param>
-        public Format(int ID, string Name)
+        /// <param name="id">Unique ID</param>
+        /// <param name="name">Name</param>
+        /// <param name="shortName">Short name</param>
+        public Format(int id, string name, string shortName = "")
         {
-            init(ID, Name);
+            init(id, name, (0 == shortName.Length) ? name : shortName);
         }
 
         /// <summary>
@@ -42,8 +43,9 @@ namespace ATL
         /// <param name="iFormat">Format to copy data from</param>
         protected virtual void copyFrom(Format iFormat)
         {
-            this.Name = iFormat.Name;
             this.ID = iFormat.ID;
+            this.Name = iFormat.Name;
+            this.ShortName = iFormat.ShortName;
             this.mimeList = new Dictionary<string, int>(iFormat.mimeList);
             this.extList = new Dictionary<string, int>(iFormat.extList);
             this.Readable = iFormat.Readable;
@@ -52,12 +54,24 @@ namespace ATL
         /// <summary>
         /// Initialize the object from its parts
         /// </summary>
-        /// <param name="ID">Unique ID</param>
-        /// <param name="Name">Name</param>
-        protected virtual void init(int ID, string Name)
+        /// <param name="id">Unique ID</param>
+        /// <param name="name">Name</param>
+        protected virtual void init(int id, string name)
         {
-            this.ID = ID;
-            this.Name = Name;
+            init(id, name, "");
+        }
+
+        /// <summary>
+        /// Initialize the object from its parts
+        /// </summary>
+        /// <param name="id">Unique ID</param>
+        /// <param name="name">Name</param>
+        /// <param name="shortName">Short name</param>
+        protected virtual void init(int id, string name, string shortName)
+        {
+            this.ID = id;
+            this.Name = name;
+            this.ShortName = (0 == shortName.Length) ? name : shortName;
             this.Readable = true;
             extList = new Dictionary<string, int>();
             mimeList = new Dictionary<string, int>();
@@ -67,6 +81,11 @@ namespace ATL
         /// Name
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Short name
+        /// </summary>
+        public string ShortName { get; set; }
 
         /// <summary>
         /// Internal unique ID

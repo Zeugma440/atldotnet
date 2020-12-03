@@ -45,9 +45,18 @@ namespace ATL.AudioData.IO
     /// </summary>
     public class ID3v2 : MetaDataIO
     {
-        public const byte TAG_VERSION_2_2 = 2;             // Code for ID3v2.2.x tag
-        public const byte TAG_VERSION_2_3 = 3;             // Code for ID3v2.3.x tag
-        public const byte TAG_VERSION_2_4 = 4;             // Code for ID3v2.4.x tag
+        /// <summary>
+        /// ID3v2.2
+        /// </summary>
+        public const byte TAG_VERSION_2_2 = 2;
+        /// <summary>
+        /// ID3v2.3
+        /// </summary>
+        public const byte TAG_VERSION_2_3 = 3;
+        /// <summary>
+        /// ID3v2.4
+        /// </summary>
+        public const byte TAG_VERSION_2_4 = 4;
 
         private TagInfo tagHeader;
 
@@ -381,6 +390,43 @@ namespace ATL.AudioData.IO
             public byte TimestampFormat;
             public byte ContentType;
         }
+
+
+        // --------------- OPTIONAL INFORMATIVE OVERRIDES
+
+        /// <inheritdoc/>
+        public new IList<Format> TaggingFormats
+        {
+            get
+            {
+                Format format = MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v2")[0];
+                format.Name = format.Name + "." + tagVersion;
+                format.ID += tagVersion;
+                return new List<Format>(new Format[1] { format });
+            }
+        }
+
+
+        // --------------- MANDATORY INFORMATIVE OVERRIDES
+
+        /// <inheritdoc/>
+        protected override int getDefaultTagOffset()
+        {
+            return TO_BOF;
+        }
+
+        /// <inheritdoc/>
+        protected override int getImplementedTagType()
+        {
+            return MetaDataIOFactory.TAG_ID3V2;
+        }
+
+        /// <inheritdoc/>
+        public override byte FieldCodeFixedLength
+        {
+            get { return 0; } // Actually 4 when strictly applying specs, but thanks to TXXX fields, any code is supported
+        }
+
 
         // ********************* Auxiliary functions & voids ********************
 
@@ -993,22 +1039,6 @@ namespace ATL.AudioData.IO
 
             return result;
         }
-
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BOF;
-        }
-
-        protected override int getImplementedTagType()
-        {
-            return MetaDataIOFactory.TAG_ID3V2;
-        }
-
-        public override byte FieldCodeFixedLength
-        {
-            get { return 0; } // Actually 4 when strictly applying specs, but thanks to TXXX fields, any code is supported
-        }
-
 
         // Writes tag info using ID3v2.4 conventions
         internal int writeInternal(TagData tag, BinaryWriter w, string zone)

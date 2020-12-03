@@ -87,6 +87,20 @@ namespace ATL.AudioData.IO
         {
             get { return this.tagExists; }
         }
+        /// <inheritdoc/>
+        public IList<Format> MetadataFormats
+        {
+            get
+            {
+                Format nativeFormat = MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0];
+                if (this is IAudioDataIO iO)
+                {
+                    nativeFormat.Name = nativeFormat.Name + " / " + iO.AudioFormat.ShortName;
+                    nativeFormat.ID += iO.AudioFormat.ID;
+                }
+                return new List<Format>(new Format[1] { nativeFormat });
+            }
+        }
         /// <summary>
         /// Tag version
         /// </summary>

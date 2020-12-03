@@ -86,23 +86,42 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        // --------------- OPTIONAL INFORMATIVE OVERRIDES
+
+        /// <inheritdoc/>
+        public new IList<Format> TaggingFormats
+        {
+            get
+            {
+                Format format = MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0];
+                format.Name = format.Name + " v" + tagVersion / 1000f;
+                format.ID += tagVersion / 10; // e.g. 1250 -> 125
+                return new List<Format>(new Format[1] { format });
+            }
+        }
+
+
         // --------------- MANDATORY INFORMATIVE OVERRIDES
 
+        /// <inheritdoc/>
         protected override int getDefaultTagOffset()
         {
             return TO_EOF;
         }
 
+        /// <inheritdoc/>
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_APE;
         }
 
+        /// <inheritdoc/>
         protected override byte ratingConvention
         {
             get { return RC_APE; }
         }
 
+        /// <inheritdoc/>
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;

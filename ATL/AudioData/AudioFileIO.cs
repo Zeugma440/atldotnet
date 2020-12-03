@@ -27,6 +27,7 @@ namespace ATL.AudioData
         /// <param name="path">Path of the file to be parsed</param>
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
+        /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
         public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
@@ -54,8 +55,10 @@ namespace ATL.AudioData
         /// Constructor
         /// </summary>
         /// <param name="stream">Stream to access in-memory data to be parsed</param>
+        /// <param name="mimeType">Mime-type of the stream to process</param>
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
+        /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
         public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
@@ -340,6 +343,11 @@ namespace ATL.AudioData
         public bool Exists
         {
             get { return metaData.Exists; }
+        }
+        /// <inheritdoc/>
+        public IList<Format> MetadataFormats
+        {
+            get { return metaData.MetadataFormats; }
         }
         /// <summary>
         /// Recording date (DateTime.MinValue if field does not exist)
