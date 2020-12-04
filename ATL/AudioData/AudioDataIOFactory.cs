@@ -9,14 +9,32 @@ namespace ATL.AudioData
     public class AudioDataIOFactory : Factory
     {
         // Codec families
-        public const int CF_LOSSY = 0; // Streamed, lossy data
-        public const int CF_LOSSLESS = 1; // Streamed, lossless data
-        public const int CF_SEQ_WAV = 2; // Sequenced with embedded sound library
-        public const int CF_SEQ = 3; // Sequenced with codec or hardware-dependent sound library
+        /// <summary>
+        /// Streamed, lossy data
+        /// </summary>
+        public const int CF_LOSSY = 0;
+        /// <summary>
+        /// Streamed, lossless data
+        /// </summary>
+        public const int CF_LOSSLESS = 1;
+        /// <summary>
+        /// Sequenced with embedded sound library
+        /// </summary>
+        public const int CF_SEQ_WAV = 2;
+        /// <summary>
+        /// Sequenced with codec or hardware-dependent sound library
+        /// </summary>
+        public const int CF_SEQ = 3;
 
+        /// <summary>
+        /// Number of codec families
+        /// </summary>
         public static readonly int NB_CODEC_FAMILIES = 4;
 
-        public const int MAX_ALTERNATES = 2;   // Max number of alternate formats having the same file extension
+        /// <summary>
+        /// Max number of alternate formats having the same file extension
+        /// </summary>
+        public const int MAX_ALTERNATES = 2;
 
         // The instance of this factory
         private static AudioDataIOFactory theFactory = null;
@@ -24,6 +42,7 @@ namespace ATL.AudioData
         private static readonly object _lockable = new object();
 
         // Codec IDs
+#pragma warning disable CS1591 // Missing XML comment
         public const int CID_MP3 = 0;
         public const int CID_OGG = 1;
         public const int CID_MPC = 2;
@@ -54,6 +73,7 @@ namespace ATL.AudioData
         public const int CID_AA = 27;
 
         public const int NB_CODECS = 28;
+#pragma warning restore CS1591 // Missing XML comment
 
         // ------------------------------------------------------------------------------------------
 
@@ -280,7 +300,14 @@ namespace ATL.AudioData
             return theFactory;
         }
 
-        public IAudioDataIO GetFromPath(String path, int alternate = 0)
+        /// <summary>
+        /// Get the proper IAudioDataIO to exploit the file at the given path,
+        /// or a dummy object if no proper IAudioDataIO has been found
+        /// </summary>
+        /// <param name="path">Path of the file to exploit</param>
+        /// <param name="alternate">Index of the alternate format to use (for internal use only)</param>
+        /// <returns>Appropriate IAudioDataIO to exploit the file at the given path, or dummy object if no proper IAudioDataIO has been found</returns>
+        public IAudioDataIO GetFromPath(string path, int alternate = 0)
         {
             IList<Format> formats = getFormatsFromPath(path);
             Format theFormat;
@@ -291,7 +318,7 @@ namespace ATL.AudioData
 
             int formatId = theFormat.ID;
 
-            IAudioDataIO theDataReader = null;
+            IAudioDataIO theDataReader;
 
             switch (formatId)
             {
@@ -387,7 +414,15 @@ namespace ATL.AudioData
             return theDataReader;
         }
 
-        public IAudioDataIO GetFromMimeType(String mimeType, String path, int alternate = 0)
+        /// <summary>
+        /// Get the proper IAudioDataIO to exploit the data of the given Mime-type,
+        /// or a dummy object if no proper IAudioDataIO has been found
+        /// </summary>
+        /// <param name="mimeType">Mime-type of the data to exploit</param>
+        /// <param name="path">Path of the file to exploit</param>
+        /// <param name="alternate">Index of the alternate format to use (for internal use only)</param>
+        /// <returns>Appropriate IAudioDataIO to exploit the data of the given Mime-type, or dummy object if no proper IAudioDataIO has been found</returns>
+        public IAudioDataIO GetFromMimeType(string mimeType, string path, int alternate = 0)
         {
             IList<Format> formats;
             if (mimeType.StartsWith(".")) formats = getFormatsFromPath(mimeType);

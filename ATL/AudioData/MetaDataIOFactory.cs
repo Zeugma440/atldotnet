@@ -9,13 +9,30 @@ namespace ATL.AudioData
     public class MetaDataIOFactory : Factory
     {
         // Defines the types of supported "cross-format" metadata
+        /// <summary>
+        /// ID3v1
+        /// </summary>
         public const int TAG_ID3V1 = 0;
+        /// <summary>
+        /// ID3v2
+        /// </summary>
         public const int TAG_ID3V2 = 1;
+        /// <summary>
+        /// APEtag
+        /// </summary>
         public const int TAG_APE = 2;
-        public const int TAG_NATIVE = 3;    // Native tag format associated with the audio container (ex : MP4 built-in tagging format)
-        public const int TAG_ANY = 99;      // Whenever tag type is not known in advance and may apply to any available tag
+        /// <summary>
+        /// Native tag format associated with the audio container (ex : MP4 built-in tagging format)
+        /// </summary>
+        public const int TAG_NATIVE = 3;
+        /// <summary>
+        /// Whenever tag type is not known in advance and may apply to any available tag
+        /// </summary>
+        public const int TAG_ANY = 99;
 
-        // Count of the types defined above, excluding "any" type
+        /// <summary>
+        /// Count of the types defined above, excluding "any" type
+        /// </summary>
         public static readonly int TAG_TYPE_COUNT = 4;
 
         public enum TagType
