@@ -38,18 +38,28 @@ namespace ATL.AudioData.IO
     /// </summary>
     public class Midi : MetaDataIO, IAudioDataIO
     {
-        //Private properties
-        private IList<MidiTrack> tracks;    // Tracks of the song
-        private int timebase;           // timebase = ticks per frame (quarter note) a.k.a. PPQN (Pulses Per Quarter Note)
-        private int tempoMsgNum;        // position of tempo event in track 0
+        /// <summary>
+        /// Tracks of the song
+        /// </summary>
+        private IList<MidiTrack> tracks;
+        /// <summary>
+        /// Timebase = ticks per frame (quarter note) a.k.a. PPQN (Pulses Per Quarter Note)
+        /// </summary>
+        private int timebase;
 
-        private long tempo;             // tempo (0 for unknown)
-        // NB : there is no such thing as an uniform "song tempo" since tempo can change over time within each track !
+        /// <summary>
+        /// Tempo (0 for unknown)
+        /// NB : there is no such thing as an uniform "song tempo" since tempo can change over time within each track !
+        /// </summary>
+        private long tempo;
 
-        private byte type;              // MIDI STRUCTURE TYPE
-        // 0 - single-track 
-        // 1 - multiple tracks, synchronous
-        // 2 - multiple tracks, asynchronous
+        /// <summary>
+        /// MIDI structure type
+        ///   0 - single-track
+        ///   1 - multiple tracks, synchronous
+        ///   2 - multiple tracks, asynchronous
+        /// </summary>
+        private byte type;
 
 
         private static class MidiEvents
@@ -136,133 +146,133 @@ namespace ATL.AudioData.IO
 
         #region instruments
         private static readonly string[] instrumentList = new string[128] { "Piano",
-															  "Bright Piano",
-															  "Electric Grand",
-															  "Honky Tonk Piano",
-															  "Electric Piano 1",
-															  "Electric Piano 2",
-															  "Harpsichord",
-															  "Clavinet",
-															  "Celesta",
-															  "Glockenspiel",
-															  "Music Box",
-															  "Vibraphone",
-															  "Marimba",
-															  "Xylophone",
-															  "Tubular Bell",
-															  "Dulcimer",
-															  "Hammond Organ",
-															  "Perc Organ",
-															  "Rock Organ",
-															  "Church Organ",
-															  "Reed Organ",
-															  "Accordion",
-															  "Harmonica",
-															  "Tango Accordion",
-															  "Nylon Str Guitar",
-															  "Steel String Guitar",
-															  "Jazz Electric Gtr",
-															  "Clean Guitar",
-															  "Muted Guitar",
-															  "Overdrive Guitar",
-															  "Distortion Guitar",
-															  "Guitar Harmonics",
-															  "Acoustic Bass",
-															  "Fingered Bass",
-															  "Picked Bass",
-															  "Fretless Bass",
-															  "Slap Bass 1",
-															  "Slap Bass 2",
-															  "Syn Bass 1",
-															  "Syn Bass 2",
-															  "Violin",
-															  "Viola",
-															  "Cello",
-															  "Contrabass",
-															  "Tremolo Strings",
-															  "Pizzicato Strings",
-															  "Orchestral Harp",
-															  "Timpani",
-															  "Ensemble Strings",
-															  "Slow Strings",
-															  "Synth Strings 1",
-															  "Synth Strings 2",
-															  "Choir Aahs",
-															  "Voice Oohs",
-															  "Syn Choir",
-															  "Orchestra Hit",
-															  "Trumpet",
-															  "Trombone",
-															  "Tuba",
-															  "Muted Trumpet",
-															  "French Horn",
-															  "Brass Ensemble",
-															  "Syn Brass 1",
-															  "Syn Brass 2",
-															  "Soprano Sax",
-															  "Alto Sax",
-															  "Tenor Sax",
-															  "Baritone Sax",
-															  "Oboe",
-															  "English Horn",
-															  "Bassoon",
-															  "Clarinet",
-															  "Piccolo",
-															  "Flute",
-															  "Recorder",
-															  "Pan Flute",
-															  "Bottle Blow",
-															  "Shakuhachi",
-															  "Whistle",
-															  "Ocarina",
-															  "Syn Square Wave",
-															  "Syn Saw Wave",
-															  "Syn Calliope",
-															  "Syn Chiff",
-															  "Syn Charang",
-															  "Syn Voice",
-															  "Syn Fifths Saw",
-															  "Syn Brass and Lead",
-															  "Fantasia",
-															  "Warm Pad",
-															  "Polysynth",
-															  "Space Vox",
-															  "Bowed Glass",
-															  "Metal Pad",
-															  "Halo Pad",
-															  "Sweep Pad",
-															  "Ice Rain",
-															  "Soundtrack",
-															  "Crystal",
-															  "Atmosphere",
-															  "Brightness",
-															  "Goblins",
-															  "Echo Drops",
-															  "Sci Fi",
-															  "Sitar",
-															  "Banjo",
-															  "Shamisen",
-															  "Koto",
-															  "Kalimba",
-															  "Bag Pipe",
-															  "Fiddle",
-															  "Shanai",
-															  "Tinkle Bell",
-															  "Agogo",
-															  "Steel Drums",
-															  "Woodblock",
-															  "Taiko Drum",
-															  "Melodic Tom",
-															  "Syn Drum",
-															  "Reverse Cymbal",
-															  "Guitar Fret Noise",
-															  "Breath Noise",
-															  "Seashore",
-															  "Bird",
-															  "Telephone",
-															  "Helicopter",
-															  "Applause",
-															  "Gunshot"};
+                                                              "Bright Piano",
+                                                              "Electric Grand",
+                                                              "Honky Tonk Piano",
+                                                              "Electric Piano 1",
+                                                              "Electric Piano 2",
+                                                              "Harpsichord",
+                                                              "Clavinet",
+                                                              "Celesta",
+                                                              "Glockenspiel",
+                                                              "Music Box",
+                                                              "Vibraphone",
+                                                              "Marimba",
+                                                              "Xylophone",
+                                                              "Tubular Bell",
+                                                              "Dulcimer",
+                                                              "Hammond Organ",
+                                                              "Perc Organ",
+                                                              "Rock Organ",
+                                                              "Church Organ",
+                                                              "Reed Organ",
+                                                              "Accordion",
+                                                              "Harmonica",
+                                                              "Tango Accordion",
+                                                              "Nylon Str Guitar",
+                                                              "Steel String Guitar",
+                                                              "Jazz Electric Gtr",
+                                                              "Clean Guitar",
+                                                              "Muted Guitar",
+                                                              "Overdrive Guitar",
+                                                              "Distortion Guitar",
+                                                              "Guitar Harmonics",
+                                                              "Acoustic Bass",
+                                                              "Fingered Bass",
+                                                              "Picked Bass",
+                                                              "Fretless Bass",
+                                                              "Slap Bass 1",
+                                                              "Slap Bass 2",
+                                                              "Syn Bass 1",
+                                                              "Syn Bass 2",
+                                                              "Violin",
+                                                              "Viola",
+                                                              "Cello",
+                                                              "Contrabass",
+                                                              "Tremolo Strings",
+                                                              "Pizzicato Strings",
+                                                              "Orchestral Harp",
+                                                              "Timpani",
+                                                              "Ensemble Strings",
+                                                              "Slow Strings",
+                                                              "Synth Strings 1",
+                                                              "Synth Strings 2",
+                                                              "Choir Aahs",
+                                                              "Voice Oohs",
+                                                              "Syn Choir",
+                                                              "Orchestra Hit",
+                                                              "Trumpet",
+                                                              "Trombone",
+                                                              "Tuba",
+                                                              "Muted Trumpet",
+                                                              "French Horn",
+                                                              "Brass Ensemble",
+                                                              "Syn Brass 1",
+                                                              "Syn Brass 2",
+                                                              "Soprano Sax",
+                                                              "Alto Sax",
+                                                              "Tenor Sax",
+                                                              "Baritone Sax",
+                                                              "Oboe",
+                                                              "English Horn",
+                                                              "Bassoon",
+                                                              "Clarinet",
+                                                              "Piccolo",
+                                                              "Flute",
+                                                              "Recorder",
+                                                              "Pan Flute",
+                                                              "Bottle Blow",
+                                                              "Shakuhachi",
+                                                              "Whistle",
+                                                              "Ocarina",
+                                                              "Syn Square Wave",
+                                                              "Syn Saw Wave",
+                                                              "Syn Calliope",
+                                                              "Syn Chiff",
+                                                              "Syn Charang",
+                                                              "Syn Voice",
+                                                              "Syn Fifths Saw",
+                                                              "Syn Brass and Lead",
+                                                              "Fantasia",
+                                                              "Warm Pad",
+                                                              "Polysynth",
+                                                              "Space Vox",
+                                                              "Bowed Glass",
+                                                              "Metal Pad",
+                                                              "Halo Pad",
+                                                              "Sweep Pad",
+                                                              "Ice Rain",
+                                                              "Soundtrack",
+                                                              "Crystal",
+                                                              "Atmosphere",
+                                                              "Brightness",
+                                                              "Goblins",
+                                                              "Echo Drops",
+                                                              "Sci Fi",
+                                                              "Sitar",
+                                                              "Banjo",
+                                                              "Shamisen",
+                                                              "Koto",
+                                                              "Kalimba",
+                                                              "Bag Pipe",
+                                                              "Fiddle",
+                                                              "Shanai",
+                                                              "Tinkle Bell",
+                                                              "Agogo",
+                                                              "Steel Drums",
+                                                              "Woodblock",
+                                                              "Taiko Drum",
+                                                              "Melodic Tom",
+                                                              "Syn Drum",
+                                                              "Reverse Cymbal",
+                                                              "Guitar Fret Noise",
+                                                              "Breath Noise",
+                                                              "Seashore",
+                                                              "Bird",
+                                                              "Telephone",
+                                                              "Helicopter",
+                                                              "Applause",
+                                                              "Gunshot"};
         #endregion
 
         private const string MIDI_FILE_HEADER = "MThd";
@@ -281,53 +291,67 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // IAudioDataIO
+        // From IAudioDataIO
+
+        /// <inheritdoc/>
         public int SampleRate
         {
             get { return 0; }
         }
+        /// <inheritdoc/>
         public bool IsVBR
         {
             get { return false; }
         }
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get;
         }
+        /// <inheritdoc/>
         public int CodecFamily
         {
             get { return AudioDataIOFactory.CF_SEQ; }
         }
+        /// <inheritdoc/>
         public string FileName
         {
             get { return filePath; }
         }
+        /// <inheritdoc/>
         public double BitRate
         {
             get { return bitrate; }
         }
+        /// <inheritdoc/>
         public double Duration
         {
             get { return duration; }
         }
+        /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement
         {
             get { return ChannelsArrangements.STEREO; }
         }
+        /// <inheritdoc/>
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // Only for comments
         }
 
-        // IMetaDataIO
+        // From IMetaDataIO
+
+        /// <inheritdoc/>
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
         }
+        /// <inheritdoc/>
         protected override int getImplementedTagType()
         {
             return MetaDataIOFactory.TAG_NATIVE;
         }
+        /// <inheritdoc/>
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
@@ -351,7 +375,7 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        
+
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
         private double getDuration()
@@ -409,6 +433,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
+        /// <inheritdoc/>
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] header;
@@ -419,14 +444,6 @@ namespace ATL.AudioData.IO
             resetData();
 
             // Ignores everything (comments) written before the MIDI header
-            /*
-             *          trigger = "";
-                        while (trigger != MIDI_FILE_HEADER)
-                        {
-                            trigger += new String(StreamUtils.ReadOneByteChars(source, 1));
-                            if (trigger.Length > 4) trigger = trigger.Remove(0, 1);
-                        }
-            */
             StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_FILE_HEADER));
 
             // Ready to read header data...
@@ -437,7 +454,7 @@ namespace ATL.AudioData.IO
                 (header[3] != 6)
                 )
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_ERROR,"Wrong MIDI header");
+                Logging.LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
                 return false;
             }
             type = header[5];
@@ -485,7 +502,7 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());
 
             duration = getDuration();
-            bitrate = (double) sizeInfo.FileSize / duration;
+            bitrate = (double)sizeInfo.FileSize / duration;
 
             return true;
         }
@@ -774,7 +791,6 @@ namespace ATL.AudioData.IO
                                         if (0 == trackNumber/* && 0 == this.tempo*/)
                                         {
                                             this.tempo = currentTempo;
-                                            this.tempoMsgNum = track.events.Count - 1;
                                         }
                                         position += 6;
                                         break;
@@ -821,7 +837,6 @@ namespace ATL.AudioData.IO
                                         if ((len + position) > trackLen) throw new InvalidDataException("SeqSpec has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
-                                            //String str = Encoding.ASCII.GetString(data, position + 3, len); //data.=' '.sprintf("%02x",(byte)($data[$p+3+$i]));
                                             evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
                                             evt.isMetaEvent = true;
                                             evt.Description = " Meta SeqSpec";
@@ -838,7 +853,7 @@ namespace ATL.AudioData.IO
                                         if ((len + position) > trackLen) throw new InvalidDataException("Meta " + metacode + " has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + "]");
                                         position -= 3;
                                         {
-                                            String str = Encoding.ASCII.GetString(data, position + 3, len); //sprintf("%02x",(byte)($data[$p+3+$i]));
+                                            String str = Encoding.ASCII.GetString(data, position + 3, len);
                                             evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
                                             evt.isMetaEvent = true;
                                             evt.Description = " Meta 0x" + metacode + " " + str;
@@ -855,7 +870,6 @@ namespace ATL.AudioData.IO
                                 len = readVarLen(ref data, ref position);
                                 if ((len + position) > trackLen) throw new InvalidDataException("SysEx has corrupt variable length field (" + len + ") [track: " + trackNumber + " dt: " + currentDelta + " p: " + position + "]");
                                 {
-                                    //String str = "f0" + Encoding.ASCII.GetString(data, position + 2, len); //str+=' '.sprintf("%02x",(byte)(data[p+2+i]));
                                     evt = new MidiEvent(currentTicks, eventTypeHigh, -1, currentTempo);
                                     evt.isMetaEvent = true;
                                     evt.Description = " SysEx";
@@ -955,6 +969,7 @@ namespace ATL.AudioData.IO
             return (value);
         }
 
+        /// <inheritdoc/>
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             // Not implemented, as it would require a whole new set of metadata related to tracks and their names

@@ -17,7 +17,7 @@ namespace ATL.Playlist.IO
     {
         private static byte[] FILE_IDENTIFIER = Utils.Latin1Encoding.GetBytes("file://");
 
-        /// Mandatory override of PlaylistIO.getFiles
+        /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
@@ -27,7 +27,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override of PlaylistIO.setTracks
+        /// <inheritdoc/>
         protected override void setTracks(FileStream fs, IList<Track> result)
         {
             throw new NotImplementedException("FPL writing not implemented");

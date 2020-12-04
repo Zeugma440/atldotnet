@@ -12,16 +12,31 @@ namespace ATL.AudioData.IO
     /// </summary>
 	public class APEtag : MetaDataIO
     {
-        // Tag ID
-        public const string APE_ID = "APETAGEX";                            // APE
+        /// <summary>
+        /// Tag ID / magic number
+        /// </summary>
+        public const string APE_ID = "APETAGEX";
 
         // Size constants
-        public const byte APE_TAG_FOOTER_SIZE = 32;                         // APE tag footer
-        public const byte APE_TAG_HEADER_SIZE = 32;                         // APE tag header
+        /// <summary>
+        /// APE tag footer size
+        /// </summary>
+        public const byte APE_TAG_FOOTER_SIZE = 32;
+        /// <summary>
+        /// APE tag header size
+        /// </summary>
+        public const byte APE_TAG_HEADER_SIZE = 32;
 
-        // First version of APE tag
+        // Version values
+        /// <summary>
+        /// APE v1
+        /// </summary>
         public const int APE_VERSION_1_0 = 1000;
+        /// <summary>
+        /// APE v2
+        /// </summary>
         public const int APE_VERSION_2_0 = 2000;
+
 
         // Mapping between standard ATL fields and APE identifiers
         /*
@@ -294,6 +309,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
+        /// <param name="zone">Code of the zone to write</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
@@ -423,7 +439,7 @@ namespace ATL.AudioData.IO
             int frameFlags = 0x0000;
 
             frameSizePos = writer.BaseStream.Position;
-            writer.Write((int)0); // Frame size placeholder to be rewritten in a few lines
+            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
 
             writer.Write(frameFlags);
 

@@ -534,14 +534,43 @@ namespace ATL.AudioData.IO
 
         // ------ ABSTRACT METHODS -----------------------------------------------------
 
+        /// <summary>
+        /// Read metadata from the given source, using the given parameters
+        /// </summary>
+        /// <param name="source">Source to read metadata from</param>
+        /// <param name="readTagParams">Read parameters</param>
+        /// <returns>True if read has been successful, false if it failed</returns>
         abstract protected bool read(BinaryReader source, ReadTagParams readTagParams);
 
+        /// <summary>
+        /// Write the given zone's metadata using the given writer
+        /// </summary>
+        /// <param name="tag">Metadata to write</param>
+        /// <param name="w">Writer to use</param>
+        /// <param name="zone">Code of the zone to write</param>
+        /// <returns>Number of written fields; 0 if no field has been added not edited</returns>
         abstract protected int write(TagData tag, BinaryWriter w, string zone);
 
+        /// <summary>
+        /// Return the default offset of the metadata block
+        /// </summary>
+        /// <returns></returns>
         abstract protected int getDefaultTagOffset();
 
+        /// <summary>
+        /// Return the implemented tag type (see <see cref="MetaDataIOFactory"/> constants)
+        /// TODO make it return a <see cref="MetaDataIOFactory.TagType"/>
+        /// </summary>
+        /// <returns></returns>
         abstract protected int getImplementedTagType();
 
+        /// <summary>
+        /// Get the frame code (per <see cref="TagData"/> standards for the given field ID in the given zone and the given tag version
+        /// </summary>
+        /// <param name="zone">Code of the zone of the given field</param>
+        /// <param name="ID">ID of the field to get the mapping for</param>
+        /// <param name="tagVersion">Version the tagging system (e.g. 3 for ID3v2.3)</param>
+        /// <returns></returns>
         abstract protected byte getFrameMapping(string zone, string ID, byte tagVersion);
 
 

@@ -16,7 +16,7 @@ namespace ATL.Playlist.IO
     public class SMILIO : PlaylistIO
 #pragma warning restore S101 // Types should be named in PascalCase
     {
-        /// Mandatory override of PlaylistIO.getFiles
+        /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             using (XmlReader source = XmlReader.Create(fs))
@@ -58,7 +58,7 @@ namespace ATL.Playlist.IO
             return null;
         }
 
-        /// Mandatory override of PlaylistIO.setTracks
+        /// <inheritdoc/>
         protected override void setTracks(FileStream fs, IList<Track> result)
         {
             XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());

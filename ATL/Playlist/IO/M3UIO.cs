@@ -26,7 +26,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override of PlaylistIO.getFiles
+        /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)
         {
             Encoding encoding = getEncoding(fs);
@@ -46,7 +46,7 @@ namespace ATL.Playlist.IO
             }
         }
 
-        /// Mandatory override of PlaylistIO.setTracks
+        /// <inheritdoc/>
         protected override void setTracks(FileStream fs, IList<Track> result)
         {
             Encoding encoding = getEncoding(fs);
