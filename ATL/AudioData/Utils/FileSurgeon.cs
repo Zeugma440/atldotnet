@@ -219,7 +219,7 @@ namespace ATL.AudioData.IO
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
-                        using (MemoryStream s = new MemoryStream(zone.Size))
+                        using (MemoryStream s = new MemoryStream((int)zone.Size))
                         using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                         {
                             // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)

@@ -111,11 +111,11 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Total size of tag (in bytes)
         /// </summary>
-        public int Size
+        public long Size
         {
             get
             {
-                int result = 0;
+                long result = 0;
 
                 foreach (Zone zone in Zones) result += zone.Size;
 

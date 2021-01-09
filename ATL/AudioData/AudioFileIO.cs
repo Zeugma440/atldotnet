@@ -387,7 +387,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Metadata size (bytes)
         /// </summary>
-        public int Size
+        public long Size
         {
             get { return metaData.Size; }
         }

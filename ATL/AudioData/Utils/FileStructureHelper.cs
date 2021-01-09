@@ -123,7 +123,7 @@ namespace ATL.AudioData
             /// <summary>
             /// Size in bytes
             /// </summary>
-            public int Size;
+            public long Size;
             /// <summary>
             /// Data sequence that has to be written in the zone when the zone does not contain any other data
             /// </summary>
@@ -148,7 +148,7 @@ namespace ATL.AudioData
             /// <summary>
             /// Construct a new Zone using the given field values
             /// </summary>
-            public Zone(string name, long offset, int size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
+            public Zone(string name, long offset, long size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
             {
                 Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; IsResizable = resizable;
                 Headers = new List<FrameHeader>();
@@ -256,7 +256,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
+        public void AddZone(long offset, long size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
             AddZone(offset, size, new byte[0], name, isDeletable, resizable);
         }
@@ -264,7 +264,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, int size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
+        public void AddZone(long offset, long size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
             if (!zones.ContainsKey(zone))
             {

@@ -119,6 +119,7 @@
     <None Include="packages.config" />
     <None Include="Resources\APE\ape.ape" />
     <None Include="Resources\APE\v394.ape" />
+    <None Include="Resources\CAF\caf.caf" />
     <None Include="Resources\DSF\adgpp_PLAY_01_05.dsf" />
     <None Include="Resources\DSF\dsf.dsf" />
     <None Include="Resources\DSF\empty.dsf" />

@@ -400,6 +400,20 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decode a signed Big-Endian 64-bit floating-point from the given array of bytes
+        /// </summary>
+        /// <param name="data">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static double DecodeBEDouble(byte[] data)
+        {
+            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(data);
+
+            return BitConverter.ToDouble(data, 0);
+        }
+
+        /// <summary>
         /// Switch the format of a signed Int32 between big endian and little endian
         /// </summary>
         /// <param name="n">value to convert</param>

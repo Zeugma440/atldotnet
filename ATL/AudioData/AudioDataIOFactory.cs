@@ -71,8 +71,9 @@ namespace ATL.AudioData
         public const int CID_GYM = 25;
         public const int CID_MP4 = 26;
         public const int CID_AA = 27;
+        public const int CID_CAF = 28;
 
-        public const int NB_CODECS = 28;
+        public const int NB_CODECS = 29;
 #pragma warning restore CS1591 // Missing XML comment
 
         // ------------------------------------------------------------------------------------------
@@ -294,6 +295,11 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-pn-audibleaudio");
                     tempFmt.AddExtension(".aa");
                     theFactory.addFormat(tempFmt);
+
+                    tempFmt = new Format(CID_CAF, "Apple Core Audio", "CAF");
+                    tempFmt.AddMimeType("audio/x-caf");
+                    tempFmt.AddExtension(".caf");
+                    theFactory.addFormat(tempFmt);
                 }
             }
 
@@ -405,6 +411,9 @@ namespace ATL.AudioData
                     break;
                 case CID_AA:
                     theDataReader = new IO.AA(path, theFormat);
+                    break;
+                case CID_CAF:
+                    theDataReader = new IO.CAF(path, theFormat);
                     break;
                 default:
                     theDataReader = new IO.DummyReader(path);
@@ -523,6 +532,9 @@ namespace ATL.AudioData
                     break;
                 case CID_AA:
                     theDataReader = new IO.AA(path, theFormat);
+                    break;
+                case CID_CAF:
+                    theDataReader = new IO.CAF(path, theFormat);
                     break;
                 default:
                     theDataReader = new IO.DummyReader(path);
