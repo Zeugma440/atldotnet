@@ -23,6 +23,7 @@ namespace ATL.AudioData.IO
         public const string CHUNK_INFO = "info";
         public const string CHUNK_UMID = "umid";
         public const string CHUNK_AUDIO = "data";
+        public const string CHUNK_PADDING = "free";
 
         // Mapping between CAF channels layout codes and ATL ChannelsArrangement
         private static Dictionary<uint, ChannelsArrangement> channelsMapping = new Dictionary<uint, ChannelsArrangement>() {
@@ -119,7 +120,6 @@ namespace ATL.AudioData.IO
         private double duration;
         private uint channelsPerFrame;
         double secondsPerByte;
-        uint bitsPerChannel;
         private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
@@ -207,7 +207,6 @@ namespace ATL.AudioData.IO
             channelsPerFrame = 0;
             channelsArrangement = null;
             secondsPerByte = 0;
-            bitsPerChannel = 0;
         }
 
         public CAF(string filePath, Format format)
@@ -238,7 +237,7 @@ namespace ATL.AudioData.IO
             uint bytesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             uint framesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             channelsPerFrame = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            bitsPerChannel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            uint bitsPerChannel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
             this.sampleRate = (uint)Math.Round(sampleRate);
 
