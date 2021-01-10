@@ -136,6 +136,7 @@ namespace ATL.AudioData.IO
         {
             get
             {
+                containerAudioFormat = new Format(containerAudioFormat);
                 containerAudioFormat.Name += " / " + containeeAudioFormat.Value;
                 containerAudioFormat.ID += containeeAudioFormat.Key;
                 return containerAudioFormat;
@@ -338,7 +339,7 @@ namespace ATL.AudioData.IO
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
-            resetData();
+            ResetData();
 
             bool result = false;
 
