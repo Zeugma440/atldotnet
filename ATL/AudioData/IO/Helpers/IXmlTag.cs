@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -117,51 +118,59 @@ namespace ATL.AudioData.IO
             writer.WriteStartDocument();
             writer.WriteStartElement("BWFXML");
 
-            string[] path;
-            string[] previousPath = null;
-            bool first = true;
+            // Path notes : key = node path; value = node name
+            Dictionary<string, string> pathNodes = new Dictionary<string, string>();
+            List<string> previousPathNodes = new List<string>();
             string subkey;
 
             foreach(string key in additionalFields.Keys)
             {
                 if (key.StartsWith("ixml."))
                 {
-                    path = key.Split('.');
-                    if (first)
+                    // Create the list of path nodes
+                    List<string> singleNodes = new List<string>(key.Split('.'));
+                    singleNodes.RemoveAt(0); // Remove the "ixml" node
+
+                    StringBuilder nodePrefix = new StringBuilder();
+                    pathNodes.Clear();
+                    foreach(string nodeName in singleNodes)
                     {
-                        previousPath = path;
-                        first = false;
+                        nodePrefix.Append(".").Append(nodeName);
+                        pathNodes.Add(nodePrefix.ToString(), nodeName);
                     }
 
-                    // Closes all terminated paths
-                    for (int i = previousPath.Length - 2; i >= 0; i--)
+                    // Close all terminated (i.e. non present in current path) nodes in reverse order
+                    for (int i = previousPathNodes.Count - 2; i >= 0; i--)
                     {
-                        if ((path.Length <= i) || (path.Length > i && !path[i].Equals(previousPath[i])))
+                        if (!pathNodes.ContainsKey(previousPathNodes[i]))
                         {
                             writer.WriteEndElement();
                         }
                     }
 
-                    // Opens all new paths
-                    for (int i = 0; i < path.Length - 1; i++)
+                    // Opens all new (i.e. non present in previous path) nodes
+                    foreach(string nodePath in pathNodes.Keys)
                     {
-                        if (previousPath.Length <= i || !path[i].Equals(previousPath[i]))
+                        if (!previousPathNodes.Contains(nodePath))
                         {
-                            subkey = path[i];
+                            subkey = pathNodes[nodePath];
+                            if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
+
                             if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
                             writer.WriteStartElement(subkey.ToUpper());
                         }
                     }
 
-                    writer.WriteElementString(path[path.Length - 1], additionalFields[key]);
+                    // Write the last node (=leaf) as a proper value
+                    writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
 
-                    previousPath = path;
+                    previousPathNodes = pathNodes.Keys.ToList();
                 }
             }
 
             // Closes all terminated paths
-            if (previousPath != null)
-                for (int i = previousPath.Length - 2; i >= 0; i--)
+            if (previousPathNodes != null)
+                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
                 {
                     writer.WriteEndElement();
                 }
