@@ -263,8 +263,8 @@ namespace ATL.AudioData
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine(e.Message);
-                    System.Console.WriteLine(e.StackTrace);
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                     result = false;
                 }

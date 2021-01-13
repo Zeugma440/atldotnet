@@ -83,8 +83,9 @@ namespace ATL.AudioData
             if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
-        public void Save(TagData data)
+        public bool Save(TagData data)
         {
+            bool result = true;
             IList<int> availableMetas = audioManager.getAvailableMetas();
             IList<int> supportedMetas = audioManager.getSupportedMetas();
 
@@ -106,13 +107,15 @@ namespace ATL.AudioData
             if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
             foreach (int meta in availableMetas)
             {
-                audioManager.UpdateTagInFile(data, meta);
+                result &= audioManager.UpdateTagInFile(data, meta);
                 if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
             }
+            return result;
         }
 
-        public void Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        public bool Remove(int tagType = MetaDataIOFactory.TAG_ANY)
         {
+            bool result = true;
             IList<int> metasToRemove;
 
             if (MetaDataIOFactory.TAG_ANY == tagType)
@@ -128,9 +131,10 @@ namespace ATL.AudioData
             if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
             foreach (int meta in metasToRemove)
             {
-                audioManager.RemoveTagFromFile(meta);
+                result &= audioManager.RemoveTagFromFile(meta);
                 if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
             }
+            return result;
         }
 
         // ============ FIELD ACCESSORS

@@ -466,10 +466,12 @@ namespace ATL
         /// <summary>
         /// Save current Track to disk
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            fileIO.Save(toTagData());
-            Update();
+            bool result = fileIO.Save(toTagData());
+            if (result) Update();
+            
+            return result;
         }
 
         /// <summary>
@@ -477,10 +479,12 @@ namespace ATL
         /// </summary>
         /// <param name="tagType">Tag type to remove (see MetaDataIOFactory.TAG_XX values)</param>
         /// <see cref="MetaDataIOFactory"/>
-        public void Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        public bool Remove(int tagType = MetaDataIOFactory.TAG_ANY)
         {
-            fileIO.Remove(tagType);
-            Update();
+            bool result = fileIO.Remove(tagType);
+            if (result) Update();
+
+            return result;
         }
     }
 }

@@ -111,7 +111,7 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
-            theTrack.Remove(MetaDataIOFactory.TAG_ID3V2);
+            Assert.IsTrue(theTrack.Remove(MetaDataIOFactory.TAG_ID3V2));
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(0, theTrack.Year); // Empty on the ID3v1 tag => should really come empty since ID3v2 tag has been removed
@@ -129,7 +129,7 @@ namespace ATL.test.IO
             string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -185,7 +185,7 @@ namespace ATL.test.IO
             // Tricky fields that aren't managed with a 1-to-1 mapping
             theTrack.Year = 1944;
             theTrack.TrackNumber = 10;
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -236,7 +236,7 @@ namespace ATL.test.IO
             theTrack.TrackTotal = 20;
             theTrack.DiscNumber = 30;
             theTrack.DiscTotal = 40;
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -294,7 +294,7 @@ namespace ATL.test.IO
 
                 // A1- Check that the resulting file (working copy that has been processed) keeps the same quantity of bytes when adding data
                 theTrack.Title = originalTitle + "1234567890";
-                theTrack.Save();
+                Assert.IsTrue(theTrack.Save());
 
                 // A11- File length should be the same
                 FileInfo originalFileInfo = new FileInfo(location);
@@ -314,7 +314,7 @@ namespace ATL.test.IO
 
                 // A2- Check that the resulting file (working copy that has been processed) keeps the same quantity of bytes when removing data
                 theTrack.Title = originalTitle;
-                theTrack.Save();
+                Assert.IsTrue(theTrack.Save());
 
                 // A21- File length should be the same
                 originalFileInfo = new FileInfo(location);
@@ -351,7 +351,7 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
 
             theTrack.Title = "a";
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             long initialLength = new FileInfo(testFileLocation).Length;
 
@@ -359,7 +359,7 @@ namespace ATL.test.IO
             try
             {
                 theTrack.Title = "b";
-                theTrack.Save();
+                Assert.IsTrue(theTrack.Save());
 
                 // B1- Check that the resulting file size has been increased by the size of the padding
                 Assert.AreEqual(initialLength + ATL.Settings.PaddingSize + extraBytes, new FileInfo(testFileLocation).Length);
@@ -405,7 +405,7 @@ namespace ATL.test.IO
 
             theTrack.AdditionalFields.Add("ABCD", "efgh");
             theTrack.AdditionalFields.Remove("TENC");
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -424,7 +424,7 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
 
             theTrack.AdditionalFields["TENC"] = "update test";
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -448,7 +448,7 @@ namespace ATL.test.IO
             PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.CD);
             theTrack.EmbeddedPictures.Add(newPicture);
 
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -468,7 +468,7 @@ namespace ATL.test.IO
 
             // Remove all
             theTrack.EmbeddedPictures.Clear();
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(0, theTrack.EmbeddedPictures.Count);
 
@@ -486,7 +486,7 @@ namespace ATL.test.IO
             PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PictureInfo.PIC_TYPE.Front);
             theTrack.EmbeddedPictures.Add(newPicture);
 
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -536,7 +536,7 @@ namespace ATL.test.IO
             chapter.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             theTrack.Chapters.Add(chapter);
 
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
             IList<ChapterInfo> chaptersSave = new List<ChapterInfo>(theTrack.Chapters);
 
             theTrack = new Track(testFileLocation);
@@ -570,7 +570,7 @@ namespace ATL.test.IO
 
             // Delete all
             theTrack.Chapters.Clear();
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(0, theTrack.Chapters.Count);
 
@@ -592,7 +592,7 @@ namespace ATL.test.IO
 
             theTrack.Chapters[2] = chapter;
 
-            theTrack.Save();
+            Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
@@ -619,12 +619,12 @@ namespace ATL.test.IO
 
                 string initialArtist = theTrack.Artist; // '֎FATHER֎'
                 theTrack.Artist = "Hey ho";
-                theTrack.Save();
+                Assert.IsTrue(theTrack.Save());
 
                 theTrack = new Track(testFileLocation);
 
                 theTrack.Artist = initialArtist;
-                theTrack.Save();
+                Assert.IsTrue(theTrack.Save());
 
                 // Check that the resulting file (working copy that has been processed) remains identical to the original file (i.e. no byte lost nor added)
                 FileInfo originalFileInfo = new FileInfo(location);
