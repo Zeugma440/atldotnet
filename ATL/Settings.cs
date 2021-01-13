@@ -112,7 +112,7 @@ namespace ATL
         /// Rationale : the ID3v1 format has very limited capabilities. Adding richer metadata to files tagged with ID3v1 only should be easily feasible
         /// without too many client-side checks
         /// </summary>
-        public static bool IgnoreID3v1onEdit = true;
+        public static bool EnrichID3v1 = true;
 
         /// <summary>
         /// ID3v2 : Always write CTOC frame when metadata contain at least one chapter

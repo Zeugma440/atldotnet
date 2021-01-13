@@ -711,8 +711,8 @@ namespace ATL.test.IO
             string resource = "MP3/id3v1.mp3";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
-            bool defaultSettings = ATL.Settings.IgnoreID3v1onEdit;
-            ATL.Settings.IgnoreID3v1onEdit = true;
+            bool defaultSettings = ATL.Settings.EnrichID3v1;
+            ATL.Settings.EnrichID3v1 = true;
             try
             {
                 Track theTrack = new Track(testFileLocation);
@@ -729,7 +729,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                ATL.Settings.IgnoreID3v1onEdit = defaultSettings;
+                ATL.Settings.EnrichID3v1 = defaultSettings;
             }
 
             // Get rid of the working copy
@@ -742,8 +742,8 @@ namespace ATL.test.IO
             string resource = "MP3/id3v1.mp3";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
-            bool defaultSettings = ATL.Settings.IgnoreID3v1onEdit;
-            ATL.Settings.IgnoreID3v1onEdit = false;
+            bool defaultSettings = ATL.Settings.EnrichID3v1;
+            ATL.Settings.EnrichID3v1 = false;
             try
             {
                 Track theTrack = new Track(testFileLocation);
@@ -758,7 +758,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                ATL.Settings.IgnoreID3v1onEdit = defaultSettings;
+                ATL.Settings.EnrichID3v1 = defaultSettings;
             }
 
             // Get rid of the working copy

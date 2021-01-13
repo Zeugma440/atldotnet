@@ -90,7 +90,7 @@ namespace ATL.AudioData
             IList<int> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = (0 == availableMetas.Count);
-            if (Settings.IgnoreID3v1onEdit && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TAG_ID3V1) hasNothing = true;
+            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TAG_ID3V1) hasNothing = true;
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
