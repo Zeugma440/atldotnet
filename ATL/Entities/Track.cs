@@ -204,7 +204,7 @@ namespace ATL
         /// <summary>
         /// Format of the tagging systems
         /// </summary>
-        public IList<Format> MetadataFormats { get; set;  }
+        public IList<Format> MetadataFormats { get; set; }
         /// <summary>
         /// Duration (seconds)
         /// </summary>
@@ -340,7 +340,7 @@ namespace ATL
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             AudioFormat = fileIO.AudioFormat;
-                
+
             DurationMs = fileIO.Duration;
             Popularity = fileIO.Popularity;
             IsVBR = fileIO.IsVBR;
@@ -463,14 +463,17 @@ namespace ATL
 
             return result;
         }
+
         /// <summary>
-        /// Save current Track to disk
+        /// Save Track to disk
         /// </summary>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save()
         {
             bool result = fileIO.Save(toTagData());
             if (result) Update();
-            
+
             return result;
         }
 
@@ -479,6 +482,8 @@ namespace ATL
         /// </summary>
         /// <param name="tagType">Tag type to remove (see MetaDataIOFactory.TAG_XX values)</param>
         /// <see cref="MetaDataIOFactory"/>
+        /// <returns>True if removal succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
         public bool Remove(int tagType = MetaDataIOFactory.TAG_ANY)
         {
             bool result = fileIO.Remove(tagType);

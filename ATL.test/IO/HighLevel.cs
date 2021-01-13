@@ -705,5 +705,65 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void ID3v1_Ignore_RW()
+        {
+            string resource = "MP3/id3v1.mp3";
+            string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+
+            bool defaultSettings = ATL.Settings.IgnoreID3v1onEdit;
+            ATL.Settings.IgnoreID3v1onEdit = true;
+            try
+            {
+                Track theTrack = new Track(testFileLocation);
+
+                theTrack.Artist = "bobTheBuilder";
+                theTrack.AdditionalFields["test"] = "test1"; // ID3v1 doesn't support that
+                Assert.IsTrue(theTrack.Save());
+
+                theTrack = new Track(testFileLocation);
+                Assert.AreEqual("bobTheBuilder", theTrack.Artist); // Edited
+                Assert.AreEqual(1, theTrack.AdditionalFields.Count);
+                Assert.IsTrue(theTrack.AdditionalFields.ContainsKey("TEST"));
+                Assert.AreEqual("test1", theTrack.AdditionalFields["TEST"]);
+            }
+            finally
+            {
+                ATL.Settings.IgnoreID3v1onEdit = defaultSettings;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void ID3v1_Focus_RW()
+        {
+            string resource = "MP3/id3v1.mp3";
+            string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+
+            bool defaultSettings = ATL.Settings.IgnoreID3v1onEdit;
+            ATL.Settings.IgnoreID3v1onEdit = false;
+            try
+            {
+                Track theTrack = new Track(testFileLocation);
+
+                theTrack.Artist = "bobTheBuilder";
+                theTrack.AdditionalFields["test"] = "test1"; // ID3v1 doesn't support that
+                Assert.IsTrue(theTrack.Save());
+
+                theTrack = new Track(testFileLocation);
+                Assert.AreEqual("bobTheBuilder", theTrack.Artist); // Edited
+                Assert.AreEqual(0, theTrack.AdditionalFields.Count); // Not saved
+            }
+            finally
+            {
+                ATL.Settings.IgnoreID3v1onEdit = defaultSettings;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
     }
 }

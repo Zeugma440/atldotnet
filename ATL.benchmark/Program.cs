@@ -24,13 +24,13 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            //writeAt(@"E:\temp\wav\74\empty_tagged_audacity.wav");
+            writeAt(@"E:\temp\mp3\id3v1_only.mp3");
 
-            info(@"E:\temp\wav\74\empty_tagged_audacity.wav");
+            //info(@"E:\temp\wav\74\empty_tagged_audacity.wav");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            //readAt(@"E:\temp\m4a-mp4\60\intense-8-min-abs-workout.mp4");
+            //readAt(@"E:\temp\caf");
 
             //displayVersionInfo();
         }
@@ -100,7 +100,7 @@ namespace ATL.benchmark
             {
                 //Settings.ForceDiskIO = true;
                 Settings.FileBufferSize = 2 * 1024 * 1024;
-                Settings.ID3v2_tagSubVersion = 3;
+//                Settings.ID3v2_tagSubVersion = 3;
 
                 ConsoleLogger logger = new ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);

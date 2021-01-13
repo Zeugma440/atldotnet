@@ -65,11 +65,12 @@ namespace ATL.benchmark
             theTrack.Composer = "Oscar Wilde";
             theTrack.Album = "Fake album starts here and is longer than the original one";
 
+            theTrack.AdditionalFields.Add("bob", "theBuilder");
             /*
-            theTrack.AdditionalFields.Add("©mvi", "8");
-            theTrack.AdditionalFields.Add("©mvc", "9");
-            theTrack.AdditionalFields.Add("shwm", "10");
-            */
+                        theTrack.AdditionalFields.Add("©mvi", "8");
+                        theTrack.AdditionalFields.Add("©mvc", "9");
+                        theTrack.AdditionalFields.Add("shwm", "10");
+                        */
 
             /*
             if (theTrack.EmbeddedPictures.Count > 0) theTrack.EmbeddedPictures.Clear();

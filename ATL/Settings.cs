@@ -106,6 +106,14 @@ namespace ATL
         /*
          * ========= FORMAT-SPECIFIC SETTINGS
          */
+
+        /// <summary>
+        /// Use tag formats defined in Settings.DefaultTagsWhenNoMetadata when writing to a file tagged with ID3v1 only
+        /// Rationale : the ID3v1 format has very limited capabilities. Adding richer metadata to files tagged with ID3v1 only should be easily feasible
+        /// without too many client-side checks
+        /// </summary>
+        public static bool IgnoreID3v1onEdit = true;
+
         /// <summary>
         /// ID3v2 : Always write CTOC frame when metadata contain at least one chapter
         /// Default : false
