@@ -13,7 +13,7 @@ namespace ATL.AudioData.IO
 		/// <summary>
 		/// Max. number of music genres
 		/// </summary>
-		public const int MAX_MUSIC_GENRES = 148;
+		public const int MAX_MUSIC_GENRES = 192;
 
 		/// <summary>
 		/// Standard size of an ID3v1 tag
@@ -184,7 +184,51 @@ namespace ATL.AudioData.IO
 			"Trash Metal",
 			"Anime",
 			"JPop",
-			"Synthpop"
+			"Synthpop",
+            "Abstract", 
+            "Art Rock",
+            "Baroque", 
+            "Bhangra", 
+            "Big Beat",
+            "Breakbeat", 
+            "Chillout",
+            "Downtempo", 
+            "Dub", 
+            "EBM", 
+            "Eclectic",
+            "Electro", 
+            "Electroclash", 
+            "Emo", 
+            "Experimental",
+            "Garage",
+            "Global", 
+            "IDM", 
+            "Illbient", 
+            "Industro-Goth", 
+            "Jam Band",
+            "Krautrock",
+            "Leftfield", 
+            "Lounge", 
+            "Math Rock", 
+            "New Romantic",
+            "Nu-Breakz", 
+            "Post-Punk", 
+            "Post-Rock", 
+            "Psytrance", 
+            "Shoegaze",
+            "Space Rock",
+            "Trop Rock",
+            "World Music", 
+            "Neoclassical",
+            "Audiobook", 
+            "Audio Theatre", 
+            "Neue Deutsche Welle", 
+            "Podcast",
+            "Indie Rock", 
+            "G-Funk", 
+            "Dubstep", 
+            "Garage Rock", 
+            "Psybient"
 		};
 		#endregion
 
@@ -342,12 +386,12 @@ namespace ATL.AudioData.IO
             w.Write('\0');
             w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber),Byte.MaxValue));
 
-            byte genre = 0;
+            byte genre = byte.MaxValue;
             if (tag.Genre != null)
             {
                 for (byte i = 0; i < MAX_MUSIC_GENRES; i++)
                 {
-                    if (tag.Genre.ToUpper().Equals(MusicGenre[i].ToUpper()))
+                    if (tag.Genre.Equals(MusicGenre[i], StringComparison.OrdinalIgnoreCase))
                     {
                         genre = i;
                         break;
