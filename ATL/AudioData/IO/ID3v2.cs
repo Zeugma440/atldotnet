@@ -35,13 +35,6 @@ namespace ATL.AudioData.IO
     ///     Even though ID3v2.4 allows it, ATL does not support "individual" unsynchronization at frame level
     ///     => Either the whole tag (all frames) is unsynchronized, or none is
     ///
-    ///     5. Windows explorer, embedded pictures and ID3v2.4
-    ///     
-    ///     ATL is not able to guarantee a tag saved with ID3v2.4 will have its embedded picture visible from Windows Explorer
-    ///     It seems there's a magic formula to do that because MP3tag does it well. So far I haven't found it.
-    ///     => If you want to save ID3v2 tags and view the embedded pictures on Windows Explorer, please save the tag using ID3v2.3
-    ///     (set Settings.ID3v2_tagSubVersion = 3)
-    /// 
     /// </summary>
     public class ID3v2 : MetaDataIO
     {
