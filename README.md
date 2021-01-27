@@ -126,7 +126,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 (4) : Support for BEXT, LIST INFO and iXML chunks
 
-(5) : Experimental feature, due to the rarity of sample CAF files tagged with actual metadata
+(5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
 
 
 ### DETECTED FIELDS
