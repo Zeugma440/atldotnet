@@ -10,8 +10,18 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Apple Core Audio files manipulation (extension : .CAF)
+    /// 
+    /// Implementation notes
+    /// 
+    ///     1. "Functional" metadata reading and writing
+    /// 
+    ///     Due to the rarity of CAF files with actual metadata (i.e. strg or info chunks) :
+    ///       - the implementation of metadata reading is experimental, as in "theroretically working, but untested"
+    ///       - there is no implementation for metadata writing
+    ///       
+    ///     Anyone who wants these features and has "rich" CAF files is welcome to open a new github issue about it.
     /// </summary>
-	class CAF : MetaDataIO, IAudioDataIO
+    class CAF : MetaDataIO, IAudioDataIO
     {
         private const uint CAF_MAGIC_NUMBER = 1667327590; // 'caff'
 
@@ -281,12 +291,14 @@ namespace ATL.AudioData.IO
             if (channelsMapping.ContainsKey(channelLayout)) channelsArrangement = channelsMapping[channelLayout];
         }
 
+        // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         private void readStringChunk(BinaryReader source, string id, long chunkSize)
         {
             string cookieStr = Utils.Latin1Encoding.GetString(source.ReadBytes((int)chunkSize));
             SetMetaField(id, cookieStr, true);
         }
 
+        // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         private void readStringsChunk(BinaryReader source)
         {
             uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
@@ -309,6 +321,7 @@ namespace ATL.AudioData.IO
             }
         }
 
+        // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         private void readInfoChunk(BinaryReader source, bool readAllMetaFrames)
         {
             uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
@@ -398,6 +411,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        // WARNING : NOT IMPLEMENTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             throw new System.NotImplementedException();
