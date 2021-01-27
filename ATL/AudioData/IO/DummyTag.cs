@@ -90,7 +90,7 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public int Size
+        public long Size
         {
             get { return 0; }
         }

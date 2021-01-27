@@ -192,7 +192,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Physical size of the tag (bytes)
         /// </summary>
-        int Size
+        long Size
         {
             get;
         }

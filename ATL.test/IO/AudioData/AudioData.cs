@@ -265,5 +265,11 @@ namespace ATL.test.IO
         {
             testGenericAudio("AA/aa.aa", 2967, 1, 8500, false, AudioDataIOFactory.CF_LOSSY, MONO, "Audible (legacy) (acelp85)");
         }
+
+        [TestMethod]
+        public void Audio_CAF()
+        {
+            testGenericAudio("CAF/caf.caf", 3235, 176, 11025, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "Apple Core Audio / Linear PCM");
+        }
     }
 }

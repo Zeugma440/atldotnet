@@ -519,7 +519,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public int Size
+        public long Size
         {
             get
             {

@@ -1326,7 +1326,7 @@ namespace ATL.AudioData.IO
 
             if (tagHeader.UsesUnsynchronisation)
             {
-                MemoryStream s = new MemoryStream(Size);
+                MemoryStream s = new MemoryStream((int)Size);
                 using (BinaryWriter w = new BinaryWriter(s, tagEncoding))
                 {
                     result = writeChaptersInternal(writer, w, chapters, tagEncoding, writer.BaseStream.Position);
@@ -1546,7 +1546,7 @@ namespace ATL.AudioData.IO
 
             if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
-                s = new MemoryStream(Size);
+                s = new MemoryStream((int)Size);
                 w = new BinaryWriter(s, tagEncoding);
                 frameOffset = writer.BaseStream.Position;
             }
@@ -1716,7 +1716,7 @@ namespace ATL.AudioData.IO
 
             if (tagHeader.UsesUnsynchronisation && !isInsideUnsynch)
             {
-                s = new MemoryStream(Size);
+                s = new MemoryStream((int)Size);
                 w = new BinaryWriter(s, usedTagEncoding);
                 frameOffset = writer.BaseStream.Position;
             }
