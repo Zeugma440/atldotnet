@@ -89,6 +89,7 @@ R= Read / W= Write
 Audio format | Extensions | ID3v1.0-1.1 support | ID3v2.2-2.4 support (1) | APEtag 1.0-2.0 support | Format-specific tagging support
 ---|---|---|---|---|---
 Advanced Audio Coding, Apple Lossless (ALAC) | .AAC, .MP4, .M4A, .M4B | R/W | R/W | R/W | R/W
+Apple Core Audio | .CAF |  |  |  | (5)
 Audible | .AAX, .AA | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
@@ -124,6 +125,8 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 (3) : MIDI meta events appear on the track's Comment field
 
 (4) : Support for BEXT, LIST INFO and iXML chunks
+
+(5) : Experimental feature, due to the rarity of sample CAF files tagged with actual metadata
 
 
 ### DETECTED FIELDS
