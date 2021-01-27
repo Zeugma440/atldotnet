@@ -1043,13 +1043,16 @@ namespace ATL.test.IO.MetaData
                 readExistingTagsOnFile(theFile);
 
                 // Check if they are persisted with proper ID3v2.3 field codes when editing the tag
+                MetaFieldInfo urlLink = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "WOAR", "http://moar.minera.ls");
                 TagData theTag = new TagData();
+                theTag.AdditionalFields.Add(urlLink);
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
                 testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
                 testData.PublishingDate = null; // No publising date in ID3v2.3
+                testData.AdditionalFields.Add(urlLink);
                 readExistingTagsOnFile(theFile);
 
                 // Get rid of the working copy

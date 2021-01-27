@@ -1534,7 +1534,8 @@ namespace ATL.AudioData.IO
             bool isCommentCode = false;
 
             bool writeValue = true;
-            bool writeTextEncoding = !noTextEncodingFields.Contains(frameCode);
+            bool isExplicitLatin1Encoding = noTextEncodingFields.Contains(frameCode);
+            bool writeTextEncoding = !isExplicitLatin1Encoding;
             bool writeNullTermination = true; // Required by specs; see paragraph 4, concerning $03 encoding
 
             ICollection<string> standardFrames = standardFrames_v24;
@@ -1672,10 +1673,11 @@ namespace ATL.AudioData.IO
 
             if (writeValue)
             {
-                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding)); // Encoding according to ID3v2 specs
-                w.Write(getBomFromEncoding(tagEncoding));
-                w.Write(tagEncoding.GetBytes(text));
-                if (writeNullTermination) w.Write(getNullTerminatorFromEncoding(tagEncoding));
+                Encoding localEncoding = (isExplicitLatin1Encoding ? Utils.Latin1Encoding : tagEncoding);
+                if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(localEncoding)); // Encoding according to ID3v2 specs
+                w.Write(getBomFromEncoding(localEncoding));
+                w.Write(localEncoding.GetBytes(text));
+                if (writeNullTermination) w.Write(getNullTerminatorFromEncoding(localEncoding));
             }
 
 
