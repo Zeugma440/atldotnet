@@ -608,10 +608,10 @@ namespace ATL.AudioData.IO
             /* Frame size encoding conventions
                 ID3v2.2 : 3 byte
                 ID3v2.3 : 4 byte
-                ID3v2.4 : synch-safe Int32
+                ID3v2.4 : synch-safe Int32 (except CTOC which size is de facto encoded with a plain integer)
             */
             if (TAG_VERSION_2_2 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
-            else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            else if (TAG_VERSION_2_3 == tagVersion || ("CTO".Equals(shortFrameId))) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             else if (TAG_VERSION_2_4 == tagVersion) Frame.Size = StreamUtils.DecodeSynchSafeInt32(source.ReadBytes(4));
 
             if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
@@ -1387,8 +1387,7 @@ namespace ATL.AudioData.IO
                 finalFramePos = frameWriter.BaseStream.Position;
                 frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
-                if (4 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeSynchSafeInt32(size));
-                else if (3 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeBEInt32(size));
+                fileWriter.Write(StreamUtils.EncodeBEInt32(size)); // Plain integer is the de facto standard for CTOC (sad but true)
                 frameWriter.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
                 result++;
