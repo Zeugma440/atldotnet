@@ -85,6 +85,9 @@ namespace ATL.AudioData.IO
         // Fields where text encoding descriptor byte is not required
         private static readonly ICollection<string> noTextEncodingFields = new List<string>() { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
+        // Fields which ID3v2.4 size descriptor is known to be misencoded by some implementation
+        private static readonly ICollection<string> misencodedSizev4Fields = new List<string>() { "CTOC" };
+
         // Note on date field identifiers
         //
         // Original release date
@@ -255,7 +258,7 @@ namespace ATL.AudioData.IO
             public byte Revision;                                   // Revision number
             public byte Flags;                                         // Flags of tag
             public byte[] Size = new byte[4];             // Tag size excluding header
-                                                          // Extended data
+            // Extended data
             public long FileSize;                                 // File size (bytes)
             public long HeaderEnd;                           // End position of header
             public long PaddingOffset = -1;
@@ -606,13 +609,34 @@ namespace ATL.AudioData.IO
 
             // Frame size measures number of bytes between end of flag and end of payload
             /* Frame size encoding conventions
-                ID3v2.2 : 3 byte
-                ID3v2.3 : 4 byte
-                ID3v2.4 : synch-safe Int32 (except CTOC which size is de facto encoded with a plain integer)
+                ID3v2.2 : 3 bytes
+                ID3v2.3 : 4 bytes (plain integer)
+                ID3v2.4 : synch-safe Int32
             */
             if (TAG_VERSION_2_2 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
-            else if (TAG_VERSION_2_3 == tagVersion || ("CTO".Equals(shortFrameId))) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            else if (TAG_VERSION_2_4 == tagVersion) Frame.Size = StreamUtils.DecodeSynchSafeInt32(source.ReadBytes(4));
+            else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            else if (TAG_VERSION_2_4 == tagVersion)
+            {
+                long sizePosition = source.Position;
+                byte[] sizeDescriptor = source.ReadBytes(4);
+                Frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
+                // Important: Certain implementation of ID3v2.4 still use the ID3v2.3 size descriptor (e.g.FFMpeg 4.3.1 for the CTOC frame).
+                // => We have to test reading the frame to "guess" which convention its size descriptor uses
+                // when its size is described on more than 1 byte
+                //
+                // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
+                if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
+                    && misencodedSizev4Fields.Contains(Frame.ID) 
+                    && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
+                {
+                    // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
+                    // If not, try again by reading frame size as a plain integer
+                    source.Seek(sizePosition + 6 + Frame.Size, SeekOrigin.Begin);
+                    string frameId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                    if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) Frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
+                    source.Seek(sizePosition + 4, SeekOrigin.Begin);
+                }
+            }
 
             if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
             else Frame.Flags = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
@@ -1387,7 +1411,8 @@ namespace ATL.AudioData.IO
                 finalFramePos = frameWriter.BaseStream.Position;
                 frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
-                fileWriter.Write(StreamUtils.EncodeBEInt32(size)); // Plain integer is the de facto standard for CTOC (sad but true)
+                if (4 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeSynchSafeInt32(size));
+                else if (3 == Settings.ID3v2_tagSubVersion) fileWriter.Write(StreamUtils.EncodeBEInt32(size));
                 frameWriter.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
                 result++;
@@ -2074,6 +2099,16 @@ namespace ATL.AudioData.IO
             else if (encoding.Equals(Encoding.BigEndianUnicode)) return NULLTERMINATOR_2;
             else if (encoding.Equals(Encoding.UTF8)) return NULLTERMINATOR;
             else return NULLTERMINATOR; // Default = ISO-8859-1 / ISO Latin-1
+        }
+
+        private static bool isUpperAlpha(string str)
+        {
+            foreach (char c in str)
+            {
+                if (!char.IsLetterOrDigit(c)) return false;
+                if (char.IsLetter(c) && !char.IsUpper(c)) return false;
+            }
+            return true;
         }
     }
 }

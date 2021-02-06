@@ -230,6 +230,13 @@
   <ItemGroup>
     <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
     <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
+    <Content Include="Resources\MP3\ID3v2.4-SYLT_cn.mp3" />
+    <Content Include="Resources\MP3\ID3v2.4-USLT_JP_eng.mp3" />
+    <Content Include="Resources\MP3\ID3v2.4-WXX-UnicodeMarkerWithoutDescription.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_CTOC_invalidSizeDesc.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_UTF8_singleDigitTrackTags.mp3" />
+    <Content Include="Resources\MP3\invalidApeHeader.mp3" />
+    <Content Include="Resources\MP3\rating_WMP_2.5.mp2" />
     <Content Include="Resources\MP4\chapters_NERO.mp4" />
     <Content Include="Resources\MP4\chapters_QT.m4v" />
     <Content Include="Resources\MP4\empty.m4a" />

@@ -1027,6 +1027,21 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_Invalidv4SizeDesc()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_CTOC_invalidSizeDesc.mp3");
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual(61, theFile.ID3v2.Chapters.Count);
+            Assert.AreEqual("Chapter 61", theFile.ID3v2.Chapters[60].Title);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_WriteID3v2_3()
         {
             ATL.Settings.ID3v2_tagSubVersion = 3;
