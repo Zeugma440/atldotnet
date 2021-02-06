@@ -587,7 +587,7 @@ public String Encoder // Guessed encoder name
                     // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched that way)
                     while (!result.Found && source.Position < limit)
                     {
-                        while (0xFF != source.ReadByte() && source.Position < limit) ;
+                        while (0xFF != source.ReadByte() && source.Position < limit);
 
                         source.Seek(-1, SeekOrigin.Current);
                         source.Read(headerData, 0, 4);
@@ -801,8 +801,6 @@ public String Encoder // Guessed encoder name
             this.sizeInfo = sizeInfo;
             resetData();
 
-            bool result = false;
-
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 
             reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -819,7 +817,7 @@ public String Encoder // Guessed encoder name
                             vendorID = findVendorID(Data, HeaderFrame.Size * 5);
                         }
             */
-            result = HeaderFrame.Found;
+            bool result = HeaderFrame.Found;
 
             if (!result)
             {
