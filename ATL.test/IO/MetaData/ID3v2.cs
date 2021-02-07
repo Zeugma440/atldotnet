@@ -1039,6 +1039,9 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(61, theFile.ID3v2.Chapters.Count);
             Assert.AreEqual("Chapter 61", theFile.ID3v2.Chapters[60].Title);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
