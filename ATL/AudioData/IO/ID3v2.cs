@@ -519,7 +519,7 @@ namespace ATL.AudioData.IO
 
             // Content description
             Encoding contentDescriptionEncoding = encoding;
-            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode))
             {
                 BomProperties bom = readBOM(source);
                 if (bom.Found) contentDescriptionEncoding = bom.Encoding;
@@ -626,7 +626,7 @@ namespace ATL.AudioData.IO
                 //
                 // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
                 if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
-                    && misencodedSizev4Fields.Contains(Frame.ID) 
+                    && misencodedSizev4Fields.Contains(Frame.ID)
                     && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
                 {
                     // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
@@ -1555,7 +1555,7 @@ namespace ATL.AudioData.IO
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos, frameDataPos, finalFramePos, frameOffset;
 
-            bool isCommentCode = false;
+            bool isCommentCode = false; // True if we're adding a frame that is only supported through Comment field (see commentsFields list)
 
             bool writeValue = true;
             bool isExplicitLatin1Encoding = noTextEncodingFields.Contains(frameCode);
@@ -1619,10 +1619,12 @@ namespace ATL.AudioData.IO
                 w.Write(Utils.Latin1Encoding.GetBytes(language));
 
                 // Short content description
+                w.Write(getBomFromEncoding(tagEncoding));
                 if (isCommentCode)
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode));
                 }
+                // NB : ATL doesn't support custom content description yet
                 w.Write(getNullTerminatorFromEncoding(tagEncoding));
 
                 writeTextEncoding = false;
