@@ -326,14 +326,24 @@ namespace ATL
         }
 
         /// <summary>
+        /// Indexer
+        /// </summary>
+        /// <param name="index">ATL field code to search for</param>
+        /// <returns>Value associated with the given ATL field code</returns>
+        public string this[byte index]
+        {
+            get => ToMap()[index];
+        }
+
+        /// <summary>
         /// Convert non-null 'classic' fields values into a properties Map
         /// 
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<byte, String> ToMap()
+        public IDictionary<byte, string> ToMap()
         {
-            IDictionary<byte, String> result = new Dictionary<byte, String>();
+            IDictionary<byte, string> result = new Dictionary<byte, string>();
 
             // Supported fields only
             // NB : The following block of code determines the order of appearance of fields within written files

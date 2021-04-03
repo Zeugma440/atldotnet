@@ -71,7 +71,7 @@ namespace ATL.test.IO.MetaData
             ConsoleLogger log = new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -79,23 +79,42 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VorbisFLAC_dirtyTrackDiscNumbering()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + "FLAC/flac_dirtyTrackDiscNumbering.flac";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 2);
         }
 
         [TestMethod]
+        public void TagIO_R_VorbisFLAC_multipleArtists()
+        {
+            new ConsoleLogger();
+
+            string location = TestUtils.GetResourceLocationRoot() + "FLAC/multiple artists.flac";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            // Supported fields
+            Assert.AreEqual("lovesick (feat. Punipuni Denki)", meta.Title);
+            Assert.AreEqual("Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki", meta.Artist);
+        }
+
+        [TestMethod]
         public void TagIO_RW_VorbisFLAC_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free OGG
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -260,7 +279,9 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            } finally {
+            }
+            finally
+            {
                 ATL.Settings.AddNewPadding = false;
                 ATL.Settings.PaddingSize = 2048;
             }

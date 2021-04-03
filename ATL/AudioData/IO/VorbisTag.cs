@@ -274,6 +274,40 @@ namespace ATL.AudioData.IO
             }
         }
 
+        // FLAC-specific override to handle multiple tags being authorized (e.g. representing multiple artists with multiple ARTIST tags)
+        public new void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
+        {
+            // Finds the ATL field identifier
+            byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
+
+            // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
+            if (supportedMetaID < 255)
+            {
+                string targetData = data;
+                if (tagData.hasKey(supportedMetaID)) // If the value already exists, concatenate it with the new one
+                {
+                    targetData = tagData[supportedMetaID] + Settings.DisplayValueSeparator + data;
+                }
+                base.SetMetaField(ID, targetData, readAllMetaFrames, zone, tagVersion, streamNumber, language);
+            }
+            else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
+            {
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
+                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
+                {
+                    foreach (MetaFieldInfo info in tagData.AdditionalFields)
+                    {
+                        if (info.Equals(fieldInfo)) // If the value already exists, concatenate it with the new one
+                        {
+                            fieldInfo.Value = info.Value + Settings.DisplayValueSeparator + fieldInfo.Value;
+                        }
+                    }
+                    tagData.AdditionalFields.Remove(fieldInfo);
+                }
+                tagData.AdditionalFields.Add(fieldInfo);
+            }
+        }
+
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             int size;
