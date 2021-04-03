@@ -286,7 +286,7 @@ namespace ATL.AudioData.IO
                 string targetData = data;
                 if (tagData.hasKey(supportedMetaID)) // If the value already exists, concatenate it with the new one
                 {
-                    targetData = tagData[supportedMetaID] + Settings.DisplayValueSeparator + data;
+                    targetData = tagData[supportedMetaID] + Settings.InternalValueSeparator + data;
                 }
                 base.SetMetaField(ID, targetData, readAllMetaFrames, zone, tagVersion, streamNumber, language);
             }
@@ -299,7 +299,7 @@ namespace ATL.AudioData.IO
                     {
                         if (info.Equals(fieldInfo)) // If the value already exists, concatenate it with the new one
                         {
-                            fieldInfo.Value = info.Value + Settings.DisplayValueSeparator + fieldInfo.Value;
+                            fieldInfo.Value = info.Value + Settings.InternalValueSeparator + fieldInfo.Value;
                         }
                     }
                     tagData.AdditionalFields.Remove(fieldInfo);

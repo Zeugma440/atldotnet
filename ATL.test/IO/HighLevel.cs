@@ -668,6 +668,21 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_R_VorbisFLAC_multipleArtists()
+        {
+            string resource = "FLAC/multiple artists.flac";
+            string location = TestUtils.GetResourceLocationRoot() + resource;
+            string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+
+            Track theTrack = new Track(testFileLocation);
+            // Supported fields
+            Assert.AreEqual("lovesick (feat. Punipuni Denki)", theTrack.Title);
+            Assert.AreEqual("Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki", theTrack.Artist);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
 
         [TestMethod]
         public void StreamedIO_R_Meta()

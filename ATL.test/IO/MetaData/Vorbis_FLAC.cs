@@ -103,7 +103,7 @@ namespace ATL.test.IO.MetaData
 
             // Supported fields
             Assert.AreEqual("lovesick (feat. Punipuni Denki)", meta.Title);
-            Assert.AreEqual("Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki", meta.Artist);
+            Assert.AreEqual("Kamome Sano" + ATL.Settings.InternalValueSeparator + "Punipuni Denki", meta.Artist);
         }
 
         [TestMethod]
