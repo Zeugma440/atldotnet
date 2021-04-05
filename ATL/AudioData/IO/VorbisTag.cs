@@ -477,7 +477,16 @@ namespace ATL.AudioData.IO
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
-                            writeTextFrame(w, s, value);
+                            if (frameType == TagData.TAG_FIELD_ARTIST && value.Contains(Settings.DisplayValueSeparator + ""))
+                            {
+                                // Write multiple fields (specific to FLAC; restrained to artists for now)
+                                string[] valueParts = value.Split(Settings.DisplayValueSeparator);
+                                foreach(string valuePart in valueParts) writeTextFrame(w, s, valuePart);
+                            }
+                            else
+                            {
+                                writeTextFrame(w, s, value);
+                            }
                             nbFrames++;
                         }
                         break;

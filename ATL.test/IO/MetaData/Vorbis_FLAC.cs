@@ -92,8 +92,10 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            string location = TestUtils.GetResourceLocationRoot() + "FLAC/multiple artists.flac";
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string fileName = "FLAC/multiple_artists.flac";
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -101,9 +103,39 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.IsTrue(meta.Exists);
 
-            // Supported fields
+            // Read
             Assert.AreEqual("lovesick (feat. Punipuni Denki)", meta.Title);
             Assert.AreEqual("Kamome Sano" + ATL.Settings.InternalValueSeparator + "Punipuni Denki", meta.Artist);
+
+            // Write same data and keep initial format
+            TagData theTag = new TagData();
+            theTag.Artist = "Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki";
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
+            FileInfo originalFileInfo = new FileInfo(location);
+            FileInfo testFileInfo = new FileInfo(testFileLocation);
+
+            Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+
+            // Can't test with MD5 here because of field order
+
+            // Write and modify
+            theTag = new TagData();
+            theTag.Artist = "aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc";
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+
+            // Read again
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("aaa" + ATL.Settings.InternalValueSeparator + "bbb" + ATL.Settings.InternalValueSeparator + "ccc", meta.Artist);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -111,7 +143,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : totally metadata-free OGG
+            // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));

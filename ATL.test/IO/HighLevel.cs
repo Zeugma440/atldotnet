@@ -671,14 +671,21 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_R_VorbisFLAC_multipleArtists()
         {
-            string resource = "FLAC/multiple artists.flac";
+            string resource = "FLAC/multiple_artists.flac";
             string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             Track theTrack = new Track(testFileLocation);
-            // Supported fields
-            Assert.AreEqual("lovesick (feat. Punipuni Denki)", theTrack.Title);
+
+            // Read
             Assert.AreEqual("Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki", theTrack.Artist);
+
+            // Write
+            theTrack.Artist = "aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc";
+            theTrack.Save();
+
+            Track theTrack2 = new Track(testFileLocation);
+            Assert.AreEqual("aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc", theTrack2.Artist);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
