@@ -29,7 +29,7 @@ namespace ATL.AudioData
 
         public class SizeInfo
         {
-            public long FileSize = 0;
+            private long fileSize = 0;
             private readonly IDictionary<int, long> TagSizes = new Dictionary<int, long>();
 
             public void ResetData() { FileSize = 0; TagSizes.Clear(); }
@@ -44,6 +44,7 @@ namespace ATL.AudioData
             public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_APE) ? TagSizes[MetaDataIOFactory.TAG_APE] : 0; } }
             public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
             public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
+            public long FileSize { get => fileSize; set => fileSize = value; }
         }
 
         private IMetaDataIO iD3v1 = new ID3v1();
@@ -349,8 +350,7 @@ namespace ATL.AudioData
 
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
             {
-                IMetaDataIO nativeTag = (IMetaDataIO)audioDataIO;
-                this.nativeTag = nativeTag;
+                nativeTag = (IMetaDataIO)audioDataIO;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
 
                 if (result) sizeInfo.SetSize(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
@@ -360,11 +360,11 @@ namespace ATL.AudioData
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
             }
 
-            if (audioDataIO is IMetaDataEmbedder) // Embedded ID3v2 tag detected while reading
+            if (audioDataIO is IMetaDataEmbedder embedder) // Embedded ID3v2 tag detected while reading
             {
-                if (((IMetaDataEmbedder)audioDataIO).HasEmbeddedID3v2 > 0)
+                if (embedder.HasEmbeddedID3v2 > 0)
                 {
-                    readTagParams.offset = ((IMetaDataEmbedder)audioDataIO).HasEmbeddedID3v2;
+                    readTagParams.offset = embedder.HasEmbeddedID3v2;
                     if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
                 } else
                 {
