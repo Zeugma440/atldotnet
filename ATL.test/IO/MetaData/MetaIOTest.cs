@@ -218,11 +218,7 @@ namespace ATL.test.IO.MetaData
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
                 theTag.AdditionalFields = new List<MetaFieldInfo>();
-                foreach (MetaFieldInfo info in testData.AdditionalFields)
-                {
-                    theTag.AdditionalFields.Add(info);
-                    break; // 1 is enough
-                }
+                theTag.AdditionalFields.Add(testData.AdditionalFields[0]); // 1 is enough
             }
             testData = new TagData(theTag);
 
@@ -711,7 +707,8 @@ namespace ATL.test.IO.MetaData
                     Assert.IsTrue(DateTime.TryParse(testData.PublishingDate, out date));
                     Assert.AreEqual(date, meta.PublishingDate);
                 }
-            } else
+            }
+            else
             {
                 Assert.IsTrue(meta.Year != null || (meta.Date != null && meta.Date > DateTime.MinValue));
                 if (meta.Year != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);

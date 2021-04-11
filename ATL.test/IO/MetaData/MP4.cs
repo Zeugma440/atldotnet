@@ -89,16 +89,16 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_MP4()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
 
 
             location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
-            theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
         }
 
@@ -117,7 +117,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
@@ -159,7 +159,8 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual("aa父bb", theFile.NativeTag.Chapters[0].Title);
                 Assert.AreEqual((uint)3000, theFile.NativeTag.Chapters[1].StartTime);
                 Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
-            } finally
+            }
+            finally
             {
                 ATL.Settings.MP4_readChaptersExclusive = 0;
             }
@@ -174,12 +175,14 @@ namespace ATL.test.IO.MetaData
             byte nbFound = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == nbFound))
+                if (pic.PicType.Equals(PIC_TYPE.Generic) && (1 == nbFound))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                    Assert.AreEqual(picture.Width, 175);
-                    Assert.AreEqual(picture.Height, 168);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(ImageFormat.Png, picture.RawFormat);
+                        Assert.AreEqual(175, picture.Width);
+                        Assert.AreEqual(168, picture.Height);
+                    }
                 }
                 nbFound++;
             }
@@ -191,7 +194,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Back);
+            picInfo = new PictureInfo(PIC_TYPE.Back);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -276,20 +279,24 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
+                if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (1 == found))  // No custom nor categorized picture type in MP4
+                else if (pic.PicType.Equals(PIC_TYPE.Generic) && (1 == found))  // No custom nor categorized picture type in MP4
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -327,12 +334,14 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic) && (0 == found))
+                if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -347,7 +356,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_Nero_Edit()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             ATL.Settings.MP4_createQuicktimeChapters = false;
             try
@@ -461,7 +470,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_Nero_Create()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             ATL.Settings.MP4_createQuicktimeChapters = false;
             try
@@ -534,7 +543,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_meta_Create()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file without 'chpl' atom
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_NERO.mp4");
@@ -566,7 +575,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_QT_Edit()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             ATL.Settings.MP4_createNeroChapters = false;
             try
@@ -664,7 +673,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_QT_Create()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             ATL.Settings.MP4_createNeroChapters = false;
             try
@@ -737,10 +746,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Lyrics_Unsynched()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/lyrics.m4a");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -794,10 +803,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_XtraFields()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xtraField.m4a");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
             Assert.IsTrue(theFile.ReadFromFile(false, true));

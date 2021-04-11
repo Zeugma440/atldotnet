@@ -62,10 +62,12 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 656);
-                    Assert.AreEqual(picture.Width, 552);
+                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(656, picture.Height);
+                        Assert.AreEqual(552, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -108,10 +110,12 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 656);
-                    Assert.AreEqual(picture.Width, 552);
+                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(656, picture.Height);
+                        Assert.AreEqual(552, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -141,10 +145,12 @@ namespace ATL.test.IO.MetaData
                 Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                    Assert.AreEqual(picture.Height, 256);
-                    Assert.AreEqual(picture.Width, 256);
+                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
+                        Assert.AreEqual(256, picture.Height);
+                        Assert.AreEqual(256, picture.Width);
+                    }
                     found++;
                 }
             }

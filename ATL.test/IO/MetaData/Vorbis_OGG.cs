@@ -74,16 +74,17 @@ namespace ATL.test.IO.MetaData
 
         public void TagIO_R_VorbisOGG_simple_OnePager(Stream stream)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             AudioDataManager theFile;
             if (null == stream)
             {
                 string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-                theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
-            } else
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+            }
+            else
             {
-                theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
             }
 
             readExistingTagsOnFile(theFile);
@@ -92,10 +93,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VorbisOGG_simple_MultiplePager()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + "OGG/bigPicture.ogg";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 3);
         }
@@ -103,10 +104,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VorbisOGG_dirtyTrackDiscNumbering()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_dirtyTrackDiscNumbering.ogg";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 2);
         }
@@ -119,7 +120,7 @@ namespace ATL.test.IO.MetaData
 
         public void TagIO_RW_VorbisOGG_Empty(Stream stream)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free OGG
             AudioDataManager theFile;
@@ -132,7 +133,7 @@ namespace ATL.test.IO.MetaData
                 location = TestUtils.GetResourceLocationRoot() + emptyFile;
                 testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
                 streamCopy = null;
-                theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             }
             else
             {
@@ -140,7 +141,7 @@ namespace ATL.test.IO.MetaData
                 testFileLocation = "";
                 streamCopy = new MemoryStream();
                 stream.CopyTo(streamCopy);
-                theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
             }
 
 
@@ -216,12 +217,17 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            } else
+            }
+            else
             {
                 Assert.AreEqual(stream.Length, streamCopy.Length);
 
-                string originalMD5 = TestUtils.GetStreamMD5Hash(streamCopy);
-                string testMD5 = TestUtils.GetStreamMD5Hash(stream);
+                // Not possible due to tag order issues
+                /*
+                string originalMD5 = TestUtils.GetFileMD5Hash(location);
+                string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
+                Assert.IsTrue(originalMD5.Equals(testMD5));
+                */
 
                 streamCopy.Close();
             }
@@ -236,8 +242,9 @@ namespace ATL.test.IO.MetaData
             try
             {
                 tagIO_RW_VorbisOGG_Existing(notEmptyFile, 2);
-//                test_RW_Existing(notEmptyFile, 2, true, true);
-            } finally
+                //                test_RW_Existing(notEmptyFile, 2, true, true);
+            }
+            finally
             {
                 ATL.Settings.AddNewPadding = false;
                 ATL.Settings.PaddingSize = 2048;
@@ -253,7 +260,8 @@ namespace ATL.test.IO.MetaData
             try
             {
                 tagIO_RW_VorbisOGG_Existing("OGG/bigPicture.ogg", 3);
-            } finally
+            }
+            finally
             {
                 ATL.Settings.AddNewPadding = false;
                 ATL.Settings.PaddingSize = 2048;
@@ -262,12 +270,12 @@ namespace ATL.test.IO.MetaData
 
         private void tagIO_RW_VorbisOGG_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : OGG with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -282,7 +290,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(theFile, initialNbPictures+1);
+            readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
@@ -290,13 +298,15 @@ namespace ATL.test.IO.MetaData
             int nbFound = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
+                if (pic.PicType.Equals(PIC_TYPE.CD))
                 {
-                    Assert.AreEqual(pic.NativePicCode, 0x06);
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    Assert.AreEqual(0x06, pic.NativePicCode);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     nbFound++;
                     break;
                 }
@@ -308,7 +318,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "";
 
             // Remove additional picture
-            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
+            picInfo = new PictureInfo(PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -327,11 +337,12 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
 
+            // Not possible due to tag order issues
+            /*
             string originalMD5 = TestUtils.GetFileMD5Hash(location);
             string testMD5 = TestUtils.GetFileMD5Hash(testFileLocation);
-
-            // Not possible due to tag order issues
-            //Assert.IsTrue(originalMD5.Equals(testMD5));
+            Assert.IsTrue(originalMD5.Equals(testMD5));
+            */
 
             // Get rid of the working copy
             if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -372,7 +383,8 @@ namespace ATL.test.IO.MetaData
             {
                 StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
                 test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
-            } finally
+            }
+            finally
             {
                 ATL.Settings.AddNewPadding = false;
             }
@@ -390,7 +402,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free OGG
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -432,20 +444,24 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
+                if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                else if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -483,12 +499,14 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -503,7 +521,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Chapters()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("OGG/chapters.ogg");
@@ -680,58 +698,58 @@ namespace ATL.test.IO.MetaData
 
         // No cohabitation here since other tags are not supported in OGG files
 
-/*
-        private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
-        {
-            Assert.IsTrue(theFile.ReadFromFile(true, true));
-
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            // Supported fields
-            Assert.AreEqual("Title", theFile.NativeTag.Title);
-            Assert.AreEqual("父", theFile.NativeTag.Album);
-            Assert.AreEqual("Artist", theFile.NativeTag.Artist);
-            Assert.AreEqual("Test!", theFile.NativeTag.Comment);
-            Assert.AreEqual("2017", theFile.NativeTag.Year);
-            Assert.AreEqual("Test", theFile.NativeTag.Genre);
-            Assert.AreEqual(22, theFile.NativeTag.Track);
-            Assert.AreEqual("Me", theFile.NativeTag.Composer);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
-
-            // Unsupported field (MOOD)
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("MOOD"));
-            Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["MOOD"]);
-
-
-            // Pictures
-            Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
-
-            int nbFound = 0;
-            foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
-            {
-                Image picture;
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front)) // Supported picture
+        /*
+                private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
                 {
-                    Assert.AreEqual(pic.NativePicCode, 0x03);
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 150);
-                    Assert.AreEqual(picture.Width, 150);
-                    nbFound++;
+                    Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+                    Assert.IsNotNull(theFile.NativeTag);
+                    Assert.IsTrue(theFile.NativeTag.Exists);
+
+                    // Supported fields
+                    Assert.AreEqual("Title", theFile.NativeTag.Title);
+                    Assert.AreEqual("父", theFile.NativeTag.Album);
+                    Assert.AreEqual("Artist", theFile.NativeTag.Artist);
+                    Assert.AreEqual("Test!", theFile.NativeTag.Comment);
+                    Assert.AreEqual("2017", theFile.NativeTag.Year);
+                    Assert.AreEqual("Test", theFile.NativeTag.Genre);
+                    Assert.AreEqual(22, theFile.NativeTag.Track);
+                    Assert.AreEqual("Me", theFile.NativeTag.Composer);
+                    Assert.AreEqual(2, theFile.NativeTag.Disc);
+
+                    // Unsupported field (MOOD)
+                    Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("MOOD"));
+                    Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["MOOD"]);
+
+
+                    // Pictures
+                    Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
+
+                    int nbFound = 0;
+                    foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
+                    {
+                        Image picture;
+                        if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front)) // Supported picture
+                        {
+                            Assert.AreEqual(pic.NativePicCode, 0x03);
+                            picture = Image.FromStream(new MemoryStream(pic.PictureData));
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Assert.AreEqual(picture.Height, 150);
+                            Assert.AreEqual(picture.Width, 150);
+                            nbFound++;
+                        }
+                        else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
+                        {
+                            Assert.AreEqual(pic.NativePicCode, 0x02);
+                            picture = Image.FromStream(new MemoryStream(pic.PictureData));
+                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
+                            Assert.AreEqual(picture.Height, 168);
+                            Assert.AreEqual(picture.Width, 175);
+                            nbFound++;
+                        }
+                    }
+                    Assert.AreEqual(2, nbFound);
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
-                {
-                    Assert.AreEqual(pic.NativePicCode, 0x02);
-                    picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                    Assert.AreEqual(picture.Height, 168);
-                    Assert.AreEqual(picture.Width, 175);
-                    nbFound++;
-                }
-            }
-            Assert.AreEqual(2, nbFound);
-        }
-*/
+        */
     }
 }
