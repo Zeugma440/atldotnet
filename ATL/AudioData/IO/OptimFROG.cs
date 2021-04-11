@@ -126,6 +126,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -134,6 +136,8 @@ namespace ATL.AudioData.IO
         {
             duration = 0;
             bitrate = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             header.Reset();
         }
@@ -223,6 +227,7 @@ namespace ATL.AudioData.IO
             // Read header data
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
+            long initialPos = source.BaseStream.Position;
             header.ID = source.ReadChars(4);
             header.Size = source.ReadUInt32();
             header.Length = source.ReadUInt32();
@@ -236,6 +241,9 @@ namespace ATL.AudioData.IO
             if (StreamUtils.StringEqualsArr(OFR_SIGNATURE, header.ID))
             {
                 result = true;
+                AudioDataOffset = initialPos;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
                 duration = getDuration();
                 bitrate = getBitrate();
             }

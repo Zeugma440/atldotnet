@@ -164,6 +164,8 @@ namespace ATL.AudioData.IO
 
             return supportedMetaId;
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // IMetaDataIO
@@ -190,6 +192,9 @@ namespace ATL.AudioData.IO
             isLossless = false;
             bitrate = 0;
             duration = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -616,6 +621,9 @@ namespace ATL.AudioData.IO
             }
 
             fileData.HeaderSize = fs.Position - initialPos;
+
+            AudioDataOffset = fs.Position;
+            AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             return result;
         }

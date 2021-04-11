@@ -115,6 +115,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -156,7 +158,7 @@ namespace ATL.AudioData.IO
 
         private class PSFTag
         {
-            public String TagHeader;					// Tag header (should be TAG_HEADER)
+            public string TagHeader;					// Tag header (should be TAG_HEADER)
             public int size;
 
             public void Reset()
@@ -175,6 +177,8 @@ namespace ATL.AudioData.IO
             version = 0;
             bitrate = 0;
             duration = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -311,12 +315,12 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private double parsePSFDuration(String durationStr)
+        private double parsePSFDuration(string durationStr)
         {
-            String hStr = "";
-            String mStr = "";
-            String sStr = "";
-            String dStr = "";
+            string hStr = "";
+            string mStr = "";
+            string sStr = "";
+            string dStr = "";
             double result = 0;
 
             int sepIndex;
@@ -372,14 +376,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = true;
             PSFHeader header = new PSFHeader();
@@ -391,6 +395,8 @@ namespace ATL.AudioData.IO
 
             isValid = readHeader(source, ref header);
             if (!isValid) throw new InvalidDataException("Not a PSF file");
+            
+            AudioDataOffset = 0;
 
             if (source.BaseStream.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
             {
@@ -401,8 +407,10 @@ namespace ATL.AudioData.IO
                 tagExists = true;
             }
 
+            AudioDataSize = sizeInfo.FileSize - tag.size;
+
             version = header.VersionByte;
-            bitrate = (sizeInfo.FileSize - tag.size) * 8 / duration;
+            bitrate = AudioDataSize * 8 / duration;
 
             return result;
         }

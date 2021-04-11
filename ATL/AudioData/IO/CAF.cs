@@ -205,6 +205,9 @@ namespace ATL.AudioData.IO
             return supportedMetaId;
         }
 
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
@@ -218,6 +221,8 @@ namespace ATL.AudioData.IO
             channelsPerFrame = 0;
             channelsArrangement = null;
             secondsPerByte = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public CAF(string filePath, Format format)
@@ -235,6 +240,7 @@ namespace ATL.AudioData.IO
             uint fileType = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             if (fileType != CAF_MAGIC_NUMBER) return false;
 
+            AudioDataOffset = source.BaseStream.Position - 4;
             source.BaseStream.Seek(4, SeekOrigin.Current); // Useless here
 
             return true;
@@ -351,15 +357,10 @@ namespace ATL.AudioData.IO
 
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
             ResetData();
-
-            bool result = false;
-
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            result = readFileHeader(source);
-
+            bool result = readFileHeader(source);
             long cursorPos = source.BaseStream.Position;
             long audioChunkSize = 0;
 
@@ -390,7 +391,9 @@ namespace ATL.AudioData.IO
                         readInfoChunk(source, readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames);
                         break;
                     case CHUNK_AUDIO:
+                        AudioDataOffset = cursorPos;
                         audioChunkSize = chunkSize;
+                        AudioDataSize = chunkSize + 12;
                         if (secondsPerByte > 0) duration = chunkSize * secondsPerByte * 1000;
                         break;
                     case CHUNK_PACKET_TABLE:

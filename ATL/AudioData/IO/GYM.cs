@@ -79,6 +79,8 @@ namespace ATL.AudioData.IO
         {
             get { return ChannelsArrangements.STEREO; }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
@@ -109,6 +111,8 @@ namespace ATL.AudioData.IO
             duration = 0;
 
             loopStart = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -151,6 +155,8 @@ namespace ATL.AudioData.IO
 
                 loopStart = source.ReadUInt32();
                 uint packedSize = source.ReadUInt32();
+                AudioDataOffset = source.Position;
+                AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
                 if (packedSize > 0)
                 {

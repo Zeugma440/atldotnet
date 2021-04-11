@@ -124,6 +124,9 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -152,6 +155,8 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             isValid = false;
             sampleRate = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -259,7 +264,7 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.PrepareForWriting)
             {
-                // Zone goes from the first field after COMM to the last field before DSIZ
+                // Metadata zone goes from the first field after COMM to the last field before DSIZ
                 if (-1 == tagStart) structureHelper.AddZone(source.BaseStream.Position - 8, 0);
                 else structureHelper.AddZone(tagStart, (int)(source.BaseStream.Position - tagStart - 8));
                 structureHelper.AddSize(12, Header.Size);
@@ -269,11 +274,11 @@ namespace ATL.AudioData.IO
         private bool isCorrupted()
         {
             // Check for file corruption
-            return ((isValid) &&
+            return isValid &&
                 ((0 == channelsArrangement.NbChannels) ||
                 (bitrate < 8000) || (bitrate > 192000) ||
                 (sampleRate < 8000) || (sampleRate > 44100) ||
-                (duration < 0.1) || (duration > 10000)));
+                (duration < 0.1) || (duration > 10000));
         }
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
@@ -302,6 +307,9 @@ namespace ATL.AudioData.IO
                 duration = getDuration(Header);
                 // Get tag information and fill properties
                 readTag(source, Header, readTagParams);
+                
+                AudioDataOffset = source.BaseStream.Position;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             return result;
         }

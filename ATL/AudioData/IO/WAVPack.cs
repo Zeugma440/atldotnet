@@ -17,7 +17,6 @@ namespace ATL.AudioData.IO
         private int bits;
 
         private string encoder;
-        private long tagSize;
 
         private long samples;
         private long bSamples;
@@ -205,6 +204,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -215,7 +216,6 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
-            tagSize = 0;
             formatTag = 0;
             sampleRate = 0;
             bits = 0;
@@ -223,6 +223,9 @@ namespace ATL.AudioData.IO
             encoder = "";
             samples = 0;
             bSamples = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public WAVPack(string filePath, Format format)
@@ -283,11 +286,10 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool _ReadV4(BinaryReader r)
+        private bool _ReadV4(BinaryReader source)
         {
             WavPackHeader4 wvh4 = new WavPackHeader4();
             byte[] EncBuf = new byte[4096];
-            int tempo;
             byte encoderbyte;
 
             bool result = false;
@@ -295,16 +297,16 @@ namespace ATL.AudioData.IO
 
             wvh4.Reset();
 
-            wvh4.ckID = r.ReadChars(4);
-            wvh4.ckSize = r.ReadUInt32();
-            wvh4.version = r.ReadUInt16();
-            wvh4.track_no = r.ReadByte();
-            wvh4.index_no = r.ReadByte();
-            wvh4.total_samples = r.ReadUInt32();
-            wvh4.block_index = r.ReadUInt32();
-            wvh4.block_samples = r.ReadUInt32();
-            wvh4.flags = r.ReadUInt32();
-            wvh4.crc = r.ReadUInt32();
+            wvh4.ckID = source.ReadChars(4);
+            wvh4.ckSize = source.ReadUInt32();
+            wvh4.version = source.ReadUInt16();
+            wvh4.track_no = source.ReadByte();
+            wvh4.index_no = source.ReadByte();
+            wvh4.total_samples = source.ReadUInt32();
+            wvh4.block_index = source.ReadUInt32();
+            wvh4.block_samples = source.ReadUInt32();
+            wvh4.flags = source.ReadUInt32();
+            wvh4.crc = source.ReadUInt32();
 
             if (StreamUtils.StringEqualsArr("wvpk", wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
             {
@@ -347,31 +349,30 @@ namespace ATL.AudioData.IO
 					}
 				*/
 
-                duration = (double)wvh4.total_samples * 1000.0 / sampleRate;
-                if (duration > 0) bitrate = (sizeInfo.FileSize - tagSize) * 8 / (double)(samples * 1000.0 / (double)sampleRate);
+                duration = wvh4.total_samples * 1000.0 / sampleRate;
 
                 Array.Clear(EncBuf, 0, 4096);
-                EncBuf = r.ReadBytes(4096);
+                EncBuf = source.ReadBytes(4096);
 
-                for (tempo = 0; tempo < 4096; tempo++)
+                for (int i = 0; i < 4096; i++)
                 {
-                    if (0x65 == EncBuf[tempo])
+                    if (0x65 == EncBuf[i] && 0x02 == EncBuf[i + 1])
                     {
-                        if (0x02 == EncBuf[tempo + 1])
+                        encoderbyte = EncBuf[i + 2];
+                        switch (encoderbyte)
                         {
-                            encoderbyte = EncBuf[tempo + 2];
-                            switch (encoderbyte)
-                            {
-                                case 8: encoder = encoder + " (high)"; break;
-                                case 0: encoder = encoder + " (normal)"; break;
-                                case 2: encoder = encoder + " (fast)"; break;
-                                case 6: encoder = encoder + " (very fast)"; break;
-                            }
-                            break;
+                            case 8: encoder = encoder + " (high)"; break;
+                            case 0: encoder = encoder + " (normal)"; break;
+                            case 2: encoder = encoder + " (fast)"; break;
+                            case 6: encoder = encoder + " (very fast)"; break;
                         }
+                        break;
                     }
                 }
 
+                AudioDataOffset = source.BaseStream.Position;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                if (duration > 0) bitrate = AudioDataSize * 8.0 / (samples * 1000.0 / sampleRate);
             }
             return result;
         }
@@ -384,7 +385,6 @@ namespace ATL.AudioData.IO
             bool hasfmt;
             WavpackHeader3 wvh3 = new WavpackHeader3();
             bool result = false;
-
 
             hasfmt = false;
 
@@ -437,6 +437,7 @@ namespace ATL.AudioData.IO
                     {
                         wvh3.Reset();
 
+                        long initialPos = r.BaseStream.Position;
                         wvh3.ckID = r.ReadChars(4);
                         wvh3.ckSize = r.ReadUInt32();
                         wvh3.version = r.ReadUInt16();
@@ -453,6 +454,9 @@ namespace ATL.AudioData.IO
                         if (StreamUtils.StringEqualsArr("wvpk", wvh3.ckID))  // wavpack header found
                         {
                             result = true;
+                            AudioDataOffset = initialPos;
+                            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
                             version = wvh3.version;
                             channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(2 - (wvh3.flags & 1));
                             samples = wvh3.total_samples;
@@ -523,7 +527,7 @@ namespace ATL.AudioData.IO
 
                             if (sampleRate <= 0) sampleRate = 44100;
                             duration = (double)wvh3.total_samples * 1000.0 / sampleRate;
-                            if (duration > 0) bitrate = 8.0 * (sizeInfo.FileSize - tagSize - (double)wvh3.ckSize) / duration;
+                            if (duration > 0) bitrate = 8.0 * AudioDataSize / duration;
                         }
                         break;
                     }

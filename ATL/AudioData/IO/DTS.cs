@@ -78,6 +78,8 @@ namespace ATL.AudioData.IO
         {
             return false;
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -89,6 +91,8 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             duration = 0;
             isValid = false;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public DTS(string filePath, Format format)
@@ -124,6 +128,9 @@ namespace ATL.AudioData.IO
             signatureChunk = source.ReadUInt32();
             if ( /*0x7FFE8001*/ 25230975 == signatureChunk)
             {
+                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
                 source.BaseStream.Seek(3, SeekOrigin.Current);
                 specDTS = source.ReadBytes(8);
 

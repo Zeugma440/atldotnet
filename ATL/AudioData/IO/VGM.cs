@@ -80,6 +80,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -107,6 +109,8 @@ namespace ATL.AudioData.IO
             version = 0;
 
             gd3TagOffset = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -130,10 +134,20 @@ namespace ATL.AudioData.IO
             byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
             if (VGM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(headerSignature)))
             {
+                AudioDataOffset = source.BaseStream.Position;
+
                 source.BaseStream.Seek(4, SeekOrigin.Current); // EOF offset
                 version = source.ReadInt32();
                 source.BaseStream.Seek(8, SeekOrigin.Current); // Clocks
-                gd3TagOffset = source.ReadInt32() + (int)source.BaseStream.Position - 4;
+                gd3TagOffset = source.ReadInt32();
+
+                if (gd3TagOffset > 0)
+                {
+                    gd3TagOffset += (int)source.BaseStream.Position - 4;
+                    AudioDataSize = gd3TagOffset;
+                }
+                else
+                    AudioDataSize = sizeInfo.FileSize;
 
                 if (/*gd3TagOffset > 0 && */readTagParams.PrepareForWriting)
                 {

@@ -192,7 +192,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_SPC()
         {
-            testGenericAudio("SPC/spc.spc", 69, 7646, 32000, false, AudioDataIOFactory.CF_SEQ_WAV, STEREO, "SPC700 Sound Files");
+            testGenericAudio("SPC/spc.spc", 69, 7635, 32000, false, AudioDataIOFactory.CF_SEQ_WAV, STEREO, "SPC700 Sound Files");
         }
 
         [TestMethod]
@@ -219,8 +219,8 @@ namespace ATL.test.IO
         {
             testGenericAudio("WV/losslessv3.wv", 7646, 659, 44100, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "WAVPack");
             testGenericAudio("WV/lossyv3.wv", 7646, 342, 44100, false, AudioDataIOFactory.CF_LOSSY, STEREO, "WAVPack");
-            testGenericAudio("WV/lossyv440.wv", 7646, 206, 44100, false, AudioDataIOFactory.CF_LOSSY, STEREO, "WAVPack");
-            testGenericAudio("WV/losslessv4.wv", 6082, 645, 44100, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "WAVPack");
+            testGenericAudio("WV/lossyv440.wv", 7646, 202, 44100, false, AudioDataIOFactory.CF_LOSSY, STEREO, "WAVPack");
+            testGenericAudio("WV/losslessv4.wv", 6082, 640, 44100, false, AudioDataIOFactory.CF_LOSSLESS, STEREO, "WAVPack");
         }
 
         [TestMethod]

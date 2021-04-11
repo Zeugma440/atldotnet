@@ -20,9 +20,9 @@ namespace ATL.AudioData.IO
 
 
         // VBR Vendor ID strings
-        public const String VENDOR_ID_LAME = "LAME";                      // For LAME
-        public const String VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
-        public const String VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
+        public const string VENDOR_ID_LAME = "LAME";                      // For LAME
+        public const string VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
+        public const string VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
 
         /*
         public static readonly byte[] RIFF_HEADER = new byte[4] { 0x52, 0x49, 0x46, 0x46 }; // 'RIFF'
@@ -262,52 +262,18 @@ public String Encoder // Guessed encoder name
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public VBRData VBR // VBR header data
-        {
-            get { return this.vbrData; }
-        }
-        public bool IsVBR
-        {
-            get { return this.vbrData.Found; }
-        }
-        public double BitRate
-        {
-            get { return getBitRate(); }
-        }
-        public double Duration
-        {
-            get { return getDuration(); }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return getChannelsArrangement(HeaderFrame); }
-        }
-        public int SampleRate
-        {
-            get { return getSampleRate(); }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-
-
-        // ---------- CONSTRUCTORS & INITIALIZERS
-
-        protected void resetData()
-        {
-            vbrData.Reset();
-            HeaderFrame.Reset();
-        }
-
-        public MPEGaudio(string filePath, Format format)
-        {
-            this.filePath = filePath;
-            this.audioFormat = format;
-            resetData();
-        }
-
-        // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
+        /// <summary>
+        /// VBR header data
+        /// </summary>
+        public VBRData VBR { get => vbrData; }
+        public bool IsVBR { get => vbrData.Found; }
+        public double BitRate { get => getBitRate(); }
+        public double Duration { get => getDuration(); }
+        public ChannelsArrangement ChannelsArrangement { get => getChannelsArrangement(HeaderFrame); }
+        public int SampleRate { get => getSampleRate(); }
+        public string FileName { get => filePath; }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         public Format AudioFormat
         {
@@ -320,11 +286,30 @@ public String Encoder // Guessed encoder name
         }
         public int CodecFamily
         {
-            get { return AudioDataIOFactory.CF_LOSSY; }
+            get => AudioDataIOFactory.CF_LOSSY;
         }
+
         public bool IsMetaSupported(int metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
+        }
+
+
+        // ---------- CONSTRUCTORS & INITIALIZERS
+
+        protected void resetData()
+        {
+            vbrData.Reset();
+            HeaderFrame.Reset();
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
+        }
+
+        public MPEGaudio(string filePath, Format format)
+        {
+            this.filePath = filePath;
+            this.audioFormat = format;
+            resetData();
         }
 
         // ********************* Auxiliary functions & voids ********************
@@ -404,7 +389,7 @@ public String Encoder // Guessed encoder name
             // This formula only works for Layers II and III
             return (int)Math.Floor(getCoefficient(Frame) * getBitRate(Frame) * 1000.0 / getSampleRate(Frame)) + getPadding(Frame);
         }
-
+        /*
         private static bool isXing(int Index, byte[] Data)
         {
             // Get true if Xing encoder
@@ -415,6 +400,7 @@ public String Encoder // Guessed encoder name
                 (Data[Index + 4] == 0) &&
                 (Data[Index + 5] == 0));
         }
+        */
 
         private static VBRData getXingInfo(BufferedBinaryReader source)
         {
@@ -518,7 +504,7 @@ public String Encoder // Guessed encoder name
         {
             // Calculate song duration
             if (HeaderFrame.Found)
-                if ((vbrData.Found) && (vbrData.Frames > 0))
+                if (vbrData.Found && (vbrData.Frames > 0))
                     return vbrData.Frames * getCoefficient(HeaderFrame) * 8.0 * 1000.0 / getSampleRate(HeaderFrame);
                 else
                 {
@@ -587,7 +573,7 @@ public String Encoder // Guessed encoder name
                     // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched that way)
                     while (!result.Found && source.Position < limit)
                     {
-                        while (0xFF != source.ReadByte() && source.Position < limit);
+                        while (0xFF != source.ReadByte() && source.Position < limit) ;
 
                         source.Seek(-1, SeekOrigin.Current);
                         source.Read(headerData, 0, 4);
@@ -818,6 +804,8 @@ public String Encoder // Guessed encoder name
                         }
             */
             bool result = HeaderFrame.Found;
+            AudioDataOffset = HeaderFrame.Position;
+            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
             if (!result)
             {

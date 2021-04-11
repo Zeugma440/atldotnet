@@ -194,6 +194,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -217,6 +219,8 @@ namespace ATL.AudioData.IO
             wavNotStored = false;
             bitrate = 0;
             duration = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public APE(string filePath, Format format)
@@ -257,6 +261,8 @@ namespace ATL.AudioData.IO
             {
                 isValid = true;
                 version = header.nVersion;
+                AudioDataOffset = source.BaseStream.Position - 6;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
                 versionStr = ((double)version / 1000).ToString().Substring(0, 4); //Str(FVersion / 1000 : 4 : 2, FVersionStr);
 

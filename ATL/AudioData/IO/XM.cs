@@ -86,6 +86,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -151,6 +153,9 @@ namespace ATL.AudioData.IO
 
             trackerName = "";
             nbChannels = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -391,15 +396,7 @@ namespace ATL.AudioData.IO
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
-
-            ushort nbPatterns = 0;
-            ushort nbInstruments = 0;
-
             ushort trackerVersion;
-
-            uint headerSize = 0;
-            uint songLength = 0;
-
             StringBuilder comment = new StringBuilder("");
 
             resetData();
@@ -432,15 +429,16 @@ namespace ATL.AudioData.IO
             trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
             trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);
 
-            headerSize = bSource.ReadUInt32(); // Calculated FROM THIS OFFSET, not from the beginning of the file
-            songLength = bSource.ReadUInt16();
+            AudioDataOffset = bSource.Position;
+            AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
+            uint headerSize = bSource.ReadUInt32();
+            uint songLength = bSource.ReadUInt16();
             bSource.Seek(2, SeekOrigin.Current); // Restart position
 
             nbChannels = (byte)Math.Min(bSource.ReadUInt16(), (ushort)0xFF);
-            nbPatterns = bSource.ReadUInt16();
-            nbInstruments = bSource.ReadUInt16();
-
+            ushort nbPatterns = bSource.ReadUInt16();
+            ushort nbInstruments = bSource.ReadUInt16();
             bSource.Seek(2, SeekOrigin.Current); // Flags for frequency tables; useless for ATL
 
             initialSpeed = bSource.ReadUInt16();

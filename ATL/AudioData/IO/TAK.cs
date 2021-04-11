@@ -83,6 +83,8 @@ namespace ATL.AudioData.IO
         {
             return metaDataType == MetaDataIOFactory.TAG_APE;
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -96,6 +98,9 @@ namespace ATL.AudioData.IO
             formatVersion = 0;
             bits = 0;
             sampleRate = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public TAK(string filePath, Format format)
@@ -112,7 +117,7 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio 
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
+                return (double)sizeInfo.FileSize / (duration * sampleRate * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
             else
                 return 0;
         }
@@ -138,9 +143,8 @@ namespace ATL.AudioData.IO
             if (TAK_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
                 result = true;
-                position = source.BaseStream.Position;
-
-                source.BaseStream.Seek(position, SeekOrigin.Begin);
+                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
                 do // Loop metadata
                 {

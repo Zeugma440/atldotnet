@@ -98,6 +98,8 @@ namespace ATL.AudioData.IO
         {
             get { return id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME); }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -112,6 +114,8 @@ namespace ATL.AudioData.IO
             isValid = false;
             id3v2Offset = -1;
             id3v2StructureHelper.Clear();
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public DSF(string filePath, Format format)
@@ -182,6 +186,12 @@ namespace ATL.AudioData.IO
 
                     duration = (double)sampleCount * 1000.0 / sampleRate;
                     bitrate = Math.Round(((double)(sizeInfo.FileSize - source.BaseStream.Position)) * 8 / duration); //time to calculate average bitrate
+
+                    AudioDataOffset = source.BaseStream.Position + 8;
+                    if (id3v2Offset > 0)
+                        AudioDataSize = id3v2Offset - AudioDataOffset;
+                    else
+                        AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
                     result = true;
                 }

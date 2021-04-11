@@ -65,6 +65,20 @@ namespace ATL.AudioData
         {
             get;
         }
+        /// <summary>
+        /// Offset of the audio data chunk
+        /// </summary>
+        long AudioDataOffset
+        {
+            get;
+        }
+        /// <summary>
+        /// Size of the audio data chunk
+        /// </summary>
+        long AudioDataSize
+        {
+            get;
+        }
 
         /// <summary>
         /// Indicated whether the given metadata type is supported

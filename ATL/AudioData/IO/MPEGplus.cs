@@ -133,6 +133,9 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -145,6 +148,8 @@ namespace ATL.AudioData.IO
             FSampleCount = 0;
             encoder = "";
             profileID = MPP_PROFILE_UNKNOWN;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public MPEGplus(string filePath, Format format)
@@ -197,6 +202,8 @@ namespace ATL.AudioData.IO
                     // SV8 stream header packet
                     if (packetKey.Equals("SH"))
                     {
+                        AudioDataOffset = initialPos;
+                        AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                         // Skip CRC-32 and stream version
                         source.BaseStream.Seek(5, SeekOrigin.Current);
                         FSampleCount = readVariableSizeInteger(source);

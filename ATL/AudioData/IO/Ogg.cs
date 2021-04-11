@@ -96,6 +96,9 @@ namespace ATL.AudioData.IO
         {
             get { return true; }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
 
         // Ogg page header
@@ -179,7 +182,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return ((ID != null) && ID.Equals(OGG_PAGE_ID));
+                return (ID != null) && ID.Equals(OGG_PAGE_ID);
             }
         }
 
@@ -292,6 +295,8 @@ namespace ATL.AudioData.IO
             bitRateNominal = 0;
             samples = 0;
             contents = -1;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             info.Reset();
         }
@@ -749,6 +754,9 @@ namespace ATL.AudioData.IO
                             first = false;
                         }
 
+                        AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
+                        AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
                             if (CONTENTS_VORBIS == contents)
@@ -810,12 +818,12 @@ namespace ATL.AudioData.IO
                             if (contents.Equals(CONTENTS_VORBIS))
                             {
                                 tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(7));
-                                isValidTagHeader = (VORBIS_TAG_ID.Equals(tagId));
+                                isValidTagHeader = VORBIS_TAG_ID.Equals(tagId);
                             }
                             else if (contents.Equals(CONTENTS_OPUS))
                             {
                                 tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(8));
-                                isValidTagHeader = (OPUS_TAG_ID.Equals(tagId));
+                                isValidTagHeader = OPUS_TAG_ID.Equals(tagId);
                             }
 
                             if (isValidTagHeader)

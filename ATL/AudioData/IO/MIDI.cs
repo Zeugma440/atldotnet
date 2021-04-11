@@ -338,6 +338,9 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // Only for comments
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // From IMetaDataIO
 
@@ -364,6 +367,8 @@ namespace ATL.AudioData.IO
         {
             duration = 0;
             bitrate = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -474,9 +479,12 @@ namespace ATL.AudioData.IO
 
             tempo = 0; // maybe (hopefully!) overwritten by parseTrack
 
-            int trackSize = 0;
+            int trackSize;
             int nbTrack = 0;
             comment = new StringBuilder("");
+
+            AudioDataOffset = source.BaseStream.Position;
+            AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             // Ready to read track data...
             while (source.BaseStream.Position < sizeInfo.FileSize - 4)

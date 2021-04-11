@@ -93,6 +93,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -155,6 +157,9 @@ namespace ATL.AudioData.IO
 
             trackerName = "";
             nbChannels = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -426,6 +431,9 @@ namespace ATL.AudioData.IO
             }
             tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
             bSource.Seek(4, SeekOrigin.Current);
+
+            AudioDataOffset = bSource.Position;
+            AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             nbOrders = bSource.ReadUInt16();
             nbInstruments = bSource.ReadUInt16();

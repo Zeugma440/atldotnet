@@ -135,6 +135,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_ID3V1 || metaDataType == MetaDataIOFactory.TAG_ID3V2 || metaDataType == MetaDataIOFactory.TAG_NATIVE); // Native for bext, info and iXML chunks
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // MetaDataIO
@@ -195,6 +197,9 @@ namespace ATL.AudioData.IO
 
             id3v2Offset = -1;
             id3v2StructureHelper.Clear();
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -297,6 +302,8 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_DATA))
                 {
+                    AudioDataOffset = chunkDataPos;
+                    AudioDataSize = chunkSize;
                     headerSize = riffChunkSize - chunkSize;
                 }
                 else if (subChunkId.Equals(CHUNK_FACT))

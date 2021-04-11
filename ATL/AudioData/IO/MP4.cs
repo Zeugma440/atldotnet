@@ -153,6 +153,9 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -199,6 +202,8 @@ namespace ATL.AudioData.IO
             qtChapterTrackNum = 0;
             initialPaddingSize = 0;
             initialPaddingOffset = -1;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public MP4(string fileName, Format format)
@@ -415,6 +420,8 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return;
             }
+            AudioDataOffset = source.BaseStream.Position - 8;
+            AudioDataSize = mdatSize;
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
 
             // If QT chapters are present record the current zone for chapters data

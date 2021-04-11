@@ -92,6 +92,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -107,6 +109,9 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
             samplesSize = 0;
             cRC32 = 0;
+
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public TTA(string filePath, Format format)
@@ -139,6 +144,9 @@ namespace ATL.AudioData.IO
             if (TTA_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
             {
                 isValid = true;
+
+                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
                 audioFormat = source.ReadUInt16();
                 channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(source.ReadUInt16());

@@ -76,6 +76,9 @@ namespace ATL.AudioData.IO
             get { return -2; }
         }
 
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
@@ -84,6 +87,8 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
             duration = 0;
             bitrate = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public AC3(string filePath, Format format)
@@ -121,6 +126,9 @@ namespace ATL.AudioData.IO
 
             if (30475 == signatureChunk)
             {
+                AudioDataOffset = source.BaseStream.Position - 2;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
                 source.BaseStream.Seek(2, SeekOrigin.Current);
                 aByte = source.ReadByte();
 

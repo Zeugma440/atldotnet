@@ -64,9 +64,6 @@ namespace ATL.AudioData.IO
         // Initial offset of the padding block; used to handle padding the smart way when rewriting data
         private long initialPaddingOffset, initialPaddingSize;
 
-        // Offset of audio data
-        private long audioOffset;
-
         // Physical info
         private int sampleRate;
         private byte bitsPerSample;
@@ -122,7 +119,7 @@ namespace ATL.AudioData.IO
         }
         public double BitRate
         {
-            get { return Math.Round(((double)(sizeInfo.FileSize - audioOffset)) * 8 / Duration); }
+            get { return Math.Round(((double)(sizeInfo.FileSize - AudioDataOffset)) * 8 / Duration); }
         }
         public double Duration
         {
@@ -140,6 +137,8 @@ namespace ATL.AudioData.IO
         {
             get { return AudioDataIOFactory.CF_LOSSLESS; }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         #region IMetaDataReader
         public string Title
@@ -376,9 +375,10 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
             bitsPerSample = 0;
             samples = 0;
-            audioOffset = 0;
             initialPaddingOffset = -1;
             initialPaddingSize = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public FLAC(string path, Format format)
@@ -574,7 +574,8 @@ namespace ATL.AudioData.IO
 
             if (isValid())
             {
-                audioOffset = source.BaseStream.Position;  // we need that to calculate the bitrate
+                AudioDataOffset = source.BaseStream.Position;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                 result = true;
             }
 

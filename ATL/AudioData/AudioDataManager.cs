@@ -31,6 +31,8 @@ namespace ATL.AudioData
         {
             private long fileSize = 0;
             private readonly IDictionary<int, long> TagSizes = new Dictionary<int, long>();
+            private long audioDataOffset = -1;
+            private long audioDataSize = -1;
 
             public void ResetData() { FileSize = 0; TagSizes.Clear(); }
 
@@ -45,6 +47,16 @@ namespace ATL.AudioData
             public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
             public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
             public long FileSize { get => fileSize; set => fileSize = value; }
+            public long AudioDataOffset { get => audioDataOffset; set => audioDataOffset = value; }
+            public long AudioDataSize
+            {
+                get
+                {
+                    if (audioDataSize <= 0) return fileSize - TotalTagSize;
+                    else return audioDataSize;
+                }
+                set => audioDataSize = value;
+            }
         }
 
         private IMetaDataIO iD3v1 = new ID3v1();
@@ -80,6 +92,8 @@ namespace ATL.AudioData
             get { return this.nativeTag; }
         }
 
+        public long AudioDataOffset { get => sizeInfo.AudioDataOffset; }
+        public long AudioDataSize { get => sizeInfo.AudioDataSize; }
 
 
         public AudioDataManager(IAudioDataIO audioDataReader, IProgress<float> writeProgress = null)
@@ -109,23 +123,27 @@ namespace ATL.AudioData
             if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1))
             {
                 return (iD3v1 != null) && (iD3v1.Exists);
-            } else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2))
+            }
+            else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2))
             {
                 return (iD3v2 != null) && (iD3v2.Exists);
-            } else if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+            }
+            else if (tagType.Equals(MetaDataIOFactory.TAG_APE))
             {
                 return (aPEtag != null) && (aPEtag.Exists);
-            } else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE))
+            }
+            else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE))
             {
                 return (nativeTag != null) && (nativeTag.Exists);
-            } else return false;
+            }
+            else return false;
         }
 
         public IList<int> getAvailableMetas()
         {
             IList<int> result = new List<int>();
 
-            foreach(int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType)))
+            foreach (int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType)))
             {
                 if (hasMeta(tagType)) result.Add(tagType);
             }
@@ -188,7 +206,6 @@ namespace ATL.AudioData
                 nativeTag = meta;
                 sizeInfo.SetSize(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
             }
-            
         }
 
         public bool ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)
@@ -253,7 +270,8 @@ namespace ATL.AudioData
 
                         result = theMetaIO.Write(r, w, theTag, writeProgress);
                         if (result) setMeta(theMetaIO);
-                    } finally
+                    }
+                    finally
                     {
                         if (null == stream)
                         {
@@ -269,7 +287,8 @@ namespace ATL.AudioData
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                     result = false;
                 }
-            } else
+            }
+            else
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
             }
@@ -289,7 +308,7 @@ namespace ATL.AudioData
                 BinaryWriter writer = null;
                 try
                 {
-                    result = read(reader,false,false,true);
+                    result = read(reader, false, false, true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
@@ -297,7 +316,8 @@ namespace ATL.AudioData
                         writer = new BinaryWriter(s);
                         metaIO.Remove(writer);
                     }
-                } finally
+                }
+                finally
                 {
                     if (null == stream)
                     {
@@ -330,8 +350,6 @@ namespace ATL.AudioData
 
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            bool result = false;
-
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
             {
                 if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V1, iD3v1.Size);
@@ -348,13 +366,15 @@ namespace ATL.AudioData
                 if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_APE, aPEtag.Size);
             }
 
+            bool result;
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
             {
                 nativeTag = (IMetaDataIO)audioDataIO;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
 
                 if (result) sizeInfo.SetSize(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
-            } else
+            }
+            else
             {
                 readTagParams.ReadTag = false;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
@@ -366,11 +386,15 @@ namespace ATL.AudioData
                 {
                     readTagParams.offset = embedder.HasEmbeddedID3v2;
                     if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
-                } else
+                }
+                else
                 {
                     iD3v2.Clear();
                 }
             }
+
+            sizeInfo.AudioDataOffset = audioDataIO.AudioDataOffset;
+            if (audioDataIO.AudioDataSize > 0) sizeInfo.AudioDataSize = audioDataIO.AudioDataSize;
 
             return result;
         }

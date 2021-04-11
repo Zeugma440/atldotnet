@@ -143,6 +143,9 @@ namespace ATL.AudioData.IO
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
         }
 
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
+
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -202,6 +205,8 @@ namespace ATL.AudioData.IO
             versionID = 0;
 
             id3v2Offset = -1;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
 
             ResetData();
         }
@@ -357,6 +362,8 @@ namespace ATL.AudioData.IO
                         {
                             soundChunkPosition = source.BaseStream.Position - 8;
                             soundChunkSize = header.Size + 8;
+                            AudioDataOffset = soundChunkPosition;
+                            AudioDataSize = soundChunkSize;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR) || header.ID.Equals(CHUNKTYPE_COPYRIGHT))
                         {

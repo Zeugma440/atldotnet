@@ -104,6 +104,8 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -115,6 +117,8 @@ namespace ATL.AudioData.IO
 
             bitrate = 0;
             sampleRate = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public AAC(string fileName, Format format)
@@ -150,10 +154,14 @@ namespace ATL.AudioData.IO
             if ("ADIF".Equals(headerStr))
             {
                 result = AAC_HEADER_TYPE_ADIF;
+                AudioDataOffset = Source.BaseStream.Position - 4;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             else if ((0xFF == header[0]) && (0xF0 == ((header[0]) & 0xF0)))
             {
                 result = AAC_HEADER_TYPE_ADTS;
+                AudioDataOffset = Source.BaseStream.Position - 4;
+                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             return result;
         }

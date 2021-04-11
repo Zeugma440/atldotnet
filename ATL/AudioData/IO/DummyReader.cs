@@ -50,6 +50,10 @@ namespace ATL.AudioData.IO
             get { return AudioDataIOFactory.CF_LOSSY; }
         }
         /// <inheritdoc/>
+        public long AudioDataOffset { get; set; }
+        /// <inheritdoc/>
+        public long AudioDataSize { get; set; }
+        /// <inheritdoc/>
         public IO.ID3v1 ID3v1
         {
             get { return new ID3v1(); }

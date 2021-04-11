@@ -175,6 +175,8 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_APE);
         }
+        public long AudioDataOffset { get; set; }
+        public long AudioDataSize { get; set; }
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
@@ -204,7 +206,7 @@ namespace ATL.AudioData.IO
         {
             public const int TAG_IN_HEADER = 26;
 
-            public String FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
+            public string FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
             public long Size;
             public byte TagInHeader;                    // Set to TAG_IN_HEADER if header contains ID666 info
             public byte VersionByte;                    // Version mark
@@ -219,13 +221,13 @@ namespace ATL.AudioData.IO
 
         private class SPCExTags
         {
-            public string FooterTag;                    // Extended info tag (should be XTENDED_TAG)
-            public uint FooterSize;                     // Chunk size
+            public string FormatTag;              // Extended info tag (should be XTENDED_TAG)
+            public uint Size;                     // Chunk size
 
             public void Reset()
             {
-                FooterTag = "";
-                FooterSize = 0;
+                FormatTag = "";
+                Size = 0;
             }
         }
 
@@ -378,11 +380,11 @@ namespace ATL.AudioData.IO
         private void readExtendedData(BinaryReader source, ref SPCExTags footer, ReadTagParams readTagParams)
         {
             long initialPosition = source.BaseStream.Position;
-            footer.FooterTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            if (XTENDED_TAG == footer.FooterTag)
+            footer.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            if (XTENDED_TAG == footer.FormatTag)
             {
                 tagExists = true;
-                footer.FooterSize = source.ReadUInt32();
+                footer.Size = source.ReadUInt32();
 
                 byte ID, type;
                 ushort size;
@@ -391,7 +393,7 @@ namespace ATL.AudioData.IO
                 long ticks = 0;
 
                 long dataPosition = source.BaseStream.Position;
-                while (source.BaseStream.Position < dataPosition + footer.FooterSize - 4)
+                while (source.BaseStream.Position < dataPosition + footer.Size - 4)
                 {
                     ID = source.ReadByte();
                     type = source.ReadByte();
@@ -450,14 +452,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = true;
             SPCHeader header = new SPCHeader();
@@ -479,6 +481,8 @@ namespace ATL.AudioData.IO
                 readHeaderTags(source, ref header, readTagParams);
             }
 
+            AudioDataOffset = source.BaseStream.Position;
+
             // Reads extended tag
             if (source.BaseStream.Length > SPC_RAW_LENGTH)
             {
@@ -493,7 +497,8 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            bitrate = (sizeInfo.FileSize - header.Size) * 8 / duration;
+            AudioDataSize = sizeInfo.FileSize - header.Size - footer.Size;
+            bitrate = AudioDataSize * 8 / duration;
 
             return result;
         }

@@ -398,7 +398,7 @@ namespace ATL.AudioData
         {
             get { return metaData.Size; }
         }
-
+        /// <inheritdoc/>
         public IDictionary<string, string> AdditionalFields
         {
             get
@@ -406,7 +406,7 @@ namespace ATL.AudioData
                 return metaData.AdditionalFields;
             }
         }
-
+        /// <inheritdoc/>
         public IList<ChapterInfo> Chapters
         {
             get
@@ -414,7 +414,7 @@ namespace ATL.AudioData
                 return metaData.Chapters;
             }
         }
-
+        /// <inheritdoc/>
         public LyricsInfo Lyrics
         {
             get
@@ -422,7 +422,7 @@ namespace ATL.AudioData
                 return metaData.Lyrics;
             }
         }
-
+        /// <inheritdoc/>
         public IList<PictureInfo> EmbeddedPictures
         {
             get
@@ -430,7 +430,7 @@ namespace ATL.AudioData
                 return metaData.EmbeddedPictures;
             }
         }
-
+        /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement
         {
             get
@@ -438,7 +438,17 @@ namespace ATL.AudioData
                 return audioData.ChannelsArrangement;
             }
         }
-
+        /// <inheritdoc/>
+        public long AudioDataOffset
+        {
+            get => audioData.AudioDataOffset;
+        }
+        /// <inheritdoc/>
+        public long AudioDataSize
+        {
+            get => audioData.AudioDataSize;
+        }
+        /// <inheritdoc/>
         public string ChaptersTableDescription
         {
             get
@@ -446,37 +456,37 @@ namespace ATL.AudioData
                 return metaData.ChaptersTableDescription;
             }
         }
-
+        /// <inheritdoc/>
         public bool IsMetaSupported(int metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);
         }
-
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             return metaData.Read(source, readTagParams);
         }
-
+        /// <inheritdoc/>
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             return metaData.Write(r, w, tag, writeProgress);
         }
-
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return audioData.Read(source, sizeInfo, readTagParams);
         }
-
+        /// <inheritdoc/>
         public bool Remove(BinaryWriter w)
         {
             return metaData.Remove(w);
         }
-
+        /// <inheritdoc/>
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             metaData.SetEmbedder(embedder);
         }
-
+        /// <inheritdoc/>
         public void Clear()
         {
             metaData.Clear();

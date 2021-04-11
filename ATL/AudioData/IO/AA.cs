@@ -49,7 +49,6 @@ namespace ATL.AudioData.IO
         };
 
 
-        private long audioSize;
         private string codec;
 
         private AudioDataManager.SizeInfo sizeInfo;
@@ -157,13 +156,18 @@ namespace ATL.AudioData.IO
             get { return false; }
         }
 
+        public long AudioDataOffset { get; set; }
+
+        public long AudioDataSize { get; set; }
+
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         protected void resetData()
         {
             codec = "";
-            audioSize = 0;
+            AudioDataOffset = -1;
+            AudioDataSize = 0;
         }
 
         public AA(string fileName, Format format)
@@ -181,7 +185,7 @@ namespace ATL.AudioData.IO
             if (0 == BitRate)
                 return 0;
             else
-                return audioSize / (BitRate * 1000);
+                return AudioDataSize / (BitRate * 1000);
         }
 
         // Read header data
@@ -192,6 +196,7 @@ namespace ATL.AudioData.IO
             if (magicNumber != AA_MAGIC_NUMBER) return;
 
             tagExists = true;
+            AudioDataOffset = source.BaseStream.Position - 4;
             int tocSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
 
@@ -208,7 +213,8 @@ namespace ATL.AudioData.IO
                 structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
                 if (TOC_AUDIO == section)
                 {
-                    audioSize = tocEntrySize;
+                    AudioDataOffset = tocEntryOffset;
+                    AudioDataSize = tocEntrySize;
                 }
                 if (TOC_CONTENT_TAGS == section)
                 {
@@ -277,7 +283,7 @@ namespace ATL.AudioData.IO
         }
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
