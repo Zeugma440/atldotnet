@@ -351,6 +351,7 @@ namespace ATL.AudioData.IO
 
                 duration = wvh4.total_samples * 1000.0 / sampleRate;
 
+                long initPos = source.BaseStream.Position;
                 Array.Clear(EncBuf, 0, 4096);
                 EncBuf = source.ReadBytes(4096);
 
@@ -366,11 +367,11 @@ namespace ATL.AudioData.IO
                             case 2: encoder = encoder + " (fast)"; break;
                             case 6: encoder = encoder + " (very fast)"; break;
                         }
+                        AudioDataOffset = initPos + i;
                         break;
                     }
                 }
 
-                AudioDataOffset = source.BaseStream.Position;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                 if (duration > 0) bitrate = AudioDataSize * 8.0 / (samples * 1000.0 / sampleRate);
             }

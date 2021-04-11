@@ -12,8 +12,6 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class MPEGplus : IAudioDataIO
     {
-        // Channel mode names
-        private static readonly string[] MPP_MODE = new String[3] { "Unknown", "Stereo", "Joint Stereo" };
         // Sample frequencies
         private static readonly int[] MPP_SAMPLERATES = new int[4] { 44100, 48000, 37800, 32000 };
 
@@ -33,11 +31,13 @@ namespace ATL.AudioData.IO
         private const byte MPP_PROFILE_EXPERIMENTAL = 12;
 
         // Profile names
+        /*
         private static readonly string[] MPP_PROFILE = new String[13]
         {
             "Unknown", "Thumb", "Radio", "Standard", "Xtreme", "Insane", "BrainDead",
             "--quality 9", "--quality 10", "--quality 0", "--quality 1", "Telephone", "Experimental"
         };
+        */
 
         // ID code for stream version > 6
         private const long STREAM_VERSION_7_ID = 120279117;  // 120279117 = 'MP+' + #7
@@ -174,7 +174,7 @@ namespace ATL.AudioData.IO
             int temp;
             for (int i = 0; i < Header.IntegerArray.Length; i++)
             {
-                temp = Header.ByteArray[(i * 4)] * 0x00000001 +
+                temp = Header.ByteArray[i * 4] * 0x00000001 +
                         Header.ByteArray[(i * 4) + 1] * 0x00000100 +
                         Header.ByteArray[(i * 4) + 2] * 0x00010000 +
                         Header.ByteArray[(i * 4) + 3] * 0x01000000;
@@ -184,9 +184,8 @@ namespace ATL.AudioData.IO
             // If VS8 file, looks for the (mandatory) stream header packet
             if (80 == getStreamVersion(Header))
             {
-                String packetKey = "";
-                long packetSize = 0; // Packet size (int only since we are dealing with the header packet)
-                long initialPos;
+                string packetKey;
+                long packetSize; // Packet size (int only since we are dealing with the header packet)
                 bool headerFound = false;
 
                 // Let's go back right after the 32-bit version marker
@@ -194,7 +193,7 @@ namespace ATL.AudioData.IO
 
                 while (!headerFound)
                 {
-                    initialPos = source.BaseStream.Position;
+                    long initialPos = source.BaseStream.Position;
                     packetKey = Utils.Latin1Encoding.GetString(source.ReadBytes(2));
 
                     packetSize = readVariableSizeInteger(source);
@@ -203,7 +202,6 @@ namespace ATL.AudioData.IO
                     if (packetKey.Equals("SH"))
                     {
                         AudioDataOffset = initialPos;
-                        AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                         // Skip CRC-32 and stream version
                         source.BaseStream.Seek(5, SeekOrigin.Current);
                         FSampleCount = readVariableSizeInteger(source);
@@ -231,7 +229,11 @@ namespace ATL.AudioData.IO
                     // Continue searching for header
                     source.BaseStream.Seek(initialPos + 2, SeekOrigin.Begin);
                 }
+            } else
+            {
+                AudioDataOffset = sizeInfo.ID3v2Size;
             }
+            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
             return result;
         }
@@ -334,7 +336,7 @@ namespace ATL.AudioData.IO
             double result = 0;
 
             // Try to get bit rate from header
-            if ((60 >= getStreamVersion(Header)) /*|| (5 == GetStreamVersion(Header))*/ )
+            if (60 >= getStreamVersion(Header) /*|| (5 == GetStreamVersion(Header))*/ )
             {
                 result = (ushort)((Header.IntegerArray[0] >> 23) & 0x01FF);
             }
@@ -437,7 +439,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    // VS8 data already read
+                    // SV8 data already read
                 }
             }
 
