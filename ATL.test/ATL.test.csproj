@@ -65,7 +65,6 @@
     <Compile Include="IO\AudioData\AudioData.cs" />
     <Compile Include="IO\Factories.cs" />
     <Compile Include="IO\MetaData\AA.cs" />
-    <Compile Include="IO\Obsolete.cs" />
     <Compile Include="IO\MetaData\ID3v2_WAV.cs" />
     <Compile Include="IO\MetaData\ID3v2_AIF.cs" />
     <Compile Include="IO\MetaData\ID3v2_DSF.cs" />
