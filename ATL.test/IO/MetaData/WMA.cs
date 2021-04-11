@@ -67,10 +67,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WMA_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -78,12 +78,12 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WMA_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free WMA
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -159,12 +159,12 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WMA_Empty_NonWM()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : WMA with remaining non-WM metadata used for playback (isVBR, DeviceConformanceTemplate, WMFSDKxxx)
             string location = TestUtils.GetResourceLocationRoot() + "WMA/empty_non-WMFields.wma";
             string testFileLocation = TestUtils.CopyAsTempTestFile("WMA/empty_non-WMFields.wma");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -243,12 +243,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WMA_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (WM/Mood)
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -270,13 +269,15 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Back))
+                if (pic.PicType.Equals(PIC_TYPE.Back))
                 {
-                    Assert.AreEqual(pic.NativePicCode, 0x04);
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    Assert.AreEqual(0x04, pic.NativePicCode);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     break;
                 }
             }
@@ -363,20 +364,24 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
+                if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 600);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(600, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                else if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
@@ -414,12 +419,14 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
                 {
-                    Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    Assert.AreEqual(picture.Height, 290);
-                    Assert.AreEqual(picture.Width, 900);
+                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                    {
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(290, picture.Height);
+                        Assert.AreEqual(900, picture.Width);
+                    }
                     found++;
                 }
             }
