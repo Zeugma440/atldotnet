@@ -7,7 +7,10 @@ using ATL.Playlist;
 using Commons;
 
 namespace ATL.test.CodeSnippets
+
 {
+#pragma warning disable S2699 // Tests should include assertions
+
     [TestClass]
     public class CodeSnippets : ILogDevice
     {
@@ -269,11 +272,11 @@ namespace ATL.test.CodeSnippets
             theTrack.AdditionalFields["sample.MIDIUnityNote"] = "61";
             theTrack.AdditionalFields["sample.SampleLoop[0].Start"] = "1000";
             theTrack.AdditionalFields["sample.SampleLoop[0].End"] = "2000";
-            
+
             // Add new sample loop
             theTrack.AdditionalFields["sample.SampleLoop[1].Start"] = "3000";
             theTrack.AdditionalFields["sample.SampleLoop[1].End"] = "4000";
-            
+
             // Remove sample loop (all sub-fields after [x] should be removed)
             theTrack.AdditionalFields.Remove("sample.SampleLoop[2].Start");
             theTrack.AdditionalFields.Remove("sample.SampleLoop[2].End");
@@ -355,4 +358,6 @@ namespace ATL.test.CodeSnippets
             pls.Tracks = tracksToWrite;
         }
     }
+#pragma warning restore S2699 // Tests should include assertions
+
 }

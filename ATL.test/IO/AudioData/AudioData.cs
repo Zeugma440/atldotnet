@@ -50,6 +50,7 @@ namespace ATL.test.IO
             Assert.AreEqual(formatName, theReader.AudioFormat.Name);
         }
 
+#pragma warning disable S2699 // Tests should include assertions
         [TestMethod]
         public void Audio_MP3()
         {
@@ -276,5 +277,6 @@ namespace ATL.test.IO
         {
             testGenericAudio("CAF/caf.caf", 3235, 176, 11025, false, CF_LOSSLESS, STEREO, "Apple Core Audio / Linear PCM", 4080, 71340);
         }
+#pragma warning restore S2699 // Tests should include assertions
     }
 }
