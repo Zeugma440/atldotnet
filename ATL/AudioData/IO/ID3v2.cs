@@ -34,6 +34,11 @@ namespace ATL.AudioData.IO
     ///     
     ///     Even though ID3v2.4 allows it, ATL does not support "individual" unsynchronization at frame level
     ///     => Either the whole tag (all frames) is unsynchronized, or none is
+    ///     
+    ///     5. Prepended tag
+    ///     
+    ///     Even though specs allow ID3v2.4 tags to be located at the end of the file, I have yet to find a valid sample.
+    ///     => Prepended tags are not supported until someone asks for it.
     ///
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -408,7 +413,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override int getDefaultTagOffset()
         {
-            return TO_BOF;
+            return TO_BOF; // Specs allow the ID3v2 tag to be located at the end of the audio (see §5 "Tag location" of specs)
         }
 
         /// <inheritdoc/>
