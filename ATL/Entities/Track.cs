@@ -173,6 +173,14 @@ namespace ATL
         /// Synchronized and unsynchronized lyrics
         /// </summary>
         public LyricsInfo Lyrics { get; set; }
+        /// <summary>
+        /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// </summary>
+        public IDictionary<string, string> AdditionalFields { get; set; }
+        private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
+
+        private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
+        private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
 
         //=== PHYSICAL PROPERTIES
@@ -180,15 +188,15 @@ namespace ATL
         /// <summary>
         /// Bitrate (kilobytes per second)
         /// </summary>
-		public int Bitrate { get; set; }
+		public int Bitrate { get; internal set; }
         /// <summary>
 		/// Sample rate (Hz)
 		/// </summary>
-        public double SampleRate { get; set; }
+        public double SampleRate { get; internal set; }
         /// <summary>
         /// Returns true if the bitrate is variable; false if not
         /// </summary>
-        public bool IsVBR { get; set; }
+        public bool IsVBR { get; internal set; }
         /// <summary>
         /// Family of the audio codec (See AudioDataIOFactory)
         /// 0=Streamed, lossy data
@@ -196,15 +204,15 @@ namespace ATL
         /// 2=Sequenced with embedded sound library
         /// 3=Sequenced with codec or hardware-dependent sound library
         /// </summary>
-		public int CodecFamily { get; set; }
+		public int CodecFamily { get; internal set; }
         /// <summary>
         /// Format of the audio data
         /// </summary>
-        public Format AudioFormat { get; set; }
+        public Format AudioFormat { get; internal set; }
         /// <summary>
         /// Format of the tagging systems
         /// </summary>
-        public IList<Format> MetadataFormats { get; set; }
+        public IList<Format> MetadataFormats { get; internal set; }
         /// <summary>
         /// Duration (seconds)
         /// </summary>
@@ -218,24 +226,15 @@ namespace ATL
         /// <summary>
 		/// Duration (milliseconds)
 		/// </summary>
-		public double DurationMs { get; set; }
+		public double DurationMs { get; internal set; }
         /// <summary>
 		/// Channels arrangement
 		/// </summary>
-		public ChannelsArrangement ChannelsArrangement { get; set; }
+		public ChannelsArrangement ChannelsArrangement { get; internal set; }
         /// <summary>
         /// Low-level / technical informations about the audio file
         /// </summary>
-        public TechnicalInfo TechnicalInformation { get; set;  }
-
-        /// <summary>
-        /// Contains any other metadata field that is not represented by a getter in the above interface
-        /// </summary>
-        public IDictionary<string, string> AdditionalFields { get; set; }
-        private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
-
-        private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
-        private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
+        public TechnicalInfo TechnicalInformation { get; internal set;  }
 
 
         //=== TECHNICAL
@@ -341,6 +340,15 @@ namespace ATL
             DiscTotal = fileIO.DiscTotal;
             ChaptersTableDescription = Utils.ProtectValue(fileIO.ChaptersTableDescription);
 
+            Chapters = fileIO.Chapters;
+            Lyrics = fileIO.Lyrics;
+
+            AdditionalFields = fileIO.AdditionalFields;
+            initialAdditionalFields = fileIO.AdditionalFields.Keys;
+
+            PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
+
+            // Physical information
             Bitrate = fileIO.IntBitRate;
             CodecFamily = fileIO.CodecFamily;
             AudioFormat = fileIO.AudioFormat;
@@ -352,14 +360,6 @@ namespace ATL
             ChannelsArrangement = fileIO.ChannelsArrangement;
 
             TechnicalInformation = new TechnicalInfo(fileIO.AudioDataOffset, fileIO.AudioDataSize);
-
-            Chapters = fileIO.Chapters;
-            Lyrics = fileIO.Lyrics;
-
-            AdditionalFields = fileIO.AdditionalFields;
-            initialAdditionalFields = fileIO.AdditionalFields.Keys;
-
-            PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
         }
 
         private TagData toTagData()
