@@ -66,14 +66,14 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// Offset of the audio data chunk
+        /// Offset of the audio data chunk (bytes)
         /// </summary>
         long AudioDataOffset
         {
             get;
         }
         /// <summary>
-        /// Size of the audio data chunk
+        /// Size of the audio data chunk (bytes)
         /// </summary>
         long AudioDataSize
         {

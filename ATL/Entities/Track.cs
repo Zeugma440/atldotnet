@@ -223,6 +223,10 @@ namespace ATL
 		/// Channels arrangement
 		/// </summary>
 		public ChannelsArrangement ChannelsArrangement { get; set; }
+        /// <summary>
+        /// Low-level / technical informations about the audio file
+        /// </summary>
+        public TechnicalInfo TechnicalInformation { get; set;  }
 
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
@@ -346,6 +350,8 @@ namespace ATL
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
             ChannelsArrangement = fileIO.ChannelsArrangement;
+
+            TechnicalInformation = new TechnicalInfo(fileIO.AudioDataOffset, fileIO.AudioDataSize);
 
             Chapters = fileIO.Chapters;
             Lyrics = fileIO.Lyrics;
