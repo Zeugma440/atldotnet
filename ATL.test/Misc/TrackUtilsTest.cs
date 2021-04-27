@@ -10,6 +10,7 @@ namespace ATL.test
         [TestMethod]
         public void TrackUtils_ExtractTrackNumber()
         {
+            Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("1"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("15"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15 "));
@@ -18,10 +19,37 @@ namespace ATL.test
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("15,1"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("a15a"));
 
+            Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("1/16"));
+            Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("15/16"));
+            Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15 / 16"));
+            Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15//16"));
+
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber(""));
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber(null));
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber("aaa"));
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber("99999999"));
+        }
+
+        [TestMethod]
+        public void TrackUtils_ExtractTrackTotal()
+        {
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15/16"));
+            Assert.AreEqual(1, TrackUtils.ExtractTrackTotal("15/1"));
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal(" 15 / 16 "));
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16"));
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16.1"));
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16,1"));
+
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(" 15"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(" 15 "));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15.1"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15,1"));
+
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(""));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(null));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15/aaa"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15/99999999"));
         }
 
         [TestMethod]
@@ -33,16 +61,16 @@ namespace ATL.test
 
             // Star ratings (very rare)
             // Assert.AreEqual((float)1.0 /5,  TrackUtils.DecodePopularity("*", MetaDataIO.RC_ID3v2));  <-- case not handled (see comments in code)
-            Assert.AreEqual(2.0 /5,  TrackUtils.DecodePopularity("**", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(3.0 /5,  TrackUtils.DecodePopularity("***", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(4.0 /5,  TrackUtils.DecodePopularity("****", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(1,              TrackUtils.DecodePopularity("*****", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(2.0 / 5, TrackUtils.DecodePopularity("**", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(3.0 / 5, TrackUtils.DecodePopularity("***", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(4.0 / 5, TrackUtils.DecodePopularity("****", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(1, TrackUtils.DecodePopularity("*****", MetaDataIO.RC_ID3v2));
 
             // Fringe cases not covered by test data in metadata-specific test classes
-            Assert.AreEqual(0,              TrackUtils.DecodePopularity("0", MetaDataIO.RC_ASF));
-            Assert.AreEqual(0,              TrackUtils.DecodePopularity("7", MetaDataIO.RC_APE));
-            Assert.AreEqual(6.0 /10, TrackUtils.DecodePopularity("6", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(1,              TrackUtils.DecodePopularity("10", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(0, TrackUtils.DecodePopularity("0", MetaDataIO.RC_ASF));
+            Assert.AreEqual(0, TrackUtils.DecodePopularity("7", MetaDataIO.RC_APE));
+            Assert.AreEqual(6.0 / 10, TrackUtils.DecodePopularity("6", MetaDataIO.RC_ID3v2));
+            Assert.AreEqual(1, TrackUtils.DecodePopularity("10", MetaDataIO.RC_ID3v2));
 
             // Error cases
             Assert.AreEqual(0, TrackUtils.DecodePopularity("", MetaDataIO.RC_ID3v2));
@@ -130,7 +158,7 @@ namespace ATL.test
         public void TrackUtils_FormatISOTimestamp()
         {
             Assert.AreEqual("1990-04-01", TrackUtils.FormatISOTimestamp("1990", "0104", ""));
-            Assert.AreEqual("1990-04-01T04:12", TrackUtils.FormatISOTimestamp("1990","0104","0412"));
+            Assert.AreEqual("1990-04-01T04:12", TrackUtils.FormatISOTimestamp("1990", "0104", "0412"));
             Assert.AreEqual("1990-04-01T04:12:44", TrackUtils.FormatISOTimestamp("1990", "0104", "041244"));
         }
     }

@@ -348,7 +348,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Indicate if the given string is exclusively composed of digital charachers
+        /// Indicate if the given string is exclusively composed of digital characters
         /// 
         /// NB1 : decimal separators '.' and ',' are tolerated except if allowsOnlyIntegers argument is set to True
         /// NB2 : whitespaces ' ' are not tolerated
@@ -374,6 +374,16 @@ namespace Commons
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Indicate if the given character represents a non-decimal digit (0..9)
+        /// </summary>
+        /// <param name="c">Character to analyze</param>
+        /// <returns>True if char is between 0..9; false instead</returns>
+        public static bool IsDigit(char c)
+        {
+            return (c >= '0' && c <= '9');
         }
 
         /// <summary>

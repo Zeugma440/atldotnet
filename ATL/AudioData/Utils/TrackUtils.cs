@@ -72,20 +72,29 @@ namespace ATL.AudioData
             if (str.Length < 1) return 0;
             if (!str.Contains("/")) return 0;
 
-            int indexOfDelimiter = str.IndexOf("/");
-            if (indexOfDelimiter == str.Length - 1) return 0;
+            int delimiterOffset = str.IndexOf("/");
+            if (delimiterOffset == str.Length - 1) return 0;
 
             // Try extracting the total manually when "/" is followed by a number
-            int i = indexOfDelimiter + 1;
-            while (char.IsNumber(str[i]))
-            {
-                i++;
-                if (str.Length == i) break;
-            }
+            int i = delimiterOffset;
 
-            if (i > indexOfDelimiter + 1)
+            // Skip any other non-number character
+            while (i < str.Length - 1 && !Utils.IsDigit(str[++i]))
             {
-                long number = long.Parse(str.Substring(indexOfDelimiter + 1, i - indexOfDelimiter - 1));
+                // Keep advancing
+            }
+            if (!Utils.IsDigit(str[i])) return 0; // No number found
+
+            int delimiterEnd = i;
+            while (i < str.Length - 1 && Utils.IsDigit(str[++i]))
+            {
+                // Keep advancing
+            }
+            if (!Utils.IsDigit(str[i])) i--;
+
+            if (i > delimiterOffset)
+            {
+                long number = long.Parse(str.Substring(delimiterEnd, i - delimiterEnd + 1));
                 if (number > ushort.MaxValue) number = 0;
                 return (ushort)number;
             }
