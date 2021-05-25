@@ -320,7 +320,7 @@ public String Encoder // Guessed encoder name
 
             // Check for valid frame header
             return !(
-                ((HeaderData[0] & 0xFF) != 0xFF) ||                         // First 11 bits are set
+                (HeaderData[0] != 0xFF) ||                                  // First 11 bits are set
                 ((HeaderData[1] & 0xE0) != 0xE0) ||                         // First 11 bits are set
                 (((HeaderData[1] >> 3) & 3) == MPEG_VERSION_UNKNOWN) ||     // MPEG version > 1
                 (((HeaderData[1] >> 1) & 3) == MPEG_LAYER_UNKNOWN) ||       // Layer I, II or III
@@ -581,6 +581,7 @@ public String Encoder // Guessed encoder name
 
                         // Valid header candidate found
                         // => let's see if it is a legit MP3 header by using its Size descriptor to find the next header
+                        // which in turn should at least share the same version ID and layer
                         if (result.Found)
                         {
                             result.LoadFromByteArray(headerData);
@@ -595,18 +596,24 @@ public String Encoder // Guessed encoder name
 
                             if (result.Found)
                             {
-                                source.Seek(result.Position + 4, SeekOrigin.Begin); // Go back to header candidate position
-                                break;
+                                FrameHeader result2 = new FrameHeader();
+                                result2.LoadFromByteArray(nextHeaderData);
+
+                                if (result.LayerID == result2.LayerID && result.VersionID == result2.VersionID)
+                                {
+                                    source.Seek(result.Position + 4, SeekOrigin.Begin); // Success ! Go back to header candidate position
+                                    break;
+                                }
                             }
-                            else
-                            {
-                                // Restart looking for a candidate
-                                source.Seek(result.Position + 1, SeekOrigin.Begin);
-                            }
+
+                            // Restart looking for a candidate
+                            source.Seek(result.Position + 1, SeekOrigin.Begin);
+                            result.Reset();
                         }
                         else
                         {
                             source.Seek(-3, SeekOrigin.Current);
+                            result.Reset();
                         }
                     }
                 }
