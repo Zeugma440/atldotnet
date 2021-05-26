@@ -237,6 +237,7 @@
     <Content Include="Resources\MP3\id3v2.4_UTF8_singleDigitTrackTags.mp3" />
     <Content Include="Resources\MP3\invalidApeHeader.mp3" />
     <Content Include="Resources\MP3\rating_WMP_2.5.mp2" />
+    <Content Include="Resources\MP3\truncated_frame.mp3" />
     <Content Include="Resources\MP4\chapters_NERO.mp4" />
     <Content Include="Resources\MP4\chapters_QT.m4v" />
     <Content Include="Resources\MP4\empty.m4a" />
