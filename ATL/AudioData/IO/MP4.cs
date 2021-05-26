@@ -1256,7 +1256,7 @@ namespace ATL.AudioData.IO
 
             do
             {
-                if (!first) Source.Seek(atomSize - 8, SeekOrigin.Current);
+                if (!first) Source.Seek((long)atomSize - 8, SeekOrigin.Current);
                 Source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
                 Source.Read(data, 0, 4);
