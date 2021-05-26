@@ -608,12 +608,12 @@ public String Encoder // Guessed encoder name
 
                             // Restart looking for a candidate
                             source.Seek(result.Position + 1, SeekOrigin.Begin);
-                            result.Reset();
+                            result.Found = false;
                         }
                         else
                         {
                             source.Seek(-3, SeekOrigin.Current);
-                            result.Reset();
+                            result.Found = false;
                         }
                     }
                 }
