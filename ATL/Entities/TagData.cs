@@ -430,30 +430,44 @@ namespace ATL
         /// </summary>
         public void Cleanup()
         {
-            if (TrackNumber != null && TrackNumber.Contains("/"))
+            if (TrackNumber != null)
             {
-                TrackNumberTotal = TrackNumber;
-                string[] parts = TrackNumber.Split('/');
-                TrackNumber = parts[0];
-                TrackTotal = parts[1];
-            }
-            else if (Utils.IsNumeric(TrackNumber))
-            {
-                TrackNumberTotal = TrackNumber;
-                if (Utils.IsNumeric(TrackTotal)) TrackNumberTotal += "/" + TrackTotal;
+                if (TrackNumber.Contains("/"))
+                {
+                    TrackNumberTotal = TrackNumber;
+                    string[] parts = TrackNumber.Split('/');
+                    TrackNumber = parts[0];
+                    TrackTotal = parts[1];
+                }
+                else if (Utils.IsNumeric(TrackNumber))
+                {
+                    TrackNumberTotal = TrackNumber;
+                    if (Utils.IsNumeric(TrackTotal)) TrackNumberTotal += "/" + TrackTotal;
+                }
+                else
+                {
+                    TrackNumberTotal = "";
+                }
             }
 
-            if (DiscNumber != null && DiscNumber.Contains("/"))
+            if (DiscNumber != null)
             {
-                DiscNumberTotal = DiscNumber;
-                string[] parts = DiscNumber.Split('/');
-                DiscNumber = parts[0];
-                DiscTotal = parts[1];
-            }
-            else if (Utils.IsNumeric(DiscNumber))
-            {
-                DiscNumberTotal = DiscNumber;
-                if (Utils.IsNumeric(DiscTotal)) DiscNumberTotal += "/" + DiscTotal;
+                if (DiscNumber.Contains("/"))
+                {
+                    DiscNumberTotal = DiscNumber;
+                    string[] parts = DiscNumber.Split('/');
+                    DiscNumber = parts[0];
+                    DiscTotal = parts[1];
+                }
+                else if (Utils.IsNumeric(DiscNumber))
+                {
+                    DiscNumberTotal = DiscNumber;
+                    if (Utils.IsNumeric(DiscTotal)) DiscNumberTotal += "/" + DiscTotal;
+                }
+                else
+                {
+                    DiscNumberTotal = "";
+                }
             }
 
             if (Chapters != null && Chapters.Count > 0)

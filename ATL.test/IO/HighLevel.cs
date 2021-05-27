@@ -606,6 +606,44 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
+        public void TagIO_RW_ResetTrackDisc()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.TrackNumber = 1;
+            theTrack.TrackTotal = 2;
+            theTrack.DiscNumber = 3;
+            theTrack.DiscTotal = 4;
+
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(1, theTrack.TrackNumber);
+            Assert.AreEqual(2, theTrack.TrackTotal);
+            Assert.AreEqual(3, theTrack.DiscNumber);
+            Assert.AreEqual(4, theTrack.DiscTotal);
+
+            theTrack.TrackNumber = 0;
+            theTrack.TrackTotal = 0;
+            theTrack.DiscNumber = 0;
+            theTrack.DiscTotal = 0;
+
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(0, theTrack.TrackNumber);
+            Assert.AreEqual(0, theTrack.TrackTotal);
+            Assert.AreEqual(0, theTrack.DiscNumber);
+            Assert.AreEqual(0, theTrack.DiscTotal);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_UpdateKeepDataIntegrity()
         {
             ATL.Settings.AddNewPadding = true;
