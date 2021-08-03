@@ -142,8 +142,16 @@ namespace ATL.AudioData.IO
             long sizePos = w.BaseStream.Position;
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
-            string typeId = additionalFields["list.TypeId"];
-            w.Write(typeId);
+            string typeId = PURPOSE_INFO;
+            if (additionalFields.ContainsKey("list.TypeId")) typeId = additionalFields["list.TypeId"];
+            else
+                foreach (string key in additionalFields.Keys)
+                    if (key.StartsWith("info.Labels"))
+                    {
+                        typeId = PURPOSE_ADTL;
+                        break;
+                    }
+            w.Write(Utils.Latin1Encoding.GetBytes(typeId));
 
             if (typeId.Equals(PURPOSE_INFO, System.StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
             else if (typeId.Equals(PURPOSE_ADTL, System.StringComparison.OrdinalIgnoreCase)) writeDataListPurpose(w, isLittleEndian, additionalFields);
