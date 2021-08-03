@@ -59,13 +59,18 @@ namespace ATL.benchmark
             //            Settings.tag
 
             // Modify metadata
-//            theTrack.Title = "yeepee";
-//            theTrack.Comment = "hohoho";
-            theTrack.Artist = "Hey ho";
-            theTrack.Composer = "Oscar Wilde";
-            theTrack.Album = "Fake album starts here and is longer than the original one";
+            //            theTrack.Title = "yeepee";
+            //            theTrack.Comment = "hohoho";
 
-            theTrack.AdditionalFields.Add("bob", "theBuilder");
+            //theTrack.Artist = theTrack.Artist.Substring(1, theTrack.Artist.Length - 1);
+            theTrack.TrackNumber = 0;
+
+
+
+            //            theTrack.Composer = "Oscar Wilde";
+            //            theTrack.Album = "Fake album starts here and is longer than the original one";
+
+            //            theTrack.AdditionalFields.Add("bob", "theBuilder");
             /*
                         theTrack.AdditionalFields.Add("©mvi", "8");
                         theTrack.AdditionalFields.Add("©mvc", "9");
