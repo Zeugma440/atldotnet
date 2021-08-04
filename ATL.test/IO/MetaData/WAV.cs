@@ -111,7 +111,7 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].PlayCount", "2"));
         }
 
-        private void initCueTestData()
+        private void initCueTestReadData()
         {
             notEmptyFile = notEmptyFile_cue;
 
@@ -138,6 +138,34 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Type", "labl"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].CuePointId", "10"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Text", "MARKEURRRR 8"));
+        }
+
+        private void initCueTestRWData()
+        {
+            notEmptyFile = notEmptyFile_cue;
+
+            testData = new TagData();
+
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].Position", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].SampleOffset", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].Position", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].SampleOffset", "1730925"));
+
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Text", "MARKEURRRR 8"));
         }
 
         [TestMethod]
@@ -180,7 +208,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_Cue_simple()
         {
             ConsoleLogger log = new ConsoleLogger();
-            initCueTestData();
+            initCueTestReadData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -217,6 +245,13 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_WAV_Cue_Empty()
+        {
+            initCueTestRWData();
+            test_RW_Empty(emptyFile, true, true, true);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WAV_BEXT_Existing()
         {
             initBextTestData();
@@ -246,5 +281,11 @@ namespace ATL.test.IO.MetaData
         }
         */
 
+        [TestMethod]
+        public void TagIO_RW_WAV_Cue_Existing()
+        {
+            initCueTestRWData();
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
     }
 }
