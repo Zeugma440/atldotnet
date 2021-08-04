@@ -96,7 +96,7 @@ namespace ATL.AudioData.IO
         {
             byte[] data = new byte[size - 4];
             readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            
+
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero and the even padding
@@ -248,15 +248,12 @@ namespace ATL.AudioData.IO
                 else if (type.Equals(CHUNK_NOTE, System.StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabelSubChunk(w, key, additionalFields);
                 else if (type.Equals(CHUNK_LABELED_TEXT, System.StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabeledTextSubChunk(w, key, additionalFields);
 
+                long finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                if (isLittleEndian)
-                {
-                    w.Write(writtenSize);
-                }
-                else
-                {
-                    w.Write(StreamUtils.EncodeBEInt32(writtenSize));
-                }
+                if (isLittleEndian) w.Write(writtenSize);
+                else w.Write(StreamUtils.EncodeBEInt32(writtenSize));
+
+                w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
             }
         }
 
@@ -270,7 +267,7 @@ namespace ATL.AudioData.IO
             // Needs one byte of padding if data size is odd
             int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
 
-            int size = buffer.Length + 4; // Size shouldn't take padding byte into account, per specs
+            int size = buffer.Length + 1 + 4; // Size shouldn't take padding byte into account, per specs
 
             w.Write(buffer);
             w.Write((byte)0); // String is null-terminated
@@ -297,7 +294,7 @@ namespace ATL.AudioData.IO
             // Needs one byte of padding if data size is odd
             int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
 
-            int size = buffer.Length + 4; // Size shouldn't take padding byte into account, per specs
+            int size = buffer.Length + 1 + 4; // Size shouldn't take padding byte into account, per specs
 
             w.Write(buffer);
             w.Write((byte)0); // String is null-terminated

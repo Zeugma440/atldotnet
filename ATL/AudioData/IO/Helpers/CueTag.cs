@@ -66,10 +66,7 @@ namespace ATL.AudioData.IO
             long sizePos = w.BaseStream.Position;
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
-            // Int values
-            writeFieldIntValue("cue.NumCuePoints", additionalFields, w, 0);
-
-            // == Sample loops
+            // == Cue points list
 
             // How many of them do we have ? -> count distinct indexes
             IList<string> keys = new List<string>();
@@ -83,11 +80,7 @@ namespace ATL.AudioData.IO
             }
             w.Write(keys.Count);
 
-            // Sample loops data size
-            long sampleLoopsPos = w.BaseStream.Position;
-            w.Write(0); // Placeholder for data size that will be rewritten at the end of the method
-
-            // Sample loops data
+            // Cue points data
             foreach (string key in keys)
             {
                 writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
@@ -98,12 +91,9 @@ namespace ATL.AudioData.IO
                 writeFieldIntValue(key + ".SampleOffset", additionalFields, w, 0);
             }
 
-            // Write actual sample loops data size
-            long finalPos = w.BaseStream.Position;
-            w.BaseStream.Seek(sampleLoopsPos, SeekOrigin.Begin);
-            w.Write((int)(finalPos - sampleLoopsPos - 4));
-
             // Write actual tag size
+            long finalPos = w.BaseStream.Position;
+
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)
             {
