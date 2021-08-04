@@ -461,8 +461,8 @@ namespace ATL.test.IO.MetaData
             {
                 foreach (MetaFieldInfo info in testData.AdditionalFields)
                 {
-                    Assert.IsTrue(meta.AdditionalFields.ContainsKey(info.NativeFieldCode));
-                    Assert.AreEqual(info.Value, meta.AdditionalFields[info.NativeFieldCode]);
+                    Assert.IsTrue(meta.AdditionalFields.ContainsKey(info.NativeFieldCode), info.NativeFieldCode);
+                    Assert.AreEqual(info.Value, meta.AdditionalFields[info.NativeFieldCode], info.NativeFieldCode);
                 }
             }
 
