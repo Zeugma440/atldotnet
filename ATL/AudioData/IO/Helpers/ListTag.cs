@@ -96,8 +96,11 @@ namespace ATL.AudioData.IO
         {
             byte[] data = new byte[size - 4];
             readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
+            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero and the even padding
+
             meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
@@ -114,6 +117,8 @@ namespace ATL.AudioData.IO
 
             source.Read(data, 0, size - 20);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
+            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero and the even padding
+
             meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
@@ -267,7 +272,7 @@ namespace ATL.AudioData.IO
 
             int size = buffer.Length + 4; // Size shouldn't take padding byte into account, per specs
 
-            w.Write(Utils.Latin1Encoding.GetBytes(text));
+            w.Write(buffer);
             w.Write((byte)0); // String is null-terminated
             if (paddingByte > 0) // Add padding byte if needed
                 w.Write((byte)0);
@@ -294,7 +299,7 @@ namespace ATL.AudioData.IO
 
             int size = buffer.Length + 4; // Size shouldn't take padding byte into account, per specs
 
-            w.Write(Utils.Latin1Encoding.GetBytes(text));
+            w.Write(buffer);
             w.Write((byte)0); // String is null-terminated
             if (paddingByte > 0) // Add padding byte if needed
                 w.Write((byte)0);

@@ -26,7 +26,8 @@ namespace ATL.AudioData.IO
                 readInt32(source, meta, "cue.CuePoints[" + i + "].Position", data, readTagParams.ReadAllMetaFrames);
 
                 // RIFF ID of corresponding data chunk
-                readInt32(source, meta, "cue.CuePoints[" + i + "].DataChunkId", data, readTagParams.ReadAllMetaFrames);
+                source.Read(data, 0, 4);
+                meta.SetMetaField("cue.CuePoints[" + i + "].DataChunkId", Utils.Latin1Encoding.GetString(data, 0, 4), readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset of Data Chunk
                 readInt32(source, meta, "cue.CuePoints[" + i + "].ChunkStart", data, readTagParams.ReadAllMetaFrames);
@@ -91,7 +92,7 @@ namespace ATL.AudioData.IO
             {
                 writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
                 writeFieldIntValue(key + ".Position", additionalFields, w, 0);
-                writeFieldIntValue(key + ".DataChunkId", additionalFields, w, 0);
+                w.Write(Utils.Latin1Encoding.GetBytes(additionalFields[key + ".DataChunkId"]));
                 writeFieldIntValue(key + ".ChunkStart", additionalFields, w, 0);
                 writeFieldIntValue(key + ".BlockStart", additionalFields, w, 0);
                 writeFieldIntValue(key + ".SampleOffset", additionalFields, w, 0);
