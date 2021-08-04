@@ -11,6 +11,7 @@ namespace ATL.test.IO.MetaData
         private string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
         private string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
         private string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
+        private string notEmptyFile_cue = "WAV/cue.wav";
 
         public WAV()
         {
@@ -110,6 +111,35 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].PlayCount", "2"));
         }
 
+        private void initCueTestData()
+        {
+            notEmptyFile = notEmptyFile_cue;
+
+            testData = new TagData();
+
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.NumCuePoints", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].Position", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].SampleOffset", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].Position", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].SampleOffset", "1730925"));
+
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Text", "MARKEURRRR 8"));
+        }
+
         [TestMethod]
         public void TagIO_R_WAV_BEXT_simple()
         {
@@ -117,7 +147,7 @@ namespace ATL.test.IO.MetaData
             initBextTestData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 0);
         }
@@ -139,6 +169,18 @@ namespace ATL.test.IO.MetaData
         {
             ConsoleLogger log = new ConsoleLogger();
             initIXmlTestData();
+
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            readExistingTagsOnFile(theFile, 0);
+        }
+
+        [TestMethod]
+        public void TagIO_R_Cue_simple()
+        {
+            ConsoleLogger log = new ConsoleLogger();
+            initCueTestData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
