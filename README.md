@@ -59,7 +59,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __lyrics__ natively
 
-* ATL supports BEXT, LIST INFO and iXML metadata in RIFF / WAV files
+* ATL supports BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops) and iXML metadata chunks in RIFF / WAV files
 
 * ATL supports __Playlists and Cuesheets__
 
