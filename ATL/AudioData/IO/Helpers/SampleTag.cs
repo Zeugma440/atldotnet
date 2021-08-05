@@ -16,22 +16,22 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Manufacturer
-            readInt32(source, meta, "sample.manufacturer", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.manufacturer", data, readTagParams.ReadAllMetaFrames);
 
             // Product
-            readInt32(source, meta, "sample.product", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.product", data, readTagParams.ReadAllMetaFrames);
 
             // Period
-            readInt32(source, meta, "sample.period", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.period", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI unity note
-            readInt32(source, meta, "sample.MIDIUnityNote", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.MIDIUnityNote", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI pitch fraction
-            readInt32(source, meta, "sample.MIDIPitchFraction", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.MIDIPitchFraction", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE format
-            readInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE offsets
             source.Read(data, 0, 1);
@@ -48,7 +48,7 @@ namespace ATL.AudioData.IO
             meta.SetMetaField("sample.SMPTEOffset.Frames", byteData.ToString(), readTagParams.ReadAllMetaFrames);
 
             // Num sample loops
-            int numSampleLoops = readInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);
+            int numSampleLoops = WavUtils.readInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);
 
             // Sample loops size (not useful here)
             source.Seek(4, SeekOrigin.Current);
@@ -56,31 +56,23 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < numSampleLoops; i++)
             {
                 // Cue point ID
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Type
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
 
                 // Start
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
 
                 // End
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
 
                 // Fraction
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
 
                 // Play count
-                readInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
             }
-        }
-
-        private static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
-        {
-            source.Read(buffer, 0, 4);
-            int value = StreamUtils.DecodeInt32(buffer);
-            meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
-            return value;
         }
 
         public static bool IsDataEligible(MetaDataIO meta)
@@ -102,26 +94,27 @@ namespace ATL.AudioData.IO
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
             // Int values
-            writeFieldIntValue("sample.manufacturer", additionalFields, w, 0);
-            writeFieldIntValue("sample.product", additionalFields, w, 0);
-            writeFieldIntValue("sample.period", additionalFields, w, 1);
-            writeFieldIntValue("sample.MIDIUnityNote", additionalFields, w, 0);
-            writeFieldIntValue("sample.MIDIPitchFraction", additionalFields, w, 0);
-            writeFieldIntValue("sample.SMPTEFormat", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue("sample.manufacturer", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue("sample.product", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue("sample.period", additionalFields, w, 1);
+            WavUtils.writeFieldIntValue("sample.MIDIUnityNote", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue("sample.MIDIPitchFraction", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue("sample.SMPTEFormat", additionalFields, w, 0);
 
             // SMPTE offset
-            writeFieldIntValue("sample.SMPTEOffset.Hours", additionalFields, w, (sbyte)0);
-            writeFieldIntValue("sample.SMPTEOffset.Minutes", additionalFields, w, (byte)0);
-            writeFieldIntValue("sample.SMPTEOffset.Seconds", additionalFields, w, (byte)0);
-            writeFieldIntValue("sample.SMPTEOffset.Frames", additionalFields, w, (byte)0);
+            WavUtils.writeFieldIntValue("sample.SMPTEOffset.Hours", additionalFields, w, (sbyte)0);
+            WavUtils.writeFieldIntValue("sample.SMPTEOffset.Minutes", additionalFields, w, (byte)0);
+            WavUtils.writeFieldIntValue("sample.SMPTEOffset.Seconds", additionalFields, w, (byte)0);
+            WavUtils.writeFieldIntValue("sample.SMPTEOffset.Frames", additionalFields, w, (byte)0);
 
             // == Sample loops
 
             // How many of them do we have ? -> count distinct indexes
             IList<string> keys = new List<string>();
-            foreach(string s in additionalFields.Keys)
+            foreach (string s in additionalFields.Keys)
             {
-                if (s.StartsWith("sample.SampleLoop")) {
+                if (s.StartsWith("sample.SampleLoop"))
+                {
                     string key = s.Substring(0, s.IndexOf("]") + 1);
                     if (!keys.Contains(key)) keys.Add(key);
                 }
@@ -135,12 +128,12 @@ namespace ATL.AudioData.IO
             // Sample loops data
             foreach (string key in keys)
             {
-                writeFieldIntValue(key+ ".CuePointId", additionalFields, w, 0);
-                writeFieldIntValue(key + ".Type", additionalFields, w, 0);
-                writeFieldIntValue(key + ".Start", additionalFields, w, 0);
-                writeFieldIntValue(key + ".End", additionalFields, w, 0);
-                writeFieldIntValue(key + ".Fraction", additionalFields, w, 0);
-                writeFieldIntValue(key + ".PlayCount", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".Type", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".Start", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".End", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".Fraction", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".PlayCount", additionalFields, w, 0);
             }
 
             // Write actual sample loops data size
@@ -160,28 +153,6 @@ namespace ATL.AudioData.IO
             }
 
             return 10;
-        }
-
-        private static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                if (Utils.IsNumeric(additionalFields[field], true))
-                {
-                    if (defaultValue is int) w.Write(int.Parse(additionalFields[field]));
-                    else if (defaultValue is byte) w.Write(byte.Parse(additionalFields[field]));
-                    else if (defaultValue is sbyte) w.Write(sbyte.Parse(additionalFields[field]));
-                    return;
-                }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
-            }
-
-            if (defaultValue is int) w.Write((int)defaultValue);
-            else if (defaultValue is byte) w.Write((byte)defaultValue);
-            else if (defaultValue is sbyte) w.Write((sbyte)defaultValue);
         }
     }
 }

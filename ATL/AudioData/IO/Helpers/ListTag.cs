@@ -95,7 +95,7 @@ namespace ATL.AudioData.IO
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[size - 4];
-            readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
@@ -107,13 +107,13 @@ namespace ATL.AudioData.IO
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[size - 4];
-            readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
-            readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
-            readInt16(source, meta, "info.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
-            readInt16(source, meta, "info.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
-            readInt16(source, meta, "info.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
-            readInt16(source, meta, "info.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
+            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 20);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
@@ -259,7 +259,7 @@ namespace ATL.AudioData.IO
 
         private static int writeLabelSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
@@ -279,14 +279,14 @@ namespace ATL.AudioData.IO
 
         private static int writeLabeledTextSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
-            writeFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
-            writeFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
+            WavUtils.writeFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
 
-            writeFieldIntValue(key + ".Country", additionalFields, w, (short)0);
-            writeFieldIntValue(key + ".Language", additionalFields, w, (short)0);
-            writeFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
-            writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
+            WavUtils.writeFieldIntValue(key + ".Country", additionalFields, w, (short)0);
+            WavUtils.writeFieldIntValue(key + ".Language", additionalFields, w, (short)0);
+            WavUtils.writeFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
+            WavUtils.writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
@@ -328,44 +328,6 @@ namespace ATL.AudioData.IO
                 w.Write((byte)0);
 
             writtenFields.Add("info." + key, value);
-        }
-
-        private static void readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
-        {
-            source.Read(buffer, 0, 4);
-            int value = StreamUtils.DecodeInt32(buffer);
-            meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
-        }
-
-        private static void readInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
-        {
-            source.Read(buffer, 0, 2);
-            int value = StreamUtils.DecodeInt16(buffer);
-            meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
-        }
-
-        private static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                if (Utils.IsNumeric(additionalFields[field], true))
-                {
-                    if (defaultValue is int) w.Write(int.Parse(additionalFields[field]));
-                    else if (defaultValue is short) w.Write(short.Parse(additionalFields[field]));
-                    else if (defaultValue is byte) w.Write(byte.Parse(additionalFields[field]));
-                    else if (defaultValue is sbyte) w.Write(sbyte.Parse(additionalFields[field]));
-                    return;
-                }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
-            }
-
-            if (defaultValue is int) w.Write((int)defaultValue);
-            else if (defaultValue is short) w.Write((short)defaultValue);
-            else if (defaultValue is byte) w.Write((byte)defaultValue);
-            else if (defaultValue is sbyte) w.Write((sbyte)defaultValue);
         }
     }
 }

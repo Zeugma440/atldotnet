@@ -15,37 +15,29 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Num cue points
-            int numCuePoints = readInt32(source, meta, "cue.NumCuePoints", data, readTagParams.ReadAllMetaFrames);
+            int numCuePoints = WavUtils.readInt32(source, meta, "cue.NumCuePoints", data, readTagParams.ReadAllMetaFrames);
 
             for (int i = 0; i < numCuePoints; i++)
             {
                 // Cue point ID
-                readInt32(source, meta, "cue.CuePoints[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "cue.CuePoints[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Play order position
-                readInt32(source, meta, "cue.CuePoints[" + i + "].Position", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "cue.CuePoints[" + i + "].Position", data, readTagParams.ReadAllMetaFrames);
 
                 // RIFF ID of corresponding data chunk
                 source.Read(data, 0, 4);
                 meta.SetMetaField("cue.CuePoints[" + i + "].DataChunkId", Utils.Latin1Encoding.GetString(data, 0, 4), readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset of Data Chunk
-                readInt32(source, meta, "cue.CuePoints[" + i + "].ChunkStart", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "cue.CuePoints[" + i + "].ChunkStart", data, readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset to sample of First Channel
-                readInt32(source, meta, "cue.CuePoints[" + i + "].BlockStart", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "cue.CuePoints[" + i + "].BlockStart", data, readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset to sample byte of First Channel
-                readInt32(source, meta, "cue.CuePoints[" + i + "].SampleOffset", data, readTagParams.ReadAllMetaFrames);
+                WavUtils.readInt32(source, meta, "cue.CuePoints[" + i + "].SampleOffset", data, readTagParams.ReadAllMetaFrames);
             }
-        }
-
-        private static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
-        {
-            source.Read(buffer, 0, 4);
-            int value = StreamUtils.DecodeInt32(buffer);
-            meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
-            return value;
         }
 
         public static bool IsDataEligible(MetaDataIO meta)
@@ -83,12 +75,12 @@ namespace ATL.AudioData.IO
             // Cue points data
             foreach (string key in keys)
             {
-                writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
-                writeFieldIntValue(key + ".Position", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".Position", additionalFields, w, 0);
                 w.Write(Utils.Latin1Encoding.GetBytes(additionalFields[key + ".DataChunkId"]));
-                writeFieldIntValue(key + ".ChunkStart", additionalFields, w, 0);
-                writeFieldIntValue(key + ".BlockStart", additionalFields, w, 0);
-                writeFieldIntValue(key + ".SampleOffset", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".ChunkStart", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".BlockStart", additionalFields, w, 0);
+                WavUtils.writeFieldIntValue(key + ".SampleOffset", additionalFields, w, 0);
             }
 
             // Write actual tag size
@@ -105,28 +97,6 @@ namespace ATL.AudioData.IO
             }
 
             return 10;
-        }
-
-        private static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                if (Utils.IsNumeric(additionalFields[field], true))
-                {
-                    if (defaultValue is int) w.Write(int.Parse(additionalFields[field]));
-                    else if (defaultValue is byte) w.Write(byte.Parse(additionalFields[field]));
-                    else if (defaultValue is sbyte) w.Write(sbyte.Parse(additionalFields[field]));
-                    return;
-                }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
-            }
-
-            if (defaultValue is int) w.Write((int)defaultValue);
-            else if (defaultValue is byte) w.Write((byte)defaultValue);
-            else if (defaultValue is sbyte) w.Write((sbyte)defaultValue);
         }
     }
 }

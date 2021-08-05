@@ -128,15 +128,15 @@ namespace ATL.AudioData.IO
             string description = Utils.ProtectValue(meta.GeneralDescription);
             if (0 == description.Length && additionalFields.Keys.Contains("bext.description")) description = additionalFields["bext.description"];
 
-            writeFixedTextValue(description, 256, w);
-            writeFixedFieldTextValue("bext.originator", 32, additionalFields, w);
-            writeFixedFieldTextValue("bext.originatorReference", 32, additionalFields, w);
-            writeFixedFieldTextValue("bext.originationDate", 10, additionalFields, w);
-            writeFixedFieldTextValue("bext.originationTime", 8, additionalFields, w);
+            WavUtils.writeFixedTextValue(description, 256, w);
+            WavUtils.writeFixedFieldTextValue("bext.originator", 32, additionalFields, w);
+            WavUtils.writeFixedFieldTextValue("bext.originatorReference", 32, additionalFields, w);
+            WavUtils.writeFixedFieldTextValue("bext.originationDate", 10, additionalFields, w);
+            WavUtils.writeFixedFieldTextValue("bext.originationTime", 8, additionalFields, w);
 
             // Int values
-            writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
-            writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
+            WavUtils.writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
+            WavUtils.writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
 
             // UMID
             if (additionalFields.Keys.Contains("bext.UMID"))
@@ -144,30 +144,31 @@ namespace ATL.AudioData.IO
                 if (Utils.IsHex(additionalFields["bext.UMID"]))
                 {
                     int usedValues = (int)Math.Floor(additionalFields["bext.UMID"].Length / 2.0);
-                    for (int i = 0; i<usedValues; i++)
+                    for (int i = 0; i < usedValues; i++)
                     {
-                        w.Write( Convert.ToByte(additionalFields["bext.UMID"].Substring(i*2, 2), 16) );
+                        w.Write(Convert.ToByte(additionalFields["bext.UMID"].Substring(i * 2, 2), 16));
                     }
                     // Complete the field to 64 bytes
-                    for (int i = 0; i < 64-usedValues; i++) w.Write((byte)0);
+                    for (int i = 0; i < 64 - usedValues; i++) w.Write((byte)0);
                 }
                 else
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'bext.UMID' : error writing field - hexadecimal notation required; " + additionalFields["bext.UMID"] + " found");
                     for (int i = 0; i < 64; i++) w.Write((byte)0);
                 }
-            } else
+            }
+            else
             {
                 for (int i = 0; i < 64; i++) w.Write((byte)0);
             }
 
 
             // Float values
-            writeField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
-            writeField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
-            writeField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
-            writeField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
-            writeField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
+            WavUtils.writeField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
+            WavUtils.writeField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
+            WavUtils.writeField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
+            WavUtils.writeField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
+            WavUtils.writeField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
 
             // Reserved
             for (int i = 0; i < 180; i++) w.Write((byte)0);
@@ -177,7 +178,7 @@ namespace ATL.AudioData.IO
             if (additionalFields.Keys.Contains("bext.codingHistory"))
             {
                 textData = Utils.Latin1Encoding.GetBytes(additionalFields["bext.codingHistory"]);
-                w.Write( textData );
+                w.Write(textData);
             }
             w.Write(new byte[2] { 13, 10 } /* CR LF */);
 
@@ -197,64 +198,6 @@ namespace ATL.AudioData.IO
             }
 
             return 14;
-        }
-
-        private static void writeFixedFieldTextValue(string field, int length, IDictionary<string, string> additionalFields, BinaryWriter w, byte paddingByte = 0)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                writeFixedTextValue(additionalFields[field], length, w, paddingByte);
-            }
-            else
-            {
-                writeFixedTextValue("", length, w, paddingByte);
-            }
-        }
-
-        private static void writeFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
-        {
-            w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Utils.Latin1Encoding));
-        }
-
-        private static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                if (Utils.IsNumeric(additionalFields[field], true))
-                {
-                    if (defaultValue is short) w.Write(short.Parse(additionalFields[field]));
-                    else if (defaultValue is ulong) w.Write(ulong.Parse(additionalFields[field]));
-                    else if (defaultValue is ushort) w.Write(ushort.Parse(additionalFields[field]));
-                    return;
-                }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
-            }
-
-            if (defaultValue is short) w.Write((short)defaultValue);
-            else if (defaultValue is ulong) w.Write((ulong)defaultValue);
-            else if (defaultValue is ushort) w.Write((ushort)defaultValue);
-        }
-
-        private static void writeField100DecimalValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
-        {
-            if (additionalFields.Keys.Contains(field))
-            {
-                if (Utils.IsNumeric(additionalFields[field]))
-                {
-                    float f = float.Parse(additionalFields[field]) * 100;
-                    if (defaultValue is short)  w.Write((short)Math.Round(f));
-                    return;
-                }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer or decimal required; " + additionalFields[field] + " found");
-                }
-            }
-
-            w.Write((short)defaultValue);
         }
     }
 }
