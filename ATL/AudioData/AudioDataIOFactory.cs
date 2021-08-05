@@ -110,6 +110,7 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/opus");
                     tempFmt.AddMimeType("audio/ogg;codecs=opus");
                     tempFmt.AddExtension(".ogg");
+                    tempFmt.AddExtension(".oga");
                     tempFmt.AddExtension(".opus");
                     theFactory.addFormat(tempFmt);
 
