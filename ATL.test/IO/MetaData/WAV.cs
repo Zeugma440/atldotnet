@@ -163,9 +163,20 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Type", "labl"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].CuePointId", "1"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Type", "labl"));
+            
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Type", "note"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].CuePointId", "10"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Text", "MARKEURRRR 8"));
+
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Type", "ltxt"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].CuePointId", "11"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].SampleLength", "1234"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].PurposeId", "5678"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Country", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Language", "4"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Dialect", "6"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].CodePage", "8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Text", "HEYHEY 10"));
         }
 
         [TestMethod]

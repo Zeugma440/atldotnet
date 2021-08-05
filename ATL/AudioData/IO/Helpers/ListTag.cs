@@ -294,7 +294,7 @@ namespace ATL.AudioData.IO
             // Needs one byte of padding if data size is odd
             int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
 
-            int size = buffer.Length + 1 + 4; // Size shouldn't take padding byte into account, per specs
+            int size = buffer.Length + 1 + 20; // Size shouldn't take padding byte into account, per specs
 
             w.Write(buffer);
             w.Write((byte)0); // String is null-terminated
