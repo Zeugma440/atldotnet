@@ -131,12 +131,7 @@ namespace ATL.AudioData.IO
             if (meta.Year.Length > 0) return true;
             if (meta.Copyright.Length > 0) return true;
 
-            foreach (string key in meta.AdditionalFields.Keys)
-            {
-                if (key.StartsWith("info.")) return true;
-            }
-
-            return false;
+            return WavUtils.IsDataEligible(meta, "info.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)

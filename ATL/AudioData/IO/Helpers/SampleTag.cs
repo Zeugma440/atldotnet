@@ -77,12 +77,7 @@ namespace ATL.AudioData.IO
 
         public static bool IsDataEligible(MetaDataIO meta)
         {
-            foreach (string key in meta.AdditionalFields.Keys)
-            {
-                if (key.StartsWith("sample.")) return true;
-            }
-
-            return false;
+            return WavUtils.IsDataEligible(meta, "sample.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)

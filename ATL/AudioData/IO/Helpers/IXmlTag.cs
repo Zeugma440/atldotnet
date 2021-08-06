@@ -23,7 +23,8 @@ namespace ATL.AudioData.IO
                 if (first)
                 {
                     first = false;
-                } else
+                }
+                else
                 {
                     result += ".";
                 }
@@ -42,7 +43,7 @@ namespace ATL.AudioData.IO
             position.Add("ixml");
 
             using (MemoryStream mem = new MemoryStream((int)chunkSize))
-            { 
+            {
                 StreamUtils.CopyStream(source, mem, (int)chunkSize); // Isolate XML structure in a clean memory chunk
                 mem.Seek(0, SeekOrigin.Begin);
 
@@ -76,7 +77,7 @@ namespace ATL.AudioData.IO
                                 break;
 
                             case XmlNodeType.EndElement: // Element end
-                                position.RemoveAt(position.Count-1);
+                                position.RemoveAt(position.Count - 1);
                                 if (inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
                                 {
                                     inList = false;
@@ -90,12 +91,7 @@ namespace ATL.AudioData.IO
 
         public static bool IsDataEligible(MetaDataIO meta)
         {
-            foreach (string key in meta.AdditionalFields.Keys)
-            {
-                if (key.StartsWith("ixml.")) return true;
-            }
-
-            return false;
+            return WavUtils.IsDataEligible(meta, "ixml.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
@@ -123,7 +119,7 @@ namespace ATL.AudioData.IO
             List<string> previousPathNodes = new List<string>();
             string subkey;
 
-            foreach(string key in additionalFields.Keys)
+            foreach (string key in additionalFields.Keys)
             {
                 if (key.StartsWith("ixml."))
                 {
@@ -133,7 +129,7 @@ namespace ATL.AudioData.IO
 
                     StringBuilder nodePrefix = new StringBuilder();
                     pathNodes.Clear();
-                    foreach(string nodeName in singleNodes)
+                    foreach (string nodeName in singleNodes)
                     {
                         nodePrefix.Append(".").Append(nodeName);
                         pathNodes.Add(nodePrefix.ToString(), nodeName);
@@ -149,7 +145,7 @@ namespace ATL.AudioData.IO
                     }
 
                     // Opens all new (i.e. non present in previous path) nodes
-                    foreach(string nodePath in pathNodes.Keys)
+                    foreach (string nodePath in pathNodes.Keys)
                     {
                         if (!previousPathNodes.Contains(nodePath))
                         {

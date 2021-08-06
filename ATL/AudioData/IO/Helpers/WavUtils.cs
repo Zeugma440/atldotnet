@@ -8,6 +8,15 @@ namespace ATL.AudioData.IO
 {
     static class WavUtils
     {
+        public static bool IsDataEligible(MetaDataIO meta, string prefix)
+        {
+            foreach (string key in meta.AdditionalFields.Keys)
+            {
+                if (key.StartsWith(prefix)) return true;
+            }
+
+            return false;
+        }
 
         public static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {

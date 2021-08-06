@@ -108,12 +108,7 @@ namespace ATL.AudioData.IO
         {
             if (meta.GeneralDescription.Length > 0) return true;
 
-            foreach (string key in meta.AdditionalFields.Keys)
-            {
-                if (key.StartsWith("bext.")) return true;
-            }
-
-            return false;
+            return WavUtils.IsDataEligible(meta, "bext.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
