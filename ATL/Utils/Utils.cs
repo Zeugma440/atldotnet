@@ -11,6 +11,7 @@ namespace Commons
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
         /// <summary>
         /// 'ZERO WIDTH NO-BREAK SPACE' invisible character, sometimes used by certain tagging softwares
+        /// Looks like a BOM unfortunately converted into an unicode character :/
         /// </summary>
         public readonly static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
 

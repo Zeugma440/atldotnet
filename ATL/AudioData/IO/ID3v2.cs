@@ -1555,7 +1555,7 @@ namespace ATL.AudioData.IO
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, Encoding tagEncoding, string language = "", string description = "", bool isInsideUnsynch = false)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string value, Encoding tagEncoding, string language = "", string description = "", bool isInsideUnsynch = false)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos, frameDataPos, finalFramePos, frameOffset;
@@ -1585,11 +1585,11 @@ namespace ATL.AudioData.IO
                 frameOffset = 0;
             }
 
-            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && text.Length > tagHeader.TextFieldSizeRestriction)
+            if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && value.Length > tagHeader.TextFieldSizeRestriction)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + text + ") is longer than authorized by ID3v2 restrictions; reducing to " + tagHeader.TextFieldSizeRestriction + " characters");
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, frameCode + " field value (" + value + ") is longer than authorized by ID3v2 restrictions; reducing to " + tagHeader.TextFieldSizeRestriction + " characters");
 
-                text = text.Substring(0, tagHeader.TextFieldSizeRestriction);
+                value = value.Substring(0, tagHeader.TextFieldSizeRestriction);
             }
 
             if (frameCode.Length < 5) frameCode = frameCode.ToUpper(); // Only capitalize standard ID3v2 fields -- TODO : Use TagData.Origin property !
@@ -1654,7 +1654,7 @@ namespace ATL.AudioData.IO
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
 
-                w.Write(byte.Parse(text));
+                w.Write(byte.Parse(value));
 
                 // Play count
                 w.Write(0); // TODO : handle this field dynamically. Warning : may be longer than 32 bits (see specs)
@@ -1676,10 +1676,10 @@ namespace ATL.AudioData.IO
                 byte[] desc;
                 byte[] url;
                 // Case 1 : Field read by ATL from a file
-                string[] parts = text.Split(Settings.InternalValueSeparator);
+                string[] parts = value.Split(Settings.InternalValueSeparator);
                 // Case 2 : User-defined value with the ID3v2 specs separator
                 // NB : Keeps a remaining null char when the desc is encoded with UTF-16, which is rare
-                if (1 == parts.Length) parts = text.Split('\0');
+                if (1 == parts.Length) parts = value.Split('\0');
                 // Case 3 : User-defined value without separator
                 if (1 == parts.Length)
                 {
@@ -1701,13 +1701,19 @@ namespace ATL.AudioData.IO
 
                 writeValue = false;
             }
+            else if (shortCode.Equals("TCO") && value.Contains(Settings.DisplayValueSeparator + "")) // Genre
+            {
+                // Separating values with \0 is actually specific to ID3v2.4 but seems to have become the de facto standard
+                // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
+                value = value.Replace(Settings.DisplayValueSeparator, '\0');
+            }
 
             if (writeValue)
             {
                 Encoding localEncoding = (isExplicitLatin1Encoding ? Utils.Latin1Encoding : tagEncoding);
                 if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(localEncoding)); // Encoding according to ID3v2 specs
                 w.Write(getBomFromEncoding(localEncoding));
-                w.Write(localEncoding.GetBytes(text));
+                w.Write(localEncoding.GetBytes(value));
                 if (writeNullTermination) w.Write(getNullTerminatorFromEncoding(localEncoding));
             }
 
@@ -1852,42 +1858,29 @@ namespace ATL.AudioData.IO
         /// <returns>Genre name</returns>
         private static string extractGenreFromID3v2Code(string iGenre)
         {
-            if (null == iGenre) return "";
+            if (null == iGenre || 0 == iGenre.Length) return "";
 
-            string result = iGenre.Trim().Replace("\0", "");
-            int genreIndex = -1;
-            int openParenthesisIndex = -1;
+            IList<string> genres = new List<string>();
+            int genreIndex;
 
-            for (int i = 0; i < result.Length; i++)
+            // Handle ID3v2.4 separators and ID3v2.3 parenthesis
+            // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character before each genre
+            string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new char[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string part in parts)
             {
-                if ('(' == result[i]) openParenthesisIndex = i;
-                else if (')' == result[i] && openParenthesisIndex > -1
-                    && int.TryParse(result.Substring(openParenthesisIndex + 1, i - openParenthesisIndex - 1), out genreIndex)
-                    )
+                // Handle numerical index of the genre, as per ID3v1 convention
+                if (Utils.IsNumeric(part, true))
                 {
-                    // Delete genre index string from the tag value
-                    result = result.Remove(0, i + 1);
-                    break;
+                    int.TryParse(part, out genreIndex);
+                    if (genreIndex > -1 && genreIndex < ID3v1.MusicGenre.Length)
+                    {
+                        genres.Add(ID3v1.MusicGenre[genreIndex]);
+                        continue;
+                    }
                 }
+                genres.Add(part);
             }
-
-            /* Regexes are too expensive
-            // Any number between parenthesis
-            Regex regex = new Regex(@"(?<=\()\d+?(?=\))");
-
-            Match match = regex.Match(result);
-            // First match is directly returned
-            if (match.Success)
-            {
-                genreIndex = Int32.Parse(match.Value);
-                // Delete genre index string from the tag value
-                result = result.Remove(0, result.LastIndexOf(')') + 1);
-            }
-            */
-
-            if (("" == result) && (genreIndex != -1) && (genreIndex < ID3v1.MusicGenre.Length)) result = ID3v1.MusicGenre[genreIndex];
-
-            return result;
+            return string.Join(Settings.InternalValueSeparator + "", genres);
         }
 
         // Specific to ID3v2 : extract numeric rating from POP/POPM block containing other useless/obsolete data

@@ -189,6 +189,36 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_Multiple_Genres()
+        {
+            // Expected values
+            IList<string> expectedGenres = new List<string>();
+            expectedGenres.Add("Rock");
+            expectedGenres.Add("Pop");
+            expectedGenres.Add("Country");
+
+            R_ID3v2_Multiple_Genres(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_multipleGenres.mp3", expectedGenres);
+            R_ID3v2_Multiple_Genres(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16_multipleGenres.mp3", expectedGenres);
+            R_ID3v2_Multiple_Genres(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_ISO_multipleGenres.mp3", expectedGenres);
+        }
+
+        private void R_ID3v2_Multiple_Genres(string location, IList<string> expectedGenres)
+        {
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            // Check if the two fields are indeed accessible
+            Assert.IsTrue(theFile.ReadFromFile(false, false));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            IList<string> actualGenres = theFile.ID3v2.Genre.Split(ATL.Settings.InternalValueSeparator);
+            Assert.AreEqual(expectedGenres.Count, actualGenres.Count);
+
+            for (int i = 0; i < expectedGenres.Count; i++)
+                Assert.AreEqual(expectedGenres[i], actualGenres[i]);
+        }
+
+        [TestMethod]
         public void TagIO_R_ID3v2_WXXX_UnicodeNoDesc()
         {
             // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
@@ -1088,6 +1118,38 @@ namespace ATL.test.IO.MetaData
                 testData.RecordingDate = "1997-06-20T04:04:04";
                 testData.PublishingDate = "1997-06-22T05:05:05";
             }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_Multiple_Genres()
+        {
+            string writtenGenre = "Rock" + ATL.Settings.DisplayValueSeparator + "Pop" + ATL.Settings.DisplayValueSeparator + "Country";
+            string expectedGenre = writtenGenre.Replace(ATL.Settings.DisplayValueSeparator, ATL.Settings.InternalValueSeparator);
+
+            ConsoleLogger log = new ConsoleLogger();
+
+            // Source : empty MP3
+            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsFalse(theFile.ID3v2.Exists);
+
+            TagData newTag = new TagData();
+            newTag.Genre = writtenGenre;
+
+            theFile.UpdateTagInFile(newTag, tagType);
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(expectedGenre, meta.Genre);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
