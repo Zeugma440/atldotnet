@@ -250,6 +250,8 @@ namespace ATL.AudioData.IO
                             {
                                 newTagSize = zone.Size;
                             }
+                            long delta = newTagSize - oldTagSize;
+                            bool isNothing = (0 == oldTagSize && 0 == delta); // Avoids unnecessary operations to optimize processing time
 
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "newTagSize : " + Utils.GetBytesReadable(newTagSize));
 
@@ -281,7 +283,7 @@ namespace ATL.AudioData.IO
                                 tagEndOffset = tagBeginOffset + zone.Size;
                             }
 
-                            if (WriteMode.REPLACE == writeResult.RequiredMode)
+                            if (WriteMode.REPLACE == writeResult.RequiredMode && !isNothing)
                             {
                                 // Need to build a larger file
                                 if (newTagSize > zone.Size)
@@ -303,19 +305,21 @@ namespace ATL.AudioData.IO
                             }
 
                             // Copy tag contents to the new slot
-                            writer.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                            s.Seek(0, SeekOrigin.Begin);
-
-                            if (writeResult.WrittenFields > 0)
+                            if (!isNothing)
                             {
-                                StreamUtils.CopyStream(s, writer.BaseStream);
-                            }
-                            else
-                            {
-                                if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                                writer.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                                s.Seek(0, SeekOrigin.Begin);
+
+                                if (writeResult.WrittenFields > 0)
+                                {
+                                    StreamUtils.CopyStream(s, writer.BaseStream);
+                                }
+                                else
+                                {
+                                    if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                                }
                             }
 
-                            long delta = newTagSize - oldTagSize;
                             regionCumulativeDelta += delta;
                             globalCumulativeDelta += delta;
 
