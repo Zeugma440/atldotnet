@@ -94,6 +94,7 @@
     <Compile Include="Misc\FileStructureHelperTest.cs" />
     <Compile Include="Misc\ImageUtilsTest.cs" />
     <Compile Include="Misc\TrackUtilsTest.cs" />
+    <Compile Include="Misc\WavUtilsTest.cs" />
     <Compile Include="Misc\UtilsTest.cs" />
     <Compile Include="Playlist\SMILIO.cs" />
     <Compile Include="Playlist\ASXIO.cs" />

@@ -6,7 +6,7 @@ using System;
 
 namespace ATL.AudioData.IO
 {
-    static class WavUtils
+    public static class WavUtils
     {
         public static bool IsDataEligible(MetaDataIO meta, string prefix)
         {
