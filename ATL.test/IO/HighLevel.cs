@@ -5,6 +5,7 @@ using System.Drawing;
 using ATL.test.IO.MetaData;
 using System.Collections.Generic;
 using static ATL.Logging.Log;
+using System;
 
 namespace ATL.test.IO
 {
@@ -395,6 +396,46 @@ namespace ATL.test.IO
                 ATL.Settings.MP4_createNeroChapters = true;
                 ATL.Settings.MP4_createQuicktimeChapters = true;
             }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_AddRemoveTagRegular()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            Track theTrack = new Track(testFileLocation);
+
+            DateTime now = System.DateTime.Now;
+
+            theTrack.Artist = "aaa"; // String data
+            theTrack.DiscNumber = 1; // Int data
+            theTrack.Year = 1998; // Int data
+            theTrack.PublishingDate = now; // Date data
+
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("aaa", theTrack.Artist);
+            Assert.AreEqual(1, theTrack.DiscNumber);
+            Assert.AreEqual(1998, theTrack.Year);
+            Assert.AreEqual(now.ToString(), theTrack.PublishingDate.ToString());
+
+            theTrack.Artist = "";
+            theTrack.DiscNumber = 0;
+            theTrack.Year = 0;
+            theTrack.PublishingDate = DateTime.MinValue;
+
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual("", theTrack.Artist);
+            Assert.AreEqual(0, theTrack.DiscNumber);
+            Assert.AreEqual(0, theTrack.Year);
+            Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.PublishingDate.ToString());
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

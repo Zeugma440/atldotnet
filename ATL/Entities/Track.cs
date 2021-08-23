@@ -114,7 +114,7 @@ namespace ATL
         /// </summary>
         public string Publisher { get; set; }
         /// <summary>
-        /// Publishing date
+        /// Publishing date (set to DateTime.MinValue to remove)
         /// </summary>
         public DateTime PublishingDate { get; set; }
         /// <summary>
@@ -126,7 +126,7 @@ namespace ATL
         /// </summary>
         public string Conductor { get; set; }
         /// <summary>
-		/// Recording Date
+		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
         public DateTime Date { get; set; }
         /// <summary>
@@ -378,9 +378,11 @@ namespace ATL
             result.Copyright = Copyright;
             result.Publisher = Publisher;
             if (!PublishingDate.Equals(DateTime.MinValue)) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate);
+            else result.PublishingDate = "0";
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
             if (!Date.Equals(DateTime.MinValue)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
+            else result.RecordingDate = "0";
             result.RecordingYear = Year.ToString();
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();
