@@ -45,7 +45,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("ARTIST", theFile.ID3v2.Artist);
             Assert.AreEqual("ALBUMARTIST", theFile.ID3v2.AlbumArtist);
             Assert.AreEqual("I have no IDE and i must code", theFile.ID3v2.Comment);
-            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
             Assert.AreEqual(1, theFile.ID3v2.Track);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
@@ -93,7 +93,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("﻿父", theFile.ID3v2.Artist);
             Assert.AreEqual("ALBUMARTIST", theFile.ID3v2.AlbumArtist);
             Assert.AreEqual("﻿I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
-            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
             Assert.AreEqual(1, theFile.ID3v2.Track);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
@@ -470,7 +470,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
 
             int found = 0;
             string rvaValue = "";
@@ -513,7 +513,7 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(2, found);
 
-            Assert.AreEqual("1997", theFile.ID3v2.Year);
+            Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
 
 
             // 2/ Check if they are indeed persisted as "classic" ID3v2 fields, and not as sub-codes inside a TXXX field

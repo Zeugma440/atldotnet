@@ -132,7 +132,19 @@ namespace ATL
         /// <summary>
 		/// Recording Year
 		/// </summary>
-        public int Year { get; set; }
+        public int Year
+        {
+            get
+            {
+                if (Date == DateTime.MinValue) return 0;
+                else return Date.Year;
+            }
+            set
+            {
+                if (value > 0) Date = new DateTime(value, 1, 1);
+                else Date = DateTime.MinValue;
+            }
+        }
         /// <summary>
 		/// Track number
 		/// </summary>
@@ -234,7 +246,7 @@ namespace ATL
         /// <summary>
         /// Low-level / technical informations about the audio file
         /// </summary>
-        public TechnicalInfo TechnicalInformation { get; internal set;  }
+        public TechnicalInfo TechnicalInformation { get; internal set; }
 
 
         //=== TECHNICAL
@@ -332,7 +344,6 @@ namespace ATL
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
             Date = fileIO.Date;
-            Year = fileIO.IntYear;
             Album = fileIO.Album;
             TrackNumber = fileIO.Track;
             TrackTotal = fileIO.TrackTotal;

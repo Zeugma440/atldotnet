@@ -404,7 +404,9 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
             Track theTrack = new Track(testFileLocation);
 
-            DateTime now = System.DateTime.Now;
+            DateTime now = DateTime.Now;
+
+            // === FIRST TEST WITH REGULAR FIELDS
 
             theTrack.Artist = "aaa"; // String data
             theTrack.DiscNumber = 1; // Int data
@@ -412,7 +414,6 @@ namespace ATL.test.IO
             theTrack.PublishingDate = now; // Date data
 
             Assert.IsTrue(theTrack.Save());
-
             theTrack = new Track(testFileLocation);
 
             Assert.AreEqual("aaa", theTrack.Artist);
@@ -426,13 +427,32 @@ namespace ATL.test.IO
             theTrack.PublishingDate = DateTime.MinValue;
 
             Assert.IsTrue(theTrack.Save());
-
             theTrack = new Track(testFileLocation);
 
             Assert.AreEqual("", theTrack.Artist);
             Assert.AreEqual(0, theTrack.DiscNumber);
             Assert.AreEqual(0, theTrack.Year);
             Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.PublishingDate.ToString());
+
+
+            // === SECOND TEST WITH YEAR/DATE DUAL PROPERTIES
+
+            theTrack.Date = now;
+
+            Assert.IsTrue(theTrack.Save());
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(now.Year, theTrack.Year);
+            Assert.AreEqual(now.ToString(), theTrack.Date.ToString());
+
+            theTrack.Date = DateTime.MinValue;
+
+            Assert.IsTrue(theTrack.Save());
+            theTrack = new Track(testFileLocation);
+
+            Assert.AreEqual(0, theTrack.Year);
+            Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
+
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

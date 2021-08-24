@@ -92,7 +92,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
+            Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("FPS", theFile.NativeTag.Genre);
 
 
@@ -246,7 +246,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Yasunori Mitsuda", theFile.NativeTag.Artist);
             Assert.AreEqual("RPG", theFile.NativeTag.Genre);
             Assert.AreEqual("ルティクラウ", theFile.NativeTag.Comment);
-            Assert.AreEqual("1998", theFile.NativeTag.Year);
+            Assert.AreEqual(1998, theFile.NativeTag.Date.Year);
             Assert.AreEqual(copyrightStr, theFile.NativeTag.Copyright);
 
             // Unsupported field (psfby)

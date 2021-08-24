@@ -233,19 +233,6 @@ namespace ATL.AudioData.IO
             get { return (float)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
         }
         /// <summary>
-        /// Release year
-        /// </summary>
-        public String Year
-        {
-            get
-            {
-                String result;
-                result = TrackUtils.ExtractStrYear(tagData.RecordingYear);
-                if (0 == result.Length) result = TrackUtils.ExtractStrYear(tagData.RecordingDate);
-                return result;
-            }
-        }
-        /// <summary>
         /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         public DateTime Date
@@ -257,10 +244,10 @@ namespace ATL.AudioData.IO
                 {
                     bool success = false;
                     string dayMonth = Utils.ProtectValue(tagData.RecordingDayMonth); // If not, try to assemble year and dateMonth (e.g. ID3v2)
-                    if (4 == dayMonth.Length && 4 == Year.Length)
+                    if (4 == dayMonth.Length && 4 == Utils.ProtectValue(tagData.RecordingYear).Length)
                     {
                         StringBuilder dateTimeBuilder = new StringBuilder();
-                        dateTimeBuilder.Append(Year).Append("-");
+                        dateTimeBuilder.Append(tagData.RecordingYear).Append("-");
                         dateTimeBuilder.Append(dayMonth.Substring(2, 2)).Append("-");
                         dateTimeBuilder.Append(dayMonth.Substring(0, 2));
                         string time = Utils.ProtectValue(tagData.RecordingTime); // Try to add time if available
@@ -272,6 +259,25 @@ namespace ATL.AudioData.IO
                             dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
                         }
                         success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                    }
+                    if (!success) // Year only
+                    {
+                        string year = Utils.ProtectValue(tagData.RecordingYear); // First try with RecordingYear...
+                        if (year.Length != 4) year = Utils.ProtectValue(tagData.RecordingDate); // ...then with RecordingDate
+                        if (4 == year.Length) // We have a year !
+                        {
+                            StringBuilder dateTimeBuilder = new StringBuilder();
+                            dateTimeBuilder.Append(year).Append("-01-01");
+                            string time = Utils.ProtectValue(tagData.RecordingTime); // Try to add time if available
+                            if (time.Length >= 4)
+                            {
+                                dateTimeBuilder.Append("T");
+                                dateTimeBuilder.Append(time.Substring(0, 2)).Append(":");
+                                dateTimeBuilder.Append(time.Substring(2, 2)).Append(":");
+                                dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
+                            }
+                            success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                        }
                     }
                     if (!success) result = DateTime.MinValue;
                 }

@@ -340,7 +340,7 @@ namespace ATL.AudioData.IO
             w.Write(endString);
 
             string dateStr = "";
-            if (Date != DateTime.MinValue) dateStr = Date.ToString("yyyy/MM/dd");
+            if (Date != DateTime.MinValue && !(1 == Date.Day && 1 == Date.Month)) dateStr = Date.ToString("yyyy/MM/dd");
             else if (tag.RecordingYear != null && tag.RecordingYear.Length == 4)
             {
                 dateStr = tag.RecordingYear;

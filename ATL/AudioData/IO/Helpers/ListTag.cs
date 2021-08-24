@@ -128,7 +128,7 @@ namespace ATL.AudioData.IO
             if (meta.Artist.Length > 0) return true;
             if (meta.Comment.Length > 0) return true;
             if (meta.Genre.Length > 0) return true;
-            if (meta.Year.Length > 0) return true;
+            if (meta.Date > System.DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
 
             return WavUtils.IsDataEligible(meta, "info.");
@@ -193,7 +193,7 @@ namespace ATL.AudioData.IO
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
             // Year
-            value = Utils.ProtectValue(meta.Year);
+            value = Utils.ProtectYear(meta.Date);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICRD")) value = additionalFields["info.ICRD"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICRD", value, w, writtenFields);
             // Genre

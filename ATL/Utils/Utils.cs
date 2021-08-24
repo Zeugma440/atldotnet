@@ -32,9 +32,19 @@ namespace Commons
         /// </summary>
         /// <param name="value">String to protect</param>
         /// <returns>Given string if non-null; else empty string</returns>
-        public static String ProtectValue(String value)
+        public static string ProtectValue(string value)
         {
             return (null == value) ? "" : value;
+        }
+
+        /// <summary>
+        /// Extract the year from the given DateTime; "" if DateTime is its minimum value
+        /// </summary>
+        /// <param name="value">DateTime to extract the year from</param>
+        /// <returns>Year from the given DateTime, or "" if not set</returns>
+        public static string ProtectYear(DateTime value)
+        {
+            return (DateTime.MinValue == value) ? "" : value.Year.ToString();
         }
 
         /// <summary>

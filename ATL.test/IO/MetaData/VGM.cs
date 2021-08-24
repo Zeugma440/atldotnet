@@ -89,7 +89,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Album", theFile.NativeTag.Album);
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
+            Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
@@ -135,7 +135,7 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
 
-            readExistingTagsOnFile(theFile, "1999");
+            readExistingTagsOnFile(theFile, 1999);
 
 
             // Remove the additional supported field
@@ -163,7 +163,7 @@ namespace ATL.test.IO.MetaData
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(AudioDataManager theFile, string yearStr = "1992")
+        private void readExistingTagsOnFile(AudioDataManager theFile, int year = 1992)
         {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -175,7 +175,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Taz-Mania", theFile.NativeTag.Album);
             Assert.AreEqual("Satoshi Namekawa, Kouichi Shimamura, Takashi Masuzaki", theFile.NativeTag.Artist);
             Assert.AreEqual("", theFile.NativeTag.Comment);
-            Assert.AreEqual(yearStr, theFile.NativeTag.Year);
+            Assert.AreEqual(year, theFile.NativeTag.Date.Year);
 
             // Unsupported fields
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TITLE_J"));

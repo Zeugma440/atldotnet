@@ -182,7 +182,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("Mike", theFile.NativeTag.AlbumArtist);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
+            Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
             Assert.AreEqual(1, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.TrackTotal);

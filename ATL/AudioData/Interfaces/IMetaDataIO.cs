@@ -94,13 +94,6 @@ namespace ATL.AudioData
         {
             get;
         }
-        /// <summary>
-        /// Recording Year
-        /// </summary>
-        string Year
-		{
-			get;
-		}
 		/// <summary>
 		/// Title of the album
 		/// </summary>

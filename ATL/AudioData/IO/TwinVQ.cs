@@ -26,7 +26,7 @@ namespace ATL.AudioData.IO
             { "MUSC", TagData.TAG_FIELD_COMPOSER },
             { "CDCT", TagData.TAG_FIELD_CONDUCTOR },
             { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER }, // Unofficial; found in sample files
-            { "DATE", TagData.TAG_FIELD_RECORDING_DATE }, // Unofficial; found in sample files
+            { "DATE", TagData.TAG_FIELD_RECORDING_YEAR }, // Unofficial; found in sample files
             { "GENR", TagData.TAG_FIELD_GENRE }, // Unofficial; found in sample files
             { "COMT", TagData.TAG_FIELD_COMMENT }
             // TODO - handle integer extension sub-chunks : YEAR, TRAC

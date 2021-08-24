@@ -91,7 +91,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Album", theFile.NativeTag.Album);
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
+            Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual(1, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
 
@@ -250,7 +250,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Chrono Trigger", theFile.NativeTag.Album);
             Assert.AreEqual("Yasunori Mitsuda", theFile.NativeTag.Artist);
             Assert.AreEqual("", theFile.NativeTag.Comment);
-            Assert.AreEqual("1995", theFile.NativeTag.Year);
+            Assert.AreEqual(1995, theFile.NativeTag.Date.Year);
             Assert.AreEqual(23, theFile.NativeTag.Track);
             Assert.AreEqual(2, theFile.NativeTag.Disc);
             Assert.AreEqual(publisherStr, theFile.NativeTag.Publisher);

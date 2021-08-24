@@ -44,10 +44,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VQF_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(theFile);
         }
@@ -55,12 +55,12 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VQF_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free VQF
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -93,7 +93,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
-            Assert.AreEqual("2008", theFile.NativeTag.Year);
+            Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("FPS", theFile.NativeTag.Genre);
             Assert.AreEqual(22, theFile.NativeTag.Track);
 
@@ -247,7 +247,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Bob", theFile.NativeTag.Album);
             Assert.AreEqual("Rock", theFile.NativeTag.Genre);
             Assert.AreEqual("this is a comment", theFile.NativeTag.Comment);
-            Assert.AreEqual("2016", theFile.NativeTag.Year);
+            Assert.AreEqual(2016, theFile.NativeTag.Date.Year);
             Assert.AreEqual(22, theFile.NativeTag.Track);
             Assert.AreEqual(testCopyright, theFile.NativeTag.Copyright);
 

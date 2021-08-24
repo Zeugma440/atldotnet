@@ -289,13 +289,6 @@ namespace ATL.AudioData
             get { return metaData.DiscTotal; }
         }
         /// <summary>
-        /// Year, converted to int
-        /// </summary>
-        public int IntYear
-        {
-            get { return TrackUtils.ExtractIntYear(metaData.Year); }
-        }
-        /// <summary>
         /// Album title
         /// </summary>
         public string Album
@@ -362,13 +355,6 @@ namespace ATL.AudioData
         public DateTime Date
         {
             get { return metaData.Date; }
-        }
-        /// <summary>
-        /// Year, in its original form
-        /// </summary>
-        public string Year
-        {
-            get { return metaData.Year; }
         }
         /// <summary>
         /// Track bitrate (Kbit/s)

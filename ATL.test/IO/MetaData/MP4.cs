@@ -69,7 +69,8 @@ namespace ATL.test.IO.MetaData
             testData.TrackTotal = "2";
             testData.DiscNumber = "3";
             testData.DiscTotal = "4";
-            testData.RecordingDate = "1997-06-20T00:00:00"; // No timestamp in MP4 date format
+            testData.RecordingYear = "1997";
+            testData.RecordingDate = null;
             testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
             testData.Publisher = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
@@ -96,10 +97,20 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
 
+            // Test reading complete recording date
+            try
+            {
+                testData.RecordingDate = "1997-06-20T00:00:00"; // No timestamp in MP4 date format
+                testData.RecordingYear = null;
 
-            location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
-            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
-            readExistingTagsOnFile(theFile, 1);
+                location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+                readExistingTagsOnFile(theFile, 1);
+            } finally
+            {
+                testData.RecordingDate = null;
+                testData.RecordingYear = "1997";
+            }
         }
 
         [TestMethod]

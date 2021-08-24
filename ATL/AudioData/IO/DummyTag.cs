@@ -75,11 +75,6 @@ namespace ATL.AudioData.IO
             get { return DateTime.MinValue; }
         }
         /// <inheritdoc/>
-        public String Year
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
         public String Album
         {
             get { return ""; }

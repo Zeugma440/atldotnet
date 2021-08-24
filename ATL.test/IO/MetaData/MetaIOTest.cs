@@ -420,7 +420,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
             if (!supportsDateOrYear)
             {
-                if (testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
+                if (testData.RecordingYear != null) Assert.AreEqual(2008, meta.Date.Year);
                 if (testData.RecordingDate != null)
                 {
                     DateTime date;
@@ -436,8 +436,8 @@ namespace ATL.test.IO.MetaData
             }
             else
             {
-                Assert.IsTrue(meta.Year != null || (meta.Date != null && meta.Date > DateTime.MinValue));
-                if (meta.Year != null && testData.RecordingYear != null) Assert.AreEqual("2008", meta.Year);
+                Assert.IsTrue(meta.Date != null && meta.Date > DateTime.MinValue);
+                if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(2008, meta.Date.Year);
                 if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
                 {
                     DateTime date;
@@ -694,7 +694,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Comment != null) Assert.AreEqual(testData.Comment, meta.Comment);
             if (!supportsDateOrYear)
             {
-                if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
+                if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Date.Year.ToString());
                 if (testData.RecordingDate != null)
                 {
                     DateTime date;
@@ -710,8 +710,8 @@ namespace ATL.test.IO.MetaData
             }
             else
             {
-                Assert.IsTrue(meta.Year != null || (meta.Date != null && meta.Date > DateTime.MinValue));
-                if (meta.Year != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Year);
+                Assert.IsTrue(meta.Date != null && meta.Date > DateTime.MinValue);
+                if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Date.Year.ToString());
                 if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
                 {
                     DateTime date;
@@ -751,8 +751,8 @@ namespace ATL.test.IO.MetaData
             {
                 foreach (MetaFieldInfo field in testData.AdditionalFields)
                 {
-                    Assert.IsTrue(meta.AdditionalFields.Keys.Contains(field.NativeFieldCode));
-                    Assert.AreEqual(field.Value, meta.AdditionalFields[field.NativeFieldCode]);
+                    Assert.IsTrue(meta.AdditionalFields.Keys.Contains(field.NativeFieldCode), field.NativeFieldCode);
+                    Assert.AreEqual(field.Value, meta.AdditionalFields[field.NativeFieldCode], field.NativeFieldCode);
                 }
             }
 

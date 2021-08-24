@@ -225,22 +225,6 @@ namespace ATL.AudioData
             }
         }
         /// <summary>
-        /// Year
-        /// </summary>
-        public String Year
-        {
-            get
-            {
-                String year = "";
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    year = reader.Year;
-                    if (year != "") break;
-                }
-                return year;
-            }
-        }
-        /// <summary>
         /// Title of the album
         /// </summary>
         public String Album
