@@ -430,7 +430,6 @@ namespace ATL
             }
 
             result.Pictures = new List<PictureInfo>();
-//            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.TransientFlag = 0;
 
             if (initialEmbeddedPictures != null && currentEmbeddedPictures != null)
             {
@@ -454,8 +453,6 @@ namespace ATL
                                 picToDelete.MarkedForDeletion = true;
                                 result.Pictures.Add(picToDelete);
                             }
-
-//                            targetPic.TransientFlag = 1;
                             found = true;
                             break;
                         }
@@ -474,55 +471,6 @@ namespace ATL
                         result.Pictures.Add(picToDelete);
                     }
                 }
-
-                /*
-                foreach (PictureInfo picInfo in initialEmbeddedPictures)
-                {
-                    // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
-                    if (!currentEmbeddedPictures.Contains(picInfo))
-                    {
-                        PictureInfo picToDelete = new PictureInfo(picInfo);
-                        picToDelete.MarkedForDeletion = true;
-                        result.Pictures.Add(picToDelete);
-                    }
-                    else // Only add new additions (pictures identical to initial list will be kept, and do not have to make it to the list, or else a duplicate will be created)
-                    {
-                        foreach (PictureInfo targetPic in currentEmbeddedPictures)
-                        {
-                            if (targetPic.Equals(picInfo))
-                            {
-                                // Compare picture contents
-                                targetPic.ComputePicHash();
-
-                                if (targetPic.PictureHash != picInfo.PictureHash)
-                                {
-                                    // A new picture content has been defined for an existing location
-                                    result.Pictures.Add(targetPic);
-
-                                    PictureInfo picToDelete = new PictureInfo(picInfo);
-                                    picToDelete.MarkedForDeletion = true;
-                                    result.Pictures.Add(picToDelete);
-                                }
-
-                                targetPic.TransientFlag = 1;
-                            }
-                        }
-                    }
-                }
-                                    */
-                /*
-
-                if (currentEmbeddedPictures != null)
-                {
-                    foreach (PictureInfo targetPic in currentEmbeddedPictures)
-                    {
-                        if (0 == targetPic.TransientFlag) // Entirely new pictures without equivalent in initialEmbeddedPictures
-                        {
-                            result.Pictures.Add(targetPic);
-                        }
-                    }
-                }
-                */
             }
 
             return result;
