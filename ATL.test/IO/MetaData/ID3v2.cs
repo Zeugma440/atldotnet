@@ -26,6 +26,7 @@ namespace ATL.test.IO.MetaData
             testData.PublishingDate = "1997-06-22T05:05:05";
 
             tagType = MetaDataIOFactory.TAG_ID3V2;
+            foreach (PictureInfo pic in testData.Pictures) pic.TagType = tagType;
         }
 
         [TestMethod]

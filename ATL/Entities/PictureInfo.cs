@@ -15,7 +15,8 @@ namespace ATL
         /// <summary>
         /// Type of the embedded picture
         /// </summary>
-        public enum PIC_TYPE { 
+        public enum PIC_TYPE
+        {
             /// <summary>
             /// Unsupported (i.e. none of the supported values in the enum)
             /// </summary>
@@ -35,7 +36,7 @@ namespace ATL
             /// <summary>
             /// Picture of disc
             /// </summary>
-            CD = 4 
+            CD = 4
         };
 
         /// <summary>
@@ -248,10 +249,30 @@ namespace ATL
         /// <returns>FNV-1a hash of the raw binary data</returns>
         public uint ComputePicHash()
         {
-            PictureHash = FNV1a.Hash32(PictureData);
+            uint result = 0;
+            if (PictureData != null) result = FNV1a.Hash32(PictureData);
+            PictureHash = result;
             return PictureHash;
         }
 
+        // TODO doc
+        public bool EqualsProper(PictureInfo picInfo)
+        {
+            return Position == picInfo.Position && (equalsNative(picInfo) || equalsGeneric(picInfo));
+        }
+
+        private bool equalsNative(PictureInfo picInfo)
+        {
+            if (0 == TagType || TagType != picInfo.TagType) return false;
+            if (NativePicCode > 0 && NativePicCode == picInfo.NativePicCode) return true;
+            if (NativePicCodeStr != null && NativePicCodeStr.Length > 0 && NativePicCodeStr == picInfo.NativePicCodeStr) return true;
+            return false;
+        }
+
+        private bool equalsGeneric(PictureInfo picInfo)
+        {
+            return (PIC_TYPE.Unsupported != PicType && PicType == picInfo.PicType);
+        }
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
 
@@ -261,19 +282,21 @@ namespace ATL
         /// <returns>String representation of the object</returns>
         public override string ToString()
         {
-            string result = Utils.BuildStrictLengthString(Position.ToString(), 2, '0', false) + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false);
+            return Utils.BuildStrictLengthString(Position.ToString(), 2, '0', false) + valueToString();
+        }
 
-            if (PicType.Equals(PIC_TYPE.Unsupported))
-            {
-                if (NativePicCode > 0)
-                    result = result + ((10000000 * TagType) + NativePicCode).ToString();
-                else if ((NativePicCodeStr != null) && (NativePicCodeStr.Length > 0))
-                    result = result + (10000000 * TagType).ToString() + NativePicCodeStr;
-                else
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Non-supported picture detected, but no native picture code found");
-            }
+        private string valueToString()
+        {
+            if (NativePicCode > 0 && TagType > 0)
+                return ((10000000 * TagType) + "N" + NativePicCode).ToString();
+            else if (NativePicCodeStr != null && NativePicCodeStr.Length > 0 && TagType > 0)
+                return (10000000 * TagType).ToString() + "N" + NativePicCodeStr;
+            else if (PicType != PIC_TYPE.Unsupported)
+                return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes
+            else
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Non-supported picture detected, but no native picture code found");
 
-            return result;
+            return "";
         }
 
         /// <summary>

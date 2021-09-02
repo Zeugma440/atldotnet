@@ -510,7 +510,7 @@ namespace ATL.AudioData.IO
 
                         if (blockType == META_VORBIS_COMMENT) // Vorbis metadata
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, new byte[0], true, blockType));
                             vorbisTag.Read(source, readTagParams);
                         }
                         else if ((blockType == META_PADDING) && (!paddingFound))  // Padding block (skip any other padding block)
@@ -523,12 +523,12 @@ namespace ATL.AudioData.IO
                         }
                         else if (blockType == META_PICTURE) // Picture (NB: as per FLAC specs, pictures must be embedded at the FLAC level, not in the VorbisComment !)
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, new byte[0], true, blockType));
                             vorbisTag.ReadPicture(source.BaseStream, readTagParams);
                         }
                         else // Unhandled block; needs to be zoned anyway to be able to manage the 'isLast' flag at write-time
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "", position - 4, (int)blockLength + 4, new byte[0], true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, new byte[0], true, blockType));
                         }
 
 
@@ -556,8 +556,8 @@ namespace ATL.AudioData.IO
                             else if (zone.Flag == META_VORBIS_COMMENT) vorbisTagFound = true;
                         }
 
-                        if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "", blockEndOffset, 0, new byte[0], true, META_VORBIS_COMMENT));
-                        if (!pictureFound) zones.Add(new Zone(META_PICTURE + "", blockEndOffset, 0, new byte[0], true, META_PICTURE));
+                        if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "." + zones.Count, blockEndOffset, 0, new byte[0], true, META_VORBIS_COMMENT));
+                        if (!pictureFound) zones.Add(new Zone(META_PICTURE + "." + zones.Count, blockEndOffset, 0, new byte[0], true, META_PICTURE));
                         // Padding must be the last block for it to correctly absorb size variations of the other blocks
                         if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, new byte[0], true, META_PADDING));
                     }
@@ -608,9 +608,9 @@ namespace ATL.AudioData.IO
         {
             WriteResult result;
 
-            if (zone.Name.Equals(META_VORBIS_COMMENT + "")) result = writeVorbisCommentBlock(w, tag);
+            if (zone.Name.StartsWith(META_VORBIS_COMMENT + ".")) result = writeVorbisCommentBlock(w, tag);
             else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(w, tag.DataSizeDelta);
-            else if (zone.Name.Equals(META_PICTURE + "")) result = processPictureBlock(w, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
+            else if (zone.Name.StartsWith(META_PICTURE + ".")) result = processPictureBlock(w, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
             else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
             {
                 w.Write(zone.Flag);
@@ -651,7 +651,7 @@ namespace ATL.AudioData.IO
             if (nbExistingPictures < picturesToWrite.Count)
             {
                 for (int i = 0; i < picturesToWrite.Count - nbExistingPictures; i++)
-                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "", lastPictureZoneOffset, 0, new byte[0], true, META_PICTURE));
+                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "." + zones.Count, lastPictureZoneOffset, 0, new byte[0], true, META_PICTURE));
             }
         }
 

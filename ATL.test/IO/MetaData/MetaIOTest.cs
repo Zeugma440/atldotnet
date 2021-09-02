@@ -48,7 +48,7 @@ namespace ATL.test.IO.MetaData
     {
         protected string emptyFile;
         protected string notEmptyFile;
-        protected int tagType;
+        protected int tagType = MetaDataIOFactory.TAG_ANY;
         protected TagData testData;
         protected bool supportsDateOrYear = false;
         protected bool supportsInternationalChars = true;
@@ -81,14 +81,16 @@ namespace ATL.test.IO.MetaData
             testData.GeneralDescription = "";
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TEST", "xxx"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(tagType, "TEST", "xxx"));
 
             testData.Pictures = new List<PictureInfo>();
-            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 0x03);
+            // 0x03 : front cover according to ID3v2 conventions
+            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, tagType, 0x03);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
-            pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 0x02);
+            // 0x02 : conductor according to ID3v2 conventions
+            pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"), PIC_TYPE.Unsupported, tagType, 0x02);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
         }
@@ -196,7 +198,7 @@ namespace ATL.test.IO.MetaData
 
         protected void test_RW_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
@@ -304,7 +306,7 @@ namespace ATL.test.IO.MetaData
 
         protected void test_RW_UpdateTrackDiscZeroes(string fileName, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat, StreamDelegate checkDelegate, bool deleteTempFile = true)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             bool settingsInit1 = ATL.Settings.UseLeadingZeroes;
             ATL.Settings.UseLeadingZeroes = useLeadingZeroes;
@@ -505,7 +507,7 @@ namespace ATL.test.IO.MetaData
 
         public void test_RW_Unsupported_Empty(string fileName, bool deleteTempFile = true)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
@@ -615,63 +617,69 @@ namespace ATL.test.IO.MetaData
             }
 
             // Remove the additional unsupported field
-            if (handleUnsupportedFields)
+            if (handleUnsupportedFields || handleUnsupportedPictures)
             {
-                theTag = new TagData();
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(tagType, "TEST");
-                fieldInfo.MarkedForDeletion = true;
-                theTag.AdditionalFields.Add(fieldInfo);
-            }
+                TagData newTag = new TagData();
 
-            // Remove additional picture
-            if (handleUnsupportedPictures)
-            {
-                picInfo = new PictureInfo(tagType, pictureCode1);
-                picInfo.MarkedForDeletion = true;
-                theTag.Pictures.Add(picInfo);
-            }
-
-            // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
-
-            Assert.IsTrue(theFile.ReadFromFile(true, true));
-
-            Assert.IsNotNull(theFile.getMeta(tagType));
-            meta = theFile.getMeta(tagType);
-            Assert.IsTrue(meta.Exists);
-
-            if (handleUnsupportedFields)
-            {
-                // Additional removed field
-                Assert.AreEqual(1, meta.AdditionalFields.Count);
-                Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TES2"));
-                Assert.AreEqual("This is another test " + internationalChar, meta.AdditionalFields["TES2"]);
-            }
-
-            // Pictures
-            if (handleUnsupportedPictures)
-            {
-                Assert.AreEqual(1, meta.EmbeddedPictures.Count);
-
-                found = 0;
-
-                foreach (PictureInfo pic in meta.EmbeddedPictures)
+                if (handleUnsupportedFields)
                 {
-                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
-                         (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
-                       )
-                    {
-                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                        {
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            Assert.AreEqual(290, picture.Height);
-                            Assert.AreEqual(900, picture.Width);
-                        }
-                        found++;
-                    }
+                    MetaFieldInfo fieldInfo = new MetaFieldInfo(tagType, "TEST");
+                    fieldInfo.MarkedForDeletion = true;
+                    newTag.AdditionalFields.Add(fieldInfo);
+                    newTag.AdditionalFields.Add(theTag.AdditionalFields[1]);
                 }
 
-                Assert.AreEqual(1, found);
+                // Remove additional picture
+                if (handleUnsupportedPictures)
+                {
+                    picInfo = new PictureInfo(tagType, pictureCode1);
+                    picInfo.MarkedForDeletion = true;
+                    newTag.Pictures.Add(picInfo);
+                    newTag.Pictures.Add(theTag.Pictures[1]);
+                }
+
+                // Add the new tag and check that it has been indeed added with all the correct information
+                Assert.IsTrue(theFile.UpdateTagInFile(newTag, tagType));
+
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                meta = theFile.getMeta(tagType);
+                Assert.IsTrue(meta.Exists);
+
+                if (handleUnsupportedFields)
+                {
+                    // Additional removed field
+                    Assert.AreEqual(1, meta.AdditionalFields.Count);
+                    Assert.IsTrue(meta.AdditionalFields.Keys.Contains("TES2"));
+                    Assert.AreEqual("This is another test " + internationalChar, meta.AdditionalFields["TES2"]);
+                }
+
+                // Pictures
+                if (handleUnsupportedPictures)
+                {
+                    Assert.AreEqual(1, meta.EmbeddedPictures.Count);
+
+                    found = 0;
+
+                    foreach (PictureInfo pic in meta.EmbeddedPictures)
+                    {
+                        if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
+                             (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
+                           )
+                        {
+                            using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
+                            {
+                                Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                Assert.AreEqual(290, picture.Height);
+                                Assert.AreEqual(900, picture.Width);
+                            }
+                            found++;
+                        }
+                    }
+
+                    Assert.AreEqual(1, found);
+                }
             }
 
             // Get rid of the working copy

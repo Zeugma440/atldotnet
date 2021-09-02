@@ -527,9 +527,29 @@ namespace ATL.test.IO
             Assert.IsTrue(foundFront);
             Assert.IsTrue(foundCD);
 
+
+            // Remove 1st and add it back on 1st position -> should still be listed 1st
+            theTrack.EmbeddedPictures.RemoveAt(0);
+            newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.Back);
+            theTrack.EmbeddedPictures.Insert(0, newPicture);
+            Assert.IsTrue(theTrack.Save());
+
+            newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.Front);
+            theTrack.EmbeddedPictures.Insert(0, newPicture);
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(3, theTrack.EmbeddedPictures.Count);
+
+            Assert.AreEqual(PictureInfo.PIC_TYPE.Front, theTrack.EmbeddedPictures[0].PicType);
+            Assert.AreEqual(PictureInfo.PIC_TYPE.Back, theTrack.EmbeddedPictures[1].PicType);
+            Assert.AreEqual(PictureInfo.PIC_TYPE.CD, theTrack.EmbeddedPictures[2].PicType);
+
+
             // Remove all
             theTrack.EmbeddedPictures.Clear();
             Assert.IsTrue(theTrack.Save());
+
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(0, theTrack.EmbeddedPictures.Count);
 
@@ -563,6 +583,7 @@ namespace ATL.test.IO
                     foundFront = true;
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
+                        // Properties of updated picture (pic2.jpg)
                         Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                         Assert.AreEqual(900, picture.Width);
                         Assert.AreEqual(290, picture.Height);

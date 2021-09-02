@@ -203,62 +203,88 @@ namespace ATL
         /// <summary>
         /// Merge given TagData object with current TagData object
         /// </summary>
-        /// <param name="data">TagData object to merge</param>
+        /// <param name="targetData">TagData object to merge</param>
         /// <param name="integratePictures">Set to true to merge picture information (default : true)</param>
         /// <param name="mergeAdditionalData">Set to true to merge additional (i.e. non-TagData) fields (default : true)</param>
-        public void IntegrateValues(TagData data, bool integratePictures = true, bool mergeAdditionalData = true)
+        public void IntegrateValues(TagData targetData, bool integratePictures = true, bool mergeAdditionalData = true)
         {
             // String values
-            IDictionary<byte, String> newData = data.ToMap();
+            IDictionary<byte, string> newData = targetData.ToMap();
             foreach (byte key in newData.Keys)
             {
                 IntegrateValue(key, newData[key]);
             }
 
             // Force to input value, if any
-            if (data.PaddingSize > -1) PaddingSize = data.PaddingSize; else PaddingSize = -1;
+            if (targetData.PaddingSize > -1) PaddingSize = targetData.PaddingSize; else PaddingSize = -1;
 
             // Pictures
-            if (integratePictures && data.Pictures != null)
+            if (integratePictures && targetData.Pictures != null)
             {
-                IDictionary<PictureInfo, int> picturePositions = generatePicturePositions();
+                IList<PictureInfo> resultPictures = new List<PictureInfo>();
 
-                foreach (PictureInfo newPicInfo in data.Pictures)
+                foreach (PictureInfo newPicInfo in targetData.Pictures)
                 {
-                    // New PictureInfo picture type already exists in current TagData
-                    if (picturePositions.ContainsKey(newPicInfo))
+                    newPicInfo.ComputePicHash();
+                    int candidatePosition = 0;
+                    bool added = false;
+                    foreach (PictureInfo picInfo in Pictures)
                     {
-                        // New PictureInfo is a demand for deletion
-                        if (newPicInfo.MarkedForDeletion)
+                        picInfo.ComputePicHash();
+                        // New PictureInfo picture type already exists in current TagData
+                        if (picInfo.EqualsProper(newPicInfo))
                         {
-                            foreach (PictureInfo picInfo in Pictures)
+                            // New PictureInfo is a demand for deletion
+                            if (newPicInfo.MarkedForDeletion)
                             {
-                                if (picInfo.ToString().Equals(newPicInfo.ToString()))
+                                picInfo.MarkedForDeletion = true;
+                                added = true;
+                                resultPictures.Add(picInfo);
+                            }
+                            else
+                            {
+                                candidatePosition = Math.Max(candidatePosition, picInfo.Position);
+                                if (picInfo.PictureHash > 0 && picInfo.PictureHash == newPicInfo.PictureHash)
                                 {
-                                    picInfo.MarkedForDeletion = true;
+                                    added = true;
+                                    resultPictures.Add(picInfo);
+                                    break;
                                 }
                             }
                         }
-                        else // New PictureInfo is a X-th picture of the same type
-                        {
-                            newPicInfo.Position = picturePositions[newPicInfo] + 1;
-                            Pictures.Add(newPicInfo);
-                        }
                     }
-                    else // New PictureInfo picture type does not exist in current TagData
+                    // New PictureInfo is a X-th picture of the same type
+                    if (!added)
                     {
-                        Pictures.Add(newPicInfo);
+                        newPicInfo.Position = candidatePosition + 1;
+                        resultPictures.Add(newPicInfo);
                     }
                 }
+
+                // Eventually add all existing pictures that are completely absent from target pictures
+                // in the _beginning_, as they were there initially
+                for (int i = Pictures.Count - 1; i >= 0; i--)
+                {
+                    bool found = false;
+                    foreach (PictureInfo picInfo in targetData.Pictures)
+                    {
+                        if (picInfo.EqualsProper(Pictures[i]))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) resultPictures.Insert(0, Pictures[i]);
+                }
+                Pictures = resultPictures;
             }
 
-            bool found;
             // Additional textual fields
             if (mergeAdditionalData)
             {
-                foreach (MetaFieldInfo newMetaInfo in data.AdditionalFields)
+                foreach (MetaFieldInfo newMetaInfo in targetData.AdditionalFields)
                 {
-                    found = false;
+                    bool found = false;
                     foreach (MetaFieldInfo metaInfo in AdditionalFields)
                     {
                         // New MetaFieldInfo tag type+field code+streamNumber+language already exists in current TagData
@@ -287,11 +313,11 @@ namespace ATL
             }
             else
             {
-                AdditionalFields = new List<MetaFieldInfo>(data.AdditionalFields);
+                AdditionalFields = new List<MetaFieldInfo>(targetData.AdditionalFields);
             }
 
             // Chapters, processed as a whole
-            if (data.Chapters != null)
+            if (targetData.Chapters != null)
             {
                 // Sending an existing but empty chapter list counts as a "marked for deletion"
                 if (Chapters != null)
@@ -303,16 +329,16 @@ namespace ATL
                     Chapters = new List<ChapterInfo>();
                 }
 
-                foreach (ChapterInfo chapter in data.Chapters)
+                foreach (ChapterInfo chapter in targetData.Chapters)
                 {
                     Chapters.Add(new ChapterInfo(chapter));
                 }
             }
 
-            if (data.Lyrics != null)
-                Lyrics = new LyricsInfo(data.Lyrics);
+            if (targetData.Lyrics != null)
+                Lyrics = new LyricsInfo(targetData.Lyrics);
 
-            DurationMs = data.DurationMs;
+            DurationMs = targetData.DurationMs;
         }
 
         /// <summary>

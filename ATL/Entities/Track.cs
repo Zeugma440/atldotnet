@@ -430,10 +430,52 @@ namespace ATL
             }
 
             result.Pictures = new List<PictureInfo>();
-            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.TransientFlag = 0;
+//            if (currentEmbeddedPictures != null) foreach (PictureInfo targetPic in currentEmbeddedPictures) targetPic.TransientFlag = 0;
 
             if (initialEmbeddedPictures != null && currentEmbeddedPictures != null)
             {
+                // Process target pictures first, in their specified order
+                foreach (PictureInfo targetPic in currentEmbeddedPictures)
+                {
+                    bool found = false;
+                    foreach (PictureInfo picInfo in initialEmbeddedPictures)
+                    {
+                        if (targetPic.EqualsProper(picInfo))
+                        {
+                            result.Pictures.Add(targetPic);
+
+                            // Compare picture contents
+                            targetPic.ComputePicHash();
+
+                            // A new picture content has been defined for an existing location
+                            if (targetPic.PictureHash != picInfo.PictureHash)
+                            {
+                                PictureInfo picToDelete = new PictureInfo(picInfo);
+                                picToDelete.MarkedForDeletion = true;
+                                result.Pictures.Add(picToDelete);
+                            }
+
+//                            targetPic.TransientFlag = 1;
+                            found = true;
+                            break;
+                        }
+                    }
+                    // Completely new picture
+                    if (!found) result.Pictures.Add(targetPic);
+                }
+
+                // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
+                foreach (PictureInfo picInfo in initialEmbeddedPictures)
+                {
+                    if (!currentEmbeddedPictures.Contains(picInfo))
+                    {
+                        PictureInfo picToDelete = new PictureInfo(picInfo);
+                        picToDelete.MarkedForDeletion = true;
+                        result.Pictures.Add(picToDelete);
+                    }
+                }
+
+                /*
                 foreach (PictureInfo picInfo in initialEmbeddedPictures)
                 {
                     // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
@@ -467,6 +509,8 @@ namespace ATL
                         }
                     }
                 }
+                                    */
+                /*
 
                 if (currentEmbeddedPictures != null)
                 {
@@ -478,6 +522,7 @@ namespace ATL
                         }
                     }
                 }
+                */
             }
 
             return result;
