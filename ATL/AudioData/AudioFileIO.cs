@@ -389,7 +389,12 @@ namespace ATL.AudioData
         {
             get
             {
-                return metaData.AdditionalFields;
+                IDictionary<string, string> result = new Dictionary<string, string>();
+                foreach (string key in metaData.AdditionalFields.Keys)
+                {
+                    result.Add(key, processString(metaData.AdditionalFields[key]));
+                }
+                return result;
             }
         }
         /// <inheritdoc/>

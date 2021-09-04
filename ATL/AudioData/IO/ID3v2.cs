@@ -755,7 +755,7 @@ namespace ATL.AudioData.IO
                         string[] tabS = strData.Split('\0');
 
                         Frame.ID = tabS[0];
-                        if (tabS.Length > 1) strData = string.Join("\0", tabS, 1, tabS.Length - 1);
+                        if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
                         else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
 
 
@@ -1671,6 +1671,7 @@ namespace ATL.AudioData.IO
                 w.Write(getBomFromEncoding(tagEncoding));
                 w.Write(tagEncoding.GetBytes(actualFrameCode));
                 w.Write(getNullTerminatorFromEncoding(tagEncoding));
+                value = value.Replace(Settings.DisplayValueSeparator, '\0');
 
                 writeTextEncoding = false;
                 writeNullTermination = true; // Seems to be the de facto standard; however, it isn't written like that in the specs

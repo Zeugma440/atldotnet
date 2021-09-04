@@ -231,7 +231,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split('\0');
+            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split(ATL.Settings.InternalValueSeparator);
             Assert.AreEqual(3, values.Length);
             Assert.AreEqual("first", values[0]);
             Assert.AreEqual("second", values[1]);
@@ -248,7 +248,7 @@ namespace ATL.test.IO.MetaData
             // 2- Add and read
             TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "MOOD", "a\0b\0c");
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "MOOD", "a" + ATL.Settings.DisplayValueSeparator + "b" + ATL.Settings.DisplayValueSeparator + "c");
             theTag.AdditionalFields.Add(info);
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
@@ -257,7 +257,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split('\0');
+            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split(ATL.Settings.InternalValueSeparator);
             Assert.AreEqual(3, values.Length);
             Assert.AreEqual("a", values[0]);
             Assert.AreEqual("b", values[1]);
