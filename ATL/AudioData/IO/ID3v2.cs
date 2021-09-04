@@ -940,7 +940,7 @@ namespace ATL.AudioData.IO
                         }
                     }
 
-                    // Image description (unused)
+                    // Image description
                     // Description may be coded with another convention
                     if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                     string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
@@ -1751,7 +1751,7 @@ namespace ATL.AudioData.IO
 
             if (writeValue)
             {
-                Encoding localEncoding = (isExplicitLatin1Encoding ? Utils.Latin1Encoding : tagEncoding);
+                Encoding localEncoding = isExplicitLatin1Encoding ? Utils.Latin1Encoding : tagEncoding;
                 if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(localEncoding)); // Encoding according to ID3v2 specs
                 w.Write(getBomFromEncoding(localEncoding));
                 w.Write(localEncoding.GetBytes(value));
@@ -1856,7 +1856,7 @@ namespace ATL.AudioData.IO
 
             // Picture description
             w.Write(getBomFromEncoding(usedTagEncoding));
-            if (picDescription.Length > 0) w.Write(picDescription);
+            if (picDescription.Length > 0) w.Write(usedTagEncoding.GetBytes(picDescription));
             w.Write(getNullTerminatorFromEncoding(usedTagEncoding)); // Description should be null-terminated
 
             w.Write(pictureData);

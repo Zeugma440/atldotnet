@@ -5,6 +5,7 @@ using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using Commons;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -1211,6 +1212,41 @@ namespace ATL.test.IO.MetaData
             // Source : empty MP3
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            testMultipleValues(theFile, writtenValues, expectedValues);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v23_Multiple_Values()
+        {
+            string writtenValues = "AA" + ATL.Settings.DisplayValueSeparator + "BB" + ATL.Settings.DisplayValueSeparator + "CC";
+            string expectedValues = writtenValues.Replace(ATL.Settings.DisplayValueSeparator, ATL.Settings.InternalValueSeparator);
+
+            new ConsoleLogger();
+
+            // Source : empty MP3
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            ATL.Settings.ID3v2_tagSubVersion = 3;
+            try
+            {
+                testMultipleValues(theFile, writtenValues, expectedValues);
+            }
+            finally
+            {
+                ATL.Settings.ID3v2_tagSubVersion = 4;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private void testMultipleValues(AudioDataManager theFile, string writtenValues, string expectedValues)
+        {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsFalse(theFile.ID3v2.Exists);
@@ -1227,45 +1263,36 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(meta.Exists);
 
             Assert.AreEqual(expectedValues, meta.Composer);
-
-            // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        public void TagIO_RW_ID3v23_Multiple_Values()
+        [TestMethod]
+        public void TagIO_RW_ID3v2_Picture_Description()
         {
-            string writtenValues = "AA" + ATL.Settings.DisplayValueSeparator + "BB" + ATL.Settings.DisplayValueSeparator + "CC";
-            string expectedValues = writtenValues.Replace(ATL.Settings.DisplayValueSeparator, ATL.Settings.InternalValueSeparator);
-
+            string picDescription = "now that's a nice pic!";
             new ConsoleLogger();
 
             // Source : empty MP3
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-            ATL.Settings.ID3v2_tagSubVersion = 3;
-            try
-            {
-                Assert.IsTrue(theFile.ReadFromFile(true, true));
-                Assert.IsNotNull(theFile.ID3v2);
-                Assert.IsFalse(theFile.ID3v2.Exists);
+            TagData theTag = new TagData();
+            theTag.Pictures = new List<PictureInfo>();
+            // 0x03 : front cover according to ID3v2 conventions
+            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, tagType, 0x03);
+            pic.Description = picDescription;
+            theTag.Pictures.Add(pic);
 
-                TagData newTag = new TagData();
-                newTag.Composer = writtenValues;
+            theFile.UpdateTagInFile(theTag, tagType);
 
-                theFile.UpdateTagInFile(newTag, tagType);
+            Assert.IsTrue(theFile.ReadFromFile(true, false));
 
-                Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
 
-                Assert.IsNotNull(theFile.getMeta(tagType));
-                IMetaDataIO meta = theFile.getMeta(tagType);
-                Assert.IsTrue(meta.Exists);
-
-                Assert.AreEqual(expectedValues, meta.Composer);
-            } finally
-            {
-                ATL.Settings.ID3v2_tagSubVersion = 4;
-            }
+            Assert.AreEqual(1, meta.EmbeddedPictures.Count);
+            pic = meta.EmbeddedPictures[0];
+            Assert.AreEqual(picDescription, pic.Description);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
