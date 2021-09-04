@@ -22,6 +22,18 @@
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+
+  <PropertyGroup>
+  <!-- Explicitly generate Assembly Info -->
+  <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+</PropertyGroup>
+
+<ItemGroup>
+  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+  <_Parameter1>ATL.test</_Parameter1>
+  </AssemblyAttribute>
+</ItemGroup>
+
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />

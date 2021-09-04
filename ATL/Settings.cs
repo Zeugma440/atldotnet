@@ -50,7 +50,7 @@ namespace ATL
         /// Value separator character
         /// Read-only; for ATL internal use only (don't use it in your client app)
         /// </summary>
-        public static readonly char InternalValueSeparator = '˵';       // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
+        internal static readonly char InternalValueSeparator = '˵';       // Some obscure unicode character that hopefully won't be used anywhere in an actual tag
 
         /// <summary>
         /// Value separator character used to display and write multiple values within one field
