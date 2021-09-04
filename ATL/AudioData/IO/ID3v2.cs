@@ -59,6 +59,7 @@ namespace ATL.AudioData.IO
         private TagInfo tagHeader;
 
 
+        // Technical 'shortcut' data
         private static readonly byte[] BOM_UTF16_LE = new byte[] { 0xFF, 0xFE };
         private static readonly byte[] BOM_UTF16_BE = new byte[] { 0xFE, 0xFF };
         private static readonly byte[] BOM_NONE = new byte[] { };
@@ -75,12 +76,18 @@ namespace ATL.AudioData.IO
         private const short FLAG_FRAME_24_UNSYNCHRONIZED = 0b0000000000000010; // ID3v2.4 only
         private const short FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR = 0b0000000000000001; // ID3v2.4 only
 
+        // Value separators
+        private const char VALUE_SEPARATOR_22 = '/';
+        private const char VALUE_SEPARATOR_24 = '\0';
 
         // ID3v2 tag ID
         private const string ID3V2_ID = "ID3";
 
         // List of standard fields
+
+#pragma warning disable S125 // Sections of code should not be commented out
         //private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
+#pragma warning restore S125 // Sections of code should not be commented out
         private static readonly ICollection<string> standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
         private static readonly ICollection<string> standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC",
           "RGAD", "TCMP", "TSO2", "TSOC", "XRVA"  // Unoffical fields used by modern apps like itunes & Musicbrainz - see "Unofficial Frames Seen in the Wild" on ID3.org
@@ -95,20 +102,23 @@ namespace ATL.AudioData.IO
         // Fields which ID3v2.4 size descriptor is known to be misencoded by some implementation
         private static readonly ICollection<string> misencodedSizev4Fields = new List<string>() { "CTOC" };
 
+        // Fields allowed to have multiple values according to ID3v2.2-3 specs
+        private static readonly ICollection<string> multipleValuev23Fields = new List<string>() { "TP1", "TCM", "TXT", "TLA", "TOA", "TOL", "TCOM", "TEXT", "TOLY", "TOPE", "TPE1" };
+
         // Note on date field identifiers
         //
         // Original release date
-        //   ID3v2.0 : TOR (year only)
+        //   ID3v2.2 : TOR (year only)
         //   ID3v2.3 : TORY (year only)
         //   ID3v2.4 : TDOR (timestamp according to spec)
         //
         // Release date
-        //   ID3v2.0 : no standard
+        //   ID3v2.2 : no standard
         //   ID3v2.3 : no standard
         //   ID3v2.4 : TDRL (timestamp according to spec; actual content may vary)
         //
         // Recording date <== de facto standard behind the "date" field on most taggers
-        //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+        //   ID3v2.2 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
         //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
         //   NB : Some loose implementations actually use TDRC inside ID3v2.3 headers (MediaMonkey, I'm looking at you...)
         //   ID3v2.4 : TDRC (timestamp)
@@ -244,7 +254,7 @@ namespace ATL.AudioData.IO
                 // TYER, TDAT and TIME are converted on the fly when writing
             };
 
-        // Mapping between ID3v2.2/4 fields and ID3v2.3 fields not included in frameMapping_v2x, and that have changed between versions
+        // Mapping between ID3v2.2/4 fields and ID3v2.3 fields not included in frameMapping_v2x, and that have changed between versions (populated at runtime)
         private static readonly IDictionary<string, string> frameMapping_v22_3 = new Dictionary<string, string>();
         private static readonly IDictionary<string, string> frameMapping_v24_3 = new Dictionary<string, string>();
 
@@ -309,6 +319,7 @@ namespace ATL.AudioData.IO
 
 
             // **** EXTENDED HEADER PROPERTIES ****
+#pragma warning disable S2437 // Silly bit operations should not be performed
             public int TagFramesRestriction
             {
                 get
@@ -374,6 +385,7 @@ namespace ATL.AudioData.IO
                 }
             }
         }
+#pragma warning restore S2437 // Silly bit operations should not be performed
 
         // Unicode BOM properties
         private class BomProperties
@@ -452,6 +464,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        /// <inheritdoc/>
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
             byte supportedMetaId = 255;
@@ -612,8 +625,6 @@ namespace ATL.AudioData.IO
 
             if (tag.ActualEnd > -1) return false;
 
-            string shortFrameId = Frame.ID.Substring(0, 3);
-
             // Frame size measures number of bytes between end of flag and end of payload
             /* Frame size encoding conventions
                 ID3v2.2 : 3 bytes
@@ -654,12 +665,12 @@ namespace ATL.AudioData.IO
             if ((Frame.Flags & 1) > 0)
             {
                 source.Seek(4, SeekOrigin.Current);
-                dataSize = dataSize - 4;
+                dataSize -= 4;
             }
 
             if (!noTextEncodingFields.Contains(Frame.ID))
             {
-                dataSize = dataSize - 1; // Minus encoding byte
+                dataSize--; // Minus encoding byte
                 encodingCode = source.ReadByte();
             }
             else
@@ -673,18 +684,20 @@ namespace ATL.AudioData.IO
             //   a "short content description", as an encoded null-terminated string
             //   the actual data (i.e. comment or lyrics), as an encoded, null-terminated string
             // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
-            if (shortFrameId.Equals("COM") || shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
+            if (Frame.ID.StartsWith("COM") || Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
             {
                 RichStructure structure = readCommentStructure(source, tagVersion, encodingCode, frameEncoding);
 
-                if (shortFrameId.Equals("COM"))
+                if (Frame.ID.StartsWith("COM"))
                 {
                     if (null == comments) comments = new List<MetaFieldInfo>();
-                    comment = new MetaFieldInfo(getImplementedTagType(), "");
-                    comment.Language = structure.LanguageCode;
-                    comment.NativeFieldCode = structure.ContentDescriptor;
+                    comment = new MetaFieldInfo(getImplementedTagType(), "")
+                    {
+                        Language = structure.LanguageCode,
+                        NativeFieldCode = structure.ContentDescriptor
+                    };
                 }
-                else if (shortFrameId.Equals("USL") || shortFrameId.Equals("ULT"))
+                else if (Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
                 {
                     if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
                     tagData.Lyrics.LanguageCode = structure.LanguageCode;
@@ -692,9 +705,9 @@ namespace ATL.AudioData.IO
                     inLyrics = true;
                 }
 
-                dataSize = dataSize - structure.Size;
+                dataSize -= structure.Size;
             }
-            else if ("SYL".Equals(shortFrameId)) // Synch'ed lyrics
+            else if (Frame.ID.StartsWith("SYL")) // Synch'ed lyrics
             {
                 RichStructure structure = readSynchedLyricsStructure(source, tagVersion, encodingCode, frameEncoding);
                 if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
@@ -703,7 +716,7 @@ namespace ATL.AudioData.IO
                 tagData.Lyrics.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
                 inLyrics = true;
 
-                dataSize = dataSize - structure.Size;
+                dataSize -= structure.Size;
             }
 
             // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
@@ -714,7 +727,7 @@ namespace ATL.AudioData.IO
                 if (bom.Found)
                 {
                     frameEncoding = bom.Encoding;
-                    dataSize = dataSize - bom.Size;
+                    dataSize -= bom.Size;
                 }
             }
 
@@ -738,32 +751,29 @@ namespace ATL.AudioData.IO
                     string strData;
 
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if ("POP".Equals(shortFrameId))
+                    if (Frame.ID.StartsWith("POP"))
                     {
-                        /*
-                         * ID3v2.0 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
-                         * ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
-                         */
+                        // ID3v2.2 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
+                        // ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
-                    else if ("TXX".Equals(shortFrameId))
+                    else if (Frame.ID.StartsWith("TXX"))
                     {
                         // Read frame data and set tag item if frame supported
                         byte[] bData = source.ReadBytes(dataSize);
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         string[] tabS = strData.Split('\0');
-
                         Frame.ID = tabS[0];
+                        // Handle multiple values (ID3v2.4 only theoretically)
                         if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
                         else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
-
 
                         // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
                         if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
                     }
-                    else if ("CTO".Equals(shortFrameId)) // Chapters table of contents -> store chapter description
+                    else if (Frame.ID.StartsWith("CTO")) // Chapters table of contents -> store chapter description
                     {
                         StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip element ID
                         source.Seek(1, SeekOrigin.Current); // Skip flags
@@ -783,7 +793,7 @@ namespace ATL.AudioData.IO
                             strData = "";
                         }
                     }
-                    else if ("CHA".Equals(shortFrameId)) // Chapters
+                    else if (Frame.ID.StartsWith("CHA")) // Chapters
                     {
                         if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
                         chapter = new ChapterInfo();
@@ -808,7 +818,7 @@ namespace ATL.AudioData.IO
 
                         strData = "";
                     }
-                    else if ("SYL".Equals(shortFrameId)) // Synch'ed lyrics
+                    else if (Frame.ID.StartsWith("SYL")) // Synch'ed lyrics
                     {
                         long initPos = source.Position;
                         long remainingData = dataSize - (source.Position - initPos);
@@ -819,7 +829,7 @@ namespace ATL.AudioData.IO
                         }
                         strData = "";
                     }
-                    else if ("WXX".Equals(shortFrameId)) // Custom URL
+                    else if (Frame.ID.StartsWith("WXX")) // Custom URL
                     {
                         // Description encoded with current encoding
                         strData = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
@@ -834,7 +844,20 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         // Parse GENRE frame
-                        if ("TCO".Equals(shortFrameId)) strData = extractGenreFromID3v2Code(strData);
+                        if (Frame.ID.StartsWith("TCO")) strData = extractGenreFromID3v2Code(strData);
+                        else if (Frame.ID.StartsWith("T")) // Handle multiple values on text information frames
+                        {
+                            string[] parts = null;
+                            if (TAG_VERSION_2_4 == tagVersion) // All text information frames may contain multiple values on ID3v2.4
+                            {
+                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
+                            }
+                            else if (multipleValuev23Fields.Contains(Frame.ID)) // Only specific text information frames may contain multiple values on ID3v2.2-3
+                            {
+                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
+                            }
+                            if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
+                        }
                     }
 
                     if (inLyrics)
@@ -1018,19 +1041,19 @@ namespace ATL.AudioData.IO
 
         // ********************** Public functions & voids **********************
 
+        /// <inheritdoc/>
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             return Read(source, readTagParams.offset, readTagParams);
         }
 
         /// <summary>
-        /// Reads ID3v2 data
+        /// Read ID3v2 data
         /// </summary>
-        /// <param name="source">Reader object from where to read ID3v2 data</param>
-        /// <param name="pictureStreamHandler">If not null, handler that will be triggered whenever a supported embedded picture is read</param>
+        /// <param name="source">Reader object to read ID3v2 data from</param>
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
-        /// <param name="storeUnsupportedMetaFields">Indicates whether unsupported fields should be read and stored in memory (optional; default = false)</param>
-        /// <returns></returns>
+        /// <param name="readTagParams">Reading parameters</param>
+        /// <returns>True if the reading operation has succeeded; false if not</returns>
         public bool Read(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
             tagHeader = new TagInfo();
@@ -1077,6 +1100,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="tag">Tag information to be written</param>
         /// <param name="w">Stream to write tag information to</param>
+        /// <param name="zone">Name of the zone that is currently being written</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
@@ -1202,7 +1226,7 @@ namespace ATL.AudioData.IO
 
             // 1st pass to gather date information
             // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
-            //   ID3v2.0 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+            //   ID3v2.2 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
             //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
             //   ID3v2.4 : TDRC (timestamp)
             foreach (byte frameType in map.Keys)
@@ -1615,10 +1639,8 @@ namespace ATL.AudioData.IO
             writeFrameHeader(w, frameCode, tagHeader.UsesUnsynchronisation);
 
             frameDataPos = w.BaseStream.Position;
-            string shortCode = frameCode.Substring(0, 3);
-
             // Comments frame specifics
-            if (shortCode.Equals("COM"))
+            if (frameCode.StartsWith("COM"))
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
@@ -1638,7 +1660,7 @@ namespace ATL.AudioData.IO
 
                 writeTextEncoding = false;
             }
-            else if (shortCode.Equals("USL")) // Unsynched lyrics frame specifics
+            else if (frameCode.StartsWith("USL")) // Unsynched lyrics frame specifics
             {
                 // Encoding according to ID3v2 specs
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
@@ -1653,7 +1675,7 @@ namespace ATL.AudioData.IO
 
                 writeTextEncoding = false;
             }
-            else if (shortCode.Equals("POP")) // Rating frame specifics
+            else if (frameCode.StartsWith("POP")) // Rating frame specifics
             {
                 // User e-mail
                 w.Write('\0'); // Empty string, null-terminated; TODO : handle this field dynamically
@@ -1665,7 +1687,7 @@ namespace ATL.AudioData.IO
 
                 writeValue = false;
             }
-            else if (shortCode.Equals("TXX")) // User-defined text frame specifics
+            else if (frameCode.StartsWith("TXX")) // User-defined text frame specifics
             {
                 if (writeTextEncoding) w.Write(encodeID3v2CharEncoding(tagEncoding));
                 w.Write(getBomFromEncoding(tagEncoding));
@@ -1676,7 +1698,7 @@ namespace ATL.AudioData.IO
                 writeTextEncoding = false;
                 writeNullTermination = true; // Seems to be the de facto standard; however, it isn't written like that in the specs
             }
-            else if (shortCode.Equals("WXX")) // User-defined URL
+            else if (frameCode.StartsWith("WXX")) // User-defined URL
             {
                 byte[] desc;
                 byte[] url;
@@ -1706,11 +1728,25 @@ namespace ATL.AudioData.IO
 
                 writeValue = false;
             }
-            else if (shortCode.Equals("TCO") && value.Contains(Settings.DisplayValueSeparator + "")) // Genre
+            else if (value.Contains(Settings.DisplayValueSeparator + ""))
             {
-                // Separating values with \0 is actually specific to ID3v2.4 but seems to have become the de facto standard
-                // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
-                value = value.Replace(Settings.DisplayValueSeparator, '\0');
+                if (frameCode.StartsWith("TCO")) // Genre
+                {
+                    // Separating values with \0 is actually specific to ID3v2.4 but seems to have become the de facto standard
+                    // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
+                    value = value.Replace(Settings.DisplayValueSeparator, '\0');
+                }
+                else if (frameCode.StartsWith("T")) // Text information frame
+                {
+                    if (4 == Settings.ID3v2_tagSubVersion) // All text information frames may contain multiple values on ID3v2.4
+                    {
+                        value = value.Replace(Settings.DisplayValueSeparator, VALUE_SEPARATOR_24);
+                    }
+                    else if (multipleValuev23Fields.Contains(frameCode)) // Only specific text information frames may contain multiple values on ID3v2.2-3
+                    {
+                        value = value.Replace(Settings.DisplayValueSeparator, VALUE_SEPARATOR_22);
+                    }
+                }
             }
 
             if (writeValue)
@@ -1748,8 +1784,8 @@ namespace ATL.AudioData.IO
             long frameDataPos;
             long finalFramePos;
             long finalFramePosRaw;
-            bool useDataSize = (4 == Settings.ID3v2_tagSubVersion); // Alsways write data length indicator for ID3v2.4
-            Encoding usedTagEncoding = (Settings.ID3v2_forceAPICEncodingToLatin1 ? Utils.Latin1Encoding : tagEncoding);
+            bool useDataSize = 4 == Settings.ID3v2_tagSubVersion; // Alsways write data length indicator for ID3v2.4
+            Encoding usedTagEncoding = Settings.ID3v2_forceAPICEncodingToLatin1 ? Utils.Latin1Encoding : tagEncoding;
 
             // Unsynchronization management
             BinaryWriter w;
@@ -1868,7 +1904,7 @@ namespace ATL.AudioData.IO
             IList<string> genres = new List<string>();
             int genreIndex;
 
-            // Handle ID3v2.4 separators and ID3v2.3 parenthesis
+            // Handle ID3v2.4 separators and ID3v2.2-3 parenthesis
             // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character before each genre
             string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new char[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string part in parts)
@@ -2017,7 +2053,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.0 specs; paragraph6 of ID3v2.3+ specs)
+        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.2 specs; paragraph6 of ID3v2.3+ specs)
         // => every "0xff 0x00" becomes "0xff"
         private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int length)
         {
@@ -2073,7 +2109,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // Copies the stream while unsynchronizing it (Cf. paragraph5 of ID3v2.0 specs; paragraph6 of ID3v2.3+ specs)
+        // Copies the stream while unsynchronizing it (Cf. paragraph5 of ID3v2.2 specs; paragraph6 of ID3v2.3+ specs)
         // => every "0xff 0xex" becomes "0xff 0x00 0xex"; every "0xff 0x00" becomes "0xff 0x00 0x00"
         private static void encodeUnsynchronizedStreamTo(Stream from, BinaryWriter to)
         {
