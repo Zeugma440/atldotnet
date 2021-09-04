@@ -33,7 +33,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v22_simple()
         {
             string location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 ANSI charset only.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -81,7 +81,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 UTF16.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -129,7 +129,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.2 3 pictures.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -164,7 +164,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             try
             {
@@ -184,7 +184,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : MP3 with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_UTF8.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -205,7 +205,7 @@ namespace ATL.test.IO.MetaData
 
         private void R_ID3v2_Multiple_Genres(string location, IList<string> expectedGenres)
         {
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, false));
@@ -220,11 +220,58 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_TXXX_MultipleValues()
+        {
+            // Source : ID3v2 with TXXX MOOD field with multiple values
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_TXXX_multipleValues.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            // Check if field and value are read properly
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split('\0');
+            Assert.AreEqual(3, values.Length);
+            Assert.AreEqual("first", values[0]);
+            Assert.AreEqual("second", values[1]);
+            Assert.AreEqual("third", values[2]);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_TXXX_MultipleValues()
+        {
+            // Source : ID3v2 with TXXX MOOD field with multiple values
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_TXXX_multipleValues.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // 2- Add and read
+            TagData theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "MOOD", "a\0b\0c");
+            theTag.AdditionalFields.Add(info);
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            string[] values = theFile.ID3v2.AdditionalFields["MOOD"].Split('\0');
+            Assert.AreEqual(3, values.Length);
+            Assert.AreEqual("a", values[0]);
+            Assert.AreEqual("b", values[1]);
+            Assert.AreEqual("c", values[2]);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_R_ID3v2_WXXX_UnicodeNoDesc()
         {
             // Source : ID3v2 with COM field with unicode encoding on the content description, without any content description
             String location = TestUtils.GetResourceLocationRoot() + "MP3/ID3v2.4-WXX-UnicodeMarkerWithoutDescription.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -238,7 +285,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v2_WXXX_ManualUpdate()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
@@ -266,7 +313,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with extended tag properties (tag restrictions)
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8_extendedTag.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             try
             {
@@ -405,7 +452,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -464,7 +511,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing unsupported fields : RVA & TBP
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -569,7 +616,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : empty MP3
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -661,7 +708,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : empty MP3
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Case 1. Setting Track.ChaptersTableDescription alone without setting any chapter shouldn't write any CTOC frame
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -724,7 +771,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/chapters.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -903,7 +950,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/chapters.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -974,7 +1021,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v2_HugeTrackAlbumNum()
         {
             String location = TestUtils.GetResourceLocationRoot() + "MP3/hugeAlbumTrackNumber.mp3";
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -990,7 +1037,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Lyrics_Unsynched()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -1021,7 +1068,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Lyrics_Synched()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_cn.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -1067,7 +1114,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_ID3v2_Invalidv4SizeDesc()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_CTOC_invalidSizeDesc.mp3");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -1088,7 +1135,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
-                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -1131,7 +1178,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : empty MP3
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsFalse(theFile.ID3v2.Exists);

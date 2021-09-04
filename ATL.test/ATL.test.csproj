@@ -231,10 +231,14 @@
     <Content Include="Resources\AAC\adif_CBR88_8s.aac" />
     <Content Include="Resources\AAC\adts_CBR88_8s.aac" />
     <Content Include="Resources\FLAC\multiple_artists.flac" />
+    <Content Include="Resources\MP3\id3v2.3_ISO_multipleGenres.mp3" />
+    <Content Include="Resources\MP3\id3v2.3_UTF16_multipleGenres.mp3" />
     <Content Include="Resources\MP3\ID3v2.4-SYLT_cn.mp3" />
     <Content Include="Resources\MP3\ID3v2.4-USLT_JP_eng.mp3" />
     <Content Include="Resources\MP3\ID3v2.4-WXX-UnicodeMarkerWithoutDescription.mp3" />
     <Content Include="Resources\MP3\id3v2.4_CTOC_invalidSizeDesc.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_multipleGenres.mp3" />
+    <Content Include="Resources\MP3\id3v2.4_TXXX_multipleValues.mp3" />
     <Content Include="Resources\MP3\id3v2.4_UTF8_singleDigitTrackTags.mp3" />
     <Content Include="Resources\MP3\invalidApeHeader.mp3" />
     <Content Include="Resources\MP3\rating_WMP_2.5.mp2" />

@@ -755,7 +755,9 @@ namespace ATL.AudioData.IO
                         string[] tabS = strData.Split('\0');
 
                         Frame.ID = tabS[0];
-                        if (tabS.Length > 1) strData = tabS[1]; else strData = ""; // If the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
+                        if (tabS.Length > 1) strData = string.Join("\0", tabS, 1, tabS.Length - 1);
+                        else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
+
 
                         // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
