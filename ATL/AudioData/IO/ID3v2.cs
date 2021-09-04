@@ -1346,7 +1346,7 @@ namespace ATL.AudioData.IO
             w.Write(0);
 
             short flags = 0;
-            if (useDataSize) flags |= FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR; // Force data length indicator for ID3v2.4
+            if (useDataSize) flags |= FLAG_FRAME_24_HAS_DATA_LENGTH_INDICATOR;
             if (useUnsynchronization) flags |= FLAG_FRAME_24_UNSYNCHRONIZED;
             w.Write(StreamUtils.EncodeBEInt16(flags));
         }
@@ -1745,7 +1745,7 @@ namespace ATL.AudioData.IO
             long frameDataPos;
             long finalFramePos;
             long finalFramePosRaw;
-            bool useDataSize = (4 == Settings.ID3v2_tagSubVersion);
+            bool useDataSize = (4 == Settings.ID3v2_tagSubVersion); // Alsways write data length indicator for ID3v2.4
             Encoding usedTagEncoding = (Settings.ID3v2_forceAPICEncodingToLatin1 ? Utils.Latin1Encoding : tagEncoding);
 
             // Unsynchronization management
@@ -1842,7 +1842,7 @@ namespace ATL.AudioData.IO
             if (useDataSize) // ID3v2.4 only
             {
                 writer.BaseStream.Seek(dataSizePos + frameOffset, SeekOrigin.Begin);
-                size = (int)(finalFramePosRaw - frameDataPos);
+                size = (int)(finalFramePosRaw - frameDataPos - 4); // Data size doesn't take the data size header into account (breaks certain softwares like MusicBee)
                 writer.Write(StreamUtils.EncodeSynchSafeInt32(size));
             }
 
