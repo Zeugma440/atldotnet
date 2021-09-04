@@ -383,9 +383,9 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAA);
             theTag.Pictures.Add(picInfo);
-            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0x0B);
+            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAB);
             theTag.Pictures.Add(picInfo);
 
 
@@ -409,7 +409,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0A))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAA))
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
@@ -419,7 +419,7 @@ namespace ATL.test.IO.MetaData
                     }
                     found++;
                 }
-                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAB))
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
@@ -440,7 +440,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(MetaDataIOFactory.TAG_NATIVE, 0x0A);
+            picInfo = new PictureInfo(MetaDataIOFactory.TAG_NATIVE, 0xAA);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -464,7 +464,7 @@ namespace ATL.test.IO.MetaData
 
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0x0B))
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAB))
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {

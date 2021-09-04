@@ -571,10 +571,10 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
 
-            Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, Conductor
+            Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, Icon
 
             bool foundFront = false;
-            bool foundConductor = false;
+            bool foundIcon = false;
 
             foreach (PictureInfo pic in theTrack.EmbeddedPictures)
             {
@@ -589,11 +589,12 @@ namespace ATL.test.IO
                         Assert.AreEqual(290, picture.Height);
                     }
                 }
-                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)) foundConductor = true;
+                if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Icon)) foundIcon = true;
+                // TODO test reading an unsupported pic code ?
             }
 
             Assert.IsTrue(foundFront);
-            Assert.IsTrue(foundConductor);
+            Assert.IsTrue(foundIcon);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

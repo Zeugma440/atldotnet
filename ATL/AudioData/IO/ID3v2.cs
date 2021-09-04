@@ -1949,21 +1949,69 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <summary>
+        /// Returns the ATL picture type corresponding to the given ID3v2 picture code
+        /// </summary>
+        /// <param name="picCode">ID3v2 picture code</param>
+        /// <returns>ATL picture type corresponding to the given ID3v2 picture code; PIC_TYPE.Unsupported by default</returns>
         public static PictureInfo.PIC_TYPE DecodeID3v2PictureType(int picCode)
         {
-            if (0 == picCode) return PictureInfo.PIC_TYPE.Generic;      // Spec calls it "Other"
-            else if (3 == picCode) return PictureInfo.PIC_TYPE.Front;
-            else if (4 == picCode) return PictureInfo.PIC_TYPE.Back;
-            else if (6 == picCode) return PictureInfo.PIC_TYPE.CD;
-            else return PictureInfo.PIC_TYPE.Unsupported;
+            switch (picCode)
+            {
+                case 0: return PictureInfo.PIC_TYPE.Generic;      // Spec calls it "Other"
+                case 0x02: return PictureInfo.PIC_TYPE.Icon;
+                case 0x03: return PictureInfo.PIC_TYPE.Front;
+                case 0x04: return PictureInfo.PIC_TYPE.Back;
+                case 0x05: return PictureInfo.PIC_TYPE.Leaflet;
+                case 0x06: return PictureInfo.PIC_TYPE.CD;
+                case 0x07: return PictureInfo.PIC_TYPE.LeadArtist;
+                case 0x08: return PictureInfo.PIC_TYPE.Artist;
+                case 0x09: return PictureInfo.PIC_TYPE.Conductor;
+                case 0x0A: return PictureInfo.PIC_TYPE.Band;
+                case 0x0B: return PictureInfo.PIC_TYPE.Composer;
+                case 0x0C: return PictureInfo.PIC_TYPE.Lyricist;
+                case 0x0D: return PictureInfo.PIC_TYPE.RecordingLocation;
+                case 0x0E: return PictureInfo.PIC_TYPE.DuringRecording;
+                case 0x0F: return PictureInfo.PIC_TYPE.DuringPerformance;
+                case 0x10: return PictureInfo.PIC_TYPE.MovieCapture;
+                case 0x11: return PictureInfo.PIC_TYPE.Fishie;
+                case 0x12: return PictureInfo.PIC_TYPE.Illustration;
+                case 0x13: return PictureInfo.PIC_TYPE.BandLogo;
+                case 0x14: return PictureInfo.PIC_TYPE.PublisherLogo;
+                default: return PictureInfo.PIC_TYPE.Unsupported;
+            }
         }
 
-        public static byte EncodeID3v2PictureType(PictureInfo.PIC_TYPE picCode)
+        /// <summary>
+        /// Returns the ID3v2 picture code corresponding to the given ATL picture type
+        /// </summary>
+        /// <param name="picType">ATL picture type</param>
+        /// <returns>ID3v2 picture code corresponding to the given ATL picture type; 0 ("Other") by default</returns>
+        public static byte EncodeID3v2PictureType(PictureInfo.PIC_TYPE picType)
         {
-            if (PictureInfo.PIC_TYPE.Front.Equals(picCode)) return 3;
-            else if (PictureInfo.PIC_TYPE.Back.Equals(picCode)) return 4;
-            else if (PictureInfo.PIC_TYPE.CD.Equals(picCode)) return 6;
-            else return 0;
+            switch (picType)
+            {
+                case PictureInfo.PIC_TYPE.Icon: return 0x02;
+                case PictureInfo.PIC_TYPE.Front: return 0x03;
+                case PictureInfo.PIC_TYPE.Back: return 0x04;
+                case PictureInfo.PIC_TYPE.Leaflet: return 0x05;
+                case PictureInfo.PIC_TYPE.CD: return 0x06;
+                case PictureInfo.PIC_TYPE.LeadArtist: return 0x07;
+                case PictureInfo.PIC_TYPE.Artist: return 0x08;
+                case PictureInfo.PIC_TYPE.Conductor: return 0x09;
+                case PictureInfo.PIC_TYPE.Band: return 0x0A;
+                case PictureInfo.PIC_TYPE.Composer: return 0x0B;
+                case PictureInfo.PIC_TYPE.Lyricist: return 0x0C;
+                case PictureInfo.PIC_TYPE.RecordingLocation: return 0x0D;
+                case PictureInfo.PIC_TYPE.DuringRecording: return 0x0E;
+                case PictureInfo.PIC_TYPE.DuringPerformance: return 0x0F;
+                case PictureInfo.PIC_TYPE.MovieCapture: return 0x10;
+                case PictureInfo.PIC_TYPE.Fishie: return 0x11;
+                case PictureInfo.PIC_TYPE.Illustration: return 0x12;
+                case PictureInfo.PIC_TYPE.BandLogo: return 0x13;
+                case PictureInfo.PIC_TYPE.PublisherLogo: return 0x14;
+                default: return 0;
+            }
         }
 
         // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.0 specs; paragraph6 of ID3v2.3+ specs)
@@ -2054,7 +2102,7 @@ namespace ATL.AudioData.IO
             to.Write(data[0]);
         }
 
-        /// Returns the .NET Encoding corresponding to the ID3v2 convention (see below)
+        /// Returns the .NET Encoding corresponding to the given ID3v2 convention (see below)
         ///
         /// Default encoding should be "ISO-8859-1"
         /// 
@@ -2077,6 +2125,11 @@ namespace ATL.AudioData.IO
             else return Encoding.Default;
         }
 
+        /// <summary>
+        /// Returns the ID3v2 encoding byte corresponding to the given .NET Encoding (see above function for the convention)
+        /// </summary>
+        /// <param name="encoding">.NET Encoding to get the ID3v2 encoding byte for</param>
+        /// <returns>ID3v2 encoding byte corresponding to the given Encoding; 0 (ISO-8859-1) by default</returns>
         private static byte encodeID3v2CharEncoding(Encoding encoding)
         {
             if (encoding.Equals(Encoding.Unicode)) return 1;
@@ -2085,7 +2138,11 @@ namespace ATL.AudioData.IO
             else return 0; // Default = ISO-8859-1 / ISO Latin-1
         }
 
-        // TODO Doc
+        /// <summary>
+        /// Get the Byte Order Mark (BOM) corresponding to the given Encoding
+        /// </summary>
+        /// <param name="encoding">Encoding to get the BOM for</param>
+        /// <returns>BOM corresponding to the given Encoding; no BOM (ISO-8859-1) by default</returns>
         private static byte[] getBomFromEncoding(Encoding encoding)
         {
             if (encoding.Equals(Encoding.Unicode)) return BOM_UTF16_LE;
@@ -2094,7 +2151,11 @@ namespace ATL.AudioData.IO
             else return BOM_NONE; // Default = ISO-8859-1 / ISO Latin-1
         }
 
-        // TODO Doc
+        /// <summary>
+        /// Get the null terminator corresponding to the given Encoding
+        /// </summary>
+        /// <param name="encoding">Encoding to get the null terminator for</param>
+        /// <returns>Null terminator corresponding to the given Encoding; single byte (ISO-8859-1) by default</returns>
         private static byte[] getNullTerminatorFromEncoding(Encoding encoding)
         {
             if (encoding.Equals(Encoding.Unicode)) return NULLTERMINATOR_2;
@@ -2103,6 +2164,11 @@ namespace ATL.AudioData.IO
             else return NULLTERMINATOR; // Default = ISO-8859-1 / ISO Latin-1
         }
 
+        /// <summary>
+        /// Indicate if the given string is exclusively composed of upper alphabetic characters
+        /// </summary>
+        /// <param name="str">String to test</param>
+        /// <returns>True if the given string is exclusively composed of upper alphabetic characters; false if not</returns>
         private static bool isUpperAlpha(string str)
         {
             foreach (char c in str)
