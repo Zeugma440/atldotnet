@@ -244,10 +244,17 @@ namespace ATL
                             else
                             {
                                 candidatePosition = Math.Max(candidatePosition, picInfo.Position);
+                                // New picture is an existing picture -> keep the existing one
                                 if (picInfo.PictureHash > 0 && picInfo.PictureHash == newPicInfo.PictureHash)
                                 {
                                     added = true;
-                                    resultPictures.Add(picInfo);
+                                    PictureInfo targetPicture = picInfo;
+                                    if (newPicInfo.Description != picInfo.Description)
+                                    {
+                                        targetPicture = new PictureInfo(picInfo, false);
+                                        targetPicture.Description = newPicInfo.Description;
+                                    }
+                                    resultPictures.Add(targetPicture);
                                     break;
                                 }
                             }

@@ -563,7 +563,7 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_UTF8.mp3");
             Track theTrack = new Track(testFileLocation);
 
-            // Update Front picture
+            // 1- Update Front picture field picture data
             PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PictureInfo.PIC_TYPE.Front);
             theTrack.EmbeddedPictures.Add(newPicture);
 
@@ -595,6 +595,14 @@ namespace ATL.test.IO
 
             Assert.IsTrue(foundFront);
             Assert.IsTrue(foundIcon);
+
+            // 2- Update Front picture field description
+            theTrack.EmbeddedPictures[0].Description = "aaa";
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, Icon
+            Assert.AreEqual("aaa", theTrack.EmbeddedPictures[0].Description);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

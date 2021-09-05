@@ -1275,6 +1275,7 @@ namespace ATL.test.IO.MetaData
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
+            // 1- Save new
             TagData theTag = new TagData();
             theTag.Pictures = new List<PictureInfo>();
             // 0x03 : front cover according to ID3v2 conventions
@@ -1293,6 +1294,21 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(1, meta.EmbeddedPictures.Count);
             pic = meta.EmbeddedPictures[0];
             Assert.AreEqual(picDescription, pic.Description);
+
+
+            // 2- Update
+            theTag.Pictures[0].Description = picDescription + "!!";
+            theFile.UpdateTagInFile(theTag, tagType);
+
+            Assert.IsTrue(theFile.ReadFromFile(true, false));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(1, meta.EmbeddedPictures.Count);
+            pic = meta.EmbeddedPictures[0];
+            Assert.AreEqual(picDescription + "!!", pic.Description);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

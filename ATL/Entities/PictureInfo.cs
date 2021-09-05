@@ -206,7 +206,7 @@ namespace ATL
         /// Construct picture information by copying data from another PictureInfo object
         /// </summary>
         /// <param name="picInfo">PictureInfo object to copy data from</param>
-        /// <param name="copyPictureData">If true, copy raw picture data; if false only copy properties</param>
+        /// <param name="copyPictureData">If true, copy raw picture data; if false only take its reference from the given PictureInfo</param>
         public PictureInfo(PictureInfo picInfo, bool copyPictureData = true)
         {
             this.PicType = picInfo.PicType;
@@ -220,6 +220,9 @@ namespace ATL
             {
                 PictureData = new byte[picInfo.PictureData.Length];
                 picInfo.PictureData.CopyTo(PictureData, 0);
+            } else
+            {
+                this.PictureData = picInfo.PictureData;
             }
             this.PictureHash = picInfo.PictureHash;
             this.MarkedForDeletion = picInfo.MarkedForDeletion;
