@@ -45,6 +45,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_SAMPLE = SampleTag.CHUNK_SAMPLE;
         private const string CHUNK_CUE = CueTag.CHUNK_CUE;
         private const string CHUNK_LIST = ListTag.CHUNK_LIST;
+        private const string CHUNK_DISP = DispTag.CHUNK_DISP;
 
         // Broadcast Wave metadata sub-chunk
         private const string CHUNK_BEXT = BextTag.CHUNK_BEXT;
@@ -265,6 +266,8 @@ namespace ATL.AudioData.IO
             bool foundSample = false;
             bool foundCue = false;
             bool foundList = false;
+            bool foundDisp = false;
+            int dispIndex = 0;
             bool foundBext = false;
             bool foundIXml = false;
 
@@ -287,7 +290,7 @@ namespace ATL.AudioData.IO
 
                 chunkDataPos = source.Position;
 
-                if (subChunkId.Equals(CHUNK_FORMAT))
+                if (subChunkId.Equals(CHUNK_FORMAT, StringComparison.OrdinalIgnoreCase))
                 {
                     source.Read(data, 0, 2);
                     if (isLittleEndian) formatId = StreamUtils.DecodeUInt16(data); else formatId = StreamUtils.DecodeBEUInt16(data);
@@ -307,18 +310,18 @@ namespace ATL.AudioData.IO
                     source.Read(data, 0, 2);
                     if (isLittleEndian) bitsPerSample = StreamUtils.DecodeUInt16(data); else bitsPerSample = StreamUtils.DecodeBEUInt16(data);
                 }
-                else if (subChunkId.Equals(CHUNK_DATA))
+                else if (subChunkId.Equals(CHUNK_DATA, StringComparison.OrdinalIgnoreCase))
                 {
                     AudioDataOffset = chunkDataPos;
                     AudioDataSize = chunkSize;
                     headerSize = riffChunkSize - chunkSize;
                 }
-                else if (subChunkId.Equals(CHUNK_FACT))
+                else if (subChunkId.Equals(CHUNK_FACT, StringComparison.OrdinalIgnoreCase))
                 {
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleNumber = StreamUtils.DecodeInt32(data); else sampleNumber = StreamUtils.DecodeBEInt32(data);
                 }
-                else if (subChunkId.Equals(CHUNK_SAMPLE))
+                else if (subChunkId.Equals(CHUNK_SAMPLE, StringComparison.OrdinalIgnoreCase))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -328,7 +331,7 @@ namespace ATL.AudioData.IO
 
                     SampleTag.FromStream(source, this, readTagParams);
                 }
-                else if (subChunkId.Equals(CHUNK_CUE))
+                else if (subChunkId.Equals(CHUNK_CUE, StringComparison.OrdinalIgnoreCase))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -338,7 +341,7 @@ namespace ATL.AudioData.IO
 
                     CueTag.FromStream(source, this, readTagParams);
                 }
-                else if (subChunkId.Equals(CHUNK_LIST))
+                else if (subChunkId.Equals(CHUNK_LIST, StringComparison.OrdinalIgnoreCase))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -348,7 +351,18 @@ namespace ATL.AudioData.IO
 
                     ListTag.FromStream(source, this, readTagParams, chunkSize);
                 }
-                else if (subChunkId.Equals(CHUNK_BEXT))
+                else if (subChunkId.Equals(CHUNK_DISP, StringComparison.OrdinalIgnoreCase))
+                {
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId + "." + dispIndex);
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId + "." + dispIndex);
+                    dispIndex++;
+
+                    foundDisp = true;
+                    tagExists = true;
+
+                    DispTag.FromStream(source, this, readTagParams, chunkSize);
+                }
+                else if (subChunkId.Equals(CHUNK_BEXT, StringComparison.OrdinalIgnoreCase))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -358,7 +372,7 @@ namespace ATL.AudioData.IO
 
                     BextTag.FromStream(source, this, readTagParams);
                 }
-                else if (subChunkId.Equals(CHUNK_IXML))
+                else if (subChunkId.Equals(CHUNK_IXML, StringComparison.OrdinalIgnoreCase))
                 {
                     structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, subChunkId);
@@ -368,7 +382,7 @@ namespace ATL.AudioData.IO
 
                     IXmlTag.FromStream(source, this, readTagParams, chunkSize);
                 }
-                else if (subChunkId.Equals(CHUNK_ID3))
+                else if (subChunkId.Equals(CHUNK_ID3, StringComparison.OrdinalIgnoreCase))
                 {
                     id3v2Offset = source.Position;
 
@@ -397,6 +411,11 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(source.Position, 0, CHUNK_LIST);
                     structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_LIST);
+                }
+                if (!foundDisp)
+                {
+                    structureHelper.AddZone(source.Position, 0, CHUNK_DISP + ".0");
+                    structureHelper.AddSize(riffChunkSizePos, riffChunkSize, CHUNK_DISP + ".0");
                 }
                 if (!foundBext)
                 {
@@ -487,6 +506,7 @@ namespace ATL.AudioData.IO
             if (zone.Equals(CHUNK_SAMPLE) && SampleTag.IsDataEligible(this)) result += SampleTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_CUE) && CueTag.IsDataEligible(this)) result += CueTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_LIST) && ListTag.IsDataEligible(this)) result += ListTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
             else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
 

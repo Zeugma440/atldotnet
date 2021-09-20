@@ -56,15 +56,7 @@ namespace ATL.AudioData.IO
             // == Cue points list
 
             // How many of them do we have ? -> count distinct indexes
-            IList<string> keys = new List<string>();
-            foreach (string s in additionalFields.Keys)
-            {
-                if (s.StartsWith("cue.CuePoints"))
-                {
-                    string key = s.Substring(0, s.IndexOf("]") + 1);
-                    if (!keys.Contains(key)) keys.Add(key);
-                }
-            }
+            IList<string> keys = WavUtils.getEligibleKeys("cue.CuePoints", additionalFields.Keys);
             w.Write(keys.Count);
 
             // Cue points data

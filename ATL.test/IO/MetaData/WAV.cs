@@ -45,7 +45,7 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
         }
 
-        private void initInfoTestData()
+        private void initListInfoTestData()
         {
             notEmptyFile = notEmptyFile_info;
 
@@ -70,6 +70,25 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISRC", "info.ISRC"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISRF", "info.ISRF"));
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ITCH", "info.ITCH"));
+        }
+
+        private void initDispTestData()
+        {
+            notEmptyFile = emptyFile;
+
+            testData = new TagData();
+
+            testData.AdditionalFields = new List<MetaFieldInfo>();
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[0].type", "CF_TEXT"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[0].value", "blah"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[1].type", "CF_BITMAP"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[1].value", "YmxhaCBibGFo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[2].type", "CF_METAFILE"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[2].value", "YmxlaCBibGVo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[3].type", "CF_DIB"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[3].value", "Ymx1aCBibHVo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[4].type", "CF_PALETTE"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[4].value", "YmzDvGggYmzDvGg="));
         }
 
         private void initIXmlTestData()
@@ -182,11 +201,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WAV_BEXT_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
             initBextTestData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 0);
         }
@@ -194,11 +213,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WAV_INFO_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
-            initInfoTestData();
+            new ConsoleLogger();
+            initListInfoTestData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 0);
         }
@@ -206,11 +225,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WAV_IXML_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
             initIXmlTestData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 0);
         }
@@ -218,11 +237,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_Cue_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
             initCueTestReadData();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile, 0);
         }
@@ -237,7 +256,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_WAV_INFO_Empty()
         {
-            initInfoTestData();
+            initListInfoTestData();
             test_RW_Empty(emptyFile, true, true, true);
         }
 
@@ -270,10 +289,17 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_WAV_INFO_Existing()
+        public void TagIO_RW_WAV_LIST_INFO_Existing()
         {
-            initInfoTestData();
+            initListInfoTestData();
             test_RW_Existing(notEmptyFile, 0, true, true, false); // CRC check impossible because of field order
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_DISP_Existing()
+        {
+            initDispTestData();
+            test_RW_Empty(emptyFile, true, true, true);
         }
 
         [TestMethod]

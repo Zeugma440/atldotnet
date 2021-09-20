@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using static ATL.ChannelsArrangements;
 
 namespace ATL
@@ -61,6 +62,11 @@ namespace ATL
             Path = InMemoryPath;
             this.writeProgress = writeProgress;
             Update();
+        }
+
+        public static async Task<Track> FromFileAsync(string path)
+        {
+            return new Track(path);
         }
 
         //=== METADATA
