@@ -64,11 +64,6 @@ namespace ATL
             Update();
         }
 
-        public static async Task<Track> FromFileAsync(string path)
-        {
-            return new Track(path);
-        }
-
         //=== METADATA
 
         /// <summary>
