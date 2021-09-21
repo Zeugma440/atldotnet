@@ -274,14 +274,14 @@ namespace ATL.AudioData.IO
                 case "COVER ART (COMPOSER)": return PictureInfo.PIC_TYPE.Composer;
                 case "COVER ART (LYRICIST)": return PictureInfo.PIC_TYPE.Lyricist;
                 case "COVER ART (RECORDING LOCATION)": return PictureInfo.PIC_TYPE.RecordingLocation;
-                case "COVER ART (DURING RECODRING)": return PictureInfo.PIC_TYPE.DuringRecording;
+                case "COVER ART (DURING RECORDING)": return PictureInfo.PIC_TYPE.DuringRecording;
                 case "COVER ART (DURING PERFORMANCE)": return PictureInfo.PIC_TYPE.DuringPerformance;
                 case "COVER ART (MOVIE CAPTURE)": return PictureInfo.PIC_TYPE.MovieCapture;
                 case "COVER ART (A BRIGHT COLOURED FISH)": return PictureInfo.PIC_TYPE.Fishie;
                 case "COVER ART (ILLUSTRATION)": return PictureInfo.PIC_TYPE.Illustration;
                 case "COVER ART (BAND LOGOTYPE)": return PictureInfo.PIC_TYPE.BandLogo;
                 case "COVER ART (PUBLISHER LOGOTYPE)": return PictureInfo.PIC_TYPE.PublisherLogo;
-                default: return PictureInfo.PIC_TYPE.Unsupported;
+                default: return PictureInfo.PIC_TYPE.Generic;
             }
         }
 
@@ -311,8 +311,8 @@ namespace ATL.AudioData.IO
                 case PictureInfo.PIC_TYPE.MovieCapture: return "Cover Art (Movie capture)";
                 case PictureInfo.PIC_TYPE.Fishie: return "Cover Art (A bright coloured fish)";
                 case PictureInfo.PIC_TYPE.Illustration: return "Cover Art (Illustration)";
-                case PictureInfo.PIC_TYPE.BandLogo: return "Cover Art (Band logo)";
-                case PictureInfo.PIC_TYPE.PublisherLogo: return "Cover Art (Publisher logo)";
+                case PictureInfo.PIC_TYPE.BandLogo: return "Cover Art (Band logotype)";
+                case PictureInfo.PIC_TYPE.PublisherLogo: return "Cover Art (Publisher logotype)";
                 default: return "Cover Art (Other)";
             }
         }

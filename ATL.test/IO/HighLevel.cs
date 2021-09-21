@@ -398,6 +398,43 @@ namespace ATL.test.IO
             }
         }
 
+        private void tagIO_RW_doImageType(string resource, PictureInfo picture, PictureInfo.PIC_TYPE type)
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+            Track theTrack = new Track(testFileLocation);
+
+            if (theTrack.EmbeddedPictures.Count > 0) theTrack.EmbeddedPictures[0] = picture;
+            else theTrack.EmbeddedPictures.Add(picture);
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+
+            // Check that the picture type can be read properly
+            Assert.AreEqual(type, theTrack.EmbeddedPictures[0].PicType);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private void tagIO_RW_ImageType(string resource)
+        {
+            PictureInfo.PIC_TYPE[] types = (PictureInfo.PIC_TYPE[])Enum.GetValues(typeof(PictureInfo.PIC_TYPE));
+
+            foreach (PictureInfo.PIC_TYPE type in types)
+            {
+                if (type == PictureInfo.PIC_TYPE.Unsupported) continue;
+                PictureInfo newPicture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), type);
+                tagIO_RW_doImageType(resource, newPicture, type);
+            }
+        }
+
+        [TestMethod]
+        public void tagIO_RW_ImageType()
+        {
+            tagIO_RW_ImageType("MP3/id3v2.4_UTF8.mp3");
+            tagIO_RW_ImageType("MP3/APE.mp3");
+        }
+
         [TestMethod]
         public void TagIO_RW_AddRemoveTagRegular()
         {

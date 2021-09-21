@@ -1997,7 +1997,6 @@ namespace ATL.AudioData.IO
         {
             switch (picCode)
             {
-                case 0: return PictureInfo.PIC_TYPE.Generic;      // Spec calls it "Other"
                 case 0x02: return PictureInfo.PIC_TYPE.Icon;
                 case 0x03: return PictureInfo.PIC_TYPE.Front;
                 case 0x04: return PictureInfo.PIC_TYPE.Back;
@@ -2017,7 +2016,7 @@ namespace ATL.AudioData.IO
                 case 0x12: return PictureInfo.PIC_TYPE.Illustration;
                 case 0x13: return PictureInfo.PIC_TYPE.BandLogo;
                 case 0x14: return PictureInfo.PIC_TYPE.PublisherLogo;
-                default: return PictureInfo.PIC_TYPE.Unsupported;
+                default: return PictureInfo.PIC_TYPE.Generic; // Spec calls it "Other"
             }
         }
 
