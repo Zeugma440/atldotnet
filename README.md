@@ -124,7 +124,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 (3) : MIDI meta events appear on the track's Comment field
 
-(4) : Support for BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops) and iXML metadata chunks
+(4) : Support for BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects) and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
 
