@@ -9,7 +9,7 @@ using System;
 namespace ATL.benchmark
 {
     [MemoryDiagnoser]
-    [InliningDiagnoser]
+//    [InliningDiagnoser]
     public class Misc
     {
         //[Params(64,128,512,1024,2048,4096,8192)]

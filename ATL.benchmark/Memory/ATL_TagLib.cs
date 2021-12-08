@@ -6,7 +6,7 @@ using BenchmarkDotNet.Diagnostics.Windows.Configs;
 namespace ATL.benchmark
 {
     [MemoryDiagnoser]
-    [InliningDiagnoser]
+//    [InliningDiagnoser]
     public class ATL_TagLib
     {
         //[Params("E:/temp/wma", "E:/temp/id3v2", "E:/temp/aac/mp4", "E:/temp/ogg", "E:/temp/flac")]
