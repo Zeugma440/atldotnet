@@ -6,7 +6,9 @@ before_build:
  - choco install "sonarscanner-msbuild-net46" -y
  - ps: echo SonarScanner
  - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
- - msbuild /verbosity:minimal "ATL.sln"
+build:
+  project: ATL.sln
+  verbosity: minimal
 test_script:
 # - dotnet test /p:AltCover=true
   - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
