@@ -3,14 +3,16 @@ before_build:
  - nuget restore
 build_script:
  - choco install "sonarscanner-msbuild-net46" -y
- - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
+ - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.vbnet.vscoveragexml.reportsPaths="%CD%\VisualStudio.coveragexml"
  - msbuild /verbosity:minimal "ATL.sln"
 test_script:
- - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register:path64 -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Logger:console /Diag:testResults.txt" -coverbytest:ATL.Test.dll -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
+# - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register:path64 -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Logger:console /Diag:testResults.txt" -coverbytest:ATL.Test.dll -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
+ - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Diag:testResults.txt
 after_test:
+ - C:\projects\atldotnet\packages\microsoft.codecoverage\17.0.0\build\netstandard1.0\CodeCoverage\CodeCoverage.exe analyze /output:atl.coveragexml atl.coverage
+# - "C:\\Program Files\\Microsoft Visual Studio\\2022\\Team Tools\\Dynamic Code Coverage Tools\\CodeCoverage.exe" analyze /output: "atl.coveragexml" "atl.coverage"
  - appveyor PushArtifact "testResults.txt"
  - appveyor PushArtifact "coverage.xml"
- - appveyor PushArtifact "atl.coverage"
  - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk16"
  - "SET PATH=C:\\Python38;%JAVA_HOME%\\bin;C:\\Python38\\Scripts;%PATH%"
  - pip install codecov
