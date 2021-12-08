@@ -1,15 +1,14 @@
 image: Visual Studio 2022
 init :
-  - ps: dotnet tool install --global coverlet.console
+#  - ps: dotnet tool install --global coverlet.console
 before_build:
  - nuget restore
  - choco install "sonarscanner-msbuild-net46" -y
  - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
  - msbuild /verbosity:minimal "ATL.sln"
 test_script:
-# - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register:appveyor -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Parallel /Logger:console /Diag:testResults.txt" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
-  - ps: dotnet test ./ATL.test/ATL.test.csproj --verbosity normal
-  - ps: coverlet ./ATL.test/bin/Debug/ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover" --output "./coverage.xml"
+  - dotnet test /p:AltCover=true
+#  - ps: coverlet ./ATL.test/bin/Debug/ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover" --output "./coverage.xml"
 after_test:
 # - appveyor PushArtifact "testResults.txt"
  - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk16"
