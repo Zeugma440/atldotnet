@@ -179,31 +179,8 @@ namespace ATL.AudioData.IO
         }
 
         // Reads large data chunks by streaming
-        private void SetExtendedTagItem(Stream Source, int size, ReadTagParams readTagParams)
+        private void SetPictureItem(Stream Source, string tagId, int size, ReadTagParams readTagParams)
         {
-            const int KEY_BUFFER = 20;
-            StringBuilder tagIdBuilder = new StringBuilder();
-            byte[] stringData = new byte[KEY_BUFFER];
-            int equalsIndex = -1;
-
-            while (-1 == equalsIndex)
-            {
-                Source.Read(stringData, 0, KEY_BUFFER);
-
-                for (int i = 0; i < KEY_BUFFER; i++)
-                {
-                    if (stringData[i] == 0x3D) // '=' character
-                    {
-                        equalsIndex = i;
-                        break;
-                    }
-                }
-
-                tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex));
-            }
-            Source.Seek(-(KEY_BUFFER - equalsIndex - 1), SeekOrigin.Current);
-
-            string tagId = tagIdBuilder.ToString();
             if (tagId.Equals(PICTURE_METADATA_ID_NEW))
             {
                 size = size - 1 - PICTURE_METADATA_ID_NEW.Length;
@@ -332,34 +309,59 @@ namespace ATL.AudioData.IO
             do
             {
                 size = source.ReadInt32();
-
                 position = source.BaseStream.Position;
-                if (size < 500) // 'Small' field
+
+                if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
                     strData = Encoding.UTF8.GetString(source.ReadBytes(size)).Trim();
+                    SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
+                }
+                else
+                {
+                    const int KEY_BUFFER = 20;
+                    StringBuilder tagIdBuilder = new StringBuilder();
+                    byte[] stringData = new byte[KEY_BUFFER];
+                    int equalsIndex = -1;
+                    int nbBuffered = -1;
 
-                    int strIndex = strData.IndexOf('=');
-                    if (strIndex > -1 && strIndex < strData.Length)
+                    while (-1 == equalsIndex)
                     {
-                        string fieldId = strData.Substring(0, strIndex);
+                        source.BaseStream.Read(stringData, 0, KEY_BUFFER);
+                        nbBuffered++;
 
-                        if (fieldId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
+                        for (int i = 0; i < KEY_BUFFER; i++)
                         {
-                            setChapter(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim());
+                            if (stringData[i] == 0x3D) // '=' character
+                            {
+                                equalsIndex = i;
+                                break;
+                            }
+                        }
+
+                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex));
+                    }
+                    equalsIndex += KEY_BUFFER * nbBuffered;
+                    source.BaseStream.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
+
+                    string tagId = tagIdBuilder.ToString();
+
+                    if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
+                    {
+                        SetPictureItem(source.BaseStream, tagId, size, readTagParams);
+                    }
+                    else
+                    {
+                        strData = Encoding.UTF8.GetString(source.ReadBytes(size - equalsIndex - 1)).Trim();
+
+                        if (tagId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
+                        {
+                            setChapter(tagId, strData);
                         }
                         else // Standard textual field
                         {
-                            SetMetaField(fieldId, strData.Substring(strIndex + 1, strData.Length - strIndex - 1).Trim(), readTagParams.ReadAllMetaFrames);
+                            SetMetaField(tagId, strData, readTagParams.ReadAllMetaFrames);
                         }
                     }
-                    else if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
-                    {
-                        SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
-                    }
-                }
-                else // 'Large' field = picture
-                {
-                    SetExtendedTagItem(source.BaseStream, size, readTagParams);
                 }
                 source.BaseStream.Seek(position + size, SeekOrigin.Begin);
 
@@ -481,7 +483,7 @@ namespace ATL.AudioData.IO
                             {
                                 // Write multiple fields (specific to FLAC; restrained to artists for now)
                                 string[] valueParts = value.Split(Settings.DisplayValueSeparator);
-                                foreach(string valuePart in valueParts) writeTextFrame(w, s, valuePart);
+                                foreach (string valuePart in valueParts) writeTextFrame(w, s, valuePart);
                             }
                             else
                             {
