@@ -9,7 +9,7 @@ test_script:
  - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Parallel /Logger:console /Diag:testResults.txt" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
 after_test:
  - appveyor PushArtifact "testResults.txt"
- - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk11"
+ - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk16"
  - "SET PATH=C:\\Python34;%JAVA_HOME%\\bin;C:\\Python34\\Scripts;%PATH%"
  - pip install codecov
  - codecov -f "coverage.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
