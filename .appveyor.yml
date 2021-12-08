@@ -9,7 +9,7 @@ test_script:
 # - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register:path64 -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Logger:console /Diag:testResults.txt" -coverbytest:ATL.Test.dll -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
  - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Diag:testResults.txt
 after_test:
- - C:\projects\atldotnet\packages\microsoft.codecoverage\17.0.0\build\netstandard1.0\CodeCoverage\CodeCoverage.exe analyze /output:atl.coveragexml atl.coverage
+ - "%userprofile%\\.nuget\\packages\\microsoft.codecoverage\\17.0.0\\build\\netstandard1.0\\CodeCoverage\\CodeCoverage.exe" analyze /output:atl.coveragexml atl.coverage
 # - "C:\\Program Files\\Microsoft Visual Studio\\2022\\Team Tools\\Dynamic Code Coverage Tools\\CodeCoverage.exe" analyze /output: "atl.coveragexml" "atl.coverage"
  - appveyor PushArtifact "testResults.txt"
  - appveyor PushArtifact "coverage.xml"
