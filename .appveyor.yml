@@ -7,12 +7,13 @@ build_script:
  - msbuild /verbosity:minimal "ATL.sln"
 test_script:
 # - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register:path64 -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Logger:console /Diag:testResults.txt" -coverbytest:ATL.Test.dll -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
- - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel /Diag:testResults.txt
+ - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Parallel /Diag:testResults.txt
 after_test:
 # - appveyor PushArtifact "testResults.txt"
 # - appveyor PushArtifact "coverage.xml"
  - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk16"
  - "SET PATH=C:\\Python38;%JAVA_HOME%\\bin;C:\\Python38\\Scripts;%USERPROFILE%\\.nuget\\packages\\microsoft.codecoverage\\17.0.0\\build\\netstandard1.0\\CodeCoverage;%PATH%"
+ - CodeCoverage.exe collect /output:atl.coverage .\ATL.test\bin\Debug\ATL.test.dll /verbose 
  - CodeCoverage.exe analyze /output:atl.coveragexml atl.coverage
  - pip install codecov
  - codecov -f "coverage.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
