@@ -477,8 +477,10 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.props'))" />
     <Error Condition="!Exists('..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.targets'))" />
+    <Error Condition="!Exists('..\packages\coverlet.collector.3.1.0\build\netstandard1.0\coverlet.collector.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\coverlet.collector.3.1.0\build\netstandard1.0\coverlet.collector.targets'))" />
   </Target>
   <Import Project="..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.targets" Condition="Exists('..\packages\altcover.8.2.831\build\netstandard2.0\AltCover.targets')" />
+  <Import Project="..\packages\coverlet.collector.3.1.0\build\netstandard1.0\coverlet.collector.targets" Condition="Exists('..\packages\coverlet.collector.3.1.0\build\netstandard1.0\coverlet.collector.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
