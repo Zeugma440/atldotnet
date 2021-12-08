@@ -6,7 +6,7 @@ build_script:
  - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
  - msbuild /verbosity:minimal "ATL.sln"
 test_script:
- - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Parallel /Logger:console /resultsfile:testResults.txt" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
+ - .\packages\OpenCover.4.7.1221\tools\OpenCover.Console.exe -register -target:"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\vstest.console.exe" -targetargs:".\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Parallel /Logger:console /Diag:testResults.txt" -output:"coverage.xml" -filter:"+[ATL*]* -[ATL.test*]*"
 after_test:
  - appveyor PushArtifact "testResults.txt"
  - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk11"
