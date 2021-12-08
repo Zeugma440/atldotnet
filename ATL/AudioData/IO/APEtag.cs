@@ -262,6 +262,8 @@ namespace ATL.AudioData.IO
         {
             switch (picCode.Trim().ToUpper())
             {
+                case "COVER ART": 
+                case "COVER ART (OTHER)": return PictureInfo.PIC_TYPE.Generic;
                 case "COVER ART (ICON)": return PictureInfo.PIC_TYPE.Icon;
                 case "COVER ART (FRONT)": return PictureInfo.PIC_TYPE.Front;
                 case "COVER ART (BACK)": return PictureInfo.PIC_TYPE.Back;
@@ -281,7 +283,7 @@ namespace ATL.AudioData.IO
                 case "COVER ART (ILLUSTRATION)": return PictureInfo.PIC_TYPE.Illustration;
                 case "COVER ART (BAND LOGOTYPE)": return PictureInfo.PIC_TYPE.BandLogo;
                 case "COVER ART (PUBLISHER LOGOTYPE)": return PictureInfo.PIC_TYPE.PublisherLogo;
-                default: return PictureInfo.PIC_TYPE.Generic;
+                default: return PictureInfo.PIC_TYPE.Unsupported;
             }
         }
 
