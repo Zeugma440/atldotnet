@@ -3,6 +3,7 @@
     <OutputType>Library</OutputType>
 	<TestProjectType>UnitTest</TestProjectType>
     <TargetFramework>net48</TargetFramework>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
