@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
             public const int META_SEQUENCER_DATA = 0x7F; // Sequencer specific data
         }
 
-        private class MidiEvent
+        private sealed class MidiEvent
         {
             public long TickOffset = 0;
             public int Type = 0;
@@ -115,7 +115,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class MidiTrack
+        private sealed class MidiTrack
         {
             public long Duration = 0;
             public long Ticks = 0;
@@ -338,7 +338,9 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // Only for comments
         }
+        /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
+        /// <inheritdoc/>
         public long AudioDataSize { get; set; }
 
 
@@ -427,10 +429,7 @@ namespace ATL.AudioData.IO
 		*                                                                           *
 		****************************************************************************/
 
-        //---------------------------------------------------------------
-        // Imports Standard MIDI File (type 0 or 1) (and RMID)
-        // (if optional parameter $tn set, only track $tn is imported)
-        //---------------------------------------------------------------
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -443,8 +442,6 @@ namespace ATL.AudioData.IO
         {
             byte[] header;
             string trigger;
-
-            IList<MidiTrack> tracks = new List<MidiTrack>();
 
             resetData();
 
@@ -486,6 +483,7 @@ namespace ATL.AudioData.IO
             AudioDataOffset = source.BaseStream.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
+            IList<MidiTrack> m_tracks = new List<MidiTrack>();
             // Ready to read track data...
             while (source.BaseStream.Position < sizeInfo.FileSize - 4)
             {
@@ -500,17 +498,17 @@ namespace ATL.AudioData.IO
                 // trackSize is stored in big endian -> needs inverting
                 trackSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
 
-                tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
+                m_tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
                 nbTrack++;
             }
 
-            this.tracks = tracks;
+            tracks = m_tracks;
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
             tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());
 
             duration = getDuration();
-            bitrate = (double)sizeInfo.FileSize / duration;
+            bitrate = sizeInfo.FileSize / duration;
 
             return true;
         }
