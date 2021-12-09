@@ -1,7 +1,0 @@
-language: csharp
-solution: ATL.sln
-mono:
-  - latest
-os:
-  - linux
-  - osx
