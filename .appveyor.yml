@@ -10,7 +10,9 @@ build:
   project: ATL.sln
   verbosity: minimal
 test_script:
- - dotnet test /p:AltCover=true
+ - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel
+ - ps: Get-ChildItem ".\" -Recurse -file -Filter *.coverage | Copy-Item -Destination ".\" -Force
+# - dotnet test /p:AltCover=true
 #  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
 # - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 #  - ps: coverlet ./ATL.test/bin/Debug/ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover" --output "./coverage.xml"
