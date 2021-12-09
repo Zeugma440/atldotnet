@@ -102,7 +102,7 @@ namespace ATL.AudioData.IO
 
 
         // Ogg page header
-        private class OggHeader
+        private sealed class OggHeader
         {
             public string ID;                                               // Always "OggS"
             public byte StreamVersion;                           // Stream structure version
@@ -186,8 +186,9 @@ namespace ATL.AudioData.IO
             }
         }
 
+#pragma warning disable S4487 // Unread "private" fields should be removed
         // Vorbis parameter header
-        private class VorbisHeader
+        private sealed class VorbisHeader
         {
             public String ID;
             public byte[] BitstreamVersion = new byte[4];  // Bitstream version number
@@ -214,7 +215,7 @@ namespace ATL.AudioData.IO
         }
 
         // Opus parameter header
-        private class OpusHeader
+        private sealed class OpusHeader
         {
             public String ID;
             public byte Version;
@@ -241,9 +242,11 @@ namespace ATL.AudioData.IO
                 CoupledStreamCount = 0;
             }
         }
+#pragma warning restore S4487 // Unread "private" fields should be removed
+
 
         // File data
-        private class FileInfo
+        private sealed class FileInfo
         {
             // First, second and third Vorbis packets
             public OggHeader IdentificationHeader = new OggHeader();
@@ -594,7 +597,7 @@ namespace ATL.AudioData.IO
                 if (!found) // Increase seek distance if not found
                 {
                     seekDistanceRatio += 0.1;
-                    seekDistance = (int)Math.Round(source.Length * seekDistanceRatio); 
+                    seekDistance = (int)Math.Round(source.Length * seekDistanceRatio);
                 }
             }
             if (!found)
@@ -689,7 +692,6 @@ namespace ATL.AudioData.IO
                     info.OpusParameters.Version = source.ReadByte();
                     info.OpusParameters.OutputChannelCount = source.ReadByte();
                     info.OpusParameters.PreSkip = source.ReadUInt16();
-                    //info.OpusParameters.InputSampleRate = source.ReadUInt32();
                     info.OpusParameters.InputSampleRate = 48000; // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
                     source.Seek(4, SeekOrigin.Current);
                     info.OpusParameters.OutputGain = source.ReadInt16();
@@ -839,13 +841,16 @@ namespace ATL.AudioData.IO
             double result;
 
             if (samples > 0)
+            {
                 if (sampleRate > 0)
                     result = ((double)samples * 1000.0 / sampleRate);
                 else
                     result = 0;
-            else
-                if ((bitRateNominal > 0) && (channelsArrangement.NbChannels > 0))
+            }
+            else if ((bitRateNominal > 0) && (channelsArrangement.NbChannels > 0))
+            {
                 result = (1000.0 * (double)sizeInfo.FileSize - sizeInfo.ID3v2Size) / (double)bitRateNominal / channelsArrangement.NbChannels / 125.0 * 2;
+            }
             else
                 result = 0;
 
@@ -937,9 +942,6 @@ namespace ATL.AudioData.IO
             bool result = true;
             int writtenPages = 0;
             long nextPageOffset = 0;
-            float currentProgress = 0;
-
-//            if (writeProgress != null) writeProgress.Report(currentProgress / 4);
 
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -1075,9 +1077,6 @@ namespace ATL.AudioData.IO
                     virtualW.Write(crc);
                 }
 
-//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
-
-
                 // Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
                 long newHeadersSize = memStream.Length;
@@ -1090,14 +1089,12 @@ namespace ATL.AudioData.IO
                 {
                     StreamUtils.ShortenStream(w.BaseStream, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
-//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
                 // Rewrite Comment and Setup headers
                 w.BaseStream.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
                 StreamUtils.CopyStream(memStream, w.BaseStream);
-//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             }
@@ -1147,7 +1144,6 @@ namespace ATL.AudioData.IO
                     }
 
                 } while (0 == (header.TypeFlag & 0x04));  // 0x04 marks the last page of the logical bitstream
-//                if (writeProgress != null) writeProgress.Report(++currentProgress / 4);
             }
 
             return result;
