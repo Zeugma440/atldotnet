@@ -43,10 +43,8 @@ namespace ATL.AudioData.IO
 
         private byte initialSpeed;
         private byte initialTempo;
-
         private byte nbChannels;
         private String trackerName;
-
         private double bitrate;
         private double duration;
 
@@ -113,31 +111,19 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class Instrument
+        private sealed class Instrument
         {
             public byte Type = 0;
-            public String FileName = "";
-            public String DisplayName = "";
-
+            public string FileName = "";
+            public string DisplayName = "";
             // Other fields not useful for ATL
         }
 
-        private class S3MEvent
+        private sealed class S3MEvent
         {
-            // Commented fields below not useful for ATL
-            public int Channel;
-            //public byte Note;
-            //public byte Instrument;
-            //public byte Volume;
-            public byte Command;
-            public byte Info;
-
-            public void Reset()
-            {
-                Channel = 0;
-                Command = 0;
-                Info = 0;
-            }
+            public byte Command = 0;
+            public byte Info = 0;
+            // Other fields not useful for ATL
         }
 
 
@@ -370,7 +356,7 @@ namespace ATL.AudioData.IO
                     if (what > 0)
                     {
                         S3MEvent theEvent = new S3MEvent();
-                        theEvent.Channel = what & 0x1F;
+//                        theEvent.Channel = what & 0x1F;
 
                         if ((what & 0x20) > 0) source.Seek(2, SeekOrigin.Current); // Note & Instrument
                         if ((what & 0x40) > 0) source.Seek(1, SeekOrigin.Current); // Volume
@@ -447,7 +433,6 @@ namespace ATL.AudioData.IO
             bSource.Seek(2, SeekOrigin.Current); // sampleType (16b)
             if (!S3M_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
             {
-                result = false;
                 throw new InvalidDataException("Invalid S3M file (file signature mismatch)");
             }
             bSource.Seek(1, SeekOrigin.Current); // globalVolume (8b)
