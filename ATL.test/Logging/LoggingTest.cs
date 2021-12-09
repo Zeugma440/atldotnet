@@ -8,8 +8,8 @@ namespace ATL.test
     [TestClass]
     public class LoggingTest : ILogDevice
     {
-        Log theLog = new Log();
-        IList<Log.LogItem> messages = new List<Log.LogItem>();
+        readonly Log theLog = new Log();
+        readonly IList<Log.LogItem> messages = new List<Log.LogItem>();
 
         public LoggingTest()
         {
@@ -143,11 +143,11 @@ namespace ATL.test
 
             Thread.Sleep(200);
 
-            Assert.AreEqual(messages.Count, 4);
+            Assert.AreEqual(4, messages.Count);
             foreach (Log.LogItem logItem in messages)
             {
-                if (logItem.Level.Equals(Log.LV_WARNING)) Assert.AreEqual(logItem.Location, "over there");
-                if (logItem.Level.Equals(Log.LV_ERROR)) Assert.AreEqual(logItem.Location, "here");
+                if (logItem.Level.Equals(Log.LV_WARNING)) Assert.AreEqual("over there", logItem.Location);
+                if (logItem.Level.Equals(Log.LV_ERROR)) Assert.AreEqual("here", logItem.Location);
             }
         }
 
