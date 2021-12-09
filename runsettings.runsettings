@@ -2,7 +2,7 @@
 <RunSettings>
   <RunConfiguration>
     <!-- Path relative to directory that contains .runsettings file-->
-    <ResultsDirectory>../</ResultsDirectory>
+    <ResultsDirectory>TestResults</ResultsDirectory>
   </RunConfiguration>
   <DataCollectionRunSettings>
     <DataCollectors>
