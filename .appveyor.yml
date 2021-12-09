@@ -1,7 +1,7 @@
 image: Visual Studio 2022
-#init :
+init :
 # - cd c:\ && dir /s CodeCoverage.exe
-# - ps: dotnet tool install --global coverlet.console
+ - ps: dotnet tool install --global coverlet.console
 before_build:
  - nuget restore
  - choco install "sonarscanner-msbuild-net46" -y
@@ -14,9 +14,9 @@ test_script:
 # - vstest.console /Logger:Appveyor .\ATL.test\bin\Debug\net48\ATL.test.dll /TestCaseFilter:TestCategory!=snippets /Enablecodecoverage /Settings:runsettings.runsettings /Parallel
 # - ps: Get-ChildItem ".\" -Recurse -file -Filter *.coverage | Copy-Item -Destination ".\" -Force
 # - dotnet test /p:AltCover=true
-  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
-# - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-#  - ps: coverlet ./ATL.test/bin/Debug/ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover" --output "./coverage.xml"
+#  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+# - dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+  - ps: coverlet .\ATL.test\bin\Debug\net48\ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover"
 after_test:
 # - appveyor PushArtifact "testResults.txt"
 # c:\Program Files (x86)\Microsoft SDKs\NuGetPackages\microsoft.codecoverage\16.11.0\build\netstandard1.0\CodeCoverage
