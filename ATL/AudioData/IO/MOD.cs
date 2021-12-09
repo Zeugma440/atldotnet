@@ -6,6 +6,7 @@ using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -480,11 +481,11 @@ namespace ATL.AudioData.IO
             // == Computing track properties
 
             duration = calculateDuration();
-
-            foreach (Sample aSample in FSamples)
+            foreach (var aSample in FSamples.Where(aSample => aSample.Name.Length > 0))
             {
-                if (aSample.Name.Length > 0) comment.Append(aSample.Name).Append(Settings.InternalValueSeparator);
+                comment.Append(aSample.Name).Append(Settings.InternalValueSeparator);
             }
+
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
             tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());

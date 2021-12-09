@@ -1,4 +1,3 @@
-using ATL.Logging;
 using Commons;
 using System;
 using System.IO;
@@ -30,15 +29,6 @@ namespace ATL.AudioData.IO
         private const byte MPP_PROFILE_UNKNOWN = 0;               // Unknown profile
         private const byte MPP_PROFILE_EXPERIMENTAL = 12;
 
-        // Profile names
-        /*
-        private static readonly string[] MPP_PROFILE = new String[13]
-        {
-            "Unknown", "Thumb", "Radio", "Standard", "Xtreme", "Insane", "BrainDead",
-            "--quality 9", "--quality 10", "--quality 0", "--quality 1", "Telephone", "Experimental"
-        };
-        */
-
         // ID code for stream version > 6
         private const long STREAM_VERSION_7_ID = 120279117;  // 120279117 = 'MP+' + #7
         private const long STREAM_VERSION_71_ID = 388714573; // 388714573 = 'MP+' + #23
@@ -46,54 +36,22 @@ namespace ATL.AudioData.IO
 
 
         private int frameCount;
-        private long FSampleCount;
         private int sampleRate;
-        private byte FStreamVersion;
-        private byte profileID;
-        private string encoder;
 
         private double bitrate;
         private double duration;
         private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
-        private readonly String filePath;
+        private readonly string filePath;
 
 
         // File header data - for internal use
-        private class HeaderRecord
+        private sealed class HeaderRecord
         {
             public byte[] ByteArray = new byte[32];               // Data as byte array
             public int[] IntegerArray = new int[8];            // Data as integer array
         }
-
-
-        /* Unused for now
-                public int FrameCount // Number of frames
-                {
-                    get { return this.frameCount; }
-                }	
-                public byte StreamVersion // Stream version
-                {
-                    get { return this.FStreamVersion; }
-                }	
-                public byte ProfileID // Profile code
-                {
-                    get { return this.profileID; }
-                }	
-                public String Profile // Profile name
-                {
-                    get { return this.getProfile(); }
-                }	
-                public bool Corrupted // True if file corrupted
-                {
-                    get { return this.isCorrupted(); }
-                }		       
-                public String Encoder // Encoder used
-                {
-                    get { return this.encoder; }
-                }
-        */
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -127,7 +85,7 @@ namespace ATL.AudioData.IO
         }
         public int SampleRate
         {
-            get { return this.sampleRate; }
+            get { return sampleRate; }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -143,11 +101,7 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             frameCount = 0;
-            FStreamVersion = 0;
             sampleRate = 0;
-            FSampleCount = 0;
-            encoder = "";
-            profileID = MPP_PROFILE_UNKNOWN;
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
@@ -185,7 +139,6 @@ namespace ATL.AudioData.IO
             if (80 == getStreamVersion(Header))
             {
                 string packetKey;
-                long packetSize; // Packet size (int only since we are dealing with the header packet)
                 bool headerFound = false;
 
                 // Let's go back right after the 32-bit version marker
@@ -196,7 +149,7 @@ namespace ATL.AudioData.IO
                     long initialPos = source.BaseStream.Position;
                     packetKey = Utils.Latin1Encoding.GetString(source.ReadBytes(2));
 
-                    packetSize = readVariableSizeInteger(source);
+                    readVariableSizeInteger(source); // Packet size (unused)
 
                     // SV8 stream header packet
                     if (packetKey.Equals("SH"))
@@ -204,7 +157,7 @@ namespace ATL.AudioData.IO
                         AudioDataOffset = initialPos;
                         // Skip CRC-32 and stream version
                         source.BaseStream.Seek(5, SeekOrigin.Current);
-                        FSampleCount = readVariableSizeInteger(source);
+                        long sampleCount = readVariableSizeInteger(source);
                         readVariableSizeInteger(source); // Skip beginning silence
 
                         byte b = source.ReadByte(); // Sample frequency (3) + Max used bands (5)
@@ -215,13 +168,9 @@ namespace ATL.AudioData.IO
                         bool isMidSideStereo = (b & 0b00001000) > 0; // First 4 bits
                         if (isMidSideStereo) channelsArrangement = JOINT_STEREO_MID_SIDE;
                         else channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channelCount);
-                        long framesPerPacket = (long)Math.Pow(4, (b & 0b00000111)); // Last 3 bits
-
-                        profileID = MPP_PROFILE_UNKNOWN;   // Profile info is SV7-only
-                        encoder = "";                      // Encoder info is SV7-only
 
                         // MPC has variable bitrate; only MPC versions < 7 display fixed bitrate
-                        duration = (double)FSampleCount * 1000.0 / sampleRate;
+                        duration = sampleCount * 1000.0 / sampleRate;
                         bitrate = calculateAverageBitrate(duration);
 
                         headerFound = true;
@@ -229,7 +178,8 @@ namespace ATL.AudioData.IO
                     // Continue searching for header
                     source.BaseStream.Seek(initialPos + 2, SeekOrigin.Begin);
                 }
-            } else
+            }
+            else
             {
                 AudioDataOffset = sizeInfo.ID3v2Size;
             }
@@ -275,32 +225,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private static String getSV7Encoder(HeaderRecord Header)
-        {
-            int EncoderID;
-            String result = "";
-
-            EncoderID = Header.ByteArray[10 + 2 + 15];
-            if (0 == EncoderID)
-            {
-                //FEncoder := 'Buschmann 1.7.0...9, Klemm 0.90...1.05';
-            }
-            else
-            {
-                switch (EncoderID % 10)
-                {
-                    case 0: result = "Release " + (EncoderID / 100) + "." + ((EncoderID / 10) % 10); break;
-                    case 2: result = "Beta " + (EncoderID / 100) + "." + (EncoderID % 100); break; // Not exactly...
-                    case 4: goto case 2;
-                    case 6: goto case 2;
-                    case 8: goto case 2;
-                    default: result = "--Alpha-- " + (EncoderID / 100) + "." + (EncoderID % 100); break;
-                }
-            }
-
-            return result;
-        }
-
         private static ChannelsArrangement getSV7ChannelsArrangement(HeaderRecord Header)
         {
             ChannelsArrangement result;
@@ -323,28 +247,19 @@ namespace ATL.AudioData.IO
 
             // Get frame count
             if (40 == getStreamVersion(Header)) result = Header.IntegerArray[1] >> 16;
-            else
-                if ((50 <= getStreamVersion(Header)) && (getStreamVersion(Header) <= 71))
+            else if ((50 <= getStreamVersion(Header)) && (getStreamVersion(Header) <= 71))
+            {
                 result = Header.IntegerArray[1];
+            }
             else result = 0;
 
             return result;
         }
 
-        private double getSV7BitRate(HeaderRecord Header)
+        private double getSV7BitRate()
         {
-            double result = 0;
-
-            // Try to get bit rate from header
-            if (60 >= getStreamVersion(Header) /*|| (5 == GetStreamVersion(Header))*/ )
-            {
-                result = (ushort)((Header.IntegerArray[0] >> 23) & 0x01FF);
-            }
-
-            // Calculate bit rate if not given
-            result = calculateAverageBitrate(getSV7Duration());
-
-            return result;
+            // Calculate bit rate
+            return calculateAverageBitrate(getSV7Duration());
         }
 
         private double calculateAverageBitrate(double duration)
@@ -358,49 +273,6 @@ namespace ATL.AudioData.IO
 
             return result;
         }
-
-        private static byte getSV7ProfileID(HeaderRecord Header)
-        {
-            byte result = MPP_PROFILE_UNKNOWN;
-            // Get MPEGplus profile (exists for stream version 7 only)
-            if ((70 == getStreamVersion(Header)) || (71 == getStreamVersion(Header)))
-                // ((and $F0) shr 4) is needed because samplerate is stored in the same byte!
-                switch (((Header.ByteArray[10] & 0xF0) >> 4))
-                {
-                    case 1: result = MPP_PROFILE_EXPERIMENTAL; break;
-                    case 5: result = MPP_PROFILE_QUALITY0; break;
-                    case 6: result = MPP_PROFILE_QUALITY1; break;
-                    case 7: result = MPP_PROFILE_TELEPHONE; break;
-                    case 8: result = MPP_PROFILE_THUMB; break;
-                    case 9: result = MPP_PROFILE_RADIO; break;
-                    case 10: result = MPP_PROFILE_STANDARD; break;
-                    case 11: result = MPP_PROFILE_XTREME; break;
-                    case 12: result = MPP_PROFILE_INSANE; break;
-                    case 13: result = MPP_PROFILE_BRAINDEAD; break;
-                    case 14: result = MPP_PROFILE_QUALITY9; break;
-                    case 15: result = MPP_PROFILE_QUALITY10; break;
-                }
-
-            return result;
-        }
-
-        /* Unused for now
-                private String getChannelMode()
-                {
-                    return MPP_MODE[channelModeID];
-                }
-
-                private String getProfile()
-                {
-                    return MPP_PROFILE[profileID];
-                }
-
-                private bool isCorrupted()
-                {
-                    // Check for file corruption
-                    return ( (bitrate < 3) || (bitrate > 480) );
-                }
-        */
 
         private double getSV7Duration()
         {
@@ -425,16 +297,13 @@ namespace ATL.AudioData.IO
             // Process data if loaded and file valid
             if (result && (sizeInfo.FileSize > 0) && (version > 0))
             {
-                FStreamVersion = version;
                 if (version < 80)
                 {
                     // Fill properties with SV7 header data
                     sampleRate = getSV7SampleRate(Header);
                     channelsArrangement = getSV7ChannelsArrangement(Header);
                     frameCount = getSV7FrameCount(Header);
-                    bitrate = getSV7BitRate(Header);
-                    profileID = getSV7ProfileID(Header);
-                    encoder = getSV7Encoder(Header);
+                    bitrate = getSV7BitRate();
                     duration = getSV7Duration();
                 }
                 else

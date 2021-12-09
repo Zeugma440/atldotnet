@@ -87,7 +87,7 @@ namespace ATL.AudioData.IO
             { "©mvi", 21 }
         };
 
-        private class MP4Sample
+        private sealed class MP4Sample
         {
             public double Duration;
             public uint Size;
