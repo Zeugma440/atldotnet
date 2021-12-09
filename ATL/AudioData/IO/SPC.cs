@@ -16,8 +16,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_EXTENDED = "extended";
         private const string ZONE_HEADER = "header";
 
-        //private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data v0.30";
-        private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data"; // v0.10 can be parsed as well
+        private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data";
         private const String XTENDED_TAG = "xid6";
 
         private const int REGISTERS_LENGTH = 9;
@@ -202,7 +201,7 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class SPCHeader
+        private sealed class SpcHeader
         {
             public const int TAG_IN_HEADER = 26;
 
@@ -219,7 +218,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class SPCExTags
+        private sealed class SpcExTags
         {
             public string FormatTag;              // Extended info tag (should be XTENDED_TAG)
             public uint Size;                     // Chunk size
@@ -254,7 +253,7 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE METHODS ===
 
-        private bool readHeader(BinaryReader source, ref SPCHeader header)
+        private bool readHeader(BinaryReader source, ref SpcHeader header)
         {
             source.BaseStream.Seek(0, SeekOrigin.Begin);
 
@@ -273,7 +272,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readHeaderTags(BinaryReader source, ref SPCHeader header, ReadTagParams readTagParams)
+        private void readHeaderTags(BinaryReader source, ref SpcHeader header, ReadTagParams readTagParams)
         {
             long initialPosition = source.BaseStream.Position;
 
@@ -377,7 +376,7 @@ namespace ATL.AudioData.IO
                 return -1;
         }
 
-        private void readExtendedData(BinaryReader source, ref SPCExTags footer, ReadTagParams readTagParams)
+        private void readExtendedData(BinaryReader source, ref SpcExTags footer, ReadTagParams readTagParams)
         {
             long initialPosition = source.BaseStream.Position;
             footer.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
@@ -462,8 +461,8 @@ namespace ATL.AudioData.IO
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = true;
-            SPCHeader header = new SPCHeader();
-            SPCExTags footer = new SPCExTags();
+            SpcHeader header = new SpcHeader();
+            SpcExTags footer = new SpcExTags();
 
             header.Reset();
             footer.Reset();
@@ -474,7 +473,7 @@ namespace ATL.AudioData.IO
             if (!readHeader(source, ref header)) throw new InvalidDataException("Not a SPC file");
 
             // Reads the header tag
-            if (SPCHeader.TAG_IN_HEADER == header.TagInHeader)
+            if (SpcHeader.TAG_IN_HEADER == header.TagInHeader)
             {
                 tagExists = true;
                 source.BaseStream.Seek(REGISTERS_LENGTH, SeekOrigin.Current);

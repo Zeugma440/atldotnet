@@ -90,14 +90,6 @@ namespace ATL.AudioData.IO
         };
 
 
-        /* Unused for now
-		public ushort BlockAlign // Block alignment
-		{
-			get { return this.blockAlign; }
-		}
-        */
-
-
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO

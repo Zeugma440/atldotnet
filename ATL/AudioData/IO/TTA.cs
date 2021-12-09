@@ -42,17 +42,6 @@ namespace ATL.AudioData.IO
         {
             get { return samplesSize; }
         }
-        /*
-        public uint CRC32
-        {
-            get { return cRC32; }
-        }
-        public uint AudioFormat
-        {
-            get { return audioFormat; }
-        }
-        */
-
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 

@@ -30,7 +30,6 @@ namespace ATL.AudioData.IO
         private static int RECORDING_RATE_DEFAULT = 60;         // Default playback rate for v1.00 files
 
         // Standard fields
-        private int version;
         private int sampleRate;
         private double bitrate;
         private double duration;
@@ -106,7 +105,6 @@ namespace ATL.AudioData.IO
             sampleRate = 44100; // Default value for all VGM files, according to v1.70 spec 
             bitrate = 0;
             duration = 0;
-            version = 0;
 
             gd3TagOffset = 0;
             AudioDataOffset = -1;
@@ -137,7 +135,7 @@ namespace ATL.AudioData.IO
                 AudioDataOffset = source.BaseStream.Position;
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // EOF offset
-                version = source.ReadInt32();
+                int version = source.ReadInt32();
                 source.BaseStream.Seek(8, SeekOrigin.Current); // Clocks
                 gd3TagOffset = source.ReadInt32();
 

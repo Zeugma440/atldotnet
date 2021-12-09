@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -272,13 +273,12 @@ namespace ATL.AudioData.IO
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
-                    foreach (MetaFieldInfo info in tagData.AdditionalFields)
+                    // If the value already exists, concatenate it with the new one
+                    foreach (var info in tagData.AdditionalFields.Where(info => info.Equals(fieldInfo)))
                     {
-                        if (info.Equals(fieldInfo)) // If the value already exists, concatenate it with the new one
-                        {
-                            fieldInfo.Value = info.Value + Settings.InternalValueSeparator + fieldInfo.Value;
-                        }
+                        fieldInfo.Value = info.Value + Settings.InternalValueSeparator + fieldInfo.Value;
                     }
+
                     tagData.AdditionalFields.Remove(fieldInfo);
                 }
                 tagData.AdditionalFields.Add(fieldInfo);

@@ -46,7 +46,7 @@ namespace ATL.AudioData.IO
 
         public bool Corrupted // True if file corrupted
         {
-            get { return this.isCorrupted(); }
+            get { return isCorrupted(); }
         }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -60,18 +60,14 @@ namespace ATL.AudioData.IO
 
 
         // TwinVQ chunk header
-        private class ChunkHeader
+        private sealed class ChunkHeader
         {
             public string ID;
-            public uint Size;                                            // Chunk size
-            public void Reset()
-            {
-                Size = 0;
-            }
+            public uint Size = 0;                                            // Chunk size
         }
 
         // File header data - for internal use
-        private class HeaderInfo
+        private sealed class HeaderInfo
         {
             // Real structure of TwinVQ file header
             public char[] ID = new char[4];                           // Always "TWIN"
@@ -307,7 +303,7 @@ namespace ATL.AudioData.IO
                 duration = getDuration(Header);
                 // Get tag information and fill properties
                 readTag(source, Header, readTagParams);
-                
+
                 AudioDataOffset = source.BaseStream.Position;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }

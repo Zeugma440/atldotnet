@@ -11,15 +11,9 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class WAVPack : IAudioDataIO
     {
-        private int formatTag;
-        private int version;
         private ChannelsArrangement channelsArrangement;
-        private int bits;
 
         private string encoder;
-
-        private long samples;
-        private long bSamples;
 
         private int sampleRate;
         private double bitrate;
@@ -29,40 +23,8 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-
-        /*
-        public int FormatTag
-		{
-			get  { return formatTag; }
-		}
-		public int Version
-		{
-			get  { return version; }
-		}    
-		public int Bits
-		{
-			get { return bits; }
-		}	
-		public long Samples
-		{
-			get { return samples; }
-		}
-		public long BSamples
-		{
-			get { return bSamples; }
-		}
-		public double CompressionRation
-		{
-			get { return getCompressionRatio(); }
-		}
-		public String Encoder
-		{
-			get { return encoder; }
-		}
-        */
-
-
-        private class WavpackHeader3
+#pragma warning disable S4487 // Unread "private" fields should be removed
+        private sealed class WavpackHeader3
         {
             public char[] ckID = new char[4];
             public uint ckSize;
@@ -94,7 +56,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class WavPackHeader4
+        private sealed class WavPackHeader4
         {
             public char[] ckID = new char[4];
             public uint ckSize;
@@ -132,7 +94,7 @@ namespace ATL.AudioData.IO
             public ushort wbitspersample;
         }
 
-        private class RiffChunk
+        private sealed class RiffChunk
         {
             public char[] id = new char[4];
             public uint size;
@@ -143,6 +105,8 @@ namespace ATL.AudioData.IO
                 size = 0;
             }
         }
+#pragma warning restore S4487 // Unread "private" fields should be removed
+
 
         //version 3 flags
         private const int MONO_FLAG_v3 = 1;     // not stereo
@@ -216,13 +180,8 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
-            formatTag = 0;
             sampleRate = 0;
-            bits = 0;
-            version = 0;
             encoder = "";
-            samples = 0;
-            bSamples = 0;
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -237,27 +196,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        /* unused for now
-         * 
-    public String getChannelMode()
-    {
-        switch( channels )
-        {
-            case 1: return "Mono"; 
-            case 2: return "Stereo";
-            default : return "Surround";
-        }
-    }
-
-    private double getCompressionRatio()
-    {
-        if (isValid)
-            return (double)sizeInfo.FileSize / (samples * (channels * bits / 8) + 44) * 100;
-        else
-            return 0;
-    }
-    */
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -311,12 +249,9 @@ namespace ATL.AudioData.IO
             if (StreamUtils.StringEqualsArr("wvpk", wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
             {
                 result = true;
-                version = (wvh4.version >> 8);
                 channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
 
-                bits = (int)((wvh4.flags & 3) * 16);   // bytes stored flag
-                samples = wvh4.total_samples;
-                bSamples = wvh4.block_samples;
+                uint samples = wvh4.total_samples;
                 sampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
                 if ((sampleRate > 14) || (sampleRate < 0))
                 {
@@ -421,10 +356,8 @@ namespace ATL.AudioData.IO
 
                         hasfmt = true;
                         result = true;
-                        formatTag = fmt.wformattag;
                         channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(fmt.wchannels);
                         sampleRate = (int)fmt.dwsamplespersec;
-                        bits = fmt.wbitspersample;
                         bitrate = (double)fmt.dwavgbytespersec * 8;
                     }
                     else
@@ -458,9 +391,7 @@ namespace ATL.AudioData.IO
                             AudioDataOffset = initialPos;
                             AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                            version = wvh3.version;
-                            channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(2 - (wvh3.flags & 1));
-                            samples = wvh3.total_samples;
+                            channelsArrangement = GuessFromChannelNumber(2 - (wvh3.flags & 1));
 
                             codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
@@ -527,7 +458,7 @@ namespace ATL.AudioData.IO
                             }
 
                             if (sampleRate <= 0) sampleRate = 44100;
-                            duration = (double)wvh3.total_samples * 1000.0 / sampleRate;
+                            duration = wvh3.total_samples * 1000.0 / sampleRate;
                             if (duration > 0) bitrate = 8.0 * AudioDataSize / duration;
                         }
                         break;
