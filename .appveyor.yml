@@ -6,7 +6,7 @@ before_build:
  - nuget restore
  - choco install "sonarscanner-msbuild-net46" -y
  - ps: echo SonarScanner
- - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.xml"
+ - SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.opencover.xml"
 build:
   project: ATL.sln
   verbosity: minimal
@@ -24,5 +24,5 @@ after_test:
  - "SET JAVA_HOME=C:\\Progra~1\\Java\\jdk16"
  - "SET PATH=C:\\Python38;%JAVA_HOME%\\bin;C:\\Python38\\Scripts;%PATH%"
  - pip install codecov
- - codecov -f "coverage.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
+ - codecov -f "coverage.opencover.xml" -t a0fbc5d9-c210-40a1-a823-a4a62b1f1c01
  - SonarScanner.MSBuild.exe end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
