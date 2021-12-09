@@ -1,4 +1,4 @@
-# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20Core-2.0-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.0-lightgrey.svg) ![Net Framework](https://img.shields.io/badge/.NET%20Framework-4.5-lightgrey.svg)
+# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20Core-2.1-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![Net Framework](https://img.shields.io/badge/.NET%20Framework-4.8-lightgrey.svg)
 
 __Latest stable version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/)
 
@@ -66,11 +66,11 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
-The ATL library runs on .NET Core 2.0+ / .NET Standard 2.0+ / .NET Framework 4.5+ / Mono 2.0+
+The ATL library runs on .NET Core 2.1+ / .NET Standard 2.1+ / .NET Framework 4.8+
 
-ATL unit tests run on .NET Framework 4.5+
+ATL unit tests run on .NET Framework 4.8+
 
-The library and its tests have been maintained on Visual Studio Express 2012, 2015, 2017 Community and 2019 Community
+The library and its tests have been maintained on Visual Studio Express and Community (currently on Community 2022)
 
 Please refer to the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets) for quick usage
 
