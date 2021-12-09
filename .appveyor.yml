@@ -10,8 +10,8 @@ build:
   project: ATL.sln
   verbosity: minimal
 test_script:
-# - dotnet test /p:AltCover=true
-  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+ - dotnet test /p:AltCover=true
+#  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
 # - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 #  - ps: coverlet ./ATL.test/bin/Debug/ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover" --output "./coverage.xml"
 after_test:
