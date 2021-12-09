@@ -93,7 +93,9 @@ namespace ATL.AudioData.IO
             get
             {
                 Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
+#pragma warning disable S3060 // "is" should not be used with "this"
                 if (this is IAudioDataIO iO)
+#pragma warning restore S3060 // "is" should not be used with "this"
                 {
                     nativeFormat.Name = nativeFormat.Name + " / " + iO.AudioFormat.ShortName;
                     nativeFormat.ID += iO.AudioFormat.ID;

@@ -51,7 +51,6 @@ namespace ATL.AudioData.IO
 
         private string codec;
 
-        private AudioDataManager.SizeInfo sizeInfo;
         private readonly string fileName;
         private readonly Format audioFormat;
 
@@ -285,8 +284,6 @@ namespace ATL.AudioData.IO
         // Read data from file
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
-
             return read(source, readTagParams);
         }
 

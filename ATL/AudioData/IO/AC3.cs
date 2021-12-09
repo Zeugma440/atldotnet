@@ -20,7 +20,6 @@ namespace ATL.AudioData.IO
         private double duration;
         private ChannelsArrangement channelsArrangement;
 
-        private SizeInfo sizeInfo;
         private readonly string filePath;
 
 
@@ -116,7 +115,6 @@ namespace ATL.AudioData.IO
         {
             ushort signatureChunk;
             byte aByte;
-            this.sizeInfo = sizeInfo;
             resetData();
 
             bool result = false;

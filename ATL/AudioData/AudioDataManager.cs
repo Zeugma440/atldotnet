@@ -13,14 +13,22 @@ namespace ATL.AudioData
     {
         // Settings to use when opening any FileStream
         // NB : These settings are optimal according to performance tests on the dev environment
-        public static int bufferSize = 2048;
-        public static FileOptions fileOptions = FileOptions.RandomAccess;
+        private static int bufferSize = 2048;
+        private static FileOptions fileOptions = FileOptions.RandomAccess;
 
+        /// <summary>
+        /// Set file options to use when opening any FileStream
+        /// </summary>
+        /// <param name="options">FileOptions to use when opening any FileStream</param>
         public static void SetFileOptions(FileOptions options)
         {
             fileOptions = options;
         }
 
+        /// <summary>
+        /// Set I/O buffer size to use when opening any FileStream
+        /// </summary>
+        /// <param name="bufSize">I/O buffer size to use when opening any FileStream</param>
         public static void SetBufferSize(int bufSize)
         {
             bufferSize = bufSize;

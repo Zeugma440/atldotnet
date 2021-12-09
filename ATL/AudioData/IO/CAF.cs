@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 
 namespace ATL.AudioData.IO
@@ -132,7 +131,6 @@ namespace ATL.AudioData.IO
         double secondsPerByte;
         private ChannelsArrangement channelsArrangement;
 
-        private SizeInfo sizeInfo;
         private readonly string filePath;
 
 
@@ -248,20 +246,20 @@ namespace ATL.AudioData.IO
 
         private void readAudioDescriptionChunk(BinaryReader source)
         {
-            double sampleRate = StreamUtils.DecodeBEDouble(source.ReadBytes(8)); // aka frames per second
+            double m_sampleRate = StreamUtils.DecodeBEDouble(source.ReadBytes(8)); // aka frames per second
             string formatId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            uint formatFlags = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            source.BaseStream.Seek(4, SeekOrigin.Current); // format flags
             uint bytesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             uint framesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             channelsPerFrame = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            uint bitsPerChannel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            source.BaseStream.Seek(4, SeekOrigin.Current); // bits per channel
 
-            this.sampleRate = (uint)Math.Round(sampleRate);
+            sampleRate = (uint)Math.Round(m_sampleRate);
 
             // Compute audio duration
             if (bytesPerPacket > 0)
             {
-                double secondsPerPacket = framesPerPacket / sampleRate;
+                double secondsPerPacket = framesPerPacket / m_sampleRate;
                 secondsPerByte = secondsPerPacket / bytesPerPacket;
                 // Duration will be determined using the size of 'data' chunk
             }
@@ -341,17 +339,14 @@ namespace ATL.AudioData.IO
 
         private void readPaktChunk(BinaryReader source)
         {
-            long nbPackets = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
+            source.BaseStream.Seek(8, SeekOrigin.Current); // nbPackets
             long nbFrames = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
 
-            //duration = nbFrames * channelsPerFrame * bitsPerChannel / 8;
             duration = nbFrames * 1000d / sampleRate;
         }
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
-
             return read(source, readTagParams);
         }
 

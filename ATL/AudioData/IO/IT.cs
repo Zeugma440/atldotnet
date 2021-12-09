@@ -5,6 +5,7 @@ using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -131,31 +132,19 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class Instrument
+        private sealed class Instrument
         {
-            public byte Type = 0;
             public String FileName = "";
             public String DisplayName = "";
-
             // Other fields not useful for ATL
         }
 
-        private class Event
+        private sealed class Event
         {
-            // Commented fields below not useful for ATL
-            public int Channel;
-            //public byte Note;
-            //public byte Instrument;
-            //public byte Volume;
-            public byte Command;
-            public byte Info;
-
-            public void Reset()
-            {
-                Channel = 0;
-                Command = 0;
-                Info = 0;
-            }
+            public int Channel = 0;
+            public byte Command = 0;
+            public byte Info = 0;
+            // Other fields not useful for ATL
         }
 
         // === PRIVATE METHODS ===
@@ -554,10 +543,11 @@ namespace ATL.AudioData.IO
             {
                 StringBuilder comment = new StringBuilder("");
                 // NB : Whatever the value of useSamplesAsInstruments, FInstruments contain the right data
-                foreach (Instrument i in instruments)
+                foreach (var i in instruments.Where(i => i.DisplayName.Length > 0))
                 {
-                    if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
+                    comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
                 }
+
                 if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
                 commentStr = comment.ToString();
             }
