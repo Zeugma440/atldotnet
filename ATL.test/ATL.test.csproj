@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
 	<TestProjectType>UnitTest</TestProjectType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
