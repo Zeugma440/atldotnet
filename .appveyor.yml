@@ -1,5 +1,6 @@
 image: Visual Studio 2022
-#init :
+init :
+ - cd c:\ && dir /s CodeCoverage.exe
 # - ps: dotnet tool install --global coverlet.console
 before_build:
  - nuget restore
