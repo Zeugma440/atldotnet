@@ -44,10 +44,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VGM_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(theFile);
         }
@@ -55,12 +55,12 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VGM_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -118,7 +118,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void tagIO_RW_VGM_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported field (dumper)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
@@ -163,7 +163,7 @@ namespace ATL.test.IO.MetaData
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        private void readExistingTagsOnFile(AudioDataManager theFile, int year = 1992)
+        private new void readExistingTagsOnFile(AudioDataManager theFile, int year = 1992)
         {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
