@@ -16,20 +16,20 @@ namespace ATL.AudioData.IO
     class PSF : MetaDataIO, IAudioDataIO
     {
         // Format Type Names
-        public const String PSF_FORMAT_UNKNOWN = "Unknown";
-        public const String PSF_FORMAT_PSF1 = "Playstation";
-        public const String PSF_FORMAT_PSF2 = "Playstation 2";
-        public const String PSF_FORMAT_SSF = "Saturn";
-        public const String PSF_FORMAT_DSF = "Dreamcast";
-        public const String PSF_FORMAT_USF = "Nintendo 64";
-        public const String PSF_FORMAT_QSF = "Capcom QSound";
+        public const string PSF_FORMAT_UNKNOWN = "Unknown";
+        public const string PSF_FORMAT_PSF1 = "Playstation";
+        public const string PSF_FORMAT_PSF2 = "Playstation 2";
+        public const string PSF_FORMAT_SSF = "Saturn";
+        public const string PSF_FORMAT_DSF = "Dreamcast";
+        public const string PSF_FORMAT_USF = "Nintendo 64";
+        public const string PSF_FORMAT_QSF = "Capcom QSound";
 
         // Tag predefined fields
-        public const String TAG_LENGTH = "length";
-        public const String TAG_FADE = "fade";
+        public const string TAG_LENGTH = "length";
+        public const string TAG_FADE = "fade";
 
-        private const String PSF_FORMAT_TAG = "PSF";
-        private const String TAG_HEADER = "[TAG]";
+        private const string PSF_FORMAT_TAG = "PSF";
+        private const string TAG_HEADER = "[TAG]";
         private const uint HEADER_LENGTH = 16;
 
         private const byte LINE_FEED = 0x0A;
@@ -41,7 +41,6 @@ namespace ATL.AudioData.IO
         private int sampleRate;
         private double bitrate;
         private double duration;
-        private bool isValid;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
@@ -140,9 +139,9 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class PSFHeader
+        private sealed class PSFHeader
         {
-            public String FormatTag;                    // Format tag (should be PSF_FORMAT_TAG)
+            public string FormatTag;                    // Format tag (should be PSF_FORMAT_TAG)
             public byte VersionByte;                    // Version mark
             public uint ReservedAreaLength;             // Length of reserved area (bytes)
             public uint CompressedProgramLength;        // Length of compressed program (bytes)
@@ -156,7 +155,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private class PSFTag
+        private sealed class PSFTag
         {
             public string TagHeader;					// Tag header (should be TAG_HEADER)
             public int size;
@@ -393,9 +392,8 @@ namespace ATL.AudioData.IO
             tag.Reset();
             resetData();
 
-            isValid = readHeader(source, ref header);
-            if (!isValid) throw new InvalidDataException("Not a PSF file");
-            
+            if (!readHeader(source, ref header)) throw new InvalidDataException("Not a PSF file");
+
             AudioDataOffset = 0;
 
             if (source.BaseStream.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)

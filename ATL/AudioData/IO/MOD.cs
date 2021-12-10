@@ -26,6 +26,7 @@ namespace ATL.AudioData.IO
         private const byte DEFAULT_BPM = 125;
 
         // Effects
+#pragma warning disable S1144 // Unused private types or members should be removed
         private const byte EFFECT_POSITION_JUMP = 0xB;
         private const byte EFFECT_PATTERN_BREAK = 0xD;
         private const byte EFFECT_SET_SPEED = 0xF;
@@ -36,6 +37,7 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_NOTE_DELAY = 0xD;
         private const byte EFFECT_PATTERN_DELAY = 0xE;
         private const byte EFFECT_INVERT_LOOP = 0xF;
+#pragma warning restore S1144 // Unused private types or members should be removed
 
         private static IDictionary<String, ModFormat> modFormats = new Dictionary<string, ModFormat>()
         {
@@ -86,9 +88,9 @@ namespace ATL.AudioData.IO
         private IList<IList<IList<int>>> FPatterns;
         private IList<byte> FPatternTable;
         private byte nbValidPatterns;
-        private String formatTag;
+        private string formatTag;
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;

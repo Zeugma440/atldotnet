@@ -55,21 +55,21 @@ namespace ATL.AudioData.IO
 
         private double bitrate;
         private double duration;
-        private bool isValid;
 
-        private AudioDataManager.SizeInfo sizeInfo;
-        private string filePath;
+        private SizeInfo sizeInfo;
+        private readonly string filePath;
 
 
 
         // Real structure of Monkey's Audio header
         // common header for all versions
-        private class ApeHeader
+        private sealed class ApeHeader
         {
             public char[] cID = new char[4]; // should equal 'MAC '
             public ushort nVersion;          // version number * 1000 (3.81 = 3810)
         }
 
+#pragma warning disable S4487 // Unread "private" fields should be removed
         // old header for <= 3.97
         private struct ApeHeaderOld
         {
@@ -96,7 +96,7 @@ namespace ATL.AudioData.IO
             public uint nSampleRate;            // the sample rate (typically 44100)
         }
         // data descriptor for >= 3.98
-        private class ApeDescriptor
+        private sealed class ApeDescriptor
         {
             public ushort padded;                   // padding/reserved (always empty)
             public uint nDescriptorBytes;           // the number of descriptor bytes (allows later expansion of this header)
@@ -108,6 +108,7 @@ namespace ATL.AudioData.IO
             public uint nTerminatingDataBytes;      // the terminating data of the file (not including tag data)
             public byte[] cFileMD5 = new byte[16];  // the MD5 hash of the file (see notes for usage... it's a littly tricky)
         }
+#pragma warning restore S4487 // Unread "private" fields should be removed
 
 
         public int Version
@@ -203,7 +204,6 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Reset data
-            isValid = false;
             version = 0;
             versionStr = "";
             sampleRate = 0;
@@ -259,12 +259,11 @@ namespace ATL.AudioData.IO
 
             if (StreamUtils.StringEqualsArr("MAC ", header.cID))
             {
-                isValid = true;
                 version = header.nVersion;
                 AudioDataOffset = source.BaseStream.Position - 6;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                versionStr = ((double)version / 1000).ToString().Substring(0, 4); //Str(FVersion / 1000 : 4 : 2, FVersionStr);
+                versionStr = ((double)version / 1000).ToString().Substring(0, 4);
 
                 // Load New Monkey's Audio Header for version >= 3.98
                 if (header.nVersion >= 3980)
@@ -399,8 +398,7 @@ namespace ATL.AudioData.IO
                     // average bitrate
                     if (duration > 0) bitrate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / (duration);
                     // some extra sanity checks
-                    isValid = ((bits > 0) && (sampleRate > 0) && (totalSamples > 0) && (channelsArrangement.NbChannels > 0));
-                    result = isValid;
+                    result = (bits > 0) && (sampleRate > 0) && (totalSamples > 0) && (channelsArrangement.NbChannels > 0);
                 }
             }
 

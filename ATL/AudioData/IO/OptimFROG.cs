@@ -12,6 +12,7 @@ namespace ATL.AudioData.IO
     {
         private const string OFR_SIGNATURE = "OFR ";
 
+#pragma warning disable S1144 // Unused private types or members should be removed
         private static readonly string[] OFR_COMPRESSION = new string[10]
         {
             "fast", "normal", "high", "extra",
@@ -21,7 +22,9 @@ namespace ATL.AudioData.IO
         private static readonly sbyte[] OFR_BITS = new sbyte[11]
         {
             8, 8, 16, 16, 24, 24, 32, 32,
-            -32, -32, -32 }; //negative value corresponds to floating point type.
+            -32, -32, -32 //negative value corresponds to floating point type.
+        };
+#pragma warning restore S1144 // Unused private types or members should be removed
 
 
         // Real structure of OptimFROG header
@@ -59,34 +62,6 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
         private readonly string filePath;
 
-        /* Unused for now
-        public TOfrHeader Header // OptimFROG header
-		{
-			get { return this.FHeader; }
-		}	
-
-        public String Version // Encoder version
-		{
-			get { return this.getVersion(); }
-		}									   
-		public String Compression // Compression level
-		{
-			get { return this.getCompression(); }
-		}	
-		public sbyte Bits // Bits per sample
-		{
-			get { return this.getBits(); }
-		}		  		
-		public long Samples // Number of samples
-		{
-			get { return this.getSamples(); }
-		}
-        public double CompressionRatio // Compression ratio (%)
-        {
-            get { return this.getCompressionRatio(); }
-        }
-        */
-
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -120,7 +95,7 @@ namespace ATL.AudioData.IO
         }
         public ChannelsArrangement ChannelsArrangement
         {
-            get { return ChannelsArrangements.GuessFromChannelNumber(header.ChannelMode + 1); }
+            get { return GuessFromChannelNumber(header.ChannelMode + 1); }
         }
         public bool IsMetaSupported(int metaDataType)
         {
@@ -151,46 +126,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        /* Unused for now
-    private bool getValid()
-    {
-        return (
-            StreamUtils.StringEqualsArr("OFR ", FHeader.ID) &&
-            (FHeader.SampleRate > 0) &&
-            ((0 <= FHeader.SampleType) && (FHeader.SampleType <= 10)) &&
-            ((0 <= FHeader.ChannelMode) &&(FHeader.ChannelMode <= 1)) &&
-            ((0 <= FHeader.CompressionID >> 3) && (FHeader.CompressionID >> 3 <= 9)) );
-    }
-
-    private String getVersion()
-    {
-        // Get encoder version
-        return  ( ((FHeader.EncoderID >> 4) + 4500) / 1000 ).ToString().Substring(0,5); // Pas exactement...
-    }
-
-    private String getCompression()
-    {
-        // Get compression level
-        return OFR_COMPRESSION[FHeader.CompressionID >> 3];
-    }
-
-    private sbyte getBits()
-    {
-        // Get number of bits per sample
-        return OFR_BITS[FHeader.SampleType];
-    }
-    private double getCompressionRatio()
-    {
-        // Get compression ratio
-        if (getValid())
-            return sizeInfo.FileSize /
-                (getSamples() * (header.ChannelMode+1) * Math.Abs(getBits()) / 8 + 44) * 100;
-        else
-            return 0;
-    }
-
-    */
 
         // Get number of samples
         private long getSamples()

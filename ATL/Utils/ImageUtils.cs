@@ -8,7 +8,8 @@ namespace Commons
     /// <summary>
     /// Describe an image format
     /// </summary>
-    public enum ImageFormat { 
+    public enum ImageFormat
+    {
         /// <summary>
         /// Unsupported (i.e. none of the other supported formats in the enum)
         /// </summary>
@@ -36,7 +37,7 @@ namespace Commons
         /// <summary>
         /// TIFF
         /// </summary>
-        Tiff = 5 
+        Tiff = 5
     };
 
     /// <summary>
@@ -107,7 +108,8 @@ namespace Commons
             else if (imageFormat.Equals(ImageFormat.Tiff))
             {
                 result += "tiff";
-            } else
+            }
+            else
             {
                 result += "*";
             }
@@ -198,19 +200,19 @@ namespace Commons
                         int nbIFDEntries = readInt16(r, isBigEndian);
 
                         long initialPos;
-                        int IFDtag, IFDFieldType, IFDNbValues, IFDValue32, IFDValue16;
+                        int IFDtag, IFDValue32, IFDValue16;
                         byte[] IFDValueBinary;
                         int photometricInterpretation = 0;
                         int bitsPerSample = 0;
                         int samplesPerPixel = 0;
 
-                        for (int i=0; i<nbIFDEntries; i++)
+                        for (int i = 0; i < nbIFDEntries; i++)
                         {
                             IFDtag = readInt16(r, isBigEndian);
-                            IFDFieldType = readInt16(r, isBigEndian);
-                            IFDNbValues = readInt32(r, isBigEndian);
+                            s.Seek(2, SeekOrigin.Current); // IFD field type
+                            s.Seek(4, SeekOrigin.Current); // IFD number of values
                             IFDValueBinary = r.ReadBytes(4);
-                            IFDValue32 = isBigEndian? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
+                            IFDValue32 = isBigEndian ? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
                             IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
 
                             switch (IFDtag)
@@ -274,7 +276,7 @@ namespace Commons
                         {
                             props.NumColorsInPalette = 2 << (globalPaletteUse & 0x07);
                         }
-                        
+
                         /*
                          * v89a means that the first image block should follow the first graphic control extension block
                          * (which may in turn be located after an application extension block if the GIF is animated)
@@ -288,7 +290,8 @@ namespace Commons
                             if (StreamUtils.FindSequence(s, GraphicControlExtensionBlockSignature))
                             {
                                 s.Seek(6, SeekOrigin.Current);
-                            } else
+                            }
+                            else
                             {
                                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid v89a GIF file; no graphic control extension block found");
                                 // GIF is malformed; trying to find the image block directly
@@ -306,13 +309,14 @@ namespace Commons
                             s.Seek(4, SeekOrigin.Current); // Skip image position descriptors
                             props.Width = r.ReadInt16();
                             props.Height = r.ReadInt16();
-                            
+
                             // No global palette is set => try and find information in the local palette of the 1st image block
                             if (0 == props.NumColorsInPalette)
                             {
                                 props.NumColorsInPalette = (int)Math.Pow(2, ((globalPaletteUse & 0x0F) << 4) + 1);
                             }
-                        } else
+                        }
+                        else
                         {
                             LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Error parsing GIF file; image block not found");
                         }
@@ -362,7 +366,8 @@ namespace Commons
                                 if (0 == paletteChunkSize)
                                 {
                                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid PNG file; palette declared, but no PLTE chunk found");
-                                } else
+                                }
+                                else
                                 {
                                     props.NumColorsInPalette = (int)Math.Floor(paletteChunkSize / 3.0);
                                 }
@@ -395,7 +400,7 @@ namespace Commons
                         if (0 == lastPos)
                         {
                             LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid JPEG file; no SOF0 frame found");
-                        } 
+                        }
                         else
                         {
                             // Skip frame length

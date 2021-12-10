@@ -11,12 +11,7 @@ namespace ATL.AudioData.IO
     {
         public static bool IsDataEligible(MetaDataIO meta, string prefix)
         {
-            foreach (string key in meta.AdditionalFields.Keys)
-            {
-                if (key.StartsWith(prefix)) return true;
-            }
-
-            return false;
+            return meta.AdditionalFields.Keys.Any(key => key.StartsWith(prefix));
         }
 
         // How many of them do we have ? -> count distinct indexes

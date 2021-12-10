@@ -36,6 +36,7 @@ namespace ATL.AudioData.IO
 
 
         // Format IDs
+#pragma warning disable S1144 // Unused private types or members should be removed
         private const int WMA_ID = 0x161;
         private const int WMA_PRO_ID = 0x162;
         private const int WMA_LOSSLESS_ID = 0x163;
@@ -44,9 +45,10 @@ namespace ATL.AudioData.IO
 
         // Max. number of characters in tag field
         private const byte WMA_MAX_STRING_SIZE = 250;
+#pragma warning restore S1144 // Unused private types or members should be removed
 
         // File data - for internal use
-        private class FileData
+        private sealed class FileData
         {
             public long HeaderSize;
             public int FormatTag;                                       // Format ID tag

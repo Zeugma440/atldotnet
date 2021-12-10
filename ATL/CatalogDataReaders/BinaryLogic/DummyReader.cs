@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
@@ -20,21 +19,25 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             }
         }
 
+        /// <inheritdoc/>
         public string Title
         {
             get { return ""; }
         }
 
+        /// <inheritdoc/>
         public string Artist
         {
             get { return ""; }
         }
 
+        /// <inheritdoc/>
         public string Comments
         {
             get { return ""; }
         }
 
+        /// <inheritdoc/>
         public IList<Track> Tracks
         {
             get { return new List<Track>(); }

@@ -14,6 +14,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class FLAC : IMetaDataIO, IAudioDataIO
     {
+#pragma warning disable S1144 // Unused private types or members should be removed
         private const byte META_STREAMINFO = 0;
         private const byte META_PADDING = 1;
         private const byte META_APPLICATION = 2;
@@ -21,13 +22,14 @@ namespace ATL.AudioData.IO
         private const byte META_VORBIS_COMMENT = 4;
         private const byte META_CUESHEET = 5;
         private const byte META_PICTURE = 6;
+#pragma warning restore S1144 // Unused private types or members should be removed
 
         private const string FLAC_ID = "fLaC";
 
         private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 
 
-        private class FlacHeader
+        private sealed class FlacHeader
         {
             public string StreamMarker;
             public byte[] MetaDataBlockHeader = new byte[4];
@@ -59,7 +61,7 @@ namespace ATL.AudioData.IO
 
         private VorbisTag vorbisTag;
 
-        IList<FileStructureHelper.Zone> zones; // TODO - That's one hint of why interactions with VorbisTag need to be redesigned...
+        IList<Zone> zones; // TODO - That's one hint of why interactions with VorbisTag need to be redesigned...
 
         // Initial offset of the padding block; used to handle padding the smart way when rewriting data
         private long initialPaddingOffset, initialPaddingSize;
@@ -418,22 +420,6 @@ namespace ATL.AudioData.IO
                 return 0;
             }
         }
-
-        /* Unused for now
-
-                //   Get compression ratio
-                private double getCompressionRatio()
-                {
-                    if (isValid()) 
-                    {
-                        return (double)sizeInfo.FileSize / (samples * channels * bitsPerSample / 8.0) * 100;
-                    } 
-                    else 
-                    {
-                        return 0;
-                    }
-                }
-        */
 
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
