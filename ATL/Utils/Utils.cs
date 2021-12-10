@@ -126,7 +126,7 @@ namespace Commons
         static public int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
-            DateTime dateTime = new DateTime();
+            DateTime dateTime;
             bool valid = false;
 
             if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)

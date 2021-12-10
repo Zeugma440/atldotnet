@@ -10,35 +10,34 @@ namespace ATL.CatalogDataReaders.BinaryLogic
     /// </summary>
     public class Cue : ICatalogDataReader
     {
-        private string path = "";
         private string title = "";
         private string artist = "";
         private string comments = "";
 
-        IList<Track> tracks = new List<Track>();
+        readonly IList<Track> tracks = new List<Track>();
 
+        /// <inheritdoc/>
+        public string Path { get; set; }
 
-        public string Path
-        {
-            get { return path; }
-            set { path = value; }
-        }
-
+        /// <inheritdoc/>
         public string Artist
         {
             get { return artist; }
         }
 
+        /// <inheritdoc/>
         public string Comments
         {
             get { return comments; }
         }
 
+        /// <inheritdoc/>
         public string Title
         {
             get { return title; }
         }
 
+        /// <inheritdoc/>
         public IList<Track> Tracks
         {
             get { return tracks; }
@@ -49,7 +48,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
         public Cue(string path)
         {
-            this.path = path;
+            this.Path = path;
             read();
         }
 
@@ -89,7 +88,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
         private void read()
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
+            using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
             using (TextReader source = new StreamReader(fs, System.Text.Encoding.UTF8))
             {
                 string s = source.ReadLine();
@@ -133,7 +132,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             // Strip the ending word representing the audio format
                             if (!System.IO.Path.IsPathRooted(audioFilePath))
                             {
-                                audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path), audioFilePath);
+                                audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), audioFilePath);
                             }
                             physicalTrack = new Track(audioFilePath);
                         }
@@ -155,7 +154,8 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             currentTrack.Title = "";
                             currentTrack.Comment = "";
                         }
-                    } else
+                    }
+                    else
                     {
                         if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                         {
@@ -197,7 +197,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         {
                             currentTrack.Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                         }
-                        else if ( ("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
+                        else if (("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
                         {
                             if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
                         }

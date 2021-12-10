@@ -53,13 +53,13 @@ namespace ATL.Logging
 
 
         // Storage structure containing each LogItem logged since last reset 
-        private IList<LogItem> masterLog;
+        private readonly IList<LogItem> masterLog;
 
         // Storage structure containing each LogDevice registered by this class
-        private IList<ILogDevice> logDevices;
+        private readonly IList<ILogDevice> logDevices;
 
         // Storage structure containing current locations according to calling thread ID
-        private IDictionary<int, string> locations;
+        private readonly IDictionary<int, string> locations;
 
 
         // ASYNCHRONOUS LOGGING
@@ -68,7 +68,7 @@ namespace ATL.Logging
         private bool asynchronous = false;
 
         // Queued LogItems waiting to be logged when asynchronous mode is on
-        private IList<LogItem> asyncQueue = new List<LogItem>();
+        private readonly IList<LogItem> asyncQueue = new List<LogItem>();
 
 
         // ---------------------------------------------------------------------------

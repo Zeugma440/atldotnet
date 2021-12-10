@@ -10,9 +10,7 @@ namespace ATL.Playlist.IO
     /// 
     /// Implementation notes : Playlist items other than local files (e.g. file accessible via HTTP) are not supported
     /// </summary>
-#pragma warning disable S101 // Types should be named in PascalCase
     public class ASXIO : PlaylistIO
-#pragma warning restore S101 // Types should be named in PascalCase
     {
         /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)

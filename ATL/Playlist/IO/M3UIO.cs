@@ -7,9 +7,7 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// M3U/M3U8 playlist manager
     /// </summary>
-#pragma warning disable S101 // Types should be named in PascalCase
     public class M3UIO : PlaylistIO
-#pragma warning restore S101 // Types should be named in PascalCase
     {
         private Encoding getEncoding(FileStream fs)
         {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL
 {
@@ -437,25 +438,21 @@ namespace ATL
                 foreach (PictureInfo targetPic in currentEmbeddedPictures)
                 {
                     bool found = false;
-                    foreach (PictureInfo picInfo in initialEmbeddedPictures)
+                    foreach (var picInfo in initialEmbeddedPictures.Where(picInfo => targetPic.EqualsProper(picInfo)))
                     {
-                        if (targetPic.EqualsProper(picInfo))
+                        result.Pictures.Add(targetPic);
+                        // Compare picture contents
+                        targetPic.ComputePicHash();
+                        // A new picture content has been defined for an existing location
+                        if (targetPic.PictureHash != picInfo.PictureHash)
                         {
-                            result.Pictures.Add(targetPic);
-
-                            // Compare picture contents
-                            targetPic.ComputePicHash();
-
-                            // A new picture content has been defined for an existing location
-                            if (targetPic.PictureHash != picInfo.PictureHash)
-                            {
-                                PictureInfo picToDelete = new PictureInfo(picInfo);
-                                picToDelete.MarkedForDeletion = true;
-                                result.Pictures.Add(picToDelete);
-                            }
-                            found = true;
-                            break;
+                            PictureInfo picToDelete = new PictureInfo(picInfo);
+                            picToDelete.MarkedForDeletion = true;
+                            result.Pictures.Add(picToDelete);
                         }
+
+                        found = true;
+                        break;
                     }
                     // Completely new picture
                     if (!found) result.Pictures.Add(targetPic);

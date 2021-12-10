@@ -2,11 +2,11 @@ using System.Collections.Generic;
 
 namespace ATL.CatalogDataReaders
 {
-	/// <summary>
+    /// <summary>
     /// Reads all tracks described in a container (e.g. : CUE sheet)
-	/// </summary>
-	public interface ICatalogDataReader
-	{
+    /// </summary>
+    public interface ICatalogDataReader
+    {
         /// <summary>
         /// Absolute path of the container file
         /// </summary>
@@ -20,17 +20,17 @@ namespace ATL.CatalogDataReaders
         /// Title of the container
         /// </summary>
 		string Title
-		{
-			get;
-		}
+        {
+            get;
+        }
 
         /// <summary>
         /// Artist of the container
         /// </summary>
 		string Artist
-		{
-			get;
-		}
+        {
+            get;
+        }
 
         /// <summary>
         /// Comments of the container
@@ -44,8 +44,8 @@ namespace ATL.CatalogDataReaders
         /// List of the tracks described in the container
         /// </summary>
 		IList<ATL.Track> Tracks
-		{
-			get;
-		}
-	}
+        {
+            get;
+        }
+    }
 }

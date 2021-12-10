@@ -8,9 +8,7 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// B4S playlist manager
     /// </summary>
-#pragma warning disable S101 // Types should be named in PascalCase
     public class B4SIO : PlaylistIO
-#pragma warning restore S101 // Types should be named in PascalCase
     {
         /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)

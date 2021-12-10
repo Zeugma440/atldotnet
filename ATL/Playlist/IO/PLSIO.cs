@@ -7,9 +7,7 @@ namespace ATL.Playlist.IO
     /// <summary>
     /// PLS playlist manager
     /// </summary>
-#pragma warning disable S101 // Types should be named in PascalCase
     public class PLSIO : PlaylistIO
-#pragma warning restore S101 // Types should be named in PascalCase
     {
         /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)
@@ -23,7 +21,7 @@ namespace ATL.Playlist.IO
                 while (s != null)
                 {
                     // If the read line isn't a metadata, it's a file path
-                    if (s.Length > 3 && s.Substring(0,4).Equals("FILE",System.StringComparison.OrdinalIgnoreCase))
+                    if (s.Length > 3 && s.Substring(0, 4).Equals("FILE", System.StringComparison.OrdinalIgnoreCase))
                     {
                         equalIndex = s.IndexOf("=") + 1;
                         s = s.Substring(equalIndex, s.Length - equalIndex);
