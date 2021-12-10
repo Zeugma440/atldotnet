@@ -68,7 +68,7 @@ namespace ATL.AudioData.IO
 
 
         // APE tag data - for internal use
-        private class TagInfo
+        private sealed class TagInfo
         {
             // Real structure of APE footer
             public char[] ID = new char[8];                              // Always "APETAGEX"

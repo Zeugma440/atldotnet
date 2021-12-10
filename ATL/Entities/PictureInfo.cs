@@ -107,33 +107,35 @@ namespace ATL
         /// <summary>
         /// Normalized picture type (see enum)
         /// </summary>
-        public PIC_TYPE PicType;
+        public PIC_TYPE PicType { get; set; }
+
         /// <summary>
         /// Native image format
         /// </summary>
-        public ImageFormat NativeFormat;
+        public ImageFormat NativeFormat { get; set; }
+
         /// <summary>
         /// Position of the picture among pictures of the same generic type / native code (default 1 if the picture is one of its kind)
         /// </summary>
-        public int Position;
+        public int Position { get; set; }
 
         /// <summary>
         /// Tag type where the picture originates from
         /// </summary>
-        public TagType TagType;
+        public TagType TagType { get; set; }
         /// <summary>
         /// Native picture code according to TagType convention (numeric : e.g. ID3v2)
         /// </summary>
-        public int NativePicCode;
+        public int NativePicCode { get; set; }
         /// <summary>
         /// Native picture code according to TagType convention (string : e.g. APEtag)
         /// </summary>
-        public string NativePicCodeStr;
+        public string NativePicCodeStr { get; set; }
 
         /// <summary>
         /// Picture description
         /// </summary>
-        public string Description = "";
+        public string Description { get; set; }
 
         /// <summary>
         /// Binary picture data
@@ -143,16 +145,16 @@ namespace ATL
         /// <summary>
         /// Hash of binary picture data
         /// </summary>
-        public uint PictureHash;
+        public uint PictureHash { get; set; }
 
         /// <summary>
         /// True if the field has to be deleted in the next IMetaDataIO.Write operation
         /// </summary>
-        public bool MarkedForDeletion = false;
+        public bool MarkedForDeletion { get; set; }
         /// <summary>
         /// Freeform transient value to be used by other parts of the library
         /// </summary>
-        public int TransientFlag;
+        public int TransientFlag { get; set; }
 
         /// <summary>
         /// Get the MIME-type associated with the picture
@@ -161,6 +163,8 @@ namespace ATL
         {
             get { return ImageUtils.GetMimeTypeFromImageFormat(NativeFormat); }
         }
+
+
 
 
         // ---------------- STATIC CONSTRUCTORS
@@ -244,6 +248,8 @@ namespace ATL
             PicType = picType;
             TagType = tagType;
             Position = position;
+            MarkedForDeletion = false;
+            Description = "";
 
             string picCodeStr = nativePicCode as string;
             if (picCodeStr != null)
@@ -277,6 +283,8 @@ namespace ATL
             PicType = picType;
             NativeFormat = ImageFormat.Undefined;
             Position = position;
+            MarkedForDeletion = false;
+            Description = "";
         }
 
         /// <summary>
@@ -291,6 +299,8 @@ namespace ATL
             NativeFormat = ImageFormat.Undefined;
             TagType = tagType;
             Position = position;
+            MarkedForDeletion = false;
+            Description = "";
 
             string picCodeStr = nativePicCode as string;
             if (picCodeStr != null)
