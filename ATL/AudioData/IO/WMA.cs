@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -1020,14 +1021,11 @@ namespace ATL.AudioData.IO
                     tag.IntegrateValue(b, "");
                 }
 
-                foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
+                foreach (var fieldInfo in GetAdditionalFields().Where(fieldInfo => fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/")))
                 {
-                    if (fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/"))
-                    {
-                        MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                        emptyFieldInfo.MarkedForDeletion = true;
-                        tag.AdditionalFields.Add(emptyFieldInfo);
-                    }
+                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
+                    emptyFieldInfo.MarkedForDeletion = true;
+                    tag.AdditionalFields.Add(emptyFieldInfo);
                 }
 
                 BinaryReader r = new BinaryReader(w.BaseStream);
