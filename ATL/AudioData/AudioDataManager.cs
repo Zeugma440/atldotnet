@@ -3,6 +3,7 @@ using ATL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ATL.AudioData
 {
@@ -37,9 +38,7 @@ namespace ATL.AudioData
 
         public class SizeInfo
         {
-            private long fileSize = 0;
             private readonly IDictionary<int, long> TagSizes = new Dictionary<int, long>();
-            private long audioDataOffset = -1;
             private long audioDataSize = -1;
 
             public void ResetData() { FileSize = 0; TagSizes.Clear(); }
@@ -54,13 +53,13 @@ namespace ATL.AudioData
             public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_APE) ? TagSizes[MetaDataIOFactory.TAG_APE] : 0; } }
             public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
             public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
-            public long FileSize { get => fileSize; set => fileSize = value; }
-            public long AudioDataOffset { get => audioDataOffset; set => audioDataOffset = value; }
+            public long FileSize { get; set; } = 0;
+            public long AudioDataOffset { get; set; } = -1;
             public long AudioDataSize
             {
                 get
                 {
-                    if (audioDataSize <= 0) return fileSize - TotalTagSize;
+                    if (audioDataSize <= 0) return FileSize - TotalTagSize;
                     else return audioDataSize;
                 }
                 set => audioDataSize = value;
@@ -150,10 +149,11 @@ namespace ATL.AudioData
         public IList<int> getAvailableMetas()
         {
             IList<int> result = new List<int>();
-
-            foreach (int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType)))
+            foreach (var tagType in from int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+                                    where hasMeta(tagType)
+                                    select tagType)
             {
-                if (hasMeta(tagType)) result.Add(tagType);
+                result.Add(tagType);
             }
 
             return result;
@@ -162,10 +162,11 @@ namespace ATL.AudioData
         public IList<int> getSupportedMetas()
         {
             IList<int> result = new List<int>();
-
-            foreach (int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType)))
+            foreach (var tagType in from int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+                                    where audioDataIO.IsMetaSupported(tagType)
+                                    select tagType)
             {
-                if (audioDataIO.IsMetaSupported(tagType)) result.Add(tagType);
+                result.Add(tagType);
             }
 
             return result;
