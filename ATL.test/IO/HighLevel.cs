@@ -199,7 +199,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_RW_UpdateEmpty()
         {
-            //            Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_NATIVE, AudioData.MetaDataIOFactory.TAG_ID3V2 };
+            //            Settings.DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TagType.NATIVE, AudioData.MetaDataIOFactory.TagType.ID3V2 };
             try
             {
                 tagIO_RW_UpdateEmpty("MP3/empty.mp3"); // ID3v2

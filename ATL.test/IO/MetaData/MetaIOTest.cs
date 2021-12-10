@@ -243,7 +243,7 @@ namespace ATL.test.IO.MetaData
                 {
                     if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
                     {
-                        if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+                        if (tagType.Equals(MetaDataIOFactory.TagType.APE))
                         {
                             Assert.AreEqual("Cover Art (Media)", pic.NativePicCodeStr);
                         }
@@ -538,7 +538,7 @@ namespace ATL.test.IO.MetaData
             byte found = 0;
 
             object pictureCode1, pictureCode2;
-            if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+            if (tagType.Equals(MetaDataIOFactory.TagType.APE))
             {
                 pictureCode1 = "pic1";
                 pictureCode2 = "pic2";

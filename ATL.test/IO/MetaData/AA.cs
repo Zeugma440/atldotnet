@@ -12,7 +12,7 @@ namespace ATL.test.IO.MetaData
         public AA()
         {
             notEmptyFile = "AA/aa.aa";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // Initialize specific test data
             testData = new TagData();
@@ -32,7 +32,7 @@ namespace ATL.test.IO.MetaData
             PictureInfo pic = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "AA/aa.jpg"),
                 PIC_TYPE.Generic,
-                MetaDataIOFactory.TAG_ANY,
+                MetaDataIOFactory.TagType.ANY,
                 11);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);

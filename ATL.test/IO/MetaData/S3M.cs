@@ -52,7 +52,7 @@ namespace ATL.test.IO.MetaData
             theTag.Title = "Test !!";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -63,7 +63,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -102,7 +102,7 @@ namespace ATL.test.IO.MetaData
             theTag.Title = "Test!!";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 
@@ -115,7 +115,7 @@ namespace ATL.test.IO.MetaData
             theTag.Title = "";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 

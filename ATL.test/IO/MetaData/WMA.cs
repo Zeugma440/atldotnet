@@ -58,7 +58,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "WMA/empty_full.wma";
             notEmptyFile = "WMA/wma.wma";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             testData.Conductor = null;
             testData.RecordingDate = null;
@@ -110,7 +110,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -133,7 +133,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -188,7 +188,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -213,7 +213,7 @@ namespace ATL.test.IO.MetaData
             ATL.Settings.ASF_keepNonWMFieldsWhenRemovingTag = true;
             try
             {
-                Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+                Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
             }
             finally
             {
@@ -260,7 +260,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, 3);
 
@@ -293,7 +293,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 
@@ -334,17 +334,17 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAA);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.NATIVE, 0xAA);
             theTag.Pictures.Add(picInfo);
-            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAB);
+            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.NATIVE, 0xAB);
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -390,17 +390,17 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(MetaDataIOFactory.TAG_NATIVE, 0xAA);
+            picInfo = new PictureInfo(MetaDataIOFactory.TagType.NATIVE, 0xAA);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -441,30 +441,30 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WMA_Rating()
         {
-            assumeRatingInFile("_Ratings/windows7/0.wma", 0, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/windows7/1.wma", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/windows7/2.wma", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/windows7/3.wma", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/windows7/4.wma", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/windows7/5.wma", 1, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/windows7/0.wma", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/1.wma", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/2.wma", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/3.wma", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/4.wma", 4.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/5.wma", 1, MetaDataIOFactory.TagType.NATIVE);
         }
 
         [TestMethod]
         public void TagIO_RW_WMA_ID3v1()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V1);
         }
 
         [TestMethod]
         public void TagIO_RW_WMA_ID3v2()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2);
         }
 
         [TestMethod]
         public void TagIO_RW_WMA_APE()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE);
         }
     }
 }

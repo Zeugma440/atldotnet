@@ -62,7 +62,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "MP4/empty.m4a"; // Has empty udta/meta tags
             notEmptyFile = "MP4/mp4.m4a";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // MP4 does not support leading zeroes
             testData.TrackNumber = "1";
@@ -76,10 +76,10 @@ namespace ATL.test.IO.MetaData
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
 
             testData.AdditionalFields.Clear();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "----:com.apple.iTunes:TEST", "xxx"));
 
             testData.Pictures.Clear();
-            PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 13);
+            PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.ANY, 13);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
@@ -142,14 +142,14 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
-            PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TAG_ANY, 14);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.ANY, 14);
             theTag.Pictures.Add(picInfo);
 
             theTag.Chapters = theFile.NativeTag.Chapters;
             theTag.Chapters.Add(new ChapterInfo(3000, "Chapter 2"));
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
 
             try
@@ -211,7 +211,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 
@@ -253,25 +253,25 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TES2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TES2", "This is another test 父"));
 
             // Add new unsupported pictures
             PictureInfo picInfo = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"),
                 PIC_TYPE.Unsupported,
-                MetaDataIOFactory.TAG_NATIVE,
+                MetaDataIOFactory.TagType.NATIVE,
                 "1234");
             theTag.Pictures.Add(picInfo);
             picInfo = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"),
                 PIC_TYPE.Unsupported,
-                MetaDataIOFactory.TAG_NATIVE,
+                MetaDataIOFactory.TagType.NATIVE,
                 "5678");
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -317,7 +317,7 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
@@ -327,7 +327,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -444,7 +444,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -518,7 +518,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -572,7 +572,7 @@ namespace ATL.test.IO.MetaData
             theTag.Title = "test_meta_atom";
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
@@ -648,7 +648,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -721,7 +721,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -775,7 +775,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics = new LyricsInfo();
             theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
@@ -787,29 +787,29 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_MP4_Rating()
         {
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp4", 0, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp4", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp4", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp4", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp4", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp4", 1, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp4", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp4", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp4", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp4", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp4", 4.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp4", 1, MetaDataIOFactory.TagType.NATIVE);
 
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp4", 0, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp4", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp4", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp4", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp4", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp4", 1, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp4", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp4", 0.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp4", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp4", 1.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp4", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp4", 2.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp4", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp4", 3.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp4", 4.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp4", 4.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp4", 1, MetaDataIOFactory.TagType.NATIVE);
         }
 
         [TestMethod]
@@ -837,7 +837,7 @@ namespace ATL.test.IO.MetaData
             TagData theTag = new TagData();
             theTag.Rating = 3.0 + "";
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
@@ -854,20 +854,20 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_ID3v1()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V1);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V1);
         }
         /* No longer supported
         [TestMethod]
         public void TagIO_RW_MP4_ID3v2()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_ID3V2);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2);
         }
         */
 
         [TestMethod]
         public void TagIO_RW_MP4_APE()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE);
         }
     }
 }

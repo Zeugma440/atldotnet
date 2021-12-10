@@ -81,7 +81,7 @@ namespace ATL.test.IO.MetaData
             theTag.TrackNumber = "22/23";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -99,7 +99,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -140,7 +140,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, "Squaresoft");
 
@@ -149,7 +149,7 @@ namespace ATL.test.IO.MetaData
             theTag.Copyright = "Alright";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 
@@ -190,11 +190,11 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test"));
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TES2", "This is another test"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST", "This is a test"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TES2", "This is another test"));
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -212,12 +212,12 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 

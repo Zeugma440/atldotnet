@@ -26,7 +26,7 @@ namespace ATL.test.IO.MetaData
 
             testData.PublishingDate = "1997-06-22T05:05:05";
 
-            tagType = MetaDataIOFactory.TAG_ID3V2;
+            tagType = MetaDataIOFactory.TagType.ID3V2;
             foreach (PictureInfo pic in testData.Pictures) pic.TagType = tagType;
         }
 
@@ -249,7 +249,7 @@ namespace ATL.test.IO.MetaData
             // 2- Add and read
             TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "MOOD", "a" + ATL.Settings.DisplayValueSeparator + "b" + ATL.Settings.DisplayValueSeparator + "c");
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "MOOD", "a" + ATL.Settings.DisplayValueSeparator + "b" + ATL.Settings.DisplayValueSeparator + "c");
             theTag.AdditionalFields.Add(info);
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
@@ -290,7 +290,7 @@ namespace ATL.test.IO.MetaData
 
             TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "WXXX", "http://justtheurl.com");
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "WXXX", "http://justtheurl.com");
             theTag.AdditionalFields.Add(info);
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
@@ -338,30 +338,30 @@ namespace ATL.test.IO.MetaData
                 theTag.Pictures.Add(picInfo);
 
                 // Insert 20 garbage fields to raise the number of field above maximum required fields (30)
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA01", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA02", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA03", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA04", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA05", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA06", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA07", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA08", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA09", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA10", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA11", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA12", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA13", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA14", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA15", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA16", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA17", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA18", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA19", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "GA20", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA01", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA02", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA03", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA04", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA05", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA06", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA07", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA08", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA09", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA10", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA11", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA12", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA13", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA14", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA15", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA16", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA17", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA18", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA19", "aaa"));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA20", "aaa"));
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -480,7 +480,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if they are persisted as comment fields when editing the tag
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             // For this we need to open the file in binary mode and check that the two fields belong to a comment field
             byte[] readBytes = new byte[4];
@@ -540,7 +540,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if they are persisted with proper ID3v2.4 field codes when editing the tag
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -656,7 +656,7 @@ namespace ATL.test.IO.MetaData
             expectedChaps.Add(ch.StartTime, ch);
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -720,7 +720,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters = new List<ChapterInfo>();
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -747,7 +747,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters.Add(ch);
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -898,7 +898,7 @@ namespace ATL.test.IO.MetaData
             expectedChaps.Add(ch.StartTime, ch);
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -962,7 +962,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if URLs are persisted properly, i.e. without encoding byte
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -985,36 +985,36 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_ID3v2_Rating()
         {
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp3", 0, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.mp3", 1.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.mp3", 2.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.mp3", 3.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.mp3", 4.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.mp3", 1, MetaDataIOFactory.TagType.ID3V2);
 
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.mp3", 0, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.mp3", 0.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.mp3", 1.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.mp3", 1.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.mp3", 2.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.mp3", 2.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.mp3", 3.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.mp3", 3.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.mp3", 4.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp3", 1, MetaDataIOFactory.TagType.ID3V2);
 
-            assumeRatingInFile("_Ratings/windows7/0.mp3", 0, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/windows7/1.mp3", 1.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/windows7/2.mp3", 2.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/windows7/3.mp3", 3.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/windows7/4.mp3", 4.0 / 5, MetaDataIOFactory.TAG_ID3V2);
-            assumeRatingInFile("_Ratings/windows7/5.mp3", 1, MetaDataIOFactory.TAG_ID3V2);
+            assumeRatingInFile("_Ratings/windows7/0.mp3", 0, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/1.mp3", 1.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/2.mp3", 2.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/3.mp3", 3.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/4.mp3", 4.0 / 5, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/5.mp3", 1, MetaDataIOFactory.TagType.ID3V2);
         }
 
         [TestMethod]
@@ -1053,7 +1053,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics.Description = "anthem";
             theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
@@ -1093,7 +1093,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "世の"));
             theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(18000, "中を"));
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.ContentType, theFile.ID3v2.Lyrics.ContentType);
@@ -1145,10 +1145,10 @@ namespace ATL.test.IO.MetaData
                 readExistingTagsOnFile(theFile);
 
                 // Check if they are persisted with proper ID3v2.3 field codes when editing the tag
-                MetaFieldInfo urlLink = new MetaFieldInfo(MetaDataIOFactory.TAG_ID3V2, "WOAR", "http://moar.minera.ls");
+                MetaFieldInfo urlLink = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "WOAR", "http://moar.minera.ls");
                 TagData theTag = new TagData();
                 theTag.AdditionalFields.Add(urlLink);
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_ID3V2));
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -1316,13 +1316,13 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_ID3V1);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1);
         }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_APE()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_ID3V2, MetaDataIOFactory.TAG_APE);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE);
         }
     }
 }

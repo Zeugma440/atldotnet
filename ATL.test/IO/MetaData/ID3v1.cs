@@ -10,7 +10,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/id3v1.mp3";
-            tagType = MetaDataIOFactory.TAG_ID3V1;
+            tagType = MetaDataIOFactory.TagType.ID3V1;
 
             supportsInternationalChars = false;
 

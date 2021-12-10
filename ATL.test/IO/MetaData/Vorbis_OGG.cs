@@ -60,7 +60,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "OGG/empty.ogg";
             notEmptyFile = "OGG/ogg.ogg";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             testData.Conductor = null;
             testData.RecordingDate = "1997-06-20";
@@ -170,7 +170,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -194,7 +194,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -288,7 +288,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -323,7 +323,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
@@ -413,17 +413,17 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST", "This is a test 父"));
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST2", "This is another test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST", "This is a test 父"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST2", "This is another test 父"));
 
             // Add new unsupported pictures
-            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAA);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.NATIVE, 0xAA);
             theTag.Pictures.Add(picInfo);
-            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_NATIVE, 0xAB);
+            picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.NATIVE, 0xAB);
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -469,17 +469,17 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "TEST");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(MetaDataIOFactory.TAG_NATIVE, 0xAA);
+            picInfo = new PictureInfo(MetaDataIOFactory.TagType.NATIVE, 0xAA);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -632,7 +632,7 @@ namespace ATL.test.IO.MetaData
             expectedChaps.Add(ch.StartTime, ch);
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
@@ -669,29 +669,29 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_Vorbis_Rating()
         {
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.ogg", 0, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.ogg", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.ogg", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.ogg", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.ogg", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.ogg", 1, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.ogg", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.ogg", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.ogg", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.ogg", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.ogg", 4.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/5.ogg", 1, MetaDataIOFactory.TagType.NATIVE);
 
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.ogg", 0, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.ogg", 1.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.ogg", 2.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.ogg", 3.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.ogg", 4.0 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TAG_NATIVE);
-            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ogg", 1, MetaDataIOFactory.TAG_NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.ogg", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/0.5.ogg", 0.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.ogg", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/1.5.ogg", 1.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.ogg", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/2.5.ogg", 2.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.ogg", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/3.5.ogg", 3.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.ogg", 4.0 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.ogg", 4.5 / 5, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ogg", 1, MetaDataIOFactory.TagType.NATIVE);
         }
 
 

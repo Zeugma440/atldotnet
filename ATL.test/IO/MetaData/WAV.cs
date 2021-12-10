@@ -17,7 +17,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "WAV/empty.wav";
 
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
             supportsInternationalChars = false;
         }
 
@@ -30,19 +30,19 @@ namespace ATL.test.IO.MetaData
             testData.GeneralDescription = "bext.description";
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.originator", "bext.originator"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.originatorReference", "bext.originatorReference"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.originationDate", "2018-01-09"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.originationTime", "01:23:45"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.timeReference", "110801250"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.version", "2"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.loudnessValue", (1.23).ToString()));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.loudnessRange", (4.56).ToString()));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.maxTruePeakLevel", (7.89).ToString()));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.maxMomentaryLoudness", (3.33).ToString()));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.maxShortTermLoudness", (-3.33).ToString()));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.originator", "bext.originator"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.originatorReference", "bext.originatorReference"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.originationDate", "2018-01-09"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.originationTime", "01:23:45"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.timeReference", "110801250"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.version", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.loudnessValue", (1.23).ToString()));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.loudnessRange", (4.56).ToString()));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.maxTruePeakLevel", (7.89).ToString()));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.maxMomentaryLoudness", (3.33).ToString()));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.maxShortTermLoudness", (-3.33).ToString()));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
         }
 
         private void initListInfoTestData()
@@ -58,18 +58,18 @@ namespace ATL.test.IO.MetaData
             testData.Comment = "info.ICMT";
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.IARL", "info.IARL"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ICMS", "info.ICMS"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ICRD", "2018-01-09 01:23:45"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.IENG", "info.IENG"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.IKEY", "info.IKEY"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.IMED", "info.IMED"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.IPRD", "info.IPRD"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISBJ", "info.ISBJ"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISFT", "info.ISFT"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISRC", "info.ISRC"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ISRF", "info.ISRF"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.ITCH", "info.ITCH"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.IARL", "info.IARL"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ICMS", "info.ICMS"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ICRD", "2018-01-09 01:23:45"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.IENG", "info.IENG"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.IKEY", "info.IKEY"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.IMED", "info.IMED"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.IPRD", "info.IPRD"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ISBJ", "info.ISBJ"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ISFT", "info.ISFT"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ISRC", "info.ISRC"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ISRF", "info.ISRF"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.ITCH", "info.ITCH"));
         }
 
         private void initDispTestData()
@@ -79,16 +79,16 @@ namespace ATL.test.IO.MetaData
             testData = new TagData();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[0].type", "CF_TEXT"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[0].value", "blah"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[1].type", "CF_BITMAP"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[1].value", "YmxhaCBibGFo"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[2].type", "CF_METAFILE"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[2].value", "YmxlaCBibGVo"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[3].type", "CF_DIB"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[3].value", "Ymx1aCBibHVo"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[4].type", "CF_PALETTE"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "disp[4].value", "YmzDvGggYmzDvGg="));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[0].type", "CF_TEXT"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[0].value", "blah"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[1].type", "CF_BITMAP"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[1].value", "YmxhaCBibGFo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[2].type", "CF_METAFILE"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[2].value", "YmxlaCBibGVo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[3].type", "CF_DIB"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[3].value", "Ymx1aCBibHVo"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[4].type", "CF_PALETTE"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[4].value", "YmzDvGggYmzDvGg="));
         }
 
         private void initIXmlTestData()
@@ -98,11 +98,11 @@ namespace ATL.test.IO.MetaData
             testData = new TagData();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.PROJECT", "ANewMovie"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SPEED.NOTE", "camera overcranked"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.PROJECT", "ANewMovie"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.SPEED.NOTE", "camera overcranked"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
         }
 
         private void initSampleTestData()
@@ -112,22 +112,22 @@ namespace ATL.test.IO.MetaData
             testData = new TagData();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.manufacturer", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.product", "2"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.period", "3"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.MIDIUnityNote", "4"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.MIDIPitchFraction", "5"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEFormat", "24"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Hours", "-1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Minutes", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Seconds", "20"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SMPTEOffset.Frames", "30"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].CuePointId", "11"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Type", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Start", "123"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].End", "456"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].Fraction", "8"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "sample.SampleLoop[0].PlayCount", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.manufacturer", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.product", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.period", "3"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.MIDIUnityNote", "4"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.MIDIPitchFraction", "5"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SMPTEFormat", "24"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SMPTEOffset.Hours", "-1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SMPTEOffset.Minutes", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SMPTEOffset.Seconds", "20"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SMPTEOffset.Frames", "30"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].CuePointId", "11"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].Type", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].Start", "123"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].End", "456"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].Fraction", "8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.SampleLoop[0].PlayCount", "2"));
         }
 
         private void initCueTestReadData()
@@ -137,26 +137,26 @@ namespace ATL.test.IO.MetaData
             testData = new TagData();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.NumCuePoints", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].Position", "88200"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].BlockStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].SampleOffset", "88200"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].CuePointId", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].Position", "1730925"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].BlockStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[9].SampleOffset", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.NumCuePoints", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].Position", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].SampleOffset", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].Position", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[9].SampleOffset", "1730925"));
 
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Type", "labl"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Type", "labl"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].CuePointId", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[9].Text", "MARKEURRRR 8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[9].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[9].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[9].Text", "MARKEURRRR 8"));
         }
 
         private void initCueTestRWData()
@@ -166,36 +166,36 @@ namespace ATL.test.IO.MetaData
             testData = new TagData();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].Position", "88200"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].BlockStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[0].SampleOffset", "88200"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].CuePointId", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].Position", "1730925"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].BlockStart", "0"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "cue.CuePoints[1].SampleOffset", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].Position", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].SampleOffset", "88200"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].Position", "1730925"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].DataChunkId", "data"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].ChunkStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].BlockStart", "0"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[1].SampleOffset", "1730925"));
 
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Type", "labl"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].Type", "labl"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].CuePointId", "1"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[0].Text", "MARKEURRRR 1"));
             
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Type", "note"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].CuePointId", "10"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[1].Text", "MARKEURRRR 8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[1].Type", "note"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[1].CuePointId", "10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[1].Text", "MARKEURRRR 8"));
 
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Type", "ltxt"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].CuePointId", "11"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].SampleLength", "1234"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].PurposeId", "5678"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Country", "2"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Language", "4"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Dialect", "6"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].CodePage", "8"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "info.Labels[2].Text", "HEYHEY 10"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].Type", "ltxt"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].CuePointId", "11"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].SampleLength", "1234"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].PurposeId", "5678"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].Country", "2"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].Language", "4"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].Dialect", "6"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].CodePage", "8"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "info.Labels[2].Text", "HEYHEY 10"));
         }
 
         [TestMethod]

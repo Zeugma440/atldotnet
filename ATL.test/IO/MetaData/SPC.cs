@@ -80,7 +80,7 @@ namespace ATL.test.IO.MetaData
             theTag.DiscNumber = "2";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -96,7 +96,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, theFile.NativeTag.Disc);
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -136,7 +136,7 @@ namespace ATL.test.IO.MetaData
             theTag.Publisher = "Square-Enix";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, "Square-Enix");
 
@@ -146,7 +146,7 @@ namespace ATL.test.IO.MetaData
             theTag.Publisher = "Square";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 
@@ -187,11 +187,11 @@ namespace ATL.test.IO.MetaData
 
             // Add new unsupported fields
             TagData theTag = new TagData();
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "55", "This is a test"));
-            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "56", "This is another test"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "55", "This is a test"));
+            theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "56", "This is another test"));
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE);
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -209,12 +209,12 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional unsupported field
             theTag = new TagData();
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TAG_NATIVE, "55");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "55");
             fieldInfo.MarkedForDeletion = true;
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TAG_NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -234,7 +234,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_SPC_APE()
         {
-            test_RW_Cohabitation(MetaDataIOFactory.TAG_NATIVE, MetaDataIOFactory.TAG_APE, false);
+            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE, false);
         }
 
 

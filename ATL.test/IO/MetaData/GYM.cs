@@ -11,7 +11,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "GYM/empty.gym";
             notEmptyFile = "GYM/gym.gym";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             canMetaNotExist = false;
 
@@ -24,8 +24,8 @@ namespace ATL.test.IO.MetaData
             testData.Copyright = "1990 Sega";
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "EMULATOR", "Magasis"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "DUMPER", "Guy"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "EMULATOR", "Magasis"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "DUMPER", "Guy"));
         }
 
         [TestMethod]

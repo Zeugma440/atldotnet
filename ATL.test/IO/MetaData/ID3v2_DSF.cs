@@ -11,7 +11,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "DSF/empty.dsf";
             notEmptyFile = "DSF/dsf.dsf";
-            tagType = MetaDataIOFactory.TAG_ID3V2;
+            tagType = MetaDataIOFactory.TagType.ID3V2;
         }
 
         [TestMethod]

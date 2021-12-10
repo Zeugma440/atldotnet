@@ -12,7 +12,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "WAV/empty.wav";
             notEmptyFile = "WAV/audacityTags.wav";
-            tagType = MetaDataIOFactory.TAG_ID3V2;
+            tagType = MetaDataIOFactory.TagType.ID3V2;
 
             // Initialize specific test data
             testData = new TagData();
@@ -20,7 +20,7 @@ namespace ATL.test.IO.MetaData
             testData.Title = "yeah";
             testData.Artist = "artist";
             testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "TES2", "Test父"));
+            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "TES2", "Test父"));
         }
 
         [TestMethod]

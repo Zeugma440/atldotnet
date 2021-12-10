@@ -10,7 +10,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "AIF/empty.aif";
             notEmptyFile = "AIF/aiff.aiff";
-            tagType = MetaDataIOFactory.TAG_NATIVE;
+            tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // Initialize specific test data
             testData = new TagData();
