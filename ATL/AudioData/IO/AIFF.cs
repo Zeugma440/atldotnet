@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -60,10 +61,7 @@ namespace ATL.AudioData.IO
 
         // Private declarations 
         private uint bits;
-        private uint sampleSize;
-        private uint numSampleFrames;
 
-        private string format;
         private string compression;
         private byte versionID;
 
@@ -85,7 +83,7 @@ namespace ATL.AudioData.IO
             { CHUNKTYPE_NAME, TagData.TAG_FIELD_TITLE },
             { CHUNKTYPE_AUTHOR, TagData.TAG_FIELD_ARTIST },
             { CHUNKTYPE_COPYRIGHT, TagData.TAG_FIELD_COPYRIGHT }
-        }; 
+        };
 
 
         public byte VersionID // Version code
@@ -234,6 +232,7 @@ namespace ATL.AudioData.IO
         /// Reads ID and size of a local chunk and returns them in a dedicated structure _without_ reading nor skipping the data
         /// </summary>
         /// <param name="source">Source where to read header information</param>
+        /// <param name="limit">Maximum absolute position to search to</param>
         /// <returns>Local chunk header information</returns>
         private ChunkHeader seekNextChunkHeader(BinaryReader source, long limit)
         {
@@ -291,7 +290,7 @@ namespace ATL.AudioData.IO
                 }
 
                 // Form type
-                format = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                string format = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
                 if (format.Equals(FORMTYPE_AIFF) || format.Equals(FORMTYPE_AIFC))
                 {
@@ -328,8 +327,8 @@ namespace ATL.AudioData.IO
                                 default: channelsArrangement = UNKNOWN; break;
                             }
 
-                            numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                            sampleSize = (uint)StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
+                            uint numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                            short sampleSize = StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
                             byte[] byteArray = source.ReadBytes(10);
                             Array.Reverse(byteArray);
                             double aSampleRate = StreamUtils.ExtendedToDouble(byteArray);
@@ -568,16 +567,10 @@ namespace ATL.AudioData.IO
                     // Then write comments linked to a Marker ID
                     if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
                     {
-                        foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                        foreach (var fieldInfo in tag.AdditionalFields.Where(fieldInfo => fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS)).Where(fieldInfo => ((CommentData)fieldInfo.SpecificData).MarkerId != 0))
                         {
-                            if (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS))
-                            {
-                                if (((CommentData)fieldInfo.SpecificData).MarkerId != 0)
-                                {
-                                    writeCommentChunk(w, fieldInfo);
-                                    numComments++;
-                                }
-                            }
+                            writeCommentChunk(w, fieldInfo);
+                            numComments++;
                         }
                     }
 
