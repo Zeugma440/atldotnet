@@ -590,11 +590,18 @@ namespace ATL.AudioData.IO
 
         // ------ COMMON METHODS -----------------------------------------------------
 
+        /// <summary>
+        /// Set the given embedded
+        /// </summary>
+        /// <param name="embedder">Embedder to set</param>
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             this.embedder = embedder;
         }
 
+        /// <summary>
+        /// Reset all data
+        /// </summary>
         protected void ResetData()
         {
             tagExists = false;
@@ -606,6 +613,16 @@ namespace ATL.AudioData.IO
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
 
+        /// <summary>
+        /// Set a new metadata field with the given information
+        /// </summary>
+        /// <param name="ID">ID of the metadata field</param>
+        /// <param name="data">Metadata</param>
+        /// <param name="readAllMetaFrames">True if can be stored in AdditionalData</param>
+        /// <param name="zone">Zone where this metadata appears</param>
+        /// <param name="tagVersion">Version of the tagging system</param>
+        /// <param name="streamNumber">Number of the corresponding stream</param>
+        /// <param name="language">Language</param>
         public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
@@ -643,6 +660,11 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Set a new metadata field with the given information 
+        /// </summary>
+        /// <param name="ID">ID of the metadata field</param>
+        /// <param name="data">Metadata</param>
         protected void setMetaField(byte ID, string data)
         {
             tagData.IntegrateValue(ID, data);
@@ -683,6 +705,9 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Clear all data
+        /// </summary>
         public void Clear()
         {
             ResetData();
