@@ -17,25 +17,25 @@ namespace ATL.AudioData
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
         private readonly IList<IMetaDataIO> metaReaders = null;
 
-        public CrossMetadataReader(AudioDataManager audioManager, int[] tagPriority)
+        public CrossMetadataReader(AudioDataManager audioManager, MetaDataIOFactory.TagType[] tagPriority)
         {
             metaReaders = new List<IMetaDataIO>();
 
             for (int i = 0; i < tagPriority.Length; i++)
             {
-                if ((MetaDataIOFactory.TAG_NATIVE == tagPriority[i]) && (audioManager.HasNativeMeta()) && (audioManager.NativeTag != null))
+                if ((MetaDataIOFactory.TagType.NATIVE == tagPriority[i]) && (audioManager.HasNativeMeta()) && (audioManager.NativeTag != null))
                 {
                     metaReaders.Add(audioManager.NativeTag);
                 }
-                if ((MetaDataIOFactory.TAG_ID3V1 == tagPriority[i]) && (audioManager.ID3v1.Exists))
+                if ((MetaDataIOFactory.TagType.ID3V1 == tagPriority[i]) && (audioManager.ID3v1.Exists))
                 {
                     metaReaders.Add(audioManager.ID3v1);
                 }
-                if ((MetaDataIOFactory.TAG_ID3V2 == tagPriority[i]) && (audioManager.ID3v2.Exists))
+                if ((MetaDataIOFactory.TagType.ID3V2 == tagPriority[i]) && (audioManager.ID3v2.Exists))
                 {
                     metaReaders.Add(audioManager.ID3v2);
                 }
-                if ((MetaDataIOFactory.TAG_APE == tagPriority[i]) && (audioManager.APEtag.Exists))
+                if ((MetaDataIOFactory.TagType.APE == tagPriority[i]) && (audioManager.APEtag.Exists))
                 {
                     metaReaders.Add(audioManager.APEtag);
                 }
@@ -65,9 +65,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Title of the track
-        /// </summary>
+        /// <inheritdoc/>
         public String Title
         {
             get
@@ -81,9 +79,7 @@ namespace ATL.AudioData
                 return title;
             }
         }
-        /// <summary>
-        /// Artist
-        /// </summary>
+        /// <inheritdoc/>
         public String Artist
         {
             get
@@ -97,9 +93,7 @@ namespace ATL.AudioData
                 return artist;
             }
         }
-        /// <summary>
-        /// Composer
-        /// </summary>
+        /// <inheritdoc/>
         public String Composer
         {
             get
@@ -113,9 +107,7 @@ namespace ATL.AudioData
                 return composer;
             }
         }
-        /// <summary>
-        /// Comments
-        /// </summary>
+        /// <inheritdoc/>
         public String Comment
         {
             get
@@ -129,9 +121,7 @@ namespace ATL.AudioData
                 return comment;
             }
         }
-        /// <summary>
-        /// Genre
-        /// </summary>
+        /// <inheritdoc/>
         public String Genre
         {
             get
@@ -145,9 +135,7 @@ namespace ATL.AudioData
                 return genre;
             }
         }
-        /// <summary>
-        /// Track number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Track
         {
             get
@@ -161,9 +149,7 @@ namespace ATL.AudioData
                 return track;
             }
         }
-        /// <summary>
-		/// Total track number
-		/// </summary>
+        /// <inheritdoc/>
 		public ushort TrackTotal
         {
             get
@@ -177,9 +163,7 @@ namespace ATL.AudioData
                 return trackTotal;
             }
         }
-        /// <summary>
-        /// Disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Disc
         {
             get
@@ -193,9 +177,7 @@ namespace ATL.AudioData
                 return disc;
             }
         }
-        /// <summary>
-        /// Total disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort DiscTotal
         {
             get
@@ -209,9 +191,7 @@ namespace ATL.AudioData
                 return discTotal;
             }
         }
-        /// <summary>
-        /// Recording date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime Date
         {
             get
@@ -225,9 +205,7 @@ namespace ATL.AudioData
                 return date;
             }
         }
-        /// <summary>
-        /// Title of the album
-        /// </summary>
+        /// <inheritdoc/>
         public String Album
         {
             get
@@ -241,9 +219,7 @@ namespace ATL.AudioData
                 return album;
             }
         }
-        /// <summary>
-		/// Copyright
-		/// </summary>
+        /// <inheritdoc/>
 		public String Copyright
         {
             get
@@ -257,9 +233,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-		/// Album Arist
-		/// </summary>
+        /// <inheritdoc/>
 		public String AlbumArtist
         {
             get
@@ -273,9 +247,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Conductor
-        /// </summary>
+        /// <inheritdoc/>
         public String Conductor
         {
             get
@@ -289,9 +261,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Publisher
-        /// </summary>
+        /// <inheritdoc/>
         public String Publisher
         {
             get
@@ -305,9 +275,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Publishing date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime PublishingDate
         {
             get
@@ -321,9 +289,7 @@ namespace ATL.AudioData
                 return date;
             }
         }
-        /// <summary>
-        /// General description
-        /// </summary>
+        /// <inheritdoc/>
         public String GeneralDescription
         {
             get
@@ -337,9 +303,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Original artist
-        /// </summary>
+        /// <inheritdoc/>
         public String OriginalArtist
         {
             get
@@ -353,9 +317,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Original album
-        /// </summary>
+        /// <inheritdoc/>
         public String OriginalAlbum
         {
             get
@@ -369,7 +331,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public float Popularity
         {
             get
@@ -383,9 +345,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// Size of the padding area, if any
-        /// </summary>
+        /// <inheritdoc/>
         public long PaddingSize
         {
             get
@@ -395,6 +355,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        /// <inheritdoc/>
         public string ChaptersTableDescription
         {
             get
@@ -408,9 +369,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-        /// <summary>
-        /// List of picture IDs stored in the tag
-        /// </summary>
+        /// <inheritdoc/>
         public IList<PictureInfo> PictureTokens
         {
             get
@@ -421,9 +380,7 @@ namespace ATL.AudioData
             }
         }
 
-        /// <summary>
-        /// Any other metadata field that is not represented among above getters
-        /// </summary>
+        /// <inheritdoc/>
         public IDictionary<string, string> AdditionalFields
         {
             get
@@ -444,9 +401,7 @@ namespace ATL.AudioData
             }
         }
 
-        /// <summary>
-        /// Chapters
-        /// </summary>
+        /// <inheritdoc/>
         public IList<ChapterInfo> Chapters
         {
             get
@@ -461,9 +416,7 @@ namespace ATL.AudioData
             }
         }
 
-        /// <summary>
-        /// Lyrics
-        /// </summary>
+        /// <inheritdoc/>
         public LyricsInfo Lyrics
         {
             get
@@ -474,9 +427,7 @@ namespace ATL.AudioData
             }
         }
 
-        /// <summary>
-        /// Embedded pictures
-        /// </summary>
+        /// <inheritdoc/>
         public IList<PictureInfo> EmbeddedPictures
         {
             get
@@ -491,6 +442,7 @@ namespace ATL.AudioData
             }
         }
 
+        /// <inheritdoc/>
         public long Size
         {
             get
@@ -499,17 +451,22 @@ namespace ATL.AudioData
             }
         }
 
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
+        /// <inheritdoc/>
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null) { throw new NotImplementedException(); }
 
+        /// <inheritdoc/>
         public bool Remove(BinaryWriter w) { throw new NotImplementedException(); }
 
+        /// <inheritdoc/>
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public void Clear()
         {
             throw new NotImplementedException();

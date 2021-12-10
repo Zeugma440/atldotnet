@@ -66,15 +66,15 @@ namespace ATL.AudioData.IO
 
         public int SampleRate // Sample rate (hz)
         {
-            get { return this.sampleRate; }
+            get { return sampleRate; }
         }
         public ushort BitRateNominal // Nominal bit rate
         {
-            get { return this.bitRateNominal; }
+            get { return bitRateNominal; }
         }
         public bool Valid // True if file valid
         {
-            get { return this.isValid(); }
+            get { return isValid(); }
         }
         public string FileName
         {
@@ -568,9 +568,9 @@ namespace ATL.AudioData.IO
         }
         #endregion
 
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
+            return (metaDataType == MetaDataIOFactory.TagType.NATIVE); // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
         }
 
 

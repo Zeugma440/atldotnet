@@ -141,14 +141,14 @@ namespace ATL.AudioData.IO
         public static readonly String[] MPEG_ENCODER = new String[8] { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
 
         // Xing/FhG VBR header data
-        public class VBRData
+        public sealed class VBRData
         {
             public bool Found;                            // True if VBR header found
             public char[] ID = new char[4];            // Header ID: "Xing" or "VBRI"
             public int Frames;                              // Total number of frames
             public int Bytes;                                // Total number of bytes
             public byte Scale;                                  // VBR scale (1..100)
-            public String VendorID;                         // Vendor ID (if present)
+            public string VendorID;                         // Vendor ID (if present)
 
             public void Reset()
             {
@@ -162,7 +162,7 @@ namespace ATL.AudioData.IO
         }
 
         // MPEG frame header data
-        public class FrameHeader
+        public sealed class FrameHeader
         {
             public bool Found;                                 // True if frame found
             public long Position;                        // Frame position in the file
@@ -219,45 +219,11 @@ namespace ATL.AudioData.IO
             }
         }
 
-        //		private String vendorID;
         private VBRData vbrData = new VBRData();
         private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
-        private readonly String filePath;
+        private readonly string filePath;
         private readonly Format audioFormat;
-
-
-        /* Unused for now
-
-public FrameHeader Frame // Frame header data
-{
-    get { return this.HeaderFrame; }
-}
-public String Version // MPEG version name
-{
-    get { return this.getVersion(); }
-}
-public String Layer // MPEG layer name
-{
-    get { return this.getLayer(); }
-}
-public String Emphasis // Emphasis name
-{
-    get { return this.getEmphasis(); }
-}
-public long Frames // Total number of frames
-{
-    get { return this.getFrames(); }
-}
-public byte EncoderID // Guessed encoder ID
-{
-    get { return this.getEncoderID(); }
-}
-public String Encoder // Guessed encoder name
-{
-    get { return this.getEncoder(); }
-}
-*/
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -289,9 +255,9 @@ public String Encoder // Guessed encoder name
             get => AudioDataIOFactory.CF_LOSSY;
         }
 
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE);
+            return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE);
         }
 
 
@@ -389,18 +355,6 @@ public String Encoder // Guessed encoder name
             // This formula only works for Layers II and III
             return (int)Math.Floor(getCoefficient(Frame) * getBitRate(Frame) * 1000.0 / getSampleRate(Frame)) + getPadding(Frame);
         }
-        /*
-        private static bool isXing(int Index, byte[] Data)
-        {
-            // Get true if Xing encoder
-            return ((Data[Index] == 0) &&
-                (Data[Index + 1] == 0) &&
-                (Data[Index + 2] == 0) &&
-                (Data[Index + 3] == 0) &&
-                (Data[Index + 4] == 0) &&
-                (Data[Index + 5] == 0));
-        }
-        */
 
         private static VBRData getXingInfo(BufferedBinaryReader source)
         {
@@ -625,169 +579,12 @@ public String Encoder // Guessed encoder name
 
                 result.Position = source.Position - 4;
 
-                // result.Xing = isXing(i + 4, Data); // Will look into it when encoder ID is needed by upper interfaces
-
                 // Look for VBR signature
                 oVBR = findVBR(source, result.Position + getVBRDeviation(result));
             }
 
             return result;
         }
-
-        /* Nightmarish implementation to be redone when Vendor ID is really useful
-		private static String findVendorID(byte[] Data, int Size)
-		{
-			String VendorID;
-			String result = "";
-
-			// Search for vendor ID
-			if ( (Data.Length - Size - 8) < 0 ) Size = Data.Length - 8;
-			for (int i=0; i <= Size; i++)
-			{
-                VendorID = Utils.Latin1Encoding.GetString(Data, Data.Length - i - 8, 4);
-				if (VENDOR_ID_LAME == VendorID)
-				{
-                    result = VendorID + Utils.Latin1Encoding.GetString(Data, Data.Length - i - 4, 4);
-					break;
-				}
-				else if (VENDOR_ID_GOGO_NEW == VendorID)
-				{
-					result = VendorID;
-					break;
-				}
-			}
-			return result;
-		}
-        */
-
-        /* Unused for now
-
-                private String getVersion()
-                {
-                    // Get MPEG version name
-                    return MPEG_VERSION[HeaderFrame.VersionID];
-                }
-
-                private String getChannelMode()
-                {
-                    // Get channel mode name
-                    return MPEG_CM_MODE[HeaderFrame.ModeID];
-                }
-
-                private String getEmphasis()
-                {
-                    // Get emphasis name
-                    return MPEG_EMPHASIS[HeaderFrame.EmphasisID];
-                }
-
-                private long getFrames()
-                {
-                    // Get total number of frames, calculate if VBR header not found
-                    if (vbrData.Found) return vbrData.Frames;
-                    else
-                    {
-                        long MPEGSize = sizeInfo.FileSize - sizeInfo.ID3v2Size - sizeInfo.ID3v1Size - sizeInfo.APESize;
-
-                        return (long)Math.Floor(1.0*(MPEGSize - HeaderFrame.Position) / getFrameSize(HeaderFrame));
-                    }
-                }
-
-                private byte getVBREncoderID()
-                {
-                    // Guess VBR encoder and get ID
-                    byte result = 0;
-
-                    if (VENDOR_ID_LAME == vbrData.VendorID.Substring(0, 4))
-                        result = MPEG_ENCODER_LAME;
-                    if (VENDOR_ID_GOGO_NEW == vbrData.VendorID.Substring(0, 4))
-                        result = MPEG_ENCODER_GOGO;
-                    if (VENDOR_ID_GOGO_OLD == vbrData.VendorID.Substring(0, 4))
-                        result = MPEG_ENCODER_GOGO;
-                    if ( StreamUtils.StringEqualsArr(VBR_ID_XING,vbrData.ID) &&
-                        (vbrData.VendorID.Substring(0, 4) != VENDOR_ID_LAME) &&
-                        (vbrData.VendorID.Substring(0, 4) != VENDOR_ID_GOGO_NEW) &&
-                        (vbrData.VendorID.Substring(0, 4) != VENDOR_ID_GOGO_OLD) )
-                        result = MPEG_ENCODER_XING;
-                    if ( StreamUtils.StringEqualsArr(VBR_ID_FHG,vbrData.ID))
-                        result = MPEG_ENCODER_FHG;
-
-                    return result;
-                }
-
-                private byte getCBREncoderID()
-                {
-                    // Guess CBR encoder and get ID
-                    byte result = MPEG_ENCODER_FHG;
-
-                    if ( (HeaderFrame.OriginalBit) &&
-                        (HeaderFrame.ProtectionBit) )
-                        result = MPEG_ENCODER_LAME;
-                    if ( (getBitRate(HeaderFrame) <= 160) &&
-                        (MPEG_CM_STEREO == HeaderFrame.ModeID)) 
-                        result = MPEG_ENCODER_BLADE;
-                    if ((HeaderFrame.CopyrightBit) &&
-                        (HeaderFrame.OriginalBit) &&
-                        (! HeaderFrame.ProtectionBit) )
-                        result = MPEG_ENCODER_XING;
-                    if ((HeaderFrame.Xing) &&
-                        (HeaderFrame.OriginalBit) )
-                        result = MPEG_ENCODER_XING;
-                    if (MPEG_LAYER_II == HeaderFrame.LayerID)
-                        result = MPEG_ENCODER_QDESIGN;
-                    if ((MPEG_CM_DUAL_CHANNEL == HeaderFrame.ModeID) &&
-                        (HeaderFrame.ProtectionBit) )
-                        result = MPEG_ENCODER_SHINE;
-                    if (VENDOR_ID_LAME == vendorID.Substring(0, 4))
-                        result = MPEG_ENCODER_LAME;
-                    if (VENDOR_ID_GOGO_NEW == vendorID.Substring(0, 4))
-                        result = MPEG_ENCODER_GOGO;
-
-                    return result;
-                }
-
-                private byte getEncoderID()
-                {
-                    // Get guessed encoder ID
-                    if (HeaderFrame.Found)
-                        if (vbrData.Found) return getVBREncoderID();
-                        else return getCBREncoderID();
-                    else
-                        return 0;
-                }
-
-                private String getEncoder()
-                {
-                    String VendorID = "";
-                    String result;
-
-                    // Get guessed encoder name and encoder version for LAME
-                    result = MPEG_ENCODER[getEncoderID()];
-                    if (vbrData.VendorID != "") VendorID = vbrData.VendorID;
-                    if (vendorID != "") VendorID = vendorID;
-                    if ( (MPEG_ENCODER_LAME == getEncoderID()) &&
-                        (VendorID.Length >= 8) &&
-                        Char.IsDigit(VendorID[4]) &&
-                        (VendorID[5] == '.') &&
-                        (Char.IsDigit(VendorID[6]) &&
-                        Char.IsDigit(VendorID[7]) ))
-                        result =
-                            result + (char)32 +
-                            VendorID[4] +
-                            VendorID[5] +
-                            VendorID[6] +
-                            VendorID[7];
-                    return result;
-                }
-
-                private bool getValid()
-                {
-                    // Check for right MPEG file data
-                    return
-                        ((HeaderFrame.Found) &&
-                        (getBitRate() >= MIN_MPEG_BIT_RATE) &&
-                        (getBitRate() <= MAX_MPEG_BIT_RATE) &&
-                        (getDuration() >= MIN_ALLOWED_DURATION));
-                }*/
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
@@ -799,17 +596,6 @@ public String Encoder // Guessed encoder name
             reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             HeaderFrame = findFrame(reader, ref vbrData, sizeInfo);
 
-            // Search for vendor ID at the end if CBR encoded
-            /*
-             *  This is a nightmarish implementation; to be redone when vendor ID is required by upper interfaces
-             *  
-                        if ( (HeaderFrame.Found) && (! FVBR.Found) )
-                        {
-                            fs.Seek(sizeInfo.FileSize - Data.Length - sizeInfo.ID3v1Size - sizeInfo.APESize, SeekOrigin.Begin);
-                            fs.Read(Data, 0, Data.Length);
-                            vendorID = findVendorID(Data, HeaderFrame.Size * 5);
-                        }
-            */
             bool result = HeaderFrame.Found;
             AudioDataOffset = HeaderFrame.Position;
             AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;

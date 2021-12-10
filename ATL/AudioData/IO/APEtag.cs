@@ -125,9 +125,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_APE;
+            return MetaDataIOFactory.TagType.APE;
         }
 
         /// <inheritdoc/>
@@ -262,7 +262,7 @@ namespace ATL.AudioData.IO
         {
             switch (picCode.Trim().ToUpper())
             {
-                case "COVER ART": 
+                case "COVER ART":
                 case "COVER ART (OTHER)": return PictureInfo.PIC_TYPE.Generic;
                 case "COVER ART (ICON)": return PictureInfo.PIC_TYPE.Icon;
                 case "COVER ART (FRONT)": return PictureInfo.PIC_TYPE.Front;

@@ -87,8 +87,8 @@ namespace ATL.AudioData
         public bool Save(TagData data)
         {
             bool result = true;
-            IList<int> availableMetas = audioManager.getAvailableMetas();
-            IList<int> supportedMetas = audioManager.getSupportedMetas();
+            IList<MetaDataIOFactory.TagType> availableMetas = audioManager.getAvailableMetas();
+            IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = (0 == availableMetas.Count);
             if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TAG_ID3V1) hasNothing = true;
@@ -109,7 +109,7 @@ namespace ATL.AudioData
 
             float written = 0;
             if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
-            foreach (int meta in availableMetas)
+            foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
                 result &= audioManager.UpdateTagInFile(data, meta);
                 if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
@@ -117,23 +117,23 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
         {
             bool result = true;
-            IList<int> metasToRemove;
+            IList<MetaDataIOFactory.TagType> metasToRemove;
 
-            if (MetaDataIOFactory.TAG_ANY == tagType)
+            if (MetaDataIOFactory.TagType.ANY == tagType)
             {
                 metasToRemove = audioManager.getAvailableMetas();
             }
             else
             {
-                metasToRemove = new List<int>() { tagType };
+                metasToRemove = new List<MetaDataIOFactory.TagType>() { tagType };
             }
 
             float written = 0;
             if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
-            foreach (int meta in metasToRemove)
+            foreach (MetaDataIOFactory.TagType meta in metasToRemove)
             {
                 result &= audioManager.RemoveTagFromFile(meta);
                 if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
@@ -148,150 +148,108 @@ namespace ATL.AudioData
             return value.Replace(Settings.InternalValueSeparator, Settings.DisplayValueSeparator);
         }
 
-        /// <summary>
-        /// Audio file name
-        /// </summary>
+        /// <inheritdoc/>
         public string FileName
         {
             get { return audioData.FileName; }
         }
-        /// <summary>
-        /// Title of the track
-        /// </summary>
+        /// <inheritdoc/>
         public string Title
         {
             get { return processString(metaData.Title); }
         }
-        /// <summary>
-        /// Artist
-        /// </summary>
+        /// <inheritdoc/>
         public string Artist
         {
             get { return processString(metaData.Artist); }
         }
-        /// <summary>
-        /// Composer
-        /// </summary>
+        /// <inheritdoc/>
         public string Composer
         {
             get { return processString(metaData.Composer); }
         }
-        /// <summary>
-        /// Publisher
-        /// </summary>
+        /// <inheritdoc/>
         public string Publisher
         {
             get { return processString(metaData.Publisher); }
         }
-        /// <summary>
-        /// Publishing Date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime PublishingDate
         {
             get { return metaData.PublishingDate; }
         }
-        /// <summary>
-        /// Conductor
-        /// </summary>
+        /// <inheritdoc/>
         public string Conductor
         {
             get { return processString(metaData.Conductor); }
         }
-        /// <summary>
-        /// Album Artist
-        /// </summary>
+        /// <inheritdoc/>
         public string AlbumArtist
         {
             get { return processString(metaData.AlbumArtist); }
         }
-        /// <summary>
-        /// General description
-        /// </summary>
+        /// <inheritdoc/>
         public string GeneralDescription
         {
             get { return processString(metaData.GeneralDescription); }
         }
-        /// <summary>
-        /// Copyright
-        /// </summary>
+        /// <inheritdoc/>
         public string Copyright
         {
             get { return processString(metaData.Copyright); }
         }
-        /// <summary>
-        /// Original artist
-        /// </summary>
+        /// <inheritdoc/>
         public string OriginalArtist
         {
             get { return processString(metaData.OriginalArtist); }
         }
-        /// <summary>
-        /// Original album
-        /// </summary>
+        /// <inheritdoc/>
         public string OriginalAlbum
         {
             get { return processString(metaData.OriginalAlbum); }
         }
-        /// <summary>
-        /// Size of the padding zone, if any
-        /// </summary>
+        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return metaData.PaddingSize; }
         }
 
-        /// <summary>
-        /// Comments
-        /// </summary>
+        /// <inheritdoc/>
         public string Comment
         {
             get { return processString(metaData.Comment); }
         }
-        /// <summary>
-        /// Flag indicating the presence of embedded pictures
-        /// </summary>
+        /// <inheritdoc/>
         public IList<PictureInfo> PictureTokens
         {
             get { return metaData.PictureTokens; }
         }
-        /// <summary>
-        /// Genre
-        /// </summary>
+        /// <inheritdoc/>
         public string Genre
         {
             get { return processString(metaData.Genre); }
         }
-        /// <summary>
-        /// Track number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Track
         {
             get { return metaData.Track; }
         }
-        /// <summary>
-        /// Total track number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort TrackTotal
         {
             get { return metaData.TrackTotal; }
         }
-        /// <summary>
-        /// Disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Disc
         {
             get { return metaData.Disc; }
         }
-        /// <summary>
-        /// Total disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort DiscTotal
         {
             get { return metaData.DiscTotal; }
         }
-        /// <summary>
-        /// Album title
-        /// </summary>
+        /// <inheritdoc/>
         public string Album
         {
             get { return processString(metaData.Album); }
@@ -310,37 +268,27 @@ namespace ATL.AudioData
         {
             get { return (int)Math.Round(audioData.BitRate); }
         }
-        /// <summary>
-        /// Track rating
-        /// </summary>
+        /// <inheritdoc/>
         public float Popularity
         {
             get { return metaData.Popularity; }
         }
-        /// <summary>
-        /// Format of audio data
-        /// </summary>
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get { return audioData.AudioFormat; }
         }
-        /// <summary>
-        /// Codec family
-        /// </summary>
+        /// <inheritdoc/>
         public int CodecFamily
         {
             get { return audioData.CodecFamily; }
         }
-        /// <summary>
-        /// Indicates whether the audio stream is in VBR
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsVBR
         {
             get { return audioData.IsVBR; }
         }
-        /// <summary>
-        /// Does the tag exist ?
-        /// </summary>
+        /// <inheritdoc/>
         public bool Exists
         {
             get { return metaData.Exists; }
@@ -350,37 +298,27 @@ namespace ATL.AudioData
         {
             get { return metaData.MetadataFormats; }
         }
-        /// <summary>
-        /// Recording date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime Date
         {
             get { return metaData.Date; }
         }
-        /// <summary>
-        /// Track bitrate (Kbit/s)
-        /// </summary>
+        /// <inheritdoc/>
         public double BitRate
         {
             get { return audioData.BitRate; }
         }
-        /// <summary>
-        /// Sample rate (Hz)
-        /// </summary>
+        /// <inheritdoc/>
         public int SampleRate
         {
             get { return audioData.SampleRate; }
         }
-        /// <summary>
-        /// Track duration (milliseconds)
-        /// </summary>
+        /// <inheritdoc/>
         public double Duration
         {
             get { return audioData.Duration; }
         }
-        /// <summary>
-        /// Metadata size (bytes)
-        /// </summary>
+        /// <inheritdoc/>
         public long Size
         {
             get { return metaData.Size; }
@@ -449,7 +387,7 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);
         }
@@ -459,14 +397,14 @@ namespace ATL.AudioData
             return metaData.Read(source, readTagParams);
         }
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
-        {
-            return metaData.Write(r, w, tag, writeProgress);
-        }
-        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return audioData.Read(source, sizeInfo, readTagParams);
+        }
+        /// <inheritdoc/>
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        {
+            return metaData.Write(r, w, tag, writeProgress);
         }
         /// <inheritdoc/>
         public bool Remove(BinaryWriter w)

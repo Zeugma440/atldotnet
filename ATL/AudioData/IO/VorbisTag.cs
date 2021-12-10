@@ -97,9 +97,9 @@ namespace ATL.AudioData.IO
             return TO_BUILTIN;
         }
 
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
 
         protected override byte ratingConvention

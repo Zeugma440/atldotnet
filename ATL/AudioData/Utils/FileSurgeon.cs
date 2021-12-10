@@ -91,7 +91,7 @@ namespace ATL.AudioData.IO
         private readonly FileStructureHelper structureHelper;
         private readonly IMetaDataEmbedder embedder;
 
-        private readonly int implementedTagType;
+        private readonly MetaDataIOFactory.TagType implementedTagType;
         private readonly int defaultTagOffset;
 
         public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
@@ -113,7 +113,7 @@ namespace ATL.AudioData.IO
         public FileSurgeon(
             FileStructureHelper structureHelper,
             IMetaDataEmbedder embedder,
-            int implementedTagType,
+            MetaDataIOFactory.TagType implementedTagType,
             int defaultTagOffset,
             IProgress<float> writeProgress)
         {
@@ -232,7 +232,7 @@ namespace ATL.AudioData.IO
                                 {
                                     newTagSize = s.Length;
 
-                                    if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                    if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
                                     {
                                         StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
                                         s.Position = 0;
@@ -265,7 +265,7 @@ namespace ATL.AudioData.IO
                             }
                             else // A brand new tag has been added to the file
                             {
-                                if (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+                                if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                                 {
                                     tagBeginOffset = embedder.Id3v2Zone.Offset - globalOffsetCorrection;
                                 }
@@ -324,7 +324,7 @@ namespace ATL.AudioData.IO
                             globalCumulativeDelta += delta;
 
                             // Edit wrapping size markers and frame counters if needed
-                            if (structureHelper != null && (MetaDataIOFactory.TAG_NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TAG_ID3V2)))
+                            if (structureHelper != null && (MetaDataIOFactory.TagType.NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)))
                             {
                                 ACTION action;
                                 bool isTagWritten = (writeResult.WrittenFields > 0);
@@ -415,7 +415,7 @@ namespace ATL.AudioData.IO
                 long zoneBeginOffset = getLowestOffset(zone);
                 long zoneEndOffset = getHighestOffset(zone);
 
-                if (embedder != null && !embedderProcessed && implementedTagType == MetaDataIOFactory.TAG_ID3V2)
+                if (embedder != null && !embedderProcessed && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                 {
                     zoneBeginOffset = Math.Min(zoneBeginOffset, embedder.Id3v2Zone.Offset);
                     zoneEndOffset = Math.Max(zoneEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);

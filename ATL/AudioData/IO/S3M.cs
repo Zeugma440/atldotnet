@@ -87,9 +87,9 @@ namespace ATL.AudioData.IO
         {
             get { return ChannelsArrangements.STEREO; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -99,9 +99,9 @@ namespace ATL.AudioData.IO
         {
             return TO_BUILTIN;
         }
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -356,7 +356,7 @@ namespace ATL.AudioData.IO
                     if (what > 0)
                     {
                         S3MEvent theEvent = new S3MEvent();
-//                        theEvent.Channel = what & 0x1F;
+                        //                        theEvent.Channel = what & 0x1F;
 
                         if ((what & 0x20) > 0) source.Seek(2, SeekOrigin.Current); // Note & Instrument
                         if ((what & 0x40) > 0) source.Seek(1, SeekOrigin.Current); // Volume

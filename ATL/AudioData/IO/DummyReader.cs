@@ -9,6 +9,10 @@ namespace ATL.AudioData.IO
     {
         private readonly string filePath;
 
+        /// <summary>
+        /// Instanciate a dummy reader
+        /// </summary>
+        /// <param name="filePath"></param>
         public DummyReader(string filePath)
         {
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Audio Data Reader for " + filePath);
@@ -54,17 +58,17 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public long AudioDataSize { get; set; }
         /// <inheritdoc/>
-        public IO.ID3v1 ID3v1
+        public ID3v1 ID3v1
         {
             get { return new ID3v1(); }
         }
         /// <inheritdoc/>
-        public IO.ID3v2 ID3v2
+        public ID3v2 ID3v2
         {
             get { return new ID3v2(); }
         }
         /// <inheritdoc/>
-        public IO.APEtag APEtag
+        public APEtag APEtag
         {
             get { return new APEtag(); }
         }
@@ -79,22 +83,22 @@ namespace ATL.AudioData.IO
             get { return ChannelsArrangements.UNKNOWN; }
         }
         /// <inheritdoc/>
-        public bool RemoveTagFromFile(int tagType)
+        public bool RemoveTagFromFile(MetaDataIOFactory.TagType type)
         {
             return true;
         }
         /// <inheritdoc/>
-        public bool AddTagToFile(int tagType)
+        public bool AddTagToFile(MetaDataIOFactory.TagType type)
         {
             return true;
         }
         /// <inheritdoc/>
-        public bool UpdateTagInFile(TagData theTag, int tagType)
+        public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType type)
         {
             return true;
         }
         /// <inheritdoc/>
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return true;
         }

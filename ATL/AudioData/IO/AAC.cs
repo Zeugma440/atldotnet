@@ -96,9 +96,12 @@ namespace ATL.AudioData.IO
         {
             get { return fileName; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TagType.ID3V1)
+                || (metaDataType == MetaDataIOFactory.TagType.ID3V2)
+                || (metaDataType == MetaDataIOFactory.TagType.APE)
+                || (metaDataType == MetaDataIOFactory.TagType.NATIVE);
         }
         public ChannelsArrangement ChannelsArrangement
         {

@@ -16,14 +16,14 @@ namespace ATL.test.IO
         public void TagIO_R_Single_ID3v1()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            int[] tagPriorityDefault = new int[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.TAG_TYPE_COUNT];
             MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = false;                            // default behaviour anyway
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_APE, 0);    // No APEtag on sample file => should be ignored
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V1, 1);  // Should be entirely read
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V2, 2);  // Should not be read, since behaviour is single tag reading
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.APE, 0);    // No APEtag on sample file => should be ignored
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.ID3V1, 1);  // Should be entirely read
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.ID3V2, 2);  // Should not be read, since behaviour is single tag reading
             /* end set options */
 
             try
@@ -45,14 +45,14 @@ namespace ATL.test.IO
         public void TagIO_R_Multi()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            int[] tagPriorityDefault = new int[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.TAG_TYPE_COUNT];
             MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */
             MetaDataIOFactory.GetInstance().CrossReading = true;
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_APE, 0);    // No APEtag on sample file => should be ignored
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V1, 1);  // Should be the main source except for the Year field (empty on ID3v1)
-            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TAG_ID3V2, 2);  // Should be used for the Year field (valuated on ID3v2)
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.APE, 0);    // No APEtag on sample file => should be ignored
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.ID3V1, 1);  // Should be the main source except for the Year field (empty on ID3v1)
+            MetaDataIOFactory.GetInstance().SetTagPriority(MetaDataIOFactory.TagType.ID3V2, 2);  // Should be used for the Year field (valuated on ID3v2)
             /* end set options */
 
             try
@@ -112,7 +112,7 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
-            Assert.IsTrue(theTrack.Remove(MetaDataIOFactory.TAG_ID3V2));
+            Assert.IsTrue(theTrack.Remove(MetaDataIOFactory.TagType.ID3V2));
 
             Assert.AreEqual("Nintendo Sound Scream", theTrack.Artist); // Specifically tagged like this on the ID3v1 tag
             Assert.AreEqual(0, theTrack.Year); // Empty on the ID3v1 tag => should really come empty since ID3v2 tag has been removed
@@ -218,7 +218,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                ATL.Settings.DefaultTagsWhenNoMetadata = new int[2] { ATL.AudioData.MetaDataIOFactory.TAG_ID3V2, ATL.AudioData.MetaDataIOFactory.TAG_NATIVE };
+                ATL.Settings.DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE };
             }
         }
 

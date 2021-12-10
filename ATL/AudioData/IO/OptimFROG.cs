@@ -67,7 +67,7 @@ namespace ATL.AudioData.IO
 
         public int SampleRate // Sample rate (Hz)
         {
-            get { return this.getSampleRate(); }
+            get { return getSampleRate(); }
         }
         public bool IsVBR
         {
@@ -97,9 +97,9 @@ namespace ATL.AudioData.IO
         {
             get { return GuessFromChannelNumber(header.ChannelMode + 1); }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
+            return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }

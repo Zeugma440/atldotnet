@@ -431,9 +431,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_ID3V2;
+            return MetaDataIOFactory.TagType.ID3V2;
         }
 
         /// <inheritdoc/>
@@ -930,8 +930,8 @@ namespace ATL.AudioData.IO
                     {
                         if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                         {
-                            addPictureToken(MetaDataIOFactory.TAG_ID3V2, picCode);
-                            picturePosition = takePicturePosition(MetaDataIOFactory.TAG_ID3V2, picCode);
+                            addPictureToken(MetaDataIOFactory.TagType.ID3V2, picCode);
+                            picturePosition = takePicturePosition(MetaDataIOFactory.TagType.ID3V2, picCode);
                         }
                         else
                         {

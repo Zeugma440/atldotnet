@@ -74,7 +74,7 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return false;
         }

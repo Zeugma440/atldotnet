@@ -35,26 +35,60 @@ namespace ATL.AudioData
             bufferSize = bufSize;
         }
 
-
+        /// <summary>
+        /// Contains various useful information about the size of an audio file and its components
+        /// </summary>
         public class SizeInfo
         {
-            private readonly IDictionary<int, long> TagSizes = new Dictionary<int, long>();
+            private readonly IDictionary<MetaDataIOFactory.TagType, long> TagSizes = new Dictionary<MetaDataIOFactory.TagType, long>();
             private long audioDataSize = -1;
 
+            /// <summary>
+            /// Reset all data
+            /// </summary>
             public void ResetData() { FileSize = 0; TagSizes.Clear(); }
 
-            public void SetSize(int tagType, long size)
+            /// <summary>
+            /// Set the size for the given TagType, in bytes
+            /// </summary>
+            /// <param name="type">Tag type to set the size for</param>
+            /// <param name="size">Size to set (bytes)</param>
+            public void SetSize(MetaDataIOFactory.TagType type, long size)
             {
-                TagSizes[tagType] = size;
+                TagSizes[type] = size;
             }
 
-            public long ID3v1Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_ID3V1) ? TagSizes[MetaDataIOFactory.TAG_ID3V1] : 0; } }
-            public long ID3v2Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_ID3V2) ? TagSizes[MetaDataIOFactory.TAG_ID3V2] : 0; } }
-            public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_APE) ? TagSizes[MetaDataIOFactory.TAG_APE] : 0; } }
-            public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TAG_NATIVE) ? TagSizes[MetaDataIOFactory.TAG_NATIVE] : 0; } }
+            /// <summary>
+            /// Size of the ID3v1 tag (bytes)
+            /// </summary>
+            public long ID3v1Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.ID3V1) ? TagSizes[MetaDataIOFactory.TagType.ID3V1] : 0; } }
+            /// <summary>
+            /// Size of the ID3v2 tag (bytes)
+            /// </summary>
+            public long ID3v2Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.ID3V2) ? TagSizes[MetaDataIOFactory.TagType.ID3V2] : 0; } }
+            /// <summary>
+            /// Size of the APE tag (bytes)
+            /// </summary>
+            public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.APE) ? TagSizes[MetaDataIOFactory.TagType.APE] : 0; } }
+            /// <summary>
+            /// Size of the native tag (bytes)
+            /// </summary>
+            public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.NATIVE) ? TagSizes[MetaDataIOFactory.TagType.NATIVE] : 0; } }
+            /// <summary>
+            /// Total size of all tags (bytes)
+            /// </summary>
             public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
+            /// <summary>
+            /// Size of the entire file (bytes)
+            /// </summary>
             public long FileSize { get; set; } = 0;
+            /// <summary>
+            /// Offset of the audio data (bytes)
+            /// </summary>
             public long AudioDataOffset { get; set; } = -1;
+            /// <summary>
+            /// Size of the audio data (bytes)
+            /// </summary>
             public long AudioDataSize
             {
                 get
@@ -82,27 +116,48 @@ namespace ATL.AudioData
         {
             get { return audioDataIO.FileName; }
         }
-        public IMetaDataIO ID3v1 // ID3v1 tag data
+        /// <summary>
+        /// ID3v1 tag data
+        /// </summary>
+        public IMetaDataIO ID3v1
         {
-            get { return this.iD3v1; }
+            get { return iD3v1; }
         }
-        public IMetaDataIO ID3v2 // ID3v2 tag data
+        /// <summary>
+        /// ID3v2 tag data
+        /// </summary>
+        public IMetaDataIO ID3v2
         {
-            get { return this.iD3v2; }
+            get { return iD3v2; }
         }
-        public IMetaDataIO APEtag // APE tag data
+        /// <summary>
+        /// APE tag data
+        /// </summary>
+        public IMetaDataIO APEtag
         {
-            get { return this.aPEtag; }
+            get { return aPEtag; }
         }
-        public IMetaDataIO NativeTag // Native tag data
+        /// <summary>
+        /// Native tag data
+        /// </summary>
+        public IMetaDataIO NativeTag
         {
-            get { return this.nativeTag; }
+            get { return nativeTag; }
         }
-
+        /// <summary>
+        /// Offset of audio data (bytes)
+        /// </summary>
         public long AudioDataOffset { get => sizeInfo.AudioDataOffset; }
+        /// <summary>
+        /// Size of audio data (bytes)
+        /// </summary>
         public long AudioDataSize { get => sizeInfo.AudioDataSize; }
 
-
+        /// <summary>
+        /// Create a new instance using the given IAudioDataIO and the given IProgress
+        /// </summary>
+        /// <param name="audioDataReader">Audio data reader to use</param>
+        /// <param name="writeProgress">IProgress to report with (optional)</param>
         public AudioDataManager(IAudioDataIO audioDataReader, IProgress<float> writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
@@ -110,6 +165,12 @@ namespace ATL.AudioData
             this.writeProgress = writeProgress;
         }
 
+        /// <summary>
+        /// Create a new instance using the given IAudioDataIO, the given data Stream and the given IProgress
+        /// </summary>
+        /// <param name="audioDataReader">Audio data reader to use</param>
+        /// <param name="stream">Data stream to use</param>
+        /// <param name="writeProgress">IProgress to report with (optional)</param>
         public AudioDataManager(IAudioDataIO audioDataReader, Stream stream, IProgress<float> writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
@@ -125,31 +186,36 @@ namespace ATL.AudioData
             sizeInfo.ResetData();
         }
 
-        public bool hasMeta(int tagType)
+        /// <summary>
+        /// Indicate whether the current audio file contains a tag from the given type
+        /// </summary>
+        /// <param name="type">Tag type whose presence to check</param>
+        /// <returns>True if the current audio file contains a tag of the given type; false if not</returns>
+        public bool hasMeta(MetaDataIOFactory.TagType type)
         {
-            if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1))
+            if (type.Equals(MetaDataIOFactory.TagType.ID3V1))
             {
-                return (iD3v1 != null) && (iD3v1.Exists);
+                return (iD3v1 != null) && iD3v1.Exists;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2))
+            else if (type.Equals(MetaDataIOFactory.TagType.ID3V2))
             {
-                return (iD3v2 != null) && (iD3v2.Exists);
+                return (iD3v2 != null) && iD3v2.Exists;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+            else if (type.Equals(MetaDataIOFactory.TagType.APE))
             {
-                return (aPEtag != null) && (aPEtag.Exists);
+                return (aPEtag != null) && aPEtag.Exists;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE))
+            else if (type.Equals(MetaDataIOFactory.TagType.NATIVE))
             {
-                return (nativeTag != null) && (nativeTag.Exists);
+                return (nativeTag != null) && nativeTag.Exists;
             }
             else return false;
         }
 
-        public IList<int> getAvailableMetas()
+        public IList<MetaDataIOFactory.TagType> getAvailableMetas()
         {
-            IList<int> result = new List<int>();
-            foreach (var tagType in from int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+            IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
+            foreach (var tagType in from MetaDataIOFactory.TagType tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
                                     where hasMeta(tagType)
                                     select tagType)
             {
@@ -159,10 +225,10 @@ namespace ATL.AudioData
             return result;
         }
 
-        public IList<int> getSupportedMetas()
+        public IList<MetaDataIOFactory.TagType> getSupportedMetas()
         {
-            IList<int> result = new List<int>();
-            foreach (var tagType in from int tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+            IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
+            foreach (var tagType in from MetaDataIOFactory.TagType tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
                                     where audioDataIO.IsMetaSupported(tagType)
                                     select tagType)
             {
@@ -172,21 +238,21 @@ namespace ATL.AudioData
             return result;
         }
 
-        public IMetaDataIO getMeta(int tagType)
+        public IMetaDataIO getMeta(MetaDataIOFactory.TagType type)
         {
-            if (tagType.Equals(MetaDataIOFactory.TAG_ID3V1))
+            if (type.Equals(MetaDataIOFactory.TagType.ID3V1))
             {
                 return iD3v1;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_ID3V2))
+            else if (type.Equals(MetaDataIOFactory.TagType.ID3V2))
             {
                 return iD3v2;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_APE))
+            else if (type.Equals(MetaDataIOFactory.TagType.APE))
             {
                 return aPEtag;
             }
-            else if (tagType.Equals(MetaDataIOFactory.TAG_NATIVE) && nativeTag != null)
+            else if (type.Equals(MetaDataIOFactory.TagType.NATIVE) && nativeTag != null)
             {
                 return nativeTag;
             }
@@ -198,22 +264,22 @@ namespace ATL.AudioData
             if (meta is ID3v1)
             {
                 iD3v1 = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V1, iD3v1.Size);
+                sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V1, iD3v1.Size);
             }
             else if (meta is ID3v2)
             {
                 iD3v2 = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
             }
             else if (meta is APEtag)
             {
                 aPEtag = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TAG_APE, aPEtag.Size);
+                sizeInfo.SetSize(MetaDataIOFactory.TagType.APE, aPEtag.Size);
             }
             else
             {
                 nativeTag = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
+                sizeInfo.SetSize(MetaDataIOFactory.TagType.NATIVE, nativeTag.Size);
             }
         }
 
@@ -249,7 +315,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(TagData theTag, int tagType)
+        public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -305,7 +371,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool RemoveTagFromFile(int tagType)
+        public bool RemoveTagFromFile(MetaDataIOFactory.TagType tagType)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -359,29 +425,29 @@ namespace ATL.AudioData
 
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V1))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V1))
             {
                 if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V1, iD3v1.Size);
             }
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_ID3V2))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V2))
             {
                 if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
                 {
-                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
                 }
             }
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_APE))
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.APE))
             {
-                if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_APE, aPEtag.Size);
+                if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.APE, aPEtag.Size);
             }
 
             bool result;
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE) && audioDataIO is IMetaDataIO)
+            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE) && audioDataIO is IMetaDataIO)
             {
                 nativeTag = (IMetaDataIO)audioDataIO;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
 
-                if (result) sizeInfo.SetSize(MetaDataIOFactory.TAG_NATIVE, nativeTag.Size);
+                if (result) sizeInfo.SetSize(MetaDataIOFactory.TagType.NATIVE, nativeTag.Size);
             }
             else
             {
@@ -394,7 +460,7 @@ namespace ATL.AudioData
                 if (embedder.HasEmbeddedID3v2 > 0)
                 {
                     readTagParams.offset = embedder.HasEmbeddedID3v2;
-                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V2, iD3v2.Size);
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
                 }
                 else
                 {
@@ -410,7 +476,7 @@ namespace ATL.AudioData
 
         public bool HasNativeMeta()
         {
-            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TAG_NATIVE);
+            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE);
         }
     }
 }

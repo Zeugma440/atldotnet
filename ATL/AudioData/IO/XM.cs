@@ -83,11 +83,11 @@ namespace ATL.AudioData.IO
         }
         public ChannelsArrangement ChannelsArrangement
         {
-            get { return ChannelsArrangements.STEREO; }
+            get { return STEREO; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -97,9 +97,9 @@ namespace ATL.AudioData.IO
         {
             return TO_BUILTIN;
         }
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {

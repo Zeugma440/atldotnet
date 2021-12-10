@@ -80,9 +80,9 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V2);
+            return metaDataType == MetaDataIOFactory.TagType.ID3V2;
         }
 
         // IMetaDataEmbedder

@@ -1,4 +1,5 @@
-﻿using ATL.Logging;
+﻿using ATL.AudioData;
+using ATL.Logging;
 using Commons;
 using HashDepot;
 using System;
@@ -117,9 +118,9 @@ namespace ATL
         public int Position;
 
         /// <summary>
-        /// Tag type where the picture originates from (see MetaDataIOFactory)
+        /// Tag type where the picture originates from
         /// </summary>
-        public int TagType;
+        public TagType TagType;
         /// <summary>
         /// Native picture code according to TagType convention (numeric : e.g. ID3v2)
         /// </summary>
@@ -169,11 +170,11 @@ namespace ATL
         /// </summary>
         /// <param name="data">Raw picture data</param>
         /// <param name="picType">Type of the picture (default : Generic)</param>
-        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/>(default : TAG_ANY)</param>
+        /// <param name="tagType">Type of the containing tag (default : TAG_ANY)</param>
         /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs (default : not set)</param>
         /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
         /// <returns></returns>
-        public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, int tagType = TAG_ANY, object nativePicCode = null, int position = 1)
+        public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, TagType tagType = TagType.ANY, object nativePicCode = null, int position = 1)
         {
             if (null == data || data.Length < 3) throw new ArgumentException("Data should not be null and be at least 3 bytes long");
             if (null == nativePicCode) nativePicCode = 0; // Can't default with 0 in params declaration
@@ -187,11 +188,11 @@ namespace ATL
         /// <param name="stream">Stream containing raw picture data, positioned at the beginning of picture data</param>
         /// <param name="length">Length of the picture data to read inside the given stream</param>
         /// <param name="picType">Type of the picture (default : Generic)</param>
-        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/>(default : TAG_ANY)</param>
+        /// <param name="tagType">Type of the containing tag (default : TAG_ANY)</param>
         /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs (default : not set)</param>
         /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
         /// <returns></returns>
-        public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, int tagType, object nativePicCode, int position = 1)
+        public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, TagType tagType, object nativePicCode, int position = 1)
         {
             if (null == stream || length < 3) throw new ArgumentException("Stream should not be null and be at least 3 bytes long");
 
@@ -220,7 +221,8 @@ namespace ATL
             {
                 PictureData = new byte[picInfo.PictureData.Length];
                 picInfo.PictureData.CopyTo(PictureData, 0);
-            } else
+            }
+            else
             {
                 this.PictureData = picInfo.PictureData;
             }
@@ -233,11 +235,11 @@ namespace ATL
         /// Construct picture information from its parts
         /// </summary>
         /// <param name="picType">Type of the picture</param>
-        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/></param>
+        /// <param name="tagType">Type of the containing tag</param>
         /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs</param>
         /// <param name="position">Position of the picture among the other pictures of the same file</param>
         /// <param name="binaryData">Raw binary data of the picture</param>
-        private PictureInfo(PIC_TYPE picType, int tagType, object nativePicCode, int position, byte[] binaryData)
+        private PictureInfo(PIC_TYPE picType, TagType tagType, object nativePicCode, int position, byte[] binaryData)
         {
             PicType = picType;
             TagType = tagType;
@@ -280,10 +282,10 @@ namespace ATL
         /// <summary>
         /// Construct picture information from its parts
         /// </summary>
-        /// <param name="tagType">Type of the containing tag (see static fields in <see cref="ATL.AudioData.MetaDataIOFactory"/></param>
+        /// <param name="tagType">Type of the containing tag</param>
         /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs</param>
         /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
-        public PictureInfo(int tagType, object nativePicCode, int position = 1)
+        public PictureInfo(TagType tagType, object nativePicCode, int position = 1)
         {
             PicType = PIC_TYPE.Unsupported;
             NativeFormat = ImageFormat.Undefined;
@@ -355,9 +357,9 @@ namespace ATL
         private string valueToString()
         {
             if (NativePicCode > 0 && TagType > 0)
-                return ((10000000 * TagType) + "N" + NativePicCode).ToString();
+                return ((10000000 * ((int)TagType)) + "N" + NativePicCode).ToString();
             else if (NativePicCodeStr != null && NativePicCodeStr.Length > 0 && TagType > 0)
-                return (10000000 * TagType).ToString() + "N" + NativePicCodeStr;
+                return (10000000 * ((int)TagType)).ToString() + "N" + NativePicCodeStr;
             else if (PicType != PIC_TYPE.Unsupported)
                 return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes
             else

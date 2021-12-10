@@ -85,7 +85,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="metaDataType">Metadata type to be tested (see list in MetaDataIOFactory)</param>
         /// <returns>True if current file supports the given metadata type; false if not</returns>
-        bool IsMetaSupported(int metaDataType);
+        bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType);
         
         /// <summary>
         /// Reads audio data from the given stream.

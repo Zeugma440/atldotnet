@@ -164,9 +164,9 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_APE);
+            return metaDataType == MetaDataIOFactory.TagType.APE;
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }

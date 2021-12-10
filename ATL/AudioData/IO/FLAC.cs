@@ -355,9 +355,9 @@ namespace ATL.AudioData.IO
         }
         #endregion
 
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE || metaDataType == MetaDataIOFactory.TAG_ID3V2); // Native is for VorbisTag
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE || metaDataType == MetaDataIOFactory.TagType.ID3V2; // Native is for VorbisTag
         }
 
 
@@ -580,7 +580,7 @@ namespace ATL.AudioData.IO
 
             adjustPictureZones(dataToWrite.Pictures);
 
-            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TAG_NATIVE, TO_BUILTIN, writeProgress);
+            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
             surgeon.RewriteZones(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
 
             // Set the 'isLast' bit on the actual last block
@@ -696,7 +696,7 @@ namespace ATL.AudioData.IO
 
                 // Picture has either to be supported, or to come from the right tag standard
                 doWritePicture = !pictureToWrite.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (MetaDataIOFactory.TAG_NATIVE == pictureToWrite.TagType);
+                if (!doWritePicture) doWritePicture = MetaDataIOFactory.TAG_NATIVE.Equals(pictureToWrite.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!pictureToWrite.MarkedForDeletion);
             }

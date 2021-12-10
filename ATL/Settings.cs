@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using ATL.AudioData;
+using System.Text;
 
 namespace ATL
 {
@@ -22,7 +23,7 @@ namespace ATL
         /// Warning : The app will crash if you set a value higher than the file size itself.
         /// </summary>
         public static int FileBufferSize = 512;
-        
+
         /// <summary>
         /// Force high-level I/O operations to be performed without zone buffering,
         /// resulting in higher disk usage, but lower RAM usage
@@ -77,7 +78,7 @@ namespace ATL
         /// 
         /// Default : ID3v2 then Native tagging
         /// </summary>
-        public static int[] DefaultTagsWhenNoMetadata = new int[2] { AudioData.MetaDataIOFactory.TAG_ID3V2, AudioData.MetaDataIOFactory.TAG_NATIVE };
+        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] { AudioData.MetaDataIOFactory.TagType.ID3V2, AudioData.MetaDataIOFactory.TagType.NATIVE };
 
         /// <summary>
         /// If true, file name (without the extension) will go to the Title field if metadata contains no title
@@ -85,11 +86,11 @@ namespace ATL
         /// </summary>
         public static bool UseFileNameWhenNoTitle = true;
 
-        
+
         //
         // Behaviour related to leading zeroes when formatting Disc and Track fields (ID3v2, Vorbis, APE)
         //
-        
+
         /// <summary>
         /// If true, use leading zeroes; number of digits is aligned on TOTAL fields or 2 digits if no total field
         /// Default : false

@@ -103,7 +103,7 @@ namespace ATL.AudioData.IO
 
             public int Param0 = 0;
             public int Param1 = 0;
-            public String Description;
+            public string Description;
 
             public MidiEvent(long tickOffset, int type, int channel, int param0, int param1 = 0)
             {
@@ -334,9 +334,9 @@ namespace ATL.AudioData.IO
             get { return ChannelsArrangements.STEREO; }
         }
         /// <inheritdoc/>
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE); // Only for comments
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE; // Only for comments
         }
         /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
@@ -352,9 +352,9 @@ namespace ATL.AudioData.IO
             return TO_BUILTIN;
         }
         /// <inheritdoc/>
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
         /// <inheritdoc/>
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)

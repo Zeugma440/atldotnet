@@ -43,7 +43,7 @@ namespace ATL
         /// <summary>
         /// Tag type where the picture originates from (see <see cref="ATL.AudioData.MetaDataIOFactory"/> static fields)
         /// </summary>
-        public int TagType;
+        public MetaDataIOFactory.TagType TagType;
         /// <summary>
         /// Native field code according to TagType convention
         /// </summary>
@@ -86,13 +86,13 @@ namespace ATL
         /// <summary>
         /// Construct the structure from its parts
         /// </summary>
-        /// <param name="tagType">Tag type where the picture originates from (see <see cref="ATL.AudioData.MetaDataIOFactory"/> static fields)</param>
+        /// <param name="tagType">Tag type where the picture originates from</param>
         /// <param name="nativeFieldCode">Native field code according to TagType convention</param>
         /// <param name="value">Value of the field</param>
         /// <param name="streamNumber">Index of the stream the field is attached to (if applicable, i.e. for multi-stream files)</param>
         /// <param name="language">Language the value is written in</param>
         /// <param name="zone">File zone where the value is supposed to appear</param>
-        public MetaFieldInfo(int tagType, string nativeFieldCode, string value = "", ushort streamNumber = 0, string language = "", string zone = "")
+        public MetaFieldInfo(MetaDataIOFactory.TagType tagType, string nativeFieldCode, string value = "", ushort streamNumber = 0, string language = "", string zone = "")
         {
             TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; StreamNumber = streamNumber; Language = language; Zone = zone;
         }
@@ -162,7 +162,7 @@ namespace ATL
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
 
-            bool result = (MetaDataIOFactory.TAG_ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode));
+            bool result = (MetaDataIOFactory.TagType.ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode));
             if (obj.StreamNumber > 0) result = result && (obj.StreamNumber == this.StreamNumber);
             if (obj.Language.Length > 0) result = result && obj.Language.Equals(this.Language);
 

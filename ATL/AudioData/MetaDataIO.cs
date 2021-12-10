@@ -507,12 +507,12 @@ namespace ATL.AudioData.IO
             pictureTokens.Add(new PictureInfo(picType));
         }
 
-        protected void addPictureToken(int tagType, byte nativePicCode)
+        protected void addPictureToken(MetaDataIOFactory.TagType tagType, byte nativePicCode)
         {
             pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
         }
 
-        protected void addPictureToken(int tagType, string nativePicCode)
+        protected void addPictureToken(MetaDataIOFactory.TagType tagType, string nativePicCode)
         {
             pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
         }
@@ -522,12 +522,12 @@ namespace ATL.AudioData.IO
             return takePicturePosition(new PictureInfo(picType));
         }
 
-        protected int takePicturePosition(int tagType, byte nativePicCode)
+        protected int takePicturePosition(MetaDataIOFactory.TagType tagType, byte nativePicCode)
         {
             return takePicturePosition(new PictureInfo(tagType, nativePicCode));
         }
 
-        protected int takePicturePosition(int tagType, string nativePicCode)
+        protected int takePicturePosition(MetaDataIOFactory.TagType tagType, string nativePicCode)
         {
             return takePicturePosition(new PictureInfo(tagType, nativePicCode));
         }
@@ -584,11 +584,10 @@ namespace ATL.AudioData.IO
         abstract protected int getDefaultTagOffset();
 
         /// <summary>
-        /// Return the implemented tag type (see <see cref="MetaDataIOFactory"/> constants)
-        /// TODO make it return a <see cref="MetaDataIOFactory.TagType"/>
+        /// Return the implemented tag type
         /// </summary>
         /// <returns></returns>
-        abstract protected int getImplementedTagType();
+        abstract protected MetaDataIOFactory.TagType getImplementedTagType();
 
         /// <summary>
         /// Get the frame code (per <see cref="TagData"/> standards for the given field ID in the given zone and the given tag version
@@ -736,7 +735,7 @@ namespace ATL.AudioData.IO
                 }
                 foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
-                    if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TAG_ANY == fieldInfo.TagType)
+                    if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TagType.ANY == fieldInfo.TagType)
                     {
                         string fieldCode = Utils.ProtectValue(fieldInfo.NativeFieldCode);
                         if (fieldCode.Length != FieldCodeFixedLength && !fieldCode.Contains("----")) // "----" = exception for MP4 extended fields (e.g. ----:com.apple.iTunes:CONDUCTOR)
@@ -761,7 +760,7 @@ namespace ATL.AudioData.IO
 
             this.read(r, readTagParams);
 
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
+            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
                 structureHelper.Clear();
                 structureHelper.AddZone(embedder.Id3v2Zone);
@@ -796,7 +795,7 @@ namespace ATL.AudioData.IO
             bool result = true;
             long cumulativeDelta = 0;
 
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2)
+            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
                 structureHelper.Clear();
                 structureHelper.AddZone(embedder.Id3v2Zone);
@@ -816,7 +815,7 @@ namespace ATL.AudioData.IO
                             w.Write(zone.CoreSignature);
                         }
                     }
-                    if (MetaDataIOFactory.TAG_NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TAG_ID3V2))
+                    if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
                     {
                         if (zone.IsDeletable)
                             result = result && structureHelper.RewriteHeaders(w, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);

@@ -154,9 +154,9 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_ID3V1) || (metaDataType == MetaDataIOFactory.TAG_ID3V2) || (metaDataType == MetaDataIOFactory.TAG_APE) || (metaDataType == MetaDataIOFactory.TAG_NATIVE);
+            return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.NATIVE);
         }
         protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -176,9 +176,9 @@ namespace ATL.AudioData.IO
         {
             return TO_BUILTIN;
         }
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
         protected override byte ratingConvention
         {
@@ -456,8 +456,8 @@ namespace ATL.AudioData.IO
                     int picturePosition;
                     if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
-                        addPictureToken(MetaDataIOFactory.TAG_NATIVE, picCode);
-                        picturePosition = takePicturePosition(MetaDataIOFactory.TAG_NATIVE, picCode);
+                        addPictureToken(MetaDataIOFactory.TagType.NATIVE, picCode);
+                        picturePosition = takePicturePosition(MetaDataIOFactory.TagType.NATIVE, picCode);
                     }
                     else
                     {

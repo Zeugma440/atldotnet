@@ -48,7 +48,7 @@ namespace ATL.test.IO.MetaData
     {
         protected string emptyFile;
         protected string notEmptyFile;
-        protected int tagType = MetaDataIOFactory.TAG_ANY;
+        protected MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
         protected TagData testData;
         protected bool supportsDateOrYear = false;
         protected bool supportsInternationalChars = true;
@@ -95,7 +95,7 @@ namespace ATL.test.IO.MetaData
             testData.Pictures.Add(pic);
         }
 
-        protected void test_RW_Cohabitation(int tagType1, int tagType2, bool canMeta1NotExist = true)
+        protected void test_RW_Cohabitation(MetaDataIOFactory.TagType tagType1, MetaDataIOFactory.TagType tagType2, bool canMeta1NotExist = true)
         {
             new ConsoleLogger();
 
@@ -788,7 +788,7 @@ namespace ATL.test.IO.MetaData
             }
         }
 
-        protected void assumeRatingInFile(string file, double rating, int tagType)
+        protected void assumeRatingInFile(string file, double rating, MetaDataIOFactory.TagType tagType)
         {
             string location = TestUtils.GetResourceLocationRoot() + file;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));

@@ -9,6 +9,9 @@ namespace ATL.CatalogDataReaders
     public class CatalogDataReaderFactory : Factory
     {
         // Defines the supported formats
+        /// <summary>
+        ///  Cuesheet
+        /// </summary>
         public const int CR_CUE = 0;
 
         // The instance of this factory
@@ -16,7 +19,10 @@ namespace ATL.CatalogDataReaders
 
         private static readonly object _lockable = new object();
 
-
+        /// <summary>
+        /// Get the instance of the Factory singleton
+        /// </summary>
+        /// <returns>Instance of the Factory singleton</returns>
         public static CatalogDataReaderFactory GetInstance()
         {
             lock (_lockable)
@@ -35,14 +41,19 @@ namespace ATL.CatalogDataReaders
             return theFactory;
         }
 
-        public ICatalogDataReader GetCatalogDataReader(String path, int alternate = 0)
+        /// <summary>
+        /// Get the GetCatalogDataReader for the file at the given path
+        /// </summary>
+        /// <param name="path">Path of the file to read</param>
+        /// <returns></returns>
+        public ICatalogDataReader GetCatalogDataReader(string path)
         {
             IList<Format> formats = getFormatsFromPath(path);
             ICatalogDataReader result;
 
-            if (formats != null && formats.Count > alternate)
+            if (formats != null && formats.Count > 0)
             {
-                result = GetCatalogDataReader(formats[alternate].ID, path);
+                result = GetCatalogDataReader(formats[0].ID, path);
             }
             else
             {

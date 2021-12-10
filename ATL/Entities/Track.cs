@@ -416,7 +416,7 @@ namespace ATL
 
             foreach (string s in AdditionalFields.Keys)
             {
-                result.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, AdditionalFields[s]));
+                result.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, s, AdditionalFields[s]));
             }
 
             // Detect and tag deleted Additional fields (=those which were in initialAdditionalFields and do not appear in AdditionalFields anymore)
@@ -424,7 +424,7 @@ namespace ATL
             {
                 if (!AdditionalFields.ContainsKey(s))
                 {
-                    MetaFieldInfo metaFieldToDelete = new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, s, "");
+                    MetaFieldInfo metaFieldToDelete = new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, s, "");
                     metaFieldToDelete.MarkedForDeletion = true;
                     result.AdditionalFields.Add(metaFieldToDelete);
                 }
@@ -486,11 +486,11 @@ namespace ATL
         /// <summary>
         /// Remove the given tag type from the Track
         /// </summary>
-        /// <param name="tagType">Tag type to remove (see MetaDataIOFactory.TAG_XX values)</param>
+        /// <param name="tagType">Tag type to remove</param>
         /// <see cref="MetaDataIOFactory"/>
         /// <returns>True if removal succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public bool Remove(int tagType = MetaDataIOFactory.TAG_ANY)
+        public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
         {
             bool result = fileIO.Remove(tagType);
             if (result) Update();

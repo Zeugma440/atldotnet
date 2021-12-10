@@ -136,9 +136,9 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public bool IsMetaSupported(int metaDataType)
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TAG_NATIVE) || (metaDataType == MetaDataIOFactory.TAG_ID3V2);
+            return (metaDataType == MetaDataIOFactory.TagType.NATIVE) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
         }
 
         public long AudioDataOffset { get; set; }
@@ -150,9 +150,9 @@ namespace ATL.AudioData.IO
         {
             return TO_BUILTIN;
         }
-        protected override int getImplementedTagType()
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
-            return MetaDataIOFactory.TAG_NATIVE;
+            return MetaDataIOFactory.TagType.NATIVE;
         }
         public override byte FieldCodeFixedLength
         {
