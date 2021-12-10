@@ -66,6 +66,7 @@ namespace ATL.AudioData.IO
             public uint Size = 0;                                            // Chunk size
         }
 
+#pragma warning disable S4487 // Unread "private" fields should be removed
         // File header data - for internal use
         private sealed class HeaderInfo
         {
@@ -79,6 +80,7 @@ namespace ATL.AudioData.IO
             public uint SampleRate;                               // Sample rate (khz)
             public uint SecurityLevel;                                     // Always 0
         }
+#pragma warning restore S4487 // Unread "private" fields should be removed
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
