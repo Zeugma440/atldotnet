@@ -191,6 +191,7 @@ namespace ATL.AudioData
         }
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available
         /// </summary>
         IDictionary<string, string> AdditionalFields
         {

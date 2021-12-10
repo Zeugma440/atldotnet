@@ -98,9 +98,7 @@ namespace ATL.AudioData.IO
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
-        /// <summary>
-        /// True if tag has been found in media file
-        /// </summary>
+        /// <inheritdoc/>
         public bool Exists
         {
             get { return this.tagExists; }
@@ -128,9 +126,7 @@ namespace ATL.AudioData.IO
         {
             get { return this.tagVersion; }
         }
-        /// <summary>
-        /// Total size of tag (in bytes)
-        /// </summary>
+        /// <inheritdoc/>
         public long Size
         {
             get
@@ -142,6 +138,9 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
+        /// <summary>
+        /// Zones of the file
+        /// </summary>
         public ICollection<Zone> Zones
         {
             get
@@ -153,16 +152,12 @@ namespace ATL.AudioData.IO
 
         // ------ TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
-        /// <summary>
-        /// Song/piece title
-        /// </summary>
+        /// <inheritdoc/>
         public String Title
         {
             get { return Utils.ProtectValue(tagData.Title); }
         }
-        /// <summary>
-        /// Artist (Performer)
-        /// </summary>
+        /// <inheritdoc/>
         public String Artist
         {
             get
@@ -172,30 +167,22 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
-        /// <summary>
-        /// Album Artist
-        /// </summary>
+        /// <inheritdoc/>
         public String AlbumArtist
         {
             get { return Utils.ProtectValue(tagData.AlbumArtist); }
         }
-        /// <summary>
-        /// Composer
-        /// </summary>
+        /// <inheritdoc/>
         public String Composer
         {
             get { return Utils.ProtectValue(tagData.Composer); }
         }
-        /// <summary>
-        /// Album title
-        /// </summary>
+        /// <inheritdoc/>
         public String Album
         {
             get { return Utils.ProtectValue(tagData.Album); }
         }
-        /// <summary>
-        /// Track number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Track
         {
             get
@@ -205,9 +192,7 @@ namespace ATL.AudioData.IO
                 else return TrackUtils.ExtractTrackNumber(tagData.TrackNumber);
             }
         }
-        /// <summary>
-        /// Total track number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort TrackTotal
         {
             get
@@ -219,9 +204,7 @@ namespace ATL.AudioData.IO
                 else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber);
             }
         }
-        /// <summary>
-        /// Disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort Disc
         {
             get
@@ -231,9 +214,7 @@ namespace ATL.AudioData.IO
                 else return TrackUtils.ExtractTrackNumber(tagData.DiscNumber);
             }
         }
-        /// <summary>
-        /// Total disc number
-        /// </summary>
+        /// <inheritdoc/>
         public ushort DiscTotal
         {
             get
@@ -245,16 +226,12 @@ namespace ATL.AudioData.IO
                 else return TrackUtils.ExtractTrackTotal(tagData.DiscNumber);
             }
         }
-        /// <summary>
-        /// Rating, from 0 to 100%
-        /// </summary>
+        /// <inheritdoc/>
         public float Popularity
         {
             get { return (float)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
         }
-        /// <summary>
-        /// Recording date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime Date
         {
             get
@@ -304,9 +281,7 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
-        /// <summary>
-        /// Publishing date (DateTime.MinValue if field does not exist)
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime PublishingDate
         {
             get
@@ -317,65 +292,47 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
-        /// <summary>
-        /// Genre name
-        /// </summary>
+        /// <inheritdoc/>
         public String Genre
         {
             get { return Utils.ProtectValue(tagData.Genre); }
         }
-        /// <summary>
-        /// Commment
-        /// </summary>
+        /// <inheritdoc/>
         public String Comment
         {
             get { return Utils.ProtectValue(tagData.Comment); }
         }
-        /// <summary>
-        /// Copyright
-        /// </summary>
+        /// <inheritdoc/>
         public String Copyright
         {
             get { return Utils.ProtectValue(tagData.Copyright); }
         }
-        /// <summary>
-        /// Original artist
-        /// </summary>
+        /// <inheritdoc/>
         public String OriginalArtist
         {
             get { return Utils.ProtectValue(tagData.OriginalArtist); }
         }
-        /// <summary>
-        /// Original album
-        /// </summary>
+        /// <inheritdoc/>
         public String OriginalAlbum
         {
             get { return Utils.ProtectValue(tagData.OriginalAlbum); }
         }
-        /// <summary>
-        /// General Description
-        /// </summary>
+        /// <inheritdoc/>
         public String GeneralDescription
         {
             get { return Utils.ProtectValue(tagData.GeneralDescription); }
         }
-        /// <summary>
-        /// Publisher
-        /// </summary>
+        /// <inheritdoc/>
         public String Publisher
         {
             get { return Utils.ProtectValue(tagData.Publisher); }
         }
-        /// <summary>
-        /// Conductor
-        /// </summary>
+        /// <inheritdoc/>
         public String Conductor
         {
             get { return Utils.ProtectValue(tagData.Conductor); }
         }
-        /// <summary>
-        /// Size of padding zone, if any
-        /// </summary>
+        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return tagData.PaddingSize; }
@@ -402,7 +359,12 @@ namespace ATL.AudioData.IO
                 return result;
             }
         }
-
+        /// <summary>
+        /// Get additional fields for the given stream number and language
+        /// </summary>
+        /// <param name="streamNumber">Stream number to get additional fields for (optional)</param>
+        /// <param name="language">Language to get additional fields for (optional)</param>
+        /// <returns>Additional fields associated with the given stream and language</returns>
         public IList<MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
         {
             IList<MetaFieldInfo> result = new List<MetaFieldInfo>();
@@ -422,6 +384,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <inheritdoc/>
         public IList<PictureInfo> EmbeddedPictures
         {
             get
@@ -437,14 +400,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        /// <summary>
-        /// Each positioned flag indicates the presence of an embedded picture
-        /// </summary>
+        /// <inheritdoc/>
         public IList<PictureInfo> PictureTokens
         {
-            get { return this.pictureTokens; }
+            get { return pictureTokens; }
         }
 
+        /// <inheritdoc/>
         public IList<ChapterInfo> Chapters
         {
             get
@@ -463,6 +425,7 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <inheritdoc/>
         public LyricsInfo Lyrics
         {
             get
@@ -478,6 +441,7 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <inheritdoc/>
         public string ChaptersTableDescription
         {
             get { return Utils.ProtectValue(tagData.ChaptersTableDescription); }
@@ -485,16 +449,27 @@ namespace ATL.AudioData.IO
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
+        /// <summary>
+        /// Indicate whether the metadata field code must have a fixed length or not
+        /// Default : 0 (no fixed length)
+        /// </summary>
         public virtual byte FieldCodeFixedLength
         {
             get { return 0; }
         }
 
+        /// <summary>
+        /// Indicate whether metadata should be read with little endian convention
+        /// true : little endian; false : big endian
+        /// </summary>
         protected virtual bool isLittleEndian
         {
             get { return true; }
         }
 
+        /// <summary>
+        /// Indicate which rating convention to apply (See MetaDataIO.RC_XXX static constants)
+        /// </summary>
         protected virtual byte ratingConvention
         {
             get { return RC_ID3v2; }
@@ -502,16 +477,30 @@ namespace ATL.AudioData.IO
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
 
+        /// <summary>
+        /// Add a picture token of the given type
+        /// </summary>
+        /// <param name="picType">Type of the picture token to add</param>
         protected void addPictureToken(PictureInfo.PIC_TYPE picType)
         {
             pictureTokens.Add(new PictureInfo(picType));
         }
 
+        /// <summary>
+        /// Add a picture token for the given tag type, with the given code as a byte
+        /// </summary>
+        /// <param name="tagType">Tag type to use</param>
+        /// <param name="nativePicCode">Native code to use</param>
         protected void addPictureToken(MetaDataIOFactory.TagType tagType, byte nativePicCode)
         {
             pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
         }
 
+        /// <summary>
+        /// Add a picture token for the given tag type, with the given code as a string
+        /// </summary>
+        /// <param name="tagType">Tag type to use</param>
+        /// <param name="nativePicCode">Native code to use</param>
         protected void addPictureToken(MetaDataIOFactory.TagType tagType, string nativePicCode)
         {
             pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
