@@ -6,7 +6,7 @@ namespace ATL.test
 {
     public class ArrayLogger : ILogDevice
     {
-        Log theLog = new Log();
+        readonly Log theLog = new Log();
         public IList<Log.LogItem> Items;
 
         public ArrayLogger()

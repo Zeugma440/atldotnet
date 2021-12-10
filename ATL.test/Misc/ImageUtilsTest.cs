@@ -7,24 +7,6 @@ namespace ATL.test
     [TestClass]
     public class ImageUtilsTest
     {
-        /*
-                [TestMethod]
-                public void Utils_ResizePic()
-                {
-                    Image image = Image.FromFile(TestUtils.GetResourceLocationRoot() + "pic1.jpg");
-                    Assert.AreEqual(900, image.Width);
-                    Assert.AreEqual(600, image.Height);
-
-                    Image resizedImage = Utils.ResizeImage(image, new Size(50, 50), false);
-                    Assert.AreEqual(50, resizedImage.Width);
-                    Assert.AreEqual(50, resizedImage.Height);
-
-                    resizedImage = Utils.ResizeImage(image, new Size(50, 50), true);
-                    Assert.AreEqual(50, resizedImage.Width);
-                    Assert.AreEqual(33, resizedImage.Height);
-                }
-        */
-
         [TestMethod]
         public void ImgUtils_MimeAndFormat()
         {
@@ -42,9 +24,10 @@ namespace ATL.test
             {
                 ImageUtils.GetImageFormatFromPictureHeader(new byte[2]);
                 Assert.Fail();
-            } catch
+            }
+            catch
             {
-                return;
+                // Nothing
             }
         }
 

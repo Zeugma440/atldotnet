@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ATL.test
 {
-    public class TestUtils
+    public static class TestUtils
     {
         public static string REPO_NAME = "atldotnet";
         private static string locationRoot = null;
@@ -29,8 +29,8 @@ namespace ATL.test
         {
             string extension = fileName.Substring(fileName.LastIndexOf('.'), fileName.Length - fileName.LastIndexOf('.'));
             int lastSeparatorPos = Math.Max(fileName.LastIndexOf('\\'), fileName.LastIndexOf('/'));
-            string bareFileName = fileName.Substring(lastSeparatorPos+1, fileName.Length - lastSeparatorPos - 1);
-            if (!Directory.Exists(GetResourceLocationRoot()+"tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
+            string bareFileName = fileName.Substring(lastSeparatorPos + 1, fileName.Length - lastSeparatorPos - 1);
+            if (!Directory.Exists(GetResourceLocationRoot() + "tmp")) Directory.CreateDirectory(GetResourceLocationRoot() + "tmp");
             string result = GetResourceLocationRoot() + "tmp" + Path.DirectorySeparatorChar + bareFileName + "--" + DateTime.Now.ToString("HH.mm.ss.fff") + extension;
 
             // Create a writable working copy

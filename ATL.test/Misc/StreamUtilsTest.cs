@@ -12,10 +12,10 @@ namespace ATL.test
         [TestMethod]
         public void StreamUtils_CopyStream_limited()
         {
-            IList<int> list1 = new List<int>();
+            IList<byte> list1 = new List<byte>();
             for (byte i = 0; i < 20; i++) list1.Add(i);
 
-            IList<int> list2 = new List<int>();
+            IList<byte> list2 = new List<byte>();
             for (byte i = 0; i < 20; i++) list2.Add(i);
 
             using (MemoryStream stream1 = new MemoryStream(20))
@@ -30,7 +30,7 @@ namespace ATL.test
                 StreamUtils.CopyStream(stream1, stream2, 5);
 
                 // Build expected result
-                for (int i = 5; i < 10; i++) list2[i] = i - 4;
+                for (int i = 5; i < 10; i++) list2[i] = Convert.ToByte(i - 4);
 
                 // Test expected result
                 stream2.Seek(0, SeekOrigin.Begin);
@@ -41,10 +41,10 @@ namespace ATL.test
         [TestMethod]
         public void StreamUtils_CopyStream_unlimited()
         {
-            IList<int> list1 = new List<int>();
+            IList<byte> list1 = new List<byte>();
             for (byte i = 0; i < 20; i++) list1.Add(i);
 
-            IList<int> list2 = new List<int>();
+            IList<byte> list2 = new List<byte>();
             for (byte i = 0; i < 20; i++) list2.Add(i);
 
             using (MemoryStream stream1 = new MemoryStream(20))
@@ -59,14 +59,14 @@ namespace ATL.test
                 StreamUtils.CopyStream(stream1, stream2);
 
                 // Build expected result
-                for (int i = 5; i < 20; i++) list2[i] = i - 4;
+                for (int i = 5; i < 20; i++) list2[i] = Convert.ToByte(i - 4);
 
                 // Test expected result
                 stream2.Seek(0, SeekOrigin.Begin);
                 for (int i = 0; i < 20; i++) Assert.AreEqual(list2[i], stream2.ReadByte());
             }
         }
-        
+
         [TestMethod]
         public void StreamUtils_ShortenStream()
         {
@@ -227,28 +227,40 @@ namespace ATL.test
                 StreamUtils.DecodeBEUInt16(new byte[1]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeUInt16(new byte[1]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeInt16(new byte[1]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeBEInt16(new byte[1]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
 
             try
@@ -256,21 +268,30 @@ namespace ATL.test
                 StreamUtils.DecodeBEInt24(new byte[2]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeBEUInt24(new byte[2]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.EncodeBEUInt24(0x01FFFFFF);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
 
             try
@@ -278,28 +299,40 @@ namespace ATL.test
                 StreamUtils.DecodeBEUInt32(new byte[3]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeUInt32(new byte[3]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeBEInt32(new byte[3]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeInt32(new byte[3]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
 
             try
@@ -307,14 +340,20 @@ namespace ATL.test
                 StreamUtils.DecodeUInt64(new byte[7]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeBEInt64(new byte[7]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
 
             try
@@ -322,42 +361,60 @@ namespace ATL.test
                 StreamUtils.DecodeSynchSafeInt(new byte[6]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.DecodeSynchSafeInt32(new byte[6]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.EncodeSynchSafeInt(1, 0);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.EncodeSynchSafeInt(1, 6);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.ReadBits(new BinaryReader(new MemoryStream()), 0, 0);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
 
             try
             {
                 StreamUtils.ReadBits(new BinaryReader(new MemoryStream()), 0, 33);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
         }
     }
 }

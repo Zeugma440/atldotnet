@@ -93,7 +93,10 @@ namespace ATL.test
                 Utils.DecodeFrom64(new byte[9]);
                 Assert.Fail();
             }
-            catch { }
+            catch
+            {
+                // Nothing
+            }
         }
 
         [TestMethod]

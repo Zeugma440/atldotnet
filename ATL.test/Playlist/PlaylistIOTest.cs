@@ -43,7 +43,9 @@ namespace ATL.test.IO.Playlist
             try
             {
                 pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/efiufhziuefizeub.m3u");
+#pragma warning disable S1481 // Unused local variables should be removed
                 IList<string> files = pls.FilePaths;
+#pragma warning restore S1481 // Unused local variables should be removed
                 Assert.Fail();
             }
             catch
@@ -65,7 +67,9 @@ namespace ATL.test.IO.Playlist
             try
             {
                 theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/efiufhziuefizeub.m3u");
+#pragma warning disable S1481 // Unused local variables should be removed
                 IList<string> files = theReader.FilePaths;
+#pragma warning restore S1481 // Unused local variables should be removed
                 Assert.Fail();
             }
             catch
