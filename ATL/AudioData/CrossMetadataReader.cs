@@ -2,6 +2,7 @@ using ATL.AudioData.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ATL.AudioData
 {
@@ -414,16 +415,9 @@ namespace ATL.AudioData
         {
             get
             {
-                IList<PictureInfo> pictures = new List<PictureInfo>();
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    if (reader.PictureTokens.Count > 0)
-                    {
-                        pictures = reader.PictureTokens;
-                        break;
-                    }
-                }
-                return pictures;
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.PictureTokens.Count > 0);
+                if (reader != null) return reader.PictureTokens;
+                return new List<PictureInfo>();
             }
         }
 
@@ -435,17 +429,17 @@ namespace ATL.AudioData
             get
             {
                 IDictionary<string, string> result = new Dictionary<string, string>();
-                foreach (IMetaDataIO reader in metaReaders)
+
+                foreach (var (readerAdditionalFields, s) in from IMetaDataIO reader in metaReaders
+                                                            let readerAdditionalFields = reader.AdditionalFields
+                                                            where readerAdditionalFields.Count > 0
+                                                            from string s in readerAdditionalFields.Keys
+                                                            where !result.ContainsKey(s)
+                                                            select (readerAdditionalFields, s))
                 {
-                    IDictionary<string, string> readerAdditionalFields = reader.AdditionalFields;
-                    if (readerAdditionalFields.Count > 0)
-                    {
-                        foreach (string s in readerAdditionalFields.Keys)
-                        {
-                            if (!result.ContainsKey(s)) result.Add(s, readerAdditionalFields[s]);
-                        }
-                    }
+                    result.Add(s, readerAdditionalFields[s]);
                 }
+
                 return result;
             }
         }
@@ -458,17 +452,11 @@ namespace ATL.AudioData
             get
             {
                 IList<ChapterInfo> chapters = new List<ChapterInfo>();
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    if (reader.Chapters != null && reader.Chapters.Count > 0)
-                    {
-                        foreach (ChapterInfo chapter in reader.Chapters)
-                        {
-                            chapters.Add(chapter);
-                        }
-                        break;
-                    }
-                }
+
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Chapters != null && r.Chapters.Count > 0);
+                if (reader != null)
+                    foreach (ChapterInfo chapter in reader.Chapters) chapters.Add(chapter);
+
                 return chapters;
             }
         }
@@ -480,13 +468,8 @@ namespace ATL.AudioData
         {
             get
             {
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    if (reader.Lyrics != null)
-                    {
-                        return new LyricsInfo(reader.Lyrics);
-                    }
-                }
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null);
+                if (reader != null) return new LyricsInfo(reader.Lyrics);
                 return new LyricsInfo();
             }
         }
@@ -499,17 +482,11 @@ namespace ATL.AudioData
             get
             {
                 IList<PictureInfo> pictures = new List<PictureInfo>();
-                foreach (IMetaDataIO reader in metaReaders)
-                {
-                    if (reader.EmbeddedPictures != null && reader.EmbeddedPictures.Count > 0)
-                    {
-                        foreach (PictureInfo picture in reader.EmbeddedPictures)
-                        {
-                            pictures.Add(picture);
-                        }
-                        break;
-                    }
-                }
+
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.EmbeddedPictures != null && r.EmbeddedPictures.Count > 0);
+                if (reader != null)
+                    foreach (PictureInfo picture in reader.EmbeddedPictures) pictures.Add(picture);
+
                 return pictures;
             }
         }
