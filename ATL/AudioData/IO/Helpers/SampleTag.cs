@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -12,7 +13,6 @@ namespace ATL.AudioData.IO
 
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams)
         {
-            string str;
             byte[] data = new byte[256];
 
             // Manufacturer
@@ -106,14 +106,12 @@ namespace ATL.AudioData.IO
 
             // How many of them do we have ? -> count distinct indexes
             IList<string> keys = new List<string>();
-            foreach (string s in additionalFields.Keys)
+            foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("sample.SampleLoop")))
             {
-                if (s.StartsWith("sample.SampleLoop"))
-                {
-                    string key = s.Substring(0, s.IndexOf("]") + 1);
-                    if (!keys.Contains(key)) keys.Add(key);
-                }
+                string key = s.Substring(0, s.IndexOf("]") + 1);
+                if (!keys.Contains(key)) keys.Add(key);
             }
+
             w.Write(keys.Count);
 
             // Sample loops data size

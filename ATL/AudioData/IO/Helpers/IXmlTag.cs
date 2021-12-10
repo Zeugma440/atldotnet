@@ -118,50 +118,41 @@ namespace ATL.AudioData.IO
             Dictionary<string, string> pathNodes = new Dictionary<string, string>();
             List<string> previousPathNodes = new List<string>();
             string subkey;
-
-            foreach (string key in additionalFields.Keys)
+            foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("ixml.")))
             {
-                if (key.StartsWith("ixml."))
+                // Create the list of path nodes
+                List<string> singleNodes = new List<string>(key.Split('.'));
+                singleNodes.RemoveAt(0);// Remove the "ixml" node
+                StringBuilder nodePrefix = new StringBuilder();
+                pathNodes.Clear();
+                foreach (string nodeName in singleNodes)
                 {
-                    // Create the list of path nodes
-                    List<string> singleNodes = new List<string>(key.Split('.'));
-                    singleNodes.RemoveAt(0); // Remove the "ixml" node
-
-                    StringBuilder nodePrefix = new StringBuilder();
-                    pathNodes.Clear();
-                    foreach (string nodeName in singleNodes)
-                    {
-                        nodePrefix.Append(".").Append(nodeName);
-                        pathNodes.Add(nodePrefix.ToString(), nodeName);
-                    }
-
-                    // Close all terminated (i.e. non present in current path) nodes in reverse order
-                    for (int i = previousPathNodes.Count - 2; i >= 0; i--)
-                    {
-                        if (!pathNodes.ContainsKey(previousPathNodes[i]))
-                        {
-                            writer.WriteEndElement();
-                        }
-                    }
-
-                    // Opens all new (i.e. non present in previous path) nodes
-                    foreach (string nodePath in pathNodes.Keys)
-                    {
-                        if (!previousPathNodes.Contains(nodePath))
-                        {
-                            subkey = pathNodes[nodePath];
-                            if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
-
-                            if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
-                            writer.WriteStartElement(subkey.ToUpper());
-                        }
-                    }
-
-                    // Write the last node (=leaf) as a proper value
-                    writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
-
-                    previousPathNodes = pathNodes.Keys.ToList();
+                    nodePrefix.Append(".").Append(nodeName);
+                    pathNodes.Add(nodePrefix.ToString(), nodeName);
                 }
+                // Close all terminated (i.e. non present in current path) nodes in reverse order
+                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
+                {
+                    if (!pathNodes.ContainsKey(previousPathNodes[i]))
+                    {
+                        writer.WriteEndElement();
+                    }
+                }
+                // Opens all new (i.e. non present in previous path) nodes
+                foreach (string nodePath in pathNodes.Keys)
+                {
+                    if (!previousPathNodes.Contains(nodePath))
+                    {
+                        subkey = pathNodes[nodePath];
+                        if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
+
+                        if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
+                        writer.WriteStartElement(subkey.ToUpper());
+                    }
+                }
+                // Write the last node (=leaf) as a proper value
+                writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
+                previousPathNodes = pathNodes.Keys.ToList();
             }
 
             // Closes all terminated paths

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -145,12 +146,12 @@ namespace ATL.AudioData.IO
             string typeId = PURPOSE_INFO;
             if (additionalFields.ContainsKey("list.TypeId")) typeId = additionalFields["list.TypeId"];
             else
-                foreach (string key in additionalFields.Keys)
-                    if (key.StartsWith("info.Labels"))
-                    {
-                        typeId = PURPOSE_ADTL;
-                        break;
-                    }
+                foreach (var _ in additionalFields.Keys.Where(key => key.StartsWith("info.Labels")).Select(key => new { }))
+                {
+                    typeId = PURPOSE_ADTL;
+                    break;
+                }
+
             w.Write(Utils.Latin1Encoding.GetBytes(typeId));
 
             if (typeId.Equals(PURPOSE_INFO, System.StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
@@ -202,15 +203,12 @@ namespace ATL.AudioData.IO
             if (value.Length > 0) writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
 
             string shortKey;
-            foreach (string key in additionalFields.Keys)
+            foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("info.")))
             {
-                if (key.StartsWith("info."))
+                shortKey = key.Substring(5, key.Length - 5).ToUpper();
+                if (!writtenFields.ContainsKey(key))
                 {
-                    shortKey = key.Substring(5, key.Length - 5).ToUpper();
-                    if (!writtenFields.ContainsKey(key))
-                    {
-                        if (additionalFields[key].Length > 0) writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
-                    }
+                    if (additionalFields[key].Length > 0) writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
                 }
             }
         }
@@ -219,13 +217,10 @@ namespace ATL.AudioData.IO
         {
             // Inventory of all positions
             IList<string> keys = new List<string>();
-            foreach (string s in additionalFields.Keys)
+            foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("info.Labels")))
             {
-                if (s.StartsWith("info.Labels"))
-                {
-                    string key = s.Substring(0, s.IndexOf("]") + 1);
-                    if (!keys.Contains(key)) keys.Add(key);
-                }
+                string key = s.Substring(0, s.IndexOf("]") + 1);
+                if (!keys.Contains(key)) keys.Add(key);
             }
 
             foreach (string key in keys)

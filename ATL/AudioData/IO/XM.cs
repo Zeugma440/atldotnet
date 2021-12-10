@@ -6,6 +6,7 @@ using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -18,6 +19,7 @@ namespace ATL.AudioData.IO
 
         private const String XM_SIGNATURE = "Extended Module: ";
 
+#pragma warning disable S1144 // Unused private types or members should be removed
         // Effects (NB : very close to the MOD effect codes)
         private const byte EFFECT_POSITION_JUMP = 0xB;
         private const byte EFFECT_PATTERN_BREAK = 0xD;
@@ -28,6 +30,7 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_NOTE_CUT = 0xC;
         private const byte EFFECT_NOTE_DELAY = 0xD;
         private const byte EFFECT_PATTERN_DELAY = 0xE;
+#pragma warning restore S1144 // Unused private types or members should be removed
 
 
         // Standard fields
@@ -39,7 +42,7 @@ namespace ATL.AudioData.IO
         private ushort initialTempo; // BPM
 
         private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -106,36 +109,17 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE STRUCTURES/SUBCLASSES ===
 
-        private class Instrument
+        private sealed class Instrument
         {
-            //public byte Type;  Useful for S3M but not for XM
-            public String DisplayName;
-
+            public String DisplayName = "";
             // Other fields not useful for ATL
-
-            public void Reset()
-            {
-                //Type = 0;
-                DisplayName = "";
-            }
         }
 
-        private class Event
+        private sealed class Event
         {
-            // Commented fields below not useful for ATL
-            public int Channel;
-            //public byte Note;
-            //public byte Instrument;
-            //public byte Volume;
-            public byte Command;
-            public byte Info;
-
-            public void Reset()
-            {
-                Channel = 0;
-                Command = 0;
-                Info = 0;
-            }
+            public byte Command = 0;
+            public byte Info = 0;
+            // Other fields not useful for ATL
         }
 
 
@@ -328,7 +312,6 @@ namespace ATL.AudioData.IO
             IList<Event> aRow;
             IList<IList<Event>> aPattern;
 
-            uint headerLength;
             ushort nbRows;
             uint packedDataSize;
 
@@ -336,7 +319,7 @@ namespace ATL.AudioData.IO
             {
                 aPattern = new List<IList<Event>>();
 
-                headerLength = source.ReadUInt32();
+                source.Seek(4, SeekOrigin.Current); // Header length
                 source.Seek(1, SeekOrigin.Current); // Packing type
                 nbRows = source.ReadUInt16();
 
@@ -351,8 +334,6 @@ namespace ATL.AudioData.IO
                         for (int k = 0; k < nbChannels; k++)
                         {
                             Event e = new Event();
-                            e.Channel = k + 1;
-
                             firstByte = source.ReadByte();
                             if ((firstByte & 0x80) > 0) // Most Significant Byte (MSB) is set => packed data layout
                             {
@@ -457,11 +438,11 @@ namespace ATL.AudioData.IO
             // == Computing track properties
 
             duration = calculateDuration() * 1000.0;
-
-            foreach (Instrument i in FInstruments)
+            foreach (var i in FInstruments.Where(i => i.DisplayName.Length > 0))
             {
-                if (i.DisplayName.Length > 0) comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
+                comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
             }
+
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
             tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());

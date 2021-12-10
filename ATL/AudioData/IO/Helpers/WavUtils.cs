@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using System;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -22,14 +23,12 @@ namespace ATL.AudioData.IO
         public static IList<string> getEligibleKeys(string prefix, ICollection<string> keys)
         {
             IList<string> result = new List<string>();
-            foreach (string s in keys)
+            foreach (var s in keys.Where(s => s.StartsWith(prefix + "[")))
             {
-                if (s.StartsWith(prefix + "["))
-                {
-                    string key = s.Substring(0, s.IndexOf("]") + 1);
-                    if (!result.Contains(key)) result.Add(key);
-                }
+                string key = s.Substring(0, s.IndexOf("]") + 1);
+                if (!result.Contains(key)) result.Add(key);
             }
+
             return result;
         }
 
