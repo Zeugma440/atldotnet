@@ -73,7 +73,6 @@ namespace ATL.test.IO.MetaData
         {
             using (BinaryReader r = new BinaryReader(fs))
             {
-                byte[] bytes = new byte[20];
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER")));
                 fs.Seek(1, SeekOrigin.Current);

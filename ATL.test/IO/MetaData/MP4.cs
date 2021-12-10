@@ -79,7 +79,7 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TAG_ANY, "----:com.apple.iTunes:TEST", "xxx"));
 
             testData.Pictures.Clear();
-            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 13);
+            PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TAG_ANY, 13);
             pic.ComputePicHash();
             testData.Pictures.Add(pic);
 
@@ -106,7 +106,8 @@ namespace ATL.test.IO.MetaData
                 location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
                 theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
                 readExistingTagsOnFile(theFile, 1);
-            } finally
+            }
+            finally
             {
                 testData.RecordingDate = null;
                 testData.RecordingYear = "1997";

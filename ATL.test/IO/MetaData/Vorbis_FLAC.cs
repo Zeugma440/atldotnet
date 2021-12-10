@@ -69,7 +69,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_VorbisFLAC_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -233,7 +233,7 @@ namespace ATL.test.IO.MetaData
 
             try
             {
-                ConsoleLogger log = new ConsoleLogger();
+                new ConsoleLogger();
 
                 // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
                 string location = TestUtils.GetResourceLocationRoot() + fileName;
@@ -325,7 +325,6 @@ namespace ATL.test.IO.MetaData
         {
             using (BinaryReader r = new BinaryReader(fs))
             {
-                byte[] bytes = new byte[20];
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKNUMBER=")));
                 String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);

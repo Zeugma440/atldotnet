@@ -17,11 +17,11 @@ namespace ATL.test.CodeSnippets
         string audioFilePath;
         string cuesheetFilePath;
         string playlistFilePath;
-        string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
-        string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
+        readonly string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
+        readonly string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
 
-        Log theLog = new Log();
-        System.Collections.Generic.IList<Log.LogItem> messages = new System.Collections.Generic.List<Log.LogItem>();
+        readonly Log theLog = new Log();
+        readonly System.Collections.Generic.IList<Log.LogItem> messages = new System.Collections.Generic.List<Log.LogItem>();
 
 
         public CodeSnippets()

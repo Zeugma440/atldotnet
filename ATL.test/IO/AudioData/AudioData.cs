@@ -29,7 +29,7 @@ namespace ATL.test.IO
             long audioDataSize,
             int alternate = 0)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
             string theResource = TestUtils.GetResourceLocationRoot() + resource;
 
             IAudioDataIO theReader = GetInstance().GetFromPath(theResource, alternate);

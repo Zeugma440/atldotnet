@@ -417,7 +417,6 @@ namespace ATL.test.IO.MetaData
         {
             using (BinaryReader r = new BinaryReader(fs))
             {
-                byte[] bytes = new byte[20];
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TPOS")));
                 fs.Seek(7, SeekOrigin.Current);
@@ -449,7 +448,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_iTunCommentFields()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. comment fields (iTunNORM, iTunPGAP)
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
@@ -508,7 +507,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_FieldCodev22Tov24()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing unsupported fields : RVA & TBP
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.2_iTunNORM-iTunPGAP.mp3");
@@ -613,7 +612,7 @@ namespace ATL.test.IO.MetaData
 
         private void TagIO_RW_ID3v2_Chapters()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : empty MP3
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
@@ -705,7 +704,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_Chapters_CTOCEdgeCases()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : empty MP3
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
@@ -768,7 +767,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_Chapters_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/chapters.mp3");
@@ -947,7 +946,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_UrlFrames()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : MP3 with existing tag incl. chapters
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP3/chapters.mp3");

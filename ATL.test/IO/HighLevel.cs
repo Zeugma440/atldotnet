@@ -132,8 +132,6 @@ namespace ATL.test.IO
             Track theTrack = new Track(testFileLocation);
             Assert.IsTrue(theTrack.Save());
 
-            theTrack = new Track(testFileLocation);
-
             // Check that the resulting file (working copy that has been processed) remains identical to the original file (i.e. no byte lost nor added)
 
             // 1- File length should be the same
@@ -347,7 +345,6 @@ namespace ATL.test.IO
             bool initEnablePadding = ATL.Settings.AddNewPadding;
             ATL.Settings.AddNewPadding = false;
 
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
 
@@ -816,7 +813,6 @@ namespace ATL.test.IO
         public void StreamedIO_R_Audio()
         {
             string resource = "OGG/ogg.ogg";
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -840,7 +836,6 @@ namespace ATL.test.IO
         public void TagIO_R_VorbisFLAC_multipleArtists()
         {
             string resource = "FLAC/multiple_artists.flac";
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             Track theTrack = new Track(testFileLocation);
@@ -863,7 +858,6 @@ namespace ATL.test.IO
         public void StreamedIO_R_Meta()
         {
             string resource = "OGG/ogg.ogg";
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -881,7 +875,6 @@ namespace ATL.test.IO
         public void StreamedIO_RW_Meta()
         {
             string resource = "OGG/empty.ogg";
-            string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))

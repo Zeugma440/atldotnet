@@ -125,7 +125,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void tagIO_RW_VQF_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported field (dumper)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;

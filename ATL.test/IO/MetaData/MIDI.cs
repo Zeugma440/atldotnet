@@ -6,19 +6,19 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class MIDI
     {
-        string notEmptyFile = "MID/ROQ.MID";
+        readonly string notEmptyFile = "MID/ROQ.MID";
 
         [TestMethod]
         public void TagIO_R_MIDI()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
-        
+
 
         private void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {

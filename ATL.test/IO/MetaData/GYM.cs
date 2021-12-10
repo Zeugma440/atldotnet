@@ -31,10 +31,10 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_GYM_simple()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(theFile);
         }

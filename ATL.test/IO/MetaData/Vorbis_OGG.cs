@@ -352,7 +352,6 @@ namespace ATL.test.IO.MetaData
         {
             using (BinaryReader r = new BinaryReader(fs))
             {
-                byte[] bytes = new byte[20];
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKNUMBER=")));
                 String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
@@ -697,59 +696,5 @@ namespace ATL.test.IO.MetaData
 
 
         // No cohabitation here since other tags are not supported in OGG files
-
-        /*
-                private void readExistingTagsOnFile(ref AudioDataManager theFile, int nbPictures = 2)
-                {
-                    Assert.IsTrue(theFile.ReadFromFile(true, true));
-
-                    Assert.IsNotNull(theFile.NativeTag);
-                    Assert.IsTrue(theFile.NativeTag.Exists);
-
-                    // Supported fields
-                    Assert.AreEqual("Title", theFile.NativeTag.Title);
-                    Assert.AreEqual("父", theFile.NativeTag.Album);
-                    Assert.AreEqual("Artist", theFile.NativeTag.Artist);
-                    Assert.AreEqual("Test!", theFile.NativeTag.Comment);
-                    Assert.AreEqual("2017", theFile.NativeTag.Year);
-                    Assert.AreEqual("Test", theFile.NativeTag.Genre);
-                    Assert.AreEqual(22, theFile.NativeTag.Track);
-                    Assert.AreEqual("Me", theFile.NativeTag.Composer);
-                    Assert.AreEqual(2, theFile.NativeTag.Disc);
-
-                    // Unsupported field (MOOD)
-                    Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("MOOD"));
-                    Assert.AreEqual("xxx", theFile.NativeTag.AdditionalFields["MOOD"]);
-
-
-                    // Pictures
-                    Assert.AreEqual(nbPictures, theFile.NativeTag.EmbeddedPictures.Count);
-
-                    int nbFound = 0;
-                    foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
-                    {
-                        Image picture;
-                        if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front)) // Supported picture
-                        {
-                            Assert.AreEqual(pic.NativePicCode, 0x03);
-                            picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            Assert.AreEqual(picture.Height, 150);
-                            Assert.AreEqual(picture.Width, 150);
-                            nbFound++;
-                        }
-                        else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported))  // Unsupported picture (icon)
-                        {
-                            Assert.AreEqual(pic.NativePicCode, 0x02);
-                            picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Png);
-                            Assert.AreEqual(picture.Height, 168);
-                            Assert.AreEqual(picture.Width, 175);
-                            nbFound++;
-                        }
-                    }
-                    Assert.AreEqual(2, nbFound);
-                }
-        */
     }
 }

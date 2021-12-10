@@ -7,13 +7,13 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class IT
     {
-        string notEmptyFile = "IT/it.it";
-        string emptyFile = "IT/empty.it";
+        readonly string notEmptyFile = "IT/it.it";
+        readonly string emptyFile = "IT/empty.it";
 
         [TestMethod]
         public void TagIO_R_IT()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
@@ -33,7 +33,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_IT_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
@@ -89,10 +89,9 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void tagIO_RW_IT_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 

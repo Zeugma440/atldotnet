@@ -97,7 +97,7 @@ namespace ATL.test.IO.MetaData
 
         protected void test_RW_Cohabitation(int tagType1, int tagType2, bool canMeta1NotExist = true)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : empty file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
@@ -356,7 +356,7 @@ namespace ATL.test.IO.MetaData
 
         public void test_RW_Empty(string fileName, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
@@ -510,9 +510,8 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             // Source : totally metadata-free file
-            string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -792,7 +791,7 @@ namespace ATL.test.IO.MetaData
         protected void assumeRatingInFile(string file, double rating, int tagType)
         {
             string location = TestUtils.GetResourceLocationRoot() + file;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile());
 

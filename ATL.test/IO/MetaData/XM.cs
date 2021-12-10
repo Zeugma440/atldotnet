@@ -7,16 +7,16 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class XM
     {
-        string notEmptyFile = "XM/xm.xm";
-        string emptyFile = "XM/empty.xm";
+        readonly string notEmptyFile = "XM/xm.xm";
+        readonly string emptyFile = "XM/empty.xm";
 
         [TestMethod]
         public void TagIO_R_XM()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -33,7 +33,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_XM_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
@@ -89,10 +89,9 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void tagIO_RW_XM_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
@@ -126,7 +125,7 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
-        
+
 
         private void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {

@@ -7,11 +7,11 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class WAV : MetaIOTest
     {
-        private string notEmptyFile_bext = "WAV/broadcastwave_bext.wav";
-        private string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
-        private string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
-        private string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
-        private string notEmptyFile_cue = "WAV/cue.wav";
+        readonly private string notEmptyFile_bext = "WAV/broadcastwave_bext.wav";
+        readonly private string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
+        readonly private string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
+        readonly private string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
+        readonly private string notEmptyFile_cue = "WAV/cue.wav";
 
         public WAV()
         {

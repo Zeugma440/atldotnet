@@ -7,16 +7,16 @@ namespace ATL.test.IO.MetaData
     [TestClass]
     public class MOD
     {
-        string notEmptyFile = "MOD/mod.mod";
-        string emptyFile = "MOD/empty.mod";
+        readonly string notEmptyFile = "MOD/mod.mod";
+        readonly string emptyFile = "MOD/empty.mod";
 
         [TestMethod]
         public void TagIO_R_MOD()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -29,16 +29,16 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("THALAMUSIC-SP", theFile.NativeTag.Title);
             Assert.AreEqual("original by r.hubbard/convert by m.simmonds/sonic projects 1991", comment);
         }
-        
+
         [TestMethod]
         public void TagIO_RW_MOD_Empty()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -89,12 +89,11 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void tagIO_RW_MOD_Existing()
         {
-            ConsoleLogger log = new ConsoleLogger();
+            new ConsoleLogger();
 
             // Source : file with existing tag
-            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -126,7 +125,7 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
-        
+
 
         private void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {
