@@ -14,21 +14,6 @@ namespace ATL.AudioData.IO
         // Sample frequencies
         private static readonly int[] MPP_SAMPLERATES = new int[4] { 44100, 48000, 37800, 32000 };
 
-        // Used with ProfileID property
-        private const byte MPP_PROFILE_QUALITY0 = 9;        // '--quality 0' profile
-        private const byte MPP_PROFILE_QUALITY1 = 10;       // '--quality 1' profile
-        private const byte MPP_PROFILE_TELEPHONE = 11;        // 'Telephone' profile
-        private const byte MPP_PROFILE_THUMB = 1;          // 'Thumb' (poor) quality
-        private const byte MPP_PROFILE_RADIO = 2;        // 'Radio' (normal) quality
-        private const byte MPP_PROFILE_STANDARD = 3;    // 'Standard' (good) quality
-        private const byte MPP_PROFILE_XTREME = 4;   // 'Xtreme' (very good) quality
-        private const byte MPP_PROFILE_INSANE = 5;   // 'Insane' (excellent) quality
-        private const byte MPP_PROFILE_BRAINDEAD = 6; // 'BrainDead' (excellent) quality
-        private const byte MPP_PROFILE_QUALITY9 = 7; // '--quality 9' (excellent) quality
-        private const byte MPP_PROFILE_QUALITY10 = 8;  // '--quality 10' (excellent) quality
-        private const byte MPP_PROFILE_UNKNOWN = 0;               // Unknown profile
-        private const byte MPP_PROFILE_EXPERIMENTAL = 12;
-
         // ID code for stream version > 6
         private const long STREAM_VERSION_7_ID = 120279117;  // 120279117 = 'MP+' + #7
         private const long STREAM_VERSION_71_ID = 388714573; // 388714573 = 'MP+' + #23

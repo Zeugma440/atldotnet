@@ -437,8 +437,9 @@ namespace ATL
                 // Process target pictures first, in their specified order
                 foreach (PictureInfo targetPic in currentEmbeddedPictures)
                 {
-                    bool found = false;
-                    foreach (var picInfo in initialEmbeddedPictures.Where(picInfo => targetPic.EqualsProper(picInfo)))
+                    PictureInfo picInfo = initialEmbeddedPictures.FirstOrDefault(pi => targetPic.EqualsProper(pi));
+
+                    if (picInfo != null)
                     {
                         result.Pictures.Add(targetPic);
                         // Compare picture contents
@@ -450,12 +451,8 @@ namespace ATL
                             picToDelete.MarkedForDeletion = true;
                             result.Pictures.Add(picToDelete);
                         }
-
-                        found = true;
-                        break;
                     }
-                    // Completely new picture
-                    if (!found) result.Pictures.Add(targetPic);
+                    else result.Pictures.Add(targetPic); // Completely new picture
                 }
 
                 // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)

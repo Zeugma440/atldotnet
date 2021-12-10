@@ -145,12 +145,7 @@ namespace ATL.AudioData.IO
 
             string typeId = PURPOSE_INFO;
             if (additionalFields.ContainsKey("list.TypeId")) typeId = additionalFields["list.TypeId"];
-            else
-                foreach (var _ in additionalFields.Keys.Where(key => key.StartsWith("info.Labels")).Select(key => new { }))
-                {
-                    typeId = PURPOSE_ADTL;
-                    break;
-                }
+            else if (additionalFields.Keys.Any(key => key.StartsWith("info.Labels"))) typeId = PURPOSE_ADTL;
 
             w.Write(Utils.Latin1Encoding.GetBytes(typeId));
 
@@ -206,10 +201,8 @@ namespace ATL.AudioData.IO
             foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("info.")))
             {
                 shortKey = key.Substring(5, key.Length - 5).ToUpper();
-                if (!writtenFields.ContainsKey(key))
-                {
-                    if (additionalFields[key].Length > 0) writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
-                }
+                if (!writtenFields.ContainsKey(key) && additionalFields[key].Length > 0)
+                    writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
             }
         }
 
