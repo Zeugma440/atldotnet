@@ -14,7 +14,7 @@ namespace ATL.AudioData
     internal class CrossMetadataReader : IMetaDataIO
     {
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
-        private IList<IMetaDataIO> metaReaders = null;
+        private readonly IList<IMetaDataIO> metaReaders = null;
 
         public CrossMetadataReader(AudioDataManager audioManager, int[] tagPriority)
         {

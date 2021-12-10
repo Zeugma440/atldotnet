@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData
 {
@@ -96,9 +97,9 @@ namespace ATL.AudioData
             // => Try writing with one of the metas set in the Settings
             if (hasNothing)
             {
-                foreach (int i in Settings.DefaultTagsWhenNoMetadata)
+                foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
                 {
-                    if (supportedMetas.Contains(i)) availableMetas.Add(i);
+                    availableMetas.Add(i);
                 }
 
                 // File does not support any of the metas we want to write

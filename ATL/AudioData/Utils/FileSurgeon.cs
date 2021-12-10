@@ -47,7 +47,7 @@ namespace ATL.AudioData.IO
         /// Describes a group of overlapping, contiguous or neighbouring <see cref="FileStructureHelper.Zone"/>s that can be buffered together for I/O optimization
         /// Two Zones stop belonging to the same region if they are distant by more than <see cref="REGION_DISTANCE_THRESHOLD"/>% of the total file size
         /// </summary>
-        private class ZoneRegion
+        private sealed class ZoneRegion
         {
             public ZoneRegion(int id)
             {

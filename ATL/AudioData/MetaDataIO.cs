@@ -15,14 +15,32 @@ namespace ATL.AudioData.IO
         // ------ CONSTS -----------------------------------------------------
 
         // Default tag offset
-        public const int TO_EOF = 0;     // Tag offset is at End Of File
-        public const int TO_BOF = 1;     // Tag offset is at Beginning Of File
-        public const int TO_BUILTIN = 2; // Tag offset is at a Built-in location (e.g. MP4)
+        /// <summary>
+        /// Tag offset is at End Of File
+        /// </summary>
+        public const int TO_EOF = 0;
+        /// <summary>
+        /// Tag offset is at Beginning Of File
+        /// </summary>
+        public const int TO_BOF = 1;
+        /// <summary>
+        /// Tag offset is at a Built-in location (e.g. MP4)
+        /// </summary>
+        public const int TO_BUILTIN = 2;
 
         // Rating conventions
-        public const int RC_ID3v2 = 0;       // ID3v2 convention (0..255 scale with various tweaks)
-        public const int RC_ASF = 1;         // ASF convention (0..100 scale with 1 being encoded as 1)
-        public const int RC_APE = 2;         // APE convention (proper 0..100 scale)
+        /// <summary>
+        /// ID3v2 convention (0..255 scale with various tweaks)
+        /// </summary>
+        public const int RC_ID3v2 = 0;
+        /// <summary>
+        /// ASF convention (0..100 scale with 1 being encoded as 1)
+        /// </summary>
+        public const int RC_ASF = 1;
+        /// <summary>
+        /// APE convention (proper 0..100 scale)
+        /// </summary>
+        public const int RC_APE = 2;
 
 
         // ------ INNER CLASSES -----------------------------------------------------

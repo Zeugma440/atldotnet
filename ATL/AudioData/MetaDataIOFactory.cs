@@ -44,12 +44,6 @@ namespace ATL.AudioData
             ANY = TAG_ANY
         }
 
-        // Defines the default reading priority of the metadata
-        private int[] tagPriority;
-
-        // Defines whether the next created metadatareaders should use cross-tag reading
-        private bool m_enableCrossReading = true;
-
         // The instance of this factory
         private static MetaDataIOFactory theFactory = null;
 
@@ -64,17 +58,9 @@ namespace ATL.AudioData
         ///                        priorities) is first read. If the value is empty, the next
         ///                        tagging standard (according to priorities) is read, and so on...
         /// </summary>
-        public bool CrossReading
-        {
-            get { return m_enableCrossReading; }
-            set { m_enableCrossReading = value; }
-        }
+        public bool CrossReading { get; set; } = true;
 
-        public int[] TagPriority
-        {
-            get { return tagPriority; }
-            set { tagPriority = value; }
-        }
+        public int[] TagPriority { get; set; }
 
         // ------------------------------------------------------------------------------------------
 
@@ -90,11 +76,11 @@ namespace ATL.AudioData
                 if (null == theFactory)
                 {
                     theFactory = new MetaDataIOFactory();
-                    theFactory.tagPriority = new int[TAG_TYPE_COUNT];
-                    theFactory.tagPriority[0] = TAG_ID3V2;
-                    theFactory.tagPriority[1] = TAG_APE;
-                    theFactory.tagPriority[2] = TAG_NATIVE;
-                    theFactory.tagPriority[3] = TAG_ID3V1;
+                    theFactory.TagPriority = new int[TAG_TYPE_COUNT];
+                    theFactory.TagPriority[0] = TAG_ID3V2;
+                    theFactory.TagPriority[1] = TAG_APE;
+                    theFactory.TagPriority[2] = TAG_NATIVE;
+                    theFactory.TagPriority[3] = TAG_ID3V1;
 
                     theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
                     theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
@@ -128,8 +114,8 @@ namespace ATL.AudioData
         /// <param name="rank">Reading priority (0..TAG_TYPE_COUNT-1)</param>
         public void SetTagPriority(int tag, int rank)
         {
-            if ((rank > -1) && (rank < tagPriority.Length))
-                tagPriority[rank] = tag;
+            if ((rank > -1) && (rank < TagPriority.Length))
+                TagPriority[rank] = tag;
         }
 
         /// <summary>
@@ -148,27 +134,27 @@ namespace ATL.AudioData
             if (theDataManager.ID3v2.Exists) tagCount++;
             if (theDataManager.APEtag.Exists) tagCount++;
 
-            if (m_enableCrossReading && (tagCount > 1) && (-1 == forceTagType))
+            if (CrossReading && (tagCount > 1) && (-1 == forceTagType))
             {
-                theMetaReader = new CrossMetadataReader(theDataManager, tagPriority);
+                theMetaReader = new CrossMetadataReader(theDataManager, TagPriority);
             }
             else
             {
                 for (int i = 0; i < TAG_TYPE_COUNT; i++)
                 {
-                    if (((TAG_NATIVE == tagPriority[i] && -1 == forceTagType) || (TAG_NATIVE == forceTagType)) && (theDataManager.HasNativeMeta()))
+                    if (((TAG_NATIVE == TagPriority[i] && -1 == forceTagType) || (TAG_NATIVE == forceTagType)) && (theDataManager.HasNativeMeta()))
                     {
                         theMetaReader = theDataManager.NativeTag; break;
                     }
-                    if (((TAG_ID3V1 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V1 == forceTagType)) && (theDataManager.ID3v1.Exists))
+                    if (((TAG_ID3V1 == TagPriority[i] && -1 == forceTagType) || (TAG_ID3V1 == forceTagType)) && (theDataManager.ID3v1.Exists))
                     {
                         theMetaReader = theDataManager.ID3v1; break;
                     }
-                    if (((TAG_ID3V2 == tagPriority[i] && -1 == forceTagType) || (TAG_ID3V2 == forceTagType)) && (theDataManager.ID3v2.Exists))
+                    if (((TAG_ID3V2 == TagPriority[i] && -1 == forceTagType) || (TAG_ID3V2 == forceTagType)) && (theDataManager.ID3v2.Exists))
                     {
                         theMetaReader = theDataManager.ID3v2; break;
                     }
-                    if (((TAG_APE == tagPriority[i] && -1 == forceTagType) || (TAG_APE == forceTagType)) && (theDataManager.APEtag.Exists))
+                    if (((TAG_APE == TagPriority[i] && -1 == forceTagType) || (TAG_APE == forceTagType)) && (theDataManager.APEtag.Exists))
                     {
                         theMetaReader = theDataManager.APEtag; break;
                     }

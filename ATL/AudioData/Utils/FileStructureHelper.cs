@@ -615,7 +615,7 @@ namespace ATL.AudioData
                         }
                         else if (header.Value is int)
                         {
-                            value = BitConverter.GetBytes((int)0);
+                            value = BitConverter.GetBytes(0);
                         }
                         else if (header.Value is uint)
                         {
