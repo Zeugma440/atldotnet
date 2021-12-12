@@ -530,7 +530,7 @@ namespace ATL.test.IO
 
                 theTrack.Artist = "";
                 theTrack.DiscNumber = 0;
-                theTrack.Year = 0;
+                theTrack.Year = null;
                 theTrack.PublishingDate = null;
 
                 Assert.IsTrue(theTrack.Save());
@@ -538,7 +538,7 @@ namespace ATL.test.IO
 
                 Assert.AreEqual("", theTrack.Artist);
                 Assert.AreEqual(0, theTrack.DiscNumber);
-                Assert.AreEqual(0, theTrack.Year);
+                Assert.IsFalse(theTrack.Year.HasValue);
                 Assert.IsFalse(theTrack.PublishingDate.HasValue);
 
 
@@ -552,13 +552,13 @@ namespace ATL.test.IO
                 Assert.AreEqual(now.Year, theTrack.Year);
                 Assert.AreEqual(now.ToString(), theTrack.Date.ToString());
 
-                theTrack.Date = DateTime.MinValue;
+                theTrack.Date = null;
 
                 Assert.IsTrue(theTrack.Save());
                 theTrack = new Track(testFileLocation);
 
-                Assert.AreEqual(0, theTrack.Year);
-                Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
+                Assert.IsFalse(theTrack.Year.HasValue);
+                Assert.IsFalse(theTrack.Date.HasValue);
 
 
                 // Get rid of the working copy

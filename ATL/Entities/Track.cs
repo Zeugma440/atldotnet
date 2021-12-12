@@ -129,20 +129,22 @@ namespace ATL
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
         /// <summary>
 		/// Recording Year
 		/// </summary>
-        public int Year
+        public int? Year
         {
             get
             {
-                if (Date == DateTime.MinValue) return 0;
-                else return Date.Year;
+                if (canUseValue(Date)) return Date.Value.Year;
+                else if (Settings.NullAbsentValues) return null;
+                else return 0;
             }
             set
             {
-                if (value > 0) Date = new DateTime(value, 1, 1);
+                if (canUseValue(value)) Date = new DateTime(value.Value, 1, 1);
+                else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
             }
         }
@@ -345,7 +347,8 @@ namespace ATL
             else PublishingDate = null;
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
-            Date = fileIO.Date;
+            if (fileIO.Date > DateTime.MinValue || !Settings.NullAbsentValues) Date = fileIO.Date;
+            else Date = null;
             Album = fileIO.Album;
             TrackNumber = fileIO.Track;
             TrackTotal = fileIO.TrackTotal;
@@ -394,9 +397,10 @@ namespace ATL
             else result.PublishingDate = "0";
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
-            if (!Date.Equals(DateTime.MinValue)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
+            if (canUseValue(Date)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date.Value);
             else result.RecordingDate = "0";
-            result.RecordingYear = Year.ToString();
+            if (canUseValue(Year)) result.RecordingYear = Year.Value.ToString();
+            else result.RecordingYear = "0";
             result.Album = Album;
             result.TrackNumber = TrackNumber.ToString();
             result.TrackTotal = TrackTotal.ToString();

@@ -45,7 +45,9 @@ namespace ATL
         public const byte TAG_FIELD_LYRICS_SYNCH = 27;
         public const byte TAG_FIELD_PUBLISHING_DATE = 28;
 #pragma warning disable S1104 // Fields should not have public accessibility
+        
         // Values for 'classic' fields
+        // NB : null is the convention for "keep existing value"
         public string GeneralDescription = null;
         public string Title = null;
         public string Artist = null;

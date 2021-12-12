@@ -31,7 +31,10 @@ namespace ATL
         /// </summary>
         public static bool ForceDiskIO = false;
 
-        // TODO doc
+        /// <summary>
+        /// Use null instead of default values to represent absent fields in <see cref="ATL.Track"/>
+        /// Default : false
+        /// </summary>
         public static bool NullAbsentValues = false;
 
 
