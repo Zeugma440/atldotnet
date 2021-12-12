@@ -151,19 +151,19 @@ namespace ATL
         /// <summary>
 		/// Track number
 		/// </summary>
-        public int TrackNumber { get; set; }
+        public int? TrackNumber { get; set; }
         /// <summary>
 		/// Total track number
 		/// </summary>
-        public int TrackTotal { get; set; }
+        public int? TrackTotal { get; set; }
         /// <summary>
 		/// Disc number
 		/// </summary>
-        public int DiscNumber { get; set; }
+        public int? DiscNumber { get; set; }
         /// <summary>
 		/// Total disc number
 		/// </summary>
-        public int DiscTotal { get; set; }
+        public int? DiscTotal { get; set; }
         /// <summary>
 		/// Popularity (0% = 0 stars to 100% = 5 stars)
         /// e.g. 3.5 stars = 70%
@@ -343,17 +343,15 @@ namespace ATL
             Description = Utils.ProtectValue(fileIO.GeneralDescription);
             Copyright = Utils.ProtectValue(fileIO.Copyright);
             Publisher = Utils.ProtectValue(fileIO.Publisher);
-            if (fileIO.PublishingDate > DateTime.MinValue || !Settings.NullAbsentValues) PublishingDate = fileIO.PublishingDate;
-            else PublishingDate = null;
+            PublishingDate = update(fileIO.PublishingDate);
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
-            if (fileIO.Date > DateTime.MinValue || !Settings.NullAbsentValues) Date = fileIO.Date;
-            else Date = null;
+            Date = update(fileIO.Date);
             Album = fileIO.Album;
-            TrackNumber = fileIO.Track;
-            TrackTotal = fileIO.TrackTotal;
-            DiscNumber = fileIO.Disc;
-            DiscTotal = fileIO.DiscTotal;
+            TrackNumber = update(fileIO.Track);
+            TrackTotal = update(fileIO.TrackTotal);
+            DiscNumber = update(fileIO.Disc);
+            DiscTotal = update(fileIO.DiscTotal);
             ChaptersTableDescription = Utils.ProtectValue(fileIO.ChaptersTableDescription);
 
             Chapters = fileIO.Chapters;
@@ -393,19 +391,16 @@ namespace ATL
             result.Rating = (Popularity * 5).ToString();
             result.Copyright = Copyright;
             result.Publisher = Publisher;
-            if (canUseValue(PublishingDate)) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate.Value);
-            else result.PublishingDate = "0";
+            result.PublishingDate = toTagData(PublishingDate);
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
-            if (canUseValue(Date)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date.Value);
-            else result.RecordingDate = "0";
-            if (canUseValue(Year)) result.RecordingYear = Year.Value.ToString();
-            else result.RecordingYear = "0";
+            result.RecordingDate = toTagData(Date);
+            result.RecordingYear = toTagData(Year);
             result.Album = Album;
-            result.TrackNumber = TrackNumber.ToString();
-            result.TrackTotal = TrackTotal.ToString();
-            result.DiscNumber = DiscNumber.ToString();
-            result.DiscTotal = DiscTotal.ToString();
+            result.TrackNumber = toTagData(TrackNumber);
+            result.TrackTotal = toTagData(TrackTotal);
+            result.DiscNumber = toTagData(DiscNumber);
+            result.DiscTotal = toTagData(DiscTotal);
             result.ChaptersTableDescription = ChaptersTableDescription.ToString();
 
             result.Chapters = new List<ChapterInfo>();
@@ -503,14 +498,38 @@ namespace ATL
             return result;
         }
 
+        private DateTime? update(DateTime value)
+        {
+            if (value > DateTime.MinValue || !Settings.NullAbsentValues) return value;
+            else return null;
+        }
+
+        private int? update(int value)
+        {
+            if (value != 0 || !Settings.NullAbsentValues) return value;
+            else return null;
+        }
+
         private bool canUseValue(DateTime? value)
         {
             return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
         }
 
+        private string toTagData(DateTime? value)
+        {
+            if (canUseValue(value)) return TrackUtils.FormatISOTimestamp(value.Value);
+            else return "0";
+        }
+
         private bool canUseValue(int? value)
         {
             return (value.HasValue && (Settings.NullAbsentValues || value != 0));
+        }
+
+        private string toTagData(int? value)
+        {
+            if (canUseValue(value)) return value.Value.ToString();
+            else return "0";
         }
     }
 }

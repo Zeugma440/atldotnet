@@ -529,7 +529,7 @@ namespace ATL.test.IO
                 Assert.AreEqual(now.ToString(), theTrack.PublishingDate.ToString());
 
                 theTrack.Artist = "";
-                theTrack.DiscNumber = 0;
+                theTrack.DiscNumber = null;
                 theTrack.Year = null;
                 theTrack.PublishingDate = null;
 
@@ -537,7 +537,7 @@ namespace ATL.test.IO
                 theTrack = new Track(testFileLocation);
 
                 Assert.AreEqual("", theTrack.Artist);
-                Assert.AreEqual(0, theTrack.DiscNumber);
+                Assert.IsFalse(theTrack.DiscNumber.HasValue);
                 Assert.IsFalse(theTrack.Year.HasValue);
                 Assert.IsFalse(theTrack.PublishingDate.HasValue);
 
