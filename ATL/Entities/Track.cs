@@ -117,7 +117,7 @@ namespace ATL
         /// <summary>
         /// Publishing date (set to DateTime.MinValue to remove)
         /// </summary>
-        public DateTime PublishingDate { get; set; }
+        public DateTime? PublishingDate { get; set; }
         /// <summary>
         /// Album Artist
         /// </summary>
@@ -341,7 +341,8 @@ namespace ATL
             Description = Utils.ProtectValue(fileIO.GeneralDescription);
             Copyright = Utils.ProtectValue(fileIO.Copyright);
             Publisher = Utils.ProtectValue(fileIO.Publisher);
-            PublishingDate = fileIO.PublishingDate;
+            if (fileIO.PublishingDate > DateTime.MinValue) PublishingDate = fileIO.PublishingDate;
+            else PublishingDate = null;
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
             Date = fileIO.Date;
@@ -389,7 +390,7 @@ namespace ATL
             result.Rating = (Popularity * 5).ToString();
             result.Copyright = Copyright;
             result.Publisher = Publisher;
-            if (!PublishingDate.Equals(DateTime.MinValue)) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate);
+            if (PublishingDate.HasValue) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate.Value);
             else result.PublishingDate = "0";
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;

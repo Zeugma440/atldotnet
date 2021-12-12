@@ -262,7 +262,7 @@ namespace ATL.AudioData
         bool Remove(BinaryWriter w);
 
         /// <summary>
-        /// Clears all metadata
+        /// Clear all metadata
         /// </summary>
         void Clear();
     }

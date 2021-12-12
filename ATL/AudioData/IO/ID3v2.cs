@@ -1044,7 +1044,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
-            return Read(source, readTagParams.offset, readTagParams);
+            return Read(source, readTagParams.Offset, readTagParams);
         }
 
         /// <summary>

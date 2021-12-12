@@ -466,7 +466,7 @@ namespace ATL.test.IO
             Assert.AreEqual("", theTrack.Artist);
             Assert.AreEqual(0, theTrack.DiscNumber);
             Assert.AreEqual(0, theTrack.Year);
-            Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.PublishingDate.ToString());
+            Assert.IsFalse(theTrack.PublishingDate.HasValue);
 
 
             // === SECOND TEST WITH YEAR/DATE DUAL PROPERTIES

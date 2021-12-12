@@ -459,7 +459,7 @@ namespace ATL.AudioData
             {
                 if (embedder.HasEmbeddedID3v2 > 0)
                 {
-                    readTagParams.offset = embedder.HasEmbeddedID3v2;
+                    readTagParams.Offset = embedder.HasEmbeddedID3v2;
                     if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
                 }
                 else
