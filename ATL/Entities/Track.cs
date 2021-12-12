@@ -341,7 +341,7 @@ namespace ATL
             Description = Utils.ProtectValue(fileIO.GeneralDescription);
             Copyright = Utils.ProtectValue(fileIO.Copyright);
             Publisher = Utils.ProtectValue(fileIO.Publisher);
-            if (fileIO.PublishingDate > DateTime.MinValue) PublishingDate = fileIO.PublishingDate;
+            if (fileIO.PublishingDate > DateTime.MinValue || !Settings.NullAbsentValues) PublishingDate = fileIO.PublishingDate;
             else PublishingDate = null;
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
@@ -390,7 +390,7 @@ namespace ATL
             result.Rating = (Popularity * 5).ToString();
             result.Copyright = Copyright;
             result.Publisher = Publisher;
-            if (PublishingDate.HasValue) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate.Value);
+            if (canUseValue(PublishingDate)) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate.Value);
             else result.PublishingDate = "0";
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
@@ -497,6 +497,16 @@ namespace ATL
             if (result) Update();
 
             return result;
+        }
+
+        private bool canUseValue(DateTime? value)
+        {
+            return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
+        }
+
+        private bool canUseValue(int? value)
+        {
+            return (value.HasValue && (Settings.NullAbsentValues || value != 0));
         }
     }
 }

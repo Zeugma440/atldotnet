@@ -31,6 +31,9 @@ namespace ATL
         /// </summary>
         public static bool ForceDiskIO = false;
 
+        // TODO doc
+        public static bool NullAbsentValues = false;
+
 
         /*
          * ========= GENERIC FUNCTIONAL SETTINGS
