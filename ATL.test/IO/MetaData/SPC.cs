@@ -47,7 +47,7 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -60,7 +60,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free SPC
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -127,7 +127,7 @@ namespace ATL.test.IO.MetaData
             // Source : file with existing tag incl. unsupported field (dumper)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -175,7 +175,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free file
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -229,6 +229,20 @@ namespace ATL.test.IO.MetaData
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_R_SPC_binFadeVal()
+        {
+            new ConsoleLogger();
+
+            string location = TestUtils.GetResourceLocationRoot() + "SPC/binFadeVal.spc";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
         }
 
         [TestMethod]

@@ -355,7 +355,7 @@ namespace ATL.AudioData.IO
             SetMetaField(HEADER_SONGLENGTH.ToString(), Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
-            if (songVal > 0) duration = Math.Round((double)fadeVal) + songVal;
+            if (songVal > 0) duration = fadeVal + songVal;
 
             SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             header.Size += source.BaseStream.Position - initialPosition;
