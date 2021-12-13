@@ -94,10 +94,11 @@ namespace ATL.AudioData.IO
             }
         }
 
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public APEtag()
         {
-            // Create object		
             ResetData();
         }
 
@@ -189,14 +190,13 @@ namespace ATL.AudioData.IO
             string strValue;
             int frameDataSize;
             long valuePosition;
-            int frameFlags;
 
             source.BaseStream.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
             // Read all stored fields
             for (int iterator = 0; iterator < Tag.FrameCount; iterator++)
             {
                 frameDataSize = source.ReadInt32();
-                frameFlags = source.ReadInt32();
+                source.BaseStream.Seek(4, SeekOrigin.Current); // Frame flags
                 frameName = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
                 valuePosition = source.BaseStream.Position;
@@ -470,7 +470,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     nbFrames++;

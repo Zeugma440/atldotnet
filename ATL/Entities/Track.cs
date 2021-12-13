@@ -143,7 +143,7 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value)) Date = new DateTime(value.Value, 1, 1);
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1);
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
             }
@@ -168,7 +168,7 @@ namespace ATL
 		/// Popularity (0% = 0 stars to 100% = 5 stars)
         /// e.g. 3.5 stars = 70%
 		/// </summary>
-        public float Popularity { get; set; }
+        public float? Popularity { get; set; }
         /// <summary>
         /// List of picture IDs stored in the tag
         ///     PictureInfo.PIC_TYPE : internal, normalized picture type
@@ -296,6 +296,10 @@ namespace ATL
             return currentEmbeddedPictures;
         }
 
+        /// <summary>
+        /// Load all properties from the values stored on disk
+        /// </summary>
+        /// <param name="onlyReadEmbeddedPictures">True to only read embedded pictures - used for pictures lazy loading (default : false)</param>
         protected void Update(bool onlyReadEmbeddedPictures = false)
         {
             if (string.IsNullOrEmpty(Path)) return;
@@ -388,19 +392,21 @@ namespace ATL
             result.OriginalArtist = OriginalArtist;
             result.OriginalAlbum = OriginalAlbum;
             result.GeneralDescription = Description;
-            result.Rating = (Popularity * 5).ToString();
+            if (Popularity.HasValue)
+                result.Rating = toTagValue(Popularity.Value * 5);
+            else result.Rating = Settings.NullAbsentValues ? "" : "0";
             result.Copyright = Copyright;
             result.Publisher = Publisher;
-            result.PublishingDate = toTagData(PublishingDate);
+            result.PublishingDate = toTagValue(PublishingDate);
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
-            result.RecordingDate = toTagData(Date);
-            result.RecordingYear = toTagData(Year);
+            result.RecordingDate = toTagValue(Date);
+            result.RecordingYear = toTagValue(Year);
             result.Album = Album;
-            result.TrackNumber = toTagData(TrackNumber);
-            result.TrackTotal = toTagData(TrackTotal);
-            result.DiscNumber = toTagData(DiscNumber);
-            result.DiscTotal = toTagData(DiscTotal);
+            result.TrackNumber = toTagValue(TrackNumber);
+            result.TrackTotal = toTagValue(TrackTotal);
+            result.DiscNumber = toTagValue(DiscNumber);
+            result.DiscTotal = toTagValue(DiscTotal);
             result.ChaptersTableDescription = ChaptersTableDescription.ToString();
 
             result.Chapters = new List<ChapterInfo>();
@@ -514,22 +520,32 @@ namespace ATL
         {
             return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
         }
-
-        private string toTagData(DateTime? value)
-        {
-            if (canUseValue(value)) return TrackUtils.FormatISOTimestamp(value.Value);
-            else return "0";
-        }
-
         private bool canUseValue(int? value)
         {
             return (value.HasValue && (Settings.NullAbsentValues || value != 0));
         }
 
-        private string toTagData(int? value)
+        private bool canUseValue(float value)
+        {
+            return (Settings.NullAbsentValues || value != 0.0);
+        }
+
+        private string toTagValue(DateTime? value)
+        {
+            if (canUseValue(value)) return TrackUtils.FormatISOTimestamp(value.Value);
+            else return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private string toTagValue(int? value)
         {
             if (canUseValue(value)) return value.Value.ToString();
-            else return "0";
+            else return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private string toTagValue(float value)
+        {
+            if (canUseValue(value)) return value.ToString();
+            else return Settings.NullAbsentValues ? "" : "0";
         }
     }
 }

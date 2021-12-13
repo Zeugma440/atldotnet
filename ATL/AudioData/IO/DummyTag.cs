@@ -9,6 +9,9 @@ namespace ATL.AudioData.IO
     /// </summary>
     public class DummyTag : IMetaDataIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public DummyTag()
         {
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Meta Data Reader");
@@ -80,9 +83,9 @@ namespace ATL.AudioData.IO
             get { return ""; }
         }
         /// <inheritdoc/>
-        public float Popularity
+        public float? Popularity
         {
-            get { return 0; }
+            get { return null; }
         }
         /// <inheritdoc/>
         public long Size

@@ -549,7 +549,7 @@ namespace ATL
         {
             string result = s;
 
-            if (s != null && s.Equals("0")) result = "";
+            if (!Settings.NullAbsentValues && s != null && s.Equals("0")) result = "";
 
             return result;
         }

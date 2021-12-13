@@ -250,9 +250,14 @@ namespace ATL.AudioData.IO
             }
         }
         /// <inheritdoc/>
-        public float Popularity
+        public float? Popularity
         {
-            get { return (float)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
+            get
+            {
+                float? result = (float?)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention);
+                if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
+                return result;
+            }
         }
         /// <inheritdoc/>
         public DateTime Date
@@ -795,7 +800,7 @@ namespace ATL.AudioData.IO
                 readTagParams.Offset = embedder.HasEmbeddedID3v2;
             }
 
-            this.read(r, readTagParams);
+            read(r, readTagParams);
 
             if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {

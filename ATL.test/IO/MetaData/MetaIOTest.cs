@@ -69,7 +69,7 @@ namespace ATL.test.IO.MetaData
             testData.RecordingYear = "1997";
             testData.RecordingDate = "1997-06-20T04:04:04";
             testData.Genre = "House";
-            testData.Rating = "0";
+            testData.Rating = null;
             testData.TrackNumber = "01";
             testData.TrackTotal = "02";
             testData.Composer = "ccᱬdd";
@@ -800,8 +800,10 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(meta);
             Assert.IsTrue(meta.Exists);
 
-            //Assert.IsTrue(Math.Abs(rating - meta.Popularity) < 0.01);
-            Assert.AreEqual((float)rating, meta.Popularity);
+            if (0 == rating)
+                Assert.IsTrue(!meta.Popularity.HasValue || (float)rating == meta.Popularity.Value);
+            else
+                Assert.AreEqual((float)rating, meta.Popularity);
         }
 
     }

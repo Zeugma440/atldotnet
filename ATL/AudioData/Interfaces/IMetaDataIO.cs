@@ -104,7 +104,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Rating of the track, from 0% to 100%
         /// </summary>
-        float Popularity
+        float? Popularity
         {
             get;
         }
