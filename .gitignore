@@ -208,3 +208,5 @@ $RECYCLE.BIN/
 /.editorconfig
 /ATL.test/Resources/AAC/AtomicParsley.exe
 /MigrationBackup
+/ATL/BUILD TODO.txt.bak
+/ATL/ATL.csproj.bak
