@@ -427,7 +427,7 @@ namespace ATL.AudioData
         {
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V1))
             {
-                if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TAG_ID3V1, iD3v1.Size);
+                if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V1, iD3v1.Size);
             }
             if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V2))
             {
