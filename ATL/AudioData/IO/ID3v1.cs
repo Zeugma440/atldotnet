@@ -34,8 +34,11 @@ namespace ATL.AudioData.IO
         private const byte TAG_VERSION_1_1 = 2;
 
         #region music genres
-        public static readonly string[] MusicGenre = new string[MAX_MUSIC_GENRES] 		// Genre names
-		{	// Standard genres
+        /// <summary>
+        /// Codified music genres, ordered by numeric code
+        /// </summary>
+        public static readonly string[] MusicGenre = new string[MAX_MUSIC_GENRES]
+        {	// Standard genres
 			"Blues",
             "Classic Rock",
             "Country",
@@ -334,6 +337,9 @@ namespace ATL.AudioData.IO
 
         // ********************** Public functions & voids **********************
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ID3v1()
         {
             ResetData();

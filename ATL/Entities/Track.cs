@@ -117,7 +117,7 @@ namespace ATL
         /// <summary>
         /// Publishing date (set to DateTime.MinValue to remove)
         /// </summary>
-        public DateTime PublishingDate { get; set; }
+        public DateTime? PublishingDate { get; set; }
         /// <summary>
         /// Album Artist
         /// </summary>
@@ -129,44 +129,46 @@ namespace ATL
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
         /// <summary>
 		/// Recording Year
 		/// </summary>
-        public int Year
+        public int? Year
         {
             get
             {
-                if (Date == DateTime.MinValue) return 0;
-                else return Date.Year;
+                if (canUseValue(Date)) return Date.Value.Year;
+                else if (Settings.NullAbsentValues) return null;
+                else return 0;
             }
             set
             {
-                if (value > 0) Date = new DateTime(value, 1, 1);
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1);
+                else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
             }
         }
         /// <summary>
 		/// Track number
 		/// </summary>
-        public int TrackNumber { get; set; }
+        public int? TrackNumber { get; set; }
         /// <summary>
 		/// Total track number
 		/// </summary>
-        public int TrackTotal { get; set; }
+        public int? TrackTotal { get; set; }
         /// <summary>
 		/// Disc number
 		/// </summary>
-        public int DiscNumber { get; set; }
+        public int? DiscNumber { get; set; }
         /// <summary>
 		/// Total disc number
 		/// </summary>
-        public int DiscTotal { get; set; }
+        public int? DiscTotal { get; set; }
         /// <summary>
 		/// Popularity (0% = 0 stars to 100% = 5 stars)
         /// e.g. 3.5 stars = 70%
 		/// </summary>
-        public float Popularity { get; set; }
+        public float? Popularity { get; set; }
         /// <summary>
         /// List of picture IDs stored in the tag
         ///     PictureInfo.PIC_TYPE : internal, normalized picture type
@@ -294,6 +296,10 @@ namespace ATL
             return currentEmbeddedPictures;
         }
 
+        /// <summary>
+        /// Load all properties from the values stored on disk
+        /// </summary>
+        /// <param name="onlyReadEmbeddedPictures">True to only read embedded pictures - used for pictures lazy loading (default : false)</param>
         protected void Update(bool onlyReadEmbeddedPictures = false)
         {
             if (string.IsNullOrEmpty(Path)) return;
@@ -341,15 +347,15 @@ namespace ATL
             Description = Utils.ProtectValue(fileIO.GeneralDescription);
             Copyright = Utils.ProtectValue(fileIO.Copyright);
             Publisher = Utils.ProtectValue(fileIO.Publisher);
-            PublishingDate = fileIO.PublishingDate;
+            PublishingDate = update(fileIO.PublishingDate);
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
-            Date = fileIO.Date;
+            Date = update(fileIO.Date);
             Album = fileIO.Album;
-            TrackNumber = fileIO.Track;
-            TrackTotal = fileIO.TrackTotal;
-            DiscNumber = fileIO.Disc;
-            DiscTotal = fileIO.DiscTotal;
+            TrackNumber = update(fileIO.Track);
+            TrackTotal = update(fileIO.TrackTotal);
+            DiscNumber = update(fileIO.Disc);
+            DiscTotal = update(fileIO.DiscTotal);
             ChaptersTableDescription = Utils.ProtectValue(fileIO.ChaptersTableDescription);
 
             Chapters = fileIO.Chapters;
@@ -386,21 +392,21 @@ namespace ATL
             result.OriginalArtist = OriginalArtist;
             result.OriginalAlbum = OriginalAlbum;
             result.GeneralDescription = Description;
-            result.Rating = (Popularity * 5).ToString();
+            if (Popularity.HasValue)
+                result.Rating = toTagValue(Popularity.Value * 5);
+            else result.Rating = Settings.NullAbsentValues ? "" : "0";
             result.Copyright = Copyright;
             result.Publisher = Publisher;
-            if (!PublishingDate.Equals(DateTime.MinValue)) result.PublishingDate = TrackUtils.FormatISOTimestamp(PublishingDate);
-            else result.PublishingDate = "0";
+            result.PublishingDate = toTagValue(PublishingDate);
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
-            if (!Date.Equals(DateTime.MinValue)) result.RecordingDate = TrackUtils.FormatISOTimestamp(Date);
-            else result.RecordingDate = "0";
-            result.RecordingYear = Year.ToString();
+            result.RecordingDate = toTagValue(Date);
+            result.RecordingYear = toTagValue(Year);
             result.Album = Album;
-            result.TrackNumber = TrackNumber.ToString();
-            result.TrackTotal = TrackTotal.ToString();
-            result.DiscNumber = DiscNumber.ToString();
-            result.DiscTotal = DiscTotal.ToString();
+            result.TrackNumber = toTagValue(TrackNumber);
+            result.TrackTotal = toTagValue(TrackTotal);
+            result.DiscNumber = toTagValue(DiscNumber);
+            result.DiscTotal = toTagValue(DiscTotal);
             result.ChaptersTableDescription = ChaptersTableDescription.ToString();
 
             result.Chapters = new List<ChapterInfo>();
@@ -496,6 +502,50 @@ namespace ATL
             if (result) Update();
 
             return result;
+        }
+
+        private DateTime? update(DateTime value)
+        {
+            if (value > DateTime.MinValue || !Settings.NullAbsentValues) return value;
+            else return null;
+        }
+
+        private int? update(int value)
+        {
+            if (value != 0 || !Settings.NullAbsentValues) return value;
+            else return null;
+        }
+
+        private bool canUseValue(DateTime? value)
+        {
+            return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
+        }
+        private bool canUseValue(int? value)
+        {
+            return (value.HasValue && (Settings.NullAbsentValues || value != 0));
+        }
+
+        private bool canUseValue(float value)
+        {
+            return (Settings.NullAbsentValues || value != 0.0);
+        }
+
+        private string toTagValue(DateTime? value)
+        {
+            if (canUseValue(value)) return TrackUtils.FormatISOTimestamp(value.Value);
+            else return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private string toTagValue(int? value)
+        {
+            if (canUseValue(value)) return value.Value.ToString();
+            else return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private string toTagValue(float value)
+        {
+            if (canUseValue(value)) return value.ToString();
+            else return Settings.NullAbsentValues ? "" : "0";
         }
     }
 }

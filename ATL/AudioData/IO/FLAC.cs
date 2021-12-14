@@ -218,7 +218,7 @@ namespace ATL.AudioData.IO
                 return ((IMetaDataIO)vorbisTag).Album;
             }
         }
-        public float Popularity
+        public float? Popularity
         {
             get
             {
@@ -696,7 +696,7 @@ namespace ATL.AudioData.IO
 
                 // Picture has either to be supported, or to come from the right tag standard
                 doWritePicture = !pictureToWrite.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = MetaDataIOFactory.TAG_NATIVE.Equals(pictureToWrite.TagType);
+                if (!doWritePicture) doWritePicture = MetaDataIOFactory.TagType.NATIVE.Equals(pictureToWrite.TagType);
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!pictureToWrite.MarkedForDeletion);
             }

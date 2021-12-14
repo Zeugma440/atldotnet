@@ -269,7 +269,7 @@ namespace ATL.AudioData
             get { return (int)Math.Round(audioData.BitRate); }
         }
         /// <inheritdoc/>
-        public float Popularity
+        public float? Popularity
         {
             get { return metaData.Popularity; }
         }

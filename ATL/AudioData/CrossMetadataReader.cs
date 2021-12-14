@@ -332,15 +332,16 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public float Popularity
+        public float? Popularity
         {
             get
             {
-                float result = 0;
+                float? result = null;
+                if (!Settings.NullAbsentValues) result = 0;
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Popularity;
-                    if (result != 0) break;
+                    if (result.HasValue && (Settings.NullAbsentValues || result.Value > 0)) break;
                 }
                 return result;
             }

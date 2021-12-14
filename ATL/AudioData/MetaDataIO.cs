@@ -53,47 +53,70 @@ namespace ATL.AudioData.IO
             /// <summary>
             /// True : read metadata; False : do not read metadata (only "physical" audio data)
             /// </summary>
-            public bool ReadTag = true;
+            public bool ReadTag { get; set; }
 
             /// <summary>
             /// True : read all metadata frames; False : only read metadata frames that match IMetaDataIO public properties (="supported" metadata)
             /// </summary>
-            public bool ReadAllMetaFrames = false;
+            public bool ReadAllMetaFrames { get; set; }
 
             /// <summary>
             /// True : read embedded pictures; False : skip embedded pictures
             /// </summary>
-            public bool ReadPictures = false;
+            public bool ReadPictures { get; set; }
 
             /// <summary>
             /// True : read all data that will be useful for writing; False : only read metadata values
             /// </summary>
-            public bool PrepareForWriting = false;
+            public bool PrepareForWriting { get; set; }
 
             /// <summary>
             /// File offset to start reading metadata from (bytes)
             /// </summary>
-            public long offset = 0;
+            public long Offset { get; set; }
 
+            /// <summary>
+            /// Create a new ReadTagParams
+            /// </summary>
+            /// <param name="readPictures">true if pictures have to be read</param>
+            /// <param name="readAllMetaFrames">true if all meta frames have t be read</param>
             public ReadTagParams(bool readPictures, bool readAllMetaFrames)
             {
-                ReadPictures = readPictures; ReadAllMetaFrames = readAllMetaFrames;
+                ReadPictures = readPictures;
+                ReadAllMetaFrames = readAllMetaFrames;
+                ReadTag = true;
+                PrepareForWriting = false;
+                Offset = 0;
             }
         }
 
 
         // ------ PROPERTIES -----------------------------------------------------
 
+        /// <summary>
+        /// True if the tag exists
+        /// </summary>
         protected bool tagExists;
+        /// <summary>
+        /// Version of the tag
+        /// </summary>
         protected int tagVersion;
+        /// <summary>
+        /// Metadata
+        /// </summary>
         protected TagData tagData;
+        /// <summary>
+        /// Picture tokens (i.e. presence of pictures, without its binary data)
+        /// </summary>
         protected IList<PictureInfo> pictureTokens;
+        /// <summary>
+        /// Tag embedder (3rd party tagging system within the tag)
+        /// </summary>
+        protected IMetaDataEmbedder embedder;
 
         private IList<KeyValuePair<string, int>> picturePositions;
 
         internal FileStructureHelper structureHelper;
-
-        protected IMetaDataEmbedder embedder;
 
 
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
@@ -227,9 +250,14 @@ namespace ATL.AudioData.IO
             }
         }
         /// <inheritdoc/>
-        public float Popularity
+        public float? Popularity
         {
-            get { return (float)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention); }
+            get
+            {
+                float? result = (float?)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention);
+                if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
+                return result;
+            }
         }
         /// <inheritdoc/>
         public DateTime Date
@@ -705,14 +733,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        /// <summary>
-        /// Clear all data
-        /// </summary>
+        /// <inheritdoc/>
         public void Clear()
         {
             ResetData();
         }
 
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             if (readTagParams.PrepareForWriting) structureHelper.Clear();
@@ -727,6 +754,7 @@ namespace ATL.AudioData.IO
             return new FileSurgeon.WriteResult(writeMode, result);
         }
 
+        /// <inheritdoc/>
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
@@ -769,10 +797,10 @@ namespace ATL.AudioData.IO
 
             if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
             {
-                readTagParams.offset = embedder.HasEmbeddedID3v2;
+                readTagParams.Offset = embedder.HasEmbeddedID3v2;
             }
 
-            this.read(r, readTagParams);
+            read(r, readTagParams);
 
             if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
@@ -804,6 +832,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <inheritdoc/>
         public virtual bool Remove(BinaryWriter w)
         {
             bool result = true;

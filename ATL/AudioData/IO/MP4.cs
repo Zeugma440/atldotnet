@@ -1215,8 +1215,9 @@ namespace ATL.AudioData.IO
             // so that it is parsed properly by MetaDataIO's default mechanisms
             if (TagData.TAG_FIELD_RATING == supportedMetaID)
             {
-                double popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
-                data = TrackUtils.EncodePopularity(popularity * 5, ratingConvention) + "";
+                double? popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
+                if (popularity.HasValue) data = TrackUtils.EncodePopularity(popularity.Value * 5, ratingConvention) + "";
+                else return;
             }
 
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
@@ -1631,9 +1632,13 @@ namespace ATL.AudioData.IO
                 // so that it is parsed properly by Windows
                 if ("wm/shareduserrating" == fieldInfo.NativeFieldCode.ToLower())
                 {
-                    double popularity = TrackUtils.DecodePopularity(value, ratingConvention);
-                    value = TrackUtils.EncodePopularity(popularity * 5, MetaDataIO.RC_ASF) + "";
-                    isNumeric = true;
+                    double? popularity = TrackUtils.DecodePopularity(value, ratingConvention);
+                    if (popularity.HasValue)
+                    {
+                        value = TrackUtils.EncodePopularity(popularity.Value * 5, MetaDataIO.RC_ASF) + "";
+                        isNumeric = true;
+                    }
+                    else continue;
                 }
 
                 WMAHelper.WriteField(w, fieldInfo.NativeFieldCode, value, isNumeric);

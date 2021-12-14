@@ -36,19 +36,19 @@ namespace ATL.Logging
             /// <summary>
             /// Date of the message
             /// </summary>
-			public DateTime When;
+			public DateTime When { get; set; }
             /// <summary>
             /// Logging level
             /// </summary>
-			public int Level;
+			public int Level { get; set; }
             /// <summary>
             /// Location of the message (e.g. filename, line, module...)
             /// </summary>
-            public string Location;
+            public string Location { get; set; }
             /// <summary>
             /// Contents of the message
             /// </summary>
-			public string Message;
+			public string Message { get; set; }
         }
 
 

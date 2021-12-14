@@ -355,7 +355,7 @@ namespace ATL.AudioData.IO
             SetMetaField(HEADER_SONGLENGTH.ToString(), Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
-            if (songVal > 0) duration = Math.Round((double)fadeVal) + songVal;
+            if (songVal > 0) duration = fadeVal + songVal;
 
             SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             header.Size += source.BaseStream.Position - initialPosition;
@@ -553,7 +553,7 @@ namespace ATL.AudioData.IO
                 // Other textual fields
                 foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
-                    if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER) && fieldInfo.Value.Length > 0)
+                    if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER) && fieldInfo.Value.Length > 0)
                     {
                         writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), fieldInfo.Value);
                         result++;

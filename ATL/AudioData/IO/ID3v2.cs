@@ -1044,7 +1044,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
-            return Read(source, readTagParams.offset, readTagParams);
+            return Read(source, readTagParams.Offset, readTagParams);
         }
 
         /// <summary>
@@ -1309,7 +1309,7 @@ namespace ATL.AudioData.IO
             string fieldCode;
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     fieldCode = fieldInfo.NativeFieldCode;
                     if (fieldCode.Equals(VorbisTag.VENDOR_METADATA_ID)) continue; // Specific mandatory field exclusive to VorbisComment

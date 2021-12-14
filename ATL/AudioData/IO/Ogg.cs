@@ -431,7 +431,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public float Popularity
+        public float? Popularity
         {
             get
             {

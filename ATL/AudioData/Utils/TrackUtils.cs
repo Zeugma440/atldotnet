@@ -118,9 +118,9 @@ namespace ATL.AudioData
         /// <param name="ratingString">Raw "rating" field in string form</param>
         /// <param name="convention">Tagging convention (see MetaDataIO.RC_XXX constants)</param>
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
-        public static double DecodePopularity(string ratingString, int convention)
+        public static double? DecodePopularity(string ratingString, int convention)
         {
-            if ((null == ratingString) || (0 == ratingString.Trim().Length)) return 0;
+            if ((null == ratingString) || (0 == ratingString.Trim().Length)) return null;
 
             if (Utils.IsNumeric(ratingString))
             {
@@ -143,7 +143,7 @@ namespace ATL.AudioData
                 return match.Value.Length / 5.0;
             }
 
-            return 0;
+            return null;
         }
 
         /// <summary>

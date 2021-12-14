@@ -433,63 +433,160 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void TagIO_RW_AddRemoveTagRegular()
+        public void TagIO_RW_AddRemoveTagRegularNotNullable()
         {
-            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
-            Track theTrack = new Track(testFileLocation);
+            bool initialSettings = ATL.Settings.NullAbsentValues;
+            ATL.Settings.NullAbsentValues = false;
+            try
+            {
+                string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+                Track theTrack = new Track(testFileLocation);
 
-            DateTime now = DateTime.Now;
+                DateTime now = DateTime.Now;
 
-            // === FIRST TEST WITH REGULAR FIELDS
+                // === FIRST TEST WITH REGULAR FIELDS
 
-            theTrack.Artist = "aaa"; // String data
-            theTrack.DiscNumber = 1; // Int data
-            theTrack.Year = 1998; // Int data
-            theTrack.PublishingDate = now; // Date data
+                theTrack.Artist = "aaa"; // String data
+                theTrack.DiscNumber = 1; // Int data
+                theTrack.Year = 1998; // Int data
+                theTrack.Popularity = 0.2f; // Float data
+                theTrack.PublishingDate = now; // Date data
 
-            Assert.IsTrue(theTrack.Save());
-            theTrack = new Track(testFileLocation);
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
 
-            Assert.AreEqual("aaa", theTrack.Artist);
-            Assert.AreEqual(1, theTrack.DiscNumber);
-            Assert.AreEqual(1998, theTrack.Year);
-            Assert.AreEqual(now.ToString(), theTrack.PublishingDate.ToString());
+                Assert.AreEqual("aaa", theTrack.Artist);
+                Assert.AreEqual(1, theTrack.DiscNumber);
+                Assert.AreEqual(1998, theTrack.Year);
+                Assert.AreEqual(0.2f, theTrack.Popularity);
+                Assert.AreEqual(now.ToString(), theTrack.PublishingDate.ToString());
 
-            theTrack.Artist = "";
-            theTrack.DiscNumber = 0;
-            theTrack.Year = 0;
-            theTrack.PublishingDate = DateTime.MinValue;
+                theTrack.Artist = "";
+                theTrack.DiscNumber = 0;
+                theTrack.Year = 0;
+                theTrack.Popularity = 0;
+                theTrack.PublishingDate = DateTime.MinValue;
 
-            Assert.IsTrue(theTrack.Save());
-            theTrack = new Track(testFileLocation);
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
 
-            Assert.AreEqual("", theTrack.Artist);
-            Assert.AreEqual(0, theTrack.DiscNumber);
-            Assert.AreEqual(0, theTrack.Year);
-            Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.PublishingDate.ToString());
-
-
-            // === SECOND TEST WITH YEAR/DATE DUAL PROPERTIES
-
-            theTrack.Date = now;
-
-            Assert.IsTrue(theTrack.Save());
-            theTrack = new Track(testFileLocation);
-
-            Assert.AreEqual(now.Year, theTrack.Year);
-            Assert.AreEqual(now.ToString(), theTrack.Date.ToString());
-
-            theTrack.Date = DateTime.MinValue;
-
-            Assert.IsTrue(theTrack.Save());
-            theTrack = new Track(testFileLocation);
-
-            Assert.AreEqual(0, theTrack.Year);
-            Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
+                Assert.AreEqual("", theTrack.Artist);
+                Assert.AreEqual(0, theTrack.DiscNumber);
+                Assert.AreEqual(0, theTrack.Year);
+                Assert.AreEqual(0, theTrack.Popularity);
+                Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.PublishingDate.ToString());
 
 
-            // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                // === SECOND TEST WITH YEAR/DATE DUAL PROPERTIES
+
+                theTrack.Date = now;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(now.Year, theTrack.Year);
+                Assert.AreEqual(now.ToString(), theTrack.Date.ToString());
+
+                theTrack.Date = DateTime.MinValue;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(0, theTrack.Year);
+                Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
+
+
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+            finally
+            {
+                ATL.Settings.NullAbsentValues = initialSettings;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_AddRemoveTagRegularNullable()
+        {
+            bool initialSettings = ATL.Settings.NullAbsentValues;
+            ATL.Settings.NullAbsentValues = true;
+            try
+            {
+                string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+                Track theTrack = new Track(testFileLocation);
+
+                DateTime now = DateTime.Now;
+
+                // === FIRST TEST WITH REGULAR FIELDS
+
+                theTrack.Artist = "aaa"; // String data
+                theTrack.DiscNumber = 1; // Int data
+                theTrack.Year = 1998; // Int data
+                theTrack.Popularity = 0.2f; // Float data
+                theTrack.PublishingDate = now; // Date data
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual("aaa", theTrack.Artist);
+                Assert.AreEqual(1, theTrack.DiscNumber);
+                Assert.AreEqual(1998, theTrack.Year);
+                Assert.AreEqual(0.2f, theTrack.Popularity);
+                Assert.AreEqual(now.ToString(), theTrack.PublishingDate.ToString());
+
+
+                // Change value
+                theTrack.Popularity = 0;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(0, theTrack.Popularity);
+
+
+                // Remove value
+                theTrack.Artist = "";
+                theTrack.DiscNumber = null;
+                theTrack.Year = null;
+                theTrack.Popularity = null;
+                theTrack.PublishingDate = null;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual("", theTrack.Artist);
+                Assert.IsFalse(theTrack.DiscNumber.HasValue);
+                Assert.IsFalse(theTrack.Year.HasValue);
+                Assert.IsFalse(theTrack.Popularity.HasValue);
+                Assert.IsFalse(theTrack.PublishingDate.HasValue);
+
+
+                // === SECOND TEST WITH YEAR/DATE DUAL PROPERTIES
+
+                theTrack.Date = now;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(now.Year, theTrack.Year);
+                Assert.AreEqual(now.ToString(), theTrack.Date.ToString());
+
+                theTrack.Date = null;
+
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.IsFalse(theTrack.Year.HasValue);
+                Assert.IsFalse(theTrack.Date.HasValue);
+
+
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+            finally
+            {
+                ATL.Settings.NullAbsentValues = initialSettings;
+            }
         }
 
         [TestMethod]

@@ -73,9 +73,9 @@ namespace ATL.test
             Assert.AreEqual(1, TrackUtils.DecodePopularity("10", MetaDataIO.RC_ID3v2));
 
             // Error cases
-            Assert.AreEqual(0, TrackUtils.DecodePopularity("", MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(0, TrackUtils.DecodePopularity(null, MetaDataIO.RC_ID3v2));
-            Assert.AreEqual(0, TrackUtils.DecodePopularity("aaa", MetaDataIO.RC_ID3v2));
+            Assert.IsNull(TrackUtils.DecodePopularity("", MetaDataIO.RC_ID3v2));
+            Assert.IsNull(TrackUtils.DecodePopularity(null, MetaDataIO.RC_ID3v2));
+            Assert.IsNull(TrackUtils.DecodePopularity("aaa", MetaDataIO.RC_ID3v2));
         }
 
         [TestMethod]
