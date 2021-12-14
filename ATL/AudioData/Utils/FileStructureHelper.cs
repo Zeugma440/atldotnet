@@ -96,7 +96,7 @@ namespace ATL.AudioData
             /// <summary>
             /// Current value of the header (counter : number of frames / size : frame size / index : frame index (absolute) / rindex : frame index (relative to header position))
             /// </summary>
-            public object Value;
+            public object Value { get; set; }
 
             /// <summary>
             /// Constructs a new frame header using the given field values
@@ -115,35 +115,35 @@ namespace ATL.AudioData
             /// <summary>
             /// Zone name (any unique value will do; used as internal reference only)
             /// </summary>
-            public string Name;
+            public string Name { get; set; }
             /// <summary>
             /// Offset in bytes
             /// </summary>
-            public long Offset;
+            public long Offset { get; set; }
             /// <summary>
             /// Size in bytes
             /// </summary>
-            public long Size;
+            public long Size { get; set; }
             /// <summary>
             /// Data sequence that has to be written in the zone when the zone does not contain any other data
             /// </summary>
-            public byte[] CoreSignature;
+            public byte[] CoreSignature { get; set; }
             /// <summary>
             /// Indicates whether the zone contents are deletable by ATL (e.g. non-metadata zone is not deletable)
             /// </summary>
-            public bool IsDeletable;
+            public bool IsDeletable { get; set; }
             /// <summary>
             /// Generic usage flag for storing information
             /// </summary>
-            public byte Flag;
+            public byte Flag { get; set; }
             /// <summary>
             /// Size descriptors and item counters referencing the zone elsehwere on the file
             /// </summary>
-            public IList<FrameHeader> Headers;
+            public IList<FrameHeader> Headers { get; set; }
             /// <summary>
             /// True if the zone might shrink or enlarge, false if it must keep its original size
             /// </summary>
-            public bool IsResizable;
+            public bool IsResizable { get; set; }
 
             /// <summary>
             /// Construct a new Zone using the given field values
