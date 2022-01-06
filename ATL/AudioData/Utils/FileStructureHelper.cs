@@ -498,7 +498,6 @@ namespace ATL.AudioData
 
 
             if (null == zones) return false;
-            //if (!zones.ContainsKey(zone)) return true; // No effect
             if (zones.TryGetValue(zone, out var currentZone))
             {
                 return true;
