@@ -498,7 +498,11 @@ namespace ATL.AudioData
 
 
             if (null == zones) return false;
-            if (!zones.ContainsKey(zone)) return true; // No effect
+            //if (!zones.ContainsKey(zone)) return true; // No effect
+            if (zones.TryGetValue(zone, out var currentZone))
+            {
+                return true;
+            }
 
 
             // Get the dynamic correction map from the proper region
@@ -512,7 +516,7 @@ namespace ATL.AudioData
             bool isPostReprocessing = zone == POST_PROCESSING_ZONE_NAME;
 
             // == Update the current zone's headers
-            foreach (FrameHeader header in zones[zone].Headers)
+            foreach (FrameHeader header in currentZone.Headers)
             {
                 // === Update values
                 offsetPositionCorrection = -globalOffsetCorrection;
@@ -631,7 +635,7 @@ namespace ATL.AudioData
 
             // Update local dynamic offset
             if (!localDynamicOffsetCorrection.ContainsKey(zone))
-                localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
+                localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
 
             // If applicable, update global dynamic offset
             if (regionId > -1)
@@ -639,7 +643,7 @@ namespace ATL.AudioData
                 IDictionary<string, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
                 // Add new region
                 if (!globalRegion.ContainsKey(zone))
-                    globalRegion.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
+                    globalRegion.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
                 else // Increment current delta to existing region
                 {
                     KeyValuePair<long, long> currentValues = globalRegion[zone];
