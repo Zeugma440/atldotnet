@@ -7,6 +7,7 @@ using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace ATL.AudioData.IO
 {
@@ -67,24 +68,25 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
-        private static Dictionary<string, byte> frameClasses_mp4 = new Dictionary<string, byte>() {
-            { "gnre", 0 },
-            { "trkn", 0 },
-            { "disk", 0 },
-            { "rtng", 21 },
-            { "tmpo", 21 },
-            { "cpil", 21 },
-            { "stik", 21 },
-            { "pcst", 21 },
-            { "purl", 0 },
-            { "egid", 0 },
-            { "tvsn", 21 },
-            { "tves", 21 },
-            { "pgap", 21 },
-            { "shwm", 21 },
-            { "hdvd", 21 },
-            { "©mvc", 21 },
-            { "©mvi", 21 }
+        private static ConcurrentDictionary<string, byte> frameClasses_mp4 = new ConcurrentDictionary<string, byte>()
+        {
+            ["gnre"] = 0,
+            ["trkn"] = 0,
+            ["disk"] = 0,
+            ["rtng"] = 21,
+            ["tmpo"] = 21,
+            ["cpil"] = 21,
+            ["stik"] = 21,
+            ["pcst"] = 21,
+            ["purl"] = 0,
+            ["egid"] = 0,
+            ["tvsn"] = 21,
+            ["tves"] = 21,
+            ["pgap"] = 21,
+            ["shwm"] = 21,
+            ["hdvd"] = 21,
+            ["©mvc"] = 21,
+            ["©mvi"] = 21
         };
 
         private sealed class MP4Sample
@@ -217,7 +219,7 @@ namespace ATL.AudioData.IO
 
         private static void addFrameClass(string frameCode, byte frameClass)
         {
-            if (!frameClasses_mp4.ContainsKey(frameCode)) frameClasses_mp4.Add(frameCode, frameClass);
+            frameClasses_mp4.TryAdd(frameCode, frameClass);
         }
 
         // Calculate duration time

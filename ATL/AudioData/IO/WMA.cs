@@ -6,6 +6,7 @@ using System.Text;
 using Commons;
 using static ATL.ChannelsArrangements;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace ATL.AudioData.IO
 {
@@ -113,9 +114,9 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
-        private static IDictionary<string, ushort> frameClasses = new Dictionary<string, ushort>() // To be further populated while reading
+        private static ConcurrentDictionary<string, ushort> frameClasses = new ConcurrentDictionary<string, ushort>() // To be further populated while reading
         {
-            { "WM/SharedUserRating", 3 }
+            ["WM/SharedUserRating"] = 3
         };
 
 
@@ -214,7 +215,7 @@ namespace ATL.AudioData.IO
 
         private static void addFrameClass(string frameCode, ushort frameClass)
         {
-            if (!frameClasses.ContainsKey(frameCode)) frameClasses.Add(frameCode, frameClass);
+            frameClasses.TryAdd(frameCode, frameClass);
         }
 
         private void cacheLanguageIndex(Stream source)
