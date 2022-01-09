@@ -526,6 +526,7 @@ namespace ATL.AudioData
                     // Don't need to process zones located further than we are
                     if (dynamicZone == header.ParentZone) passedParentZone = true;
                     if (dynamicZone == header.ValueZone) passedValueZone = true;
+                    if (passedParentZone && passedValueZone) continue;
 
                     KeyValuePair<long, long> offsetDelta = localDynamicOffsetCorrection[dynamicZone];
 
@@ -547,28 +548,28 @@ namespace ATL.AudioData
                 else w = bufferedWriter;
 
 
-                if (FrameHeader.TYPE.Counter == header.Type)
-                {
-                    switch (action)
-                    {
-                        case ACTION.Add: delta = 1; break;
-                        case ACTION.Delete: delta = -1; break;
-                        default: delta = 0; break;
-                    }
-
-                }
-                else if (FrameHeader.TYPE.Size == header.Type)
-                {
-                    delta = deltaSize;
-                }
-
                 // === Rewrite headers
 
                 // If we're going to delete the zone, and the header is located inside it, don't write it !
                 if (header.ParentZone == zone && ACTION.Delete == action) continue;
 
-                if ((FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type))
+                if (FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type)
                 {
+                    if (FrameHeader.TYPE.Counter == header.Type)
+                    {
+                        switch (action)
+                        {
+                            case ACTION.Add: delta = 1; break;
+                            case ACTION.Delete: delta = -1; break;
+                            default: delta = 0; break;
+                        }
+
+                    }
+                    else if (FrameHeader.TYPE.Size == header.Type)
+                    {
+                        delta = deltaSize;
+                    }
+
                     w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 
                     value = addToValue(header.Value, delta, out updatedValue);
@@ -585,10 +586,8 @@ namespace ATL.AudioData
                 else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
                 {
                     long headerPosition = header.Position + offsetPositionCorrection;
-                    w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
-                    value = null;
-
                     long headerOffsetCorrection = (FrameHeader.TYPE.RelativeIndex == header.Type) ? headerPosition : 0;
+                    value = null;
 
                     if (action != ACTION.Delete)
                     {
@@ -625,12 +624,13 @@ namespace ATL.AudioData
 
                     if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
+                    w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
                     w.Write(value);
                 } // Index & relative index types
             } // Loop through headers
 
-            // Update local dynamic offset
-            if (!localDynamicOffsetCorrection.ContainsKey(zone))
+            // Update local dynamic offset if non-null
+            if (deltaSize != 0 && !localDynamicOffsetCorrection.ContainsKey(zone))
                 localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(zones[zone].Offset + zones[zone].Size, deltaSize));
 
             // If applicable, update global dynamic offset
