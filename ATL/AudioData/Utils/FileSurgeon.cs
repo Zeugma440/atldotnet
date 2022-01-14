@@ -75,7 +75,7 @@ namespace ATL.AudioData.IO
 
             public long EndOffset => FileSurgeon.getHighestOffset(Zones);
 
-            public int Size => (int)(EndOffset - StartOffset);
+            public long Size => EndOffset - StartOffset;
 
             public override string ToString()
             {
@@ -92,7 +92,7 @@ namespace ATL.AudioData.IO
         private readonly IMetaDataEmbedder embedder;
 
         private readonly MetaDataIOFactory.TagType implementedTagType;
-        private readonly int defaultTagOffset;
+        private readonly long defaultTagOffset;
 
         public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
 
@@ -114,7 +114,7 @@ namespace ATL.AudioData.IO
             FileStructureHelper structureHelper,
             IMetaDataEmbedder embedder,
             MetaDataIOFactory.TagType implementedTagType,
-            int defaultTagOffset,
+            long defaultTagOffset,
             IProgress<float> writeProgress)
         {
             this.structureHelper = structureHelper;
@@ -180,7 +180,7 @@ namespace ATL.AudioData.IO
                 long regionCumulativeDelta = 0;
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------------ REGION " + regionIndex++);
 
-                int initialBufferSize = region.Size;
+                int initialBufferSize = (int)Math.Min(region.Size, int.MaxValue);
                 MemoryStream buffer = null;
                 try
                 {
@@ -219,7 +219,7 @@ namespace ATL.AudioData.IO
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
-                        using (MemoryStream s = new MemoryStream((int)zone.Size))
+                        using (MemoryStream s = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
                         using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
                         {
                             // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
@@ -362,7 +362,11 @@ namespace ATL.AudioData.IO
                         }
 
                         // Copy tag contents to the new slot
-                        fullScopeWriter.BaseStream.Seek(region.StartOffset, SeekOrigin.Begin);
+                        if (structureHelper != null)
+                            fullScopeWriter.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
+                        else // for classes that don't use FileStructureHelper(FLAC)
+                            fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta - regionCumulativeDelta, SeekOrigin.Begin); // don't apply self-created delta
+
                         buffer.Seek(0, SeekOrigin.Begin);
 
                         StreamUtils.CopyStream(buffer, fullScopeWriter.BaseStream);

@@ -449,12 +449,15 @@ namespace ATL.AudioData
         /// e.g. if offset is 30 and 10 bytes have been inserted at position 15, corrected offset will be 40
         /// </summary>
         /// <param name="offset">Offset to correct</param>
+        /// <param name="includeItself">True if offset corrections starting at the exact given offset should be applied</param>
         /// <returns>Corrected offset</returns>
-        public long getCorrectedOffset(long offset)
+        public long getCorrectedOffset(long offset, bool includeItself = true)
         {
             long offsetPositionCorrection = 0;
             foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection[-1].Values) // Search in global repo
-                if (offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+            {
+                if (offset > offsetDelta.Key || (includeItself && offset == offsetDelta.Key)) offsetPositionCorrection += offsetDelta.Value;
+            }
 
             return offset + offsetPositionCorrection;
         }
