@@ -160,6 +160,13 @@ namespace ATL
         public static bool MP4_createNeroChapters = true;
 
         /// <summary>
+        /// MP4 : Set to true to limit the max number of Nero chapters (chpl) to 255
+        /// to ensure better compatiblity with certain apps
+        /// Default : true
+        /// </summary>
+        public static bool MP4_capNeroChapters = true;
+
+        /// <summary>
         /// MP4 : Set to true to always create chapters in Quicktime format (chap)
         /// Default : true
         /// </summary>
@@ -177,6 +184,9 @@ namespace ATL
         ///   - 1 : Only from Quicktime format (chap)
         ///   - 2 : Only from Nero format (chpl)
         ///   
+        /// When choosing 0, if ATL detects that one of the formats features more chapter entries than the other,
+        /// it will keep all the entries of the largest list
+        /// 
         /// Warning : Using a value > 0 while updating files may delete the tag you've not chosen to read
         /// Default : 0
         /// </summary>

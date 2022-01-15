@@ -121,7 +121,7 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public bool IsVBR
         {
-            get { return (MP4_BITRATE_TYPE_VBR == bitrateTypeID); }
+            get { return MP4_BITRATE_TYPE_VBR == bitrateTypeID; }
         }
         public Format AudioFormat
         {
@@ -290,7 +290,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="source">Source to read from</param>
         /// <param name="readTagParams">Reading parameters</param>
-        private void readMP4(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readMP4(BinaryReader source, ReadTagParams readTagParams)
         {
             long moovPosition;
 
@@ -909,7 +909,7 @@ namespace ATL.AudioData.IO
             return trakSize;
         }
 
-        private void readUserData(BinaryReader source, MetaDataIO.ReadTagParams readTagParams, long moovPosition, uint moovSize)
+        private void readUserData(BinaryReader source, ReadTagParams readTagParams, long moovPosition, uint moovSize)
         {
             long atomPosition, udtaPosition;
             uint atomSize;
@@ -958,24 +958,30 @@ namespace ATL.AudioData.IO
 
                 if (chapterCount > 0 && Settings.MP4_readChaptersExclusive != 1)
                 {
-                    if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
-                    byte stringSize;
-                    ChapterInfo chapter;
-                    ChapterInfo previousChapter = null;
+                    if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); // No Quicktime chapters previously detected
 
-                    for (int i = 0; i < chapterCount; i++)
+                    // Overwrites detected Quicktime chapters with Nero chapters only if there are >= of them
+                    if (chapterCount >= tagData.Chapters.Count)
                     {
-                        chapter = new ChapterInfo();
-                        tagData.Chapters.Add(chapter);
+                        tagData.Chapters.Clear();
+                        byte stringSize;
+                        ChapterInfo chapter;
+                        ChapterInfo previousChapter = null;
 
-                        source.BaseStream.Read(data64, 0, 8);
-                        chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
-                        if (previousChapter != null) previousChapter.EndTime = chapter.StartTime;
-                        stringSize = source.ReadByte();
-                        chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
-                        previousChapter = chapter;
+                        for (int i = 0; i < chapterCount; i++)
+                        {
+                            chapter = new ChapterInfo();
+                            tagData.Chapters.Add(chapter);
+
+                            source.BaseStream.Read(data64, 0, 8);
+                            chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
+                            if (previousChapter != null) previousChapter.EndTime = chapter.StartTime;
+                            stringSize = source.ReadByte();
+                            chapter.Title = Encoding.UTF8.GetString(source.ReadBytes(stringSize));
+                            previousChapter = chapter;
+                        }
+                        if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
                     }
-                    if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
                 }
             }
             else if (Settings.MP4_createNeroChapters)
@@ -1668,13 +1674,17 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("chpl"));
 
             w.Write(new byte[5] { 1, 0, 0, 0, 0 }); // Version, flags and reserved byte
-            w.Write(StreamUtils.EncodeBEInt32(chapters.Count));
+
+            int maxCount = Settings.MP4_capNeroChapters ? Math.Min(chapters.Count, 255) : chapters.Count;
+            w.Write(StreamUtils.EncodeBEInt32(maxCount));
 
             byte[] strData;
             byte strDataLength;
 
-            foreach (ChapterInfo chapter in chapters)
+            //foreach (ChapterInfo chapter in chapters)
+            for (int i = 0; i < maxCount; i++)
             {
+                ChapterInfo chapter = chapters[i];
                 w.Write(StreamUtils.EncodeBEUInt64((ulong)chapter.StartTime * 10000));
                 strData = Encoding.UTF8.GetBytes(chapter.Title);
                 strDataLength = (byte)Math.Min(255, strData.Length);

@@ -131,9 +131,9 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : MP3 with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
+            // Source : file with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
             String testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -241,7 +241,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free M4A
             String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free
@@ -373,9 +373,9 @@ namespace ATL.test.IO.MetaData
             ATL.Settings.MP4_createQuicktimeChapters = false;
             try
             {
-                // Source : MP3 with existing tag incl. chapters
+                // Source : file with existing tag incl. chapters
                 String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_NERO.mp4");
-                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -489,7 +489,7 @@ namespace ATL.test.IO.MetaData
             {
                 // Source : file without 'chpl' atom
                 String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
-                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 Assert.IsTrue(theFile.ReadFromFile());
 
@@ -559,7 +559,7 @@ namespace ATL.test.IO.MetaData
 
             // Source : file without 'chpl' atom
             String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_NERO.mp4");
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -592,9 +592,9 @@ namespace ATL.test.IO.MetaData
             ATL.Settings.MP4_createNeroChapters = false;
             try
             {
-                // Source : MP3 with existing tag incl. chapters
+                // Source : file with existing tag incl. chapters
                 String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_QT.m4v");
-                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 // Check if the two fields are indeed accessible
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -692,7 +692,7 @@ namespace ATL.test.IO.MetaData
             {
                 // Source : file without 'chpl' atom
                 String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
-                AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
                 Assert.IsTrue(theFile.ReadFromFile());
 
@@ -753,6 +753,27 @@ namespace ATL.test.IO.MetaData
             {
                 ATL.Settings.MP4_createNeroChapters = true;
             }
+        }
+
+        [TestMethod]
+        public void TagIO_R_MP4_Chapters_MostInfo()
+        {
+            new ConsoleLogger();
+
+            // Source :file with 260 Quicktime chapters and 255 Nero chapters (capped by some apps)
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_260qt255nero.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Add a new supported field and a new supported picture
+            Assert.IsTrue(theFile.ReadFromFile());
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(260, meta.Chapters.Count);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
