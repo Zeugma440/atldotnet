@@ -772,6 +772,65 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(260, meta.Chapters.Count);
 
+            // Check if Nero chapters are correctly capped to 255 when the option is on
+            TagData tagData = new TagData();
+
+            bool initialCap = ATL.Settings.MP4_capNeroChapters;
+            int initialChapRead = ATL.Settings.MP4_readChaptersExclusive;
+            ATL.Settings.MP4_capNeroChapters = true;
+            try
+            {
+                Assert.IsTrue(theFile.UpdateTagInFile(tagData, MetaDataIOFactory.TagType.NATIVE));
+
+                ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
+                Assert.IsTrue(theFile.ReadFromFile());
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                meta = theFile.getMeta(tagType);
+                Assert.IsTrue(meta.Exists);
+
+                Assert.AreEqual(255, meta.Chapters.Count);
+
+                ATL.Settings.MP4_capNeroChapters = false;
+                ATL.Settings.MP4_readChaptersExclusive = 0; // Read them all again for the update
+                Assert.IsTrue(theFile.UpdateTagInFile(tagData, MetaDataIOFactory.TagType.NATIVE));
+
+                ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
+                Assert.IsTrue(theFile.ReadFromFile());
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                meta = theFile.getMeta(tagType);
+                Assert.IsTrue(meta.Exists);
+
+                Assert.AreEqual(260, meta.Chapters.Count);
+            }
+            finally
+            {
+                ATL.Settings.MP4_capNeroChapters = initialCap;
+                ATL.Settings.MP4_readChaptersExclusive = initialChapRead;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Chapters_CapNero()
+        {
+            new ConsoleLogger();
+
+            // Source :file with 260 Quicktime chapters and 255 Nero chapters (capped by some apps)
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_260qt255nero.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Add a new supported field and a new supported picture
+            Assert.IsTrue(theFile.ReadFromFile());
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(260, meta.Chapters.Count);
+
+
+
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
