@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Collections.Generic;
 using Commons;
 using static ATL.PictureInfo;
+using static ATL.Logging.Log;
+using ATL.Logging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -118,12 +120,37 @@ namespace ATL.test.IO.MetaData
                 testData.Comment = null;
                 testData.Pictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
-            } finally
+            }
+            finally
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
                 testData.Pictures = pictureInfos;
             }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_FlacOGG()
+        {
+            ArrayLogger log = new ArrayLogger();
+            AudioDataManager theFile;
+            string location = TestUtils.GetResourceLocationRoot() + "OGG/embedded-flac.ogg";
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+            theFile.ReadFromFile();
+
+            TagData theTag = new TagData();
+            theTag.Title = "Test !!";
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+            
+            // Confirm an exception has been raised
+            IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
+            Assert.IsTrue(logItems.Count > 0);
+            bool found = false;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("not supported")) found = true;
+            }
+            Assert.IsTrue(found);
         }
 
         [TestMethod]

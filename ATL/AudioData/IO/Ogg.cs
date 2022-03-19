@@ -13,11 +13,13 @@ namespace ATL.AudioData.IO
     /// Class for OGG files manipulation. Current implementation covers :
     ///   - Vorbis data (extensions : .OGG)
     ///   - Opus data (extensions : .OPUS)
+    ///   - Embedded FLAC data (extensions : .OGG)
     ///   
     /// Implementation notes
     /// 
     ///   1. CRC's : Current implementation does not test OGG page header CRC's
     ///   2. Page numbers : Current implementation does not test page numbers consistency
+    ///   3. Writing metadata is not supported yet on embedded FLAC files
     /// 
     /// </summary>
 	class Ogg : IAudioDataIO, IMetaDataIO
@@ -987,6 +989,8 @@ namespace ATL.AudioData.IO
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
             Read(r, readTagParams);
+
+            if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
 
             // Create the "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
