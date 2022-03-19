@@ -6,6 +6,7 @@ using static ATL.AudioData.FileStructureHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.AudioData.IO.FileSurgeon;
 using static ATL.ChannelsArrangements;
+using static ATL.AudioData.FlacHelper;
 
 namespace ATL.AudioData.IO
 {
@@ -24,37 +25,11 @@ namespace ATL.AudioData.IO
         private const byte META_PICTURE = 6;
 #pragma warning restore S1144 // Unused private types or members should be removed
 
-        private const string FLAC_ID = "fLaC";
+        public const string FLAC_ID = "fLaC";
 
         private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 
-
-        private sealed class FlacHeader
-        {
-            public string StreamMarker;
-            public byte[] MetaDataBlockHeader = new byte[4];
-            public byte[] Info = new byte[18];
-            // 16-bytes MD5 Sum only applies to audio data
-
-            public void Reset()
-            {
-                StreamMarker = "";
-                Array.Clear(MetaDataBlockHeader, 0, 4);
-                Array.Clear(Info, 0, 18);
-            }
-
-            public bool IsValid()
-            {
-                return StreamMarker.Equals(FLAC_ID);
-            }
-
-            public FlacHeader()
-            {
-                Reset();
-            }
-        }
-
-        private readonly FlacHeader header;
+        private FlacHeader header = null;
 
         private readonly string filePath;
         private AudioDataManager.SizeInfo sizeInfo;
@@ -379,7 +354,6 @@ namespace ATL.AudioData.IO
         {
             filePath = path;
             AudioFormat = format;
-            header = new FlacHeader();
             resetData();
         }
 
@@ -389,24 +363,12 @@ namespace ATL.AudioData.IO
         // Check for right FLAC file data
         private bool isValid()
         {
+            if (header == null) return false;
             return header.IsValid() &&
                     (channelsArrangement.NbChannels > 0) &&
                     (sampleRate > 0) &&
                     (bitsPerSample > 0) &&
                     (samples > 0);
-        }
-
-        private void readHeader(BinaryReader source)
-        {
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-
-            // Read header data    
-            header.Reset();
-
-            header.StreamMarker = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            header.MetaDataBlockHeader = source.ReadBytes(4);
-            header.Info = source.ReadBytes(18);
-            source.BaseStream.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
         }
 
         private double getDuration()
@@ -447,31 +409,16 @@ namespace ATL.AudioData.IO
             bool paddingFound = false;
             long blockEndOffset = -1;
 
-            readHeader(source);
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            header = readHeader(source.BaseStream);
 
             // Process data if loaded and header valid    
             if (header.IsValid())
             {
-                int channels = (header.Info[12] >> 1) & 0x7;
-                switch (channels)
-                {
-                    case 0b0000: channelsArrangement = MONO; break;
-                    case 0b0001: channelsArrangement = STEREO; break;
-                    case 0b0010: channelsArrangement = ISO_3_0_0; break;
-                    case 0b0011: channelsArrangement = QUAD; break;
-                    case 0b0100: channelsArrangement = ISO_3_2_0; break;
-                    case 0b0101: channelsArrangement = ISO_3_2_1; break;
-                    case 0b0110: channelsArrangement = LRCLFECrLssRss; break;
-                    case 0b0111: channelsArrangement = LRCLFELrRrLssRss; break;
-                    case 0b1000: channelsArrangement = JOINT_STEREO_LEFT_SIDE; break;
-                    case 0b1001: channelsArrangement = JOINT_STEREO_RIGHT_SIDE; break;
-                    case 0b1010: channelsArrangement = JOINT_STEREO_MID_SIDE; break;
-                    default: channelsArrangement = UNKNOWN; break;
-                }
-
-                sampleRate = header.Info[10] << 12 | header.Info[11] << 4 | header.Info[12] >> 4;
-                bitsPerSample = (byte)(((header.Info[12] & 1) << 4) | (header.Info[13] >> 4) + 1);
-                samples = header.Info[14] << 24 | header.Info[15] << 16 | header.Info[16] << 8 | header.Info[17];
+                channelsArrangement = header.getChannelsArrangement();
+                sampleRate = header.getSampleRate();
+                bitsPerSample = header.getBitsPerSample();
+                samples = header.getSamples();
 
                 if (0 == (header.MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK)) // metadata block exists
                 {

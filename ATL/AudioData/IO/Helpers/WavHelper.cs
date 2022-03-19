@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
-    public static class WavUtils
+    public static class WavHelper
     {
         public static bool IsDataEligible(MetaDataIO meta, string prefix)
         {

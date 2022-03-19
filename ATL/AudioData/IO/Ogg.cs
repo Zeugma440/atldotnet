@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
 
@@ -25,30 +26,35 @@ namespace ATL.AudioData.IO
         private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
         private const int CONTENTS_VORBIS = 0;				// Vorbis
         private const int CONTENTS_OPUS = 1;                // Opus
+        private const int CONTENTS_FLAC = 2;                // FLAC
 
         private const int MAX_PAGE_SIZE = 255 * 255;
 
         // Ogg page header ID
-        private const String OGG_PAGE_ID = "OggS";
+        private const string OGG_PAGE_ID = "OggS";
 
         // Vorbis identification packet (frame) ID
-        private static readonly String VORBIS_HEADER_ID = (char)1 + "vorbis";
+        private static readonly string VORBIS_HEADER_ID = (char)1 + "vorbis";
 
         // Vorbis tag packet (frame) ID
-        private static readonly String VORBIS_TAG_ID = (char)3 + "vorbis";
+        private static readonly string VORBIS_TAG_ID = (char)3 + "vorbis";
 
         // Vorbis setup packet (frame) ID
-        private static readonly String VORBIS_SETUP_ID = (char)5 + "vorbis";
+        private static readonly string VORBIS_SETUP_ID = (char)5 + "vorbis";
 
         // Vorbis parameter frame ID
-        private const String OPUS_HEADER_ID = "OpusHead";
+        private const string OPUS_HEADER_ID = "OpusHead";
 
         // Opus tag frame ID
-        private const String OPUS_TAG_ID = "OpusTags";
+        private const string OPUS_TAG_ID = "OpusTags";
+
+        // FLAC identification packet (frame) ID
+        private static readonly string FLAC_HEADER_ID = (char)0x7f + "FLAC";
 
 
 
         private readonly string filePath;
+        private readonly Format audioFormat;
         private VorbisTag vorbisTag;
 
         private readonly FileInfo info = new FileInfo();
@@ -94,7 +100,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsVBR
         {
-            get { return true; }
+            get { return contents != CONTENTS_FLAC; }
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -217,7 +223,7 @@ namespace ATL.AudioData.IO
         // Opus parameter header
         private sealed class OpusHeader
         {
-            public String ID;
+            public string ID;
             public byte Version;
             public byte OutputChannelCount;
             public UInt16 PreSkip;
@@ -257,6 +263,7 @@ namespace ATL.AudioData.IO
             // TODO - handle Theora
             public VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
             public OpusHeader OpusParameters = new OpusHeader();        // Opus parameter header
+            public FlacHeader FlacParameters;                           // FLAC parameter header
 
             // Total number of samples
             public ulong Samples;
@@ -307,7 +314,7 @@ namespace ATL.AudioData.IO
         public Ogg(string filePath, Format format)
         {
             this.filePath = filePath;
-            AudioFormat = format;
+            audioFormat = format;
             resetData();
         }
 
@@ -316,11 +323,21 @@ namespace ATL.AudioData.IO
 
         public Format AudioFormat
         {
-            get;
+            get
+            {
+                Format f = new Format(audioFormat);
+                string subformat;
+                if (contents == CONTENTS_VORBIS) subformat = "Vorbis";
+                else if (contents == CONTENTS_OPUS) subformat = "Opus";
+                else if (contents == CONTENTS_FLAC) subformat = "FLAC";
+                else subformat = "Unsupported";
+                f.Name = f.Name + " (" + subformat + ")";
+                return f;
+            }
         }
         public int CodecFamily
         {
-            get { return AudioDataIOFactory.CF_LOSSY; }
+            get { return (contents == CONTENTS_FLAC) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
         }
 
         #region IMetaDataIO
@@ -570,7 +587,7 @@ namespace ATL.AudioData.IO
 
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TagType.NATIVE); // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE; // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
         }
 
 
@@ -666,7 +683,7 @@ namespace ATL.AudioData.IO
                 // Read Vorbis or Opus stream info
                 long position = source.Position;
 
-                String headerStart = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+                string headerStart = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
                 source.Seek(position, SeekOrigin.Begin);
                 if (VORBIS_HEADER_ID.StartsWith(headerStart))
                 {
@@ -710,6 +727,16 @@ namespace ATL.AudioData.IO
                         }
                     }
                 }
+                else if (FLAC_HEADER_ID.StartsWith(headerStart))
+                {
+                    contents = CONTENTS_FLAC;
+                    source.Seek(5, SeekOrigin.Current); // Skip the entire FLAC segment header
+                    source.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
+                    Int16 nbHeaderPackets = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                    info.FlacParameters = FlacHelper.readHeader(source);
+                    isValidHeader = info.FlacParameters.IsValid();
+                }
+                // TODO THEORA HERE
 
                 if (isValidHeader)
                 {
@@ -753,7 +780,7 @@ namespace ATL.AudioData.IO
 
                         if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                         {
-                            if (CONTENTS_VORBIS == contents)
+                            if (CONTENTS_VORBIS == contents || CONTENTS_FLAC == contents)
                             {
                                 // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
                                 if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
@@ -818,6 +845,13 @@ namespace ATL.AudioData.IO
                             {
                                 tagId = Utils.Latin1Encoding.GetString(msr.ReadBytes(8));
                                 isValidTagHeader = OPUS_TAG_ID.Equals(tagId);
+                            }
+                            else if (contents.Equals(CONTENTS_FLAC))
+                            {
+                                byte[] aMetaDataBlockHeader = msr.ReadBytes(4);
+                                uint blockLength = StreamUtils.DecodeBEUInt24(aMetaDataBlockHeader, 1);
+                                byte blockType = (byte)(aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
+                                isValidTagHeader = (blockType < 7);
                             }
 
                             if (isValidTagHeader)
@@ -921,6 +955,12 @@ namespace ATL.AudioData.IO
                     channelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
                     sampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
+                }
+                else if (contents.Equals(CONTENTS_FLAC))
+                {
+                    channelsArrangement = info.FlacParameters.getChannelsArrangement();
+                    sampleRate = info.FlacParameters.getSampleRate();
+                    // No nominal bitrate for FLAC
                 }
 
                 samples = info.Samples;

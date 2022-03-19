@@ -102,6 +102,31 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_FlacOGG()
+        {
+            new ConsoleLogger();
+            AudioDataManager theFile;
+            string location = TestUtils.GetResourceLocationRoot() + "OGG/embedded-flac.ogg";
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            string comment = testData.Comment;
+            IList<PictureInfo> pictureInfos = testData.Pictures;
+            try
+            {
+                // Embedded FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
+                testData.GeneralDescription = comment;
+                testData.Comment = null;
+                testData.Pictures = new List<PictureInfo>();
+                readExistingTagsOnFile(theFile, 0);
+            } finally
+            {
+                testData.GeneralDescription = null;
+                testData.Comment = comment;
+                testData.Pictures = pictureInfos;
+            }
+        }
+
+        [TestMethod]
         public void TagIO_R_VorbisOGG_dirtyTrackDiscNumbering()
         {
             new ConsoleLogger();

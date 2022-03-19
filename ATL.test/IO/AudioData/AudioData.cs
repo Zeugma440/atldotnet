@@ -42,7 +42,7 @@ namespace ATL.test.IO
             Assert.AreEqual(duration, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(bitrate, (int)Math.Round(theReader.BitRate));
             Assert.AreEqual(samplerate, theReader.SampleRate);
-            Assert.AreEqual(theReader.IsVBR, isVbr);
+            Assert.AreEqual(isVbr, theReader.IsVBR);
             Assert.AreEqual(codecFamily, theReader.CodecFamily);
             Assert.AreEqual(channelsArrangement, theReader.ChannelsArrangement);
             Assert.AreEqual(audioDataOffset, theReader.AudioDataOffset);
@@ -90,19 +90,20 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_OGG()
         {
-            testGenericAudio("OGG/ogg.ogg", 33003, 69, 22050, true, CF_LOSSY, STEREO, "OGG : Vorbis, Opus", 23125, 278029);
+            testGenericAudio("OGG/ogg.ogg", 33003, 69, 22050, true, CF_LOSSY, STEREO, "OGG (Vorbis)", 23125, 278029);
         }
 
         [TestMethod]
         public void Audio_Opus()
         {
-            testGenericAudio("OPUS/opus.opus", 30959, 33, 48000, true, CF_LOSSY, STEREO, "OGG : Vorbis, Opus", 19479, 126225);
+            testGenericAudio("OPUS/opus.opus", 30959, 33, 48000, true, CF_LOSSY, STEREO, "OGG (Opus)", 19479, 126225);
         }
 
         [TestMethod]
         public void Audio_FLAC()
         {
             testGenericAudio("FLAC/flac.flac", 5176, 694, 44100, false, CF_LOSSLESS, STEREO, "Free Lossless Audio Codec", 18030, 448997);
+            testGenericAudio("OGG/embedded-flac.ogg", 5176, 635, 44100, false, CF_LOSSLESS, STEREO, "OGG (FLAC)", 397, 410863);
         }
 
         [TestMethod]

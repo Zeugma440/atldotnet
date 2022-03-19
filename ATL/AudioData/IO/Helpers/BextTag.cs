@@ -108,7 +108,7 @@ namespace ATL.AudioData.IO
         {
             if (meta.GeneralDescription.Length > 0) return true;
 
-            return WavUtils.IsDataEligible(meta, "bext.");
+            return WavHelper.IsDataEligible(meta, "bext.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
@@ -123,15 +123,15 @@ namespace ATL.AudioData.IO
             string description = Utils.ProtectValue(meta.GeneralDescription);
             if (0 == description.Length && additionalFields.Keys.Contains("bext.description")) description = additionalFields["bext.description"];
 
-            WavUtils.writeFixedTextValue(description, 256, w);
-            WavUtils.writeFixedFieldTextValue("bext.originator", 32, additionalFields, w);
-            WavUtils.writeFixedFieldTextValue("bext.originatorReference", 32, additionalFields, w);
-            WavUtils.writeFixedFieldTextValue("bext.originationDate", 10, additionalFields, w);
-            WavUtils.writeFixedFieldTextValue("bext.originationTime", 8, additionalFields, w);
+            WavHelper.writeFixedTextValue(description, 256, w);
+            WavHelper.writeFixedFieldTextValue("bext.originator", 32, additionalFields, w);
+            WavHelper.writeFixedFieldTextValue("bext.originatorReference", 32, additionalFields, w);
+            WavHelper.writeFixedFieldTextValue("bext.originationDate", 10, additionalFields, w);
+            WavHelper.writeFixedFieldTextValue("bext.originationTime", 8, additionalFields, w);
 
             // Int values
-            WavUtils.writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
-            WavUtils.writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
+            WavHelper.writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
+            WavHelper.writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
 
             // UMID
             if (additionalFields.Keys.Contains("bext.UMID"))
@@ -159,11 +159,11 @@ namespace ATL.AudioData.IO
 
 
             // Float values
-            WavUtils.writeField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
-            WavUtils.writeField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
-            WavUtils.writeField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
-            WavUtils.writeField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
-            WavUtils.writeField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
+            WavHelper.writeField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
+            WavHelper.writeField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
+            WavHelper.writeField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
+            WavHelper.writeField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
+            WavHelper.writeField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
 
             // Reserved
             for (int i = 0; i < 180; i++) w.Write((byte)0);

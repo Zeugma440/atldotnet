@@ -104,7 +104,7 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".mp3");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(CID_OGG, "OGG : Vorbis, Opus", "OGG");
+                    tempFmt = new Format(CID_OGG, "OGG", "OGG");
                     tempFmt.AddMimeType("audio/ogg");
                     tempFmt.AddMimeType("audio/vorbis");
                     tempFmt.AddMimeType("audio/opus");

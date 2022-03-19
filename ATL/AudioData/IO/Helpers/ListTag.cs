@@ -96,7 +96,7 @@ namespace ATL.AudioData.IO
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[size - 4];
-            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
@@ -108,13 +108,13 @@ namespace ATL.AudioData.IO
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[size - 4];
-            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
-            WavUtils.readInt16(source, meta, "info.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 20);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
@@ -132,7 +132,7 @@ namespace ATL.AudioData.IO
             if (meta.Date > System.DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
 
-            return WavUtils.IsDataEligible(meta, "info.");
+            return WavHelper.IsDataEligible(meta, "info.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
@@ -242,7 +242,7 @@ namespace ATL.AudioData.IO
 
         private static int writeLabelSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
@@ -262,14 +262,14 @@ namespace ATL.AudioData.IO
 
         private static int writeLabeledTextSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            WavUtils.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
-            WavUtils.writeFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
-            WavUtils.writeFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
+            WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavHelper.writeFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
+            WavHelper.writeFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
 
-            WavUtils.writeFieldIntValue(key + ".Country", additionalFields, w, (short)0);
-            WavUtils.writeFieldIntValue(key + ".Language", additionalFields, w, (short)0);
-            WavUtils.writeFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
-            WavUtils.writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
+            WavHelper.writeFieldIntValue(key + ".Country", additionalFields, w, (short)0);
+            WavHelper.writeFieldIntValue(key + ".Language", additionalFields, w, (short)0);
+            WavHelper.writeFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
+            WavHelper.writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);

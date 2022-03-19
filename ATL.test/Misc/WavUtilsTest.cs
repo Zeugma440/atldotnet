@@ -24,8 +24,8 @@ namespace ATL.test
 
                 // Write test values to stream
                 stream.Seek(0, SeekOrigin.Begin);
-                WavUtils.writeFixedFieldTextValue("aaa", 3, additionalFields, w, 1);
-                WavUtils.writeFixedFieldTextValue("ccc", 2, additionalFields, w, 1);
+                WavHelper.writeFixedFieldTextValue("aaa", 3, additionalFields, w, 1);
+                WavHelper.writeFixedFieldTextValue("ccc", 2, additionalFields, w, 1);
 
                 // Test expected result
                 stream.Seek(0, SeekOrigin.Begin);
@@ -50,14 +50,14 @@ namespace ATL.test
 
                 // Write test values to stream
                 stream.Seek(0, SeekOrigin.Begin);
-                WavUtils.writeFieldIntValue("aaa", additionalFields, w, (byte)1);
+                WavHelper.writeFieldIntValue("aaa", additionalFields, w, (byte)1);
 
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, (byte)1);
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, (sbyte)1);
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, (short)1);
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, (ushort)1);
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, 1);
-                WavUtils.writeFieldIntValue("ccc", additionalFields, w, (ulong)1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, (byte)1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, (sbyte)1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, (short)1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, (ushort)1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, 1);
+                WavHelper.writeFieldIntValue("ccc", additionalFields, w, (ulong)1);
 
                 // Test expected result
                 stream.Seek(0, SeekOrigin.Begin);
@@ -92,9 +92,9 @@ namespace ATL.test
 
                 // Write test values to stream
                 stream.Seek(0, SeekOrigin.Begin);
-                WavUtils.writeField100DecimalValue("aaa", additionalFields, w, (short)1);
+                WavHelper.writeField100DecimalValue("aaa", additionalFields, w, (short)1);
 
-                WavUtils.writeField100DecimalValue("ccc", additionalFields, w, (short)1);
+                WavHelper.writeField100DecimalValue("ccc", additionalFields, w, (short)1);
 
                 // Test expected result
                 stream.Seek(0, SeekOrigin.Begin);

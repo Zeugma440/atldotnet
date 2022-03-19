@@ -91,7 +91,7 @@ namespace ATL.AudioData.IO
 
         public static bool IsDataEligible(MetaDataIO meta)
         {
-            return WavUtils.IsDataEligible(meta, "ixml.");
+            return WavHelper.IsDataEligible(meta, "ixml.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)

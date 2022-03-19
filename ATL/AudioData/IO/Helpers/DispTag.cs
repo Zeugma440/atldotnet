@@ -36,7 +36,7 @@ namespace ATL.AudioData.IO
             if (chunkSize <= 4) return;
             byte[] data = new byte[chunkSize - 4];
 
-            IList<string> keys = WavUtils.getEligibleKeys("disp", meta.AdditionalFields.Keys);
+            IList<string> keys = WavHelper.getEligibleKeys("disp", meta.AdditionalFields.Keys);
             int index = keys.Count;
 
             // Type
@@ -83,14 +83,14 @@ namespace ATL.AudioData.IO
 
         public static bool IsDataEligible(MetaDataIO meta)
         {
-            return WavUtils.IsDataEligible(meta, "disp[");
+            return WavHelper.IsDataEligible(meta, "disp[");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
 
-            IList<string> keys = WavUtils.getEligibleKeys("disp", additionalFields.Keys);
+            IList<string> keys = WavHelper.getEligibleKeys("disp", additionalFields.Keys);
             foreach (string key in keys) writeDispChunk(w, isLittleEndian, additionalFields, key);
 
             return keys.Count;
