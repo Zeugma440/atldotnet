@@ -189,11 +189,6 @@ namespace ATL.AudioData
             get { return processString(metaData.ProductId); }
         }
         /// <inheritdoc/>
-        public string Narrator
-        {
-            get { return processString(metaData.Narrator); }
-        }
-        /// <inheritdoc/>
         public string AlbumArtist
         {
             get { return processString(metaData.AlbumArtist); }

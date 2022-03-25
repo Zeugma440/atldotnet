@@ -366,11 +366,6 @@ namespace ATL.AudioData.IO
             get { return Utils.ProtectValue(tagData.ProductId); }
         }
         /// <inheritdoc/>
-        public String Narrator
-        {
-            get { return Utils.ProtectValue(tagData.Narrator); }
-        }
-        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return tagData.PaddingSize; }

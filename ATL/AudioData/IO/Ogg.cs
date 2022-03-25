@@ -530,14 +530,6 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public string Narrator
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Narrator;
-            }
-        }
-
         public long PaddingSize
         {
             get

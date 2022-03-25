@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Commons;
 using static ATL.AudioData.FileStructureHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.AudioData.IO.FileSurgeon;
@@ -270,14 +269,6 @@ namespace ATL.AudioData.IO
             get
             {
                 return ((IMetaDataIO)vorbisTag).ProductId;
-            }
-        }
-
-        public string Narrator
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Narrator;
             }
         }
 

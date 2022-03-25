@@ -131,10 +131,6 @@ namespace ATL
         /// </summary>
         public string ProductId { get; set; }
         /// <summary>
-        /// Narrator
-        /// </summary>
-        public string Narrator { get; set; }
-        /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
         public DateTime? Date { get; set; }
@@ -359,7 +355,6 @@ namespace ATL
             AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
             Conductor = Utils.ProtectValue(fileIO.Conductor);
             ProductId = Utils.ProtectValue(fileIO.ProductId);
-            Narrator = Utils.ProtectValue(fileIO.Narrator);
             Date = update(fileIO.Date);
             Album = fileIO.Album;
             TrackNumber = update(fileIO.Track);
@@ -411,7 +406,6 @@ namespace ATL
             result.AlbumArtist = AlbumArtist;
             result.Conductor = Conductor;
             result.ProductId = ProductId;
-            result.Narrator = Narrator;
             result.RecordingDate = toTagValue(Date);
             result.RecordingYear = toTagValue(Year);
             result.Album = Album;

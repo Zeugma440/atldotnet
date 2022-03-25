@@ -68,7 +68,6 @@ namespace ATL.AudioData.IO
             { "©pub", TagData.TAG_FIELD_PUBLISHER },
             { "rldt", TagData.TAG_FIELD_PUBLISHING_DATE},
             { "prID", TagData.TAG_FIELD_PRODUCT_ID},
-            { "@nrt", TagData.TAG_FIELD_NARRATOR},
             { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
         };
 

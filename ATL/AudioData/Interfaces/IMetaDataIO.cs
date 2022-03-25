@@ -172,14 +172,6 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// Narrator
-        /// </summary>
-        string Narrator
-        {
-            get;
-        }
-
-        /// <summary>
         /// Size of padding area, if any
         /// </summary>
         long PaddingSize
