@@ -522,6 +522,22 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public string ProductId
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).ProductId;
+            }
+        }
+
+        public string Narrator
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Narrator;
+            }
+        }
+
         public long PaddingSize
         {
             get

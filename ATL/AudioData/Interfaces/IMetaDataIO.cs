@@ -164,6 +164,20 @@ namespace ATL.AudioData
         {
             get;
         }
+        /// <summary>
+        /// Product ID
+        /// </summary>
+        string ProductId
+        {
+            get;
+        }
+        /// <summary>
+        /// Narrator
+        /// </summary>
+        string Narrator
+        {
+            get;
+        }
 
         /// <summary>
         /// Size of padding area, if any

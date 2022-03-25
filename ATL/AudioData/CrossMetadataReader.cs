@@ -332,6 +332,34 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
+        public String ProductId
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.ProductId;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
+        public String Narrator
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Narrator;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
         public float? Popularity
         {
             get

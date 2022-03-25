@@ -91,7 +91,7 @@ namespace ATL.AudioData
             IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = (0 == availableMetas.Count);
-            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TAG_ID3V1) hasNothing = true;
+            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
@@ -182,6 +182,16 @@ namespace ATL.AudioData
         public string Conductor
         {
             get { return processString(metaData.Conductor); }
+        }
+        /// <inheritdoc/>
+        public string ProductId
+        {
+            get { return processString(metaData.ProductId); }
+        }
+        /// <inheritdoc/>
+        public string Narrator
+        {
+            get { return processString(metaData.Narrator); }
         }
         /// <inheritdoc/>
         public string AlbumArtist

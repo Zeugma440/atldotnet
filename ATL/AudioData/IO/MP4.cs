@@ -67,6 +67,8 @@ namespace ATL.AudioData.IO
             { "©lyr", TagData.TAG_FIELD_LYRICS_UNSYNCH },
             { "©pub", TagData.TAG_FIELD_PUBLISHER },
             { "rldt", TagData.TAG_FIELD_PUBLISHING_DATE},
+            { "prID", TagData.TAG_FIELD_PRODUCT_ID},
+            { "@nrt", TagData.TAG_FIELD_NARRATOR},
             { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
         };
 
@@ -1460,7 +1462,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
                     counter++;
@@ -1619,7 +1621,7 @@ namespace ATL.AudioData.IO
 
         private int writeXtraFrames(TagData tag, BinaryWriter w)
         {
-            IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TAG_ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
+            IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
 
             if (!xtraTags.Any()) return 0;
 

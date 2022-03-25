@@ -44,8 +44,10 @@ namespace ATL
         public const byte TAG_FIELD_LYRICS_UNSYNCH = 26;
         public const byte TAG_FIELD_LYRICS_SYNCH = 27;
         public const byte TAG_FIELD_PUBLISHING_DATE = 28;
+        public const byte TAG_FIELD_PRODUCT_ID = 29;
+        public const byte TAG_FIELD_NARRATOR = 30;
 #pragma warning disable S1104 // Fields should not have public accessibility
-        
+
         // Values for 'classic' fields
         // NB : null is the convention for "keep existing value"
         public string GeneralDescription = null;
@@ -74,6 +76,8 @@ namespace ATL
         public string DiscNumberTotal = null;
         public string ChaptersTableDescription = null;
         public string PublishingDate = null;
+        public string ProductId = null;
+        public string Narrator = null;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible members
 
         /// <summary>
@@ -199,6 +203,8 @@ namespace ATL
                     Lyrics.UnsynchronizedLyrics = value;
                     break;
                 case TAG_FIELD_PUBLISHING_DATE: PublishingDate = emptyIfZero(value); break;
+                case TAG_FIELD_PRODUCT_ID: ProductId = emptyIfZero(value); break;
+                case TAG_FIELD_NARRATOR: Narrator = emptyIfZero(value); break;
             }
         }
 
@@ -412,6 +418,8 @@ namespace ATL
             if (Lyrics != null)
                 addIfConsistent(Lyrics.UnsynchronizedLyrics, TAG_FIELD_LYRICS_UNSYNCH, result);
             addIfConsistent(PublishingDate, TAG_FIELD_PUBLISHING_DATE, result);
+            addIfConsistent(ProductId, TAG_FIELD_PRODUCT_ID, result);
+            addIfConsistent(Narrator, TAG_FIELD_NARRATOR, result);
 
             return result;
         }
@@ -452,6 +460,8 @@ namespace ATL
             ChaptersTableDescription = null;
             Lyrics = null;
             PublishingDate = null;
+            ProductId = null;
+            Narrator = null;
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;

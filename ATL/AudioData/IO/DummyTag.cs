@@ -138,6 +138,16 @@ namespace ATL.AudioData.IO
             get { return ""; }
         }
         /// <inheritdoc/>
+        public string ProductId
+        {
+            get { return ""; }
+        }
+        /// <inheritdoc/>
+        public string Narrator
+        {
+            get { return ""; }
+        }
+        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return 0; }
