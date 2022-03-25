@@ -62,7 +62,8 @@ namespace ATL.AudioData.IO
                 { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
                 { "RATING", TagData.TAG_FIELD_RATING },
                 { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
-                { "PUBLISHER", TagData.TAG_FIELD_PUBLISHER }
+                { "PUBLISHER", TagData.TAG_FIELD_PUBLISHER },
+                { "PRODUCTNUMBER", TagData.TAG_FIELD_PRODUCT_ID }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
