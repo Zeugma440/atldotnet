@@ -12,7 +12,7 @@ using System.Collections.Concurrent;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for MP4 files manipulation (extensions : .MP4, .M4A, .M4B, .M4V)
+    /// Class for MP4 files manipulation (extensions : .MP4, .M4A, .M4B, .M4V, .M4P, .M4R, .AAX)
     /// 
     /// Implementation notes
     /// 
@@ -64,6 +64,8 @@ namespace ATL.AudioData.IO
             { "cprt", TagData.TAG_FIELD_COPYRIGHT },
             { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
             { "©lyr", TagData.TAG_FIELD_LYRICS_UNSYNCH },
+            { "©pub", TagData.TAG_FIELD_PUBLISHER },
+            { "rldt", TagData.TAG_FIELD_PUBLISHING_DATE},
             { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
         };
 
