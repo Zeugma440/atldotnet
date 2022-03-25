@@ -60,6 +60,7 @@ namespace ATL.AudioData.IO
             { "rtng", TagData.TAG_FIELD_RATING },
             { "rate", TagData.TAG_FIELD_RATING },
             { "©wrt", TagData.TAG_FIELD_COMPOSER },
+            { "@des", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
             { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
             { "cprt", TagData.TAG_FIELD_COPYRIGHT },
             { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
