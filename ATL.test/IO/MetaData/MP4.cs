@@ -74,6 +74,7 @@ namespace ATL.test.IO.MetaData
             testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
             testData.Publisher = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
+            testData.ProductId = "THIS IS A GOOD ID";
 
             testData.AdditionalFields.Clear();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "----:com.apple.iTunes:TEST", "xxx"));
@@ -93,15 +94,18 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
-            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
 
+            string ry = testData.RecordingYear;
+            string pid = testData.ProductId;
             // Test reading complete recording date
             try
             {
                 testData.RecordingDate = "1997-06-20T00:00:00"; // No timestamp in MP4 date format
                 testData.RecordingYear = null;
+                testData.ProductId = null;
 
                 location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
                 theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -110,7 +114,8 @@ namespace ATL.test.IO.MetaData
             finally
             {
                 testData.RecordingDate = null;
-                testData.RecordingYear = "1997";
+                testData.RecordingYear = ry;
+                testData.ProductId = pid;
             }
         }
 

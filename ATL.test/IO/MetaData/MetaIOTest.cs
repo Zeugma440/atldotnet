@@ -752,6 +752,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Publisher != null) Assert.AreEqual(testData.Publisher, meta.Publisher);
             if (testData.Copyright != null) Assert.AreEqual(testData.Copyright, meta.Copyright);
             if (testData.GeneralDescription != null) Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
+            if (testData.ProductId != null) Assert.AreEqual(testData.ProductId, meta.ProductId);
 
             // Unsupported field
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)

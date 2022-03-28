@@ -84,7 +84,9 @@ namespace ATL
         /// 
         /// Default : ID3v2 then Native tagging
         /// </summary>
-        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] { AudioData.MetaDataIOFactory.TagType.ID3V2, AudioData.MetaDataIOFactory.TagType.NATIVE };
+        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] {
+            MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE
+        };
 
         /// <summary>
         /// If true, file name (without the extension) will go to the Title field if metadata contains no title
