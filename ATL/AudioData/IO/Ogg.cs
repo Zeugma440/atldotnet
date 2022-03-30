@@ -674,6 +674,7 @@ namespace ATL.AudioData.IO
             IList<long> pageOffsets = new List<long>();
             IDictionary<int, MemoryStream> bitstreams = new Dictionary<int, MemoryStream>();
             IDictionary<int, int> pageCount = new Dictionary<int, int>();
+            bool isValidHeader = false;
 
             try
             {
@@ -763,7 +764,6 @@ namespace ATL.AudioData.IO
                 // Get total number of samples
                 info.Samples = getSamples(source);
 
-                bool isValidHeader = false;
                 // Read through all streams to detect audio ones
                 foreach (KeyValuePair<int, MemoryStream> kvp in bitstreams)
                 {
@@ -773,6 +773,8 @@ namespace ATL.AudioData.IO
 
                         bool isSupported = readIdentificationPacket(reader);
                         if (!isSupported) continue;
+
+                        isValidHeader = true;
 
                         info.AudioStreamId = kvp.Key;
 
@@ -788,7 +790,7 @@ namespace ATL.AudioData.IO
                     entry.Value.Close();
                 }
             }
-            return true;
+            return isValidHeader;
         }
 
         private bool readIdentificationPacket(BinaryReader source)
