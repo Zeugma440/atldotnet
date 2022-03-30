@@ -309,7 +309,7 @@ namespace ATL.AudioData.IO
                 readTagParams.ReadPictures = true;
             }
 
-            initialTagOffset = source.BaseStream.Position - 7; // 7 = size of vorbis comment packet header
+            initialTagOffset = source.BaseStream.Position;
             do
             {
                 size = source.ReadInt32();
@@ -416,6 +416,7 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
+            long initialWriteOffset = w.BaseStream.Position;
             long counterPos;
             uint counter = 0;
             string vendor;
@@ -447,7 +448,7 @@ namespace ATL.AudioData.IO
             {
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
-                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset - initialTagOffset, w.BaseStream.Position);
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset - initialTagOffset, w.BaseStream.Position - initialWriteOffset);
                 if (paddingSizeToWrite > 0)
                     for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
             }

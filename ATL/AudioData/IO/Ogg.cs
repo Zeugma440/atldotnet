@@ -878,7 +878,7 @@ namespace ATL.AudioData.IO
                 byte[] aMetaDataBlockHeader = source.ReadBytes(4);
                 uint blockLength = StreamUtils.DecodeBEUInt24(aMetaDataBlockHeader, 1);
                 byte blockType = (byte)(aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
-                isValidTagHeader = (blockType < 7);
+                isValidTagHeader = blockType < 7;
             }
 
             if (isValidTagHeader)
