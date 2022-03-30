@@ -724,7 +724,12 @@ namespace ATL.AudioData.IO
                     {
                         stream = bitstreams[pageHeader.StreamId];
                         if (pageHeader.IsFirstPage())
-                            pageCount[pageHeader.StreamId] = pageCount[pageHeader.StreamId] + 1;
+                        {
+                            int newPageCount = pageCount[pageHeader.StreamId] + 1;
+                            pageCount[pageHeader.StreamId] = newPageCount;
+                            if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
+                            else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
+                        }
                     }
                     else
                     {
@@ -733,9 +738,6 @@ namespace ATL.AudioData.IO
                         pageCount.Add(pageHeader.StreamId, 1);
                     }
 
-                    if (2 == pageCount[pageHeader.StreamId]) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
-                    if (3 == pageCount[pageHeader.StreamId]) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
-                    //if (3 == pageCount[pageHeader.Serial]) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize() - 1;
                     if (pageCount[pageHeader.StreamId] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
                 } while (pageCount[pageHeader.StreamId] < 3);
 
