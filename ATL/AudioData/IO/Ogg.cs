@@ -711,6 +711,7 @@ namespace ATL.AudioData.IO
                 // Reads all Vorbis pages that describe metadata (i.e. Identification, Comment and Setup packets)
                 // and concatenate their content into a single, continuous data stream
                 OggPageHeader pageHeader;
+                source.Seek(0, SeekOrigin.Begin);
                 do
                 {
                     pageOffsets.Add(source.Position);
@@ -817,37 +818,6 @@ namespace ATL.AudioData.IO
                     entry.Value.Close();
                 }
             }
-
-            /*
-
-                    // Reconstruct all packets from OGG pages to a MemoryStream
-                    info.SetupHeaderEnd = source.Position; // When the loop stops, cursor is starting to read a brand new page located after Comment _and_ Setup headers
-                    info.CommentHeader.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                    info.CommentHeader.StreamVersion = source.ReadByte();
-                    info.CommentHeader.TypeFlag = source.ReadByte();
-                    // 0 marks a new page
-                    if (0 == info.CommentHeader.TypeFlag)
-                    {
-                        loop = first;
-                    }
-                    if (loop)
-                    {
-                        info.CommentHeader.AbsolutePosition = source.ReadUInt64();
-                        info.CommentHeader.Serial = source.ReadInt32();
-                        info.CommentHeader.PageNumber = source.ReadInt32();
-                        info.CommentHeader.Checksum = source.ReadUInt32();
-                        info.CommentHeader.Segments = source.ReadByte();
-                        info.CommentHeader.LacingValues = source.ReadBytes(info.CommentHeader.Segments);
-                        s.Write(source.ReadBytes(info.CommentHeader.GetPageSize()), 0, info.CommentHeader.GetPageSize());
-                        pageOffsets.Add(info.SetupHeaderEnd);
-                    }
-                    first = false;
-                } while (!metadataFound && source.Position < source.Length);
-
-                AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as raw audio is useless without the setup header
-                AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
-            }
-            */
             return true;
         }
 
