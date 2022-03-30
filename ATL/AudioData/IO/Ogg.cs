@@ -29,7 +29,6 @@ namespace ATL.AudioData.IO
         private const int CONTENTS_VORBIS = 0;				// Vorbis
         private const int CONTENTS_OPUS = 1;                // Opus
         private const int CONTENTS_FLAC = 2;                // FLAC
-        private const int CONTENTS_THEORA = 3;              // Theora
 
         private const int MAX_PAGE_SIZE = 255 * 255;
 
@@ -48,12 +47,6 @@ namespace ATL.AudioData.IO
 
         // Theora identification packet (frame) ID
         private static readonly string THEORA_HEADER_ID = (char)0x80 + "theora";
-
-        // Theora comment (tags) packet (frame) ID
-        private static readonly string THEORA_COMMENT_ID = (char)0x81 + "theora";
-
-        // Theora setup packet (frame) ID
-        private static readonly string THEORA_SETUP_ID = (char)0x82 + "theora";
 
 
         // Opus parameter frame ID
@@ -136,18 +129,6 @@ namespace ATL.AudioData.IO
             public byte Segments;                                 // Number of page segments
             public byte[] LacingValues;                     // Lacing values - segment sizes
 
-            public void Reset()
-            {
-                ID = "";
-                StreamVersion = 0;
-                TypeFlag = 0;
-                AbsolutePosition = 0;
-                StreamId = 0;
-                PageNumber = 0;
-                Checksum = 0;
-                Segments = 0;
-            }
-
             public void ReadFromStream(BufferedBinaryReader r)
             {
                 ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
@@ -205,11 +186,6 @@ namespace ATL.AudioData.IO
             public bool IsValid()
             {
                 return (ID != null) && ID.Equals(OGG_PAGE_ID);
-            }
-
-            public bool IsMetadata()
-            {
-                return 0 == AbsolutePosition;
             }
 
             public bool IsFirstPage()
@@ -274,12 +250,6 @@ namespace ATL.AudioData.IO
                 CoupledStreamCount = 0;
             }
         }
-
-        // Opus parameter header
-        private sealed class TheoraHeader
-        {
-
-        }
 #pragma warning restore S4487 // Unread "private" fields should be removed
 
 
@@ -293,7 +263,6 @@ namespace ATL.AudioData.IO
             public VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
             public OpusHeader OpusParameters = new OpusHeader();        // Opus parameter header
             public FlacHeader FlacParameters;                           // FLAC parameter header
-            public TheoraHeader TheoraParameters;                       // Theora parameter header
 
             // Total number of samples
             public ulong Samples;
@@ -754,7 +723,6 @@ namespace ATL.AudioData.IO
                         {
                             info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
                             info.CommentHeaderEnd = info.SetupHeaderStart;
-                            //info.CommentHeaderEnd = info.SetupHeaderStart - 1;
 
                             // Determine over how many OGG pages Comment and Setup pages span
                             if (pageOffsets.Count > 1)
