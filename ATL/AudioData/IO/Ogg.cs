@@ -130,7 +130,7 @@ namespace ATL.AudioData.IO
             public byte StreamVersion;                           // Stream structure version
             public byte TypeFlag;                                        // Header type flag
             public ulong AbsolutePosition;                      // Absolute granule position
-            public int Serial;                                       // Stream serial number
+            public int StreamId;                                       // Stream serial number
             public int PageNumber;                                   // Page sequence number
             public uint Checksum;                                              // Page CRC32
             public byte Segments;                                 // Number of page segments
@@ -142,7 +142,7 @@ namespace ATL.AudioData.IO
                 StreamVersion = 0;
                 TypeFlag = 0;
                 AbsolutePosition = 0;
-                Serial = 0;
+                StreamId = 0;
                 PageNumber = 0;
                 Checksum = 0;
                 Segments = 0;
@@ -154,7 +154,7 @@ namespace ATL.AudioData.IO
                 StreamVersion = r.ReadByte();
                 TypeFlag = r.ReadByte();
                 AbsolutePosition = r.ReadUInt64();
-                Serial = r.ReadInt32();
+                StreamId = r.ReadInt32();
                 PageNumber = r.ReadInt32();
                 Checksum = r.ReadUInt32();
                 Segments = r.ReadByte();
@@ -167,7 +167,7 @@ namespace ATL.AudioData.IO
                 StreamVersion = r.ReadByte();
                 TypeFlag = r.ReadByte();
                 AbsolutePosition = r.ReadUInt64();
-                Serial = r.ReadInt32();
+                StreamId = r.ReadInt32();
                 PageNumber = r.ReadInt32();
                 Checksum = r.ReadUInt32();
                 Segments = r.ReadByte();
@@ -180,7 +180,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamVersion);
                 w.Write(TypeFlag);
                 w.Write(AbsolutePosition);
-                w.Write(Serial);
+                w.Write(StreamId);
                 w.Write(PageNumber);
                 w.Write(Checksum);
                 w.Write(Segments);
@@ -287,9 +287,7 @@ namespace ATL.AudioData.IO
         private sealed class FileInfo
         {
             // First, second and third Vorbis packets
-            public OggPageHeader IdentificationHeader = new OggPageHeader();
-            public OggPageHeader CommentHeader = new OggPageHeader();
-            public OggPageHeader SetupHeader = new OggPageHeader();
+            public int AudioStreamId;
 
             // Following two properties are mutually exclusive
             public VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
@@ -311,9 +309,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                IdentificationHeader.Reset();
-                CommentHeader.Reset();
-                SetupHeader.Reset();
+                AudioStreamId = 0;
 
                 VorbisParameters.Reset();
                 OpusParameters.Reset();
@@ -723,24 +719,24 @@ namespace ATL.AudioData.IO
                     pageHeader.ReadFromStream(source);
 
                     MemoryStream stream;
-                    if (bitstreams.ContainsKey(pageHeader.Serial))
+                    if (bitstreams.ContainsKey(pageHeader.StreamId))
                     {
-                        stream = bitstreams[pageHeader.Serial];
+                        stream = bitstreams[pageHeader.StreamId];
                         if (pageHeader.IsFirstPage())
-                            pageCount[pageHeader.Serial] = pageCount[pageHeader.Serial] + 1;
+                            pageCount[pageHeader.StreamId] = pageCount[pageHeader.StreamId] + 1;
                     }
                     else
                     {
                         stream = new MemoryStream();
-                        bitstreams.Add(pageHeader.Serial, stream);
-                        pageCount.Add(pageHeader.Serial, 1);
+                        bitstreams.Add(pageHeader.StreamId, stream);
+                        pageCount.Add(pageHeader.StreamId, 1);
                     }
 
-                    if (2 == pageCount[pageHeader.Serial]) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
-                    if (3 == pageCount[pageHeader.Serial]) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
+                    if (2 == pageCount[pageHeader.StreamId]) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
+                    if (3 == pageCount[pageHeader.StreamId]) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
                     //if (3 == pageCount[pageHeader.Serial]) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize() - 1;
-                    if (pageCount[pageHeader.Serial] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
-                } while (pageCount[pageHeader.Serial] < 3);
+                    if (pageCount[pageHeader.StreamId] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
+                } while (pageCount[pageHeader.StreamId] < 3);
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -798,14 +794,16 @@ namespace ATL.AudioData.IO
 
                 bool isValidHeader = false;
                 // Read through all streams to detect audio ones
-                foreach (MemoryStream stream in bitstreams.Values)
+                foreach (KeyValuePair<int, MemoryStream> kvp in bitstreams)
                 {
-                    using (BinaryReader reader = new BinaryReader(stream))
+                    using (BinaryReader reader = new BinaryReader(kvp.Value))
                     {
                         reader.BaseStream.Position = 0;
 
                         bool isSupported = readIdentificationPacket(reader);
                         if (!isSupported) continue;
+
+                        info.AudioStreamId = kvp.Key;
 
                         readCommentPacket(reader, contents, vorbisTag, readTagParams);
                     }
@@ -948,6 +946,7 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /*
         private bool getInfo_old(BufferedBinaryReader source, FileInfo info, ReadTagParams readTagParams)
         {
             // Get info from file
@@ -1158,6 +1157,7 @@ namespace ATL.AudioData.IO
 
             return result;
         }
+        */
 
         // Calculate duration time
         private double getDuration()
@@ -1348,10 +1348,10 @@ namespace ATL.AudioData.IO
                 OggPageHeader header = new OggPageHeader()
                 {
                     ID = OGG_PAGE_ID,
-                    StreamVersion = info.CommentHeader.StreamVersion,
+                    StreamVersion = 0, // Constant
                     TypeFlag = 0,
                     AbsolutePosition = ulong.MaxValue,
-                    Serial = info.CommentHeader.Serial,
+                    StreamId = info.AudioStreamId,
                     PageNumber = 1,
                     Checksum = 0
                 };
