@@ -36,8 +36,8 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.pls");
