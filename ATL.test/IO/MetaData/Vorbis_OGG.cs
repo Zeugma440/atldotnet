@@ -115,7 +115,33 @@ namespace ATL.test.IO.MetaData
             IList<PictureInfo> pictureInfos = testData.Pictures;
             try
             {
-                // Embedded FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
+                // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
+                testData.GeneralDescription = comment;
+                testData.Comment = null;
+                testData.Pictures = new List<PictureInfo>();
+                readExistingTagsOnFile(theFile, 0);
+            }
+            finally
+            {
+                testData.GeneralDescription = null;
+                testData.Comment = comment;
+                testData.Pictures = pictureInfos;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_R_FlacTheora()
+        {
+            new ConsoleLogger();
+            AudioDataManager theFile;
+            string location = TestUtils.GetResourceLocationRoot() + "OGG/theora-flac.ogg";
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            string comment = testData.Comment;
+            IList<PictureInfo> pictureInfos = testData.Pictures;
+            try
+            {
+                // Theora-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
                 testData.Pictures = new List<PictureInfo>();
