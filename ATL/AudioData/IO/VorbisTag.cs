@@ -75,6 +75,9 @@ namespace ATL.AudioData.IO
         // Tweak to enable/disable padding management at VorbisComment level (OGG vs. FLAC behaviour)
         private readonly bool managePadding;
 
+        // Initial offset of the entire Vorbis tag
+        private long initialTagOffset;
+
         // Initial offset of the padding block; used to handle padding the smart way when rewriting data
         private long initialPaddingOffset, initialPaddingSize;
 
@@ -290,7 +293,7 @@ namespace ATL.AudioData.IO
         {
             int size;
             string strData;
-            long initialPos, position;
+            long position;
             int nbFields = 0;
             int index = 0;
             bool result = true;
@@ -306,7 +309,7 @@ namespace ATL.AudioData.IO
                 readTagParams.ReadPictures = true;
             }
 
-            initialPos = source.BaseStream.Position;
+            initialTagOffset = source.BaseStream.Position;
             do
             {
                 size = source.ReadInt32();
@@ -373,7 +376,7 @@ namespace ATL.AudioData.IO
 
             // All fields have been read
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialPos, (int)(source.BaseStream.Position - initialPos), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
+            structureHelper.AddZone(initialTagOffset, (int)(source.BaseStream.Position - initialTagOffset), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
 
             if (readTagParams.PrepareForWriting)
             {
@@ -413,6 +416,7 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
+            long initialWriteOffset = w.BaseStream.Position;
             long counterPos;
             uint counter = 0;
             string vendor;
@@ -444,7 +448,7 @@ namespace ATL.AudioData.IO
             {
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
-                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset, w.BaseStream.Position);
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset - initialTagOffset, w.BaseStream.Position - initialWriteOffset);
                 if (paddingSizeToWrite > 0)
                     for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
             }
