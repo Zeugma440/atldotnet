@@ -18,10 +18,12 @@ namespace ATL.Playlist
         /// Byte Order Mark of UTF-8 files
         /// </summary>
         public static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+
         /// <summary>
         /// .NET Encoding for UTF-8 with no Byte Order Mark
         /// </summary>
         protected static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
+
         /// <summary>
         /// Latin-1 encoding used as ANSI
         /// </summary>
@@ -31,10 +33,12 @@ namespace ATL.Playlist
         /// File Path of the playlist file
         /// </summary>
         public string Path { get; set; }
+
         /// <summary>
         /// Formatting of the track locations (file paths) within the playlist
         /// </summary>
         public PlaylistFormat.LocationFormatting LocationFormatting { get; set; }
+
         /// <summary>
         /// String encoding used within the playlist file
         /// </summary>
@@ -64,7 +68,7 @@ namespace ATL.Playlist
         /// </summary>
         /// <param name="fs">FileStream to use to read the values</param>
         /// <param name="result">List that will receive the values</param>
-        abstract protected void getFiles(FileStream fs, IList<string> result);
+        protected abstract void getFiles(FileStream fs, IList<string> result);
 
         /// <summary>
         /// Read the tracks described by the playlist using the given Stream
@@ -72,7 +76,7 @@ namespace ATL.Playlist
         /// </summary>
         /// <param name="fs">FileStream to use to read the tracks</param>
         /// <param name="result">List that will receive the tracks</param>
-        abstract protected void setTracks(FileStream fs, IList<Track> result);
+        protected abstract void setTracks(FileStream fs, IList<Track> result);
 
         /// <summary>
         /// Read the paths of the track files described by the playlist
@@ -180,6 +184,7 @@ namespace ATL.Playlist
                     settings.Encoding = UTF8_NO_BOM;
                     break;
             }
+
             settings.OmitXmlDeclaration = true;
             settings.ConformanceLevel = ConformanceLevel.Fragment;
             settings.Indent = true;
@@ -229,23 +234,24 @@ namespace ATL.Playlist
         protected string decodeLocation(string href)
         {
             // It it an URI ?
-            string hrefUri = href.Replace('\\', '/'); // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
+            // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
+            var hrefUri = href.Replace('\\', '/'); 
             if (hrefUri.Contains("://")) // RFC URI
             {
                 try
                 {
-                    Uri uri = new Uri(hrefUri);
+                    var uri = new Uri(hrefUri);
                     if (uri.IsFile)
                     {
                         if (!System.IO.Path.IsPathRooted(uri.LocalPath))
                         {
                             return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), uri.LocalPath);
                         }
-                        else
-                        {
-                            // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
-                            return uri.LocalPath.Replace("" + System.IO.Path.DirectorySeparatorChar + System.IO.Path.DirectorySeparatorChar, "" + System.IO.Path.DirectorySeparatorChar);
-                        }
+                        
+                        // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
+                        return uri.LocalPath.Replace(
+                            "" + System.IO.Path.DirectorySeparatorChar + System.IO.Path.DirectorySeparatorChar,
+                            "" + System.IO.Path.DirectorySeparatorChar);
                     }
                 }
                 catch (UriFormatException)
@@ -254,7 +260,7 @@ namespace ATL.Playlist
                 }
             }
 
-            href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "");
+            href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "").Replace('\\', System.IO.Path.DirectorySeparatorChar);
             if (!System.IO.Path.IsPathRooted(href))
             {
                 href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);

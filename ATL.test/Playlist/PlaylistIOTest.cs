@@ -85,16 +85,23 @@ namespace ATL.test.IO.Playlist
         {
             IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
 
-            Assert.AreEqual(1, theReader.FilePaths.Count);
-            foreach (string s in theReader.FilePaths)
+            var filePaths = theReader.FilePaths;
+            Assert.AreEqual(1, filePaths.Count);
+            foreach (string s in filePaths)
             {
                 Assert.IsTrue(System.IO.File.Exists(s));
             }
 
-            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
-            string resourceRoot = TestUtils.GetResourceLocationRoot(false);
+            var replacements = new List<KeyValuePair<string, string>>();
+            var resourceRoot = TestUtils.GetResourceLocationRoot(false);
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", resourceRoot.Substring(2, resourceRoot.Length - 2)));
+            
+            // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
+            var noDiskPath = Path.DirectorySeparatorChar != '\\'
+                ? resourceRoot
+                : resourceRoot.Substring(2, resourceRoot.Length - 2);
+
+            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
             try
@@ -131,10 +138,16 @@ namespace ATL.test.IO.Playlist
         [TestMethod]
         public void PL_SMIL()
         {
-            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
-            string resourceRoot = TestUtils.GetResourceLocationRoot(false);
+            var replacements = new List<KeyValuePair<string, string>>();
+            var resourceRoot = TestUtils.GetResourceLocationRoot(false);
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", resourceRoot.Substring(2, resourceRoot.Length - 2)));
+            
+            // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
+            var noDiskPath = Path.DirectorySeparatorChar != '\\'
+                ? resourceRoot
+                : resourceRoot.Substring(2, resourceRoot.Length - 2);
+
+            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.smil", replacements);
             try

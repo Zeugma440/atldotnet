@@ -77,7 +77,7 @@ namespace ATL.test
                 {
                     replacedLine = line;
                     foreach (KeyValuePair<string, string> kvp in replacements) replacedLine = replacedLine.Replace(kvp.Key, kvp.Value);
-                    s.WriteLine(replacedLine);
+                    s.WriteLine(replacedLine.Replace("file:////", "file:///"));
                 }
             }
 

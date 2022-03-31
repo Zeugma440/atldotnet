@@ -11,27 +11,33 @@ namespace ATL.test.IO.Playlist
         [TestMethod]
         public void PLIO_R_M3U()
         {
-            IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
-
+            var pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
+            
             Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
             Assert.AreEqual(1, pls.FilePaths.Count);
-            foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-            foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
+            foreach (var s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+            foreach (var t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
 
-            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
-            string resourceRoot = TestUtils.GetResourceLocationRoot(false);
+            var replacements = new List<KeyValuePair<string, string>>();
+            var resourceRoot = TestUtils.GetResourceLocationRoot(false);
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", resourceRoot.Substring(2, resourceRoot.Length - 2)));
-
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
+            
+            // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
+            var noDiskPath = Path.DirectorySeparatorChar != '\\'
+                ? resourceRoot
+                : resourceRoot.Substring(2, resourceRoot.Length - 2);
+            
+            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
+            
+            var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
             try
             {
                 pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
                 Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
                 Assert.AreEqual(3, pls.FilePaths.Count);
-                foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-                foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
+                foreach (var s in pls.FilePaths) Assert.IsTrue(File.Exists(s));
+                foreach (var t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
             }
             finally
             {
@@ -94,8 +100,8 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");

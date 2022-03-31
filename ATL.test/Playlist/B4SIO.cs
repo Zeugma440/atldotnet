@@ -13,16 +13,17 @@ namespace ATL.test.IO.Playlist
         [TestMethod]
         public void PLIO_R_B4S()
         {
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.b4s", "$PATH", TestUtils.GetResourceLocationRoot(false));
-
+            var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.b4s", "$PATH", TestUtils.GetResourceLocationRoot(false));
+            
             try
             {
-                IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
+                var theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
+                var filePaths = theReader.FilePaths;
+                var tracks = theReader.Tracks;
                 Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(3, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-                foreach (Track t in theReader.Tracks) Assert.IsTrue(t.Duration > 0);
+                Assert.AreEqual(3, filePaths.Count);
+                foreach (var s in filePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                foreach (var t in tracks) Assert.IsTrue(t.Duration > 0);
             }
             finally
             {
@@ -38,8 +39,8 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.b4s");

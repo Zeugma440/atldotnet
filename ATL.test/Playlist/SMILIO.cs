@@ -13,10 +13,16 @@ namespace ATL.test.IO.Playlist
         [TestMethod]
         public void PLIO_R_SMIL()
         {
-            IList<KeyValuePair<string, string>> replacements = new List<KeyValuePair<string, string>>();
-            string resourceRoot = TestUtils.GetResourceLocationRoot(false);
+            var replacements = new List<KeyValuePair<string, string>>();
+            var resourceRoot = TestUtils.GetResourceLocationRoot(false);
+            
+            // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
+            var noDiskPath = Path.DirectorySeparatorChar != '\\'
+                ? resourceRoot
+                : resourceRoot.Substring(2, resourceRoot.Length - 2);
+
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", resourceRoot.Substring(2, resourceRoot.Length - 2)));
+            replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.smil", replacements);
             try
@@ -42,8 +48,8 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add("bbb.mp3");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3\\empty.mp3"));
-            tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD\\mod.mod"));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.smil");
@@ -108,7 +114,11 @@ namespace ATL.test.IO.Playlist
                             else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase) && parents.Contains("seq"))
                             {
                                 index++;
-                                Assert.AreEqual("file:///"+tracksToWrite[index].Path.Replace('\\', '/'), source.GetAttribute("src"));
+                                // fix file:////, which is happening on *nix systems
+                                var expected = ("file:///" + tracksToWrite[index].Path.Replace('\\', '/'))
+                                    .Replace("file:////", "file:///");
+                                var actual = source.GetAttribute("src");
+                                Assert.AreEqual(expected, actual);
                             }
                         }
                     }
