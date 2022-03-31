@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
-	class FLAC : IMetaDataIO, IAudioDataIO
+	class FLAC : VorbisTagContainer, IAudioDataIO
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         private const byte META_STREAMINFO = 0;
@@ -32,8 +32,6 @@ namespace ATL.AudioData.IO
 
         private readonly string filePath;
         private AudioDataManager.SizeInfo sizeInfo;
-
-        private VorbisTag vorbisTag;
 
         IList<Zone> zones; // TODO - That's one hint of why interactions with VorbisTag need to be redesigned...
 
@@ -74,19 +72,15 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
-        public bool Exists
-        {
-            get { return vorbisTag.Exists; }
-        }
         /// <inheritdoc/>
-        public IList<Format> MetadataFormats
+        public override IList<Format> MetadataFormats
         {
             get
             {
-                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
-                nativeFormat.Name = "Native / Vorbis (FLAC)";
-                nativeFormat.ID += AudioFormat.ID;
-                return new List<Format>(new Format[1] { nativeFormat });
+                IList<Format> result = base.MetadataFormats;
+                result[0].Name += " (FLAC)";
+                result[0].ID += AudioFormat.ID;
+                return result;
             }
         }
         public string FileName
@@ -115,227 +109,6 @@ namespace ATL.AudioData.IO
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
-
-        #region IMetaDataReader
-        public string Title
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Title;
-            }
-        }
-
-        public string Artist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Artist;
-            }
-        }
-
-        public string Composer
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Composer;
-            }
-        }
-
-        public string Comment
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Comment;
-            }
-        }
-
-        public string Genre
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Genre;
-            }
-        }
-
-        public ushort Track
-        {
-            get { return ((IMetaDataIO)vorbisTag).Track; }
-        }
-
-        public ushort TrackTotal
-        {
-            get { return ((IMetaDataIO)vorbisTag).TrackTotal; }
-        }
-
-        public ushort Disc
-        {
-            get { return ((IMetaDataIO)vorbisTag).Disc; }
-        }
-
-        public ushort DiscTotal
-        {
-            get { return ((IMetaDataIO)vorbisTag).DiscTotal; }
-        }
-
-        public DateTime Date
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Date;
-            }
-        }
-
-        public string Album
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Album;
-            }
-        }
-        public float? Popularity
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Popularity;
-            }
-        }
-
-        public string Copyright
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Copyright;
-            }
-        }
-
-        public string OriginalArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).OriginalArtist;
-            }
-        }
-
-        public string OriginalAlbum
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).OriginalAlbum;
-            }
-        }
-
-        public string GeneralDescription
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).GeneralDescription;
-            }
-        }
-
-        public string Publisher
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Publisher;
-            }
-        }
-
-        public DateTime PublishingDate
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PublishingDate;
-            }
-        }
-
-        public string AlbumArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).AlbumArtist;
-            }
-        }
-
-        public string Conductor
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Conductor;
-            }
-        }
-
-        public string ProductId
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).ProductId;
-            }
-        }
-
-        public long PaddingSize
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PaddingSize;
-            }
-        }
-
-        public IList<PictureInfo> PictureTokens
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PictureTokens;
-            }
-        }
-
-        public long Size
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Size;
-            }
-        }
-
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).AdditionalFields;
-            }
-        }
-
-        public string ChaptersTableDescription
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).ChaptersTableDescription;
-            }
-        }
-
-        public IList<ChapterInfo> Chapters
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Chapters;
-            }
-        }
-
-        public LyricsInfo Lyrics
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Lyrics;
-            }
-        }
-
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).EmbeddedPictures;
-            }
-        }
-        #endregion
 
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
@@ -398,7 +171,7 @@ namespace ATL.AudioData.IO
         }
 
         // TODO : support for CUESHEET block
-        public bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -515,7 +288,7 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public override bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -694,7 +467,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        public bool Remove(BinaryWriter w)
+        public override bool Remove(BinaryWriter w)
         {
             bool result = true;
             long cumulativeDelta = 0;
@@ -735,12 +508,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public void SetEmbedder(IMetaDataEmbedder embedder)
+        public override void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }
 
-        public void Clear()
+        public override void Clear()
         {
             vorbisTag.Clear();
         }

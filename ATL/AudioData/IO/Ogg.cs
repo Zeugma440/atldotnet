@@ -22,7 +22,7 @@ namespace ATL.AudioData.IO
     ///   3. Writing metadata is not supported yet on embedded FLAC files
     /// 
     /// </summary>
-	class Ogg : IAudioDataIO, IMetaDataIO
+	class Ogg : VorbisTagContainer, IAudioDataIO
     {
         // Contents of the file
         private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
@@ -64,7 +64,6 @@ namespace ATL.AudioData.IO
 
         private readonly string filePath;
         private readonly Format audioFormat;
-        private VorbisTag vorbisTag;
 
         private readonly FileInfo info = new FileInfo();
 
@@ -337,262 +336,21 @@ namespace ATL.AudioData.IO
             get { return (contents == CONTENTS_FLAC) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
         }
 
-        #region IMetaDataIO
-        public bool Exists
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Exists;
-            }
-        }
-        /// <inheritdoc/>
-        public IList<Format> MetadataFormats
-        {
-            get
-            {
-                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
-                nativeFormat.Name = "Native / Vorbis (OGG)";
-                nativeFormat.ID += AudioFormat.ID;
-                return new List<Format>(new Format[1] { nativeFormat });
-            }
-        }
-
-        public string Title
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Title;
-            }
-        }
-
-        public string Artist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Artist;
-            }
-        }
-
-        public string Composer
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Composer;
-            }
-        }
-
-        public string Comment
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Comment;
-            }
-        }
-
-        public string Genre
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Genre;
-            }
-        }
-
-        public ushort Track
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Track;
-            }
-        }
-
-        public ushort TrackTotal
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).TrackTotal;
-            }
-        }
-
-        public ushort Disc
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Disc;
-            }
-        }
-
-        public ushort DiscTotal
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).DiscTotal;
-            }
-        }
-
-        public DateTime Date
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Date;
-            }
-        }
-
-        public string Album
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Album;
-            }
-        }
-
-        public float? Popularity
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Popularity;
-            }
-        }
-
-        public string Copyright
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Copyright;
-            }
-        }
-
-        public string OriginalArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).OriginalArtist;
-            }
-        }
-
-        public string OriginalAlbum
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).OriginalAlbum;
-            }
-        }
-
-        public string GeneralDescription
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).GeneralDescription;
-            }
-        }
-
-        public string Publisher
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Publisher;
-            }
-        }
-
-        public DateTime PublishingDate
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PublishingDate;
-            }
-        }
-
-        public string AlbumArtist
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).AlbumArtist;
-            }
-        }
-
-        public string Conductor
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Conductor;
-            }
-        }
-
-        public string ProductId
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).ProductId;
-            }
-        }
-
-        public long PaddingSize
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PaddingSize;
-            }
-        }
-
-        public IList<PictureInfo> PictureTokens
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PictureTokens;
-            }
-        }
-
-        public long Size
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Size;
-            }
-        }
-
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).AdditionalFields;
-            }
-        }
-
-        public string ChaptersTableDescription
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).ChaptersTableDescription;
-            }
-        }
-
-        public IList<ChapterInfo> Chapters
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Chapters;
-            }
-        }
-
-        public LyricsInfo Lyrics
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Lyrics;
-            }
-        }
-
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).EmbeddedPictures;
-            }
-        }
-        #endregion
-
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.NATIVE; // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
+        }
+
+        /// <inheritdoc/>
+        public override IList<Format> MetadataFormats
+        {
+            get
+            {
+                IList<Format> result = base.MetadataFormats;
+                result[0].Name += " (OGG)";
+                result[0].ID += AudioFormat.ID;
+                return result;
+            }
         }
 
 
@@ -952,7 +710,7 @@ namespace ATL.AudioData.IO
             return Read(source, readTagParams);
         }
 
-        public bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -996,7 +754,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public override bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -1210,7 +968,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public bool Remove(BinaryWriter w)
+        public override bool Remove(BinaryWriter w)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
 
@@ -1218,12 +976,12 @@ namespace ATL.AudioData.IO
             return Write(r, w, tag);
         }
 
-        public void SetEmbedder(IMetaDataEmbedder embedder)
+        public override void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }
 
-        public void Clear()
+        public override void Clear()
         {
             vorbisTag.Clear();
         }
