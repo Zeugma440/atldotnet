@@ -2,11 +2,11 @@
   <PropertyGroup>
     <TargetFrameworks>net48;netcoreapp3.1;netstandard2.1</TargetFrameworks>
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company />
     <AssemblyVersion>4.4.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
-	<PackageVersion>4.4.0-alpha</PackageVersion>
+    <PackageVersion>4.4.0-alpha</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>audio metadata tag mp3 mp4 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -24,18 +24,24 @@
   </PropertyGroup>
 
   <PropertyGroup>
-  <!-- Explicitly generate Assembly Info -->
-  <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-  <RepositoryUrl></RepositoryUrl>
-  <RepositoryType></RepositoryType>
-</PropertyGroup>
+    <!-- Explicitly generate Assembly Info -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl></RepositoryUrl>
+    <RepositoryType></RepositoryType>
+  </PropertyGroup>
 
-<ItemGroup>
-  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-  <_Parameter1>ATL.test</_Parameter1>
-  </AssemblyAttribute>
-</ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>ATL.test</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>ATL.benchmark</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />

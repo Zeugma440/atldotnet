@@ -9,7 +9,7 @@ namespace ATL.AudioData
     /// <summary>
     /// General utility class to manipulate values extracted from tracks metadata
     /// </summary>
-    public static class TrackUtils
+    internal static class TrackUtils
     {
         /// <summary>
         /// Extract the track number from the given string

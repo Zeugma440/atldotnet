@@ -7,7 +7,7 @@ namespace HashDepot
     /// FNV-1a Hash functions
     /// </summary>
 #pragma warning disable S101 // Types should be named in PascalCase
-    public static class FNV1a
+    internal static class FNV1a
 #pragma warning restore S101 // Types should be named in PascalCase
     {
         /// <summary>

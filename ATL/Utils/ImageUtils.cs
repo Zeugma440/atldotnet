@@ -77,7 +77,7 @@ namespace Commons
     ///   - If a TIFF file has multiple images, only the properties of the 1st image will be read
     ///   - BMPs with color palettes are not supported
     /// </summary>
-    public static class ImageUtils
+    internal static class ImageUtils
     {
         /// <summary>
         /// Return the mime-type of the given .NET image format

@@ -6,7 +6,7 @@ namespace Commons
     /// <summary>
     /// General utility class
     /// </summary>
-    public static class Utils
+    internal static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
         /// <summary>

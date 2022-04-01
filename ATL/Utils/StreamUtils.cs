@@ -7,7 +7,7 @@ namespace ATL
     /// <summary>
     /// Misc. utilities used by binary readers
     /// </summary>
-    public static class StreamUtils
+    internal static class StreamUtils
     {
         /// <summary>
         /// Handler signature to be used when needing to process a MemoryStream
