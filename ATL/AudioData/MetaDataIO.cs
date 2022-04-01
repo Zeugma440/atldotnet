@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
             public bool ReadAllMetaFrames { get; set; }
 
             /// <summary>
-            /// True : read embedded pictures; False : skip embedded pictures
+            /// True : read embedded pictures; False : skip embedded pictures (faster, less memory taken)
             /// </summary>
             public bool ReadPictures { get; set; }
 

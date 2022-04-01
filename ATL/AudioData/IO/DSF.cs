@@ -19,7 +19,6 @@ namespace ATL.AudioData.IO
 
 
         // Private declarations 
-        private int formatVersion;
         private ChannelsArrangement channelsArrangement;
         private uint bits;
         private uint sampleRate;
@@ -106,7 +105,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            formatVersion = -1;
             bits = 0;
             sampleRate = 0;
             duration = 0;
@@ -154,7 +152,7 @@ namespace ATL.AudioData.IO
                 {
                     source.BaseStream.Seek(8, SeekOrigin.Current); // Chunk size
 
-                    formatVersion = source.ReadInt32();
+                    int formatVersion = source.ReadInt32();
 
                     if (formatVersion > 1)
                     {

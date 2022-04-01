@@ -37,7 +37,6 @@ namespace ATL.AudioData.IO
 
         // Stuff loaded from the header:
         private int version;
-        private string versionStr;
         private ChannelsArrangement channelsArrangement;
         private int sampleRate;
         private int bits;
@@ -205,7 +204,6 @@ namespace ATL.AudioData.IO
         {
             // Reset data
             version = 0;
-            versionStr = "";
             sampleRate = 0;
             bits = 0;
             peakLevel = 0;
@@ -262,8 +260,6 @@ namespace ATL.AudioData.IO
                 version = header.nVersion;
                 AudioDataOffset = source.BaseStream.Position - 6;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
-
-                versionStr = ((double)version / 1000).ToString().Substring(0, 4);
 
                 // Load New Monkey's Audio Header for version >= 3.98
                 if (header.nVersion >= 3980)

@@ -229,7 +229,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readTags(BinaryReader source, long offset, long size, ReadTagParams readTagParams)
+        private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
         {
             source.BaseStream.Seek(offset, SeekOrigin.Begin);
             int nbTags = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
@@ -295,7 +295,8 @@ namespace ATL.AudioData.IO
             readHeader(source);
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
-                readTags(source, toc[TOC_CONTENT_TAGS].Item1, toc[TOC_CONTENT_TAGS].Item2, readTagParams);
+                // toc[TOC_CONTENT_TAGS].Item2 is the size
+                readTags(source, toc[TOC_CONTENT_TAGS].Item1, readTagParams);
             }
             if (toc.ContainsKey(TOC_COVER_ART))
             {

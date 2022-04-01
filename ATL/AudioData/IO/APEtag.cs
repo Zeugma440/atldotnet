@@ -319,6 +319,7 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <inheritdoc/>
         protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             TagInfo Tag = new TagInfo();

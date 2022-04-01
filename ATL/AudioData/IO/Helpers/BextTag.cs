@@ -4,13 +4,26 @@ using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Represents a Broadcast Wave Format ("bext"; see EBU – TECH 3285) metadata set
+    /// </summary>
     public static class BextTag
     {
+        /// <summary>
+        /// Identifier of a bext chunk
+        /// </summary>
         public const string CHUNK_BEXT = "bext";
 
+        /// <summary>
+        /// Read a bext chunk from the given source into the given Metadata I/O, using the given read parameters
+        /// </summary>
+        /// <param name="source">Stream to read data from</param>
+        /// <param name="meta">Metadata I/O to copy metadata to</param>
+        /// <param name="readTagParams">Read parameters to use</param>
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams)
         {
             string str;
@@ -53,13 +66,12 @@ namespace ATL.AudioData.IO
 
             // UMID
             source.Read(data, 0, 64);
-            str = "";
-
             int usefulLength = 32; // "basic" UMID
             if (data[12] > 19) usefulLength = 64; // data[12] gives the size of remaining UMID
-            for (int i = 0; i < usefulLength; i++) str = str + data[i].ToString("X2");
+            StringBuilder sbr = new StringBuilder();
+            for (int i = 0; i < usefulLength; i++) sbr.Append(data[i].ToString("X2"));
 
-            meta.SetMetaField("bext.UMID", str, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("bext.UMID", sbr.ToString(), readTagParams.ReadAllMetaFrames);
 
             // LoudnessValue
             source.Read(data, 0, 2);
@@ -104,6 +116,11 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Indicates whether the given Metadata I/O contains metadata relevant to the Bext format
+        /// </summary>
+        /// <param name="meta">Metadata I/O to test with</param>
+        /// <returns>True if the given Metadata I/O contains data relevant to the Bext format; false if it doesn't</returns>
         public static bool IsDataEligible(MetaDataIO meta)
         {
             if (meta.GeneralDescription.Length > 0) return true;
@@ -111,6 +128,13 @@ namespace ATL.AudioData.IO
             return WavHelper.IsDataEligible(meta, "bext.");
         }
 
+        /// <summary>
+        /// Write Bext metadata from the given Metadata I/O to the given writer, using the given endianness for the size headers
+        /// </summary>
+        /// <param name="w">Writer to write data to</param>
+        /// <param name="isLittleEndian">Endianness to write the size headers with</param>
+        /// <param name="meta">Metadata to write</param>
+        /// <returns>The number of fields written</returns>
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;

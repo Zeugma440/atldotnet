@@ -212,6 +212,19 @@ namespace ATL.AudioData
             else return false;
         }
 
+        /// <summary>
+        /// Indicate whether the current file supports native tagging
+        /// </summary>
+        /// <returns>True if the current file supports native tagging; false if it doesn't</returns>
+        public bool HasNativeMeta()
+        {
+            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE);
+        }
+
+        /// <summary>
+        /// List the available tag types of the current file
+        /// </summary>
+        /// <returns>List of tag types available in the current file</returns>
         public IList<MetaDataIOFactory.TagType> getAvailableMetas()
         {
             IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
@@ -225,6 +238,10 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// List the tag types supported by the format of the current file
+        /// </summary>
+        /// <returns>Tag types supported by the format of the current file</returns>
         public IList<MetaDataIOFactory.TagType> getSupportedMetas()
         {
             IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
@@ -238,6 +255,11 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// Return metadata from the given tag type from the current file
+        /// </summary>
+        /// <param name="type">Tag type to retrieve metadata from</param>
+        /// <returns>Metadata I/O for the given tag type</returns>
         public IMetaDataIO getMeta(MetaDataIOFactory.TagType type)
         {
             if (type.Equals(MetaDataIOFactory.TagType.ID3V1))
@@ -259,6 +281,11 @@ namespace ATL.AudioData
             else return new DummyTag();
         }
 
+        /// <summary>
+        /// Set the given metadata to the current file
+        /// NB : Operates on RAM; doesn't save the file on disk. To do so, use UpdateTagInFile
+        /// </summary>
+        /// <param name="meta">Metadata to set</param>
         public void setMeta(IMetaDataIO meta)
         {
             if (meta is ID3v1)
@@ -283,6 +310,12 @@ namespace ATL.AudioData
             }
         }
 
+        /// <summary>
+        /// Read all metadata from the current file
+        /// </summary>
+        /// <param name="readEmbeddedPictures">True if embedded pictures should be read; false if not (faster, less memory)</param>
+        /// <param name="readAllMetaFrames">True if all frames, including "Additional fields" should be read; false if only fields published in IMetaDataIO should be read</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)
         {
             bool result = false;
@@ -306,8 +339,8 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.Message);
-                System.Console.WriteLine(e.StackTrace);
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
@@ -315,6 +348,12 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// Update metadata of current file and save it to disk
+        /// </summary>
+        /// <param name="theTag">Metadata to save</param>
+        /// <param name="tagType">TagType to save the given metadata with</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
         {
             bool result = true;
@@ -371,6 +410,11 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// Remove the tagging from the given type (i.e. the whole technical structure, not only values) from the current file
+        /// </summary>
+        /// <param name="tagType">Type of the tagging to be removed</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool RemoveTagFromFile(MetaDataIOFactory.TagType tagType)
         {
             bool result = false;
@@ -472,11 +516,6 @@ namespace ATL.AudioData
             if (audioDataIO.AudioDataSize > 0) sizeInfo.AudioDataSize = audioDataIO.AudioDataSize;
 
             return result;
-        }
-
-        public bool HasNativeMeta()
-        {
-            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE);
         }
     }
 }

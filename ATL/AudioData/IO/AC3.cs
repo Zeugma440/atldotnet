@@ -23,15 +23,6 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
 
-        // Public declarations 
-        /* Unused for now
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
-        */
-
-
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         public bool IsVBR
@@ -99,17 +90,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        /* Unused for now
-        private double getCompressionRatio()
-        {
-            // Get compression ratio 
-            if (isValid)
-                return (double)sizeInfo.FileSize / ((duration * sampleRate) * (channels * bits / 8) + 44) * 100;
-            else
-                return 0;
-        }
-        */
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
