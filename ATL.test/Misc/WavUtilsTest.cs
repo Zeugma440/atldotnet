@@ -24,8 +24,8 @@ namespace ATL.test
 
                 // Write test values to stream
                 stream.Seek(0, SeekOrigin.Begin);
-                WavHelper.writeFixedFieldTextValue("aaa", 3, additionalFields, w, 1);
-                WavHelper.writeFixedFieldTextValue("ccc", 2, additionalFields, w, 1);
+                WavHelper.writeFixedFieldTextValue("aaa", additionalFields, 3, w, 1);
+                WavHelper.writeFixedFieldTextValue("ccc", additionalFields, 2, w, 1);
 
                 // Test expected result
                 stream.Seek(0, SeekOrigin.Begin);

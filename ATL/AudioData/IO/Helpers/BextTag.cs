@@ -148,10 +148,10 @@ namespace ATL.AudioData.IO
             if (0 == description.Length && additionalFields.Keys.Contains("bext.description")) description = additionalFields["bext.description"];
 
             WavHelper.writeFixedTextValue(description, 256, w);
-            WavHelper.writeFixedFieldTextValue("bext.originator", 32, additionalFields, w);
-            WavHelper.writeFixedFieldTextValue("bext.originatorReference", 32, additionalFields, w);
-            WavHelper.writeFixedFieldTextValue("bext.originationDate", 10, additionalFields, w);
-            WavHelper.writeFixedFieldTextValue("bext.originationTime", 8, additionalFields, w);
+            WavHelper.writeFixedFieldTextValue("bext.originator", additionalFields, 32, w);
+            WavHelper.writeFixedFieldTextValue("bext.originatorReference", additionalFields, 32, w);
+            WavHelper.writeFixedFieldTextValue("bext.originationDate", additionalFields, 10, w);
+            WavHelper.writeFixedFieldTextValue("bext.originationTime", additionalFields, 8, w);
 
             // Int values
             WavHelper.writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);

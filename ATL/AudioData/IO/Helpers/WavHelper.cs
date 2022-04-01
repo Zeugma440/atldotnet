@@ -7,14 +7,28 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// General utility class to manipulate RIFF WAV chunks
+    /// </summary>
     public static class WavHelper
     {
+        /// <summary>
+        /// Indicate whether the given Metadata I/O contains metadata relevant to the given prefix
+        /// </summary>
+        /// <param name="meta">Metadata I/O to test with</param>
+        /// <param name="prefix">Prefix to test with</param>
+        /// <returns>True if the given Metadata I/O contains data relevant to the given prefix; false if it doesn't</returns>
         public static bool IsDataEligible(MetaDataIO meta, string prefix)
         {
             return meta.AdditionalFields.Keys.Any(key => key.StartsWith(prefix));
         }
 
-        // How many of them do we have ? -> count distinct indexes
+        /// <summary>
+        /// Filter the given key collection with the given prefix
+        /// </summary>
+        /// <param name="prefix">Prefix to test with</param>
+        /// <param name="keys">Collection to test with</param>
+        /// <returns>List of keys from the given collection starting with the given prefix</returns>
         public static IList<string> getEligibleKeys(string prefix, ICollection<string> keys)
         {
             IList<string> result = new List<string>();
@@ -27,6 +41,15 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <summary>
+        /// Read a 32-bit signed integer from the given source into the given Metadata I/O, using the given field name, buffer and read parameters
+        /// </summary>
+        /// <param name="source">Source to read from</param>
+        /// <param name="meta">Metadata I/O to copy the value to</param>
+        /// <param name="fieldName">Field name to use</param>
+        /// <param name="buffer">Buffer to use</param>
+        /// <param name="readAllMetaFrames">Read parameters to use</param>
+        /// <returns>Read value</returns>
         public static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             source.Read(buffer, 0, 4);
@@ -35,6 +58,15 @@ namespace ATL.AudioData.IO
             return value;
         }
 
+        /// <summary>
+        /// Read a 16-bit signed integer from the given source into the given Metadata I/O, using the given field name, buffer and read parameters
+        /// </summary>
+        /// <param name="source">Source to read from</param>
+        /// <param name="meta">Metadata I/O to copy the value to</param>
+        /// <param name="fieldName">Field name to use</param>
+        /// <param name="buffer">Buffer to use</param>
+        /// <param name="readAllMetaFrames">Read parameters to use</param>
+        /// <returns>Read value</returns>
         public static void readInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             source.Read(buffer, 0, 2);
@@ -42,8 +74,16 @@ namespace ATL.AudioData.IO
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
         }
 
-
-        public static void writeFixedFieldTextValue(string field, int length, IDictionary<string, string> additionalFields, BinaryWriter w, byte paddingByte = 0)
+        /// <summary>
+        /// Write a fixed-length text value from the given Map to the given writer
+        /// NB : Used encoding is Latin-1
+        /// </summary>
+        /// <param name="field">Key of the field to write</param>
+        /// <param name="additionalFields">Map to take the value from</param>
+        /// <param name="length">Fixed length of the text to write</param>
+        /// <param name="w">Writer to write the value to</param>
+        /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
+        public static void writeFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
         {
             if (additionalFields.Keys.Contains(field))
             {
@@ -55,11 +95,27 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Write the given value to the given writer as fixed-length text
+        /// NB : Used encoding is Latin-1
+        /// </summary>
+        /// <param name="value">Value to write</param>
+        /// <param name="length">Fixed length of the text to write</param>
+        /// <param name="w">Writer to write the value to</param>
+        /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
         public static void writeFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
         {
             w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Utils.Latin1Encoding));
         }
 
+        /// <summary>
+        /// Write an integer value from the given Map to the given writer
+        /// NB : The method auto-detects which kind of integer to write according to the type of the default value
+        /// </summary>
+        /// <param name="field">Key of the field to write</param>
+        /// <param name="additionalFields">Map to take the value from</param>
+        /// <param name="w">Writer to use</param>
+        /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
         public static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
             if (additionalFields.Keys.Contains(field))
@@ -88,6 +144,14 @@ namespace ATL.AudioData.IO
             else if (defaultValue is sbyte) w.Write((sbyte)defaultValue);
         }
 
+        /// <summary>
+        /// Write an 0.01-precision floating-point value from the given Map to the given writer
+        /// NB : The method auto-detects which kind of floating-point to write according to the type of the default value (float or short)
+        /// </summary>
+        /// <param name="field">Key of the field to write</param>
+        /// <param name="additionalFields">Map to take the value from</param>
+        /// <param name="w">Writer to use</param>
+        /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
         public static void writeField100DecimalValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
             if (additionalFields.Keys.Contains(field))
