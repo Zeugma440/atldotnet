@@ -1,6 +1,7 @@
 using ATL.Logging;
 using System;
 using System.IO;
+using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 
@@ -246,10 +247,12 @@ namespace ATL.AudioData.IO
             wvh4.flags = source.ReadUInt32();
             wvh4.crc = source.ReadUInt32();
 
+            StringBuilder encoderBuilder = new StringBuilder();
+
             if (StreamUtils.StringEqualsArr("wvpk", wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
             {
                 result = true;
-                channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
+                channelsArrangement = GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
 
                 uint samples = wvh4.total_samples;
                 sampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
@@ -264,25 +267,14 @@ namespace ATL.AudioData.IO
 
                 if (8 == (wvh4.flags & 8))  // hybrid flag
                 {
-                    encoder = "hybrid lossy";
+                    encoderBuilder.Append("hybrid lossy");
                     codecFamily = AudioDataIOFactory.CF_LOSSY;
                 }
                 else
-                { //if (2 == (wvh4.flags & 2) )  {  // lossless flag
-                    encoder = "lossless";
+                {
+                    encoderBuilder.Append("lossless");
                     codecFamily = AudioDataIOFactory.CF_LOSSLESS;
                 }
-
-                /*
-					if ((wvh4.flags & 0x20) > 0)  // MODE_HIGH
-					{
-					  FEncoder = FEncoder + " (high)";
-					end
-					else if ((wvh4.flags & 0x40) > 0)  // MODE_FAST
-					{
-					  FEncoder = FEncoder + " (fast)";
-					}
-				*/
 
                 duration = wvh4.total_samples * 1000.0 / sampleRate;
 
@@ -297,10 +289,10 @@ namespace ATL.AudioData.IO
                         encoderbyte = EncBuf[i + 2];
                         switch (encoderbyte)
                         {
-                            case 8: encoder = encoder + " (high)"; break;
-                            case 0: encoder = encoder + " (normal)"; break;
-                            case 2: encoder = encoder + " (fast)"; break;
-                            case 6: encoder = encoder + " (very fast)"; break;
+                            case 8: encoderBuilder.Append(" (high)"); break;
+                            case 0: encoderBuilder.Append(" (normal)"); break;
+                            case 2: encoderBuilder.Append(" (fast)"); break;
+                            case 6: encoderBuilder.Append(" (very fast)"); break;
                         }
                         AudioDataOffset = initPos + i;
                         break;
@@ -310,6 +302,7 @@ namespace ATL.AudioData.IO
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                 if (duration > 0) bitrate = AudioDataSize * 8.0 / (samples * 1000.0 / sampleRate);
             }
+            encoder = encoderBuilder.ToString();
             return result;
         }
 
@@ -321,6 +314,7 @@ namespace ATL.AudioData.IO
             bool hasfmt;
             WavpackHeader3 wvh3 = new WavpackHeader3();
             bool result = false;
+            StringBuilder encoderBuilder = new StringBuilder();
 
             hasfmt = false;
 
@@ -367,7 +361,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    if ((StreamUtils.StringEqualsArr("data", chunk.id)) && hasfmt)
+                    if (StreamUtils.StringEqualsArr("data", chunk.id) && hasfmt)
                     {
                         wvh3.Reset();
 
@@ -403,16 +397,16 @@ namespace ATL.AudioData.IO
                                     encoder = "hybrid";
                                     if ((wvh3.flags & WVC_FLAG_v3) > 0)
                                     {
-                                        encoder += " lossless";
+                                        encoderBuilder.Append(" lossless");
                                     }
                                     else
                                     {
-                                        encoder += " lossy";
+                                        encoderBuilder.Append(" lossy");
                                         codecFamily = AudioDataIOFactory.CF_LOSSY;
                                     }
 
                                     if ((wvh3.flags & EXTREME_DECORR_v3) > 0)
-                                        encoder = encoder + " (high)";
+                                        encoderBuilder.Append(" (high)");
                                 }
                                 else
                                 {
@@ -428,11 +422,11 @@ namespace ATL.AudioData.IO
 
                                         if ((wvh3.flags & HIGH_FLAG_v3) > 0)
                                         {
-                                            encoder += " high";
+                                            encoderBuilder.Append(" high");
                                         }
                                         else
                                         {
-                                            encoder += " fast";
+                                            encoderBuilder.Append(" fast");
                                         }
                                     }
                                 }
@@ -441,17 +435,17 @@ namespace ATL.AudioData.IO
                             {
                                 if ((wvh3.flags & HIGH_FLAG_v3) == 0)
                                 {
-                                    encoder = "lossless (fast mode)";
+                                    encoderBuilder.Append("lossless (fast mode)");
                                 }
                                 else
                                 {
                                     if ((wvh3.flags & EXTREME_DECORR_v3) > 0)
                                     {
-                                        encoder = "lossless (high mode)";
+                                        encoderBuilder.Append("lossless (high mode)");
                                     }
                                     else
                                     {
-                                        encoder = "lossless";
+                                        encoderBuilder.Append("lossless");
                                     }
 
                                 }
@@ -469,6 +463,7 @@ namespace ATL.AudioData.IO
                     }
                 }
             } // while
+            encoder = encoderBuilder.ToString();
 
             return result;
         }

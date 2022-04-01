@@ -365,6 +365,9 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
+        /// <summary>
+        /// Reset all data
+        /// </summary>
         protected void resetData()
         {
             duration = 0;
@@ -375,6 +378,11 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">File path</param>
+        /// <param name="format">Audio format</param>
         public Midi(string filePath, Format format)
         {
             this.filePath = filePath;

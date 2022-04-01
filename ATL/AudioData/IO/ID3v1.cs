@@ -345,6 +345,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        /// <inheritdoc/>
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
@@ -368,13 +369,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        /// <summary>
-        /// Writes the given metadata into the given stream using the ID3v1.1 standard
-        /// NB : Metadata fields that are not supported by ID3v1.1 standard (e.g. Composer) won't be written into the stream, even though their value are set
-        /// </summary>
-        /// <param name="tag">Metadata to be written</param>
-        /// <param name="w">Stream to be used</param>
-        /// <returns>True if operation completed successfuly; else false</returns>
+        /// <inheritdoc/>
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             // ID3v1 tags are C-String(null-terminated)-based tags
