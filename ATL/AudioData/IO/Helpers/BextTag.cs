@@ -117,7 +117,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Indicates whether the given Metadata I/O contains metadata relevant to the Bext format
+        /// Indicate whether the given Metadata I/O contains metadata relevant to the Bext format
         /// </summary>
         /// <param name="meta">Metadata I/O to test with</param>
         /// <returns>True if the given Metadata I/O contains data relevant to the Bext format; false if it doesn't</returns>
@@ -134,7 +134,7 @@ namespace ATL.AudioData.IO
         /// <param name="w">Writer to write data to</param>
         /// <param name="isLittleEndian">Endianness to write the size headers with</param>
         /// <param name="meta">Metadata to write</param>
-        /// <returns>The number of fields written</returns>
+        /// <returns>The number of written fields</returns>
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;

@@ -736,7 +736,7 @@ namespace ATL.AudioData.IO
                 else if (contents.Equals(CONTENTS_FLAC))
                 {
                     channelsArrangement = info.FlacParameters.getChannelsArrangement();
-                    sampleRate = info.FlacParameters.getSampleRate();
+                    sampleRate = info.FlacParameters.SampleRate;
                     // No nominal bitrate for FLAC
                 }
 

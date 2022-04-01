@@ -1,15 +1,26 @@
 ﻿using Commons;
 using System.Collections.Generic;
 using System.IO;
-using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Represents a Cue-Points metadata set (See Cue-points Chunk of the RIFF WAV format spec)
+    /// </summary>
     public static class CueTag
     {
+        /// <summary>
+        /// Identifier of a cue-points chunk
+        /// </summary>
         public const string CHUNK_CUE = "cue ";
 
+        /// <summary>
+        /// Read a cue-points chunk from the given source into the given Metadata I/O, using the given read parameters
+        /// </summary>
+        /// <param name="source">Stream to read data from</param>
+        /// <param name="meta">Metadata I/O to copy metadata to</param>
+        /// <param name="readTagParams">Read parameters to use</param>
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams)
         {
             byte[] data = new byte[256];
@@ -40,11 +51,23 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Indicate whether the given Metadata I/O contains metadata relevant to the Cue-points format
+        /// </summary>
+        /// <param name="meta">Metadata I/O to test with</param>
+        /// <returns>True if the given Metadata I/O contains data relevant to the Cue-points format; false if it doesn't</returns>
         public static bool IsDataEligible(MetaDataIO meta)
         {
             return WavHelper.IsDataEligible(meta, "cue.");
         }
 
+        /// <summary>
+        /// Write Cue-points metadata from the given Metadata I/O to the given writer, using the given endianness for the size headers
+        /// </summary>
+        /// <param name="w">Writer to write data to</param>
+        /// <param name="isLittleEndian">Endianness to write the size headers with</param>
+        /// <param name="meta">Metadata to write</param>
+        /// <returns>The number of written fields</returns>
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;

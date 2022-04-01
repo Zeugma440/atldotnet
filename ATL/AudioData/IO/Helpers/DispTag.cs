@@ -1,13 +1,18 @@
 ﻿using Commons;
 using System.Collections.Generic;
 using System.IO;
-using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Represents a Display metadata set (see specs for Microsoft's Display Chunk for RIFF WAV)
+    /// </summary>
     public static class DispTag
     {
+        /// <summary>
+        /// Identifier of a Display chunk
+        /// </summary>
         public const string CHUNK_DISP = "disp";
 
         /// <summary>
@@ -31,6 +36,13 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const int CF_PALETTE = 9;
 
+        /// <summary>
+        /// Read a Disp chunk from the given source into the given Metadata I/O, using the given size and read parameters
+        /// </summary>
+        /// <param name="source">Stream to read data from</param>
+        /// <param name="meta">Metadata I/O to copy metadata to</param>
+        /// <param name="readTagParams">Read parameters to use</param>
+        /// <param name="chunkSize">Size of the chunk to read</param>
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
         {
             if (chunkSize <= 4) return;
@@ -81,11 +93,23 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <summary>
+        /// Indicate whether the given Metadata I/O contains metadata relevant to the Disp format
+        /// </summary>
+        /// <param name="meta">Metadata I/O to test with</param>
+        /// <returns>True if the given Metadata I/O contains data relevant to the Disp format; false if it doesn't</returns>
         public static bool IsDataEligible(MetaDataIO meta)
         {
             return WavHelper.IsDataEligible(meta, "disp[");
         }
 
+        /// <summary>
+        /// Write Disp metadata from the given Metadata I/O to the given writer, using the given endianness for the size headers
+        /// </summary>
+        /// <param name="w">Writer to write data to</param>
+        /// <param name="isLittleEndian">Endianness to write the size headers with</param>
+        /// <param name="meta">Metadata to write</param>
+        /// <returns>The number of written fields</returns>
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;

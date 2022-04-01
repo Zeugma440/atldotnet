@@ -196,11 +196,11 @@ namespace ATL.AudioData.IO
             if (header.IsValid())
             {
                 channelsArrangement = header.getChannelsArrangement();
-                sampleRate = header.getSampleRate();
-                bitsPerSample = header.getBitsPerSample();
-                samples = header.getSamples();
+                sampleRate = header.SampleRate;
+                bitsPerSample = header.BitsPerSample;
+                samples = header.NbSamples;
 
-                if (0 == (header.MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK)) // metadata block exists
+                if (header.MetadataExists)
                 {
                     blockIndex = 0;
                     vorbisTag.Clear();

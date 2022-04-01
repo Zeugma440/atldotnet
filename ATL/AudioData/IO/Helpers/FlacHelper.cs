@@ -11,18 +11,29 @@ namespace ATL.AudioData
     /// </summary>
     public static class FlacHelper
     {
+        /// <summary>
+        /// Represents general information extracted from a FLAC file
+        /// </summary>
         public sealed class FlacHeader
         {
-            public string StreamMarker;
-            public byte[] MetaDataBlockHeader = new byte[4];
-            public byte[] Info = new byte[18];
+            private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
+
+            private string StreamMarker;
+            private readonly byte[] MetaDataBlockHeader = new byte[4];
+            private readonly byte[] Info = new byte[18];
             // 16-bytes MD5 Sum only applies to audio data
 
+            /// <summary>
+            /// Contruct a new FlacHeader object
+            /// </summary>
             public FlacHeader()
             {
                 Reset();
             }
 
+            /// <summary>
+            /// Reset all data
+            /// </summary>
             public void Reset()
             {
                 StreamMarker = "";
@@ -30,11 +41,33 @@ namespace ATL.AudioData
                 Array.Clear(Info, 0, 18);
             }
 
+            /// <summary>
+            /// Read data from the given stream
+            /// </summary>
+            /// <param name="source">Stream to read data from</param>
+            public void fromStream(Stream source)
+            {
+                byte[] data = new byte[4];
+                source.Read(data, 0, 4);
+                StreamMarker = Utils.Latin1Encoding.GetString(data, 0, 4);
+                source.Read(MetaDataBlockHeader, 0, 4);
+                source.Read(Info, 0, 18); // METADATA_BLOCK_STREAMINFO
+                source.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
+            }
+
+            /// <summary>
+            /// True if the header has valid data; false if it doesn't
+            /// </summary>
+            /// <returns></returns>
             public bool IsValid()
             {
                 return StreamMarker.Equals(FLAC.FLAC_ID);
             }
 
+            /// <summary>
+            /// Get the channels arrangement
+            /// </summary>
+            /// <returns>Channels arrangement</returns>
             public ChannelsArrangement getChannelsArrangement()
             {
                 int channels = (Info[12] >> 1) & 0x7;
@@ -55,34 +88,37 @@ namespace ATL.AudioData
                 }
             }
 
-            public int getSampleRate()
-            {
-                return Info[10] << 12 | Info[11] << 4 | Info[12] >> 4;
-            }
+            /// <summary>
+            /// Returns true if the metadata block exists; false if it doesn't
+            /// </summary>
+            public bool MetadataExists { get => 0 == (MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK); }
 
-            public byte getBitsPerSample()
-            {
-                return (byte)(((Info[12] & 1) << 4) | (Info[13] >> 4) + 1);
-            }
+            /// <summary>
+            /// Sample rate
+            /// </summary>
+            public int SampleRate { get => Info[10] << 12 | Info[11] << 4 | Info[12] >> 4; }
 
-            public long getSamples()
-            {
-                return Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17];
-            }
+            /// <summary>
+            /// Bits per sample
+            /// </summary>
+            public byte BitsPerSample { get => (byte)(((Info[12] & 1) << 4) | (Info[13] >> 4) + 1); }
+
+            /// <summary>
+            /// Number of samples
+            /// </summary>
+            public long NbSamples { get => Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17]; }
         }
 
+        /// <summary>
+        /// Read FLAC headers from the given source
+        /// </summary>
+        /// <param name="source">Source to read data from</param>
+        /// <returns>FLAC headers</returns>
         public static FlacHeader readHeader(Stream source)
         {
             // Read header data    
             FlacHeader flacHeader = new FlacHeader();
-
-            byte[] data = new byte[4];
-            source.Read(data, 0, 4);
-            flacHeader.StreamMarker = Utils.Latin1Encoding.GetString(data, 0, 4);
-            source.Read(flacHeader.MetaDataBlockHeader, 0, 4);
-            source.Read(flacHeader.Info, 0, 18); // METADATA_BLOCK_STREAMINFO
-            source.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
-
+            flacHeader.fromStream(source);
             return flacHeader;
         }
     }
