@@ -8,7 +8,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Represents a Cue-Points metadata set (See Cue-points Chunk of the RIFF WAV format spec)
     /// </summary>
-    public static class CueTag
+    internal static class CueTag
     {
         /// <summary>
         /// Identifier of a cue-points chunk

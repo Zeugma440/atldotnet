@@ -8,7 +8,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Represents a Display metadata set (see specs for Microsoft's Display Chunk for RIFF WAV)
     /// </summary>
-    public static class DispTag
+    internal static class DispTag
     {
         /// <summary>
         /// Identifier of a Display chunk

@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Represents a Broadcast Wave Format ("bext"; see EBU – TECH 3285) metadata set
     /// </summary>
-    public static class BextTag
+    internal static class BextTag
     {
         /// <summary>
         /// Identifier of a bext chunk

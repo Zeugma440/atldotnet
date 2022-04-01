@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
-    public static class SampleTag
+    internal static class SampleTag
     {
         public const string CHUNK_SAMPLE = "smpl";
 

@@ -9,7 +9,7 @@ namespace ATL.AudioData
     /// <summary>
     /// General utility class to manipulate WMA-like tags embedded in other formats (e.g. MP4)
     /// </summary>
-    public static class WMAHelper
+    internal static class WMAHelper
     {
 
         /// <summary>

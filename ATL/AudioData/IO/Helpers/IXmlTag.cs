@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
-    public static class IXmlTag
+    internal static class IXmlTag
     {
         public const string CHUNK_IXML = "iXML";
 

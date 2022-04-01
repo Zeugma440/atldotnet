@@ -10,7 +10,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// General utility class to manipulate RIFF WAV chunks
     /// </summary>
-    public static class WavHelper
+    internal static class WavHelper
     {
         /// <summary>
         /// Indicate whether the given Metadata I/O contains metadata relevant to the given prefix

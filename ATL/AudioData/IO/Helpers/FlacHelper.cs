@@ -9,7 +9,7 @@ namespace ATL.AudioData
     /// <summary>
     /// General utility class to manipulate FLAC-like tags embedded in other formats (e.g. OGG)
     /// </summary>
-    public static class FlacHelper
+    internal static class FlacHelper
     {
         /// <summary>
         /// Represents general information extracted from a FLAC file

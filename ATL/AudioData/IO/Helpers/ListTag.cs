@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
-    public static class ListTag
+    internal static class ListTag
     {
         public const string CHUNK_LIST = "LIST";
 
