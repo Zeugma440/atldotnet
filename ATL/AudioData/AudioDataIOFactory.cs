@@ -323,105 +323,7 @@ namespace ATL.AudioData
             else
                 theFormat = UNKNOWN_FORMAT;
 
-            int formatId = theFormat.ID;
-
-            IAudioDataIO theDataReader;
-
-            switch (formatId)
-            {
-                case CID_MP3:
-                    theDataReader = new IO.MPEGaudio(path, theFormat);
-                    break;
-                case CID_AAC:
-                    theDataReader = new IO.AAC(path, theFormat);
-                    break;
-                case CID_MP4:
-                    theDataReader = new IO.MP4(path, theFormat);
-                    break;
-                case CID_WMA:
-                    theDataReader = new IO.WMA(path, theFormat);
-                    break;
-                case CID_OGG:
-                    theDataReader = new IO.Ogg(path, theFormat);
-                    break;
-                case CID_FLAC:
-                    theDataReader = new IO.FLAC(path, theFormat);
-                    break;
-                case CID_MPC:
-                    theDataReader = new IO.MPEGplus(path, theFormat);
-                    break;
-                case CID_AC3:
-                    theDataReader = new IO.AC3(path, theFormat);
-                    break;
-                case CID_DSF:
-                    theDataReader = new IO.DSF(path, theFormat);
-                    break;
-                case CID_DTS:
-                    theDataReader = new IO.DTS(path, theFormat);
-                    break;
-                case CID_IT:
-                    theDataReader = new IO.IT(path, theFormat);
-                    break;
-                case CID_MIDI:
-                    theDataReader = new IO.Midi(path, theFormat);
-                    break;
-                case CID_MOD:
-                    theDataReader = new IO.MOD(path, theFormat);
-                    break;
-                case CID_APE:
-                    theDataReader = new IO.APE(path, theFormat);
-                    break;
-                case CID_OFR:
-                    theDataReader = new IO.OptimFrog(path, theFormat);
-                    break;
-                case CID_WAVPACK:
-                    theDataReader = new IO.WAVPack(path, theFormat);
-                    break;
-                case CID_WAV:
-                    theDataReader = new IO.WAV(path, theFormat);
-                    break;
-                case CID_PSF:
-                    theDataReader = new IO.PSF(path, theFormat);
-                    break;
-                case CID_SPC:
-                    theDataReader = new IO.SPC(path, theFormat);
-                    break;
-                case CID_TAK:
-                    theDataReader = new IO.TAK(path, theFormat);
-                    break;
-                case CID_S3M:
-                    theDataReader = new IO.S3M(path, theFormat);
-                    break;
-                case CID_XM:
-                    theDataReader = new IO.XM(path, theFormat);
-                    break;
-                case CID_TTA:
-                    theDataReader = new IO.TTA(path, theFormat);
-                    break;
-                case CID_VQF:
-                    theDataReader = new IO.TwinVQ(path, theFormat);
-                    break;
-                case CID_AIFF:
-                    theDataReader = new IO.AIFF(path, theFormat);
-                    break;
-                case CID_VGM:
-                    theDataReader = new IO.VGM(path, theFormat);
-                    break;
-                case CID_GYM:
-                    theDataReader = new IO.GYM(path, theFormat);
-                    break;
-                case CID_AA:
-                    theDataReader = new IO.AA(path, theFormat);
-                    break;
-                case CID_CAF:
-                    theDataReader = new IO.CAF(path, theFormat);
-                    break;
-                default:
-                    theDataReader = new IO.DummyReader(path);
-                    break;
-            }
-
-            return theDataReader;
+            return getFromFormat(path, theFormat);
         }
 
         /// <summary>
@@ -444,105 +346,74 @@ namespace ATL.AudioData
             else
                 theFormat = UNKNOWN_FORMAT;
 
-            int formatId = theFormat.ID;
+            return getFromFormat(path, theFormat);
+        }
 
-            IAudioDataIO theDataReader;
-
-            switch (formatId)
+        private IAudioDataIO getFromFormat(string path, Format theFormat)
+        {
+            switch (theFormat.ID)
             {
                 case CID_MP3:
-                    theDataReader = new IO.MPEGaudio(path, theFormat);
-                    break;
+                    return new IO.MPEGaudio(path, theFormat);
                 case CID_AAC:
-                    theDataReader = new IO.AAC(path, theFormat);
-                    break;
+                    return new IO.AAC(path, theFormat);
                 case CID_MP4:
-                    theDataReader = new IO.MP4(path, theFormat);
-                    break;
+                    return new IO.MP4(path, theFormat);
                 case CID_WMA:
-                    theDataReader = new IO.WMA(path, theFormat);
-                    break;
+                    return new IO.WMA(path, theFormat);
                 case CID_OGG:
-                    theDataReader = new IO.Ogg(path, theFormat);
-                    break;
+                    return new IO.Ogg(path, theFormat);
                 case CID_FLAC:
-                    theDataReader = new IO.FLAC(path, theFormat);
-                    break;
+                    return new IO.FLAC(path, theFormat);
                 case CID_MPC:
-                    theDataReader = new IO.MPEGplus(path, theFormat);
-                    break;
+                    return new IO.MPEGplus(path, theFormat);
                 case CID_AC3:
-                    theDataReader = new IO.AC3(path, theFormat);
-                    break;
+                    return new IO.AC3(path, theFormat);
                 case CID_DSF:
-                    theDataReader = new IO.DSF(path, theFormat);
-                    break;
+                    return new IO.DSF(path, theFormat);
                 case CID_DTS:
-                    theDataReader = new IO.DTS(path, theFormat);
-                    break;
+                    return new IO.DTS(path, theFormat);
                 case CID_IT:
-                    theDataReader = new IO.IT(path, theFormat);
-                    break;
+                    return new IO.IT(path, theFormat);
                 case CID_MIDI:
-                    theDataReader = new IO.Midi(path, theFormat);
-                    break;
+                    return new IO.Midi(path, theFormat);
                 case CID_MOD:
-                    theDataReader = new IO.MOD(path, theFormat);
-                    break;
+                    return new IO.MOD(path, theFormat);
                 case CID_APE:
-                    theDataReader = new IO.APE(path, theFormat);
-                    break;
+                    return new IO.APE(path, theFormat);
                 case CID_OFR:
-                    theDataReader = new IO.OptimFrog(path, theFormat);
-                    break;
+                    return new IO.OptimFrog(path, theFormat);
                 case CID_WAVPACK:
-                    theDataReader = new IO.WAVPack(path, theFormat);
-                    break;
+                    return new IO.WAVPack(path, theFormat);
                 case CID_WAV:
-                    theDataReader = new IO.WAV(path, theFormat);
-                    break;
+                    return new IO.WAV(path, theFormat);
                 case CID_PSF:
-                    theDataReader = new IO.PSF(path, theFormat);
-                    break;
+                    return new IO.PSF(path, theFormat);
                 case CID_SPC:
-                    theDataReader = new IO.SPC(path, theFormat);
-                    break;
+                    return new IO.SPC(path, theFormat);
                 case CID_TAK:
-                    theDataReader = new IO.TAK(path, theFormat);
-                    break;
+                    return new IO.TAK(path, theFormat);
                 case CID_S3M:
-                    theDataReader = new IO.S3M(path, theFormat);
-                    break;
+                    return new IO.S3M(path, theFormat);
                 case CID_XM:
-                    theDataReader = new IO.XM(path, theFormat);
-                    break;
+                    return new IO.XM(path, theFormat);
                 case CID_TTA:
-                    theDataReader = new IO.TTA(path, theFormat);
-                    break;
+                    return new IO.TTA(path, theFormat);
                 case CID_VQF:
-                    theDataReader = new IO.TwinVQ(path, theFormat);
-                    break;
+                    return new IO.TwinVQ(path, theFormat);
                 case CID_AIFF:
-                    theDataReader = new IO.AIFF(path, theFormat);
-                    break;
+                    return new IO.AIFF(path, theFormat);
                 case CID_VGM:
-                    theDataReader = new IO.VGM(path, theFormat);
-                    break;
+                    return new IO.VGM(path, theFormat);
                 case CID_GYM:
-                    theDataReader = new IO.GYM(path, theFormat);
-                    break;
+                    return new IO.GYM(path, theFormat);
                 case CID_AA:
-                    theDataReader = new IO.AA(path, theFormat);
-                    break;
+                    return new IO.AA(path, theFormat);
                 case CID_CAF:
-                    theDataReader = new IO.CAF(path, theFormat);
-                    break;
+                    return new IO.CAF(path, theFormat);
                 default:
-                    theDataReader = new IO.DummyReader(path);
-                    break;
+                    return new IO.DummyReader(path);
             }
-
-            return theDataReader;
         }
     }
 }
