@@ -48,7 +48,7 @@ namespace ATL.test.IO.MetaData
             // Assert.IsFalse(theFile.NativeTag.Exists); MOD files have embedded comments that prevent from saying that the tag does not exist at all
 
             // Construct a new tag
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -98,7 +98,7 @@ namespace ATL.test.IO.MetaData
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test!!";
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -111,7 +111,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the additional supported field
-            theTag = new TagData();
+            theTag = new TagHolder();
             theTag.Title = "";
 
             // Add the new tag and check that it has been indeed added with all the correct information

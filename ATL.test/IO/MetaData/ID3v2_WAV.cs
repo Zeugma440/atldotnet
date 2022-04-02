@@ -15,7 +15,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.ID3V2;
 
             // Initialize specific test data
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Title = "yeah";
             testData.Artist = "artist";

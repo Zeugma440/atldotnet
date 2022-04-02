@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using Commons;
 using ATL.Logging;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -124,77 +125,77 @@ namespace ATL.AudioData.IO
         //   ID3v2.4 : TDRC (timestamp)
 
         // Mapping between standard fields and ID3v2.2 identifiers
-        private static readonly IDictionary<string, byte> frameMapping_v22 = new Dictionary<string, byte>
+        private static readonly IDictionary<string, Field> frameMapping_v22 = new Dictionary<string, Field>
             {
-                { "TT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TT2", TagData.TAG_FIELD_TITLE },
-                { "TP1", TagData.TAG_FIELD_ARTIST },
-                { "TP2", TagData.TAG_FIELD_ALBUM_ARTIST },  // De facto standard, regardless of spec
-                { "TP3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOA", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TAL", TagData.TAG_FIELD_ALBUM },
-                { "TOT", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPA", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TYE", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "TDA", TagData.TAG_FIELD_RECORDING_DAYMONTH },
-                { "TIM", TagData.TAG_FIELD_RECORDING_TIME },
-                { "COM", TagData.TAG_FIELD_COMMENT },
-                { "TCM", TagData.TAG_FIELD_COMPOSER },
-                { "POP", TagData.TAG_FIELD_RATING },
-                { "TCO", TagData.TAG_FIELD_GENRE },
-                { "TCR", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPB", TagData.TAG_FIELD_PUBLISHER }
+                { "TT1", Field.GENERAL_DESCRIPTION },
+                { "TT2", Field.TITLE },
+                { "TP1", Field.ARTIST },
+                { "TP2", Field.ALBUM_ARTIST },  // De facto standard, regardless of spec
+                { "TP3", Field.CONDUCTOR },
+                { "TOA", Field.ORIGINAL_ARTIST },
+                { "TAL", Field.ALBUM },
+                { "TOT", Field.ORIGINAL_ALBUM },
+                { "TRK", Field.TRACK_NUMBER_TOTAL },
+                { "TPA", Field.DISC_NUMBER_TOTAL },
+                { "TYE", Field.RECORDING_YEAR },
+                { "TDA", Field.RECORDING_DAYMONTH },
+                { "TIM", Field.RECORDING_TIME },
+                { "COM", Field.COMMENT },
+                { "TCM", Field.COMPOSER },
+                { "POP", Field.RATING },
+                { "TCO", Field.GENRE },
+                { "TCR", Field.COPYRIGHT },
+                { "TPB", Field.PUBLISHER }
             };
 
         // Mapping between standard fields and ID3v2.3 identifiers
-        private static readonly IDictionary<string, byte> frameMapping_v23 = new Dictionary<string, byte>
+        private static readonly IDictionary<string, Field> frameMapping_v23 = new Dictionary<string, Field>
             {
-                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TIT2", TagData.TAG_FIELD_TITLE },
-                { "TPE1", TagData.TAG_FIELD_ARTIST },
-                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
-                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TALB", TagData.TAG_FIELD_ALBUM },
-                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TYER", TagData.TAG_FIELD_RECORDING_YEAR },
-                { "TDAT", TagData.TAG_FIELD_RECORDING_DAYMONTH },
-                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE }, // Not part of ID3v2.3 standard, but sometimes found there anyway (MediaMonkey, I'm looking at you...)
-                { "TIME", TagData.TAG_FIELD_RECORDING_TIME },
-                { "COMM", TagData.TAG_FIELD_COMMENT },
-                { "TCOM", TagData.TAG_FIELD_COMPOSER },
-                { "POPM", TagData.TAG_FIELD_RATING },
-                { "TCON", TagData.TAG_FIELD_GENRE },
-                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
-                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION }
+                { "TIT1", Field.GENERAL_DESCRIPTION },
+                { "TIT2", Field.TITLE },
+                { "TPE1", Field.ARTIST },
+                { "TPE2", Field.ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", Field.CONDUCTOR },
+                { "TOPE", Field.ORIGINAL_ARTIST },
+                { "TALB", Field.ALBUM },
+                { "TOAL", Field.ORIGINAL_ALBUM },
+                { "TRCK", Field.TRACK_NUMBER_TOTAL },
+                { "TPOS", Field.DISC_NUMBER_TOTAL },
+                { "TYER", Field.RECORDING_YEAR },
+                { "TDAT", Field.RECORDING_DAYMONTH },
+                { "TDRC", Field.RECORDING_DATE }, // Not part of ID3v2.3 standard, but sometimes found there anyway (MediaMonkey, I'm looking at you...)
+                { "TIME", Field.RECORDING_TIME },
+                { "COMM", Field.COMMENT },
+                { "TCOM", Field.COMPOSER },
+                { "POPM", Field.RATING },
+                { "TCON", Field.GENRE },
+                { "TCOP", Field.COPYRIGHT },
+                { "TPUB", Field.PUBLISHER },
+                { "CTOC", Field.CHAPTERS_TOC_DESCRIPTION }
             };
 
         // Mapping between standard fields and ID3v2.4 identifiers
-        private static readonly IDictionary<string, byte> frameMapping_v24 = new Dictionary<string, byte>
+        private static readonly IDictionary<string, Field> frameMapping_v24 = new Dictionary<string, Field>
             {
-                { "TIT1", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "TIT2", TagData.TAG_FIELD_TITLE },
-                { "TPE1", TagData.TAG_FIELD_ARTIST },
-                { "TPE2", TagData.TAG_FIELD_ALBUM_ARTIST }, // De facto standard, regardless of spec
-                { "TPE3", TagData.TAG_FIELD_CONDUCTOR },
-                { "TOPE", TagData.TAG_FIELD_ORIGINAL_ARTIST },
-                { "TALB", TagData.TAG_FIELD_ALBUM },
-                { "TOAL", TagData.TAG_FIELD_ORIGINAL_ALBUM },
-                { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-                { "TPOS", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-                { "TDRC", TagData.TAG_FIELD_RECORDING_DATE },
-                { "COMM", TagData.TAG_FIELD_COMMENT },
-                { "TCOM", TagData.TAG_FIELD_COMPOSER },
-                { "POPM", TagData.TAG_FIELD_RATING },
-                { "TCON", TagData.TAG_FIELD_GENRE },
-                { "TCOP", TagData.TAG_FIELD_COPYRIGHT },
-                { "TPUB", TagData.TAG_FIELD_PUBLISHER },
-                { "CTOC", TagData.TAG_FIELD_CHAPTERS_TOC_DESCRIPTION },
-                { "TDRL", TagData.TAG_FIELD_PUBLISHING_DATE }
+                { "TIT1", Field.GENERAL_DESCRIPTION },
+                { "TIT2", Field.TITLE },
+                { "TPE1", Field.ARTIST },
+                { "TPE2", Field.ALBUM_ARTIST }, // De facto standard, regardless of spec
+                { "TPE3", Field.CONDUCTOR },
+                { "TOPE", Field.ORIGINAL_ARTIST },
+                { "TALB", Field.ALBUM },
+                { "TOAL", Field.ORIGINAL_ALBUM },
+                { "TRCK", Field.TRACK_NUMBER_TOTAL },
+                { "TPOS", Field.DISC_NUMBER_TOTAL },
+                { "TDRC", Field.RECORDING_DATE },
+                { "COMM", Field.COMMENT },
+                { "TCOM", Field.COMPOSER },
+                { "POPM", Field.RATING },
+                { "TCON", Field.GENRE },
+                { "TCOP", Field.COPYRIGHT },
+                { "TPUB", Field.PUBLISHER },
+                { "CTOC", Field.CHAPTERS_TOC_DESCRIPTION },
+                { "TDRL", Field.PUBLISHING_DATE }
             };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions
@@ -465,9 +466,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             if (ID.Length < 5) ID = ID.ToUpper(); // Preserve the case of non-standard ID3v2 fields -- TODO : use the TagData.Origin property !
 
@@ -1218,7 +1219,7 @@ namespace ATL.AudioData.IO
             bool doWritePicture;
 
             // === ID3v2 FRAMES ===
-            IDictionary<byte, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
@@ -1229,23 +1230,23 @@ namespace ATL.AudioData.IO
             //   ID3v2.2 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
             //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
             //   ID3v2.4 : TDRC (timestamp)
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    if (TagData.TAG_FIELD_RECORDING_YEAR == frameType)
+                    if (Field.RECORDING_YEAR == frameType)
                     {
                         recordingYear = map[frameType];
                     }
-                    else if (TagData.TAG_FIELD_RECORDING_DAYMONTH == frameType)
+                    else if (Field.RECORDING_DAYMONTH == frameType)
                     {
                         recordingDayMonth = map[frameType];
                     }
-                    else if (TagData.TAG_FIELD_RECORDING_TIME == frameType)
+                    else if (Field.RECORDING_TIME == frameType)
                     {
                         recordingTime = map[frameType];
                     }
-                    else if (TagData.TAG_FIELD_RECORDING_DATE == frameType)
+                    else if (Field.RECORDING_DATE == frameType)
                     {
                         recordingDate = map[frameType];
                     }
@@ -1255,26 +1256,26 @@ namespace ATL.AudioData.IO
             if (4 == Settings.ID3v2_tagSubVersion && recordingYear.Length > 0)
             {
                 if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) // Make sure we don't erase an existing, same date with less detailed (year only) information
-                    map[TagData.TAG_FIELD_RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+                    map[TagData.Field.RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
             }
             else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length) // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
             {
-                map[TagData.TAG_FIELD_RECORDING_YEAR] = recordingDate.Substring(0, 4);
+                map[TagData.Field.RECORDING_YEAR] = recordingDate.Substring(0, 4);
                 if (recordingDate.Length > 9)
                 {
-                    map[TagData.TAG_FIELD_RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                    map[TagData.Field.RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
                     if (recordingDate.Length > 15)
                     {
-                        map[TagData.TAG_FIELD_RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
+                        map[TagData.Field.RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
                     }
                 }
-                map.Remove(TagData.TAG_FIELD_RECORDING_DATE);
+                map.Remove(TagData.Field.RECORDING_DATE);
             }
 
-            IDictionary<string, byte> mapping = frameMapping_v24;
+            IDictionary<string, Field> mapping = frameMapping_v24;
             if (3 == Settings.ID3v2_tagSubVersion) mapping = frameMapping_v23;
 
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {

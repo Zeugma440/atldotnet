@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -178,14 +179,14 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public String Title
         {
-            get { return Utils.ProtectValue(tagData.Title); }
+            get { return Utils.ProtectValue(tagData[Field.TITLE]); }
         }
         /// <inheritdoc/>
         public String Artist
         {
             get
             {
-                string result = Utils.ProtectValue(tagData.Artist);
+                string result = Utils.ProtectValue(tagData[Field.ARTIST]);
                 if (0 == result.Length) result = AlbumArtist;
                 return result;
             }
@@ -193,26 +194,26 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public String AlbumArtist
         {
-            get { return Utils.ProtectValue(tagData.AlbumArtist); }
+            get { return Utils.ProtectValue(tagData[Field.ALBUM_ARTIST]); }
         }
         /// <inheritdoc/>
         public String Composer
         {
-            get { return Utils.ProtectValue(tagData.Composer); }
+            get { return Utils.ProtectValue(tagData[Field.COMPOSER]); }
         }
         /// <inheritdoc/>
         public String Album
         {
-            get { return Utils.ProtectValue(tagData.Album); }
+            get { return Utils.ProtectValue(tagData[Field.ALBUM]); }
         }
         /// <inheritdoc/>
         public ushort Track
         {
             get
             {
-                if (tagData.TrackNumberTotal != null)
-                    return TrackUtils.ExtractTrackNumber(tagData.TrackNumberTotal);
-                else return TrackUtils.ExtractTrackNumber(tagData.TrackNumber);
+                if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
+                    return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER_TOTAL]);
+                else return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
             }
         }
         /// <inheritdoc/>
@@ -220,11 +221,11 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                if (tagData.TrackNumberTotal != null)
-                    return TrackUtils.ExtractTrackTotal(tagData.TrackNumberTotal);
-                else if (Utils.IsNumeric(tagData.TrackTotal))
-                    return ushort.Parse(tagData.TrackTotal);
-                else return TrackUtils.ExtractTrackTotal(tagData.TrackNumber);
+                if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
+                    return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER_TOTAL]);
+                else if (Utils.IsNumeric(tagData[Field.TRACK_TOTAL]))
+                    return ushort.Parse(tagData[Field.TRACK_TOTAL]);
+                else return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER]);
             }
         }
         /// <inheritdoc/>
@@ -232,9 +233,9 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                if (tagData.DiscNumberTotal != null)
-                    return TrackUtils.ExtractTrackNumber(tagData.DiscNumberTotal);
-                else return TrackUtils.ExtractTrackNumber(tagData.DiscNumber);
+                if (tagData[Field.DISC_NUMBER_TOTAL] != null)
+                    return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER_TOTAL]);
+                else return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER]);
             }
         }
         /// <inheritdoc/>
@@ -242,11 +243,11 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                if (tagData.DiscNumberTotal != null)
-                    return TrackUtils.ExtractTrackTotal(tagData.DiscNumberTotal);
-                else if (Utils.IsNumeric(tagData.DiscTotal))
-                    return ushort.Parse(tagData.DiscTotal);
-                else return TrackUtils.ExtractTrackTotal(tagData.DiscNumber);
+                if (tagData[Field.DISC_NUMBER_TOTAL] != null)
+                    return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER_TOTAL]);
+                else if (Utils.IsNumeric(tagData[Field.DISC_TOTAL]))
+                    return ushort.Parse(tagData[Field.DISC_TOTAL]);
+                else return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER]);
             }
         }
         /// <inheritdoc/>
@@ -254,7 +255,7 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                float? result = (float?)TrackUtils.DecodePopularity(tagData.Rating, ratingConvention);
+                float? result = (float?)TrackUtils.DecodePopularity(tagData[Field.RATING], ratingConvention);
                 if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
                 return result;
             }
@@ -265,17 +266,18 @@ namespace ATL.AudioData.IO
             get
             {
                 DateTime result;
-                if (!DateTime.TryParse(tagData.RecordingDate, out result)) // First try with a proper Recording date field
+                if (!DateTime.TryParse(Utils.ProtectValue(tagData[Field.RECORDING_DATE]), out result)) // First try with a proper Recording date field
                 {
                     bool success = false;
-                    string dayMonth = Utils.ProtectValue(tagData.RecordingDayMonth); // If not, try to assemble year and dateMonth (e.g. ID3v2)
-                    if (4 == dayMonth.Length && 4 == Utils.ProtectValue(tagData.RecordingYear).Length)
+                    string dayMonth = Utils.ProtectValue(tagData[Field.RECORDING_DAYMONTH]); // If not, try to assemble year and dateMonth (e.g. ID3v2)
+                    string year = Utils.ProtectValue(tagData[Field.RECORDING_YEAR]);
+                    if (4 == dayMonth.Length && 4 == year.Length)
                     {
                         StringBuilder dateTimeBuilder = new StringBuilder();
-                        dateTimeBuilder.Append(tagData.RecordingYear).Append("-");
+                        dateTimeBuilder.Append(year).Append("-");
                         dateTimeBuilder.Append(dayMonth.Substring(2, 2)).Append("-");
                         dateTimeBuilder.Append(dayMonth.Substring(0, 2));
-                        string time = Utils.ProtectValue(tagData.RecordingTime); // Try to add time if available
+                        string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
                         if (time.Length >= 4)
                         {
                             dateTimeBuilder.Append("T");
@@ -287,13 +289,12 @@ namespace ATL.AudioData.IO
                     }
                     if (!success) // Year only
                     {
-                        string year = Utils.ProtectValue(tagData.RecordingYear); // First try with RecordingYear...
-                        if (year.Length != 4) year = Utils.ProtectValue(tagData.RecordingDate); // ...then with RecordingDate
+                        if (year.Length != 4) year = Utils.ProtectValue(tagData[Field.RECORDING_DATE]); // ...then with RecordingDate
                         if (4 == year.Length) // We have a year !
                         {
                             StringBuilder dateTimeBuilder = new StringBuilder();
                             dateTimeBuilder.Append(year).Append("-01-01");
-                            string time = Utils.ProtectValue(tagData.RecordingTime); // Try to add time if available
+                            string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
                             if (time.Length >= 4)
                             {
                                 dateTimeBuilder.Append("T");
@@ -315,7 +316,7 @@ namespace ATL.AudioData.IO
             get
             {
                 DateTime result;
-                if (!DateTime.TryParse(tagData.PublishingDate, out result))
+                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out result))
                     result = DateTime.MinValue;
                 return result;
             }
@@ -323,47 +324,47 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public String Genre
         {
-            get { return Utils.ProtectValue(tagData.Genre); }
+            get { return Utils.ProtectValue(tagData[Field.GENRE]); }
         }
         /// <inheritdoc/>
         public String Comment
         {
-            get { return Utils.ProtectValue(tagData.Comment); }
+            get { return Utils.ProtectValue(tagData[Field.COMMENT]); }
         }
         /// <inheritdoc/>
         public String Copyright
         {
-            get { return Utils.ProtectValue(tagData.Copyright); }
+            get { return Utils.ProtectValue(tagData[Field.COPYRIGHT]); }
         }
         /// <inheritdoc/>
         public String OriginalArtist
         {
-            get { return Utils.ProtectValue(tagData.OriginalArtist); }
+            get { return Utils.ProtectValue(tagData[Field.ORIGINAL_ARTIST]); }
         }
         /// <inheritdoc/>
         public String OriginalAlbum
         {
-            get { return Utils.ProtectValue(tagData.OriginalAlbum); }
+            get { return Utils.ProtectValue(tagData[Field.ORIGINAL_ALBUM]); }
         }
         /// <inheritdoc/>
         public String GeneralDescription
         {
-            get { return Utils.ProtectValue(tagData.GeneralDescription); }
+            get { return Utils.ProtectValue(tagData[Field.GENERAL_DESCRIPTION]); }
         }
         /// <inheritdoc/>
         public String Publisher
         {
-            get { return Utils.ProtectValue(tagData.Publisher); }
+            get { return Utils.ProtectValue(tagData[Field.PUBLISHER]); }
         }
         /// <inheritdoc/>
         public String Conductor
         {
-            get { return Utils.ProtectValue(tagData.Conductor); }
+            get { return Utils.ProtectValue(tagData[Field.CONDUCTOR]); }
         }
         /// <inheritdoc/>
         public String ProductId
         {
-            get { return Utils.ProtectValue(tagData.ProductId); }
+            get { return Utils.ProtectValue(tagData[Field.PRODUCT_ID]); }
         }
         /// <inheritdoc/>
         public long PaddingSize
@@ -477,7 +478,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public string ChaptersTableDescription
         {
-            get { return Utils.ProtectValue(tagData.ChaptersTableDescription); }
+            get { return Utils.ProtectValue(tagData[Field.CHAPTERS_TOC_DESCRIPTION]); }
         }
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
@@ -618,7 +619,7 @@ namespace ATL.AudioData.IO
         /// <param name="ID">ID of the field to get the mapping for</param>
         /// <param name="tagVersion">Version the tagging system (e.g. 3 for ID3v2.3)</param>
         /// <returns></returns>
-        abstract protected byte getFrameMapping(string zone, string ID, byte tagVersion);
+        abstract protected Field getFrameMapping(string zone, string ID, byte tagVersion);
 
 
         // ------ COMMON METHODS -----------------------------------------------------
@@ -659,13 +660,13 @@ namespace ATL.AudioData.IO
         public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
-            byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
+            Field supportedMetaID = getFrameMapping(zone, ID, tagVersion);
 
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
-            if (supportedMetaID < 255)
+            if (supportedMetaID != Field.NO_FIELD)
             {
-                if (TagData.TAG_FIELD_TRACK_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = data.Length;
-                else if (TagData.TAG_FIELD_TRACK_NUMBER_TOTAL == supportedMetaID)
+                if (Field.TRACK_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = data.Length;
+                else if (Field.TRACK_NUMBER_TOTAL == supportedMetaID)
                 {
                     if (data.Contains("/"))
                     {
@@ -673,8 +674,8 @@ namespace ATL.AudioData.IO
                         if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = parts[0].Length;
                     }
                 }
-                else if (TagData.TAG_FIELD_DISC_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = data.Length;
-                else if (TagData.TAG_FIELD_DISC_NUMBER_TOTAL == supportedMetaID && data.Contains("/"))
+                else if (Field.DISC_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = data.Length;
+                else if (Field.DISC_NUMBER_TOTAL == supportedMetaID && data.Contains("/"))
                 {
                     string[] parts = data.Split('/');
                     if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
@@ -698,40 +699,34 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="ID">ID of the metadata field</param>
         /// <param name="data">Metadata</param>
-        protected void setMetaField(byte ID, string data)
+        protected void setMetaField(Field ID, string data)
         {
             tagData.IntegrateValue(ID, data);
         }
 
-        protected string formatBeforeWriting(byte frameType, TagData tag, IDictionary<byte, string> map)
+        protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
             string value;
             string total;
             switch (frameType)
             {
-                case TagData.TAG_FIELD_RATING: return TrackUtils.EncodePopularity(map[frameType], ratingConvention).ToString();
-                case TagData.TAG_FIELD_TRACK_NUMBER:
-                    value = map[TagData.TAG_FIELD_TRACK_NUMBER];
-                    map.TryGetValue(TagData.TAG_FIELD_TRACK_TOTAL, out total);
+                case Field.RATING: return TrackUtils.EncodePopularity(map[frameType], ratingConvention).ToString();
+                case Field.TRACK_NUMBER:
+                    value = map[frameType];
+                    map.TryGetValue(Field.TRACK_TOTAL, out total);
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
-                case TagData.TAG_FIELD_TRACK_TOTAL:
-                    value = map[TagData.TAG_FIELD_TRACK_TOTAL];
-                    total = value;
-                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
-                case TagData.TAG_FIELD_TRACK_NUMBER_TOTAL:
-                    value = map[TagData.TAG_FIELD_TRACK_NUMBER_TOTAL];
-                    total = value;
-                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
-                case TagData.TAG_FIELD_DISC_NUMBER:
-                    value = map[TagData.TAG_FIELD_DISC_NUMBER];
-                    map.TryGetValue(TagData.TAG_FIELD_DISC_TOTAL, out total);
+                case Field.DISC_NUMBER:
+                    value = map[frameType];
+                    map.TryGetValue(Field.DISC_TOTAL, out total);
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
-                case TagData.TAG_FIELD_DISC_TOTAL:
-                    value = map[TagData.TAG_FIELD_DISC_TOTAL];
+                case Field.TRACK_NUMBER_TOTAL:
+                case Field.TRACK_TOTAL:
+                    value = map[frameType];
                     total = value;
-                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
-                case TagData.TAG_FIELD_DISC_NUMBER_TOTAL:
-                    value = map[TagData.TAG_FIELD_DISC_NUMBER_TOTAL];
+                    return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
+                case Field.DISC_NUMBER_TOTAL:
+                case Field.DISC_TOTAL:
+                    value = map[frameType];
                     total = value;
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 default: return map[frameType];

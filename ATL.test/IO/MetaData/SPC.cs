@@ -70,7 +70,7 @@ namespace ATL.test.IO.MetaData
             // Assert.IsFalse(theFile.NativeTag.Exists); Tag data contains information required for playback => can never be nonexistent
 
             // Construct a new tag
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
             theTag.Artist = "Artist";
@@ -132,7 +132,7 @@ namespace ATL.test.IO.MetaData
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Publisher = "Square-Enix";
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -142,7 +142,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Remove the additional supported field
-            theTag = new TagData();
+            theTag = new TagHolder();
             theTag.Publisher = "Square";
 
             // Add the new tag and check that it has been indeed added with all the correct information

@@ -15,7 +15,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // Initialize specific test data
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Title = "The New York Times Audio Digest, July 10, 2015";
             testData.Artist = "The New York Times";

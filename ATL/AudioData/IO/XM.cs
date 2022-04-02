@@ -7,6 +7,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
 using System.Linq;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -101,7 +102,7 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
         }
@@ -395,7 +396,7 @@ namespace ATL.AudioData.IO
             {
                 structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
-            tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, title.Trim());
+            tagData.IntegrateValue(TagData.Field.TITLE, title.Trim());
 
             // File format signature
             if (!0x1a.Equals(bSource.ReadByte()))
@@ -445,7 +446,7 @@ namespace ATL.AudioData.IO
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
-            tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());
+            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
             bitrate = sizeInfo.FileSize / duration;
 
             return result;
@@ -457,7 +458,7 @@ namespace ATL.AudioData.IO
 
             if (ZONE_TITLE.Equals(zone))
             {
-                string title = tag.Title;
+                string title = tag[Field.TITLE];
                 if (title.Length > 20) title = title.Substring(0, 20);
                 else if (title.Length < 20) title = Utils.BuildStrictLengthString(title, 20, '\0');
                 w.Write(Utils.Latin1Encoding.GetBytes(title));

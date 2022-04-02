@@ -3,6 +3,7 @@ using Commons;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static ATL.TagData;
 
 namespace ATL.AudioData
 {
@@ -92,12 +93,12 @@ namespace ATL.AudioData
         /// Get the ATL field code from the given WMA field name
         /// </summary>
         /// <param name="frame">WMA field name</param>
-        /// <returns>Matching ATL field code if found (See TagData.TAG_FIELD_XX properties); 255 if not</returns>
-        public static byte getAtlCodeForFrame(string frame)
+        /// <returns>Matching ATL field code if found (See TagData.Field.XX properties); 255 if not</returns>
+        public static Field getAtlCodeForFrame(string frame)
         {
             if (WMA.frameMapping.ContainsKey(frame))
                 return WMA.frameMapping[frame];
-            else return 255;
+            else return Field.NO_FIELD;
 
         }
 
@@ -110,10 +111,10 @@ namespace ATL.AudioData
         /// <returns>Matching value taken from tagData; empty string if no match found</returns>
         public static string getValueFromTagData(string frame, TagData tagData)
         {
-            byte atlCode = getAtlCodeForFrame(frame);
-            if (atlCode < 255)
+            Field atlCode = getAtlCodeForFrame(frame);
+            if (atlCode != Field.NO_FIELD)
             {
-                IDictionary<byte, string> dataMap = tagData.ToMap();
+                IDictionary<Field, string> dataMap = tagData.ToMap();
                 if (dataMap.ContainsKey(atlCode)) return dataMap[atlCode];
             }
             return "";

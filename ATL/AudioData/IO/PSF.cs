@@ -5,6 +5,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Text;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -47,16 +48,16 @@ namespace ATL.AudioData.IO
         private readonly Format audioFormat;
 
         // Mapping between PSF frame codes and ATL frame codes
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { "title", TagData.TAG_FIELD_TITLE },
-            { "game", TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
-            { "artist", TagData.TAG_FIELD_ARTIST },
-            { "copyright", TagData.TAG_FIELD_COPYRIGHT },
-            { "comment", TagData.TAG_FIELD_COMMENT },
-            { "year", TagData.TAG_FIELD_RECORDING_YEAR },
-            { "genre", TagData.TAG_FIELD_GENRE },
-            { "rating", TagData.TAG_FIELD_RATING } // Does not belong to the predefined standard PSF tags
+            { "title", TagData.Field.TITLE },
+            { "game", TagData.Field.ALBUM }, // Small innocent semantic shortcut
+            { "artist", TagData.Field.ARTIST },
+            { "copyright", TagData.Field.COPYRIGHT },
+            { "comment", TagData.Field.COMMENT },
+            { "year", TagData.Field.RECORDING_YEAR },
+            { "genre", TagData.Field.GENRE },
+            { "rating", TagData.Field.RATING } // Does not belong to the predefined standard PSF tags
         };
         // Frames that are required for playback
         private static IList<string> playbackFrames = new List<string>
@@ -126,9 +127,9 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (frameMapping.ContainsKey(ID.ToLower())) supportedMetaId = frameMapping[ID.ToLower()];
@@ -423,10 +424,10 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("utf8=1"));
             w.Write(LINE_FEED);
 
-            IDictionary<byte, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
                 {
@@ -485,7 +486,7 @@ namespace ATL.AudioData.IO
         {
             TagData tag = new TagData();
 
-            foreach (byte b in frameMapping.Values)
+            foreach (Field b in frameMapping.Values)
             {
                 tag.IntegrateValue(b, "");
             }

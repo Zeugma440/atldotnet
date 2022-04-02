@@ -49,7 +49,7 @@ namespace ATL.test.IO.MetaData
         protected string emptyFile;
         protected string notEmptyFile;
         protected MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
-        protected TagData testData;
+        protected TagHolder testData;
         protected bool supportsDateOrYear = false;
         protected bool supportsInternationalChars = true;
         protected bool canMetaNotExist = true;
@@ -59,7 +59,7 @@ namespace ATL.test.IO.MetaData
         public MetaIOTest()
         {
             // Initialize default test data
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Title = "aa父bb";
             testData.Artist = "֎FATHER֎";
@@ -119,17 +119,17 @@ namespace ATL.test.IO.MetaData
 
 
             // Construct a new tag with the most basic options (no un supported fields, no pictures)
-            TagData theTag1 = new TagData();
+            TagHolder theTag1 = new TagHolder();
             theTag1.Title = "Test1";
             theTag1.Album = "Album1";
 
-            TagData theTag2 = new TagData();
+            TagHolder theTag2 = new TagHolder();
             theTag2.Title = "Test2";
             theTag2.Album = "Album2";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag1, tagType1));
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag2, tagType2));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag1.tagData, tagType1));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag2.tagData, tagType2));
 
             // This also tests if physical data can still be read (e.g. native tag has not been scrambled by the apparition of a non-native tag)
             Assert.IsTrue(theFile.ReadFromFile());
@@ -208,11 +208,11 @@ namespace ATL.test.IO.MetaData
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
 
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
-            TagData initialTestData = new TagData(testData);
+            TagData initialTestData = new TagData(testData.tagData);
             // These two cases cover all tag capabilities
             if (testData.Title != null) theTag.Title = "Test !!" + internationalChar;
             else if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description" + internationalChar;
@@ -222,14 +222,14 @@ namespace ATL.test.IO.MetaData
                 theTag.AdditionalFields = new List<MetaFieldInfo>();
                 theTag.AdditionalFields.Add(testData.AdditionalFields[0]); // 1 is enough
             }
-            testData = new TagData(theTag);
+            testData = new TagHolder(theTag.tagData);
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
             theTag.Pictures.Add(picInfo);
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
             Assert.IsNotNull(theFile.getMeta(tagType));
@@ -266,8 +266,8 @@ namespace ATL.test.IO.MetaData
             }
 
             // Remove the additional supported field
-            theTag = new TagData(initialTestData);
-            testData = new TagData(initialTestData);
+            theTag = new TagHolder(initialTestData);
+            testData = new TagHolder(initialTestData);
 
             // Remove additional picture
             picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
@@ -275,7 +275,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
@@ -376,7 +376,7 @@ namespace ATL.test.IO.MetaData
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
             // Construct a new tag
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             if (testData.Title != null) theTag.Title = "Test !!";
             if (testData.Album != null) theTag.Album = "Album";
             if (testData.Artist != null) theTag.Artist = "Artist";
@@ -407,7 +407,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -438,7 +438,8 @@ namespace ATL.test.IO.MetaData
             }
             else
             {
-                Assert.IsTrue(meta.Date != null && meta.Date > DateTime.MinValue);
+                Assert.IsNotNull(meta.Date);
+                Assert.IsTrue(meta.Date > DateTime.MinValue);
                 if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(2008, meta.Date.Year);
                 if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
                 {
@@ -717,7 +718,8 @@ namespace ATL.test.IO.MetaData
             }
             else
             {
-                Assert.IsTrue(meta.Date != null && meta.Date > DateTime.MinValue);
+                Assert.IsNotNull(meta.Date);
+                Assert.IsTrue(meta.Date > DateTime.MinValue);
                 if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Date.Year.ToString());
                 if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
                 {

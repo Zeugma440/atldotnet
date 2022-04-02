@@ -4,6 +4,7 @@ using System.Text;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
 using System.Globalization;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -36,16 +37,16 @@ namespace ATL.AudioData.IO
 
 
         // Mapping between MP4 frame codes and ATL frame codes
-        private static Dictionary<string, byte> frameMapping = new Dictionary<string, byte>() {
-            { "title", TagData.TAG_FIELD_TITLE },
-            { "parent_title", TagData.TAG_FIELD_ALBUM },
-            { "narrator", TagData.TAG_FIELD_ARTIST },
-            { "description", TagData.TAG_FIELD_COMMENT },
-            { "pubdate", TagData.TAG_FIELD_PUBLISHING_DATE},
-            { "provider", TagData.TAG_FIELD_PUBLISHER},
-            { "author", TagData.TAG_FIELD_COMPOSER },
-            { "long_description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-            { "copyright", TagData.TAG_FIELD_COPYRIGHT },
+        private static Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+            { "title", Field.TITLE },
+            { "parent_title", Field.ALBUM},
+            { "narrator", Field.ARTIST },
+            { "description", Field.COMMENT},
+            { "pubdate", Field.PUBLISHING_DATE},
+            { "provider", Field.PUBLISHER},
+            { "author", Field.COMPOSER },
+            { "long_description", Field.GENERAL_DESCRIPTION},
+            { "copyright", Field.COPYRIGHT },
         };
 
 
@@ -142,9 +143,9 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
 
@@ -310,12 +311,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected new string formatBeforeWriting(byte frameType, TagData tag, IDictionary<byte, string> map)
+        protected new string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
             string result = base.formatBeforeWriting(frameType, tag, map);
 
             // Convert to expected date format
-            if (TagData.TAG_FIELD_PUBLISHING_DATE == frameType)
+            if (TagData.Field.PUBLISHING_DATE == frameType)
             {
                 DateTime date = DateTime.Parse(result);
                 result = date.ToString("dd-MMM-yyyy", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
@@ -334,8 +335,8 @@ namespace ATL.AudioData.IO
                 w.Write(0); // Number of tags; will be rewritten at the end of the method
 
                 // Mapped textual fields
-                IDictionary<byte, string> map = tag.ToMap();
-                foreach (byte frameType in map.Keys)
+                IDictionary<Field, string> map = tag.ToMap();
+                foreach (Field frameType in map.Keys)
                 {
                     if (map[frameType].Length > 0) // No frame with empty value
                     {

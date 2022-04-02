@@ -4,6 +4,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Collections.Generic;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -75,18 +76,18 @@ namespace ATL.AudioData.IO
 
 
         // Mapping between WAV frame codes and ATL frame codes
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { "bext.description", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-            { "info.INAM", TagData.TAG_FIELD_TITLE },
-            { "info.TITL", TagData.TAG_FIELD_TITLE },
-            { "info.IART", TagData.TAG_FIELD_ARTIST },
-            { "info.ICOP", TagData.TAG_FIELD_COPYRIGHT },
-            { "info.IGNR", TagData.TAG_FIELD_GENRE },
-            { "info.IRTD", TagData.TAG_FIELD_RATING },
-            { "info.YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
-            { "info.TRCK", TagData.TAG_FIELD_TRACK_NUMBER },
-            { "info.ICMT", TagData.TAG_FIELD_COMMENT }
+            { "bext.description", TagData.Field.GENERAL_DESCRIPTION },
+            { "info.INAM", TagData.Field.TITLE },
+            { "info.TITL", TagData.Field.TITLE },
+            { "info.IART", TagData.Field.ARTIST },
+            { "info.ICOP", TagData.Field.COPYRIGHT },
+            { "info.IGNR", TagData.Field.GENRE },
+            { "info.IRTD", TagData.Field.RATING },
+            { "info.YEAR", TagData.Field.RECORDING_YEAR },
+            { "info.TRCK", TagData.Field.TRACK_NUMBER },
+            { "info.ICMT", TagData.Field.COMMENT }
         };
 
 
@@ -149,9 +150,9 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];

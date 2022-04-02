@@ -7,6 +7,7 @@ using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 using System.Linq;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -78,11 +79,11 @@ namespace ATL.AudioData.IO
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
         // Mapping between AIFx frame codes and ATL frame codes
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { CHUNKTYPE_NAME, TagData.TAG_FIELD_TITLE },
-            { CHUNKTYPE_AUTHOR, TagData.TAG_FIELD_ARTIST },
-            { CHUNKTYPE_COPYRIGHT, TagData.TAG_FIELD_COPYRIGHT }
+            { CHUNKTYPE_NAME, Field.TITLE },
+            { CHUNKTYPE_AUTHOR, Field.ARTIST },
+            { CHUNKTYPE_COPYRIGHT, Field.COPYRIGHT }
         };
 
 
@@ -162,9 +163,9 @@ namespace ATL.AudioData.IO
         {
             get { return false; }
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
@@ -432,7 +433,7 @@ namespace ATL.AudioData.IO
                         if (header.ID.Equals(CHUNKTYPE_SOUND) && header.Size % 2 > 0) source.BaseStream.Position += 1; // Sound chunk size must be even
                     }
 
-                    tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
+                    tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
 
                     if (-1 == id3v2Offset)
                     {
@@ -483,13 +484,13 @@ namespace ATL.AudioData.IO
 
             if (zone.Equals(CHUNKTYPE_NAME))
             {
-                if (tag.Title.Length > 0)
+                if (tag[Field.TITLE].Length > 0)
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
                     w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Title);
+                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
@@ -500,13 +501,13 @@ namespace ATL.AudioData.IO
             }
             else if (zone.Equals(CHUNKTYPE_AUTHOR))
             {
-                if (tag.Artist.Length > 0)
+                if (tag[Field.ARTIST].Length > 0)
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
                     w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Artist);
+                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
@@ -517,13 +518,13 @@ namespace ATL.AudioData.IO
             }
             else if (zone.Equals(CHUNKTYPE_COPYRIGHT))
             {
-                if (tag.Copyright.Length > 0)
+                if (tag[Field.COPYRIGHT].Length > 0)
                 {
                     w.Write(Utils.Latin1Encoding.GetBytes(zone));
                     long sizePos = w.BaseStream.Position;
                     w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag.Copyright);
+                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
                     w.Write(strBytes);
 
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
@@ -538,12 +539,12 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
             {
-                bool applicable = tag.Comment.Length > 0;
+                bool applicable = tag[Field.COMMENT].Length > 0;
                 if (!applicable && tag.AdditionalFields.Count > 0)
                 {
                     foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                     {
-                        applicable = (fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS));
+                        applicable = fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS);
                         if (applicable) break;
                     }
                 }
@@ -557,7 +558,7 @@ namespace ATL.AudioData.IO
                     w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
 
                     // First write generic comments (those linked to the Comment field)
-                    string[] comments = tag.Comment.Split(Settings.InternalValueSeparator);
+                    string[] comments = tag[Field.COMMENT].Split(Settings.InternalValueSeparator);
                     foreach (string s in comments)
                     {
                         writeCommentChunk(w, null, s);

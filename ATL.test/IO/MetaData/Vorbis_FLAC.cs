@@ -109,7 +109,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Kamome Sano" + ATL.Settings.InternalValueSeparator + "Punipuni Denki", meta.Artist);
 
             // Write same data and keep initial format
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Artist = "Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki";
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
@@ -122,7 +122,7 @@ namespace ATL.test.IO.MetaData
             // Can't test with MD5 here because of field order
 
             // Write and modify
-            theTag = new TagData();
+            theTag = new TagHolder();
             theTag.Artist = "aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc";
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
@@ -157,7 +157,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsFalse(theFile.NativeTag.Exists);
 
             // Construct a new tag
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
             theTag.Artist = "Artist";
@@ -243,7 +243,7 @@ namespace ATL.test.IO.MetaData
                 // Add a new supported field and a new supported picture
                 Assert.IsTrue(theFile.ReadFromFile());
 
-                TagData theTag = new TagData();
+                TagHolder theTag = new TagHolder();
                 theTag.Conductor = "John Jackman";
 
                 PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
@@ -279,7 +279,7 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(1, nbFound);
 
                 // Remove the additional supported field
-                theTag = new TagData();
+                theTag = new TagHolder();
                 theTag.Conductor = "";
 
                 // Remove additional picture

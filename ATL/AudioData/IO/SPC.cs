@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -87,24 +88,24 @@ namespace ATL.AudioData.IO
         private readonly string filePath;
 
         // Mapping between SPC extended frame codes and ATL frame codes
-        private static IDictionary<byte, byte> extendedFrameMapping = new Dictionary<byte, byte>
+        private static IDictionary<byte, Field> extendedFrameMapping = new Dictionary<byte, Field>
         {
-            { XID6_SONG, TagData.TAG_FIELD_TITLE },
-            { XID6_GAME, TagData.TAG_FIELD_ALBUM }, // Small innocent semantic shortcut
-            { XID6_ARTIST, TagData.TAG_FIELD_ARTIST },
-            { XID6_CMNTS, TagData.TAG_FIELD_COMMENT },
-            { XID6_COPY, TagData.TAG_FIELD_RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
-            { XID6_TRACK, TagData.TAG_FIELD_TRACK_NUMBER },
-            { XID6_DISC, TagData.TAG_FIELD_DISC_NUMBER },
-            { XID6_PUB, TagData.TAG_FIELD_PUBLISHER }
+            { XID6_SONG, TagData.Field.TITLE },
+            { XID6_GAME, TagData.Field.ALBUM }, // Small innocent semantic shortcut
+            { XID6_ARTIST, TagData.Field.ARTIST },
+            { XID6_CMNTS, TagData.Field.COMMENT },
+            { XID6_COPY, TagData.Field.RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
+            { XID6_TRACK, TagData.Field.TRACK_NUMBER },
+            { XID6_DISC, TagData.Field.DISC_NUMBER },
+            { XID6_PUB, TagData.Field.PUBLISHER }
         };
         // Mapping between SPC header frame codes and ATL frame codes
-        private static IDictionary<byte, byte> headerFrameMapping = new Dictionary<byte, byte>
+        private static IDictionary<byte, Field> headerFrameMapping = new Dictionary<byte, Field>
         {
-            { HEADER_TITLE, TagData.TAG_FIELD_TITLE },
-            { HEADER_ALBUM, TagData.TAG_FIELD_ALBUM },
-            { HEADER_ARTIST, TagData.TAG_FIELD_ARTIST },
-            { HEADER_COMMENT, TagData.TAG_FIELD_COMMENT }
+            { HEADER_TITLE, TagData.Field.TITLE },
+            { HEADER_ALBUM, TagData.Field.ALBUM },
+            { HEADER_ARTIST, TagData.Field.ARTIST },
+            { HEADER_COMMENT, TagData.Field.COMMENT }
         };
         // Frames that are required for playback
         private static IList<byte> playbackFrames = new List<byte>
@@ -188,9 +189,9 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
             byte ID_b = Byte.Parse(ID);
 
             // Finds the ATL field identifier
@@ -510,14 +511,14 @@ namespace ATL.AudioData.IO
 
             if (zone.Equals(ZONE_HEADER))
             {
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Title, 32, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Album, 32, '\0')));
+                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 32, '\0')));
+                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 32, '\0')));
                 w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(AdditionalFields[HEADER_DUMPERNAME.ToString()], 16, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Comment, 32, '\0')));
+                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 32, '\0')));
                 w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_DUMPDATE.ToString()]));
                 w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_SONGLENGTH.ToString()]));
                 w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_FADE.ToString()]));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag.Artist, 32, '\0')));
+                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 32, '\0')));
                 result = 8;
             }
             else if (zone.Equals(ZONE_EXTENDED))
@@ -531,10 +532,10 @@ namespace ATL.AudioData.IO
                 sizePos = w.BaseStream.Position;
                 w.Write(0); // Size placeholder; to be rewritten with actual value at the end of the method
 
-                IDictionary<byte, string> map = tag.ToMap();
+                IDictionary<Field, string> map = tag.ToMap();
 
                 // Supported textual fields
-                foreach (byte frameType in map.Keys)
+                foreach (Field frameType in map.Keys)
                 {
                     foreach (byte b in extendedFrameMapping.Keys)
                     {
@@ -568,9 +569,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool canBeWrittenInExtendedMetadata(byte frameType, string value)
+        private bool canBeWrittenInExtendedMetadata(Field frameType, string value)
         {
-            if (frameType == TagData.TAG_FIELD_TITLE || frameType == TagData.TAG_FIELD_ALBUM || frameType == TagData.TAG_FIELD_COMMENT || frameType == TagData.TAG_FIELD_ARTIST)
+            if (frameType == Field.TITLE || frameType == Field.ALBUM || frameType == Field.COMMENT || frameType == Field.ARTIST)
             {
                 return (value.Length > 32);
             }
@@ -621,7 +622,7 @@ namespace ATL.AudioData.IO
             // Empty metadata
             TagData tag = new TagData();
 
-            foreach (byte b in extendedFrameMapping.Values)
+            foreach (Field b in extendedFrameMapping.Values)
             {
                 tag.IntegrateValue(b, "");
             }

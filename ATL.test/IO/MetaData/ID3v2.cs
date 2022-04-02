@@ -326,7 +326,7 @@ namespace ATL.test.IO.MetaData
                 ATL.Settings.ID3v2_useExtendedHeaderRestrictions = true;
 
                 // Insert a very long field while tag restrictions specify that string shouldn't be longer than 30 characters
-                TagData theTag = new TagData();
+                TagHolder theTag = new TagHolder();
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
 
                 // Insert a large picture while tag restrictions specify that pictures shouldn't be larger than 64x64pixels AND tag size shouldn't be larger than 4 KB
@@ -624,7 +624,7 @@ namespace ATL.test.IO.MetaData
 
             Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "Content֍";
             theTag.Chapters = new List<ChapterInfo>();
             ChapterInfo ch = new ChapterInfo();
@@ -715,7 +715,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsFalse(theFile.ID3v2.Exists);
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "aaa";
             theTag.Chapters = new List<ChapterInfo>();
 
@@ -866,7 +866,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Modify elements
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "Content֍";
             theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();
@@ -1183,7 +1183,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsFalse(theFile.ID3v2.Exists);
 
-            TagData newTag = new TagData();
+            TagHolder newTag = new TagHolder();
             newTag.Genre = writtenGenre;
 
             theFile.UpdateTagInFile(newTag, tagType);
@@ -1250,7 +1250,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsFalse(theFile.ID3v2.Exists);
 
-            TagData newTag = new TagData();
+            TagHolder newTag = new TagHolder();
             newTag.Composer = writtenValues;
 
             theFile.UpdateTagInFile(newTag, tagType);

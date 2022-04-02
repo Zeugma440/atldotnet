@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -45,30 +46,30 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";     // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
-        private static Dictionary<string, byte> frameMapping_mp4 = new Dictionary<string, byte>() {
-            { "©nam", TagData.TAG_FIELD_TITLE },
-            { "titl", TagData.TAG_FIELD_TITLE },
-            { "©alb", TagData.TAG_FIELD_ALBUM },
-            { "©ART", TagData.TAG_FIELD_ARTIST },
-            { "©art", TagData.TAG_FIELD_ARTIST },
-            { "©cmt", TagData.TAG_FIELD_COMMENT },
-            { "©day", TagData.TAG_FIELD_RECORDING_YEAR_OR_DATE },
-            { "©gen", TagData.TAG_FIELD_GENRE },
-            { "gnre", TagData.TAG_FIELD_GENRE },
-            { "trkn", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-            { "disk", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-            { "rtng", TagData.TAG_FIELD_RATING },
-            { "rate", TagData.TAG_FIELD_RATING },
-            { "©wrt", TagData.TAG_FIELD_COMPOSER },
-            { "@des", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-            { "desc", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-            { "cprt", TagData.TAG_FIELD_COPYRIGHT },
-            { "aART", TagData.TAG_FIELD_ALBUM_ARTIST },
-            { "©lyr", TagData.TAG_FIELD_LYRICS_UNSYNCH },
-            { "©pub", TagData.TAG_FIELD_PUBLISHER },
-            { "rldt", TagData.TAG_FIELD_PUBLISHING_DATE},
-            { "prID", TagData.TAG_FIELD_PRODUCT_ID},
-            { "----:com.apple.iTunes:CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
+        private static Dictionary<string, Field> frameMapping_mp4 = new Dictionary<string, Field>() {
+            { "©nam", Field.TITLE },
+            { "titl", Field.TITLE },
+            { "©alb", Field.ALBUM },
+            { "©ART", Field.ARTIST },
+            { "©art", Field.ARTIST },
+            { "©cmt", Field.COMMENT },
+            { "©day", Field.RECORDING_YEAR_OR_DATE },
+            { "©gen", Field.GENRE },
+            { "gnre", Field.GENRE },
+            { "trkn", Field.TRACK_NUMBER_TOTAL },
+            { "disk", Field.DISC_NUMBER_TOTAL },
+            { "rtng", Field.RATING },
+            { "rate", Field.RATING },
+            { "©wrt", Field.COMPOSER },
+            { "@des", Field.GENERAL_DESCRIPTION },
+            { "desc", Field.GENERAL_DESCRIPTION },
+            { "cprt", Field.COPYRIGHT },
+            { "aART", Field.ALBUM_ARTIST },
+            { "©lyr", Field.LYRICS_UNSYNCH },
+            { "©pub", Field.PUBLISHER },
+            { "rldt", Field.PUBLISHING_DATE},
+            { "prID", Field.PRODUCT_ID},
+            { "----:com.apple.iTunes:CONDUCTOR", TagData.Field.CONDUCTOR }
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
@@ -184,9 +185,9 @@ namespace ATL.AudioData.IO
         {
             get { return RC_APE; }
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             if (frameMapping_mp4.ContainsKey(ID)) supportedMetaId = frameMapping_mp4[ID];
 
@@ -1221,11 +1222,11 @@ namespace ATL.AudioData.IO
         private void setXtraField(string ID, string data, bool readAllMetaFrames)
         {
             // Finds the ATL field identifier
-            byte supportedMetaID = WMAHelper.getAtlCodeForFrame(ID);
+            Field supportedMetaID = WMAHelper.getAtlCodeForFrame(ID);
 
             // Hack to format popularity tag with MP4's convention rather than the ASF convention that Xtra uses
             // so that it is parsed properly by MetaDataIO's default mechanisms
-            if (TagData.TAG_FIELD_RATING == supportedMetaID)
+            if (TagData.Field.RATING == supportedMetaID)
             {
                 double? popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
                 if (popularity.HasValue) data = TrackUtils.EncodePopularity(popularity.Value * 5, ratingConvention) + "";
@@ -1233,7 +1234,7 @@ namespace ATL.AudioData.IO
             }
 
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
-            if (supportedMetaID < 255 && !tagData.hasKey(supportedMetaID))
+            if (supportedMetaID != Field.NO_FIELD && !tagData.hasKey(supportedMetaID))
             {
                 setMetaField(supportedMetaID, data);
             }
@@ -1437,10 +1438,10 @@ namespace ATL.AudioData.IO
             int counter = 0;
             bool doWritePicture;
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping_mp4.Keys)
                 {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using static ATL.ChannelsArrangements;
 using System.Linq;
+using static ATL.TagData;
 
 namespace ATL
 {
@@ -389,31 +390,31 @@ namespace ATL
         {
             TagData result = new TagData();
 
-            result.Title = Title;
-            result.Artist = Artist;
-            result.Composer = Composer;
-            result.Comment = Comment;
-            result.Genre = Genre;
-            result.OriginalArtist = OriginalArtist;
-            result.OriginalAlbum = OriginalAlbum;
-            result.GeneralDescription = Description;
+            result.IntegrateValue(Field.TITLE, Title);
+            result.IntegrateValue(Field.ARTIST, Artist);
+            result.IntegrateValue(Field.COMPOSER, Composer);
+            result.IntegrateValue(Field.COMMENT, Comment);
+            result.IntegrateValue(Field.GENRE, Genre);
+            result.IntegrateValue(Field.ORIGINAL_ARTIST, OriginalArtist);
+            result.IntegrateValue(Field.ORIGINAL_ALBUM, OriginalAlbum);
+            result.IntegrateValue(Field.GENERAL_DESCRIPTION, Description);
             if (Popularity.HasValue)
-                result.Rating = toTagValue(Popularity.Value * 5);
-            else result.Rating = Settings.NullAbsentValues ? "" : "0";
-            result.Copyright = Copyright;
-            result.Publisher = Publisher;
-            result.PublishingDate = toTagValue(PublishingDate);
-            result.AlbumArtist = AlbumArtist;
-            result.Conductor = Conductor;
-            result.ProductId = ProductId;
-            result.RecordingDate = toTagValue(Date);
-            result.RecordingYear = toTagValue(Year);
-            result.Album = Album;
-            result.TrackNumber = toTagValue(TrackNumber);
-            result.TrackTotal = toTagValue(TrackTotal);
-            result.DiscNumber = toTagValue(DiscNumber);
-            result.DiscTotal = toTagValue(DiscTotal);
-            result.ChaptersTableDescription = ChaptersTableDescription.ToString();
+                result.IntegrateValue(Field.RATING, toTagValue(Popularity.Value * 5));
+            else result.IntegrateValue(Field.RATING, Settings.NullAbsentValues ? "" : "0");
+            result.IntegrateValue(Field.COPYRIGHT, Copyright);
+            result.IntegrateValue(Field.PUBLISHER, Publisher);
+            result.IntegrateValue(Field.PUBLISHING_DATE, toTagValue(PublishingDate));
+            result.IntegrateValue(Field.ALBUM_ARTIST, AlbumArtist);
+            result.IntegrateValue(Field.CONDUCTOR, Conductor);
+            result.IntegrateValue(Field.PRODUCT_ID, ProductId);
+            result.IntegrateValue(Field.RECORDING_DATE, toTagValue(Date));
+            result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
+            result.IntegrateValue(Field.ALBUM, Album);
+            result.IntegrateValue(Field.TRACK_NUMBER, toTagValue(TrackNumber));
+            result.IntegrateValue(Field.TRACK_TOTAL, toTagValue(TrackTotal));
+            result.IntegrateValue(Field.DISC_NUMBER, toTagValue(DiscNumber));
+            result.IntegrateValue(Field.DISC_TOTAL, toTagValue(DiscTotal));
+            result.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, ChaptersTableDescription.ToString());
 
             result.Chapters = new List<ChapterInfo>();
             foreach (ChapterInfo chapter in Chapters)

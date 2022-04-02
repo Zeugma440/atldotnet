@@ -143,7 +143,7 @@ namespace ATL.test.IO.MetaData
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Conductor = "John Jackman";
 
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
@@ -207,7 +207,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2, nbFound);
 
             // Remove the additional supported field
-            theTag = new TagData();
+            theTag = new TagHolder();
             theTag.Conductor = "";
 
             // Remove additional picture
@@ -572,7 +572,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Modify elements
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
 
             theTag.Title = "test_meta_atom";
 
@@ -896,7 +896,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
 
             // Write
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Rating = 3.0 + "";
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));

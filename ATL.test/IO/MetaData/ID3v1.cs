@@ -15,7 +15,7 @@ namespace ATL.test.IO.MetaData
             supportsInternationalChars = false;
 
             // Initialize specific test data
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Title = "Title";
             testData.Album = "?";

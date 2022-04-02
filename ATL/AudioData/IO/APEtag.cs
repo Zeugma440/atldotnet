@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -46,24 +47,24 @@ namespace ATL.AudioData.IO
          *      - Disc number : "disc", "discnumber" frames
          *      - Album Artist : "albumartist", "album artist" frames
          */
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
         {
-            { "TITLE", TagData.TAG_FIELD_TITLE },
-            { "ARTIST", TagData.TAG_FIELD_ARTIST },
-            { "ALBUM", TagData.TAG_FIELD_ALBUM },
-            { "TRACK", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-            { "YEAR", TagData.TAG_FIELD_RECORDING_YEAR },
-            { "GENRE", TagData.TAG_FIELD_GENRE },
-            { "COMMENT", TagData.TAG_FIELD_COMMENT },
-            { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
-            { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
-            { "RATING", TagData.TAG_FIELD_RATING },
-            { "PREFERENCE", TagData.TAG_FIELD_RATING },
-            { "DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-            { "DISC", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-            { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
-            { "ALBUM ARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
-            { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR }
+            { "TITLE", TagData.Field.TITLE },
+            { "ARTIST", TagData.Field.ARTIST },
+            { "ALBUM", TagData.Field.ALBUM },
+            { "TRACK", TagData.Field.TRACK_NUMBER_TOTAL },
+            { "YEAR", TagData.Field.RECORDING_YEAR },
+            { "GENRE", TagData.Field.GENRE },
+            { "COMMENT", TagData.Field.COMMENT },
+            { "COPYRIGHT", TagData.Field.COPYRIGHT },
+            { "COMPOSER", TagData.Field.COMPOSER },
+            { "RATING", TagData.Field.RATING },
+            { "PREFERENCE", TagData.Field.RATING },
+            { "DISCNUMBER", TagData.Field.DISC_NUMBER_TOTAL },
+            { "DISC", TagData.Field.DISC_NUMBER_TOTAL },
+            { "ALBUMARTIST", TagData.Field.ALBUM_ARTIST },
+            { "ALBUM ARTIST", TagData.Field.ALBUM_ARTIST },
+            { "CONDUCTOR", TagData.Field.CONDUCTOR }
         };
 
 
@@ -138,9 +139,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
             ID = ID.Replace("\0", "").ToUpper();
 
             // Finds the ATL field identifier according to the APE version
@@ -448,10 +449,10 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            IDictionary<byte, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
                 {

@@ -13,70 +13,44 @@ namespace ATL
     /// </summary>
     public class TagData
     {
-        // Identifiers for 'classic' fields
-#pragma warning disable CS1591 // Missing XML comment for publicly visible members
-        public const byte TAG_FIELD_GENERAL_DESCRIPTION = 0;
-        public const byte TAG_FIELD_TITLE = 1;
-        public const byte TAG_FIELD_ARTIST = 2;
-        public const byte TAG_FIELD_COMPOSER = 3;
-        public const byte TAG_FIELD_COMMENT = 4;
-        public const byte TAG_FIELD_GENRE = 5;
-        public const byte TAG_FIELD_ALBUM = 6;
-        public const byte TAG_FIELD_RECORDING_YEAR = 7;
-        public const byte TAG_FIELD_RECORDING_DATE = 8;
-        public const byte TAG_FIELD_RECORDING_YEAR_OR_DATE = 9; // Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
-        public const byte TAG_FIELD_RECORDING_DAYMONTH = 10;
-        public const byte TAG_FIELD_RECORDING_TIME = 11;
-        public const byte TAG_FIELD_TRACK_NUMBER = 12;
-        public const byte TAG_FIELD_DISC_NUMBER = 13;
-        public const byte TAG_FIELD_RATING = 14;
-        public const byte TAG_FIELD_ORIGINAL_ARTIST = 15;
-        public const byte TAG_FIELD_ORIGINAL_ALBUM = 16;
-        public const byte TAG_FIELD_COPYRIGHT = 17;
-        public const byte TAG_FIELD_ALBUM_ARTIST = 18;
-        public const byte TAG_FIELD_PUBLISHER = 19;
-        public const byte TAG_FIELD_CONDUCTOR = 20;
-        public const byte TAG_FIELD_TRACK_TOTAL = 21;
-        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 22; // Alternate to TRACK_NUMBER and TRACK_TOTAL where both are in the same field
-        public const byte TAG_FIELD_DISC_TOTAL = 23;
-        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 24; // Alternate to DISC_NUMBER and DISC_TOTAL where both are in the same field
-        public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 25;
-        public const byte TAG_FIELD_LYRICS_UNSYNCH = 26;
-        public const byte TAG_FIELD_LYRICS_SYNCH = 27;
-        public const byte TAG_FIELD_PUBLISHING_DATE = 28;
-        public const byte TAG_FIELD_PRODUCT_ID = 29;
-#pragma warning disable S1104 // Fields should not have public accessibility
+        public enum Field
+        {
+            NO_FIELD = -1,
+            GENERAL_DESCRIPTION = 0,
+            TITLE = 1,
+            ARTIST = 2,
+            COMPOSER = 3,
+            COMMENT = 4,
+            GENRE = 5,
+            ALBUM = 6,
+            RECORDING_YEAR = 7,
+            RECORDING_DATE = 8,
+            RECORDING_YEAR_OR_DATE = 9, // Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
+            RECORDING_DAYMONTH = 10,
+            RECORDING_TIME = 11,
+            TRACK_NUMBER = 12,
+            DISC_NUMBER = 13,
+            RATING = 14,
+            ORIGINAL_ARTIST = 15,
+            ORIGINAL_ALBUM = 16,
+            COPYRIGHT = 17,
+            ALBUM_ARTIST = 18,
+            PUBLISHER = 19,
+            CONDUCTOR = 20,
+            TRACK_TOTAL = 21,
+            TRACK_NUMBER_TOTAL = 22, // Alternate to TRACK_NUMBER and TRACK_TOTAL where both are in the same field
+            DISC_TOTAL = 23,
+            DISC_NUMBER_TOTAL = 24, // Alternate to DISC_NUMBER and DISC_TOTAL where both are in the same field
+            CHAPTERS_TOC_DESCRIPTION = 25,
+            LYRICS_UNSYNCH = 26,
+            LYRICS_SYNCH = 27,
+            PUBLISHING_DATE = 28,
+            PRODUCT_ID = 29
+        }
 
-        // Values for 'classic' fields
-        // NB : null is the convention for "keep existing value"
-        public string GeneralDescription = null;
-        public string Title = null;
-        public string Artist = null;
-        public string OriginalArtist = null;
-        public string Composer = null;
-        public string Comment = null;
-        public string Genre = null;
-        public string Album = null;
-        public string OriginalAlbum = null;
-        public string RecordingYear = null;
-        public string RecordingDayMonth = null;
-        public string RecordingTime = null;
-        public string RecordingDate = null;
-        public string TrackNumber = null;
-        public string DiscNumber = null;
-        public string Rating = null;
-        public string Copyright = null;
-        public string AlbumArtist = null;
-        public string Publisher = null;
-        public string Conductor = null;
-        public string TrackTotal = null;
-        public string TrackNumberTotal = null;
-        public string DiscTotal = null;
-        public string DiscNumberTotal = null;
-        public string ChaptersTableDescription = null;
-        public string PublishingDate = null;
-        public string ProductId = null;
-#pragma warning restore CS1591 // Missing XML comment for publicly visible members
+        private static readonly ICollection<Field> numericFields = new HashSet<Field>() {
+            Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE
+        };
 
         /// <summary>
         /// Chapters 
@@ -95,6 +69,8 @@ namespace ATL
         /// NB : Each entry is processed as a metadata field on its own
         /// </summary>
         public IList<PictureInfo> Pictures;
+
+        public IDictionary<Field, string> Fields;
 
         /// <summary>
         /// Additional fields = non-classic fields
@@ -135,8 +111,9 @@ namespace ATL
         /// </summary>
         public TagData()
         {
-            Pictures = new List<PictureInfo>();
+            Fields = new Dictionary<Field, string>();
             AdditionalFields = new List<MetaFieldInfo>();
+            Pictures = new List<PictureInfo>();
         }
 
         /// <summary>
@@ -145,11 +122,14 @@ namespace ATL
         /// <param name="tagData">TagData to copy properties from</param>
         public TagData(TagData tagData)
         {
-            Pictures = new List<PictureInfo>();
+            Fields = new Dictionary<Field, string>();
             AdditionalFields = new List<MetaFieldInfo>();
+            Pictures = new List<PictureInfo>();
 
             IntegrateValues(tagData);
         }
+
+        private bool isNumeric(Field f) { return numericFields.Contains(f); }
 
         /// <summary>
         /// Stores a 'classic' metadata value into current TagData object according to its key
@@ -158,50 +138,25 @@ namespace ATL
         /// </summary>
         /// <param name="key">Identifier describing the metadata to store (see TagData public consts)</param>
         /// <param name="value">Value of the metadata to store</param>
-        public void IntegrateValue(byte key, string value)
+        public void IntegrateValue(Field key, string value)
         {
-            switch (key)
+            if (null == value)
             {
-                // Textual fields
-                case TAG_FIELD_GENERAL_DESCRIPTION: GeneralDescription = value; break;
-                case TAG_FIELD_TITLE: Title = value; break;
-                case TAG_FIELD_ARTIST: Artist = value; break;
-                case TAG_FIELD_COMPOSER: Composer = value; break;
-                case TAG_FIELD_COMMENT: Comment = value; break;
-                case TAG_FIELD_GENRE: Genre = value; break;
-                case TAG_FIELD_ALBUM: Album = value; break;
-                case TAG_FIELD_ORIGINAL_ARTIST: OriginalArtist = value; break;
-                case TAG_FIELD_ORIGINAL_ALBUM: OriginalAlbum = value; break;
-                case TAG_FIELD_COPYRIGHT: Copyright = value; break;
-                case TAG_FIELD_ALBUM_ARTIST: AlbumArtist = value; break;
-                case TAG_FIELD_PUBLISHER: Publisher = value; break;
-                case TAG_FIELD_CONDUCTOR: Conductor = value; break;
-                // Numeric fields (a value at zero mean nothing has been valued -> field should be empty)
-                case TAG_FIELD_RECORDING_DATE: RecordingDate = emptyIfZero(value); break;
-                case TAG_FIELD_RECORDING_YEAR: RecordingYear = emptyIfZero(value); break;
-                case TAG_FIELD_RECORDING_YEAR_OR_DATE:
-                    if (value != null)
-                    {
-                        if (value.Length < 5) RecordingYear = emptyIfZero(value);
-                        else RecordingDate = emptyIfZero(value);
-                    }
-                    break;
-                case TAG_FIELD_RECORDING_DAYMONTH: RecordingDayMonth = emptyIfZero(value); break;
-                case TAG_FIELD_RECORDING_TIME: RecordingTime = emptyIfZero(value); break;
-                case TAG_FIELD_TRACK_NUMBER: TrackNumber = emptyIfZero(value); break;
-                case TAG_FIELD_DISC_NUMBER: DiscNumber = emptyIfZero(value); break;
-                case TAG_FIELD_RATING: Rating = emptyIfZero(value); break;
-                case TAG_FIELD_TRACK_TOTAL: TrackTotal = emptyIfZero(value); break;
-                case TAG_FIELD_TRACK_NUMBER_TOTAL: TrackNumberTotal = emptyIfZero(value); break;
-                case TAG_FIELD_DISC_TOTAL: DiscTotal = emptyIfZero(value); break;
-                case TAG_FIELD_DISC_NUMBER_TOTAL: DiscNumberTotal = emptyIfZero(value); break;
-                case TAG_FIELD_CHAPTERS_TOC_DESCRIPTION: ChaptersTableDescription = emptyIfZero(value); break;
-                case TAG_FIELD_LYRICS_UNSYNCH:
-                    if (null == Lyrics) Lyrics = new LyricsInfo();
-                    Lyrics.UnsynchronizedLyrics = value;
-                    break;
-                case TAG_FIELD_PUBLISHING_DATE: PublishingDate = emptyIfZero(value); break;
-                case TAG_FIELD_PRODUCT_ID: ProductId = emptyIfZero(value); break;
+                Fields.Remove(key);
+            }
+            else if (key == Field.LYRICS_UNSYNCH)
+            {
+                if (null == Lyrics) Lyrics = new LyricsInfo();
+                Lyrics.UnsynchronizedLyrics = value;
+            }
+            else if (key == Field.RECORDING_YEAR_OR_DATE)
+            {
+                if (value.Length < 5) Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
+                else Fields[Field.RECORDING_DATE] = emptyIfZero(value);
+            }
+            else
+            {
+                Fields[key] = isNumeric(key) ? emptyIfZero(value) : value;
             }
         }
 
@@ -214,11 +169,8 @@ namespace ATL
         public void IntegrateValues(TagData targetData, bool integratePictures = true, bool mergeAdditionalData = true)
         {
             // String values
-            IDictionary<byte, string> newData = targetData.ToMap();
-            foreach (byte key in newData.Keys)
-            {
-                IntegrateValue(key, newData[key]);
-            }
+            IDictionary<Field, string> newData = targetData.ToMap();
+            foreach (KeyValuePair<Field, string> kvp in newData) IntegrateValue(kvp.Key, kvp.Value);
 
             // Force to input value, if any
             if (targetData.PaddingSize > -1) PaddingSize = targetData.PaddingSize; else PaddingSize = -1;
@@ -358,7 +310,7 @@ namespace ATL
         /// </summary>
         /// <param name="id">Field code to search for</param>
         /// <returns>True if the current TagData stores a value for the given ATL field code; false if not</returns>
-        public bool hasKey(byte id)
+        public bool hasKey(Field id)
         {
             return ToMap().ContainsKey(id);
         }
@@ -368,9 +320,9 @@ namespace ATL
         /// </summary>
         /// <param name="index">ATL field code to search for</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        public string this[byte index]
+        public string this[Field index]
         {
-            get => ToMap()[index];
+            get => Fields.ContainsKey(index) ? Fields[index] : null;
         }
 
         /// <summary>
@@ -379,43 +331,26 @@ namespace ATL
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<byte, string> ToMap()
+        public IDictionary<Field, string> ToMap()
         {
-            IDictionary<byte, string> result = new Dictionary<byte, string>();
+            IDictionary<Field, string> result = new Dictionary<Field, string>();
 
-            // Supported fields only
-            // NB : The following block of code determines the order of appearance of fields within written files
-            addIfConsistent(Artist, TAG_FIELD_ARTIST, result);
-            addIfConsistent(Title, TAG_FIELD_TITLE, result);
-            addIfConsistent(Album, TAG_FIELD_ALBUM, result);
-            addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_DATE, result);
-            addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR, result);
-            addIfConsistent(RecordingDate, TAG_FIELD_RECORDING_YEAR_OR_DATE, result);
-            addIfConsistent(RecordingYear, TAG_FIELD_RECORDING_YEAR_OR_DATE, result);
-            addIfConsistent(RecordingDayMonth, TAG_FIELD_RECORDING_DAYMONTH, result);
-            addIfConsistent(RecordingTime, TAG_FIELD_RECORDING_TIME, result);
-            addIfConsistent(Genre, TAG_FIELD_GENRE, result);
-            addIfConsistent(Composer, TAG_FIELD_COMPOSER, result);
-            addIfConsistent(AlbumArtist, TAG_FIELD_ALBUM_ARTIST, result);
-            addIfConsistent(TrackNumber, TAG_FIELD_TRACK_NUMBER, result);
-            addIfConsistent(TrackNumberTotal, TAG_FIELD_TRACK_NUMBER_TOTAL, result);
-            addIfConsistent(TrackTotal, TAG_FIELD_TRACK_TOTAL, result);
-            addIfConsistent(DiscNumber, TAG_FIELD_DISC_NUMBER, result);
-            addIfConsistent(DiscNumberTotal, TAG_FIELD_DISC_NUMBER_TOTAL, result);
-            addIfConsistent(DiscTotal, TAG_FIELD_DISC_TOTAL, result);
-            addIfConsistent(Comment, TAG_FIELD_COMMENT, result);
-            addIfConsistent(Rating, TAG_FIELD_RATING, result);
-            addIfConsistent(OriginalArtist, TAG_FIELD_ORIGINAL_ARTIST, result);
-            addIfConsistent(OriginalAlbum, TAG_FIELD_ORIGINAL_ALBUM, result);
-            addIfConsistent(Copyright, TAG_FIELD_COPYRIGHT, result);
-            addIfConsistent(Publisher, TAG_FIELD_PUBLISHER, result);
-            addIfConsistent(Conductor, TAG_FIELD_CONDUCTOR, result);
-            addIfConsistent(GeneralDescription, TAG_FIELD_GENERAL_DESCRIPTION, result);
-            addIfConsistent(ChaptersTableDescription, TAG_FIELD_CHAPTERS_TOC_DESCRIPTION, result);
-            if (Lyrics != null)
-                addIfConsistent(Lyrics.UnsynchronizedLyrics, TAG_FIELD_LYRICS_UNSYNCH, result);
-            addIfConsistent(PublishingDate, TAG_FIELD_PUBLISHING_DATE, result);
-            addIfConsistent(ProductId, TAG_FIELD_PRODUCT_ID, result);
+            foreach (KeyValuePair<Field, string> kvp in Fields) result[kvp.Key] = kvp.Value;
+
+            if (result.ContainsKey(Field.RECORDING_YEAR_OR_DATE))
+            {
+                string recYearOrDate = result[Field.RECORDING_YEAR_OR_DATE];
+                if (null == result[Field.RECORDING_YEAR]) result[Field.RECORDING_YEAR] = recYearOrDate;
+                if (null == result[Field.RECORDING_DATE]) result[Field.RECORDING_DATE] = recYearOrDate;
+            }
+            else
+            {
+                if (result.ContainsKey(Field.RECORDING_YEAR)) result[Field.RECORDING_YEAR_OR_DATE] = result[Field.RECORDING_YEAR];
+                else if (result.ContainsKey(Field.RECORDING_DATE)) result[Field.RECORDING_YEAR_OR_DATE] = result[Field.RECORDING_DATE];
+            }
+
+
+            if (Lyrics != null && Lyrics.UnsynchronizedLyrics != null) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
 
             return result;
         }
@@ -426,37 +361,10 @@ namespace ATL
         public void Clear()
         {
             Pictures.Clear();
+            Fields.Clear();
             AdditionalFields.Clear();
             if (Chapters != null) Chapters.Clear();
-
-            GeneralDescription = null;
-            Title = null;
-            Artist = null;
-            OriginalArtist = null;
-            Composer = null;
-            Comment = null;
-            Genre = null;
-            Album = null;
-            OriginalAlbum = null;
-            RecordingYear = null;
-            RecordingDayMonth = null;
-            RecordingTime = null;
-            RecordingDate = null;
-            TrackNumber = null;
-            DiscNumber = null;
-            Rating = null;
-            Copyright = null;
-            AlbumArtist = null;
-            Publisher = null;
-            Conductor = null;
-            TrackTotal = null;
-            TrackNumberTotal = null;
-            DiscTotal = null;
-            DiscNumberTotal = null;
-            ChaptersTableDescription = null;
-            Lyrics = null;
-            PublishingDate = null;
-            ProductId = null;
+            if (Lyrics != null) Lyrics.Clear();
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;
@@ -470,44 +378,64 @@ namespace ATL
         /// </summary>
         public void Cleanup()
         {
-            if (TrackNumber != null)
+            if (Fields.ContainsKey(Field.TRACK_NUMBER))
             {
-                if (TrackNumber.Contains("/"))
+                string trackNumber = Fields[Field.TRACK_NUMBER];
+                string trackTotal = null;
+                string trackNumberTotal;
+                if (trackNumber.Contains("/"))
                 {
-                    TrackNumberTotal = TrackNumber;
-                    string[] parts = TrackNumber.Split('/');
-                    TrackNumber = parts[0];
-                    TrackTotal = parts[1];
+                    trackNumberTotal = trackNumber;
+                    string[] parts = trackNumber.Split('/');
+                    trackNumber = parts[0];
+                    trackTotal = parts[1];
                 }
-                else if (Utils.IsNumeric(TrackNumber))
+                else if (Utils.IsNumeric(trackNumber))
                 {
-                    TrackNumberTotal = TrackNumber;
-                    if (Utils.IsNumeric(TrackTotal)) TrackNumberTotal += "/" + TrackTotal;
+                    trackNumberTotal = trackNumber;
+                    if (Fields.ContainsKey(Field.TRACK_TOTAL))
+                    {
+                        trackTotal = Fields[Field.TRACK_TOTAL];
+                        if (Utils.IsNumeric(trackTotal)) trackNumberTotal += "/" + trackTotal;
+                    }
                 }
                 else
                 {
-                    TrackNumberTotal = "";
+                    trackNumberTotal = "";
                 }
+                Fields[Field.TRACK_NUMBER] = trackNumber;
+                IntegrateValue(Field.TRACK_TOTAL, trackTotal);
+                Fields[Field.TRACK_NUMBER_TOTAL] = trackNumberTotal;
             }
 
-            if (DiscNumber != null)
+            if (Fields.ContainsKey(Field.DISC_NUMBER))
             {
-                if (DiscNumber.Contains("/"))
+                string discNumber = Fields[Field.DISC_NUMBER];
+                string discTotal = null;
+                string discNumberTotal;
+                if (discNumber.Contains("/"))
                 {
-                    DiscNumberTotal = DiscNumber;
-                    string[] parts = DiscNumber.Split('/');
-                    DiscNumber = parts[0];
-                    DiscTotal = parts[1];
+                    discNumberTotal = discNumber;
+                    string[] parts = discNumber.Split('/');
+                    discNumber = parts[0];
+                    discTotal = parts[1];
                 }
-                else if (Utils.IsNumeric(DiscNumber))
+                else if (Utils.IsNumeric(discNumber))
                 {
-                    DiscNumberTotal = DiscNumber;
-                    if (Utils.IsNumeric(DiscTotal)) DiscNumberTotal += "/" + DiscTotal;
+                    discNumberTotal = discNumber;
+                    if (Fields.ContainsKey(Field.DISC_TOTAL))
+                    {
+                        discTotal = Fields[Field.DISC_TOTAL];
+                        if (Utils.IsNumeric(discTotal)) discNumberTotal += "/" + discTotal;
+                    }
                 }
                 else
                 {
-                    DiscNumberTotal = "";
+                    discNumberTotal = "";
                 }
+                Fields[Field.DISC_NUMBER] = discNumber;
+                IntegrateValue(Field.DISC_TOTAL, discTotal);
+                Fields[Field.DISC_NUMBER_TOTAL] = discNumberTotal;
             }
 
             if (Chapters != null && Chapters.Count > 0)
@@ -535,17 +463,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Add given value to given map if value is not null
-        /// </summary>
-        /// <param name="data">Value to add to the map</param>
-        /// <param name="id">Key to add to the map</param>
-        /// <param name="map">Target map to host given values</param>
-        private void addIfConsistent(string data, byte id, IDictionary<byte, string> map)
-        {
-            if (data != null) map[id] = data;
-        }
-
-        /// <summary>
         /// Convert given value to empty string ("") if null or zero ("0")
         /// </summary>
         /// <param name="s">Value to convert</param>
@@ -555,25 +472,6 @@ namespace ATL
             string result = s;
 
             if (!Settings.NullAbsentValues && s != null && s.Equals("0")) result = "";
-
-            return result;
-        }
-
-        /// <summary>
-        /// Build a map containing the position of each picture in the Pictures field, based on the PictureInfo.Position fields
-        /// 
-        /// NB : This method does not calculate any position; it just generates the map
-        /// </summary>
-        /// <returns>Map containing the position for each picture</returns>
-        private IDictionary<PictureInfo, int> generatePicturePositions()
-        {
-            IDictionary<PictureInfo, int> result = new Dictionary<PictureInfo, int>();
-
-            foreach (PictureInfo picInfo in Pictures)
-            {
-                if (result.ContainsKey(picInfo)) result[picInfo] = Math.Max(result[picInfo], picInfo.Position);
-                else result.Add(picInfo, picInfo.Position);
-            }
 
             return result;
         }

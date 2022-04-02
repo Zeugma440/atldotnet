@@ -6,6 +6,7 @@ using Commons;
 using System.Text;
 using System.IO.Compression;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -91,7 +92,7 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
         }
@@ -210,12 +211,12 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Length
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
-                tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, str);
+                tagData.IntegrateValue(TagData.Field.TITLE, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (english)
-                tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM, str);
+                tagData.IntegrateValue(TagData.Field.ALBUM, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
 
@@ -225,18 +226,18 @@ namespace ATL.AudioData.IO
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "SYSTEM_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (english)
-                tagData.IntegrateValue(TagData.TAG_FIELD_ARTIST, str);
+                tagData.IntegrateValue(TagData.Field.ARTIST, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "AUTHOR_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Release date
-                tagData.IntegrateValue(TagData.TAG_FIELD_RECORDING_DATE, str);
+                tagData.IntegrateValue(TagData.Field.RECORDING_DATE, str);
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Dumper
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Notes
-                tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, str);
+                tagData.IntegrateValue(TagData.Field.COMMENT, str);
             }
             else
             {
@@ -307,14 +308,14 @@ namespace ATL.AudioData.IO
             sizePos = w.BaseStream.Position;
             w.Write(0);
 
-            w.Write(unicodeEncoder.GetBytes(tag.Title));
+            w.Write(unicodeEncoder.GetBytes(tag[Field.TITLE]));
             w.Write(endString); // Strings must be null-terminated
             str = "";
             if (AdditionalFields.ContainsKey("TITLE_J")) str = AdditionalFields["TITLE_J"];
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag.Album));
+            w.Write(unicodeEncoder.GetBytes(tag[Field.ALBUM]));
             w.Write(endString);
             str = "";
             if (AdditionalFields.ContainsKey("GAME_J")) str = AdditionalFields["GAME_J"];
@@ -330,7 +331,7 @@ namespace ATL.AudioData.IO
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag.Artist));
+            w.Write(unicodeEncoder.GetBytes(tag[Field.ARTIST]));
             w.Write(endString);
             str = "";
             if (AdditionalFields.ContainsKey("AUTHOR_J")) str = AdditionalFields["AUTHOR_J"];
@@ -339,12 +340,13 @@ namespace ATL.AudioData.IO
 
             string dateStr = "";
             if (Date != DateTime.MinValue && !(1 == Date.Day && 1 == Date.Month)) dateStr = Date.ToString("yyyy/MM/dd");
-            else if (tag.RecordingYear != null && tag.RecordingYear.Length == 4)
+            else if (tag[Field.RECORDING_YEAR] != null && tag[Field.RECORDING_YEAR].Length == 4)
             {
-                dateStr = tag.RecordingYear;
-                if (tag.RecordingDayMonth != null && tag.RecordingDayMonth.Length >= 4)
+                dateStr = tag[Field.RECORDING_YEAR];
+                string dayMonth = tag[Field.RECORDING_DAYMONTH];
+                if (dayMonth != null && dayMonth.Length >= 4)
                 {
-                    dateStr += "/" + tag.RecordingDayMonth.Substring(tag.RecordingDayMonth.Length - 2, 2) + "/" + tag.RecordingDayMonth.Substring(0, 2);
+                    dateStr += "/" + dayMonth.Substring(dayMonth.Length - 2, 2) + "/" + dayMonth.Substring(0, 2);
                 }
             }
             w.Write(unicodeEncoder.GetBytes(dateStr));
@@ -355,7 +357,7 @@ namespace ATL.AudioData.IO
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag.Comment));
+            w.Write(unicodeEncoder.GetBytes(tag[Field.COMMENT]));
             w.Write(endString);
 
             w.Write(endString); // Is supposed to be there, according to sample files

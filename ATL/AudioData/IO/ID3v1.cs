@@ -2,6 +2,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -266,7 +267,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
         }
@@ -293,11 +294,11 @@ namespace ATL.AudioData.IO
                     byte[] endComment = new byte[2];
                     structureHelper.AddZone(source.Position - ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
-                    tagData.Title = Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", "");
-                    tagData.Artist = Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", "");
-                    tagData.Album = Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", "");
-                    tagData.RecordingYear = Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", "");
-                    tagData.Comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
+                    setMetaField(Field.TITLE, Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", ""));
+                    setMetaField(Field.ARTIST, Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", ""));
+                    setMetaField(Field.ALBUM, Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", ""));
+                    setMetaField(Field.RECORDING_YEAR, Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", ""));
+                    string comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
 
                     Array.Copy(data, 125, endComment, 0, 2);
                     tagVersion = GetTagVersion(endComment);
@@ -305,14 +306,15 @@ namespace ATL.AudioData.IO
                     // Fill properties using tag data
                     if (TAG_VERSION_1_0 == tagVersion)
                     {
-                        tagData.Comment = tagData.Comment + Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+                        comment += Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
                     }
                     else
                     {
-                        tagData.TrackNumber = endComment[1].ToString();
+                        setMetaField(Field.TRACK_NUMBER, endComment[1].ToString());
                     }
 
-                    tagData.Genre = (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "";
+                    setMetaField(Field.COMMENT, comment);
+                    setMetaField(Field.GENRE, (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "");
 
                     result = true;
                 }
@@ -376,23 +378,24 @@ namespace ATL.AudioData.IO
             // they are not unicode-encoded, hence the use of ReadOneByteChars
             w.Write(ID3V1_ID.ToCharArray());
 
-            w.Write(Utils.BuildStrictLengthString(tag.Title, 30, '\0').ToCharArray());
-            w.Write(Utils.BuildStrictLengthString(tag.Artist, 30, '\0').ToCharArray());
-            w.Write(Utils.BuildStrictLengthString(tag.Album, 30, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString(tag[Field.TITLE], 30, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString(tag[Field.ARTIST], 30, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString(tag[Field.ALBUM], 30, '\0').ToCharArray());
             // ID3v1 standard requires the year
-            w.Write(Utils.BuildStrictLengthString(TrackUtils.ExtractStrYear(tag.RecordingYear), 4, '\0').ToCharArray());
-            w.Write(Utils.BuildStrictLengthString(tag.Comment, 28, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString(TrackUtils.ExtractStrYear(tag[Field.RECORDING_YEAR]), 4, '\0').ToCharArray());
+            w.Write(Utils.BuildStrictLengthString(tag[Field.COMMENT], 28, '\0').ToCharArray());
 
             // ID3v1.1 standard
             w.Write('\0');
-            w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag.TrackNumber), Byte.MaxValue));
+            w.Write((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag[Field.TRACK_NUMBER]), Byte.MaxValue));
 
             byte genre = byte.MaxValue;
-            if (tag.Genre != null)
+            if (tag[Field.GENRE] != null)
             {
+                string genreStr = tag[Field.GENRE];
                 for (byte i = 0; i < MAX_MUSIC_GENRES; i++)
                 {
-                    if (tag.Genre.Equals(MusicGenre[i], StringComparison.OrdinalIgnoreCase))
+                    if (genreStr.Equals(MusicGenre[i], StringComparison.OrdinalIgnoreCase))
                     {
                         genre = i;
                         break;

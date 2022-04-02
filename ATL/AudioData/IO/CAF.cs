@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -103,17 +104,17 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between CAF information keys and ATL frame codes
-        private static Dictionary<string, byte> frameMapping = new Dictionary<string, byte>() {
-            { "artist", TagData.TAG_FIELD_ARTIST },
-            { "album", TagData.TAG_FIELD_ALBUM },
-            { "track number", TagData.TAG_FIELD_TRACK_NUMBER },
-            { "year", TagData.TAG_FIELD_PUBLISHING_DATE },
-            { "composer", TagData.TAG_FIELD_COMPOSER },
-            { "genre", TagData.TAG_FIELD_GENRE },
-            { "title", TagData.TAG_FIELD_TITLE },
-            { "recorded date", TagData.TAG_FIELD_RECORDING_DATE },
-            { "comments", TagData.TAG_FIELD_COMMENT },
-            { "copyright", TagData.TAG_FIELD_COPYRIGHT }
+        private static Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+            { "artist", Field.ARTIST },
+            { "album", Field.ALBUM },
+            { "track number", Field.TRACK_NUMBER },
+            { "year", Field.PUBLISHING_DATE },
+            { "composer", Field.COMPOSER },
+            { "genre", Field.GENRE },
+            { "title", Field.TITLE },
+            { "recorded date", Field.RECORDING_DATE },
+            { "comments", Field.COMMENT },
+            { "copyright", Field.COPYRIGHT }
         };
 
 
@@ -194,9 +195,9 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
 

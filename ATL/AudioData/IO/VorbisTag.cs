@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -43,27 +44,27 @@ namespace ATL.AudioData.IO
         }
 
         // Mapping between Vorbis field IDs and ATL fields
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>() {
-                { "DESCRIPTION", TagData.TAG_FIELD_GENERAL_DESCRIPTION },
-                { "ARTIST", TagData.TAG_FIELD_ARTIST },
-                { "TITLE", TagData.TAG_FIELD_TITLE },
-                { "ALBUM", TagData.TAG_FIELD_ALBUM },
-                { "DATE", TagData.TAG_FIELD_RECORDING_DATE },
-                { "GENRE", TagData.TAG_FIELD_GENRE },
-                { "COMPOSER", TagData.TAG_FIELD_COMPOSER },
-                { "TRACKNUMBER", TagData.TAG_FIELD_TRACK_NUMBER },
-                { "TRACKTOTAL", TagData.TAG_FIELD_TRACK_TOTAL },
-                { "TOTALTRACKS", TagData.TAG_FIELD_TRACK_TOTAL },
-                { "DISCNUMBER", TagData.TAG_FIELD_DISC_NUMBER },
-                { "DISCTOTAL", TagData.TAG_FIELD_DISC_TOTAL },
-                { "TOTALDISCS", TagData.TAG_FIELD_DISC_TOTAL },
-                { "COMMENT", TagData.TAG_FIELD_COMMENT },
-                { "ALBUMARTIST", TagData.TAG_FIELD_ALBUM_ARTIST },
-                { "CONDUCTOR", TagData.TAG_FIELD_CONDUCTOR },
-                { "RATING", TagData.TAG_FIELD_RATING },
-                { "COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
-                { "PUBLISHER", TagData.TAG_FIELD_PUBLISHER },
-                { "PRODUCTNUMBER", TagData.TAG_FIELD_PRODUCT_ID }
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+                { "DESCRIPTION", TagData.Field.GENERAL_DESCRIPTION },
+                { "ARTIST", TagData.Field.ARTIST },
+                { "TITLE", TagData.Field.TITLE },
+                { "ALBUM", TagData.Field.ALBUM },
+                { "DATE", TagData.Field.RECORDING_DATE },
+                { "GENRE", TagData.Field.GENRE },
+                { "COMPOSER", TagData.Field.COMPOSER },
+                { "TRACKNUMBER", TagData.Field.TRACK_NUMBER },
+                { "TRACKTOTAL", TagData.Field.TRACK_TOTAL },
+                { "TOTALTRACKS", TagData.Field.TRACK_TOTAL },
+                { "DISCNUMBER", TagData.Field.DISC_NUMBER },
+                { "DISCTOTAL", TagData.Field.DISC_TOTAL },
+                { "TOTALDISCS", TagData.Field.DISC_TOTAL },
+                { "COMMENT", TagData.Field.COMMENT },
+                { "ALBUMARTIST", TagData.Field.ALBUM_ARTIST },
+                { "CONDUCTOR", TagData.Field.CONDUCTOR },
+                { "RATING", TagData.Field.RATING },
+                { "COPYRIGHT", TagData.Field.COPYRIGHT },
+                { "PUBLISHER", TagData.Field.PUBLISHER },
+                { "PRODUCTNUMBER", TagData.Field.PRODUCT_ID }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
@@ -111,9 +112,9 @@ namespace ATL.AudioData.IO
             get { return RC_APE; }
         }
 
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
             ID = ID.ToUpper();
 
             // Finds the ATL field identifier according to the ID3v2 version
@@ -260,10 +261,10 @@ namespace ATL.AudioData.IO
         public new void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
         {
             // Finds the ATL field identifier
-            byte supportedMetaID = getFrameMapping(zone, ID, tagVersion);
+            Field supportedMetaID = getFrameMapping(zone, ID, tagVersion);
 
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
-            if (supportedMetaID < 255)
+            if (supportedMetaID != Field.NO_FIELD)
             {
                 string targetData = data;
                 if (tagData.hasKey(supportedMetaID)) // If the value already exists, concatenate it with the new one
@@ -466,16 +467,16 @@ namespace ATL.AudioData.IO
             bool doWritePicture;
             uint nbFrames = 0;
 
-            IDictionary<byte, String> map = tag.ToMap();
-            string recordingYear = Utils.ProtectValue(tag.RecordingYear);
+            IDictionary<Field, string> map = tag.ToMap();
+            string recordingYear = Utils.ProtectValue(tag[Field.RECORDING_YEAR]);
             if (recordingYear.Length > 0)
             {
-                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
+                string recordingDate = Utils.ProtectValue(tag[Field.RECORDING_DATE]);
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.Field.RECORDING_DATE] = recordingYear;
             }
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
                 {
@@ -484,7 +485,7 @@ namespace ATL.AudioData.IO
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
-                            if (frameType == TagData.TAG_FIELD_ARTIST && value.Contains(Settings.DisplayValueSeparator + ""))
+                            if (frameType == Field.ARTIST && value.Contains(Settings.DisplayValueSeparator + ""))
                             {
                                 // Write multiple fields (specific to FLAC; restrained to artists for now)
                                 string[] valueParts = value.Split(Settings.DisplayValueSeparator);
@@ -625,7 +626,7 @@ namespace ATL.AudioData.IO
         {
             TagData tag = new TagData();
 
-            foreach (byte b in frameMapping.Values)
+            foreach (Field b in frameMapping.Values)
             {
                 tag.IntegrateValue(b, "");
             }

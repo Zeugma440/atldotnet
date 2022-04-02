@@ -30,6 +30,7 @@ using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -357,7 +358,7 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
         /// <inheritdoc/>
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
         }
@@ -513,7 +514,7 @@ namespace ATL.AudioData.IO
             tracks = m_tracks;
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
-            tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, comment.ToString());
+            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
 
             duration = getDuration();
             bitrate = sizeInfo.FileSize / duration;
@@ -743,7 +744,7 @@ namespace ATL.AudioData.IO
 
                                         txt = Encoding.ASCII.GetString(data, position, len);
                                         if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append(Settings.InternalValueSeparator);
-                                        else if (MidiEvents.META_COPYRIGHT == meta) tagData.IntegrateValue(TagData.TAG_FIELD_COPYRIGHT, txt);
+                                        else if (MidiEvents.META_COPYRIGHT == meta) tagData.IntegrateValue(TagData.Field.COPYRIGHT, txt);
 
                                         evt = new MidiEvent(currentTicks, meta, -1, meta - 1);
                                         evt.isMetaEvent = true;

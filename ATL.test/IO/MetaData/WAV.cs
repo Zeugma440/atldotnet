@@ -25,7 +25,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_bext;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.GeneralDescription = "bext.description";
 
@@ -49,7 +49,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_info;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Artist = "info.IART";
             testData.Title = "info.INAM";
@@ -76,7 +76,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = emptyFile;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "disp[0].type", "CF_TEXT"));
@@ -95,7 +95,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_ixml;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "ixml.PROJECT", "ANewMovie"));
@@ -109,7 +109,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_sample;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "sample.manufacturer", "1"));
@@ -134,7 +134,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_cue;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.NumCuePoints", "10"));
@@ -163,7 +163,7 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_cue;
 
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.AdditionalFields = new List<MetaFieldInfo>();
             testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "cue.CuePoints[0].CuePointId", "1"));

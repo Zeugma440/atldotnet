@@ -16,7 +16,7 @@ namespace ATL.test.IO.MetaData
             canMetaNotExist = false;
 
             // Initialize specific test data
-            testData = new TagData();
+            testData = new TagHolder();
 
             testData.Title = "The Source of Evilness";
             testData.Album = "Arrow Flash";

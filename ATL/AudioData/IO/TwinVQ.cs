@@ -5,6 +5,7 @@ using Commons;
 using System.Collections.Generic;
 using System.Text;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -17,18 +18,18 @@ namespace ATL.AudioData.IO
         private const string TWIN_ID = "TWIN";
 
         // Mapping between TwinVQ frame codes and ATL frame codes
-        private static IDictionary<string, byte> frameMapping = new Dictionary<string, byte>
+        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { "NAME", TagData.TAG_FIELD_TITLE },
-            { "ALBM", TagData.TAG_FIELD_ALBUM },
-            { "AUTH", TagData.TAG_FIELD_ARTIST },
-            { "(c) ", TagData.TAG_FIELD_COPYRIGHT },
-            { "MUSC", TagData.TAG_FIELD_COMPOSER },
-            { "CDCT", TagData.TAG_FIELD_CONDUCTOR },
-            { "TRCK", TagData.TAG_FIELD_TRACK_NUMBER }, // Unofficial; found in sample files
-            { "DATE", TagData.TAG_FIELD_RECORDING_YEAR }, // Unofficial; found in sample files
-            { "GENR", TagData.TAG_FIELD_GENRE }, // Unofficial; found in sample files
-            { "COMT", TagData.TAG_FIELD_COMMENT }
+            { "NAME", Field.TITLE },
+            { "ALBM", Field.ALBUM },
+            { "AUTH", Field.ARTIST },
+            { "(c) ", Field.COPYRIGHT },
+            { "MUSC", Field.COMPOSER },
+            { "CDCT", Field.CONDUCTOR },
+            { "TRCK", Field.TRACK_NUMBER }, // Unofficial; found in sample files
+            { "DATE", Field.RECORDING_YEAR }, // Unofficial; found in sample files
+            { "GENR", Field.GENRE }, // Unofficial; found in sample files
+            { "COMT", Field.COMMENT }
             // TODO - handle integer extension sub-chunks : YEAR, TRAC
         };
 
@@ -48,9 +49,9 @@ namespace ATL.AudioData.IO
         {
             get { return isCorrupted(); }
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
@@ -317,24 +318,24 @@ namespace ATL.AudioData.IO
             int result = 0;
             string recordingYear = "";
 
-            IDictionary<byte, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // 1st pass to gather date information
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
-                if (map[frameType].Length > 0 && TagData.TAG_FIELD_RECORDING_YEAR == frameType) // No frame with empty value
+                if (map[frameType].Length > 0 && Field.RECORDING_YEAR == frameType) // No frame with empty value
                 {
                     recordingYear = map[frameType];
                 }
             }
             if (recordingYear.Length > 0)
             {
-                string recordingDate = Utils.ProtectValue(tag.RecordingDate);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.TAG_FIELD_RECORDING_DATE] = recordingYear;
+                string recordingDate = Utils.ProtectValue(tag[Field.RECORDING_DATE]);
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.Field.RECORDING_DATE] = recordingYear;
             }
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
                 {
@@ -377,7 +378,7 @@ namespace ATL.AudioData.IO
         {
             TagData tag = new TagData();
 
-            foreach (byte b in frameMapping.Values)
+            foreach (Field b in frameMapping.Values)
             {
                 tag.IntegrateValue(b, "");
             }

@@ -164,9 +164,9 @@ namespace ATL.test.IO.MetaData
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             theFile.ReadFromFile();
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+            theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE);
             
             // Confirm an exception has been raised
             IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
@@ -230,7 +230,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsFalse(theFile.NativeTag.Exists);
 
             // Construct a new tag
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
             theTag.Album = "Album";
             theTag.Artist = "Artist";
@@ -248,7 +248,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -358,7 +358,7 @@ namespace ATL.test.IO.MetaData
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
 
-            TagData theTag = new TagData();
+            TagHolder theTag = new TagHolder();
             theTag.Conductor = "John Jackman";
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
@@ -366,7 +366,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -392,7 +392,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(1, nbFound);
 
             // Remove the additional supported field
-            theTag = new TagData();
+            theTag = new TagHolder();
             theTag.Conductor = "";
 
             // Remove additional picture
@@ -401,7 +401,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 

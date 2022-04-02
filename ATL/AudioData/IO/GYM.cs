@@ -5,6 +5,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Text;
 using static ATL.ChannelsArrangements;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -95,7 +96,7 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
         }
@@ -141,17 +142,17 @@ namespace ATL.AudioData.IO
                 tagExists = true;
 
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.TAG_FIELD_TITLE, str);
+                tagData.IntegrateValue(TagData.Field.TITLE, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.TAG_FIELD_ALBUM, str);
+                tagData.IntegrateValue(TagData.Field.ALBUM, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.TAG_FIELD_COPYRIGHT, str);
+                tagData.IntegrateValue(TagData.Field.COPYRIGHT, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "EMULATOR", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(256))).Trim();
-                tagData.IntegrateValue(TagData.TAG_FIELD_COMMENT, str);
+                tagData.IntegrateValue(TagData.Field.COMMENT, str);
 
                 loopStart = source.ReadUInt32();
                 uint packedSize = source.ReadUInt32();
@@ -246,16 +247,16 @@ namespace ATL.AudioData.IO
         {
             int result = 6;
 
-            w.Write(Utils.BuildStrictLengthStringBytes(tag.Title, 32, 0, Encoding.UTF8));
-            w.Write(Utils.BuildStrictLengthStringBytes(tag.Album, 32, 0, Encoding.UTF8));
-            w.Write(Utils.BuildStrictLengthStringBytes(tag.Copyright, 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag[Field.TITLE], 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag[Field.ALBUM], 32, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag[Field.COPYRIGHT], 32, 0, Encoding.UTF8));
             string str = "";
             if (AdditionalFields.ContainsKey("EMULATOR")) str = AdditionalFields["EMULATOR"];
             w.Write(Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
             str = "";
             if (AdditionalFields.ContainsKey("DUMPER")) str = AdditionalFields["DUMPER"];
             w.Write(Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
-            w.Write(Utils.BuildStrictLengthStringBytes(tag.Comment, 256, 0, Encoding.UTF8));
+            w.Write(Utils.BuildStrictLengthStringBytes(tag[Field.COMMENT], 256, 0, Encoding.UTF8));
 
             return result;
         }

@@ -7,6 +7,7 @@ using Commons;
 using static ATL.ChannelsArrangements;
 using System.Linq;
 using System.Collections.Concurrent;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -86,22 +87,22 @@ namespace ATL.AudioData.IO
         // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
         // their ID will not appear as is in the WMA header. 
         // Their info is contained in the standard Content Description block at the very beginning of the file
-        public static readonly IDictionary<string, byte> frameMapping = new Dictionary<string, byte>()
+        public static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
         {
-            { "WM/TITLE", TagData.TAG_FIELD_TITLE },
-            { "WM/AlbumTitle", TagData.TAG_FIELD_ALBUM },
-            { "WM/AUTHOR", TagData.TAG_FIELD_ARTIST },
-            { "WM/COPYRIGHT", TagData.TAG_FIELD_COPYRIGHT },
-            { "WM/DESCRIPTION", TagData.TAG_FIELD_COMMENT },
-            { "WM/Year", TagData.TAG_FIELD_RECORDING_YEAR },
-            { "WM/Genre", TagData.TAG_FIELD_GENRE },
-            { "WM/TrackNumber", TagData.TAG_FIELD_TRACK_NUMBER_TOTAL },
-            { "WM/PartOfSet", TagData.TAG_FIELD_DISC_NUMBER_TOTAL },
-            { "WM/RATING", TagData.TAG_FIELD_RATING },
-            { "WM/SharedUserRating", TagData.TAG_FIELD_RATING },
-            { "WM/Composer", TagData.TAG_FIELD_COMPOSER },
-            { "WM/AlbumArtist", TagData.TAG_FIELD_ALBUM_ARTIST },
-            { "WM/Conductor", TagData.TAG_FIELD_CONDUCTOR }
+            { "WM/TITLE", TagData.Field.TITLE },
+            { "WM/AlbumTitle", TagData.Field.ALBUM },
+            { "WM/AUTHOR", TagData.Field.ARTIST },
+            { "WM/COPYRIGHT", TagData.Field.COPYRIGHT },
+            { "WM/DESCRIPTION", TagData.Field.COMMENT },
+            { "WM/Year", TagData.Field.RECORDING_YEAR },
+            { "WM/Genre", TagData.Field.GENRE },
+            { "WM/TrackNumber", TagData.Field.TRACK_NUMBER_TOTAL },
+            { "WM/PartOfSet", TagData.Field.DISC_NUMBER_TOTAL },
+            { "WM/RATING", TagData.Field.RATING },
+            { "WM/SharedUserRating", TagData.Field.RATING },
+            { "WM/Composer", TagData.Field.COMPOSER },
+            { "WM/AlbumArtist", TagData.Field.ALBUM_ARTIST },
+            { "WM/Conductor", TagData.Field.CONDUCTOR }
         };
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>
@@ -159,9 +160,9 @@ namespace ATL.AudioData.IO
         {
             return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.NATIVE);
         }
-        protected override byte getFrameMapping(string zone, string ID, byte tagVersion)
+        protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
-            byte supportedMetaId = 255;
+            Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
             if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
@@ -690,18 +691,18 @@ namespace ATL.AudioData.IO
             string comment = "";
             string rating = "";
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 if (map[frameType].Length > 0) // No frame with empty value
                 {
-                    if (TagData.TAG_FIELD_TITLE.Equals(frameType)) title = map[frameType];
-                    else if (TagData.TAG_FIELD_ARTIST.Equals(frameType)) author = map[frameType];
-                    else if (TagData.TAG_FIELD_COPYRIGHT.Equals(frameType)) copyright = map[frameType];
-                    else if (TagData.TAG_FIELD_COMMENT.Equals(frameType)) comment = map[frameType];
-                    else if (TagData.TAG_FIELD_RATING.Equals(frameType)) rating = map[frameType];
+                    if (TagData.Field.TITLE.Equals(frameType)) title = map[frameType];
+                    else if (TagData.Field.ARTIST.Equals(frameType)) author = map[frameType];
+                    else if (TagData.Field.COPYRIGHT.Equals(frameType)) copyright = map[frameType];
+                    else if (TagData.Field.COMMENT.Equals(frameType)) comment = map[frameType];
+                    else if (TagData.Field.RATING.Equals(frameType)) rating = map[frameType];
                 }
             }
 
@@ -739,10 +740,10 @@ namespace ATL.AudioData.IO
             counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            IDictionary<byte, String> map = tag.ToMap();
+            IDictionary<Field, String> map = tag.ToMap();
 
             // Supported textual fields
-            foreach (byte frameType in map.Keys)
+            foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
                 {
@@ -1019,7 +1020,7 @@ namespace ATL.AudioData.IO
             {
                 TagData tag = new TagData();
 
-                foreach (byte b in frameMapping.Values)
+                foreach (Field b in frameMapping.Values)
                 {
                     tag.IntegrateValue(b, "");
                 }

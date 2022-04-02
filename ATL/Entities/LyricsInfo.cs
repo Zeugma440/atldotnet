@@ -137,5 +137,17 @@ namespace ATL
             ContentType = info.ContentType;
             SynchronizedLyrics = new List<LyricsPhrase>(info.SynchronizedLyrics);
         }
+
+        /// <summary>
+        /// Clear data
+        /// </summary>
+        public void Clear()
+        {
+            Description = "";
+            LanguageCode = "";
+            UnsynchronizedLyrics = "";
+            ContentType = LyricsType.LYRICS;
+            SynchronizedLyrics.Clear();
+        }
     }
 }
