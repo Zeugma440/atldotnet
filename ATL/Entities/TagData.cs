@@ -24,9 +24,9 @@ namespace ATL
         public const byte TAG_FIELD_ALBUM = 6;
         public const byte TAG_FIELD_RECORDING_YEAR = 7;
         public const byte TAG_FIELD_RECORDING_DATE = 8;
-        public const byte TAG_FIELD_RECORDING_YEAR_OR_DATE = 9;
-        public const byte TAG_FIELD_RECORDING_TIME = 10;
-        public const byte TAG_FIELD_RECORDING_DAYMONTH = 11;
+        public const byte TAG_FIELD_RECORDING_YEAR_OR_DATE = 9; // Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
+        public const byte TAG_FIELD_RECORDING_DAYMONTH = 10;
+        public const byte TAG_FIELD_RECORDING_TIME = 11;
         public const byte TAG_FIELD_TRACK_NUMBER = 12;
         public const byte TAG_FIELD_DISC_NUMBER = 13;
         public const byte TAG_FIELD_RATING = 14;
@@ -37,9 +37,9 @@ namespace ATL
         public const byte TAG_FIELD_PUBLISHER = 19;
         public const byte TAG_FIELD_CONDUCTOR = 20;
         public const byte TAG_FIELD_TRACK_TOTAL = 21;
-        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 22;
+        public const byte TAG_FIELD_TRACK_NUMBER_TOTAL = 22; // Alternate to TRACK_NUMBER and TRACK_TOTAL where both are in the same field
         public const byte TAG_FIELD_DISC_TOTAL = 23;
-        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 24;
+        public const byte TAG_FIELD_DISC_NUMBER_TOTAL = 24; // Alternate to DISC_NUMBER and DISC_TOTAL where both are in the same field
         public const byte TAG_FIELD_CHAPTERS_TOC_DESCRIPTION = 25;
         public const byte TAG_FIELD_LYRICS_UNSYNCH = 26;
         public const byte TAG_FIELD_LYRICS_SYNCH = 27;

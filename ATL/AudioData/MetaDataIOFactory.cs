@@ -12,27 +12,27 @@ namespace ATL.AudioData
         /// <summary>
         /// ID3v1
         /// </summary>
-        [ObsoleteAttribute("Use TagType.ID3V1 instead", false)]
+        [Obsolete("Use TagType.ID3V1 instead", false)]
         public const TagType TAG_ID3V1 = TagType.ID3V1;
         /// <summary>
         /// ID3v2
         /// </summary>
-        [ObsoleteAttribute("Use TagType.ID3V2 instead", false)]
+        [Obsolete("Use TagType.ID3V2 instead", false)]
         public const TagType TAG_ID3V2 = TagType.ID3V2;
         /// <summary>
         /// APEtag
         /// </summary>
-        [ObsoleteAttribute("Use TagType.APE instead", false)]
+        [Obsolete("Use TagType.APE instead", false)]
         public const TagType TAG_APE = TagType.APE;
         /// <summary>
         /// Native tag format associated with the audio container (ex : MP4 built-in tagging format)
         /// </summary>
-        [ObsoleteAttribute("Use TagType.NATIVE instead", false)]
+        [Obsolete("Use TagType.NATIVE instead", false)]
         public const TagType TAG_NATIVE = TagType.NATIVE;
         /// <summary>
         /// Whenever tag type is not known in advance and may apply to any available tag
         /// </summary>
-        [ObsoleteAttribute("Use TagType.ANY instead", false)]
+        [Obsolete("Use TagType.ANY instead", false)]
         public const TagType TAG_ANY = TagType.ANY;
 
         /// <summary>
