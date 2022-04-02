@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
-	class FLAC : VorbisTagContainer, IAudioDataIO
+	class FLAC : VorbisTagHolder, IAudioDataIO
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         private const byte META_STREAMINFO = 0;

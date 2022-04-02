@@ -22,7 +22,7 @@ namespace ATL.AudioData.IO
     ///   3. Writing metadata is not supported yet on embedded FLAC files
     /// 
     /// </summary>
-	class Ogg : VorbisTagContainer, IAudioDataIO
+	class Ogg : VorbisTagHolder, IAudioDataIO
     {
         // Contents of the file
         private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
