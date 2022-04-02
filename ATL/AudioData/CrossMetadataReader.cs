@@ -42,9 +42,7 @@ namespace ATL.AudioData
             }
         }
 
-        /// <summary>
-        /// Returns true if this kind of metadata exists in the file, false if not
-        /// </summary>
+        /// <inheritdoc/>
         public bool Exists
         {
             get { return (metaReaders.Count > 0); }
