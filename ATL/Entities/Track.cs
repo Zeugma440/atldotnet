@@ -238,10 +238,7 @@ namespace ATL
         /// </summary>
         public int Duration
         {
-            get
-            {
-                return (int)Math.Round(DurationMs / 1000.0);
-            }
+            get => (int)Math.Round(DurationMs / 1000.0);
         }
         /// <summary>
 		/// Duration (milliseconds)
@@ -268,10 +265,7 @@ namespace ATL
         /// </summary>
         public IList<PictureInfo> EmbeddedPictures
         {
-            get
-            {
-                return getEmbeddedPictures();
-            }
+            get => getEmbeddedPictures();
         }
 
         /// <summary>
