@@ -8,169 +8,28 @@ namespace ATL.AudioData
 	/// <summary>
 	/// This Interface defines an object aimed at giving audio metadata information
 	/// </summary>
-	public interface IMetaDataIO
+	public interface IMetaDataIO : IMetaData
 	{
-		/// <summary>
-		/// Returns true if this kind of metadata exists in the file, false if not
-		/// </summary>
-		bool Exists
-		{
-			get;
-		}
         /// <summary>
-        /// Available metadata formats
+        /// Returns true if this kind of metadata exists in the file, false if not
         /// </summary>
-        IList<Format> MetadataFormats
+        bool Exists
         {
             get;
         }
-		/// <summary>
-		/// Title of the track
-		/// </summary>
-		string Title
-		{
-			get;
-		}
-		/// <summary>
-		/// Artist
-		/// </summary>
-		string Artist
-		{
-			get;
-		}
+
         /// <summary>
-        /// Composer
+        /// List of picture IDs stored in the tag
+        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
+        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
+        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
         /// </summary>
-        string Composer
+        [Obsolete("Use PictureInfo instead", false)]
+        IList<PictureInfo> PictureTokens
         {
             get;
         }
-		/// <summary>
-		/// Comments
-		/// </summary>
-		string Comment
-		{
-			get;
-		}
-		/// <summary>
-		/// Genre
-		/// </summary>
-		string Genre
-		{
-			get;
-		}
-		/// <summary>
-		/// Track number
-		/// </summary>
-		ushort Track
-		{
-			get;
-		}
-        /// <summary>
-		/// Total track number
-		/// </summary>
-		ushort TrackTotal
-        {
-            get;
-        }
-        /// <summary>
-        /// Disc number
-        /// </summary>
-        ushort Disc
-		{
-			get;
-		}
-        /// <summary>
-        /// Total disc number
-        /// </summary>
-        ushort DiscTotal
-        {
-            get;
-        }
-        /// <summary>
-        /// Recording date (DateTime.MinValue if field does not exist)
-        /// </summary>
-        DateTime Date
-        {
-            get;
-        }
-		/// <summary>
-		/// Title of the album
-		/// </summary>
-		string Album
-		{
-			get;
-		}
-        /// <summary>
-        /// Rating of the track, from 0% to 100%
-        /// </summary>
-        float? Popularity
-        {
-            get;
-        }
-        /// <summary>
-        /// Copyright
-        /// </summary>
-        string Copyright
-        {
-            get;
-        }
-        /// <summary>
-        /// Original artist
-        /// </summary>
-        string OriginalArtist
-        {
-            get;
-        }
-        /// <summary>
-        /// Title of the original album
-        /// </summary>
-        string OriginalAlbum
-        {
-            get;
-        }
-        /// <summary>
-        /// General description
-        /// </summary>
-        string GeneralDescription
-        {
-            get;
-        }
-        /// <summary>
-        /// Publisher
-        /// </summary>
-        string Publisher
-        {
-            get;
-        }
-        /// <summary>
-        /// Publishing Date (DateTime.MinValue if field does not exist)
-        /// </summary>
-        DateTime PublishingDate
-        {
-            get;
-        }
-        /// <summary>
-        /// Album Artist
-        /// </summary>
-        string AlbumArtist
-        {
-            get;
-        }
-        /// <summary>
-        /// Conductor
-        /// </summary>
-        string Conductor
-        {
-            get;
-        }
-        /// <summary>
-        /// Product ID
-        /// </summary>
-        string ProductId
-        {
-            get;
-        }
+
         /// <summary>
         /// Size of padding area, if any
         /// </summary>
@@ -178,58 +37,11 @@ namespace ATL.AudioData
         {
             get;
         }
-        /// <summary>
-        /// List of picture IDs stored in the tag
-        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
-        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
-        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
-        /// </summary>
-        IList<PictureInfo> PictureTokens
-        {
-            get;
-        }
+
         /// <summary>
         /// Physical size of the tag (bytes)
         /// </summary>
         long Size
-        {
-            get;
-        }
-        /// <summary>
-        /// Contains any other metadata field that is not represented by a getter in the above interface
-        /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available
-        /// </summary>
-        IDictionary<string, string> AdditionalFields
-        {
-            get;
-        }
-        /// <summary>
-        /// Chapters table of contents description
-        /// </summary>
-        string ChaptersTableDescription
-        {
-            get;
-        }
-        /// <summary>
-        /// Chapters
-        /// </summary>
-        IList<ChapterInfo> Chapters
-        {
-            get;
-        }
-        /// <summary>
-        /// Lyrics
-        /// </summary>
-        LyricsInfo Lyrics
-        {
-            get;
-        }
-
-        /// <summary>
-        /// List of pictures stored in the tag
-        /// NB : PictureInfo.PictureData (raw binary picture data) is valued
-        /// </summary>
-        IList<PictureInfo> EmbeddedPictures
         {
             get;
         }

@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Superclass that "consolidates" all metadata I/O algorithms to ease development of new classes and minimize their code
     /// </summary>
-    public abstract class MetaDataIO : IMetaDataIO
+    public abstract class MetaDataIO : MetadataHolder, IMetaDataIO
     {
         // ------ CONSTS -----------------------------------------------------
 
@@ -103,12 +103,9 @@ namespace ATL.AudioData.IO
         /// </summary>
         protected int tagVersion;
         /// <summary>
-        /// Metadata
-        /// </summary>
-        protected TagData tagData;
-        /// <summary>
         /// Picture tokens (i.e. presence of pictures, without its binary data)
         /// </summary>
+        [Obsolete("Use PictureInfo instead", false)]
         protected IList<PictureInfo> pictureTokens;
         /// <summary>
         /// Tag embedder (3rd party tagging system within the tag)
@@ -128,7 +125,7 @@ namespace ATL.AudioData.IO
             get { return this.tagExists; }
         }
         /// <inheritdoc/>
-        public virtual IList<Format> MetadataFormats
+        public override IList<Format> MetadataFormats
         {
             get
             {
@@ -177,308 +174,15 @@ namespace ATL.AudioData.IO
         // ------ TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
-        public String Title
-        {
-            get { return Utils.ProtectValue(tagData[Field.TITLE]); }
-        }
-        /// <inheritdoc/>
-        public String Artist
-        {
-            get
-            {
-                string result = Utils.ProtectValue(tagData[Field.ARTIST]);
-                if (0 == result.Length) result = AlbumArtist;
-                return result;
-            }
-        }
-        /// <inheritdoc/>
-        public String AlbumArtist
-        {
-            get { return Utils.ProtectValue(tagData[Field.ALBUM_ARTIST]); }
-        }
-        /// <inheritdoc/>
-        public String Composer
-        {
-            get { return Utils.ProtectValue(tagData[Field.COMPOSER]); }
-        }
-        /// <inheritdoc/>
-        public String Album
-        {
-            get { return Utils.ProtectValue(tagData[Field.ALBUM]); }
-        }
-        /// <inheritdoc/>
-        public ushort Track
-        {
-            get
-            {
-                if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
-                    return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER_TOTAL]);
-                else return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
-            }
-        }
-        /// <inheritdoc/>
-        public ushort TrackTotal
-        {
-            get
-            {
-                if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
-                    return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER_TOTAL]);
-                else if (Utils.IsNumeric(tagData[Field.TRACK_TOTAL]))
-                    return ushort.Parse(tagData[Field.TRACK_TOTAL]);
-                else return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER]);
-            }
-        }
-        /// <inheritdoc/>
-        public ushort Disc
-        {
-            get
-            {
-                if (tagData[Field.DISC_NUMBER_TOTAL] != null)
-                    return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER_TOTAL]);
-                else return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER]);
-            }
-        }
-        /// <inheritdoc/>
-        public ushort DiscTotal
-        {
-            get
-            {
-                if (tagData[Field.DISC_NUMBER_TOTAL] != null)
-                    return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER_TOTAL]);
-                else if (Utils.IsNumeric(tagData[Field.DISC_TOTAL]))
-                    return ushort.Parse(tagData[Field.DISC_TOTAL]);
-                else return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER]);
-            }
-        }
-        /// <inheritdoc/>
-        public float? Popularity
-        {
-            get
-            {
-                float? result = (float?)TrackUtils.DecodePopularity(tagData[Field.RATING], ratingConvention);
-                if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
-                return result;
-            }
-        }
-        /// <inheritdoc/>
-        public DateTime Date
-        {
-            get
-            {
-                DateTime result;
-                if (!DateTime.TryParse(Utils.ProtectValue(tagData[Field.RECORDING_DATE]), out result)) // First try with a proper Recording date field
-                {
-                    bool success = false;
-                    string dayMonth = Utils.ProtectValue(tagData[Field.RECORDING_DAYMONTH]); // If not, try to assemble year and dateMonth (e.g. ID3v2)
-                    string year = Utils.ProtectValue(tagData[Field.RECORDING_YEAR]);
-                    if (4 == dayMonth.Length && 4 == year.Length)
-                    {
-                        StringBuilder dateTimeBuilder = new StringBuilder();
-                        dateTimeBuilder.Append(year).Append("-");
-                        dateTimeBuilder.Append(dayMonth.Substring(2, 2)).Append("-");
-                        dateTimeBuilder.Append(dayMonth.Substring(0, 2));
-                        string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
-                        if (time.Length >= 4)
-                        {
-                            dateTimeBuilder.Append("T");
-                            dateTimeBuilder.Append(time.Substring(0, 2)).Append(":");
-                            dateTimeBuilder.Append(time.Substring(2, 2)).Append(":");
-                            dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
-                        }
-                        success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
-                    }
-                    if (!success) // Year only
-                    {
-                        if (year.Length != 4) year = Utils.ProtectValue(tagData[Field.RECORDING_DATE]); // ...then with RecordingDate
-                        if (4 == year.Length) // We have a year !
-                        {
-                            StringBuilder dateTimeBuilder = new StringBuilder();
-                            dateTimeBuilder.Append(year).Append("-01-01");
-                            string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
-                            if (time.Length >= 4)
-                            {
-                                dateTimeBuilder.Append("T");
-                                dateTimeBuilder.Append(time.Substring(0, 2)).Append(":");
-                                dateTimeBuilder.Append(time.Substring(2, 2)).Append(":");
-                                dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
-                            }
-                            success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
-                        }
-                    }
-                    if (!success) result = DateTime.MinValue;
-                }
-                return result;
-            }
-        }
-        /// <inheritdoc/>
-        public DateTime PublishingDate
-        {
-            get
-            {
-                DateTime result;
-                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out result))
-                    result = DateTime.MinValue;
-                return result;
-            }
-        }
-        /// <inheritdoc/>
-        public String Genre
-        {
-            get { return Utils.ProtectValue(tagData[Field.GENRE]); }
-        }
-        /// <inheritdoc/>
-        public String Comment
-        {
-            get { return Utils.ProtectValue(tagData[Field.COMMENT]); }
-        }
-        /// <inheritdoc/>
-        public String Copyright
-        {
-            get { return Utils.ProtectValue(tagData[Field.COPYRIGHT]); }
-        }
-        /// <inheritdoc/>
-        public String OriginalArtist
-        {
-            get { return Utils.ProtectValue(tagData[Field.ORIGINAL_ARTIST]); }
-        }
-        /// <inheritdoc/>
-        public String OriginalAlbum
-        {
-            get { return Utils.ProtectValue(tagData[Field.ORIGINAL_ALBUM]); }
-        }
-        /// <inheritdoc/>
-        public String GeneralDescription
-        {
-            get { return Utils.ProtectValue(tagData[Field.GENERAL_DESCRIPTION]); }
-        }
-        /// <inheritdoc/>
-        public String Publisher
-        {
-            get { return Utils.ProtectValue(tagData[Field.PUBLISHER]); }
-        }
-        /// <inheritdoc/>
-        public String Conductor
-        {
-            get { return Utils.ProtectValue(tagData[Field.CONDUCTOR]); }
-        }
-        /// <inheritdoc/>
-        public String ProductId
-        {
-            get { return Utils.ProtectValue(tagData[Field.PRODUCT_ID]); }
-        }
-        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return tagData.PaddingSize; }
-        }
-
-
-        /// <summary>
-        /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
-        /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available
-        /// For detailed, stream-by-stream and language-by-language properties, use GetAdditionalFields
-        /// </summary>
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                IDictionary<string, string> result = new Dictionary<string, string>();
-
-                IList<MetaFieldInfo> additionalFields = GetAdditionalFields(0);
-                foreach (MetaFieldInfo fieldInfo in additionalFields)
-                {
-                    if (!result.ContainsKey(fieldInfo.NativeFieldCode)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
-                }
-
-                return result;
-            }
-        }
-        /// <summary>
-        /// Get additional fields for the given stream number and language
-        /// </summary>
-        /// <param name="streamNumber">Stream number to get additional fields for (optional)</param>
-        /// <param name="language">Language to get additional fields for (optional)</param>
-        /// <returns>Additional fields associated with the given stream and language</returns>
-        public IList<MetaFieldInfo> GetAdditionalFields(int streamNumber = -1, string language = "")
-        {
-            IList<MetaFieldInfo> result = new List<MetaFieldInfo>();
-
-            foreach (MetaFieldInfo fieldInfo in tagData.AdditionalFields)
-            {
-                if (
-                    getImplementedTagType().Equals(fieldInfo.TagType)
-                    && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
-                    && ((0 == language.Length) || language.Equals(fieldInfo.Language))
-                    )
-                {
-                    result.Add(fieldInfo);
-                }
-            }
-
-            return result;
-        }
-
-        /// <inheritdoc/>
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get
-            {
-                IList<PictureInfo> result = new List<PictureInfo>();
-
-                foreach (PictureInfo picInfo in tagData.Pictures)
-                {
-                    if (!picInfo.MarkedForDeletion && (!picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) || (picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && picInfo.TagType.Equals(getImplementedTagType())))) result.Add(picInfo);
-                }
-
-                return result;
-            }
         }
 
         /// <inheritdoc/>
         public IList<PictureInfo> PictureTokens
         {
             get { return pictureTokens; }
-        }
-
-        /// <inheritdoc/>
-        public IList<ChapterInfo> Chapters
-        {
-            get
-            {
-                IList<ChapterInfo> result = new List<ChapterInfo>();
-
-                if (tagData.Chapters != null)
-                {
-                    foreach (ChapterInfo chapter in tagData.Chapters)
-                    {
-                        result.Add(new ChapterInfo(chapter));
-                    }
-                }
-
-                return result;
-            }
-        }
-
-        /// <inheritdoc/>
-        public LyricsInfo Lyrics
-        {
-            get
-            {
-                if (tagData.Lyrics != null)
-                {
-                    return new LyricsInfo(tagData.Lyrics);
-                }
-                else
-                {
-                    return new LyricsInfo();
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public string ChaptersTableDescription
-        {
-            get { return Utils.ProtectValue(tagData[Field.CHAPTERS_TOC_DESCRIPTION]); }
         }
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
@@ -499,14 +203,6 @@ namespace ATL.AudioData.IO
         protected virtual bool isLittleEndian
         {
             get { return true; }
-        }
-
-        /// <summary>
-        /// Indicate which rating convention to apply (See MetaDataIO.RC_XXX static constants)
-        /// </summary>
-        protected virtual byte ratingConvention
-        {
-            get { return RC_ID3v2; }
         }
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
@@ -605,12 +301,6 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <returns></returns>
         abstract protected int getDefaultTagOffset();
-
-        /// <summary>
-        /// Return the implemented tag type
-        /// </summary>
-        /// <returns></returns>
-        abstract protected MetaDataIOFactory.TagType getImplementedTagType();
 
         /// <summary>
         /// Get the frame code (per <see cref="TagData"/> standards for the given field ID in the given zone and the given tag version

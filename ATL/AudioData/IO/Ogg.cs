@@ -716,7 +716,7 @@ namespace ATL.AudioData.IO
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(true, true, true, true);
+            if (readTagParams.ReadTag && null == vorbisTag) createVorbisTag(true, true, true, true);
             info.Reset();
 
             if (getInfo(reader, info, readTagParams))

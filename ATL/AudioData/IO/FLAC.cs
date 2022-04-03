@@ -175,7 +175,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            if (readTagParams.ReadTag && null == vorbisTag) vorbisTag = new VorbisTag(false, false, false, false);
+            if (readTagParams.ReadTag && null == vorbisTag) createVorbisTag(false, false, false, false);
 
             initialPaddingOffset = -1;
             initialPaddingSize = 0;

@@ -45,26 +45,26 @@ namespace ATL.AudioData.IO
 
         // Mapping between Vorbis field IDs and ATL fields
         private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
-                { "DESCRIPTION", TagData.Field.GENERAL_DESCRIPTION },
-                { "ARTIST", TagData.Field.ARTIST },
-                { "TITLE", TagData.Field.TITLE },
-                { "ALBUM", TagData.Field.ALBUM },
-                { "DATE", TagData.Field.RECORDING_DATE },
-                { "GENRE", TagData.Field.GENRE },
-                { "COMPOSER", TagData.Field.COMPOSER },
-                { "TRACKNUMBER", TagData.Field.TRACK_NUMBER },
-                { "TRACKTOTAL", TagData.Field.TRACK_TOTAL },
-                { "TOTALTRACKS", TagData.Field.TRACK_TOTAL },
-                { "DISCNUMBER", TagData.Field.DISC_NUMBER },
-                { "DISCTOTAL", TagData.Field.DISC_TOTAL },
-                { "TOTALDISCS", TagData.Field.DISC_TOTAL },
-                { "COMMENT", TagData.Field.COMMENT },
-                { "ALBUMARTIST", TagData.Field.ALBUM_ARTIST },
-                { "CONDUCTOR", TagData.Field.CONDUCTOR },
-                { "RATING", TagData.Field.RATING },
-                { "COPYRIGHT", TagData.Field.COPYRIGHT },
-                { "PUBLISHER", TagData.Field.PUBLISHER },
-                { "PRODUCTNUMBER", TagData.Field.PRODUCT_ID }
+                { "DESCRIPTION", Field.GENERAL_DESCRIPTION },
+                { "ARTIST", Field.ARTIST },
+                { "TITLE", Field.TITLE },
+                { "ALBUM", Field.ALBUM },
+                { "DATE", Field.RECORDING_DATE },
+                { "GENRE", Field.GENRE },
+                { "COMPOSER", Field.COMPOSER },
+                { "TRACKNUMBER", Field.TRACK_NUMBER },
+                { "TRACKTOTAL", Field.TRACK_TOTAL },
+                { "TOTALTRACKS", Field.TRACK_TOTAL },
+                { "DISCNUMBER", Field.DISC_NUMBER },
+                { "DISCTOTAL", Field.DISC_TOTAL },
+                { "TOTALDISCS", Field.DISC_TOTAL },
+                { "COMMENT", Field.COMMENT },
+                { "ALBUMARTIST", Field.ALBUM_ARTIST },
+                { "CONDUCTOR", Field.CONDUCTOR },
+                { "RATING", Field.RATING },
+                { "COPYRIGHT", Field.COPYRIGHT },
+                { "PUBLISHER", Field.PUBLISHER },
+                { "PRODUCTNUMBER", Field.PRODUCT_ID }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
@@ -472,7 +472,7 @@ namespace ATL.AudioData.IO
             if (recordingYear.Length > 0)
             {
                 string recordingDate = Utils.ProtectValue(tag[Field.RECORDING_DATE]);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.Field.RECORDING_DATE] = recordingYear;
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[Field.RECORDING_DATE] = recordingYear;
             }
 
             // Supported textual fields

@@ -180,6 +180,7 @@ namespace ATL
         ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
         ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
         /// </summary>
+        [Obsolete("Use PictureInfo instead", false)]
         public IList<PictureInfo> PictureTokens { get; set; } = null;
         /// <summary>
         /// Chapters table of content description
@@ -201,6 +202,11 @@ namespace ATL
 
         private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
+
+        /// <summary>
+        /// Format of the tagging systems
+        /// </summary>
+        public IList<Format> MetadataFormats { get; internal set; }
 
 
         //=== PHYSICAL PROPERTIES
@@ -229,10 +235,6 @@ namespace ATL
         /// Format of the audio data
         /// </summary>
         public Format AudioFormat { get; internal set; }
-        /// <summary>
-        /// Format of the tagging systems
-        /// </summary>
-        public IList<Format> MetadataFormats { get; internal set; }
         /// <summary>
         /// Duration (seconds)
         /// </summary>
