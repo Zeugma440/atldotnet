@@ -16,14 +16,6 @@ namespace ATL.AudioData.IO
             tagData = vorbisTag.tagData;
         }
 
-        /// <inheritdoc/>
-        public bool Exists
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Exists;
-            }
-        }
         protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
             return MetaDataIOFactory.TagType.NATIVE;
@@ -35,6 +27,14 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
+        public bool Exists
+        {
+            get
+            {
+                return ((IMetaDataIO)vorbisTag).Exists;
+            }
+        }
+        /// <inheritdoc/>
         public virtual IList<Format> MetadataFormats
         {
             get
@@ -44,7 +44,6 @@ namespace ATL.AudioData.IO
                 return new List<Format>(new Format[1] { nativeFormat });
             }
         }
-
         /// <inheritdoc/>
         public long PaddingSize
         {
