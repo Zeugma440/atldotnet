@@ -13,7 +13,7 @@ namespace ATL.AudioData
 	/// It calls AudioReaderFactory and queries AudioDataReader/MetaDataReader to provide physical 
 	/// _and_ meta information about the given file.
 	/// </summary>
-	internal class AudioFileIO : IMetaDataIO, IAudioDataIO
+	internal class AudioFileIO : IAudioDataIO
     {
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
@@ -143,235 +143,66 @@ namespace ATL.AudioData
 
         // ============ FIELD ACCESSORS
 
-        private string processString(string value)
+        /// <summary>
+        /// Metadata fields container
+        /// </summary>
+        public IMetaDataIO Metadata
         {
-            return value.Replace(Settings.InternalValueSeparator, Settings.DisplayValueSeparator);
+            get => metaData;
         }
-
         /// <inheritdoc/>
         public string FileName
         {
-            get { return audioData.FileName; }
-        }
-        /// <inheritdoc/>
-        public string Title
-        {
-            get { return processString(metaData.Title); }
-        }
-        /// <inheritdoc/>
-        public string Artist
-        {
-            get { return processString(metaData.Artist); }
-        }
-        /// <inheritdoc/>
-        public string Composer
-        {
-            get { return processString(metaData.Composer); }
-        }
-        /// <inheritdoc/>
-        public string Publisher
-        {
-            get { return processString(metaData.Publisher); }
-        }
-        /// <inheritdoc/>
-        public DateTime PublishingDate
-        {
-            get { return metaData.PublishingDate; }
-        }
-        /// <inheritdoc/>
-        public string Conductor
-        {
-            get { return processString(metaData.Conductor); }
-        }
-        /// <inheritdoc/>
-        public string ProductId
-        {
-            get { return processString(metaData.ProductId); }
-        }
-        /// <inheritdoc/>
-        public string AlbumArtist
-        {
-            get { return processString(metaData.AlbumArtist); }
-        }
-        /// <inheritdoc/>
-        public string GeneralDescription
-        {
-            get { return processString(metaData.GeneralDescription); }
-        }
-        /// <inheritdoc/>
-        public string Copyright
-        {
-            get { return processString(metaData.Copyright); }
-        }
-        /// <inheritdoc/>
-        public string OriginalArtist
-        {
-            get { return processString(metaData.OriginalArtist); }
-        }
-        /// <inheritdoc/>
-        public string OriginalAlbum
-        {
-            get { return processString(metaData.OriginalAlbum); }
-        }
-        /// <inheritdoc/>
-        public long PaddingSize
-        {
-            get { return metaData.PaddingSize; }
-        }
-
-        /// <inheritdoc/>
-        public string Comment
-        {
-            get { return processString(metaData.Comment); }
-        }
-        /// <inheritdoc/>
-        public IList<PictureInfo> PictureTokens
-        {
-            get { return metaData.PictureTokens; }
-        }
-        /// <inheritdoc/>
-        public string Genre
-        {
-            get { return processString(metaData.Genre); }
-        }
-        /// <inheritdoc/>
-        public ushort Track
-        {
-            get { return metaData.Track; }
-        }
-        /// <inheritdoc/>
-        public ushort TrackTotal
-        {
-            get { return metaData.TrackTotal; }
-        }
-        /// <inheritdoc/>
-        public ushort Disc
-        {
-            get { return metaData.Disc; }
-        }
-        /// <inheritdoc/>
-        public ushort DiscTotal
-        {
-            get { return metaData.DiscTotal; }
-        }
-        /// <inheritdoc/>
-        public string Album
-        {
-            get { return processString(metaData.Album); }
+            get => audioData.FileName;
         }
         /// <summary>
         /// Track duration (seconds), rounded
         /// </summary>
         public int IntDuration
         {
-            get { return (int)Math.Round(audioData.Duration); }
+            get => (int)Math.Round(audioData.Duration);
         }
         /// <summary>
         /// Track bitrate (KBit/s), rounded
         /// </summary>
         public int IntBitRate
         {
-            get { return (int)Math.Round(audioData.BitRate); }
-        }
-        /// <inheritdoc/>
-        public float? Popularity
-        {
-            get { return metaData.Popularity; }
+            get => (int)Math.Round(audioData.BitRate);
         }
         /// <inheritdoc/>
         public Format AudioFormat
         {
-            get { return audioData.AudioFormat; }
+            get => audioData.AudioFormat;
         }
         /// <inheritdoc/>
         public int CodecFamily
         {
-            get { return audioData.CodecFamily; }
+            get => audioData.CodecFamily;
         }
         /// <inheritdoc/>
         public bool IsVBR
         {
-            get { return audioData.IsVBR; }
-        }
-        /// <inheritdoc/>
-        public bool Exists
-        {
-            get { return metaData.Exists; }
-        }
-        /// <inheritdoc/>
-        public IList<Format> MetadataFormats
-        {
-            get { return metaData.MetadataFormats; }
-        }
-        /// <inheritdoc/>
-        public DateTime Date
-        {
-            get { return metaData.Date; }
+            get => audioData.IsVBR;
         }
         /// <inheritdoc/>
         public double BitRate
         {
-            get { return audioData.BitRate; }
+            get => audioData.BitRate;
         }
         /// <inheritdoc/>
         public int SampleRate
         {
-            get { return audioData.SampleRate; }
+            get => audioData.SampleRate;
         }
         /// <inheritdoc/>
         public double Duration
         {
-            get { return audioData.Duration; }
-        }
-        /// <inheritdoc/>
-        public long Size
-        {
-            get { return metaData.Size; }
-        }
-        /// <inheritdoc/>
-        public IDictionary<string, string> AdditionalFields
-        {
-            get
-            {
-                IDictionary<string, string> result = new Dictionary<string, string>();
-                foreach (string key in metaData.AdditionalFields.Keys)
-                {
-                    result.Add(key, processString(metaData.AdditionalFields[key]));
-                }
-                return result;
-            }
-        }
-        /// <inheritdoc/>
-        public IList<ChapterInfo> Chapters
-        {
-            get
-            {
-                return metaData.Chapters;
-            }
-        }
-        /// <inheritdoc/>
-        public LyricsInfo Lyrics
-        {
-            get
-            {
-                return metaData.Lyrics;
-            }
-        }
-        /// <inheritdoc/>
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get
-            {
-                return metaData.EmbeddedPictures;
-            }
+            get => audioData.Duration;
         }
         /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement
         {
-            get
-            {
-                return audioData.ChannelsArrangement;
-            }
+            get => audioData.ChannelsArrangement;
         }
         /// <inheritdoc/>
         public long AudioDataOffset
@@ -384,47 +215,14 @@ namespace ATL.AudioData
             get => audioData.AudioDataSize;
         }
         /// <inheritdoc/>
-        public string ChaptersTableDescription
-        {
-            get
-            {
-                return metaData.ChaptersTableDescription;
-            }
-        }
-        /// <inheritdoc/>
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);
         }
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            return metaData.Read(source, readTagParams);
-        }
-        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return audioData.Read(source, sizeInfo, readTagParams);
-        }
-        /// <inheritdoc/>
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
-        {
-            return metaData.Write(r, w, tag, writeProgress);
-        }
-        /// <inheritdoc/>
-        public bool Remove(BinaryWriter w)
-        {
-            return metaData.Remove(w);
-        }
-        /// <inheritdoc/>
-        public void SetEmbedder(IMetaDataEmbedder embedder)
-        {
-            metaData.SetEmbedder(embedder);
-        }
-        /// <inheritdoc/>
-        public void Clear()
-        {
-            metaData.Clear();
         }
     }
 

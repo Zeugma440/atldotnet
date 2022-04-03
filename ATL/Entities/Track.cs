@@ -313,9 +313,12 @@ namespace ATL
             if (null == stream) fileIO = new AudioFileIO(Path, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
             else fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
 
+            IMetaDataIO metadata = fileIO.Metadata;
+            MetadataFormats = new List<Format>(metadata.MetadataFormats);
+
             if (onlyReadEmbeddedPictures)
             {
-                foreach (PictureInfo picInfo in fileIO.EmbeddedPictures)
+                foreach (PictureInfo picInfo in metadata.EmbeddedPictures)
                 {
                     picInfo.ComputePicHash();
                     currentEmbeddedPictures.Add(picInfo);
@@ -336,41 +339,45 @@ namespace ATL
                 initialEmbeddedPictures = null;
             }
 
-            MetadataFormats = new List<Format>(fileIO.MetadataFormats);
-
-            Title = fileIO.Title;
+            Title = processString(metadata.Title);
             if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) && Path != InMemoryPath)
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
-            Artist = Utils.ProtectValue(fileIO.Artist);
-            Composer = Utils.ProtectValue(fileIO.Composer);
-            Comment = Utils.ProtectValue(fileIO.Comment);
-            Genre = Utils.ProtectValue(fileIO.Genre);
-            OriginalArtist = Utils.ProtectValue(fileIO.OriginalArtist);
-            OriginalAlbum = Utils.ProtectValue(fileIO.OriginalAlbum);
-            Description = Utils.ProtectValue(fileIO.GeneralDescription);
-            Copyright = Utils.ProtectValue(fileIO.Copyright);
-            Publisher = Utils.ProtectValue(fileIO.Publisher);
-            PublishingDate = update(fileIO.PublishingDate);
-            AlbumArtist = Utils.ProtectValue(fileIO.AlbumArtist);
-            Conductor = Utils.ProtectValue(fileIO.Conductor);
-            ProductId = Utils.ProtectValue(fileIO.ProductId);
-            Date = update(fileIO.Date);
-            Album = fileIO.Album;
-            TrackNumber = update(fileIO.Track);
-            TrackTotal = update(fileIO.TrackTotal);
-            DiscNumber = update(fileIO.Disc);
-            DiscTotal = update(fileIO.DiscTotal);
-            ChaptersTableDescription = Utils.ProtectValue(fileIO.ChaptersTableDescription);
+            Artist = Utils.ProtectValue(processString(metadata.Artist));
+            Composer = Utils.ProtectValue(processString(metadata.Composer));
+            Comment = Utils.ProtectValue(processString(metadata.Comment));
+            Genre = Utils.ProtectValue(processString(metadata.Genre));
+            OriginalArtist = Utils.ProtectValue(processString(metadata.OriginalArtist));
+            OriginalAlbum = Utils.ProtectValue(processString(metadata.OriginalAlbum));
+            Description = Utils.ProtectValue(processString(metadata.GeneralDescription));
+            Copyright = Utils.ProtectValue(processString(metadata.Copyright));
+            Publisher = Utils.ProtectValue(processString(metadata.Publisher));
+            AlbumArtist = Utils.ProtectValue(processString(metadata.AlbumArtist));
+            Conductor = Utils.ProtectValue(processString(metadata.Conductor));
+            ProductId = Utils.ProtectValue(processString(metadata.ProductId));
+            Album = Utils.ProtectValue(processString(metadata.Album));
+            Date = update(metadata.Date);
+            PublishingDate = update(metadata.PublishingDate);
+            TrackNumber = update(metadata.Track);
+            TrackTotal = update(metadata.TrackTotal);
+            DiscNumber = update(metadata.Disc);
+            DiscTotal = update(metadata.DiscTotal);
+            Popularity = metadata.Popularity;
 
-            Chapters = fileIO.Chapters;
-            Lyrics = fileIO.Lyrics;
+            Chapters = metadata.Chapters;
+            ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
+            Lyrics = metadata.Lyrics;
 
-            AdditionalFields = fileIO.AdditionalFields;
-            initialAdditionalFields = fileIO.AdditionalFields.Keys;
+            // Deep copy
+            AdditionalFields = new Dictionary<string, string>();
+            foreach (string key in metadata.AdditionalFields.Keys)
+            {
+                AdditionalFields.Add(key, processString(metadata.AdditionalFields[key]));
+            }
+            initialAdditionalFields = metadata.AdditionalFields.Keys;
 
-            PictureTokens = new List<PictureInfo>(fileIO.PictureTokens);
+            PictureTokens = new List<PictureInfo>(metadata.PictureTokens);
 
             // Physical information
             Bitrate = fileIO.IntBitRate;
@@ -378,7 +385,7 @@ namespace ATL
             AudioFormat = fileIO.AudioFormat;
 
             DurationMs = fileIO.Duration;
-            Popularity = fileIO.Popularity;
+
             IsVBR = fileIO.IsVBR;
             SampleRate = fileIO.SampleRate;
             ChannelsArrangement = fileIO.ChannelsArrangement;
@@ -509,6 +516,13 @@ namespace ATL
             if (result) Update();
 
             return result;
+        }
+
+        /// FORMATTING UTILITIES
+
+        private string processString(string value)
+        {
+            return value.Replace(Settings.InternalValueSeparator, Settings.DisplayValueSeparator);
         }
 
         private DateTime? update(DateTime value)
