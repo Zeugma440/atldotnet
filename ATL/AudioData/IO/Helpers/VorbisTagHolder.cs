@@ -5,7 +5,7 @@ using System;
 
 namespace ATL.AudioData.IO
 {
-    internal abstract class VorbisTagHolder : MetadataHolder, IMetaDataIO
+    internal abstract class VorbisTagHolder : MetadataHolder, IMetaData
     {
         protected VorbisTag vorbisTag;
 
@@ -68,32 +68,6 @@ namespace ATL.AudioData.IO
             {
                 return ((IMetaDataIO)vorbisTag).Size;
             }
-        }
-
-
-        public virtual void Clear()
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual bool Remove(BinaryWriter w)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void SetEmbedder(IMetaDataEmbedder embedder)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
-        {
-            throw new NotImplementedException();
         }
     }
 }

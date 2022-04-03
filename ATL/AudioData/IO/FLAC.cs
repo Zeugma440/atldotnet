@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
-	class FLAC : VorbisTagHolder, IAudioDataIO
+	class FLAC : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         private const byte META_STREAMINFO = 0;
@@ -171,7 +171,7 @@ namespace ATL.AudioData.IO
         }
 
         // TODO : support for CUESHEET block
-        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -288,7 +288,7 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public override bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -467,7 +467,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        public override bool Remove(BinaryWriter w)
+        public bool Remove(BinaryWriter w)
         {
             bool result = true;
             long cumulativeDelta = 0;
@@ -508,12 +508,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public override void SetEmbedder(IMetaDataEmbedder embedder)
+        public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }
 
-        public override void Clear()
+        public void Clear()
         {
             vorbisTag.Clear();
         }

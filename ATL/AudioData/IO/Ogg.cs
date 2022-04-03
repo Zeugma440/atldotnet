@@ -22,7 +22,7 @@ namespace ATL.AudioData.IO
     ///   3. Writing metadata is not supported yet on embedded FLAC files
     /// 
     /// </summary>
-	class Ogg : VorbisTagHolder, IAudioDataIO
+	class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
         // Contents of the file
         private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
@@ -710,7 +710,7 @@ namespace ATL.AudioData.IO
             return Read(source, readTagParams);
         }
 
-        public override bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, ReadTagParams readTagParams)
         {
             bool result = false;
 
@@ -754,7 +754,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public override bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -968,7 +968,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public override bool Remove(BinaryWriter w)
+        public bool Remove(BinaryWriter w)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
 
@@ -976,12 +976,12 @@ namespace ATL.AudioData.IO
             return Write(r, w, tag);
         }
 
-        public override void SetEmbedder(IMetaDataEmbedder embedder)
+        public void SetEmbedder(IMetaDataEmbedder embedder)
         {
             throw new NotImplementedException();
         }
 
-        public override void Clear()
+        public void Clear()
         {
             vorbisTag.Clear();
         }
