@@ -7,7 +7,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Dummy metadata provider
     /// </summary>
-    public class DummyTag : IMetaDataIO
+    public class DummyTag : MetadataHolder, IMetaDataIO
     {
         /// <summary>
         /// Constructor
@@ -15,77 +15,24 @@ namespace ATL.AudioData.IO
         public DummyTag()
         {
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Meta Data Reader");
+            tagData = new TagData();
+        }
+
+        protected override MetaDataIOFactory.TagType getImplementedTagType()
+        {
+            return MetaDataIOFactory.TagType.ID3V2;
+        }
+
+        /// <inheritdoc/>
+        public override IList<Format> MetadataFormats
+        {
+            get { return new List<Format>(new Format[1] { Factory.UNKNOWN_FORMAT }); }
         }
 
         /// <inheritdoc/>
         public bool Exists
         {
             get { return true; }
-        }
-        /// <inheritdoc/>
-        public IList<Format> MetadataFormats
-        {
-            get { return new List<Format>(new Format[1] { Factory.UNKNOWN_FORMAT }); }
-        }
-        /// <inheritdoc/>
-        public String Title
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public String Artist
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public String Composer
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public String Comment
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public String Genre
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public ushort Track
-        {
-            get { return 0; }
-        }
-        /// <inheritdoc/>
-        public ushort TrackTotal
-        {
-            get { return 0; }
-        }
-        /// <inheritdoc/>
-        public ushort Disc
-        {
-            get { return 0; }
-        }
-        /// <inheritdoc/>
-        public ushort DiscTotal
-        {
-            get { return 0; }
-        }
-        /// <inheritdoc/>
-        public DateTime Date
-        {
-            get { return DateTime.MinValue; }
-        }
-        /// <inheritdoc/>
-        public String Album
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public float? Popularity
-        {
-            get { return null; }
         }
         /// <inheritdoc/>
         public long Size
@@ -98,84 +45,9 @@ namespace ATL.AudioData.IO
             get { return new List<PictureInfo>(); }
         }
         /// <inheritdoc/>
-        public string Copyright
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string OriginalArtist
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string OriginalAlbum
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string GeneralDescription
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string Publisher
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public DateTime PublishingDate
-        {
-            get { return DateTime.MinValue; }
-        }
-        /// <inheritdoc/>
-        public string AlbumArtist
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string Conductor
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string ProductId
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public string Narrator
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return 0; }
-        }
-        /// <inheritdoc/>
-        public string ChaptersTableDescription
-        {
-            get { return ""; }
-        }
-        /// <inheritdoc/>
-        public IDictionary<string, string> AdditionalFields
-        {
-            get { return new Dictionary<string, string>(); }
-        }
-        /// <inheritdoc/>
-        public IList<ChapterInfo> Chapters
-        {
-            get { return new List<ChapterInfo>(); }
-        }
-        /// <inheritdoc/>
-        public LyricsInfo Lyrics
-        {
-            get { return new LyricsInfo(); }
-        }
-        /// <inheritdoc/>
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get { return new List<PictureInfo>(); }
         }
         /// <inheritdoc/>
         public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
