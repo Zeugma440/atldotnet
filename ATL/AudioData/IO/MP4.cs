@@ -1226,7 +1226,7 @@ namespace ATL.AudioData.IO
 
             // Hack to format popularity tag with MP4's convention rather than the ASF convention that Xtra uses
             // so that it is parsed properly by MetaDataIO's default mechanisms
-            if (TagData.Field.RATING == supportedMetaID)
+            if (Field.RATING == supportedMetaID)
             {
                 double? popularity = TrackUtils.DecodePopularity(data, MetaDataIO.RC_ASF);
                 if (popularity.HasValue) data = TrackUtils.EncodePopularity(popularity.Value * 5, ratingConvention) + "";
@@ -1645,10 +1645,10 @@ namespace ATL.AudioData.IO
                 // so that it is parsed properly by Windows
                 if ("wm/shareduserrating" == fieldInfo.NativeFieldCode.ToLower())
                 {
-                    double? popularity = TrackUtils.DecodePopularity(value, ratingConvention);
-                    if (popularity.HasValue)
+                    double popularity;
+                    if (double.TryParse(value, out popularity))
                     {
-                        value = TrackUtils.EncodePopularity(popularity.Value * 5, MetaDataIO.RC_ASF) + "";
+                        value = TrackUtils.EncodePopularity(popularity * 5, MetaDataIO.RC_ASF) + "";
                         isNumeric = true;
                     }
                     else continue;

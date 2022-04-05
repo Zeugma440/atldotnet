@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ATL.AudioData.IO
 {
-    internal static class ListTag
+    internal static class List
     {
         public const string CHUNK_LIST = "LIST";
 
@@ -131,6 +131,8 @@ namespace ATL.AudioData.IO
             if (meta.Genre.Length > 0) return true;
             if (meta.Date > System.DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
+            if (meta.Track > 0) return true;
+            if (meta.Popularity > 0) return true;
 
             return WavHelper.IsDataEligible(meta, "info.");
         }
@@ -188,14 +190,34 @@ namespace ATL.AudioData.IO
             value = Utils.ProtectValue(meta.Copyright);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
-            // Year
+            // Recording Year
+            /*
             value = Utils.ProtectYear(meta.Date);
+            if (0 == value.Length && additionalFields.Keys.Contains("info.YEAR")) value = additionalFields["info.YEAR"];
+            if (value.Length > 0) writeSizeAndNullTerminatedString("YEAR", value, w, writtenFields);
+            */
+            // Recording date
+            value = TrackUtils.FormatISOTimestamp(meta.Date).Replace("T", " ");
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICRD")) value = additionalFields["info.ICRD"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICRD", value, w, writtenFields);
             // Genre
             value = Utils.ProtectValue(meta.Genre);
             if (0 == value.Length && additionalFields.Keys.Contains("info.IGNR")) value = additionalFields["info.IGNR"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
+            // Rating
+            if (meta.Popularity > 0)
+            {
+                value = (5 * meta.Popularity).ToString();
+                if (0 == value.Length && additionalFields.Keys.Contains("info.IRTD")) value = additionalFields["info.IRTD"];
+                if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
+            }
+            // Track number
+            if (meta.Track > 0)
+            {
+                value = meta.Track.ToString();
+                if (0 == value.Length && additionalFields.Keys.Contains("info.TRCK")) value = additionalFields["info.TRCK"];
+                if (value.Length > 0) writeSizeAndNullTerminatedString("TRCK", value, w, writtenFields);
+            }
 
             string shortKey;
             foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("info.")))

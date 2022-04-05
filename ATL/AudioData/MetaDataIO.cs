@@ -185,6 +185,11 @@ namespace ATL.AudioData.IO
             get { return pictureTokens; }
         }
 
+        protected virtual byte ratingConvention
+        {
+            get { return MetaDataIO.RC_ID3v2; }
+        }
+
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <summary>
@@ -355,22 +360,6 @@ namespace ATL.AudioData.IO
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
             if (supportedMetaID != Field.NO_FIELD)
             {
-                if (Field.TRACK_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = data.Length;
-                else if (Field.TRACK_NUMBER_TOTAL == supportedMetaID)
-                {
-                    if (data.Contains("/"))
-                    {
-                        string[] parts = data.Split('/');
-                        if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = parts[0].Length;
-                    }
-                }
-                else if (Field.DISC_NUMBER == supportedMetaID && data.Length > 1 && data.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = data.Length;
-                else if (Field.DISC_NUMBER_TOTAL == supportedMetaID && data.Contains("/"))
-                {
-                    string[] parts = data.Split('/');
-                    if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
-                }
-
                 setMetaField(supportedMetaID, data);
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
@@ -388,10 +377,33 @@ namespace ATL.AudioData.IO
         /// Set a new metadata field with the given information 
         /// </summary>
         /// <param name="ID">ID of the metadata field</param>
-        /// <param name="data">Metadata</param>
-        protected void setMetaField(Field ID, string data)
+        /// <param name="dataIn">Metadata</param>
+        protected void setMetaField(Field ID, string dataIn)
         {
-            tagData.IntegrateValue(ID, data);
+            string dataOut = dataIn;
+            if (Field.TRACK_NUMBER == ID && dataIn.Length > 1 && dataIn.StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = dataIn.Length;
+            else if (Field.TRACK_NUMBER_TOTAL == ID)
+            {
+                if (dataIn.Contains("/"))
+                {
+                    string[] parts = dataIn.Split('/');
+                    if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.TrackDigitsForLeadingZeroes = parts[0].Length;
+                }
+            }
+            else if (Field.DISC_NUMBER == ID && dataIn.Length > 1 && dataIn.StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = dataIn.Length;
+            else if (Field.DISC_NUMBER_TOTAL == ID && dataIn.Contains("/"))
+            {
+                string[] parts = dataIn.Split('/');
+                if (parts[0].Length > 1 && parts[0].StartsWith("0")) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
+            }
+
+            // Use the appropriate convention if needed
+            if (Field.RATING == ID)
+            {
+                dataOut = TrackUtils.DecodePopularity(dataIn, ratingConvention).ToString();
+            }
+
+            tagData.IntegrateValue(ID, dataOut);
         }
 
         protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
@@ -400,7 +412,7 @@ namespace ATL.AudioData.IO
             string total;
             switch (frameType)
             {
-                case Field.RATING: return TrackUtils.EncodePopularity(map[frameType], ratingConvention).ToString();
+                case Field.RATING: return TrackUtils.EncodePopularity(Utils.ParseDouble(map[frameType]) * 5, ratingConvention).ToString();
                 case Field.TRACK_NUMBER:
                     value = map[frameType];
                     map.TryGetValue(Field.TRACK_TOTAL, out total);

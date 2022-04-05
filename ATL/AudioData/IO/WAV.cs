@@ -45,7 +45,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_DATA = "data";
         private const string CHUNK_SAMPLE = SampleTag.CHUNK_SAMPLE;
         private const string CHUNK_CUE = CueTag.CHUNK_CUE;
-        private const string CHUNK_LIST = ListTag.CHUNK_LIST;
+        private const string CHUNK_LIST = List.CHUNK_LIST;
         private const string CHUNK_DISP = DispTag.CHUNK_DISP;
 
         // Broadcast Wave metadata sub-chunk
@@ -82,12 +82,13 @@ namespace ATL.AudioData.IO
             { "info.INAM", TagData.Field.TITLE },
             { "info.TITL", TagData.Field.TITLE },
             { "info.IART", TagData.Field.ARTIST },
+            { "info.ICMT", TagData.Field.COMMENT },
             { "info.ICOP", TagData.Field.COPYRIGHT },
+            { "info.ICRD", TagData.Field.RECORDING_DATE },
+            { "info.YEAR", TagData.Field.RECORDING_YEAR },
             { "info.IGNR", TagData.Field.GENRE },
             { "info.IRTD", TagData.Field.RATING },
-            { "info.YEAR", TagData.Field.RECORDING_YEAR },
-            { "info.TRCK", TagData.Field.TRACK_NUMBER },
-            { "info.ICMT", TagData.Field.COMMENT }
+            { "info.TRCK", TagData.Field.TRACK_NUMBER }
         };
 
 
@@ -133,7 +134,7 @@ namespace ATL.AudioData.IO
         }
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.NATIVE); // Native for bext, info and iXML chunks
+            return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.NATIVE; // Native for bext, info and iXML chunks
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -342,7 +343,7 @@ namespace ATL.AudioData.IO
                     foundList = true;
                     tagExists = true;
 
-                    ListTag.FromStream(source, this, readTagParams, chunkSize);
+                    List.FromStream(source, this, readTagParams, chunkSize);
                 }
                 else if (subChunkId.Equals(CHUNK_DISP, StringComparison.OrdinalIgnoreCase))
                 {
@@ -498,7 +499,7 @@ namespace ATL.AudioData.IO
 
             if (zone.Equals(CHUNK_SAMPLE) && SampleTag.IsDataEligible(this)) result += SampleTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_CUE) && CueTag.IsDataEligible(this)) result += CueTag.ToStream(w, isLittleEndian, this);
-            else if (zone.Equals(CHUNK_LIST) && ListTag.IsDataEligible(this)) result += ListTag.ToStream(w, isLittleEndian, this);
+            else if (zone.Equals(CHUNK_LIST) && List.IsDataEligible(this)) result += List.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
             else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);

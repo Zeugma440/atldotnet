@@ -19,10 +19,12 @@ namespace ATL
         /// <summary>
         /// Indicate which rating convention to apply (See MetaDataIO.RC_XXX static constants)
         /// </summary>
+        /*
         protected virtual byte ratingConvention
         {
             get { return MetaDataIO.RC_ID3v2; }
         }
+        */
 
         public string Title
         {
@@ -149,7 +151,8 @@ namespace ATL
             }
             set
             {
-                tagData.IntegrateValue(Field.RECORDING_DATE, value.ToShortDateString());
+                tagData.IntegrateValue(Field.RECORDING_DATE, TrackUtils.FormatISOTimestamp(value));
+                tagData.IntegrateValue(Field.RECORDING_YEAR, value.Year.ToString());
                 tagData.IntegrateValue(Field.RECORDING_YEAR_OR_DATE, value.ToShortDateString());
             }
         }
@@ -164,7 +167,7 @@ namespace ATL
             }
             set
             {
-                tagData.IntegrateValue(Field.PUBLISHING_DATE, value.ToShortDateString());
+                tagData.IntegrateValue(Field.PUBLISHING_DATE, TrackUtils.FormatISOTimestamp(value));
             }
         }
         public string Album
@@ -172,6 +175,7 @@ namespace ATL
             get => Utils.ProtectValue(tagData[Field.ALBUM]);
             set => tagData.IntegrateValue(Field.ALBUM, value);
         }
+        /*
         public float? Popularity
         {
             get
@@ -180,7 +184,22 @@ namespace ATL
                 if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
                 return result;
             }
-            set => tagData.IntegrateValue(Field.RATING, value.ToString());
+            set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : TrackUtils.EncodePopularity((double)value * 5.0, ratingConvention).ToString());
+        }
+        */
+        public float? Popularity
+        {
+            get
+            {
+                float result;
+                if (!float.TryParse(tagData[Field.RATING], out result))
+                {
+                    if (Settings.NullAbsentValues) return null;
+                    else return 0f;
+                }
+                return result;
+            }
+            set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : value.ToString());
         }
         public string Copyright
         {

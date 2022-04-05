@@ -348,7 +348,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(TagHolder holder, MetaDataIOFactory.TagType tagType)
+        public bool UpdateTagInFile(MetadataHolder holder, MetaDataIOFactory.TagType tagType)
         {
             return UpdateTagInFile(holder.tagData, tagType);
         }

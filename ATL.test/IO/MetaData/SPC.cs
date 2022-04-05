@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -75,9 +76,10 @@ namespace ATL.test.IO.MetaData
             theTag.Album = "Album";
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
+            theTag.Date = DateTime.Parse("01/01/2008");
+            theTag.Track = 1;
+            theTag.TrackTotal = 1;
+            theTag.Disc = 2;
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));

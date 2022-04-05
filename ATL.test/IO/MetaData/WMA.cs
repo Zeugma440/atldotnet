@@ -4,6 +4,7 @@ using ATL.AudioData;
 using System.IO;
 using System.Drawing;
 using static ATL.PictureInfo;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -61,7 +62,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             testData.Conductor = null;
-            testData.RecordingDate = null;
+            testData.Date = DateTime.MinValue;
         }
 
         [TestMethod]
@@ -99,18 +100,18 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.AlbumArtist = "Mike";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.RecordingDate = "2008/01/01";
+            theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
+            theTag.Track = 1;
+            theTag.TrackTotal = 1;
+            theTag.Disc = 2;
             theTag.Composer = "Me";
-            theTag.Rating = "2";
+            theTag.Popularity = 2.0f/5;
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -178,17 +179,17 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.AlbumArtist = "Mike";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.RecordingDate = "2008/01/01";
+            theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
+            theTag.Track = 1;
+            theTag.TrackTotal = 1;
+            theTag.Disc = 2;
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -256,11 +257,13 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.Back);
-            theTag.Pictures.Add(picInfo);
+            var testPics = theTag.EmbeddedPictures;
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, 3);
 
@@ -290,10 +293,11 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Back);
             picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile);
 

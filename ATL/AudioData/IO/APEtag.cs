@@ -49,22 +49,22 @@ namespace ATL.AudioData.IO
          */
         private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
         {
-            { "TITLE", TagData.Field.TITLE },
-            { "ARTIST", TagData.Field.ARTIST },
-            { "ALBUM", TagData.Field.ALBUM },
-            { "TRACK", TagData.Field.TRACK_NUMBER_TOTAL },
-            { "YEAR", TagData.Field.RECORDING_YEAR },
-            { "GENRE", TagData.Field.GENRE },
-            { "COMMENT", TagData.Field.COMMENT },
-            { "COPYRIGHT", TagData.Field.COPYRIGHT },
-            { "COMPOSER", TagData.Field.COMPOSER },
-            { "RATING", TagData.Field.RATING },
-            { "PREFERENCE", TagData.Field.RATING },
-            { "DISCNUMBER", TagData.Field.DISC_NUMBER_TOTAL },
-            { "DISC", TagData.Field.DISC_NUMBER_TOTAL },
-            { "ALBUMARTIST", TagData.Field.ALBUM_ARTIST },
-            { "ALBUM ARTIST", TagData.Field.ALBUM_ARTIST },
-            { "CONDUCTOR", TagData.Field.CONDUCTOR }
+            { "TITLE", Field.TITLE },
+            { "ARTIST", Field.ARTIST },
+            { "ALBUM", Field.ALBUM },
+            { "TRACK", Field.TRACK_NUMBER_TOTAL },
+            { "YEAR", Field.RECORDING_YEAR },
+            { "GENRE", Field.GENRE },
+            { "COMMENT", Field.COMMENT },
+            { "COPYRIGHT", Field.COPYRIGHT },
+            { "COMPOSER", Field.COMPOSER },
+            { "RATING", Field.RATING },
+            { "PREFERENCE", Field.RATING },
+            { "DISCNUMBER", Field.DISC_NUMBER_TOTAL },
+            { "DISC", Field.DISC_NUMBER_TOTAL },
+            { "ALBUMARTIST", Field.ALBUM_ARTIST },
+            { "ALBUM ARTIST", Field.ALBUM_ARTIST },
+            { "CONDUCTOR", Field.CONDUCTOR }
         };
 
 

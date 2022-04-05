@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -75,7 +76,7 @@ namespace ATL.test.IO.MetaData
             theTag.Album = "Album";
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
+            theTag.Date = DateTime.Parse("01/01/2008");
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
@@ -129,7 +130,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagHolder theTag = new TagHolder();
-            theTag.RecordingYear = "1999";
+            theTag.Date = DateTime.Parse("01/01/1999");
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -140,7 +141,7 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional supported field
             theTag = new TagHolder();
-            theTag.RecordingYear = "1992";
+            theTag.Date = DateTime.Parse("01/01/1992");
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));

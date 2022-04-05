@@ -402,7 +402,7 @@ namespace ATL
             result.IntegrateValue(Field.ORIGINAL_ALBUM, OriginalAlbum);
             result.IntegrateValue(Field.GENERAL_DESCRIPTION, Description);
             if (Popularity.HasValue)
-                result.IntegrateValue(Field.RATING, toTagValue(Popularity.Value * 5));
+                result.IntegrateValue(Field.RATING, toTagValue(Popularity.Value));
             else result.IntegrateValue(Field.RATING, Settings.NullAbsentValues ? "" : "0");
             result.IntegrateValue(Field.COPYRIGHT, Copyright);
             result.IntegrateValue(Field.PUBLISHER, Publisher);

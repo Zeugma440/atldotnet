@@ -3,6 +3,7 @@ using ATL.AudioData;
 using System;
 using System.IO;
 using static ATL.PictureInfo;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -21,21 +22,21 @@ namespace ATL.test.IO.MetaData
             testData.Artist = "The New York Times";
             testData.Album = "The New York Times Audio Digest";
             testData.Comment = "It's the perfect listen for your morning commute! In the time it takes you to get to work, you'll hear a digest of the day's top stories, prepared by the editorial staff of The New York Times....";
-            testData.PublishingDate = DateTime.Parse("10-JUL-2015").ToString();
+            testData.PublishingDate = DateTime.Parse("10-JUL-2015");
             testData.Publisher = "The New York Times";
             testData.Composer = "The New York Times";
             testData.GeneralDescription = "It's the perfect listen for your morning commute! In the time it takes you to get to work, you'll hear a digest of the day's top stories, prepared by the editorial staff of The New York Times. Each edition includes articles from the front page, as well as the paper's international, national, business, sports, and editorial sections.";
             testData.Copyright = "(P) and &#169;2015 The New York Times News Services Division of The New York Times Company";
 
             // Initialize specific test data (Picture native codes are strings)
-            testData.Pictures.Clear();
+            testData.EmbeddedPictures.Clear();
             PictureInfo pic = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "AA/aa.jpg"),
                 PIC_TYPE.Generic,
                 MetaDataIOFactory.TagType.ANY,
                 11);
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testData.EmbeddedPictures.Add(pic);
 
             supportsInternationalChars = true;
         }

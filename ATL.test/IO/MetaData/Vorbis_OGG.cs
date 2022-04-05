@@ -8,6 +8,7 @@ using Commons;
 using static ATL.PictureInfo;
 using static ATL.Logging.Log;
 using ATL.Logging;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -65,7 +66,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             testData.Conductor = null;
-            testData.RecordingDate = "1997-06-20";
+            testData.Date = DateTime.Parse("1997-06-20");
         }
 
         [TestMethod]
@@ -112,20 +113,20 @@ namespace ATL.test.IO.MetaData
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
-            IList<PictureInfo> pictureInfos = testData.Pictures;
+            IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
                 // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
-                testData.Pictures = new List<PictureInfo>();
+                testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
             finally
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
-                testData.Pictures = pictureInfos;
+                testData.EmbeddedPictures = pictureInfos;
             }
         }
 
@@ -138,20 +139,20 @@ namespace ATL.test.IO.MetaData
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
-            IList<PictureInfo> pictureInfos = testData.Pictures;
+            IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
                 // Theora-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
-                testData.Pictures = new List<PictureInfo>();
+                testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
             finally
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
-                testData.Pictures = pictureInfos;
+                testData.EmbeddedPictures = pictureInfos;
             }
         }
 
@@ -166,8 +167,8 @@ namespace ATL.test.IO.MetaData
 
             TagHolder theTag = new TagHolder();
             theTag.Title = "Test !!";
-            theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE);
-            
+            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+
             // Confirm an exception has been raised
             IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
             Assert.IsTrue(logItems.Count > 0);
@@ -236,19 +237,18 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.AlbumArtist = "Mike";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.RecordingDate = "2008/01/01"; // <-- TODO : this field is _not_ valued when passing through Track + beware of alternate formattings depending on the format
+            theTag.Date = DateTime.Parse("2008/01/01"); // <-- TODO : this field is _not_ valued when passing through Track + beware of alternate formattings depending on the format
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01";
-            theTag.TrackTotal = "02";
-            theTag.DiscNumber = "03";
-            theTag.DiscTotal = "04";
+            theTag.Track = 1;
+            theTag.TrackTotal = 2;
+            theTag.Disc = 3;
+            theTag.DiscTotal = 4;
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -362,11 +362,13 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
-            theTag.Pictures.Add(picInfo);
+            var testPics = theTag.EmbeddedPictures;
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -398,10 +400,11 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             picInfo = new PictureInfo(PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 

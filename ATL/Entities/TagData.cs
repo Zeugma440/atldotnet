@@ -152,7 +152,7 @@ namespace ATL
             else if (key == Field.RECORDING_YEAR_OR_DATE)
             {
                 if (value.Length < 5) Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
-                else Fields[Field.RECORDING_DATE] = emptyIfZero(value);
+                else if (!Fields.ContainsKey(Field.RECORDING_DATE)) Fields[Field.RECORDING_DATE] = emptyIfZero(value);
             }
             else
             {

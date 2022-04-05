@@ -1,5 +1,5 @@
 ﻿using ATL.AudioData;
-using Commons;
+using ATL.AudioData.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -66,33 +66,37 @@ namespace ATL.test.IO.MetaData
             testData.Album = "Papa֍rules";
             testData.AlbumArtist = "aaᱬbb";
             testData.Comment = "父父!";
-            testData.RecordingYear = "1997";
-            testData.RecordingDate = "1997-06-20T04:04:04";
+            testData.Date = DateTime.Parse("1997-06-20T04:04:04");
             testData.Genre = "House";
-            testData.Rating = null;
-            testData.TrackNumber = "01";
-            testData.TrackTotal = "02";
+            testData.Popularity = null;
+            testData.Track = 1;
+            testData.TrackTotal = 2;
             testData.Composer = "ccᱬdd";
             testData.Conductor = "";  // Empty string means "supported, but not valued in test sample"
             testData.Publisher = "";
-            testData.DiscNumber = "03";
-            testData.DiscTotal = "04";
+            testData.PublishingDate = DateTime.MinValue;
+            testData.Disc = 3;
+            testData.DiscTotal = 4;
             testData.Copyright = "";
             testData.GeneralDescription = "";
 
-            testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(tagType, "TEST", "xxx"));
 
-            testData.Pictures = new List<PictureInfo>();
+            var testAddFields = new Dictionary<string, string>();
+            testAddFields["TEST"] = "xxx";
+            testData.AdditionalFields = testAddFields;
+
+            IList<PictureInfo> testPictureInfos = new List<PictureInfo>();
             // 0x03 : front cover according to ID3v2 conventions
             PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, tagType, 0x03);
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testPictureInfos.Add(pic);
 
             // 0x02 : conductor according to ID3v2 conventions
             pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"), PIC_TYPE.Unsupported, tagType, 0x02);
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testPictureInfos.Add(pic);
+
+            testData.EmbeddedPictures = testPictureInfos;
         }
 
         protected void test_RW_Cohabitation(MetaDataIOFactory.TagType tagType1, MetaDataIOFactory.TagType tagType2, bool canMeta1NotExist = true)
@@ -214,18 +218,22 @@ namespace ATL.test.IO.MetaData
 
             TagData initialTestData = new TagData(testData.tagData);
             // These two cases cover all tag capabilities
-            if (testData.Title != null) theTag.Title = "Test !!" + internationalChar;
-            else if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description" + internationalChar;
+            if (testData.Title != "") theTag.Title = "Test !!" + internationalChar;
+            else if (testData.GeneralDescription != "") theTag.GeneralDescription = "Description" + internationalChar;
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
-                theTag.AdditionalFields = new List<MetaFieldInfo>();
-                theTag.AdditionalFields.Add(testData.AdditionalFields[0]); // 1 is enough
+                foreach (KeyValuePair<string, string> kvp in testData.AdditionalFields)
+                {
+                    theTag.AdditionalFields.Add(kvp.Key, kvp.Value);
+                }
             }
             testData = new TagHolder(theTag.tagData);
 
             PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
-            theTag.Pictures.Add(picInfo);
+            var testPics = theTag.EmbeddedPictures;
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -236,7 +244,7 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.IsTrue(meta.Exists);
 
-            if (testData.Pictures != null && testData.Pictures.Count > 0)
+            if (testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
             {
                 int nbFound = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
@@ -272,16 +280,20 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
+            testPics.Add(picInfo);
+            theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
             // Additional removed field
-            Assert.AreEqual("", theFile.getMeta(tagType).Conductor);
+            meta = theFile.getMeta(tagType);
+            Assert.AreEqual("", meta.Conductor);
 
+            // Additional removed picture
+            Assert.AreEqual(initialNbPictures, meta.EmbeddedPictures.Count);
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             if (sameSizeAfterEdit || sameBitsAfterEdit)
@@ -377,33 +389,33 @@ namespace ATL.test.IO.MetaData
 
             // Construct a new tag
             TagHolder theTag = new TagHolder();
-            if (testData.Title != null) theTag.Title = "Test !!";
-            if (testData.Album != null) theTag.Album = "Album";
-            if (testData.Artist != null) theTag.Artist = "Artist";
-            if (testData.AlbumArtist != null) theTag.AlbumArtist = "Mike";
-            if (testData.Comment != null) theTag.Comment = "This is a test";
-            if (testData.RecordingYear != null) theTag.RecordingYear = "2008";
-            if (testData.RecordingDate != null) theTag.RecordingDate = "2008/01/01";
-            if (testData.PublishingDate != null) theTag.PublishingDate = "2007/02/02";
-            if (testData.Genre != null) theTag.Genre = "Merengue";
-            if (testData.Rating != null) theTag.Rating = 2.5.ToString();
-            if (testData.TrackNumber != null) theTag.TrackNumber = "01";
-            if (testData.TrackTotal != null) theTag.TrackTotal = "02";
-            if (testData.DiscNumber != null) theTag.DiscNumber = "03";
-            if (testData.DiscTotal != null) theTag.DiscTotal = "04";
-            if (testData.Composer != null) theTag.Composer = "Me";
-            if (testData.Copyright != null) theTag.Copyright = "a" + internationalChar + "a";
-            if (testData.Conductor != null) theTag.Conductor = "John Johnson Jr.";
-            if (testData.Publisher != null) theTag.Publisher = "Z Corp.";
-            if (testData.GeneralDescription != null) theTag.GeneralDescription = "Description";
+            if (testData.Title != "") theTag.Title = "Test !!";
+            if (testData.Album != "") theTag.Album = "Album";
+            if (testData.Artist != "") theTag.Artist = "Artist";
+            if (testData.AlbumArtist != "") theTag.AlbumArtist = "Mike";
+            if (testData.Comment != "") theTag.Comment = "This is a test";
+            if (testData.Date != null) theTag.Date = DateTime.Parse("2008/01/01");
+            if (testData.PublishingDate != null) theTag.PublishingDate = DateTime.Parse("2007/02/02");
+            if (testData.Genre != "") theTag.Genre = "Merengue";
+            if (testData.Popularity != null) theTag.Popularity = 2.5f / 5;
+            if (testData.Track != 0) theTag.Track = 1;
+            if (testData.TrackTotal != 0) theTag.TrackTotal = 2;
+            if (testData.Disc != 0) theTag.Disc = 3;
+            if (testData.DiscTotal != 0) theTag.DiscTotal = 4;
+            if (testData.Composer != "") theTag.Composer = "Me";
+            if (testData.Copyright != "") theTag.Copyright = "a" + internationalChar + "a";
+            if (testData.Conductor != "") theTag.Conductor = "John Johnson Jr.";
+            if (testData.Publisher != "") theTag.Publisher = "Z Corp.";
+            if (testData.GeneralDescription != "") theTag.GeneralDescription = "Description";
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
-                theTag.AdditionalFields = new List<MetaFieldInfo>();
-                foreach (MetaFieldInfo info in testData.AdditionalFields)
+                var testAddFields = new Dictionary<string, string>();
+                foreach (KeyValuePair<string, string> info in testData.AdditionalFields)
                 {
-                    theTag.AdditionalFields.Add(info);
+                    testAddFields.Add(info.Key, info.Value);
                 }
+                theTag.AdditionalFields = testAddFields;
             }
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -415,21 +427,20 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.IsTrue(meta.Exists);
 
-            if (testData.Title != null) Assert.AreEqual("Test !!", meta.Title);
-            if (testData.Album != null) Assert.AreEqual("Album", meta.Album);
-            if (testData.Artist != null) Assert.AreEqual("Artist", meta.Artist);
-            if (testData.AlbumArtist != null) Assert.AreEqual("Mike", meta.AlbumArtist);
-            if (testData.Comment != null) Assert.AreEqual("This is a test", meta.Comment);
+            if (testData.Title != "") Assert.AreEqual("Test !!", meta.Title);
+            if (testData.Album != "") Assert.AreEqual("Album", meta.Album);
+            if (testData.Artist != "") Assert.AreEqual("Artist", meta.Artist);
+            if (testData.AlbumArtist != "") Assert.AreEqual("Mike", meta.AlbumArtist);
+            if (testData.Comment != "") Assert.AreEqual("This is a test", meta.Comment);
             if (!supportsDateOrYear)
             {
-                if (testData.RecordingYear != null) Assert.AreEqual(2008, meta.Date.Year);
-                if (testData.RecordingDate != null)
+                if (!testData.Date.Equals(DateTime.MinValue))
                 {
                     DateTime date;
                     Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
                     Assert.AreEqual(date, meta.Date);
                 }
-                if (testData.PublishingDate != null)
+                if (!testData.PublishingDate.Equals(DateTime.MinValue))
                 {
                     DateTime date;
                     Assert.IsTrue(DateTime.TryParse("2007/02/02", out date));
@@ -440,32 +451,31 @@ namespace ATL.test.IO.MetaData
             {
                 Assert.IsNotNull(meta.Date);
                 Assert.IsTrue(meta.Date > DateTime.MinValue);
-                if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(2008, meta.Date.Year);
-                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
+                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.Date != null)
                 {
                     DateTime date;
                     Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
                     Assert.AreEqual(date, meta.Date);
                 }
             }
-            if (testData.Genre != null) Assert.AreEqual("Merengue", meta.Genre);
-            if (testData.Rating != null) Assert.AreEqual((float)(2.5 / 5), meta.Popularity);
-            if (testData.TrackNumber != null) Assert.AreEqual(1, meta.Track);
-            if (testData.TrackTotal != null) Assert.AreEqual(2, meta.TrackTotal);
-            if (testData.DiscNumber != null) Assert.AreEqual(3, meta.Disc);
-            if (testData.DiscTotal != null) Assert.AreEqual(4, meta.DiscTotal);
-            if (testData.Composer != null) Assert.AreEqual("Me", meta.Composer);
-            if (testData.Copyright != null) Assert.AreEqual("a" + internationalChar + "a", meta.Copyright);
-            if (testData.Conductor != null) Assert.AreEqual("John Johnson Jr.", meta.Conductor);
-            if (testData.Publisher != null) Assert.AreEqual("Z Corp.", meta.Publisher);
-            if (testData.GeneralDescription != null) Assert.AreEqual("Description", meta.GeneralDescription);
+            if (testData.Genre != "") Assert.AreEqual("Merengue", meta.Genre);
+            if (testData.Popularity != 0) Assert.AreEqual(2.5f / 5, meta.Popularity);
+            if (testData.Track != 0) Assert.AreEqual(1, meta.Track);
+            if (testData.TrackTotal != 0) Assert.AreEqual(2, meta.TrackTotal);
+            if (testData.Disc != 0) Assert.AreEqual(3, meta.Disc);
+            if (testData.DiscTotal != 0) Assert.AreEqual(4, meta.DiscTotal);
+            if (testData.Composer != "") Assert.AreEqual("Me", meta.Composer);
+            if (testData.Copyright != "") Assert.AreEqual("a" + internationalChar + "a", meta.Copyright);
+            if (testData.Conductor != "") Assert.AreEqual("John Johnson Jr.", meta.Conductor);
+            if (testData.Publisher != "") Assert.AreEqual("Z Corp.", meta.Publisher);
+            if (testData.GeneralDescription != "") Assert.AreEqual("Description", meta.GeneralDescription);
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
-                foreach (MetaFieldInfo info in testData.AdditionalFields)
+                foreach (KeyValuePair<string, string> info in testData.AdditionalFields)
                 {
-                    Assert.IsTrue(meta.AdditionalFields.ContainsKey(info.NativeFieldCode), info.NativeFieldCode);
-                    Assert.AreEqual(info.Value, meta.AdditionalFields[info.NativeFieldCode], info.NativeFieldCode);
+                    Assert.IsTrue(meta.AdditionalFields.ContainsKey(info.Key), info.Key);
+                    Assert.AreEqual(info.Value, meta.AdditionalFields[info.Key], info.Key);
                 }
             }
 
@@ -522,8 +532,8 @@ namespace ATL.test.IO.MetaData
             if (canMetaNotExist) Assert.IsFalse(meta.Exists);
 
 
-            bool handleUnsupportedFields = (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0);
-            bool handleUnsupportedPictures = (testData.Pictures != null && testData.Pictures.Count > 0);
+            bool handleUnsupportedFields = testData.AdditionalFields != null && testData.AdditionalFields.Count > 0;
+            bool handleUnsupportedPictures = testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0;
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
             // Add new unsupported fields
@@ -552,13 +562,16 @@ namespace ATL.test.IO.MetaData
 
             if (handleUnsupportedPictures)
             {
+                IList<PictureInfo> pics = new List<PictureInfo>();
                 byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
                 picInfo = PictureInfo.fromBinaryData(data, PIC_TYPE.Unsupported, tagType, pictureCode1);
-                theTag.Pictures.Add(picInfo);
+                pics.Add(picInfo);
 
                 data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
                 picInfo = PictureInfo.fromBinaryData(data, PIC_TYPE.Unsupported, tagType, pictureCode2);
-                theTag.Pictures.Add(picInfo);
+                pics.Add(picInfo);
+
+                theTag.Pictures = pics;
             }
 
             theFile.UpdateTagInFile(theTag, tagType);
@@ -695,86 +708,63 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(meta.Exists);
 
             // Supported fields
-            if (testData.Title != null) Assert.AreEqual(testData.Title, meta.Title);
-            if (testData.Album != null) Assert.AreEqual(testData.Album, meta.Album);
-            if (testData.Artist != null) Assert.AreEqual(testData.Artist, meta.Artist);
-            if (testData.AlbumArtist != null) Assert.AreEqual(testData.AlbumArtist, meta.AlbumArtist);
-            if (testData.Comment != null) Assert.AreEqual(testData.Comment, meta.Comment);
+            if (testData.Title != "") Assert.AreEqual(testData.Title, meta.Title);
+            if (testData.Album != "") Assert.AreEqual(testData.Album, meta.Album);
+            if (testData.Artist != "") Assert.AreEqual(testData.Artist, meta.Artist);
+            if (testData.AlbumArtist != "") Assert.AreEqual(testData.AlbumArtist, meta.AlbumArtist);
+            if (testData.Comment != "") Assert.AreEqual(testData.Comment, meta.Comment);
             if (!supportsDateOrYear)
             {
-                if (testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Date.Year.ToString());
-                if (testData.RecordingDate != null)
+                if (testData.Date > DateTime.MinValue)
                 {
-                    DateTime date;
-                    Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
-                    Assert.AreEqual(date, meta.Date);
+                    Assert.AreEqual(testData.Date, meta.Date);
                 }
-                if (testData.PublishingDate != null)
+                if (testData.PublishingDate > DateTime.MinValue)
                 {
-                    DateTime date;
-                    Assert.IsTrue(DateTime.TryParse(testData.PublishingDate, out date));
-                    Assert.AreEqual(date, meta.PublishingDate);
+                    Assert.AreEqual(testData.PublishingDate, meta.PublishingDate);
                 }
             }
             else
             {
                 Assert.IsNotNull(meta.Date);
                 Assert.IsTrue(meta.Date > DateTime.MinValue);
-                if (meta.Date != null && testData.RecordingYear != null) Assert.AreEqual(testData.RecordingYear, meta.Date.Year.ToString());
-                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.RecordingDate != null)
+                if (meta.Date != null && meta.Date > DateTime.MinValue && testData.Date != null)
                 {
-                    DateTime date;
-                    Assert.IsTrue(DateTime.TryParse(testData.RecordingDate, out date));
-                    Assert.AreEqual(date, meta.Date);
+                    Assert.AreEqual(testData.Date, meta.Date);
                 }
             }
-            if (testData.Genre != null) Assert.AreEqual(testData.Genre, meta.Genre);
-            if (testData.Rating != null)
-            {
-                if (Utils.IsNumeric(testData.Rating))
-                {
-                    float f = float.Parse(testData.Rating);
-                    Assert.AreEqual((f / 5.0).ToString(), meta.Popularity.ToString());
-                }
-                else if (0 == testData.Rating.Length)
-                {
-                    Assert.AreEqual("0", meta.Popularity.ToString());
-                }
-                else
-                {
-                    Assert.AreEqual(testData.Rating, meta.Popularity.ToString());
-                }
-            }
-            if (testData.TrackNumber != null) Assert.AreEqual(ushort.Parse(testData.TrackNumber), meta.Track);
-            if (testData.TrackTotal != null) Assert.AreEqual(ushort.Parse(testData.TrackTotal), meta.TrackTotal);
-            if (testData.Composer != null) Assert.AreEqual(testData.Composer, meta.Composer);
-            if (testData.DiscNumber != null) Assert.AreEqual(ushort.Parse(testData.DiscNumber), meta.Disc);
-            if (testData.DiscTotal != null) Assert.AreEqual(ushort.Parse(testData.DiscTotal), meta.DiscTotal);
-            if (testData.Conductor != null) Assert.AreEqual(testData.Conductor, meta.Conductor);
-            if (testData.Publisher != null) Assert.AreEqual(testData.Publisher, meta.Publisher);
-            if (testData.Copyright != null) Assert.AreEqual(testData.Copyright, meta.Copyright);
-            if (testData.GeneralDescription != null) Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
-            if (testData.ProductId != null) Assert.AreEqual(testData.ProductId, meta.ProductId);
+            if (testData.Genre != "") Assert.AreEqual(testData.Genre, meta.Genre);
+            if (testData.Composer != "") Assert.AreEqual(testData.Composer, meta.Composer);
+            if (testData.Popularity != null) Assert.AreEqual(testData.Popularity, meta.Popularity);
+            if (testData.Track != 0) Assert.AreEqual(testData.Track, meta.Track);
+            if (testData.TrackTotal != 0) Assert.AreEqual(testData.TrackTotal, meta.TrackTotal);
+            if (testData.Disc != 0) Assert.AreEqual(testData.Disc, meta.Disc);
+            if (testData.DiscTotal != 0) Assert.AreEqual(testData.DiscTotal, meta.DiscTotal);
+            if (testData.Conductor != "") Assert.AreEqual(testData.Conductor, meta.Conductor);
+            if (testData.Publisher != "") Assert.AreEqual(testData.Publisher, meta.Publisher);
+            if (testData.Copyright != "") Assert.AreEqual(testData.Copyright, meta.Copyright);
+            if (testData.GeneralDescription != "") Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
+            if (testData.ProductId != "") Assert.AreEqual(testData.ProductId, meta.ProductId);
 
             // Unsupported field
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
-                foreach (MetaFieldInfo field in testData.AdditionalFields)
+                foreach (KeyValuePair<string, string> field in testData.AdditionalFields)
                 {
-                    Assert.IsTrue(meta.AdditionalFields.Keys.Contains(field.NativeFieldCode), field.NativeFieldCode);
-                    Assert.AreEqual(field.Value, meta.AdditionalFields[field.NativeFieldCode], field.NativeFieldCode);
+                    Assert.IsTrue(meta.AdditionalFields.Keys.Contains(field.Key), field.Key);
+                    Assert.AreEqual(field.Value, meta.AdditionalFields[field.Key], field.Key);
                 }
             }
 
             // Pictures
-            if (testData.Pictures != null && testData.Pictures.Count > 0)
+            if (testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
             {
                 Assert.AreEqual(nbPictures, meta.EmbeddedPictures.Count);
 
                 byte nbFound = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
-                    foreach (PictureInfo testPicInfo in testData.Pictures)
+                    foreach (PictureInfo testPicInfo in testData.EmbeddedPictures)
                     {
                         if ((pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
                             || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, System.StringComparison.OrdinalIgnoreCase))
@@ -787,7 +777,7 @@ namespace ATL.test.IO.MetaData
                         }
                     }
                 }
-                Assert.AreEqual(testData.Pictures.Count, nbFound);
+                Assert.AreEqual(testData.EmbeddedPictures.Count, nbFound);
             }
         }
 

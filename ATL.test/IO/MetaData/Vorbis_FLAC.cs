@@ -5,6 +5,8 @@ using System.IO;
 using System.Drawing;
 using Commons;
 using static ATL.PictureInfo;
+using ATL.AudioData.IO;
+using System.Collections.Generic;
 
 namespace ATL.test.IO.MetaData
 {
@@ -60,10 +62,12 @@ namespace ATL.test.IO.MetaData
             emptyFile = "FLAC/empty.flac";
             notEmptyFile = "FLAC/flac.flac";
             tagType = MetaDataIOFactory.TagType.NATIVE;
-            foreach (PictureInfo pic in testData.Pictures) pic.TagType = tagType;
+            var pics = testData.EmbeddedPictures;
+            foreach (PictureInfo pic in pics) pic.TagType = tagType;
+            testData.EmbeddedPictures = pics;
 
             testData.Conductor = null;
-            testData.RecordingDate = "1997-06-20";
+            testData.Date = DateTime.Parse("1997-06-20");
         }
 
         [TestMethod]
@@ -163,12 +167,12 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.AlbumArtist = "Mike";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
-            theTag.RecordingDate = "2008/01/01";
+            theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = "01/01";
-            theTag.DiscNumber = "2";
-            theTag.Rating = 2.5.ToString();
+            theTag.Track = 1;
+            theTag.TrackTotal = 1;
+            theTag.Disc = 2;
+            theTag.Popularity = 2.5f / 5;
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
@@ -247,8 +251,9 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "John Jackman";
 
                 PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
-                picInfo.TagType = tagType;
-                theTag.Pictures.Add(picInfo);
+                var testPics = theTag.EmbeddedPictures;
+                testPics.Add(picInfo);
+                theTag.EmbeddedPictures = testPics;
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information
@@ -285,7 +290,8 @@ namespace ATL.test.IO.MetaData
                 // Remove additional picture
                 picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
                 picInfo.MarkedForDeletion = true;
-                theTag.Pictures.Add(picInfo);
+                testPics.Add(picInfo);
+                theTag.EmbeddedPictures = testPics;
 
                 // Add the new tag and check that it has been indeed added with all the correct information
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));

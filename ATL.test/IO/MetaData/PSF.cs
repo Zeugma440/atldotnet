@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.IO;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -76,7 +77,7 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.Copyright = "父";
             theTag.Comment = "This is a test";
-            theTag.RecordingYear = "2008";
+            theTag.Date = DateTime.Parse("01/01/2008");
             theTag.Genre = "FPS";
 
             // Add the new tag and check that it has been indeed added with all the correct information

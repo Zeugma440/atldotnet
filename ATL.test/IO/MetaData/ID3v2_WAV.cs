@@ -1,7 +1,8 @@
-﻿ using System;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.Collections.Generic;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -19,8 +20,7 @@ namespace ATL.test.IO.MetaData
 
             testData.Title = "yeah";
             testData.Artist = "artist";
-            testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "TES2", "Test父"));
+            testData.AdditionalFields.Add(new KeyValuePair<string, string>("TES2", "Test父"));
         }
 
         [TestMethod]
@@ -31,7 +31,7 @@ namespace ATL.test.IO.MetaData
 
             readExistingTagsOnFile(theFile);
         }
-        
+
         [TestMethod]
         public void TagIO_RW_WAV_ID3v2_Existing()
         {

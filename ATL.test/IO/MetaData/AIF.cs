@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {

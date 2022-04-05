@@ -21,7 +21,7 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected override byte ratingConvention
+        protected virtual byte ratingConvention
         {
             get { return MetaDataIO.RC_APE; }
         }

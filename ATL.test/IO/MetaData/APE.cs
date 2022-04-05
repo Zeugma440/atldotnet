@@ -4,6 +4,7 @@ using ATL.AudioData;
 using System.IO;
 using Commons;
 using static ATL.PictureInfo;
+using System.Collections.Generic;
 
 namespace ATL.test.IO.MetaData
 {
@@ -19,17 +20,17 @@ namespace ATL.test.IO.MetaData
             // Initialize specific test data (Publisher and Description fields not supported in APE tag)
             testData.Publisher = null;
             testData.GeneralDescription = null;
-            testData.RecordingDate = null;
+            testData.Date = DateTime.Parse("01/01/1997");
 
             // Initialize specific test data (Picture native codes are strings)
-            testData.Pictures.Clear();
+            IList<PictureInfo> testPictureInfos = new List<PictureInfo>();
             PictureInfo pic = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), 
                 PIC_TYPE.Unsupported, 
                 MetaDataIOFactory.TagType.ANY, 
                 "COVER ART (FRONT)");
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testPictureInfos.Add(pic);
 
             pic = PictureInfo.fromBinaryData(
                 File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"),
@@ -37,14 +38,16 @@ namespace ATL.test.IO.MetaData
                 MetaDataIOFactory.TagType.ANY,
                 "COVER ART (BACK)");
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testPictureInfos.Add(pic);
+
+            testData.EmbeddedPictures = testPictureInfos;
         }
 
 
         [TestMethod]
         public void TagIO_R_APE() // My deepest apologies for this dubious method name
         {
-            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
 
             readExistingTagsOnFile(theFile);

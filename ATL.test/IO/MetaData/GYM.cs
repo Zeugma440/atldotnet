@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
 using System.Collections.Generic;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -23,9 +24,8 @@ namespace ATL.test.IO.MetaData
             testData.Comment = "Last Stage Music";
             testData.Copyright = "1990 Sega";
 
-            testData.AdditionalFields = new List<MetaFieldInfo>();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "EMULATOR", "Magasis"));
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "DUMPER", "Guy"));
+            testData.AdditionalFields.Add(new KeyValuePair<string, string>("EMULATOR", "Magasis"));
+            testData.AdditionalFields.Add(new KeyValuePair<string, string>("DUMPER", "Guy"));
         }
 
         [TestMethod]
@@ -34,11 +34,11 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
-        
+
         [TestMethod]
         public void TagIO_RW_GYM_Empty()
         {

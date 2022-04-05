@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using static ATL.PictureInfo;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -65,24 +66,28 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // MP4 does not support leading zeroes
-            testData.TrackNumber = "1";
-            testData.TrackTotal = "2";
-            testData.DiscNumber = "3";
-            testData.DiscTotal = "4";
+            testData.Track = 1;
+            testData.TrackTotal = 2;
+            testData.Disc = 3;
+            testData.DiscTotal = 4;
+            /*
             testData.RecordingYear = "1997";
             testData.RecordingDate = null;
+            */
+            testData.Date = DateTime.Parse("01/01/1997");
             testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
             testData.Publisher = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
             testData.ProductId = "THIS IS A GOOD ID";
 
-            testData.AdditionalFields.Clear();
-            testData.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, "----:com.apple.iTunes:TEST", "xxx"));
+            testData.AdditionalFields = new Dictionary<string, string>
+            {
+                { "----:com.apple.iTunes:TEST", "xxx" }
+            };
 
-            testData.Pictures.Clear();
             PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.ANY, 13);
             pic.ComputePicHash();
-            testData.Pictures.Add(pic);
+            testData.EmbeddedPictures = new List<PictureInfo>() { pic };
 
             supportsDateOrYear = true;
         }
@@ -98,13 +103,11 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
 
-            string ry = testData.RecordingYear;
             string pid = testData.ProductId;
             // Test reading complete recording date
             try
             {
-                testData.RecordingDate = "1997-06-20T00:00:00"; // No timestamp in MP4 date format
-                testData.RecordingYear = null;
+                testData.Date = DateTime.Parse("1997-06-20T00:00:00"); // No timestamp in MP4 date format
                 testData.ProductId = null;
 
                 location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
@@ -113,8 +116,7 @@ namespace ATL.test.IO.MetaData
             }
             finally
             {
-                testData.RecordingDate = null;
-                testData.RecordingYear = ry;
+                testData.Date = DateTime.MinValue;
                 testData.ProductId = pid;
             }
         }
@@ -148,10 +150,11 @@ namespace ATL.test.IO.MetaData
 
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.ANY, 14);
-            theTag.Pictures.Add(picInfo);
+            theTag.EmbeddedPictures = new List<PictureInfo>() { picInfo };
 
-            theTag.Chapters = theFile.NativeTag.Chapters;
-            theTag.Chapters.Add(new ChapterInfo(3000, "Chapter 2"));
+            var testChaps = theFile.NativeTag.Chapters;
+            testChaps.Add(new ChapterInfo(3000, "Chapter 2"));
+            theTag.Chapters = testChaps;
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
@@ -213,7 +216,7 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             picInfo = new PictureInfo(PIC_TYPE.Back);
             picInfo.MarkedForDeletion = true;
-            theTag.Pictures.Add(picInfo);
+            theTag.EmbeddedPictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
@@ -897,7 +900,7 @@ namespace ATL.test.IO.MetaData
 
             // Write
             TagHolder theTag = new TagHolder();
-            theTag.Rating = 3.0 + "";
+            theTag.Popularity = 3.0f / 5;
 
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
             Assert.IsTrue(theFile.ReadFromFile(false, true));

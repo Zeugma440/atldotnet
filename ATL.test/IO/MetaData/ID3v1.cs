@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ATL.AudioData;
+using ATL.AudioData.IO;
+using System;
 
 namespace ATL.test.IO.MetaData
 {
@@ -21,9 +23,9 @@ namespace ATL.test.IO.MetaData
             testData.Album = "?";
             testData.Artist = "Artist";
             testData.Comment = "Test!";
-            testData.RecordingYear = "2017";
+            testData.Date = DateTime.Parse("01/01/2017");
             testData.Genre = "Bluegrass";
-            testData.TrackNumber = "22";
+            testData.Track = 22;
         }
 
         [TestMethod]

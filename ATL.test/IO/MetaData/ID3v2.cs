@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using Commons;
 using static ATL.PictureInfo;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -24,10 +25,12 @@ namespace ATL.test.IO.MetaData
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/id3v2.3_UTF16.mp3";
 
-            testData.PublishingDate = "1997-06-22T05:05:05";
+            testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
 
             tagType = MetaDataIOFactory.TagType.ID3V2;
-            foreach (PictureInfo pic in testData.Pictures) pic.TagType = tagType;
+            var pics = testData.EmbeddedPictures;
+            foreach (PictureInfo pic in pics) pic.TagType = tagType;
+            testData.EmbeddedPictures = pics;
         }
 
         [TestMethod]
@@ -169,14 +172,14 @@ namespace ATL.test.IO.MetaData
 
             try
             {
-                testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
-                testData.PublishingDate = null; // No publishing date in ID3v2.3
+                testData.Date = DateTime.Parse("1997-06-20T04:04:00"); // No seconds in ID3v2.3
+                testData.PublishingDate = DateTime.MinValue; // No publishing date in ID3v2.3
                 readExistingTagsOnFile(theFile);
             }
             finally
             {
-                testData.RecordingDate = "1997-06-20T04:04:04";
-                testData.PublishingDate = "1997-06-22T05:05:05";
+                testData.Date = DateTime.Parse("1997-06-20T04:04:04");
+                testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
             }
         }
 
@@ -318,7 +321,7 @@ namespace ATL.test.IO.MetaData
 
             try
             {
-                testData.PublishingDate = null; // Don't wanna re-edit the test file manually to add this one; it has been tested elsewhere
+                testData.PublishingDate = DateTime.MinValue; // Don't wanna re-edit the test file manually to add this one; it has been tested elsewhere
 
                 // Check that the presence of an extended tag does not disrupt field reading
                 readExistingTagsOnFile(theFile);
@@ -330,34 +333,39 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "Veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long field";
 
                 // Insert a large picture while tag restrictions specify that pictures shouldn't be larger than 64x64pixels AND tag size shouldn't be larger than 4 KB
+                var testPics = new List<PictureInfo>();
                 PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.Back);
-                theTag.Pictures.Add(picInfo);
+                testPics.Add(picInfo);
+                theTag.EmbeddedPictures = testPics;
 
                 // Insert a gif picture while tag restrictions specify that pictures should be either jpeg or png
                 picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif"), PictureInfo.PIC_TYPE.Back);
-                theTag.Pictures.Add(picInfo);
+                testPics.Add(picInfo);
+                theTag.EmbeddedPictures = testPics;
 
                 // Insert 20 garbage fields to raise the number of field above maximum required fields (30)
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA01", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA02", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA03", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA04", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA05", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA06", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA07", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA08", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA09", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA10", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA11", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA12", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA13", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA14", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA15", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA16", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA17", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA18", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA19", "aaa"));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "GA20", "aaa"));
+                var testAddFields = new Dictionary<string, string>();
+                testAddFields.Add("GA01", "aaa");
+                testAddFields.Add("GA02", "aaa");
+                testAddFields.Add("GA03", "aaa");
+                testAddFields.Add("GA04", "aaa");
+                testAddFields.Add("GA05", "aaa");
+                testAddFields.Add("GA06", "aaa");
+                testAddFields.Add("GA07", "aaa");
+                testAddFields.Add("GA08", "aaa");
+                testAddFields.Add("GA09", "aaa");
+                testAddFields.Add("GA10", "aaa");
+                testAddFields.Add("GA11", "aaa");
+                testAddFields.Add("GA12", "aaa");
+                testAddFields.Add("GA13", "aaa");
+                testAddFields.Add("GA14", "aaa");
+                testAddFields.Add("GA15", "aaa");
+                testAddFields.Add("GA16", "aaa");
+                testAddFields.Add("GA17", "aaa");
+                testAddFields.Add("GA18", "aaa");
+                testAddFields.Add("GA19", "aaa");
+                testAddFields.Add("GA20", "aaa");
+                theTag.AdditionalFields = testAddFields;
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information
@@ -368,7 +376,7 @@ namespace ATL.test.IO.MetaData
             }
             finally
             {
-                testData.PublishingDate = "1997-06-22T05:05:05";
+                testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
                 ATL.Settings.ID3v2_useExtendedHeaderRestrictions = false;
             }
 
@@ -615,7 +623,7 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             // Source : empty MP3
-            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -626,7 +634,7 @@ namespace ATL.test.IO.MetaData
 
             TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "Content֍";
-            theTag.Chapters = new List<ChapterInfo>();
+            IList<ChapterInfo> testChapters = new List<ChapterInfo>();
             ChapterInfo ch = new ChapterInfo();
             ch.StartTime = 123;
             ch.StartOffset = 456;
@@ -639,7 +647,7 @@ namespace ATL.test.IO.MetaData
             ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             ch.Picture.ComputePicHash();
 
-            theTag.Chapters.Add(ch);
+            testChapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
@@ -652,8 +660,10 @@ namespace ATL.test.IO.MetaData
             ch.Subtitle = "bbb0";
             ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
 
-            theTag.Chapters.Add(ch);
+            testChapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
+
+            theTag.Chapters = testChapters;
 
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
@@ -717,7 +727,6 @@ namespace ATL.test.IO.MetaData
 
             TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "aaa";
-            theTag.Chapters = new List<ChapterInfo>();
 
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
@@ -744,7 +753,7 @@ namespace ATL.test.IO.MetaData
             ch.UniqueID = "";
             ch.Subtitle = "bbb";
             theTag.ChaptersTableDescription = "";
-            theTag.Chapters.Add(ch);
+            theTag.Chapters = new List<ChapterInfo> { ch };
 
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
@@ -868,9 +877,9 @@ namespace ATL.test.IO.MetaData
             // Modify elements
             TagHolder theTag = new TagHolder();
             theTag.ChaptersTableDescription = "Content֍";
-            theTag.Chapters = new List<ChapterInfo>();
             expectedChaps.Clear();
 
+            IList<ChapterInfo> testChapters = new List<ChapterInfo>();
             ch = new ChapterInfo();
             ch.StartTime = 123;
             ch.StartOffset = 456;
@@ -882,7 +891,7 @@ namespace ATL.test.IO.MetaData
             ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
             ch.Picture.ComputePicHash();
 
-            theTag.Chapters.Add(ch);
+            testChapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
 
             ch = new ChapterInfo();
@@ -894,8 +903,10 @@ namespace ATL.test.IO.MetaData
             ch.Subtitle = "bbb0";
             ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
 
-            theTag.Chapters.Add(ch);
+            testChapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
+
+            theTag.Chapters = testChapters;
 
             // Check if they are persisted properly
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
@@ -1145,16 +1156,17 @@ namespace ATL.test.IO.MetaData
                 readExistingTagsOnFile(theFile);
 
                 // Check if they are persisted with proper ID3v2.3 field codes when editing the tag
-                MetaFieldInfo urlLink = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "WOAR", "http://moar.minera.ls");
+                MetaFieldInfo urlLinkMeta = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "WOAR", "http://moar.minera.ls");
+                KeyValuePair<string, string> urlLinkAdd = new KeyValuePair<string, string>("WOAR", "http://moar.minera.ls");
                 TagData theTag = new TagData();
-                theTag.AdditionalFields.Add(urlLink);
+                theTag.AdditionalFields.Add(urlLinkMeta);
                 Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
-                testData.RecordingDate = "1997-06-20T04:04:00"; // No seconds in ID3v2.3
-                testData.PublishingDate = null; // No publising date in ID3v2.3
-                testData.AdditionalFields.Add(urlLink);
+                testData.Date = DateTime.Parse("1997-06-20T04:04:00"); // No seconds in ID3v2.3
+                testData.PublishingDate = DateTime.MinValue; // No publising date in ID3v2.3
+                testData.AdditionalFields.Add(urlLinkAdd);
                 readExistingTagsOnFile(theFile);
 
                 // Get rid of the working copy
@@ -1163,8 +1175,8 @@ namespace ATL.test.IO.MetaData
             finally
             {
                 ATL.Settings.ID3v2_tagSubVersion = 4;
-                testData.RecordingDate = "1997-06-20T04:04:04";
-                testData.PublishingDate = "1997-06-22T05:05:05";
+                testData.Date = DateTime.Parse("1997-06-20T04:04:04");
+                testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
             }
         }
 
