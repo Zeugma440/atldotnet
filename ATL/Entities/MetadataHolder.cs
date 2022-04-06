@@ -1,5 +1,4 @@
 using ATL.AudioData;
-using ATL.AudioData.IO;
 using Commons;
 using System;
 using System.Collections.Generic;
@@ -19,12 +18,6 @@ namespace ATL
         /// <summary>
         /// Indicate which rating convention to apply (See MetaDataIO.RC_XXX static constants)
         /// </summary>
-        /*
-        protected virtual byte ratingConvention
-        {
-            get { return MetaDataIO.RC_ID3v2; }
-        }
-        */
 
         public string Title
         {
@@ -175,18 +168,6 @@ namespace ATL
             get => Utils.ProtectValue(tagData[Field.ALBUM]);
             set => tagData.IntegrateValue(Field.ALBUM, value);
         }
-        /*
-        public float? Popularity
-        {
-            get
-            {
-                float? result = (float?)TrackUtils.DecodePopularity(tagData[Field.RATING], ratingConvention);
-                if (!result.HasValue && !Settings.NullAbsentValues) result = 0;
-                return result;
-            }
-            set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : TrackUtils.EncodePopularity((double)value * 5.0, ratingConvention).ToString());
-        }
-        */
         public float? Popularity
         {
             get

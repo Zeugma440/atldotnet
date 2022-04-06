@@ -1,8 +1,4 @@
-﻿using Commons;
-using System.Collections.Generic;
-using System.IO;
-using System;
-
+﻿
 namespace ATL.AudioData.IO
 {
     public class TagHolder : MetadataHolder
@@ -24,16 +20,5 @@ namespace ATL.AudioData.IO
         {
             return tagType;
         }
-
-        /*protected override byte ratingConvention
-        {
-            get { return m_ratingConvention; }
-        }
-
-        public void setRatingConvention(byte value)
-        {
-            m_ratingConvention = value;
-        }
-        */
     }
 }
