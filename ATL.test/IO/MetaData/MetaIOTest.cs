@@ -280,6 +280,7 @@ namespace ATL.test.IO.MetaData
             // Remove additional picture
             picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
             picInfo.MarkedForDeletion = true;
+            testPics = theTag.EmbeddedPictures;
             testPics.Add(picInfo);
             theTag.EmbeddedPictures = testPics;
 
@@ -703,8 +704,8 @@ namespace ATL.test.IO.MetaData
         {
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
-            Assert.IsNotNull(theFile.getMeta(tagType));
             IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
             Assert.IsTrue(meta.Exists);
 
             // Supported fields

@@ -144,9 +144,9 @@ namespace ATL
             }
             set
             {
-                tagData.IntegrateValue(Field.RECORDING_DATE, TrackUtils.FormatISOTimestamp(value));
-                tagData.IntegrateValue(Field.RECORDING_YEAR, value.Year.ToString());
-                tagData.IntegrateValue(Field.RECORDING_YEAR_OR_DATE, value.ToShortDateString());
+                tagData.IntegrateValue(Field.RECORDING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
+                tagData.IntegrateValue(Field.RECORDING_YEAR, (value > DateTime.MinValue) ? value.Year.ToString() : null);
+                tagData.IntegrateValue(Field.RECORDING_YEAR_OR_DATE, (value > DateTime.MinValue) ? value.ToShortDateString() : null);
             }
         }
         public DateTime PublishingDate
@@ -160,7 +160,7 @@ namespace ATL
             }
             set
             {
-                tagData.IntegrateValue(Field.PUBLISHING_DATE, TrackUtils.FormatISOTimestamp(value));
+                tagData.IntegrateValue(Field.PUBLISHING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
             }
         }
         public string Album
@@ -287,7 +287,6 @@ namespace ATL
 
                 return result;
             }
-
             set
             {
                 tagData.Pictures.Clear();
