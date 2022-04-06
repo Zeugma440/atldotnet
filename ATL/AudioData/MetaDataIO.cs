@@ -180,11 +180,14 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
+        [Obsolete("Use PictureInfo instead", false)]
         public IList<PictureInfo> PictureTokens
         {
             get { return pictureTokens; }
         }
-
+        /// <summary>
+        /// Rating convention to use to format Popularity for the current file
+        /// </summary>
         protected virtual byte ratingConvention
         {
             get { return MetaDataIO.RC_ID3v2; }

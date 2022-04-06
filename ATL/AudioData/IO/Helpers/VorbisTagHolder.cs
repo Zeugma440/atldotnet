@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
             }
         }
         /// <inheritdoc/>
-        public virtual IList<Format> MetadataFormats
+        public override IList<Format> MetadataFormats
         {
             get
             {
