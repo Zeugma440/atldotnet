@@ -44,7 +44,7 @@ namespace ATL
             get => Utils.ProtectValue(tagData[Field.GENRE]);
             set => tagData.IntegrateValue(Field.GENRE, value);
         }
-        public ushort Track
+        public ushort TrackNumber
         {
             get
             {
@@ -72,7 +72,7 @@ namespace ATL
                 tagData.IntegrateValue(Field.TRACK_TOTAL, value.ToString());
             }
         }
-        public ushort Disc
+        public ushort DiscNumber
         {
             get
             {

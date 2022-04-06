@@ -66,9 +66,9 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             // MP4 does not support leading zeroes
-            testData.Track = 1;
+            testData.TrackNumber = 1;
             testData.TrackTotal = 2;
-            testData.Disc = 3;
+            testData.DiscNumber = 3;
             testData.DiscTotal = 4;
             /*
             testData.RecordingYear = "1997";

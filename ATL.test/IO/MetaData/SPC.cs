@@ -77,9 +77,9 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("01/01/2008");
-            theTag.Track = 1;
+            theTag.TrackNumber = 1;
             theTag.TrackTotal = 1;
-            theTag.Disc = 2;
+            theTag.DiscNumber = 2;
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
@@ -94,8 +94,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
-            Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
@@ -267,8 +267,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Yasunori Mitsuda", theFile.NativeTag.Artist);
             Assert.AreEqual("", theFile.NativeTag.Comment);
             Assert.AreEqual(1995, theFile.NativeTag.Date.Year);
-            Assert.AreEqual(23, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(23, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
             Assert.AreEqual(publisherStr, theFile.NativeTag.Publisher);
 
             // Unsupported field (Dumper)

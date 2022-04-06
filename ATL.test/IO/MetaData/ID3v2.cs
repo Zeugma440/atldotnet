@@ -52,10 +52,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("I have no IDE and i must code", theFile.ID3v2.Comment);
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
-            Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual(1, theFile.ID3v2.TrackNumber);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
-            Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual(2, theFile.ID3v2.DiscNumber);
             Assert.AreEqual(3, theFile.ID3v2.DiscTotal);
 
             // Pictures
@@ -100,10 +100,10 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("﻿I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
-            Assert.AreEqual(1, theFile.ID3v2.Track);
+            Assert.AreEqual(1, theFile.ID3v2.TrackNumber);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
-            Assert.AreEqual(2, theFile.ID3v2.Disc);
+            Assert.AreEqual(2, theFile.ID3v2.DiscNumber);
             Assert.AreEqual(3, theFile.ID3v2.DiscTotal);
 
             // Pictures
@@ -1040,8 +1040,8 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ID3v2.Exists);
 
             // Supported fields
-            Assert.AreEqual(0, theFile.ID3v2.Disc);
-            Assert.AreEqual(0, theFile.ID3v2.Track);
+            Assert.AreEqual(0, theFile.ID3v2.DiscNumber);
+            Assert.AreEqual(0, theFile.ID3v2.TrackNumber);
         }
 
         [TestMethod]

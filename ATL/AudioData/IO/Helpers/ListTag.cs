@@ -131,7 +131,7 @@ namespace ATL.AudioData.IO
             if (meta.Genre.Length > 0) return true;
             if (meta.Date > System.DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
-            if (meta.Track > 0) return true;
+            if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
 
             return WavHelper.IsDataEligible(meta, "info.");
@@ -212,9 +212,9 @@ namespace ATL.AudioData.IO
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
-            if (meta.Track > 0)
+            if (meta.TrackNumber > 0)
             {
-                value = meta.Track.ToString();
+                value = meta.TrackNumber.ToString();
                 if (0 == value.Length && additionalFields.Keys.Contains("info.TRCK")) value = additionalFields["info.TRCK"];
                 if (value.Length > 0) writeSizeAndNullTerminatedString("TRCK", value, w, writtenFields);
             }

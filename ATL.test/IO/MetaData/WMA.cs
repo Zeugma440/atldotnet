@@ -102,9 +102,9 @@ namespace ATL.test.IO.MetaData
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.Track = 1;
+            theTag.TrackNumber = 1;
             theTag.TrackTotal = 1;
-            theTag.Disc = 2;
+            theTag.DiscNumber = 2;
             theTag.Composer = "Me";
             theTag.Popularity = 2.0f/5;
             theTag.Copyright = "父";
@@ -125,8 +125,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
-            Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
             Assert.AreEqual((float)(2.0 / 5), theFile.NativeTag.Popularity);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
@@ -181,9 +181,9 @@ namespace ATL.test.IO.MetaData
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.Track = 1;
+            theTag.TrackNumber = 1;
             theTag.TrackTotal = 1;
-            theTag.Disc = 2;
+            theTag.DiscNumber = 2;
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
@@ -203,8 +203,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
-            Assert.AreEqual(1, theFile.NativeTag.Track);
-            Assert.AreEqual(2, theFile.NativeTag.Disc);
+            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);

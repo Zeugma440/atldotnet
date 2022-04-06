@@ -56,7 +56,7 @@ namespace ATL.AudioData
 		/// <summary>
 		/// Track number
 		/// </summary>
-		ushort Track
+		ushort TrackNumber
 		{
 			get;
 		}
@@ -70,7 +70,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Disc number
         /// </summary>
-        ushort Disc
+        ushort DiscNumber
 		{
 			get;
 		}

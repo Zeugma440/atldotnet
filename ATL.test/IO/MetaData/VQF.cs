@@ -79,7 +79,7 @@ namespace ATL.test.IO.MetaData
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("01/01/2008");
             theTag.Genre = "FPS";
-            theTag.Track = 22;
+            theTag.TrackNumber = 22;
             theTag.TrackTotal = 23;
 
             // Add the new tag and check that it has been indeed added with all the correct information
@@ -97,7 +97,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("FPS", theFile.NativeTag.Genre);
-            Assert.AreEqual(22, theFile.NativeTag.Track);
+            Assert.AreEqual(22, theFile.NativeTag.TrackNumber);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -250,7 +250,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Rock", theFile.NativeTag.Genre);
             Assert.AreEqual("this is a comment", theFile.NativeTag.Comment);
             Assert.AreEqual(2016, theFile.NativeTag.Date.Year);
-            Assert.AreEqual(22, theFile.NativeTag.Track);
+            Assert.AreEqual(22, theFile.NativeTag.TrackNumber);
             Assert.AreEqual(testCopyright, theFile.NativeTag.Copyright);
 
             // Unsupported field (GERR)

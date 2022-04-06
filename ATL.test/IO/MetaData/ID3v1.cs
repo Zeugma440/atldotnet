@@ -25,7 +25,7 @@ namespace ATL.test.IO.MetaData
             testData.Comment = "Test!";
             testData.Date = DateTime.Parse("01/01/2017");
             testData.Genre = "Bluegrass";
-            testData.Track = 22;
+            testData.TrackNumber = 22;
         }
 
         [TestMethod]

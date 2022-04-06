@@ -355,9 +355,9 @@ namespace ATL
             Album = Utils.ProtectValue(processString(metadata.Album));
             Date = update(metadata.Date);
             PublishingDate = update(metadata.PublishingDate);
-            TrackNumber = update(metadata.Track);
+            TrackNumber = update(metadata.TrackNumber);
             TrackTotal = update(metadata.TrackTotal);
-            DiscNumber = update(metadata.Disc);
+            DiscNumber = update(metadata.DiscNumber);
             DiscTotal = update(metadata.DiscTotal);
             Popularity = metadata.Popularity;
 

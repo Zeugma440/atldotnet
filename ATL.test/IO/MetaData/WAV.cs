@@ -61,7 +61,7 @@ namespace ATL.test.IO.MetaData
             testData.Genre = "info.IGNR";
             testData.Comment = "info.ICMT";
             testData.Date = System.DateTime.Parse("2018-01-09T01:23:45");
-            testData.Track = 5;
+            testData.TrackNumber = 5;
             testData.Popularity = 0.2f;
 
             IDictionary<string, string> tags = new Dictionary<string, string>();

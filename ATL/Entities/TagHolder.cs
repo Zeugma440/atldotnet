@@ -4,7 +4,6 @@ namespace ATL.AudioData.IO
     public class TagHolder : MetadataHolder
     {
         private MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
-        private byte m_ratingConvention = MetaDataIO.RC_ID3v2;
 
         public TagHolder()
         {

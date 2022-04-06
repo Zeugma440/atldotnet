@@ -134,14 +134,14 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public ushort Track
+        public ushort TrackNumber
         {
             get
             {
                 ushort track = 0;
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    track = reader.Track;
+                    track = reader.TrackNumber;
                     if (track != 0) break;
                 }
                 return track;
@@ -162,14 +162,14 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public ushort Disc
+        public ushort DiscNumber
         {
             get
             {
                 ushort disc = 0;
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    disc = reader.Disc;
+                    disc = reader.DiscNumber;
                     if (disc != 0) break;
                 }
                 return disc;
