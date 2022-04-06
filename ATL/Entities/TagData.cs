@@ -13,39 +13,131 @@ namespace ATL
     /// </summary>
     public class TagData
     {
+        /// <summary>
+        /// Standardized metadata fields
+        /// </summary>
         public enum Field
         {
+            /// <summary>
+            /// No field (fallback value when no match is found)
+            /// </summary>
             NO_FIELD = -1,
+            /// <summary>
+            /// General description
+            /// </summary>
             GENERAL_DESCRIPTION = 0,
+            /// <summary>
+            /// Title
+            /// </summary>
             TITLE = 1,
+            /// <summary>
+            /// Artist
+            /// </summary>
             ARTIST = 2,
+            /// <summary>
+            /// Composer
+            /// </summary>
             COMPOSER = 3,
+            /// <summary>
+            /// Comment
+            /// </summary>
             COMMENT = 4,
+            /// <summary>
+            /// Genre
+            /// </summary>
             GENRE = 5,
+            /// <summary>
+            /// Album
+            /// </summary>
             ALBUM = 6,
+            /// <summary>
+            /// Recording year
+            /// </summary>
             RECORDING_YEAR = 7,
+            /// <summary>
+            /// Recording date
+            /// </summary>
             RECORDING_DATE = 8,
-            RECORDING_YEAR_OR_DATE = 9, // Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
+            /// <summary>
+            /// Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
+            /// </summary>
+            RECORDING_YEAR_OR_DATE = 9,
+            /// <summary>
+            /// Recording day and month
+            /// </summary>
             RECORDING_DAYMONTH = 10,
+            /// <summary>
+            /// Recoding time
+            /// </summary>
             RECORDING_TIME = 11,
+            /// <summary>
+            /// Track number
+            /// </summary>
             TRACK_NUMBER = 12,
+            /// <summary>
+            /// Disc number
+            /// </summary>
             DISC_NUMBER = 13,
+            /// <summary>
+            /// Popularity (rating)
+            /// </summary>
             RATING = 14,
+            /// <summary>
+            /// Original artist
+            /// </summary>
             ORIGINAL_ARTIST = 15,
+            /// <summary>
+            /// Original album
+            /// </summary>
             ORIGINAL_ALBUM = 16,
+            /// <summary>
+            /// Copyright
+            /// </summary>
             COPYRIGHT = 17,
+            /// <summary>
+            /// Album artist
+            /// </summary>
             ALBUM_ARTIST = 18,
+            /// <summary>
+            /// Publisher
+            /// </summary>
             PUBLISHER = 19,
+            /// <summary>
+            /// Conductor
+            /// </summary>
             CONDUCTOR = 20,
+            /// <summary>
+            /// Total number of tracks
+            /// </summary>
             TRACK_TOTAL = 21,
-            TRACK_NUMBER_TOTAL = 22, // Alternate to TRACK_NUMBER and TRACK_TOTAL where both are in the same field
+            /// <summary>
+            /// Alternate to TRACK_NUMBER and TRACK_TOTAL where both are in the same field
+            /// </summary>
+            TRACK_NUMBER_TOTAL = 22,
+            /// <summary>
+            /// Total number of discs
+            /// </summary>
             DISC_TOTAL = 23,
-            DISC_NUMBER_TOTAL = 24, // Alternate to DISC_NUMBER and DISC_TOTAL where both are in the same field
+            /// <summary>
+            /// Alternate to DISC_NUMBER and DISC_TOTAL where both are in the same field
+            /// </summary>
+            DISC_NUMBER_TOTAL = 24,
+            /// <summary>
+            /// Chapters table of contents description
+            /// </summary>
             CHAPTERS_TOC_DESCRIPTION = 25,
+            /// <summary>
+            /// Unsynchronized lyrics
+            /// </summary>
             LYRICS_UNSYNCH = 26,
-            LYRICS_SYNCH = 27,
-            PUBLISHING_DATE = 28,
-            PRODUCT_ID = 29
+            /// <summary>
+            /// Publishing date
+            /// </summary>
+            PUBLISHING_DATE = 27,
+            /// <summary>
+            /// Product ID
+            /// </summary>
+            PRODUCT_ID = 28
         }
 
         private static readonly ICollection<Field> numericFields = new HashSet<Field>() {
@@ -70,7 +162,7 @@ namespace ATL
         /// </summary>
         public IList<PictureInfo> Pictures;
 
-        public IDictionary<Field, string> Fields;
+        protected IDictionary<Field, string> Fields;
 
         /// <summary>
         /// Additional fields = non-classic fields
