@@ -18,6 +18,7 @@ namespace ATL.AudioData.IO
             tagData = new TagData();
         }
 
+        /// <inheritdoc/>
         protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
             return MetaDataIOFactory.TagType.ID3V2;
