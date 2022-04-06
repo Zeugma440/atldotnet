@@ -7,43 +7,53 @@ using static ATL.TagData;
 
 namespace ATL
 {
+    /// <summary>
+    /// Represents a set of metadata (abstract; use TagHolder if you're looking for the instanciable class)
+    /// </summary>
     public abstract class MetadataHolder : IMetaData
     {
-        public TagData tagData { get; set; }
         /// <summary>
-        /// Return the implemented tag type
+        /// Reference metadata (for internal use only)
+        /// </summary>
+        internal TagData tagData { get; set; }
+
+        /// <summary>
+        /// Implemented tag type
         /// </summary>
         /// <returns></returns>
         abstract protected MetaDataIOFactory.TagType getImplementedTagType();
-        /// <summary>
-        /// Indicate which rating convention to apply (See MetaDataIO.RC_XXX static constants)
-        /// </summary>
 
+        /// <inheritdoc/>
         public string Title
         {
             get => Utils.ProtectValue(tagData[Field.TITLE]);
             set => tagData.IntegrateValue(Field.TITLE, value);
         }
+        /// <inheritdoc/>
         public string Artist
         {
             get => Utils.ProtectValue(tagData[Field.ARTIST]);
             set => tagData.IntegrateValue(Field.ARTIST, value);
         }
+        /// <inheritdoc/>
         public string Composer
         {
             get => Utils.ProtectValue(tagData[Field.COMPOSER]);
             set => tagData.IntegrateValue(Field.COMPOSER, value);
         }
+        /// <inheritdoc/>
         public string Comment
         {
             get => Utils.ProtectValue(tagData[Field.COMMENT]);
             set => tagData.IntegrateValue(Field.COMMENT, value);
         }
+        /// <inheritdoc/>
         public string Genre
         {
             get => Utils.ProtectValue(tagData[Field.GENRE]);
             set => tagData.IntegrateValue(Field.GENRE, value);
         }
+        /// <inheritdoc/>
         public ushort TrackNumber
         {
             get
@@ -57,6 +67,7 @@ namespace ATL
                 tagData.IntegrateValue(Field.TRACK_NUMBER, value.ToString());
             }
         }
+        /// <inheritdoc/>
         public ushort TrackTotal
         {
             get
@@ -72,6 +83,7 @@ namespace ATL
                 tagData.IntegrateValue(Field.TRACK_TOTAL, value.ToString());
             }
         }
+        /// <inheritdoc/>
         public ushort DiscNumber
         {
             get
@@ -82,6 +94,7 @@ namespace ATL
             }
             set => tagData.IntegrateValue(Field.DISC_NUMBER, value.ToString());
         }
+        /// <inheritdoc/>
         public ushort DiscTotal
         {
             get
@@ -94,6 +107,7 @@ namespace ATL
             }
             set => tagData.IntegrateValue(Field.DISC_TOTAL, value.ToString());
         }
+        /// <inheritdoc/>
         public DateTime Date
         {
             get
@@ -149,6 +163,7 @@ namespace ATL
                 tagData.IntegrateValue(Field.RECORDING_YEAR_OR_DATE, (value > DateTime.MinValue) ? value.ToShortDateString() : null);
             }
         }
+        /// <inheritdoc/>
         public DateTime PublishingDate
         {
             get
@@ -163,11 +178,13 @@ namespace ATL
                 tagData.IntegrateValue(Field.PUBLISHING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
             }
         }
+        /// <inheritdoc/>
         public string Album
         {
             get => Utils.ProtectValue(tagData[Field.ALBUM]);
             set => tagData.IntegrateValue(Field.ALBUM, value);
         }
+        /// <inheritdoc/>
         public float? Popularity
         {
             get
@@ -182,41 +199,49 @@ namespace ATL
             }
             set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : value.ToString());
         }
+        /// <inheritdoc/>
         public string Copyright
         {
             get => Utils.ProtectValue(tagData[Field.COPYRIGHT]);
             set => tagData.IntegrateValue(Field.COPYRIGHT, value);
         }
+        /// <inheritdoc/>
         public string OriginalArtist
         {
             get => Utils.ProtectValue(tagData[Field.ORIGINAL_ARTIST]);
             set => tagData.IntegrateValue(Field.ORIGINAL_ARTIST, value);
         }
+        /// <inheritdoc/>
         public string OriginalAlbum
         {
             get => Utils.ProtectValue(tagData[Field.ORIGINAL_ALBUM]);
             set => tagData.IntegrateValue(Field.ORIGINAL_ALBUM, value);
         }
+        /// <inheritdoc/>
         public string GeneralDescription
         {
             get => Utils.ProtectValue(tagData[Field.GENERAL_DESCRIPTION]);
             set => tagData.IntegrateValue(Field.GENERAL_DESCRIPTION, value);
         }
+        /// <inheritdoc/>
         public string Publisher
         {
             get => Utils.ProtectValue(tagData[Field.PUBLISHER]);
             set => tagData.IntegrateValue(Field.PUBLISHER, value);
         }
+        /// <inheritdoc/>
         public string AlbumArtist
         {
             get => Utils.ProtectValue(tagData[Field.ALBUM_ARTIST]);
             set => tagData.IntegrateValue(Field.ALBUM_ARTIST, value);
         }
+        /// <inheritdoc/>
         public string Conductor
         {
             get => Utils.ProtectValue(tagData[Field.CONDUCTOR]);
             set => tagData.IntegrateValue(Field.CONDUCTOR, value);
         }
+        /// <inheritdoc/>
         public string ProductId
         {
             get => Utils.ProtectValue(tagData[Field.PRODUCT_ID]);
@@ -274,6 +299,7 @@ namespace ATL
 
             return result;
         }
+        /// <inheritdoc/>
         public IList<PictureInfo> EmbeddedPictures
         {
             get
@@ -296,6 +322,7 @@ namespace ATL
                 }
             }
         }
+        /// <inheritdoc/>
         public IList<ChapterInfo> Chapters
         {
             get
@@ -311,11 +338,13 @@ namespace ATL
             }
             set => tagData.Chapters = value;
         }
+        /// <inheritdoc/>
         public string ChaptersTableDescription
         {
             get => Utils.ProtectValue(tagData[Field.CHAPTERS_TOC_DESCRIPTION]);
             set => tagData.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, value);
         }
+        /// <inheritdoc/>
         public LyricsInfo Lyrics
         {
             get
@@ -334,7 +363,7 @@ namespace ATL
                 tagData.Lyrics = value;
             }
         }
-
+        /// <inheritdoc/>
         public virtual IList<Format> MetadataFormats => throw new NotImplementedException();
     }
 }
