@@ -63,7 +63,8 @@ namespace ATL.benchmark
             //            theTrack.Comment = "hohoho";
 
             //theTrack.Artist = theTrack.Artist.Substring(1, theTrack.Artist.Length - 1);
-            theTrack.TrackNumber = 0;
+            theTrack.Popularity = 0.2f;
+            theTrack.TrackNumber = 5;
 
 
 

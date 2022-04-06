@@ -78,17 +78,17 @@ namespace ATL.AudioData.IO
         // Mapping between WAV frame codes and ATL frame codes
         private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { "bext.description", TagData.Field.GENERAL_DESCRIPTION },
-            { "info.INAM", TagData.Field.TITLE },
-            { "info.TITL", TagData.Field.TITLE },
-            { "info.IART", TagData.Field.ARTIST },
-            { "info.ICMT", TagData.Field.COMMENT },
-            { "info.ICOP", TagData.Field.COPYRIGHT },
-            { "info.ICRD", TagData.Field.RECORDING_DATE },
-            { "info.YEAR", TagData.Field.RECORDING_YEAR },
-            { "info.IGNR", TagData.Field.GENRE },
-            { "info.IRTD", TagData.Field.RATING },
-            { "info.TRCK", TagData.Field.TRACK_NUMBER }
+            { "bext.description", Field.GENERAL_DESCRIPTION },
+            { "info.INAM", Field.TITLE },
+            { "info.TITL", Field.TITLE },
+            { "info.IART", Field.ARTIST },
+            { "info.ICMT", Field.COMMENT },
+            { "info.ICOP", Field.COPYRIGHT },
+            { "info.ICRD", Field.RECORDING_DATE },
+            { "info.YEAR", Field.RECORDING_YEAR },
+            { "info.IGNR", Field.GENRE },
+            { "info.IRTD", Field.RATING },
+            { "info.TRCK", Field.TRACK_NUMBER }
         };
 
 

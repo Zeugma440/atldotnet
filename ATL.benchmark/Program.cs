@@ -24,7 +24,7 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"E:\temp\mp3\id3v1_only.mp3");
+            writeAt(@"D:\temp\wav\broadcastwave_bext_info.wav");
 
             //info(@"E:\temp\wav\74\empty_tagged_audacity.wav");
 

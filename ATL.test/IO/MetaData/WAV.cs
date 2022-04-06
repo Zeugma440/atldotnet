@@ -32,19 +32,21 @@ namespace ATL.test.IO.MetaData
 
             testData.GeneralDescription = "bext.description";
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.originator", "bext.originator"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.originatorReference", "bext.originatorReference"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.originationDate", "2018-01-09"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.originationTime", "01:23:45"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.timeReference", "110801250"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.version", "2"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.loudnessValue", (1.23).ToString()));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.loudnessRange", (4.56).ToString()));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.maxTruePeakLevel", (7.89).ToString()));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.maxMomentaryLoudness", (3.33).ToString()));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.maxShortTermLoudness", (-3.33).ToString()));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("bext.originator", "bext.originator"));
+            tags.Add(new KeyValuePair<string, string>("bext.originatorReference", "bext.originatorReference"));
+            tags.Add(new KeyValuePair<string, string>("bext.originationDate", "2018-01-09"));
+            tags.Add(new KeyValuePair<string, string>("bext.originationTime", "01:23:45"));
+            tags.Add(new KeyValuePair<string, string>("bext.timeReference", "110801250"));
+            tags.Add(new KeyValuePair<string, string>("bext.version", "2"));
+            tags.Add(new KeyValuePair<string, string>("bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"));
+            tags.Add(new KeyValuePair<string, string>("bext.loudnessValue", (1.23).ToString()));
+            tags.Add(new KeyValuePair<string, string>("bext.loudnessRange", (4.56).ToString()));
+            tags.Add(new KeyValuePair<string, string>("bext.maxTruePeakLevel", (7.89).ToString()));
+            tags.Add(new KeyValuePair<string, string>("bext.maxMomentaryLoudness", (3.33).ToString()));
+            tags.Add(new KeyValuePair<string, string>("bext.maxShortTermLoudness", (-3.33).ToString()));
+            tags.Add(new KeyValuePair<string, string>("bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
+            testData.AdditionalFields = tags;
         }
 
         private void initListInfoTestData()
@@ -58,19 +60,23 @@ namespace ATL.test.IO.MetaData
             testData.Copyright = "info.ICOP";
             testData.Genre = "info.IGNR";
             testData.Comment = "info.ICMT";
+            testData.Date = System.DateTime.Parse("2018-01-09T01:23:45");
+            testData.Track = 5;
+            testData.Popularity = 0.2f;
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.IARL", "info.IARL"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ICMS", "info.ICMS"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ICRD", "2018-01-09 01:23:45"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.IENG", "info.IENG"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.IKEY", "info.IKEY"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.IMED", "info.IMED"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.IPRD", "info.IPRD"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ISBJ", "info.ISBJ"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ISFT", "info.ISFT"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ISRF", "info.ISRF"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.ITCH", "info.ITCH"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("info.IARL", "info.IARL"));
+            tags.Add(new KeyValuePair<string, string>("info.ICMS", "info.ICMS"));
+            tags.Add(new KeyValuePair<string, string>("info.IENG", "info.IENG"));
+            tags.Add(new KeyValuePair<string, string>("info.IKEY", "info.IKEY"));
+            tags.Add(new KeyValuePair<string, string>("info.IMED", "info.IMED"));
+            tags.Add(new KeyValuePair<string, string>("info.IPRD", "info.IPRD"));
+            tags.Add(new KeyValuePair<string, string>("info.ISBJ", "info.ISBJ"));
+            tags.Add(new KeyValuePair<string, string>("info.ISFT", "info.ISFT"));
+            tags.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));
+            tags.Add(new KeyValuePair<string, string>("info.ISRF", "info.ISRF"));
+            tags.Add(new KeyValuePair<string, string>("info.ITCH", "info.ITCH"));
+            testData.AdditionalFields = tags;
         }
 
         private void initDispTestData()
@@ -79,16 +85,18 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[0].type", "CF_TEXT"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[0].value", "blah"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[1].type", "CF_BITMAP"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[1].value", "YmxhaCBibGFo"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[2].type", "CF_METAFILE"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[2].value", "YmxlaCBibGVo"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[3].type", "CF_DIB"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[3].value", "Ymx1aCBibHVo"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[4].type", "CF_PALETTE"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("disp[4].value", "YmzDvGggYmzDvGg="));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("disp[0].type", "CF_TEXT"));
+            tags.Add(new KeyValuePair<string, string>("disp[0].value", "blah"));
+            tags.Add(new KeyValuePair<string, string>("disp[1].type", "CF_BITMAP"));
+            tags.Add(new KeyValuePair<string, string>("disp[1].value", "YmxhaCBibGFo"));
+            tags.Add(new KeyValuePair<string, string>("disp[2].type", "CF_METAFILE"));
+            tags.Add(new KeyValuePair<string, string>("disp[2].value", "YmxlaCBibGVo"));
+            tags.Add(new KeyValuePair<string, string>("disp[3].type", "CF_DIB"));
+            tags.Add(new KeyValuePair<string, string>("disp[3].value", "Ymx1aCBibHVo"));
+            tags.Add(new KeyValuePair<string, string>("disp[4].type", "CF_PALETTE"));
+            tags.Add(new KeyValuePair<string, string>("disp[4].value", "YmzDvGggYmzDvGg="));
+            testData.AdditionalFields = tags;
         }
 
         private void initIXmlTestData()
@@ -97,11 +105,13 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("ixml.PROJECT", "ANewMovie"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("ixml.SPEED.NOTE", "camera overcranked"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("ixml.PROJECT", "ANewMovie"));
+            tags.Add(new KeyValuePair<string, string>("ixml.SPEED.NOTE", "camera overcranked"));
+            tags.Add(new KeyValuePair<string, string>("ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
+            tags.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
+            tags.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
+            testData.AdditionalFields = tags;
         }
 
         private void initSampleTestData()
@@ -110,22 +120,24 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.manufacturer", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.product", "2"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.period", "3"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.MIDIUnityNote", "4"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.MIDIPitchFraction", "5"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SMPTEFormat", "24"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Hours", "-1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Minutes", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Seconds", "20"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Frames", "30"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].CuePointId", "11"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Type", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Start", "123"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].End", "456"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Fraction", "8"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].PlayCount", "2"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("sample.manufacturer", "1"));
+            tags.Add(new KeyValuePair<string, string>("sample.product", "2"));
+            tags.Add(new KeyValuePair<string, string>("sample.period", "3"));
+            tags.Add(new KeyValuePair<string, string>("sample.MIDIUnityNote", "4"));
+            tags.Add(new KeyValuePair<string, string>("sample.MIDIPitchFraction", "5"));
+            tags.Add(new KeyValuePair<string, string>("sample.SMPTEFormat", "24"));
+            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Hours", "-1"));
+            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Minutes", "10"));
+            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Seconds", "20"));
+            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Frames", "30"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].CuePointId", "11"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Type", "1"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Start", "123"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].End", "456"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Fraction", "8"));
+            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].PlayCount", "2"));
+            testData.AdditionalFields = tags;
         }
 
         private void initCueTestReadData()
@@ -134,26 +146,28 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.NumCuePoints", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].CuePointId", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].Position", "1730925"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].BlockStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[9].SampleOffset", "1730925"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("cue.NumCuePoints", "10"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].Position", "1730925"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].DataChunkId", "data"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].ChunkStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].BlockStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].SampleOffset", "1730925"));
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[9].Type", "labl"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[9].CuePointId", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[9].Text", "MARKEURRRR 8"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[9].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[9].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[9].Text", "MARKEURRRR 8"));
+            testData.AdditionalFields = tags;
         }
 
         private void initCueTestRWData()
@@ -162,36 +176,38 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].CuePointId", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].Position", "1730925"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].DataChunkId", "data"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].ChunkStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].BlockStart", "0"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("cue.CuePoints[1].SampleOffset", "1730925"));
+            IDictionary<string, string> tags = new Dictionary<string, string>();
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].Position", "1730925"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].DataChunkId", "data"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].ChunkStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].BlockStart", "0"));
+            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].SampleOffset", "1730925"));
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[1].Type", "note"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[1].CuePointId", "10"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[1].Text", "MARKEURRRR 8"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[1].Type", "note"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[1].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[1].Text", "MARKEURRRR 8"));
 
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].Type", "ltxt"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].CuePointId", "11"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].SampleLength", "1234"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].PurposeId", "5678"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].Country", "2"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].Language", "4"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].Dialect", "6"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].CodePage", "8"));
-            testData.AdditionalFields.Add(new KeyValuePair<string, string>("info.Labels[2].Text", "HEYHEY 10"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Type", "ltxt"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].CuePointId", "11"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].SampleLength", "1234"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].PurposeId", "5678"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Country", "2"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Language", "4"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Dialect", "6"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].CodePage", "8"));
+            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Text", "HEYHEY 10"));
+            testData.AdditionalFields = tags;
         }
 
         [TestMethod]

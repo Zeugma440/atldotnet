@@ -223,10 +223,12 @@ namespace ATL.test.IO.MetaData
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
+                IDictionary<string, string> additionalFields = new Dictionary<string, string>();
                 foreach (KeyValuePair<string, string> kvp in testData.AdditionalFields)
                 {
-                    theTag.AdditionalFields.Add(kvp.Key, kvp.Value);
+                    additionalFields.Add(kvp.Key, kvp.Value);
                 }
+                theTag.AdditionalFields = additionalFields;
             }
             testData = new TagHolder(theTag.tagData);
 
@@ -395,10 +397,10 @@ namespace ATL.test.IO.MetaData
             if (testData.Artist != "") theTag.Artist = "Artist";
             if (testData.AlbumArtist != "") theTag.AlbumArtist = "Mike";
             if (testData.Comment != "") theTag.Comment = "This is a test";
-            if (testData.Date != null) theTag.Date = DateTime.Parse("2008/01/01");
-            if (testData.PublishingDate != null) theTag.PublishingDate = DateTime.Parse("2007/02/02");
+            if (testData.Date > DateTime.MinValue) theTag.Date = DateTime.Parse("2008/01/01");
+            if (testData.PublishingDate > DateTime.MinValue) theTag.PublishingDate = DateTime.Parse("2007/02/02");
             if (testData.Genre != "") theTag.Genre = "Merengue";
-            if (testData.Popularity != null) theTag.Popularity = 2.5f / 5;
+            if (testData.Popularity != 0) theTag.Popularity = 2.5f / 5;
             if (testData.Track != 0) theTag.Track = 1;
             if (testData.TrackTotal != 0) theTag.TrackTotal = 2;
             if (testData.Disc != 0) theTag.Disc = 3;
@@ -736,7 +738,7 @@ namespace ATL.test.IO.MetaData
             }
             if (testData.Genre != "") Assert.AreEqual(testData.Genre, meta.Genre);
             if (testData.Composer != "") Assert.AreEqual(testData.Composer, meta.Composer);
-            if (testData.Popularity != null) Assert.AreEqual(testData.Popularity, meta.Popularity);
+            if (testData.Popularity != 0) Assert.AreEqual(testData.Popularity, meta.Popularity);
             if (testData.Track != 0) Assert.AreEqual(testData.Track, meta.Track);
             if (testData.TrackTotal != 0) Assert.AreEqual(testData.TrackTotal, meta.TrackTotal);
             if (testData.Disc != 0) Assert.AreEqual(testData.Disc, meta.Disc);
