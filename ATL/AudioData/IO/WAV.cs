@@ -85,7 +85,6 @@ namespace ATL.AudioData.IO
             { "info.ICMT", Field.COMMENT },
             { "info.ICOP", Field.COPYRIGHT },
             { "info.ICRD", Field.RECORDING_DATE },
-            { "info.YEAR", Field.RECORDING_YEAR },
             { "info.IGNR", Field.GENRE },
             { "info.IRTD", Field.RATING },
             { "info.TRCK", Field.TRACK_NUMBER }

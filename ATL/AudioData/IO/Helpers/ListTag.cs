@@ -190,12 +190,6 @@ namespace ATL.AudioData.IO
             value = Utils.ProtectValue(meta.Copyright);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
-            // Recording Year
-            /*
-            value = Utils.ProtectYear(meta.Date);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.YEAR")) value = additionalFields["info.YEAR"];
-            if (value.Length > 0) writeSizeAndNullTerminatedString("YEAR", value, w, writtenFields);
-            */
             // Recording date
             value = TrackUtils.FormatISOTimestamp(meta.Date).Replace("T", " ");
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICRD")) value = additionalFields["info.ICRD"];
