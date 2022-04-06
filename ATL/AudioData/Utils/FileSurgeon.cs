@@ -9,7 +9,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Helper class called to write into files, optimizing memory and I/O speed according to the rewritten areas
     /// </summary>
-    class FileSurgeon
+    internal class FileSurgeon
     {
         /// <summary>
         /// Modes for zone block modification
