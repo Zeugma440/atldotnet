@@ -43,12 +43,12 @@ namespace ATL
         /// <param name="iFormat">Format to copy data from</param>
         protected virtual void copyFrom(Format iFormat)
         {
-            this.ID = iFormat.ID;
-            this.Name = iFormat.Name;
-            this.ShortName = iFormat.ShortName;
-            this.mimeList = new Dictionary<string, int>(iFormat.mimeList);
-            this.extList = new Dictionary<string, int>(iFormat.extList);
-            this.Readable = iFormat.Readable;
+            ID = iFormat.ID;
+            Name = iFormat.Name;
+            ShortName = iFormat.ShortName;
+            mimeList = new Dictionary<string, int>(iFormat.mimeList);
+            extList = new Dictionary<string, int>(iFormat.extList);
+            Readable = iFormat.Readable;
         }
 
         /// <summary>
@@ -109,6 +109,7 @@ namespace ATL
 
         // NB : Same principle as in Collection		
 
+        /// <inheritdoc/>
         public IEnumerator GetEnumerator()
         {
             return extList.Keys.GetEnumerator();
