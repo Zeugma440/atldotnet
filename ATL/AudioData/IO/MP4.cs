@@ -1464,7 +1464,7 @@ namespace ATL.AudioData.IO
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     counter++;
                 }
             }

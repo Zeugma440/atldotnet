@@ -556,7 +556,7 @@ namespace ATL.AudioData.IO
                 {
                     if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER) && fieldInfo.Value.Length > 0)
                     {
-                        writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), fieldInfo.Value);
+                        writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), FormatBeforeWriting(fieldInfo.Value));
                         result++;
                     }
                 }

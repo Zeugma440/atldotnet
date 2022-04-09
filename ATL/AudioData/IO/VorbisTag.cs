@@ -513,7 +513,7 @@ namespace ATL.AudioData.IO
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     nbFrames++;
                 }
             }

@@ -94,6 +94,13 @@ namespace ATL
         /// </summary>
         public static bool UseFileNameWhenNoTitle = true;
 
+        /// <summary>
+        /// If true, automatically detects dates in AdditionalFields and write them according to the expected format
+        /// Dates should be set using "[UTC]"+DateTime.ToFileTimeUtc()
+        /// Default : true
+        /// </summary>
+        public static bool AutoFormatAdditionalDates = true;
+
 
         //
         // Behaviour related to leading zeroes when formatting Disc and Track fields (ID3v2, Vorbis, APE)

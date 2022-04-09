@@ -96,6 +96,15 @@ namespace ATL.AudioData.IO
         {
             throw new NotImplementedException();
         }
+        public override string EncodeDate(DateTime date)
+        {
+            // Shitty convention for Year <-> DateTime conversion
+            if (1 == date.Month && 1 == date.Day)
+                return date.Year.ToString();
+            else
+                // According to GD3 spec for release date
+                return date.ToString("yyyy/MM/dd", Utils.EnUsCulture);
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -211,12 +220,12 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Length
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
-                tagData.IntegrateValue(TagData.Field.TITLE, str);
+                tagData.IntegrateValue(Field.TITLE, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (english)
-                tagData.IntegrateValue(TagData.Field.ALBUM, str);
+                tagData.IntegrateValue(Field.ALBUM, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Game name (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "GAME_J", str));
 
@@ -226,18 +235,18 @@ namespace ATL.AudioData.IO
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "SYSTEM_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (english)
-                tagData.IntegrateValue(TagData.Field.ARTIST, str);
+                tagData.IntegrateValue(Field.ARTIST, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Author (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "AUTHOR_J", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Release date
-                tagData.IntegrateValue(TagData.Field.RECORDING_DATE, str);
+                tagData.IntegrateValue(Field.RECORDING_DATE, str);
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Dumper
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Notes
-                tagData.IntegrateValue(TagData.Field.COMMENT, str);
+                tagData.IntegrateValue(Field.COMMENT, str);
             }
             else
             {
@@ -338,18 +347,7 @@ namespace ATL.AudioData.IO
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            string dateStr = "";
-            if (Date != DateTime.MinValue && !(1 == Date.Day && 1 == Date.Month)) dateStr = Date.ToString("yyyy/MM/dd");
-            else if (tag[Field.RECORDING_YEAR] != null && tag[Field.RECORDING_YEAR].Length == 4)
-            {
-                dateStr = tag[Field.RECORDING_YEAR];
-                string dayMonth = tag[Field.RECORDING_DAYMONTH];
-                if (dayMonth != null && dayMonth.Length >= 4)
-                {
-                    dateStr += "/" + dayMonth.Substring(dayMonth.Length - 2, 2) + "/" + dayMonth.Substring(0, 2);
-                }
-            }
-            w.Write(unicodeEncoder.GetBytes(dateStr));
+            w.Write(unicodeEncoder.GetBytes(EncodeDate(Date)));
             w.Write(endString);
 
             str = "";

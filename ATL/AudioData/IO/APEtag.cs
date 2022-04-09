@@ -2,6 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using static ATL.TagData;
@@ -116,7 +117,6 @@ namespace ATL.AudioData.IO
                 return new List<Format>(new Format[1] { format });
             }
         }
-
 
         // --------------- MANDATORY INFORMATIVE OVERRIDES
 
@@ -474,7 +474,7 @@ namespace ATL.AudioData.IO
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     nbFrames++;
                 }
             }
@@ -482,7 +482,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             long frameSizePos;
             long finalFramePos;

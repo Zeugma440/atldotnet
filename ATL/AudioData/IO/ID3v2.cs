@@ -1339,7 +1339,7 @@ namespace ATL.AudioData.IO
                         }
                     }
 
-                    writeTextFrame(w, fieldCode, fieldInfo.Value, tagEncoding, fieldInfo.Language);
+                    writeTextFrame(w, fieldCode, FormatBeforeWriting(fieldInfo.Value), tagEncoding, fieldInfo.Language);
                     nbFrames++;
                 }
             }

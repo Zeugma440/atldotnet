@@ -186,11 +186,18 @@ namespace ATL.AudioData.IO
             get { return pictureTokens; }
         }
         /// <summary>
-        /// Rating convention to use to format Popularity for the current file
+        /// Rating convention to use to format Popularity for the current tagging format
         /// </summary>
         protected virtual byte ratingConvention
         {
             get { return MetaDataIO.RC_ID3v2; }
+        }
+        /// <summary>
+        /// Encode the given DateTime for the current tagging format
+        /// </summary>
+        public virtual string EncodeDate(DateTime date)
+        {
+            return TrackUtils.FormatISOTimestamp(date);
         }
 
         // ------ NON-TAGDATA FIELDS ACCESSORS -----------------------------------------------------
@@ -411,31 +418,44 @@ namespace ATL.AudioData.IO
 
         protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
-            string value;
             string total;
+            DateTime dateTime;
+            string value = map[frameType];
             switch (frameType)
             {
                 case Field.RATING: return TrackUtils.EncodePopularity(Utils.ParseDouble(map[frameType]) * 5, ratingConvention).ToString();
+                case Field.RECORDING_DATE:
+                case Field.PUBLISHING_DATE:
+                    if (DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
+                    else return value;
+                case Field.RECORDING_YEAR_OR_DATE:
+                    if (value.Length > 4 && DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
+                    else return value;
                 case Field.TRACK_NUMBER:
-                    value = map[frameType];
                     map.TryGetValue(Field.TRACK_TOTAL, out total);
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case Field.DISC_NUMBER:
-                    value = map[frameType];
                     map.TryGetValue(Field.DISC_TOTAL, out total);
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case Field.TRACK_NUMBER_TOTAL:
                 case Field.TRACK_TOTAL:
-                    value = map[frameType];
                     total = value;
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 case Field.DISC_NUMBER_TOTAL:
                 case Field.DISC_TOTAL:
-                    value = map[frameType];
                     total = value;
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
                 default: return map[frameType];
             }
+        }
+
+        public string FormatBeforeWriting(string value)
+        {
+            if (Settings.AutoFormatAdditionalDates && value.StartsWith("[UTC]", StringComparison.OrdinalIgnoreCase))
+            {
+                return EncodeDate(DateTime.FromFileTimeUtc(long.Parse(value.Substring(5))));
+            }
+            return value;
         }
 
         /// <inheritdoc/>

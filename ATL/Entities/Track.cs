@@ -196,6 +196,7 @@ namespace ATL
         public LyricsInfo Lyrics { get; set; }
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
+        /// Use "[UTC]"+DateTime.ToFileTimeUtc() to set dates. ATL will format them properly.
         /// </summary>
         public IDictionary<string, string> AdditionalFields { get; set; }
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones

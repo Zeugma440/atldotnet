@@ -191,7 +191,7 @@ namespace ATL.AudioData.IO
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
             // Recording date
-            value = TrackUtils.FormatISOTimestamp(meta.Date).Replace("T", " ");
+            value = meta.EncodeDate(meta.Date);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICRD")) value = additionalFields["info.ICRD"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICRD", value, w, writtenFields);
             // Genre
@@ -218,7 +218,7 @@ namespace ATL.AudioData.IO
             {
                 shortKey = key.Substring(5, key.Length - 5).ToUpper();
                 if (!writtenFields.ContainsKey(key) && additionalFields[key].Length > 0)
-                    writeSizeAndNullTerminatedString(shortKey, additionalFields[key], w, writtenFields);
+                    writeSizeAndNullTerminatedString(shortKey, meta.FormatBeforeWriting(additionalFields[key]), w, writtenFields);
             }
         }
 

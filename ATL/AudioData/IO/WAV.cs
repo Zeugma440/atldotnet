@@ -165,6 +165,11 @@ namespace ATL.AudioData.IO
             get { return _isLittleEndian; }
         }
 
+        public override string EncodeDate(DateTime date)
+        {
+            return TrackUtils.FormatISOTimestamp(date).Replace("T", " ");
+        }
+
 
         // IMetaDataEmbedder
         public long HasEmbeddedID3v2

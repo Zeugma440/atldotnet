@@ -5,6 +5,7 @@ using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
 using System.Globalization;
 using static ATL.TagData;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -154,6 +155,10 @@ namespace ATL.AudioData.IO
         protected override bool isLittleEndian
         {
             get { return false; }
+        }
+        public override string EncodeDate(DateTime date)
+        {
+            return date.ToString("dd-MMM-yyyy", Utils.EnUsCulture).ToUpper();
         }
 
         public long AudioDataOffset { get; set; }
@@ -311,20 +316,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected new string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
-        {
-            string result = base.formatBeforeWriting(frameType, tag, map);
-
-            // Convert to expected date format
-            if (TagData.Field.PUBLISHING_DATE == frameType)
-            {
-                DateTime date = DateTime.Parse(result);
-                result = date.ToString("dd-MMM-yyyy", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
-            }
-
-            return result;
-        }
-
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = -1; // Default : leave as is
@@ -358,7 +349,7 @@ namespace ATL.AudioData.IO
                 {
                     if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                     {
-                        writeTagField(w, fieldInfo.NativeFieldCode, fieldInfo.Value);
+                        writeTagField(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                         result++;
                     }
                 }
