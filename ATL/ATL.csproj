@@ -38,12 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>ATL.benchmark</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />
     <None Remove="msbuild command to package.txt" />

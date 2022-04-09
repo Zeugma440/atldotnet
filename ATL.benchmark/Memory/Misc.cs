@@ -5,6 +5,7 @@ using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using Commons;
 
 namespace ATL.benchmark
 {
@@ -33,7 +34,7 @@ namespace ATL.benchmark
             MemoryStream from = new MemoryStream(buffer);
             MemoryStream to = new MemoryStream();
 
-            //StreamUtils.CopyStreamOld(from, to);
+            //Utils.CopyStreamOld(from, to);
         }
 
         [Benchmark]
@@ -42,7 +43,7 @@ namespace ATL.benchmark
             MemoryStream from = new MemoryStream(buffer);
             MemoryStream to = new MemoryStream();
 
-            StreamUtils.CopyStream(from, to);
+            Utils.CopyStream(from, to);
         }
 
         /*

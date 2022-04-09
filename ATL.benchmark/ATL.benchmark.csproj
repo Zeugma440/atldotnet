@@ -240,6 +240,7 @@
     <Compile Include="Speed\Writing.cs" />
     <Compile Include="Speed\BufferSizes.cs" />
     <Compile Include="TestUtils.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">
