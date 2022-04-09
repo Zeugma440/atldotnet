@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Superclass that "consolidates" all metadata I/O algorithms to ease development of new classes and minimize their code
     /// </summary>
-    public abstract class MetaDataIO : MetadataHolder, IMetaDataIO
+    public abstract class MetaDataIO : MetaDataHolder, IMetaDataIO
     {
         // ------ CONSTS -----------------------------------------------------
 
@@ -451,9 +451,9 @@ namespace ATL.AudioData.IO
 
         public string FormatBeforeWriting(string value)
         {
-            if (Settings.AutoFormatAdditionalDates && value.StartsWith("[UTC]", StringComparison.OrdinalIgnoreCase))
+            if (Settings.AutoFormatAdditionalDates && value.StartsWith(MetaDataHolder.DATETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
             {
-                return EncodeDate(DateTime.FromFileTimeUtc(long.Parse(value.Substring(5))));
+                return EncodeDate(DateTime.FromFileTime(long.Parse(value.Substring(MetaDataHolder.DATETIME_PREFIX.Length))));
             }
             return value;
         }

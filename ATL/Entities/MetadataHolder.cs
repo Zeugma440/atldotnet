@@ -10,8 +10,13 @@ namespace ATL
     /// <summary>
     /// Represents a set of metadata (abstract; use TagHolder if you're looking for the instanciable class)
     /// </summary>
-    public abstract class MetadataHolder : IMetaData
+    public abstract class MetaDataHolder : IMetaData
     {
+        /// <summary>
+        /// Prefix to add to AdditionalFields value to mark it as a date
+        /// </summary>
+        public const string DATETIME_PREFIX = "[DateTime]";
+
         /// <summary>
         /// Reference metadata (for internal use only)
         /// </summary>

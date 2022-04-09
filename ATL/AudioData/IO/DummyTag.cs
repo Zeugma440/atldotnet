@@ -7,7 +7,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Dummy metadata provider
     /// </summary>
-    public class DummyTag : MetadataHolder, IMetaDataIO
+    public class DummyTag : MetaDataHolder, IMetaDataIO
     {
         /// <summary>
         /// Constructor

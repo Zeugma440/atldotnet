@@ -1326,6 +1326,37 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_AdditionalDateField()
+        {
+            DateTime now = DateTime.Now;
+            new ConsoleLogger();
+
+            // Source : empty MP3
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            TagHolder theTag = new TagHolder();
+            theTag.AdditionalFields = new Dictionary<string, string>
+            {
+                { "TEST", MetaDataHolder.DATETIME_PREFIX + now.ToFileTime() }
+            };
+            theFile.UpdateTagInFile(theTag, tagType);
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(1, meta.AdditionalFields.Count);
+            Assert.IsTrue(meta.AdditionalFields.ContainsKey("TEST"));
+            Assert.AreEqual(TrackUtils.FormatISOTimestamp(now), meta.AdditionalFields["TEST"]);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1);

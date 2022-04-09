@@ -5,7 +5,7 @@ using System;
 
 namespace ATL.AudioData.IO
 {
-    internal abstract class VorbisTagHolder : MetadataHolder, IMetaData
+    internal abstract class VorbisTagHolder : MetaDataHolder, IMetaData
     {
         protected VorbisTag vorbisTag;
 

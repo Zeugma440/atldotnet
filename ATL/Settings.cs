@@ -96,7 +96,7 @@ namespace ATL
 
         /// <summary>
         /// If true, automatically detects dates in AdditionalFields and write them according to the expected format
-        /// Dates should be set using "[UTC]"+DateTime.ToFileTimeUtc()
+        /// Dates should be set using MetaDataHolder.DATETIME_PREFIX + DateTime.ToFileTime()
         /// Default : true
         /// </summary>
         public static bool AutoFormatAdditionalDates = true;

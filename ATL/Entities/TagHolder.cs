@@ -4,7 +4,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Represents a set of metadata
     /// </summary>
-    public class TagHolder : MetadataHolder
+    public class TagHolder : MetaDataHolder
     {
         private readonly MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
 

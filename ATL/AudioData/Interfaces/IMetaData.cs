@@ -167,7 +167,7 @@ namespace ATL.AudioData
         }
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
-        /// NB1 : Use "[UTC]"+DateTime.ToFileTimeUtc() to set dates. ATL will format them properly.
+        /// NB1 : Use MetaDataHolder.DATETIME_PREFIX + DateTime.ToFileTime() to set dates. ATL will format them properly.
         /// NB2 : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available
         /// </summary>
         IDictionary<string, string> AdditionalFields
