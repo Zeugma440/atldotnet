@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ATL", "ATL\ATL.csproj", "{27C03311-C017-4E99-8B35-0005102B2DAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.test", "ATL.test\ATL.test.csproj", "{E3927F5A-FA4C-459C-B13D-C53805AA10D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ATL.test", "ATL.test\ATL.test.csproj", "{E3927F5A-FA4C-459C-B13D-C53805AA10D0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
 	EndProjectSection
@@ -13,9 +13,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DE0396E1-29F4-4C21-9F1E-22190DEBF1FE}"
 	ProjectSection(SolutionItems) = preProject
 		.appveyor.yml = .appveyor.yml
-		.editorconfig = .editorconfig
-		.travis.yml = .travis.yml
-		ATL\ATL.nuspec = ATL\ATL.nuspec
 		coverlet.runsettings = coverlet.runsettings
 		runsettings.runsettings = runsettings.runsettings
 	EndProjectSection
