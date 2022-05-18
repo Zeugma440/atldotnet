@@ -89,20 +89,21 @@ namespace ATL.AudioData.IO
         // Their info is contained in the standard Content Description block at the very beginning of the file
         public static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
         {
-            { "WM/TITLE", TagData.Field.TITLE },
-            { "WM/AlbumTitle", TagData.Field.ALBUM },
-            { "WM/AUTHOR", TagData.Field.ARTIST },
-            { "WM/COPYRIGHT", TagData.Field.COPYRIGHT },
-            { "WM/DESCRIPTION", TagData.Field.COMMENT },
-            { "WM/Year", TagData.Field.RECORDING_YEAR },
-            { "WM/Genre", TagData.Field.GENRE },
-            { "WM/TrackNumber", TagData.Field.TRACK_NUMBER_TOTAL },
-            { "WM/PartOfSet", TagData.Field.DISC_NUMBER_TOTAL },
-            { "WM/RATING", TagData.Field.RATING },
-            { "WM/SharedUserRating", TagData.Field.RATING },
-            { "WM/Composer", TagData.Field.COMPOSER },
-            { "WM/AlbumArtist", TagData.Field.ALBUM_ARTIST },
-            { "WM/Conductor", TagData.Field.CONDUCTOR }
+            { "WM/TITLE", Field.TITLE },
+            { "WM/AlbumTitle", Field.ALBUM },
+            { "WM/AUTHOR", Field.ARTIST },
+            { "WM/COPYRIGHT", Field.COPYRIGHT },
+            { "WM/DESCRIPTION", Field.COMMENT },
+            { "WM/Year", Field.RECORDING_YEAR },
+            { "WM/Genre", Field.GENRE },
+            { "WM/TrackNumber", Field.TRACK_NUMBER_TOTAL },
+            { "WM/PartOfSet", Field.DISC_NUMBER_TOTAL },
+            { "WM/RATING", Field.RATING },
+            { "WM/SharedUserRating", Field.RATING },
+            { "WM/Composer", Field.COMPOSER },
+            { "WM/AlbumArtist", Field.ALBUM_ARTIST },
+            { "WM/Conductor", Field.CONDUCTOR },
+            { "WM/Lyrics", Field.LYRICS_UNSYNCH }
         };
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>

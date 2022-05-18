@@ -64,7 +64,8 @@ namespace ATL.AudioData.IO
                 { "RATING", Field.RATING },
                 { "COPYRIGHT", Field.COPYRIGHT },
                 { "PUBLISHER", Field.PUBLISHER },
-                { "PRODUCTNUMBER", Field.PRODUCT_ID }
+                { "PRODUCTNUMBER", Field.PRODUCT_ID },
+                { "LYRICS", Field.LYRICS_UNSYNCH }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)

@@ -69,7 +69,7 @@ namespace ATL.AudioData.IO
             { "©pub", Field.PUBLISHER },
             { "rldt", Field.PUBLISHING_DATE},
             { "prID", Field.PRODUCT_ID},
-            { "----:com.apple.iTunes:CONDUCTOR", TagData.Field.CONDUCTOR }
+            { "----:com.apple.iTunes:CONDUCTOR", Field.CONDUCTOR }
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
