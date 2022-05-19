@@ -1,6 +1,9 @@
-﻿using System;
+﻿using ATL;
+using System;
 using System.Globalization;
 using System.Text;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Commons
 {
@@ -10,6 +13,7 @@ namespace Commons
     internal static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+        private static IDictionary<string, Encoding> encodingCache = new Dictionary<string, Encoding>();
         private static CultureInfo enUsCulture = CultureInfo.CreateSpecificCulture("en-US");
         /// <summary>
         /// 'ZERO WIDTH NO-BREAK SPACE' invisible character, sometimes used by certain tagging softwares
@@ -500,6 +504,30 @@ namespace Commons
             readable = (readable / 1024);
             // Return formatted number with suffix
             return readable.ToString("0.## ") + suffix;
+        }
+
+        private static Encoding getEncodingCached(string code)
+        {
+            if (!encodingCache.ContainsKey(code)) encodingCache[code] = Encoding.GetEncoding(code);
+            return encodingCache[code];
+        }
+
+        public static Encoding guessTextEncoding(byte[] data)
+        {
+            Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+            cdet.Feed(data, 0, data.Length);
+            cdet.DataEnd();
+            if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
+            else return Settings.DefaultTextEncoding;
+        }
+
+        public static Encoding guessTextEncoding(FileStream fs)
+        {
+            Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+            cdet.Feed(fs);
+            cdet.DataEnd();
+            if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
+            else return Settings.DefaultTextEncoding;
         }
     }
 }

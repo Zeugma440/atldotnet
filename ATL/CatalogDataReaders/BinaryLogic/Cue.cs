@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Commons;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
@@ -89,59 +91,94 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         private void read()
         {
             using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
-            using (TextReader source = new StreamReader(fs, System.Text.Encoding.UTF8))
             {
-                string s = source.ReadLine();
-                Track physicalTrack = null;
-                string audioFilePath = "";
+                // Determine encoding
+                Encoding encoding = Utils.guessTextEncoding(fs);
+                fs.Seek(0, SeekOrigin.Begin);
 
-                Track currentTrack = null;
-                Track previousTrack = null;
-                double previousTimeOffset = 0;
-                double indexRelativePosition = 0;
-
-                while (s != null)
+                // Read contents
+                using (TextReader source = new StreamReader(fs, encoding))
                 {
-                    s = s.Trim();
-                    int firstBlank = s.IndexOf(' ');
-                    string firstWord = s.Substring(0, firstBlank);
-                    string[] trackInfo = s.Split(' ');
+                    string s = source.ReadLine();
+                    Track physicalTrack = null;
+                    string audioFilePath = "";
 
+                    Track currentTrack = null;
+                    Track previousTrack = null;
+                    double previousTimeOffset = 0;
+                    double indexRelativePosition = 0;
 
-                    if (null == currentTrack)
+                    while (s != null)
                     {
-                        if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (comments.Length > 0) comments += Settings.InternalValueSeparator;
-                            comments += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
-                        }
-                        else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
-                        }
-                        else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
-                        }
-                        else if ("FILE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            audioFilePath = s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
-                            audioFilePath = audioFilePath.Substring(0, audioFilePath.LastIndexOf(' ')); // Get rid of the last word representing the audio format
-                            audioFilePath = stripBeginEndQuotes(audioFilePath);
+                        s = s.Trim();
+                        int firstBlank = s.IndexOf(' ');
+                        string firstWord = s.Substring(0, firstBlank);
+                        string[] trackInfo = s.Split(' ');
 
-                            // Strip the ending word representing the audio format
-                            if (!System.IO.Path.IsPathRooted(audioFilePath))
-                            {
-                                audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), audioFilePath);
-                            }
-                            physicalTrack = new Track(audioFilePath);
-                        }
-                        else if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+
+                        if (null == currentTrack)
                         {
-                            currentTrack = new Track();
-                            if (trackInfo.Length > 0) currentTrack.TrackNumber = byte.Parse(trackInfo[1]);
-                            if (physicalTrack != null)
+                            if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
+                                if (comments.Length > 0) comments += Settings.InternalValueSeparator;
+                                comments += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                            }
+                            else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            }
+                            else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            }
+                            else if ("FILE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                audioFilePath = s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                                audioFilePath = audioFilePath.Substring(0, audioFilePath.LastIndexOf(' ')); // Get rid of the last word representing the audio format
+                                audioFilePath = stripBeginEndQuotes(audioFilePath);
+
+                                // Strip the ending word representing the audio format
+                                if (!System.IO.Path.IsPathRooted(audioFilePath))
+                                {
+                                    audioFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), audioFilePath);
+                                }
+                                physicalTrack = new Track(audioFilePath);
+                            }
+                            else if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                currentTrack = new Track();
+                                if (trackInfo.Length > 0) currentTrack.TrackNumber = byte.Parse(trackInfo[1]);
+                                if (physicalTrack != null)
+                                {
+                                    currentTrack.Genre = physicalTrack.Genre;
+                                    currentTrack.IsVBR = physicalTrack.IsVBR;
+                                    currentTrack.Bitrate = physicalTrack.Bitrate;
+                                    currentTrack.CodecFamily = physicalTrack.CodecFamily;
+                                    currentTrack.Year = physicalTrack.Year;
+                                    currentTrack.PictureTokens = physicalTrack.PictureTokens;
+                                    currentTrack.DiscNumber = physicalTrack.DiscNumber;
+                                }
+                                currentTrack.Artist = "";
+                                currentTrack.Title = "";
+                                currentTrack.Comment = "";
+                            }
+                        }
+                        else
+                        {
+                            if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                                if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
+                                if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
+                                if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
+                                if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
+                                currentTrack.Album = title;
+
+                                tracks.Add(currentTrack);
+
+                                previousTrack = currentTrack;
+                                currentTrack = new Track();
+                                if (trackInfo.Length > 0) currentTrack.TrackNumber = byte.Parse(trackInfo[1]);
                                 currentTrack.Genre = physicalTrack.Genre;
                                 currentTrack.IsVBR = physicalTrack.IsVBR;
                                 currentTrack.Bitrate = physicalTrack.Bitrate;
@@ -149,94 +186,66 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                                 currentTrack.Year = physicalTrack.Year;
                                 currentTrack.PictureTokens = physicalTrack.PictureTokens;
                                 currentTrack.DiscNumber = physicalTrack.DiscNumber;
+                                currentTrack.Artist = "";
+                                currentTrack.Title = "";
+                                currentTrack.Comment = "";
+
+                                indexRelativePosition = 0;
                             }
-                            currentTrack.Artist = "";
-                            currentTrack.Title = "";
-                            currentTrack.Comment = "";
+                            else if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (currentTrack.Comment.Length > 0) currentTrack.Comment += Settings.InternalValueSeparator;
+                                currentTrack.Comment += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                            }
+                            else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                currentTrack.Artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            }
+                            else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            {
+                                currentTrack.Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                            }
+                            else if (("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
+                            }
+                            else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && trackInfo.Length > 1)
+                            {
+                                double timeOffset = decodeTimecodeToMs(trackInfo[2]);
+
+                                if (0 == indexRelativePosition && previousTrack != null)
+                                {
+                                    previousTrack.DurationMs += timeOffset - previousTimeOffset;
+                                }
+                                else
+                                {
+                                    currentTrack.DurationMs += timeOffset - previousTimeOffset;
+                                }
+                                previousTimeOffset = timeOffset;
+
+                                indexRelativePosition++;
+                            }
+
                         }
-                    }
-                    else
+
+                        s = source.ReadLine();
+                    } // while
+
+                    if (currentTrack != null)
                     {
-                        if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                        currentTrack.Album = title;
+                        if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                        if (physicalTrack != null)
                         {
-                            if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
                             if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
                             if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
                             if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                             if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
-                            currentTrack.Album = title;
-
-                            tracks.Add(currentTrack);
-
-                            previousTrack = currentTrack;
-                            currentTrack = new Track();
-                            if (trackInfo.Length > 0) currentTrack.TrackNumber = byte.Parse(trackInfo[1]);
-                            currentTrack.Genre = physicalTrack.Genre;
-                            currentTrack.IsVBR = physicalTrack.IsVBR;
-                            currentTrack.Bitrate = physicalTrack.Bitrate;
-                            currentTrack.CodecFamily = physicalTrack.CodecFamily;
-                            currentTrack.Year = physicalTrack.Year;
-                            currentTrack.PictureTokens = physicalTrack.PictureTokens;
-                            currentTrack.DiscNumber = physicalTrack.DiscNumber;
-                            currentTrack.Artist = "";
-                            currentTrack.Title = "";
-                            currentTrack.Comment = "";
-
-                            indexRelativePosition = 0;
-                        }
-                        else if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (currentTrack.Comment.Length > 0) currentTrack.Comment += Settings.InternalValueSeparator;
-                            currentTrack.Comment += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
-                        }
-                        else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            currentTrack.Artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
-                        }
-                        else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
-                        {
-                            currentTrack.Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
-                        }
-                        else if (("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
-                        }
-                        else if ("INDEX".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && trackInfo.Length > 1)
-                        {
-                            double timeOffset = decodeTimecodeToMs(trackInfo[2]);
-
-                            if (0 == indexRelativePosition && previousTrack != null)
-                            {
-                                previousTrack.DurationMs += timeOffset - previousTimeOffset;
-                            }
-                            else
-                            {
-                                currentTrack.DurationMs += timeOffset - previousTimeOffset;
-                            }
-                            previousTimeOffset = timeOffset;
-
-                            indexRelativePosition++;
+                            currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
                         }
 
+                        tracks.Add(currentTrack);
                     }
-
-                    s = source.ReadLine();
-                } // while
-
-                if (currentTrack != null)
-                {
-                    currentTrack.Album = title;
-                    if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
-                    if (physicalTrack != null)
-                    {
-                        if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
-                        if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
-                        if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
-                        if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
-                        currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
-                    }
-
-                    tracks.Add(currentTrack);
                 }
             } // using
 

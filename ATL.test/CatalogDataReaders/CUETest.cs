@@ -74,5 +74,25 @@ namespace ATL.test
             }
         }
 
+        [TestMethod]
+        public void Cue_ReadTracksNonUtf8()
+        {
+            string testFileLocation = TestUtils.GetResourceLocationRoot() + "_Cuesheet/CDImage.cue";
+
+            ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(testFileLocation);
+
+            Assert.IsNotInstanceOfType(theReader, typeof(CatalogDataReaders.BinaryLogic.DummyReader));
+            Assert.AreEqual("周華健", theReader.Artist);
+            Assert.AreEqual("最後圓舞曲", theReader.Title);
+
+            Assert.AreEqual(9, theReader.Tracks.Count);
+            Assert.AreEqual("最後圓舞曲", theReader.Tracks[0].Title);
+            Assert.AreEqual("周華健", theReader.Tracks[0].Artist);
+            Assert.AreEqual(357, theReader.Tracks[0].Duration);
+
+            Assert.AreEqual("平凡的感覺", theReader.Tracks[1].Title);
+            Assert.AreEqual("周華健", theReader.Tracks[1].Artist);
+            Assert.AreEqual(233, theReader.Tracks[1].Duration);
+        }
     }
 }
