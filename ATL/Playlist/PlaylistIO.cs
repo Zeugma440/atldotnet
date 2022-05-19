@@ -233,9 +233,9 @@ namespace ATL.Playlist
         /// <returns>Absolute filepath corresponding to the given location</returns>
         protected string decodeLocation(string href)
         {
-            // It it an URI ?
+            // Is it an URI ?
             // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
-            var hrefUri = href.Replace('\\', '/'); 
+            var hrefUri = href.Replace('\\', '/');
             if (hrefUri.Contains("://")) // RFC URI
             {
                 try
@@ -247,7 +247,7 @@ namespace ATL.Playlist
                         {
                             return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), uri.LocalPath);
                         }
-                        
+
                         // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
                         return uri.LocalPath.Replace(
                             "" + System.IO.Path.DirectorySeparatorChar + System.IO.Path.DirectorySeparatorChar,

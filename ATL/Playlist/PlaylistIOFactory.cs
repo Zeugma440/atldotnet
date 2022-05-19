@@ -37,6 +37,10 @@ namespace ATL.Playlist
         /// B4S format
         /// </summary>
         public const int PL_B4S = 6;
+        /// <summary>
+        /// Daum Playlist (PotPlayer)
+        /// </summary>
+        public const int PL_DPL = 7;
 
         // The instance of this factory
         private static PlaylistIOFactory theFactory = null;
@@ -93,6 +97,12 @@ namespace ATL.Playlist
                     tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
                     tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
                     tempFmt.AddExtension(".b4s");
+                    theFactory.addFormat(tempFmt);
+
+                    tempFmt = new PlaylistFormat(PL_DPL, "DPL");
+                    tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_BOM;
+                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
+                    tempFmt.AddExtension(".dpl");
                     theFactory.addFormat(tempFmt);
                 }
             }
@@ -174,6 +184,10 @@ namespace ATL.Playlist
             else if (PL_B4S == formatId)
             {
                 theReader = new B4SIO();
+            }
+            else if (PL_DPL == formatId)
+            {
+                theReader = new DPLIO();
             }
 
             if (null == theReader) theReader = new DummyIO();
