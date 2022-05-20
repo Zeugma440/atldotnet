@@ -372,7 +372,7 @@ namespace ATL.AudioData
                 {
                     theMetaIO = getMeta(tagType);
 
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions) : stream;
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
                     BinaryReader r = new BinaryReader(s);
                     BinaryWriter w = new BinaryWriter(s);
                     try
@@ -427,7 +427,7 @@ namespace ATL.AudioData
 
             try
             {
-                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, bufferSize, fileOptions) : stream;
+                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
                 BinaryReader reader = new BinaryReader(s);
                 BinaryWriter writer = null;
                 try

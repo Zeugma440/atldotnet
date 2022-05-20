@@ -154,7 +154,7 @@ namespace ATL.Playlist
             LogDelegator.GetLocateDelegate()(Path);
             try
             {
-                using (FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite))
+                using (FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
                 {
                     if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
                     setTracks(fs, trackList);
