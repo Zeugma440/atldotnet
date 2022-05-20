@@ -138,8 +138,8 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 ### SUPPORTED PLAYLISTS FORMATS
 
-* Read and write : ASX, B4S, M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF
-* Read-only : FPL
+* Read and write : ASX, B4S, M3U, M3U8, PLS, SMIL (including WPL and ZPL), XSPF, DPL (PotPlayer playlist)
+* Read-only : FPL (Foobar2000 playlist)
 
 See detailed compatibility table [here](https://docs.google.com/spreadsheets/d/1Wo9ifsKbBloofdWCsoXziAtaS-QVjqci5aavAV8dt2U/edit?usp=sharing)
 
