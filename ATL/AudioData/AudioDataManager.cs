@@ -341,6 +341,13 @@ namespace ATL.AudioData
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
+                if (e.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception BEGIN");
+                    Console.WriteLine(e.InnerException.Message);
+                    Console.WriteLine(e.InnerException.StackTrace);
+                    Console.WriteLine("Inner Exception END");
+                }
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
@@ -403,6 +410,13 @@ namespace ATL.AudioData
                 {
                     Console.WriteLine(e.Message);
                     Console.WriteLine(e.StackTrace);
+                    if (e.InnerException != null)
+                    {
+                        Console.WriteLine("Inner Exception BEGIN");
+                        Console.WriteLine(e.InnerException.Message);
+                        Console.WriteLine(e.InnerException.StackTrace);
+                        Console.WriteLine("Inner Exception END");
+                    }
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                     result = false;
                 }
@@ -452,8 +466,15 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.Message);
-                System.Console.WriteLine(e.StackTrace);
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                if (e.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception BEGIN");
+                    Console.WriteLine(e.InnerException.Message);
+                    Console.WriteLine(e.InnerException.StackTrace);
+                    Console.WriteLine("Inner Exception END");
+                }
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
                 result = false;
             }
