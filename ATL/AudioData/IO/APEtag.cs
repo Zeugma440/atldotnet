@@ -217,7 +217,7 @@ namespace ATL.AudioData.IO
                      * 
                      * => Values have to be splitted
                      */
-                    strValue = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(frameDataSize)));
+                    strValue = Utils.StripEndingZeroChars(Settings.DefaultTextEncoding.GetString(source.ReadBytes(frameDataSize)));
                     strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
                     SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                 }
@@ -498,7 +498,7 @@ namespace ATL.AudioData.IO
             writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
-            byte[] binaryValue = Encoding.UTF8.GetBytes(text);
+            byte[] binaryValue = Settings.DefaultTextEncoding.GetBytes(text);
             writer.Write(binaryValue);
 
             // Go back to frame size location to write its actual size 

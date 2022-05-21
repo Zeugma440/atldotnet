@@ -512,15 +512,6 @@ namespace Commons
             return encodingCache[code];
         }
 
-        public static Encoding guessTextEncoding(byte[] data)
-        {
-            Ude.CharsetDetector cdet = new Ude.CharsetDetector();
-            cdet.Feed(data, 0, data.Length);
-            cdet.DataEnd();
-            if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
-            else return Settings.DefaultTextEncoding;
-        }
-
         public static Encoding guessTextEncoding(FileStream fs)
         {
             Ude.CharsetDetector cdet = new Ude.CharsetDetector();
