@@ -5,6 +5,8 @@ using System.IO;
 using Commons;
 using static ATL.PictureInfo;
 using System.Collections.Generic;
+using System.Text;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -70,6 +72,46 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_APE_Unsupported_Empty()
         {
             test_RW_Unsupported_Empty(emptyFile);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_APE_GB18030()
+        {
+            new ConsoleLogger();
+
+            Encoding initialEncoding = ATL.Settings.DefaultTextEncoding;
+            ATL.Settings.DefaultTextEncoding = Encoding.GetEncoding("GB18030");
+            try
+            {
+                // Source : totally metadata-free file
+                string testFileLocation = TestUtils.CopyAsTempTestFile("APE/GB18030_tags.ape");
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                // Check that it is indeed tag-free
+                Assert.IsTrue(theFile.ReadFromFile());
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                IMetaDataIO meta = theFile.getMeta(tagType);
+
+                Assert.AreEqual("03嘿!你写日记吗?", meta.Title);
+                Assert.AreEqual("小虎队", meta.Artist);
+
+                TagHolder theTag = new TagHolder();
+                theTag.Artist = "小虎队队队";
+
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                meta = theFile.getMeta(tagType);
+
+                Assert.AreEqual("03嘿!你写日记吗?", meta.Title);
+                Assert.AreEqual("小虎队队队", meta.Artist);
+            } finally
+            {
+                ATL.Settings.DefaultTextEncoding = initialEncoding;
+            }
         }
 
         private void checkTrackDiscZeroes(FileStream fs)
