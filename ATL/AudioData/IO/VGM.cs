@@ -7,6 +7,7 @@ using System.Text;
 using System.IO.Compression;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
+using System.Globalization;
 
 namespace ATL.AudioData.IO
 {
@@ -103,7 +104,7 @@ namespace ATL.AudioData.IO
                 return date.Year.ToString();
             else
                 // According to GD3 spec for release date
-                return date.ToString("yyyy/MM/dd", Utils.EnUsCulture);
+                return date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
         }
 
 

@@ -158,7 +158,7 @@ namespace ATL.AudioData.IO
         }
         public override string EncodeDate(DateTime date)
         {
-            return date.ToString("dd-MMM-yyyy", Utils.EnUsCulture).ToUpper();
+            return date.ToString("dd-MMM-yyyy", CultureInfo.InvariantCulture).ToUpper();
         }
 
         public long AudioDataOffset { get; set; }
