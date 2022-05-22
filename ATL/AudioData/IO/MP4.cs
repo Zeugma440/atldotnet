@@ -360,12 +360,13 @@ namespace ATL.AudioData.IO
             // Loop through tracks
             do
             {
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes, audioTrackOffsets);
                 if (-1 == trakSize)
                 {
                     currentTrakIndex = 0; // Convention to start reading from index 1 again
                     source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+                    trakSize = 1;
                 }
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTrackSamples, chapterTrackIndexes, audioTrackOffsets);
             }
             while (trakSize > 0);
 
