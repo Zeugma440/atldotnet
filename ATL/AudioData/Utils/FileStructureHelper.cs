@@ -13,6 +13,8 @@ namespace ATL.AudioData
     /// </summary>
     public class FileStructureHelper
     {
+        private static int ppzIndex = 0;
+
         /// <summary>
         /// Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
         /// </summary>
@@ -264,19 +266,19 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new zone using the given fields
         /// </summary>
-        public void AddZone(long offset, long size, byte[] coreSignature, string zone = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
+        public void AddZone(long offset, long size, byte[] coreSignature, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
-            if (!zones.ContainsKey(zone))
+            if (!zones.ContainsKey(name))
             {
-                zones.Add(zone, new Zone(zone, offset, size, coreSignature, isDeletable, 0, resizable));
+                zones.Add(name, new Zone(name, offset, size, coreSignature, isDeletable, 0, resizable));
             }
             else // Existing zone might already contain headers
             {
-                zones[zone].Name = zone;
-                zones[zone].Offset = offset;
-                zones[zone].Size = size;
-                zones[zone].CoreSignature = coreSignature;
-                zones[zone].IsDeletable = isDeletable;
+                zones[name].Name = name;
+                zones[name].Offset = offset;
+                zones[name].Size = size;
+                zones[name].CoreSignature = coreSignature;
+                zones[name].IsDeletable = isDeletable;
             }
         }
 
@@ -320,8 +322,9 @@ namespace ATL.AudioData
             long finalPosition = getCorrectedOffset(zones[positionZone].Offset) + pendingPosition;
             //long finalPosition = zones[positionZone].Offset + pendingPosition;
 
-            AddZone(finalPosition, 0, POST_PROCESSING_ZONE_NAME);
-            addZoneHeader(POST_PROCESSING_ZONE_NAME, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone, valueZone);
+            string zoneName = POST_PROCESSING_ZONE_NAME + "." + ++ppzIndex;
+            AddZone(finalPosition, 0, zoneName);
+            addZoneHeader(zoneName, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone, valueZone);
         }
 
         /// <summary>
@@ -468,7 +471,10 @@ namespace ATL.AudioData
         /// <param name="writer">Stream to write modifications to</param>
         public void PostProcessing(BinaryWriter writer)
         {
-            RewriteHeaders(writer, null, 0, ACTION.Edit, POST_PROCESSING_ZONE_NAME);
+            foreach (var zoneName in zones.Keys.Where(zoneName => zoneName.StartsWith(POST_PROCESSING_ZONE_NAME)))
+            {
+                RewriteHeaders(writer, null, 0, ACTION.Edit, zoneName);
+            }
         }
 
         /// <summary>
@@ -512,7 +518,7 @@ namespace ATL.AudioData
             localDynamicOffsetCorrection = dynamicOffsetCorrection[regionId];
 
             // Don't reprocess the position of a post-processing zone
-            bool isPostReprocessing = zone == POST_PROCESSING_ZONE_NAME;
+            bool isPostReprocessing = zone.StartsWith(POST_PROCESSING_ZONE_NAME);
 
             // == Update the current zone's headers
             foreach (FrameHeader header in currentZone.Headers)

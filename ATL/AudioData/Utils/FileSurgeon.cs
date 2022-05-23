@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using static ATL.AudioData.FileStructureHelper;
 
 namespace ATL.AudioData.IO
@@ -385,7 +386,7 @@ namespace ATL.AudioData.IO
             } // Loop through zone regions
 
             // Post-processing changes
-            if (structureHelper != null && structureHelper.ZoneNames.Contains(FileStructureHelper.POST_PROCESSING_ZONE_NAME))
+            if (structureHelper != null && structureHelper.ZoneNames.Any(z => z.StartsWith(POST_PROCESSING_ZONE_NAME)))
             {
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Post-processing");
                 structureHelper.PostProcessing(fullScopeWriter);
