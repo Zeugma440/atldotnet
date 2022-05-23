@@ -44,7 +44,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_QT_CHAP_TXT_TRAK = "qt_trak_txt"; // Quicktime chapters text track
         private const string ZONE_MP4_QT_CHAP_PIC_TRAK = "qt_trak_pic"; // Quicktime chapters picture track
         private const string ZONE_MP4_QT_CHAP_TXT_MDAT = "qt_txt_mdat"; // Quicktime chapters text data
-                                                                        //        private const string ZONE_MP4_QT_CHAP_PIC_MDAT = "qt_pic_mdat"; // Quicktime chapters picture data
+
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";         // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
@@ -350,8 +350,8 @@ namespace ATL.AudioData.IO
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_ILST);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_XTRA);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_CHPL);
-                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_TXT_TRAK);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_PIC_TRAK);
+                structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_TXT_TRAK);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_NOTREF);
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_QT_CHAP_CHAP);
             }
@@ -389,8 +389,9 @@ namespace ATL.AudioData.IO
             while (trakSize > 0);
 
             // No QT chapter track found -> Assign free track ID
-            if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = ++currentTrakIndex;
-            if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex + 1;
+            if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex++;
+            if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex;
+
 
             // QT chapters have been detected while browsing tracks
             if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples, readTagParams.ReadPictures);
@@ -401,13 +402,11 @@ namespace ATL.AudioData.IO
                 atomSize = lookForMP4Atom(source.BaseStream, "udta");
                 if (atomSize > 0)
                 {
-                    structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
+                    structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
                     // MDAT at the end of the file
                     structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_TXT_MDAT);
                     structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_TXT_MDAT, ZONE_MP4_QT_CHAP_TXT_MDAT);
-                    //                    structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_PIC_MDAT);
-                    //                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_PIC_MDAT, ZONE_MP4_QT_CHAP_PIC_MDAT);
                 }
             }
 
@@ -475,7 +474,6 @@ namespace ATL.AudioData.IO
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_TRAK);
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_MDAT);
-                        //                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_MDAT);
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
                         return;
                     }
@@ -492,13 +490,6 @@ namespace ATL.AudioData.IO
                         structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_TXT_MDAT);
                         // Zone size header = actual size of the zone that may include audio data
                         structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_TXT_MDAT, ZONE_MP4_QT_CHAP_TXT_MDAT);
-
-                        /*
-                        // Zone size = size of chapters
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_PIC_MDAT);
-                        // Zone size header = actual size of the zone that may include audio data
-                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_PIC_MDAT, ZONE_MP4_QT_CHAP_PIC_MDAT);
-*/
                     }
 
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
@@ -1124,7 +1115,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readTag(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readTag(BinaryReader source, ReadTagParams readTagParams)
         {
             long iListSize = 0;
             long iListPosition = 0;
@@ -1389,15 +1380,20 @@ namespace ATL.AudioData.IO
 
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
+            if (readTagParams is null)
+            {
+                throw new ArgumentNullException(nameof(readTagParams));
+            }
+
             bool result = false;
 
             ResetData();
@@ -1890,12 +1886,15 @@ namespace ATL.AudioData.IO
             short maxWidth = 0;
             short maxHeight = 0;
             int maxDepth = 0;
-            foreach (ChapterInfo chapter in workingChapters)
+            if (!isText)
             {
-                ImageProperties props = ImageUtils.GetImageProperties(chapter.Picture.PictureData);
-                maxWidth = (short)Math.Min(Math.Max(props.Width, maxWidth), short.MaxValue);
-                maxHeight = (short)Math.Min(Math.Max(props.Height, maxHeight), short.MaxValue);
-                maxDepth = Math.Max(props.ColorDepth, maxDepth);
+                foreach (ChapterInfo chapter in workingChapters)
+                {
+                    ImageProperties props = ImageUtils.GetImageProperties(chapter.Picture.PictureData);
+                    maxWidth = (short)Math.Min(Math.Max(props.Width, maxWidth), short.MaxValue);
+                    maxHeight = (short)Math.Min(Math.Max(props.Height, maxHeight), short.MaxValue);
+                    maxDepth = Math.Max(props.ColorDepth, maxDepth);
+                }
             }
 
             // TRACK

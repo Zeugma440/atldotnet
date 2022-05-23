@@ -764,6 +764,87 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Chapters_QT_Pic_Create()
+        {
+            new ConsoleLogger();
+
+            ATL.Settings.MP4_createNeroChapters = false;
+            try
+            {
+                // Source : file without 'chpl' atom
+                String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+                Assert.IsTrue(theFile.ReadFromFile());
+
+                Assert.IsNotNull(theFile.getMeta(tagType));
+                Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+                // Modify elements
+                TagData theTag = new TagData();
+
+                Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+                theTag.Chapters = new List<ChapterInfo>();
+
+                ChapterInfo ch = new ChapterInfo();
+                ch.StartTime = 0;
+                ch.Title = "aaa";
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
+                ch.Picture.ComputePicHash();
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo();
+                ch.StartTime = 10000;
+                ch.Title = "aaa0";
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
+                ch.Picture.ComputePicHash();
+
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                int found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                {
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
+                        Assert.IsNotNull(chap.Picture);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.PicType, chap.Picture.PicType);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.MimeType, chap.Picture.MimeType);
+                        Assert.AreEqual(expectedChaps[chap.StartTime].Picture.PictureData.Length, chap.Picture.PictureData.Length);
+                    }
+                    else
+                    {
+                        Console.WriteLine(chap.StartTime);
+                    }
+                }
+                Assert.AreEqual(2, found);
+
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+            finally
+            {
+                ATL.Settings.MP4_createNeroChapters = true;
+            }
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Chapters_CapNero()
         {
             new ConsoleLogger();
@@ -921,13 +1002,6 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V1);
         }
-        /* No longer supported
-        [TestMethod]
-        public void TagIO_RW_MP4_ID3v2()
-        {
-            test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2);
-        }
-        */
 
         [TestMethod]
         public void TagIO_RW_MP4_APE()
