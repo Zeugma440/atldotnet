@@ -1678,9 +1678,9 @@ namespace ATL.AudioData.IO
             else if (21 == frameClass) // uint8-16-24-32, depending on the value
             {
                 uint value = Convert.ToUInt32(text);
-                if (value > 0xffff) writer.Write(value);
+                if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
                 // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                else if (value > 0xff) writer.Write(Convert.ToUInt16(text));
+                else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
                 else writer.Write(Convert.ToByte(text));
             }
 
