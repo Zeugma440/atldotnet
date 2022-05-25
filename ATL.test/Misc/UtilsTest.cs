@@ -19,7 +19,7 @@ namespace ATL.test
         public void Utils_FormatTime()
         {
             // Display s and ms
-            Assert.AreEqual("00:02.2", Utils.EncodeTimecode_ms(2*1000+2));
+            Assert.AreEqual("00:02.2", Utils.EncodeTimecode_ms(2 * 1000 + 2));
             // Display m, s and ms
             Assert.AreEqual("01:02.2", Utils.EncodeTimecode_ms(62 * 1000 + 2));
             // Display h, m, s and ms
@@ -112,6 +112,8 @@ namespace ATL.test
             Assert.IsFalse(Utils.IsNumeric("a"));
             Assert.IsFalse(Utils.IsNumeric("123,456", true));
             Assert.IsFalse(Utils.IsNumeric("123.456", true));
+            Assert.IsFalse(Utils.IsNumeric("-123", true, false));
+            Assert.IsFalse(Utils.IsNumeric("-123.456", false, false));
         }
 
         [TestMethod]

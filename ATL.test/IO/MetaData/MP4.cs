@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
+using static ATL.Logging.Log;
+using ATL.Logging;
 
 namespace ATL.test.IO.MetaData
 {
@@ -992,6 +994,57 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual((float)3.0 / 5, theFile.NativeTag.Popularity);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
             Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_InvalidValues()
+        {
+            ArrayLogger log = new ArrayLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xtraField.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            // Write letter as signed int
+            TagHolder theTag = new TagHolder();
+            IDictionary<string, string> data = new Dictionary<string, string>();
+            data["©mvc"] = "a";
+            theTag.AdditionalFields = data;
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            IList<LogItem> logItems = log.GetAllItems(Log.LV_WARNING);
+            Assert.IsTrue(logItems.Count > 0);
+            bool found = false;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("value a could not be converted to integer; ignoring")) found = true;
+            }
+            Assert.IsTrue(found);
+
+            // Write signed as unsigned int
+            theTag = new TagHolder();
+            data = new Dictionary<string, string>();
+            data["tvsn"] = "-2";
+            theTag.AdditionalFields = data;
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            logItems = log.GetAllItems(Log.LV_WARNING);
+            Assert.IsTrue(logItems.Count > 0);
+            found = false;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("value -2 could not be converted to unsigned integer; ignoring")) found = true;
+            }
+            Assert.IsTrue(found);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

@@ -87,7 +87,7 @@ namespace ATL.AudioData.IO
             ["pcst"] = 21,
             ["purl"] = 0,
             ["egid"] = 0,
-            ["tvsn"] = 21,
+            ["tvsn"] = 22,
             ["tves"] = 21,
             ["pgap"] = 21,
             ["shwm"] = 21,
@@ -1715,19 +1715,35 @@ namespace ATL.AudioData.IO
             }
             else if (21 == frameClass) // int8-16-24-32, depending on the value
             {
-                int value = Convert.ToInt32(text);
-                if (value > short.MaxValue || value < short.MinValue) writer.Write(StreamUtils.EncodeBEInt32(value));
-                // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                else if (value > 127 || value < -127) writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
-                else writer.Write(Convert.ToByte(text));
+                if (!Utils.IsNumeric(text, true))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to integer; ignoring");
+                    writer.Write(0);
+                }
+                else
+                {
+                    int value = Convert.ToInt32(text);
+                    if (value > short.MaxValue || value < short.MinValue) writer.Write(StreamUtils.EncodeBEInt32(value));
+                    // use int32 instead of int24 because Convert.ToInt24 doesn't exist
+                    else if (value > 127 || value < -127) writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
+                    else writer.Write(Convert.ToByte(text));
+                }
             }
             else if (22 == frameClass) // uint8-16-24-32, depending on the value
             {
-                uint value = Convert.ToUInt32(text);
-                if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
-                // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
-                else writer.Write(Convert.ToByte(text));
+                if (!Utils.IsNumeric(text, true, false))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to unsigned integer; ignoring");
+                    writer.Write(0);
+                }
+                else
+                {
+                    uint value = Convert.ToUInt32(text);
+                    if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
+                    // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                    else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
+                    else writer.Write(Convert.ToByte(text));
+                }
             }
 
 

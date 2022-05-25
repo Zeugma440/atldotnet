@@ -372,8 +372,9 @@ namespace Commons
         /// </summary>
         /// <param name="s">String to analyze</param>
         /// <param name="allowsOnlyIntegers">Set to True if IsNumeric should reject decimal values; default = false</param>
+        /// <param name="allowsSigned">Set to False if IsNumeric should reject signed values; default = true</param>
         /// <returns>True if the string is a digital value; false if not</returns>
-        public static bool IsNumeric(string s, bool allowsOnlyIntegers = false)
+        public static bool IsNumeric(string s, bool allowsOnlyIntegers = false, bool allowsSigned = true)
         {
             if ((null == s) || (0 == s.Length)) return false;
 
@@ -385,7 +386,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && (s[i] != '-')) return false;
+                    if (!char.IsDigit(s[i]) && (allowsSigned ^ s[i] == '-')) return false;
                 }
             }
 

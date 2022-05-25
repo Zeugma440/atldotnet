@@ -362,6 +362,7 @@ namespace ATL.AudioData
 
         /// <summary>
         /// Update metadata of current file and save it to disk
+        /// Pre-requisite : ReadFromFile must have been called before
         /// </summary>
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
