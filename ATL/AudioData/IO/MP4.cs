@@ -43,7 +43,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_QT_CHAP_CHAP = "qt_chap";         // Quicktime chapters track reference
         private const string ZONE_MP4_QT_CHAP_TXT_TRAK = "qt_trak_txt"; // Quicktime chapters text track
         private const string ZONE_MP4_QT_CHAP_PIC_TRAK = "qt_trak_pic"; // Quicktime chapters picture track
-        private const string ZONE_MP4_QT_CHAP_TXT_MDAT = "qt_txt_mdat"; // Quicktime chapters text data
+        private const string ZONE_MP4_QT_CHAP_MDAT = "qt_chap_mdat";    // Quicktime chapters data
 
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";         // Physical audio chunk referenced from stco or co64
 
@@ -419,8 +419,8 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
                     structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
                     // MDAT at the end of the file
-                    structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_TXT_MDAT);
-                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_TXT_MDAT, ZONE_MP4_QT_CHAP_TXT_MDAT);
+                    structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
                 }
             }
 
@@ -487,7 +487,7 @@ namespace ATL.AudioData.IO
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_CHAP);
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_TRAK);
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_MDAT);
+                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT);
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
                         return;
                     }
@@ -501,9 +501,9 @@ namespace ATL.AudioData.IO
                     if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                     {
                         // Zone size = size of chapters
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_TXT_MDAT);
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT);
                         // Zone size header = actual size of the zone that may include audio data
-                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_TXT_MDAT, ZONE_MP4_QT_CHAP_TXT_MDAT);
+                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
                     }
 
                     source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
@@ -1523,9 +1523,9 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersTrack(w, qtChapterPictureTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
             }
-            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_MDAT)) // Quicktime chapter text data
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter text data
             {
-                result = writeQTChaptersTextData(w, Chapters);
+                result = writeQTChaptersData(w, Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
@@ -1892,11 +1892,11 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersTextData(BinaryWriter w, IList<ChapterInfo> chapters)
+        private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count)
             {
-                structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_MDAT); // Current zone commits suicide so that its size header doesn't get written
+                structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT); // Current zone commits suicide so that its size header doesn't get written
                 return 0;
             }
 
@@ -2033,25 +2033,41 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("minf"));
 
             // BASE MEDIA INFORMATION HEADER
-            w.Write(StreamUtils.EncodeBEInt32(76)); // Standard size
-            w.Write(Utils.Latin1Encoding.GetBytes("gmhd"));
-
-            w.Write(StreamUtils.EncodeBEInt32(24)); // Standard size
-            w.Write(Utils.Latin1Encoding.GetBytes("gmin"));
-            w.Write(0); // Version and flags
-            w.Write(StreamUtils.EncodeBEInt16((short)64)); // Graphics mode
-            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 1
-            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 2
-            w.Write(new byte[2] { 0x80, 0 }); // Opcolor 3
-            w.Write(0); // Balance + reserved
-
-            w.Write(StreamUtils.EncodeBEInt32(44)); // Standard size
             if (isText)
-                w.Write(Utils.Latin1Encoding.GetBytes("text")); // Subtype
+            {
+                w.Write(StreamUtils.EncodeBEInt32(76)); // Standard size
+                w.Write(Utils.Latin1Encoding.GetBytes("gmhd"));
+
+                w.Write(StreamUtils.EncodeBEInt32(24)); // Standard size
+                w.Write(Utils.Latin1Encoding.GetBytes("gmin"));
+                w.Write(0); // Version and flags
+                w.Write(StreamUtils.EncodeBEInt16((short)64)); // Graphics mode
+                w.Write(new byte[2] { 0x80, 0 }); // Opcolor 1
+                w.Write(new byte[2] { 0x80, 0 }); // Opcolor 2
+                w.Write(new byte[2] { 0x80, 0 }); // Opcolor 3
+                w.Write(0); // Balance + reserved
+
+                w.Write(StreamUtils.EncodeBEInt32(44)); // Standard size
+                if (isText)
+                    w.Write(Utils.Latin1Encoding.GetBytes("text")); // Subtype
+                else
+                    w.Write(Utils.Latin1Encoding.GetBytes("vide")); // Subtype
+                // Matrix (keep values of sample file)
+                w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 });
+            }
             else
-                w.Write(Utils.Latin1Encoding.GetBytes("vide")); // Subtype
-            // Matrix (keep values of sample file)
-            w.Write(new byte[36] { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0 });
+            {
+                w.Write(StreamUtils.EncodeBEInt32(20)); // Standard size
+                w.Write(Utils.Latin1Encoding.GetBytes("vmhd"));
+
+                w.Write((byte)0); // Version
+                w.Write((short)0); // Flags, bytes 2 and 3
+                w.Write((byte)1); // Flags, byte 1
+                w.Write((short)0); // Graphics mode
+                w.Write((short)0); // OpColor R
+                w.Write((short)0); // OpColor G
+                w.Write((short)0); // OpColor B
+            }
             // END BASE MEDIA INFORMATION HEADER
 
 
@@ -2211,7 +2227,7 @@ namespace ATL.AudioData.IO
             //   - Child of the TRAK zone (i.e. won't be useful to process if the TRAK zone is deleted)
             // NB : Only works when QT track is located _before_ QT mdat
             string zoneId = ZONE_MP4_QT_CHAP_TXT_TRAK;
-            string dataZoneId = ZONE_MP4_QT_CHAP_TXT_MDAT;
+            string dataZoneId = ZONE_MP4_QT_CHAP_MDAT;
             Zone chapMdatZone = structureHelper.GetZone(dataZoneId);
 
             uint offset = (uint)(chapMdatZone.Offset + 8 + (isText ? 0 : totalTrackTxtSize));
