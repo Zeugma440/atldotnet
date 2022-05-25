@@ -13,8 +13,6 @@ namespace ATL.AudioData
     /// </summary>
     public class FileStructureHelper
     {
-        private static int ppzIndex = 0;
-
         /// <summary>
         /// Default zone name to be used when no naming is necessary (simple cases where there is a but a single Zone to describe)
         /// </summary>
@@ -178,6 +176,9 @@ namespace ATL.AudioData
         // True if attached file uses little-endian convention for number representation; false if big-endian
         private readonly bool isLittleEndian;
 
+        // Auto-incremented index for internal naming of post-processing zones
+        private int postProcessingIndex = 0;
+
 
         /// <summary>
         /// Names of recorded zones
@@ -320,9 +321,8 @@ namespace ATL.AudioData
         public void AddPostProcessingIndex(long pendingPosition, object value, bool relative, string valueZone, string positionZone, string parentZone = "")
         {
             long finalPosition = getCorrectedOffset(zones[positionZone].Offset) + pendingPosition;
-            //long finalPosition = zones[positionZone].Offset + pendingPosition;
 
-            string zoneName = POST_PROCESSING_ZONE_NAME + "." + ++ppzIndex;
+            string zoneName = POST_PROCESSING_ZONE_NAME + "." + ++postProcessingIndex;
             AddZone(finalPosition, 0, zoneName);
             addZoneHeader(zoneName, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone, valueZone);
         }

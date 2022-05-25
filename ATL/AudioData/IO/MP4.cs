@@ -376,6 +376,15 @@ namespace ATL.AudioData.IO
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8)); else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             calculatedDurationMs = timeLengthPerSec * 1000.0 / globalTimeScale;
 
+            long trackCounterPosition = source.BaseStream.Position + 76;
+
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddCounter(trackCounterPosition, 1, ZONE_MP4_QT_CHAP_PIC_TRAK);
+                structureHelper.AddCounter(trackCounterPosition, 1, ZONE_MP4_QT_CHAP_TXT_TRAK);
+            }
+
+
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
             long trakSize = 0;
@@ -383,9 +392,10 @@ namespace ATL.AudioData.IO
             // Loop through tracks
             do
             {
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets);
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, trackCounterPosition);
                 if (-1 == trakSize)
                 {
+                    // TODO do better than that
                     currentTrakIndex = 0; // Convention to start reading from index 1 again
                     source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
                     trakSize = 1;
@@ -394,13 +404,8 @@ namespace ATL.AudioData.IO
             while (trakSize > 0);
 
             // No QT chapter track found -> Assign free track ID
-            /*
-            if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex++;
-            if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex;
-            */
             if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex++;
             if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex;
-
 
             // QT chapters have been detected while browsing tracks
             if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples, readTagParams.ReadPictures);
@@ -514,7 +519,8 @@ namespace ATL.AudioData.IO
             IList<MP4Sample> chapterTextTrackSamples,
             IList<MP4Sample> chapterPictureTrackSamples,
             IDictionary<int, IList<int>> chapterTrackIndexes,
-            IList<long> mediaTrackOffsets)
+            IList<long> mediaTrackOffsets,
+            long trackCounterOffset)
         {
             long trakPosition;
             int mediaTimeScale = 1000;
@@ -550,7 +556,11 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
 
             int trackId = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-
+            if (readTagParams.PrepareForWriting)
+            {
+                structureHelper.AddZone(trakPosition, 0, "track." + trackId);
+                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, "track." + trackId);
+            }
 
             // Detect the track type
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
