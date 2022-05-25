@@ -216,6 +216,11 @@ namespace ATL.AudioData.IO
             initialPaddingOffset = -1;
             AudioDataOffset = -1;
             AudioDataSize = 0;
+
+            chapterTextTrackEdits = null;
+            chapterPictureTrackEdits = null;
+
+            ResetData();
         }
 
         public MP4(string fileName, Format format)
@@ -389,8 +394,12 @@ namespace ATL.AudioData.IO
             while (trakSize > 0);
 
             // No QT chapter track found -> Assign free track ID
+            /*
             if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex++;
             if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex;
+            */
+            if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex++;
+            if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex;
 
 
             // QT chapters have been detected while browsing tracks
@@ -527,8 +536,21 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
                 return 0;
             }
-
             trakPosition = source.BaseStream.Position - 8;
+
+            // Read track ID
+            if (0 == lookForMP4Atom(source.BaseStream, "tkhd"))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak.tkhd atom could not be found; aborting read on track " + currentTrakIndex);
+                source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
+                return trakSize;
+            }
+            int intLength = 0 == source.ReadByte() ? 4 : 8;
+            source.BaseStream.Seek(3, SeekOrigin.Current); // Flags
+            source.BaseStream.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
+
+            int trackId = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+
 
             // Detect the track type
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
@@ -576,7 +598,7 @@ namespace ATL.AudioData.IO
             {
                 foreach (IList<int> list in chapterTrackIndexes.Values)
                 {
-                    if (currentTrakIndex == list[0])
+                    if (trackId == list[0])
                     {
                         isCurrentTrackFirstChapterTextTrack = true;
                         break;
@@ -637,7 +659,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (descFormat.Equals("jpeg")) // Descriptor for picture (slides / chapter pictures)
                 {
-                    isCurrentTrackFirstChapterPicturesTrack = chapterTrackIndexes.Values.Any(list => list.Contains(currentTrakIndex));
+                    isCurrentTrackFirstChapterPicturesTrack = chapterTrackIndexes.Values.Any(list => list.Contains(trackId));
                 }
                 else
                 {
@@ -667,11 +689,11 @@ namespace ATL.AudioData.IO
                     {
                         thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
                     }
-                    chapterTrackIndexes.Add(currentTrakIndex, thisTrackIndexes);
+                    chapterTrackIndexes.Add(trackId, thisTrackIndexes);
 
                     foreach (int i in thisTrackIndexes)
                     {
-                        if (i < currentTrakIndex)
+                        if (i < trackId)
                         {
                             parsePreviousTracks = true;
                             break;
@@ -695,14 +717,14 @@ namespace ATL.AudioData.IO
             // Read chapters textual data
             if (isCurrentTrackFirstChapterTextTrack)
             {
-                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, currentTrakIndex, chapterTextTrackSamples, mediaTimeScale, true);
+                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterTextTrackSamples, mediaTimeScale, true);
                 if (int32Data > 0) return int32Data;
             }
 
             // Read chapters picture data
             if (isCurrentTrackFirstChapterPicturesTrack)
             {
-                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, currentTrakIndex, chapterPictureTrackSamples, mediaTimeScale, false);
+                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterPictureTrackSamples, mediaTimeScale, false);
                 if (int32Data > 0) return int32Data;
             }
 
@@ -1122,7 +1144,7 @@ namespace ATL.AudioData.IO
             uint metadataSize = 0;
             byte dataClass = 0;
 
-            uint intData = 0;
+            uint uIntData = 0;
             string strData = "";
 
             uint atomSize;
@@ -1230,14 +1252,24 @@ namespace ATL.AudioData.IO
                     strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
                     SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                 }
-                else if (21 == dataClass) // uint8-16-24-32
+                else if (21 == dataClass) // int8-16-24-32
                 {
+                    int intData;
                     uint fieldSize = metadataSize - 16;
-                    if (fieldSize > 3) intData = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                    else if (fieldSize > 2) intData = StreamUtils.DecodeBEUInt24(source.ReadBytes(3));
-                    else if (fieldSize > 1) intData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                    if (fieldSize > 3) intData = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                    else if (fieldSize > 2) intData = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
+                    else if (fieldSize > 1) intData = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
                     else intData = source.ReadByte();
                     SetMetaField(atomHeader, intData.ToString(), readTagParams.ReadAllMetaFrames);
+                }
+                else if (22 == dataClass) // uint8-16-24-32
+                {
+                    uint fieldSize = metadataSize - 16;
+                    if (fieldSize > 3) uIntData = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                    else if (fieldSize > 2) uIntData = StreamUtils.DecodeBEUInt24(source.ReadBytes(3));
+                    else if (fieldSize > 1) uIntData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                    else uIntData = source.ReadByte();
+                    SetMetaField(atomHeader, uIntData.ToString(), readTagParams.ReadAllMetaFrames);
                 }
                 else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                 {
@@ -1288,10 +1320,10 @@ namespace ATL.AudioData.IO
                     }
                     else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                     {
-                        intData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                        uIntData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
                         strData = "";
-                        if (intData < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[intData - 1];
+                        if (uIntData < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[uIntData - 1];
 
                         SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                     }
@@ -1394,17 +1426,13 @@ namespace ATL.AudioData.IO
                 throw new ArgumentNullException(nameof(readTagParams));
             }
 
-            bool result = false;
-
-            ResetData();
+            resetData();
 
             headerTypeID = recognizeHeaderType(source);
             // Read header data
             if (MP4_HEADER_TYPE_MP4 == headerTypeID) readMP4(source, readTagParams);
 
-            result = true;
-
-            return result;
+            return true;
         }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
@@ -1675,7 +1703,15 @@ namespace ATL.AudioData.IO
             {
                 writer.Write(Encoding.UTF8.GetBytes(text));
             }
-            else if (21 == frameClass) // uint8-16-24-32, depending on the value
+            else if (21 == frameClass) // int8-16-24-32, depending on the value
+            {
+                int value = Convert.ToInt32(text);
+                if (value > short.MaxValue || value < short.MinValue) writer.Write(StreamUtils.EncodeBEInt32(value));
+                // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                else if (value > 127 || value < -127) writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
+                else writer.Write(Convert.ToByte(text));
+            }
+            else if (22 == frameClass) // uint8-16-24-32, depending on the value
             {
                 uint value = Convert.ToUInt32(text);
                 if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
@@ -1683,6 +1719,7 @@ namespace ATL.AudioData.IO
                 else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
                 else writer.Write(Convert.ToByte(text));
             }
+
 
             // Go back to frame size locations to write their actual size 
             finalFramePos = writer.BaseStream.Position;
@@ -1807,7 +1844,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writeQTChaptersTref(BinaryWriter w, int qtChapterTxtTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
+        private int writeQTChaptersTref(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -1815,7 +1852,7 @@ namespace ATL.AudioData.IO
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("tref"));
 
-            writeQTChaptersChap(w, qtChapterTxtTrackNum, qtChapterPictureTrackNum, chapters);
+            writeQTChaptersChap(w, qtChapterTextTrackNum, qtChapterPictureTrackNum, chapters);
 
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(trefPos, SeekOrigin.Begin);
@@ -1824,7 +1861,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersChap(BinaryWriter w, int qtChapterTxtTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
+        private int writeQTChaptersChap(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -1832,8 +1869,10 @@ namespace ATL.AudioData.IO
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("chap"));
 
-            w.Write(StreamUtils.EncodeBEInt32(qtChapterTxtTrackNum));
-            w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum));
+            if (qtChapterTextTrackNum > 0)
+                w.Write(StreamUtils.EncodeBEInt32(qtChapterTextTrackNum));
+            if (qtChapterPictureTrackNum > 0)
+                w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum));
 
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(chapPos, SeekOrigin.Begin);

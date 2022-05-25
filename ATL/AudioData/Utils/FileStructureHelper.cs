@@ -350,15 +350,16 @@ namespace ATL.AudioData
         /// (useful when multiple zones refer to the very same header)
         /// </summary>
         /// <param name="position">Position of header to be updated</param>
+        /// <param name="type">Type of header to be updated</param>
         /// <param name="newValue">New value to be assigned to header</param>
-        private void updateAllHeadersAtPosition(long position, object newValue)
+        private void updateAllHeadersAtPosition(long position, FrameHeader.TYPE type, object newValue)
         {
             // NB : this method should perform quite badly -- evolve to using position-based dictionary if any performance issue arise
             foreach (Zone frame in zones.Values)
             {
                 foreach (FrameHeader header in frame.Headers)
                 {
-                    if (position == header.Position)
+                    if (position == header.Position && type == header.Type)
                     {
                         header.Value = newValue;
                     }
@@ -586,7 +587,7 @@ namespace ATL.AudioData
                     if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
                     // The very same frame header is referenced from another frame and must be updated to its new value
-                    updateAllHeadersAtPosition(header.Position, updatedValue);
+                    updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);
 
                     if (!header.IsLittleEndian) Array.Reverse(value);
 
