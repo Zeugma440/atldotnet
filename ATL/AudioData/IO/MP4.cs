@@ -1525,7 +1525,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_MDAT)) // Quicktime chapter text data
             {
-                result = writeQTChaptersTextData(w, Chapters);
+                result = writeQTChaptersData(w, Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
@@ -1892,7 +1892,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersTextData(BinaryWriter w, IList<ChapterInfo> chapters)
+        private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count)
             {
