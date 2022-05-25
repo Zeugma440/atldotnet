@@ -2127,7 +2127,8 @@ namespace ATL.AudioData.IO
                 w.Write(new byte[4] { 0, 0x48, 0, 0 }); // Vertical resolution (32 bits fixed-point; reusing sample file data for now)
                 w.Write(0); // Data size
                 w.Write(StreamUtils.EncodeBEInt16(1)); // Frame count
-                w.Write(Utils.Latin1Encoding.GetBytes("jpeg")); // Compressor name
+                //w.Write(Utils.Latin1Encoding.GetBytes("jpeg")); // Compressor name
+                w.Write(0); // Compressor name
                 /*
                 w.Write(StreamUtils.EncodeBEInt16((short)Math.Min(maxDepth, short.MaxValue))); // Color depth
                 w.Write(StreamUtils.EncodeBEInt16(-1)); // Color table
