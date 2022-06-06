@@ -18,19 +18,17 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            //readAt(@"E:\Dev\Source\Repos\atldotnet\ATL.test\Resources\MP4\chapters_QT.m4v");
-
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"D:\temp\wav\broadcastwave_bext_info.wav");
+            //writeAt(@"D:\temp\wav\broadcastwave_bext_info.wav");
 
-            //info(@"E:\temp\wav\74\empty_tagged_audacity.wav");
+            //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            //readAt(@"E:\temp\caf");
+            readAt(@"D:\temp\m4a-mp4\152\152.m4a");
 
             //displayVersionInfo();
         }
@@ -47,7 +45,9 @@ namespace ATL.benchmark
                 Track t = new Track(filePath);
                 //t.GetEmbeddedPicture(useOldImplementation, false);
 
-                Console.WriteLine(t.Title);
+                Console.WriteLine(t.Title + " by " + t.Artist);
+                if (t.EmbeddedPictures.Count > 0) Console.WriteLine(t.EmbeddedPictures.Count + " embedded pictures detected");
+                if (t.Chapters.Count > 0) Console.WriteLine(t.Chapters.Count + " chapters detected");
             }
             else if (Directory.Exists(filePath))
             {
@@ -100,7 +100,7 @@ namespace ATL.benchmark
             {
                 //Settings.ForceDiskIO = true;
                 Settings.FileBufferSize = 2 * 1024 * 1024;
-//                Settings.ID3v2_tagSubVersion = 3;
+                //                Settings.ID3v2_tagSubVersion = 3;
 
                 ConsoleLogger logger = new ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
@@ -123,7 +123,7 @@ namespace ATL.benchmark
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
 
             AudioData.IAudioDataIO dataIO = ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(filePath);
-            
+
             Console.WriteLine(">>> WRITE : END");
 
             Console.ReadLine();
