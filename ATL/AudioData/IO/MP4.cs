@@ -1416,7 +1416,17 @@ namespace ATL.AudioData.IO
                 if (++iterations > 100) return 0;
             } while (!atomKey.Equals(atomHeader) && Source.Position + atomSize - 16 < Source.Length);
 
-            if (Source.Position + atomSize - 16 > Source.Length) return 0;
+            if (Source.Position + atomSize - 16 > Source.Length)
+            {
+                // atom found, but its declared size goes beyond file size
+                if (atomKey.Equals(atomHeader))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size");
+                    return (uint)(Source.Length - Source.Position + 16);
+                }
+                // atom not found
+                return 0;
+            }
 
             return atomSize;
         }
