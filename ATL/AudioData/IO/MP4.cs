@@ -316,7 +316,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="source">Source to read from</param>
         /// <param name="readTagParams">Reading parameters</param>
-        private void readMP4(BinaryReader source, ReadTagParams readTagParams)
+        private bool readMP4(BinaryReader source, ReadTagParams readTagParams)
         {
             long moovPosition;
 
@@ -344,7 +344,7 @@ namespace ATL.AudioData.IO
             if (0 == moovSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "moov atom could not be found; aborting read");
-                return;
+                return false;
             }
 
             moovPosition = source.BaseStream.Position;
@@ -365,7 +365,7 @@ namespace ATL.AudioData.IO
             if (0 == lookForMP4Atom(source.BaseStream, "mvhd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mvhd atom could not be found; aborting read");
-                return;
+                return false;
             }
             byte version = source.ReadByte();
             source.BaseStream.Seek(3, SeekOrigin.Current); // 3-byte flags
@@ -461,7 +461,7 @@ namespace ATL.AudioData.IO
             if (0 == mdatSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
-                return;
+                return false;
             }
             AudioDataOffset = source.BaseStream.Position - 8;
             AudioDataSize = mdatSize;
@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
                         structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT);
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
-                        return;
+                        return true;
                     }
                 }
 
@@ -510,6 +510,7 @@ namespace ATL.AudioData.IO
                     mdatSize = lookForMP4Atom(source.BaseStream, "mdat");
                 } while (mdatSize > 0);
             }
+            return true;
         }
 
         private long readTrack(
@@ -1431,18 +1432,18 @@ namespace ATL.AudioData.IO
 
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
-            if (readTagParams is null)
-            {
-                throw new ArgumentNullException(nameof(readTagParams));
-            }
+            if (readTagParams is null) throw new ArgumentNullException(nameof(readTagParams));
 
             resetData();
 
             headerTypeID = recognizeHeaderType(source);
             // Read header data
-            if (MP4_HEADER_TYPE_MP4 == headerTypeID) readMP4(source, readTagParams);
-
-            return true;
+            if (MP4_HEADER_TYPE_MP4 == headerTypeID) return readMP4(source, readTagParams);
+            else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "unknown header type");
+                return false;
+            }
         }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
