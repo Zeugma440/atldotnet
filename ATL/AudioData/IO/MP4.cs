@@ -16,6 +16,8 @@ namespace ATL.AudioData.IO
     /// Class for MP4 files manipulation (extensions : .MP4, .M4A, .M4B, .M4V, .M4P, .M4R, .AAX)
     /// 
     /// Implementation notes
+    ///     - If the UDTA atom is absent as a direct child to the MOOV atom, ATL seeks the first TRAK that has an UDTA atom
+    ///     and considers that one as the entire file's metadata
     /// 
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
@@ -1048,12 +1050,35 @@ namespace ATL.AudioData.IO
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
+            bool udtaFound = false;
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             atomSize = lookForMP4Atom(source.BaseStream, "udta");
             if (0 == atomSize)
             {
+                // If no UDTA has been located in MOOV, look for it into TRAK atoms
+                long trakPosition = 0;
+                source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
+                atomSize = lookForMP4Atom(source.BaseStream, "trak");
+                while (atomSize > 0)
+                {
+                    trakPosition = source.BaseStream.Position;
+                    atomSize = lookForMP4Atom(source.BaseStream, "udta");
+                    if (atomSize > 0)
+                    {
+                        udtaFound = true;
+                        break;
+                    } else
+                    {
+                        source.BaseStream.Seek(trakPosition, SeekOrigin.Begin);
+                        atomSize = lookForMP4Atom(source.BaseStream, "trak");
+                    }
+                }
+            }
+
+            if (!udtaFound)
+            {
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "udta atom could not be found");
-                // Create a placeholder to create a new udta atom from scratch
+                // Create a placeholder to create a new UDTA atom from scratch, located as ad direct child of MOOV
                 if (readTagParams.PrepareForWriting)
                 {
                     structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_NOMETA);
