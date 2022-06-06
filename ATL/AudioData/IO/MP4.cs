@@ -1446,7 +1446,7 @@ namespace ATL.AudioData.IO
                 // atom found, but its declared size goes beyond file size
                 if (atomKey.Equals(atomHeader))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size");
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size");
                     return (uint)(Source.Length - Source.Position + 16);
                 }
                 // atom not found
