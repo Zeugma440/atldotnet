@@ -1067,12 +1067,17 @@ namespace ATL.AudioData.IO
                     {
                         udtaFound = true;
                         break;
-                    } else
+                    }
+                    else
                     {
                         source.BaseStream.Seek(trakPosition, SeekOrigin.Begin);
                         atomSize = lookForMP4Atom(source.BaseStream, "trak");
                     }
                 }
+            }
+            else
+            {
+                udtaFound = true;
             }
 
             if (!udtaFound)
@@ -1446,8 +1451,9 @@ namespace ATL.AudioData.IO
                 // atom found, but its declared size goes beyond file size
                 if (atomKey.Equals(atomHeader))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size");
-                    return (uint)(Source.Length - Source.Position + 16);
+                    uint actualSize = (uint)(Source.Length - Source.Position + 16);
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size (" + actualSize + " bytes)");
+                    return actualSize;
                 }
                 // atom not found
                 return 0;
