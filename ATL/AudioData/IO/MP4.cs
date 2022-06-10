@@ -65,7 +65,7 @@ namespace ATL.AudioData.IO
             { "rtng", Field.RATING },
             { "rate", Field.RATING },
             { "©wrt", Field.COMPOSER },
-            { "@des", Field.GENERAL_DESCRIPTION },
+            { "©des", Field.GENERAL_DESCRIPTION },
             { "desc", Field.GENERAL_DESCRIPTION },
             { "cprt", Field.COPYRIGHT },
             { "aART", Field.ALBUM_ARTIST },
