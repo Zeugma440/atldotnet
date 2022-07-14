@@ -428,7 +428,7 @@ namespace ATL.AudioData.IO
                 case Field.PUBLISHING_DATE:
                     if (DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
                     else return value;
-                case Field.RECORDING_YEAR_OR_DATE:
+                case Field.RECORDING_DATE_OR_YEAR:
                     if (value.Length > 4 && DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
                     else return value;
                 case Field.TRACK_NUMBER:

@@ -61,7 +61,7 @@ namespace ATL
             /// <summary>
             /// Alternate to RECORDING_YEAR and RECORDING_DATE where the field may contain both
             /// </summary>
-            RECORDING_YEAR_OR_DATE = 9,
+            RECORDING_DATE_OR_YEAR = 9,
             /// <summary>
             /// Recording day and month
             /// </summary>
@@ -241,7 +241,7 @@ namespace ATL
                 if (null == Lyrics) Lyrics = new LyricsInfo();
                 Lyrics.UnsynchronizedLyrics = value;
             }
-            else if (key == Field.RECORDING_YEAR_OR_DATE)
+            else if (key == Field.RECORDING_DATE_OR_YEAR)
             {
                 if (value.Length < 5) Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
                 else if (!Fields.ContainsKey(Field.RECORDING_DATE)) Fields[Field.RECORDING_DATE] = emptyIfZero(value);
@@ -429,16 +429,16 @@ namespace ATL
 
             foreach (KeyValuePair<Field, string> kvp in Fields) result[kvp.Key] = kvp.Value;
 
-            if (result.ContainsKey(Field.RECORDING_YEAR_OR_DATE))
+            if (result.ContainsKey(Field.RECORDING_DATE_OR_YEAR))
             {
-                string recYearOrDate = result[Field.RECORDING_YEAR_OR_DATE];
+                string recYearOrDate = result[Field.RECORDING_DATE_OR_YEAR];
                 if (null == result[Field.RECORDING_YEAR]) result[Field.RECORDING_YEAR] = recYearOrDate;
                 if (null == result[Field.RECORDING_DATE]) result[Field.RECORDING_DATE] = recYearOrDate;
             }
             else
             {
-                if (result.ContainsKey(Field.RECORDING_YEAR)) result[Field.RECORDING_YEAR_OR_DATE] = result[Field.RECORDING_YEAR];
-                else if (result.ContainsKey(Field.RECORDING_DATE)) result[Field.RECORDING_YEAR_OR_DATE] = result[Field.RECORDING_DATE];
+                if (result.ContainsKey(Field.RECORDING_DATE)) result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_DATE];
+                else if (result.ContainsKey(Field.RECORDING_YEAR)) result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_YEAR];
             }
 
 

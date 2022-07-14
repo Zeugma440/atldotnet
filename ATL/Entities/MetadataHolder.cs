@@ -166,7 +166,7 @@ namespace ATL
             {
                 tagData.IntegrateValue(Field.RECORDING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
                 tagData.IntegrateValue(Field.RECORDING_YEAR, (value > DateTime.MinValue) ? value.Year.ToString() : null);
-                tagData.IntegrateValue(Field.RECORDING_YEAR_OR_DATE, (value > DateTime.MinValue) ? value.ToShortDateString() : null);
+                tagData.IntegrateValue(Field.RECORDING_DATE_OR_YEAR, (value > DateTime.MinValue) ? value.ToShortDateString() : null);
                 tagData.IntegrateValue(Field.RECORDING_DAYMONTH, (value > DateTime.MinValue) ? value.ToString("ddMM", CultureInfo.InvariantCulture) : null);
                 tagData.IntegrateValue(Field.RECORDING_TIME, (value > DateTime.MinValue) ? value.ToString("HHmm", CultureInfo.InvariantCulture) : null);
             }
