@@ -369,13 +369,13 @@ namespace ATL.AudioData.IO
             }
             public bool HasPictureEncodingRestriction
             {
-                get { return (((TagRestrictions & 0x04) >> 2) > 0); }
+                get { return ((TagRestrictions & 0x04) >> 2) > 0; }
             }
             public int PictureSizeRestriction
             {
                 get
                 {
-                    switch ((TagRestrictions & 0x03))
+                    switch (TagRestrictions & 0x03)
                     {
                         case 0: return -1;  // No restriction
                         case 1: return 256; // 256x256 or less
@@ -440,7 +440,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public override byte FieldCodeFixedLength
         {
-            get { return 0; } // Actually 4 when strictly applying specs, but thanks to TXXX fields, any code is supported
+            get { return 0; } // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
         }
 
 
@@ -481,6 +481,12 @@ namespace ATL.AudioData.IO
             }
 
             return supportedMetaId;
+        }
+
+        /// <inheritdoc/>
+        protected override bool canHandleNonStandardField(string code, string value)
+        {
+            return true; // Will be transformed to a TXXX field
         }
 
 
@@ -766,7 +772,7 @@ namespace ATL.AudioData.IO
 
                         string[] tabS = strData.Split('\0');
                         Frame.ID = tabS[0];
-                        // Handle multiple values (ID3v2.4 only theoretically)
+                        // Handle multiple values (ID3v2.4 only, theoretically)
                         if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
                         else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
 

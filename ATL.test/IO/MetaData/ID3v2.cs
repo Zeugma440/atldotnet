@@ -421,6 +421,30 @@ namespace ATL.test.IO.MetaData
             test_RW_Unsupported_Empty(emptyFile);
         }
 
+        [TestMethod]
+        public void TagIO_RW_ID3v2_NonStandardField()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Add a field outside ID3v2 standards
+            TagData theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "BLAHBLAH", "heyheyhey");
+            theTag.AdditionalFields.Add(info);
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("BLAHBLAH"));
+            Assert.AreEqual("heyheyhey", theFile.ID3v2.AdditionalFields["BLAHBLAH"]);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
         private void checkTrackDiscZeroes(FileStream fs)
         {
             using (BinaryReader r = new BinaryReader(fs))

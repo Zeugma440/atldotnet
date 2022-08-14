@@ -416,6 +416,16 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(ID, dataOut);
         }
 
+        protected virtual bool canHandleNonStandardField(string code, string value)
+        {
+            return false;
+        }
+
+        protected virtual void preprocessWrite(TagData dataToWrite)
+        {
+            // Nothing here; the point is to override when needed
+        }
+
         protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
             string total;
@@ -484,6 +494,9 @@ namespace ATL.AudioData.IO
         {
             bool result = true;
 
+            structureHelper.Clear();
+            tagData.Pictures.Clear();
+
             // Constraint-check on non-supported values
             if (FieldCodeFixedLength > 0)
             {
@@ -505,16 +518,13 @@ namespace ATL.AudioData.IO
                     if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TagType.ANY == fieldInfo.TagType)
                     {
                         string fieldCode = Utils.ProtectValue(fieldInfo.NativeFieldCode);
-                        if (fieldCode.Length != FieldCodeFixedLength && !fieldCode.Contains("----")) // "----" = exception for MP4 extended fields (e.g. ----:com.apple.iTunes:CONDUCTOR)
+                        if (fieldCode.Length != FieldCodeFixedLength && !canHandleNonStandardField(fieldCode, Utils.ProtectValue(fieldInfo.Value)))
                         {
                             throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + fieldCode + "' is " + fieldCode.Length + " characters long and cannot be written");
                         }
                     }
                 }
             }
-
-            structureHelper.Clear();
-            tagData.Pictures.Clear();
 
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -543,6 +553,8 @@ namespace ATL.AudioData.IO
             dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
             dataToWrite.Cleanup();
+
+            preprocessWrite(dataToWrite);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
             result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);

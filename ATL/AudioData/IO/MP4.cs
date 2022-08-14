@@ -40,7 +40,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
         private const string ZONE_MP4_ILST = "ilst";                    // When editing a file with an existing 'meta' atom
         private const string ZONE_MP4_CHPL = "chpl";                    // Nero chapters
-        private const string ZONE_MP4_XTRA = "Xtra";                    // Specific fields (e.g. rating) inserted by Windows instead of using standard MP4 fields
+        private const string ZONE_MP4_XTRA = "Xtra";                    // Specific fields (e.g. rating) inserted by Microsoft instead of using standard MP4 fields
         private const string ZONE_MP4_QT_CHAP_NOTREF = "qt_notref";     // Placeholder for missing track reference atom
         private const string ZONE_MP4_QT_CHAP_CHAP = "qt_chap_chap";    // Quicktime chapters track reference
         private const string ZONE_MP4_QT_CHAP_TXT_TRAK = "qt_trak_txt"; // Quicktime chapters text track
@@ -115,6 +115,7 @@ namespace ATL.AudioData.IO
         private uint initialPaddingSize;
         private byte[] chapterTextTrackEdits = null;
         private byte[] chapterPictureTrackEdits = null;
+        private long udtaOffset;
 
         private byte headerTypeID;
         private byte bitrateTypeID;
@@ -199,6 +200,15 @@ namespace ATL.AudioData.IO
 
             return supportedMetaId;
         }
+        /// <inheritdoc/>
+        protected override bool canHandleNonStandardField(string code, string value)
+        {
+            // Belongs to the XTRA zone + parent UDTA atom has been located => OK
+            if (code.StartsWith("WM/", StringComparison.OrdinalIgnoreCase)) return true;
+            string cleanedCode = code.Replace("----:", "");
+            if (cleanedCode.Contains(":")) return true; // Is part of the standard way of reprsenting non-standard fields
+            else throw new NotSupportedException("Non-standard fields must have a namespace (e.g. namespace:fieldName). Found : '" + cleanedCode + '"');
+        }
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -218,6 +228,7 @@ namespace ATL.AudioData.IO
             initialPaddingOffset = -1;
             AudioDataOffset = -1;
             AudioDataSize = 0;
+            udtaOffset = 0;
 
             chapterTextTrackEdits = null;
             chapterPictureTrackEdits = null;
@@ -1083,7 +1094,7 @@ namespace ATL.AudioData.IO
             if (!udtaFound)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "udta atom could not be found");
-                // Create a placeholder to create a new UDTA atom from scratch, located as ad direct child of MOOV
+                // Create a placeholder to create a new UDTA atom from scratch, located as a direct child of MOOV
                 if (readTagParams.PrepareForWriting)
                 {
                     structureHelper.AddSize(moovPosition - 8 + moovSize, atomSize, ZONE_MP4_NOMETA);
@@ -1096,6 +1107,7 @@ namespace ATL.AudioData.IO
             }
 
             udtaPosition = source.BaseStream.Position;
+            udtaOffset = udtaPosition;
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddSize(source.BaseStream.Position - 8, atomSize, ZONE_MP4_NOMETA);
@@ -1487,6 +1499,22 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <inheritdoc/>
+        protected override void preprocessWrite(TagData dataToWrite)
+        {
+            // Scan AdditionalData for the need to create the Xtra zone
+            foreach (MetaFieldInfo info in dataToWrite.AdditionalFields)
+            {
+                // Belongs to the XTRA zone + parent UDTA atom has been located => OK
+                if (info.NativeFieldCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase) && udtaOffset > 0)
+                {
+                    // Allow creating the 'xtra' atom / zone from scratch
+                    structureHelper.AddZone(udtaOffset, 0, ZONE_MP4_XTRA);
+                    break;
+                }
+            }
+        }
+
         protected override int write(TagData tag, BinaryWriter w, string zone)
         {
             long tagSizePos;
@@ -1698,25 +1726,29 @@ namespace ATL.AudioData.IO
             // == METADATA HEADER ==
             frameSizePos1 = writer.BaseStream.Position;
             writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-            if (frameCode.StartsWith("----")) // Specific metadata
+            if (frameCode.Length > FieldCodeFixedLength && !frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase)) // Specific non-Microsoft custom metadata
             {
                 string[] frameCodeComponents = frameCode.Split(':');
-                if (3 == frameCodeComponents.Length)
+                bool isComplete = frameCodeComponents.Length > 2 && frameCodeComponents[0] == "----";
+                if (isComplete || frameCodeComponents.Length > 1)
                 {
                     writer.Write(Utils.Latin1Encoding.GetBytes("----"));
 
-                    writer.Write(StreamUtils.EncodeBEInt32(frameCodeComponents[1].Length + 4 + 4 + 4));
+                    string nmespace = isComplete ? frameCodeComponents[1] : frameCodeComponents[0];
+                    string fieldCode = isComplete ? frameCodeComponents[2] : frameCodeComponents[1];
+
+                    writer.Write(StreamUtils.EncodeBEInt32(nmespace.Length + 4 + 4 + 4));
                     writer.Write(Utils.Latin1Encoding.GetBytes("mean"));
                     writer.Write(frameFlags);
-                    writer.Write(Utils.Latin1Encoding.GetBytes(frameCodeComponents[1]));
+                    writer.Write(Utils.Latin1Encoding.GetBytes(nmespace));
 
-                    writer.Write(StreamUtils.EncodeBEInt32(frameCodeComponents[2].Length + 4 + 4 + 4));
+                    writer.Write(StreamUtils.EncodeBEInt32(fieldCode.Length + 4 + 4 + 4));
                     writer.Write(Utils.Latin1Encoding.GetBytes("name"));
                     writer.Write(frameFlags);
-                    writer.Write(Utils.Latin1Encoding.GetBytes(frameCodeComponents[2]));
+                    writer.Write(Utils.Latin1Encoding.GetBytes(fieldCode));
                 }
             }
-            else
+            else if (!frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase))
             {
                 writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             }
@@ -1828,7 +1860,7 @@ namespace ATL.AudioData.IO
 
         private int writeXtraFrames(TagData tag, BinaryWriter w)
         {
-            IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/"));
+            IEnumerable<MetaFieldInfo> xtraTags = tag.AdditionalFields.Where(fi => (fi.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fi.TagType.Equals(getImplementedTagType())) && !fi.MarkedForDeletion && fi.NativeFieldCode.ToLower().StartsWith("wm/", StringComparison.OrdinalIgnoreCase));
 
             if (!xtraTags.Any()) return 0;
 

@@ -9,6 +9,8 @@ using static ATL.PictureInfo;
 using ATL.AudioData.IO;
 using static ATL.Logging.Log;
 using ATL.Logging;
+using Commons;
+using System.Text;
 
 namespace ATL.test.IO.MetaData
 {
@@ -201,7 +203,7 @@ namespace ATL.test.IO.MetaData
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
-                        Assert.AreEqual(ImageFormat.Png, picture.RawFormat);
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
                         Assert.AreEqual(175, picture.Width);
                         Assert.AreEqual(168, picture.Height);
                     }
@@ -305,7 +307,7 @@ namespace ATL.test.IO.MetaData
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
-                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
                         Assert.AreEqual(600, picture.Height);
                         Assert.AreEqual(900, picture.Width);
                     }
@@ -315,7 +317,7 @@ namespace ATL.test.IO.MetaData
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
-                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
                         Assert.AreEqual(290, picture.Height);
                         Assert.AreEqual(900, picture.Width);
                     }
@@ -332,7 +334,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Remove additional picture
-            picInfo = new PictureInfo(PictureInfo.PIC_TYPE.Generic, 1);
+            picInfo = new PictureInfo(PIC_TYPE.Generic, 1);
             picInfo.MarkedForDeletion = true;
             theTag.Pictures.Add(picInfo);
 
@@ -360,7 +362,7 @@ namespace ATL.test.IO.MetaData
                 {
                     using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                     {
-                        Assert.AreEqual(ImageFormat.Jpeg, picture.RawFormat);
+                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
                         Assert.AreEqual(290, picture.Height);
                         Assert.AreEqual(900, picture.Width);
                     }
@@ -372,6 +374,93 @@ namespace ATL.test.IO.MetaData
 
 
             // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars()
+        {
+            new ConsoleLogger();
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : tag-free M4A
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            // Add a field outside MP4 standards, without namespace
+            TagData theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo infoKO = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "BLAHBLAH", "heyheyhey");
+            theTag.AdditionalFields.Add(infoKO);
+            Assert.IsFalse(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            IList<LogItem> logItems = log.GetAllItems(LV_ERROR);
+            Assert.IsTrue(logItems.Count > 0);
+            bool found = false;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("must have a namespace")) found = true;
+            }
+            Assert.IsTrue(found);
+
+            // Add a field outside MP4 standards, with or without the leading '----'
+            theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo infoOK = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "my.namespace:BLAHBLAH", "heyheyhey");
+            MetaFieldInfo infoOK2 = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "----:my.namespace:BLAHBLAH2", "hohoho");
+            theTag.AdditionalFields.Add(infoOK);
+            theTag.AdditionalFields.Add(infoOK2);
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("----:my.namespace:BLAHBLAH"));
+            Assert.AreEqual("heyheyhey", theFile.NativeTag.AdditionalFields["----:my.namespace:BLAHBLAH"]);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("----:my.namespace:BLAHBLAH2"));
+            Assert.AreEqual("hohoho", theFile.NativeTag.AdditionalFields["----:my.namespace:BLAHBLAH2"]);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_NonStandard_WM()
+        {
+            new ConsoleLogger();
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : tag-free M4A
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            // Add a field outside Microsoft standards
+            TagData theTag = new TagData();
+            theTag.AdditionalFields = new List<MetaFieldInfo>();
+            MetaFieldInfo infoOK = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "WM/ParentalRating", "M for Mature");
+            theTag.AdditionalFields.Add(infoOK);
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/ParentalRating"));
+            Assert.AreEqual("M for Mature", theFile.NativeTag.AdditionalFields["WM/ParentalRating"]);
+
+            // Check that it has indeed been added to the Xtra atom
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("Xtra")));
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("WM/ParentalRating")));
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Encoding.Unicode.GetBytes("M for Mature")));
+            }
+
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
