@@ -378,13 +378,13 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars()
+        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars_KO()
         {
             new ConsoleLogger();
             ArrayLogger log = new ArrayLogger();
 
             // Source : tag-free M4A
-            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
@@ -392,9 +392,11 @@ namespace ATL.test.IO.MetaData
             // Add a field outside MP4 standards, without namespace
             TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo infoKO = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "BLAHBLAH", "heyheyhey");
+            MetaFieldInfo infoKO = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "BLEHBLEH", "heyheyhey");
             theTag.AdditionalFields.Add(infoKO);
-            Assert.IsFalse(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
             IList<LogItem> logItems = log.GetAllItems(LV_ERROR);
             Assert.IsTrue(logItems.Count > 0);
             bool found = false;
@@ -404,8 +406,29 @@ namespace ATL.test.IO.MetaData
             }
             Assert.IsTrue(found);
 
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            // Make sure the field has indeed been ignored
+            Assert.IsFalse(theFile.NativeTag.AdditionalFields.ContainsKey("----:BLEHBLEH"));
+            Assert.IsFalse(theFile.NativeTag.AdditionalFields.ContainsKey("BLEHBLEH"));
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars_OK()
+        {
+            new ConsoleLogger();
+
             // Add a field outside MP4 standards, with or without the leading '----'
-            theTag = new TagData();
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            TagData theTag = new TagData();
             theTag.AdditionalFields = new List<MetaFieldInfo>();
             MetaFieldInfo infoOK = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "my.namespace:BLAHBLAH", "heyheyhey");
             MetaFieldInfo infoOK2 = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "----:my.namespace:BLAHBLAH2", "hohoho");

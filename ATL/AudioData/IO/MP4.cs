@@ -207,7 +207,8 @@ namespace ATL.AudioData.IO
             if (code.StartsWith("WM/", StringComparison.OrdinalIgnoreCase)) return true;
             string cleanedCode = code.Replace("----:", "");
             if (cleanedCode.Contains(":")) return true; // Is part of the standard way of reprsenting non-standard fields
-            else throw new NotSupportedException("Non-standard fields must have a namespace (e.g. namespace:fieldName). Found : '" + cleanedCode + '"');
+            else LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Non-standard fields must have a namespace (e.g. namespace:fieldName) Field '" + cleanedCode + "' will be ignored.");
+            return false;
         }
 
 

@@ -1,4 +1,5 @@
-﻿using Commons;
+﻿using ATL.Logging;
+using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -502,17 +503,21 @@ namespace ATL.AudioData.IO
             {
                 if (tag.Pictures != null)
                 {
+                    ISet<PictureInfo> picsToRemove = new HashSet<PictureInfo>();
                     foreach (PictureInfo picInfo in tag.Pictures)
                     {
                         if (PictureInfo.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
                         {
                             if ((-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength))
                             {
-                                throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and cannot be written");
+                                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and will be ignored");
+                                picsToRemove.Add(picInfo);
                             }
                         }
                     }
+                    foreach (PictureInfo picInfo in picsToRemove) tag.Pictures.Remove(picInfo);
                 }
+                ISet<MetaFieldInfo> infoToRemove = new HashSet<MetaFieldInfo>();
                 foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
                     if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TagType.ANY == fieldInfo.TagType)
@@ -520,10 +525,12 @@ namespace ATL.AudioData.IO
                         string fieldCode = Utils.ProtectValue(fieldInfo.NativeFieldCode);
                         if (fieldCode.Length != FieldCodeFixedLength && !canHandleNonStandardField(fieldCode, Utils.ProtectValue(fieldInfo.Value)))
                         {
-                            throw new NotSupportedException("Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + fieldCode + "' is " + fieldCode.Length + " characters long and cannot be written");
+                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + fieldCode + "' is " + fieldCode.Length + " characters long and will be ignored");
+                            infoToRemove.Add(fieldInfo);
                         }
                     }
                 }
+                foreach (MetaFieldInfo info in infoToRemove) tag.AdditionalFields.Remove(info);
             }
 
             // Read all the fields in the existing tag (including unsupported fields)
