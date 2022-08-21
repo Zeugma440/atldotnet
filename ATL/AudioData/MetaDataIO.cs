@@ -594,6 +594,8 @@ namespace ATL.AudioData.IO
                 {
                     if (zone.IsDeletable)
                     {
+                        LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
+
                         if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
                         if (zone.CoreSignature.Length > 0)
@@ -608,7 +610,7 @@ namespace ATL.AudioData.IO
                             result = result && structureHelper.RewriteHeaders(w, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
                         else
                             result = result && structureHelper.RewriteHeaders(w, null, 0, ACTION.Edit, zone.Name);
-                    }
+                        }
 
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
