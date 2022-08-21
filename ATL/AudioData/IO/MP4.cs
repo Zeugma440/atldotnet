@@ -392,13 +392,6 @@ namespace ATL.AudioData.IO
 
             long trackCounterPosition = source.BaseStream.Position + 76;
 
-            if (readTagParams.PrepareForWriting)
-            {
-                structureHelper.AddCounter(trackCounterPosition, 1, ZONE_MP4_QT_CHAP_PIC_TRAK);
-                structureHelper.AddCounter(trackCounterPosition, 1, ZONE_MP4_QT_CHAP_TXT_TRAK);
-            }
-
-
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
             long trakSize = 0;
@@ -406,7 +399,7 @@ namespace ATL.AudioData.IO
             // Loop through tracks
             do
             {
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, trackCounterPosition);
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, trackCounterPosition, moovPosition, moovSize);
                 if (-1 == trakSize)
                 {
                     // TODO do better than that
@@ -535,7 +528,9 @@ namespace ATL.AudioData.IO
             IList<MP4Sample> chapterPictureTrackSamples,
             IDictionary<int, IList<int>> chapterTrackIndexes,
             IList<long> mediaTrackOffsets,
-            long trackCounterOffset)
+            long trackCounterOffset,
+            long moovPosition,
+            long moovSize)
         {
             long trakPosition;
             int mediaTimeScale = 1000;
@@ -547,9 +542,12 @@ namespace ATL.AudioData.IO
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
-            bool isCurrentTrackFirstChapterTextTrack = false;
-            bool isCurrentTrackFirstChapterPicturesTrack = false;
+            bool isCurrentTrackFirstChapterTextTrack = false; // First chapter text track which should contain chapter titles (as opposed to URLs)
+            bool isCurrentTrackOtherChapterTrack = false; // Generic marker for other chapter-related text tracks
+            bool isCurrentTrackFirstChapterPicturesTrack = false; // First chapter picture track which should contain chapter "covers"
             bool isCurrentTrackFirstAudioTrack = false;
+
+            string trackZoneName = "";
 
             uint trakSize = lookForMP4Atom(source.BaseStream, "trak");
             if (0 == trakSize)
@@ -573,8 +571,9 @@ namespace ATL.AudioData.IO
             int trackId = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddZone(trakPosition, 0, "track." + trackId, false);
-                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, "track." + trackId);
+                trackZoneName = "track." + trackId;
+                structureHelper.AddZone(trakPosition, 0, trackZoneName, false);
+                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, trackZoneName);
             }
 
             // Detect the track type
@@ -619,6 +618,7 @@ namespace ATL.AudioData.IO
             // Check if current track is the 1st chapter track
             // NB : Per convention, we will admit that the 1st track referenced in the 'chap' atom
             // contains the chapter names (as opposed to chapter URLs or chapter images)
+            isCurrentTrackOtherChapterTrack = false;
             if ("text".Equals(mediaType) && chapterTrackIndexes.Count > 0)
             {
                 foreach (IList<int> list in chapterTrackIndexes.Values)
@@ -626,7 +626,16 @@ namespace ATL.AudioData.IO
                     if (trackId == list[0])
                     {
                         isCurrentTrackFirstChapterTextTrack = true;
+                        isCurrentTrackOtherChapterTrack = false;
                         break;
+                    }
+                    foreach (int index in list)
+                    {
+                        if (trackId == index)
+                        {
+                            isCurrentTrackOtherChapterTrack = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -634,6 +643,15 @@ namespace ATL.AudioData.IO
             {
                 mediaTrackOffsets.Add(trakPosition);
                 isCurrentTrackFirstAudioTrack = (1 == mediaTrackOffsets.Count);
+            }
+
+            if (readTagParams.PrepareForWriting && isCurrentTrackOtherChapterTrack && !isCurrentTrackFirstChapterTextTrack)
+            {
+                structureHelper.RemoveZone(trackZoneName);
+                trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
+                structureHelper.AddZone(trakPosition, (int)trakSize, trackZoneName);
+                structureHelper.AddSize(moovPosition - 8, moovSize, trackZoneName);
+                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, trackZoneName);
             }
 
             source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
@@ -742,15 +760,17 @@ namespace ATL.AudioData.IO
             // Read chapters textual data
             if (isCurrentTrackFirstChapterTextTrack)
             {
-                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterTextTrackSamples, mediaTimeScale, true);
-                if (int32Data > 0) return int32Data;
+                Tuple<uint, string> result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterTextTrackSamples, mediaTimeScale, true);
+                if (result.Item1 > 0) return int32Data; // An error has occured
+                if (result.Item2.Length > 0) trackZoneName = result.Item2;
             }
 
             // Read chapters picture data
             if (isCurrentTrackFirstChapterPicturesTrack)
             {
-                int32Data = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterPictureTrackSamples, mediaTimeScale, false);
-                if (int32Data > 0) return int32Data;
+                Tuple<uint, string> result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterPictureTrackSamples, mediaTimeScale, false);
+                if (result.Item1 > 0) return int32Data; // An error has occured
+                if (result.Item2.Length > 0) trackZoneName = result.Item2;
             }
 
             source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
@@ -839,9 +859,13 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
-                                                                                   // "Physical" audio chunks are referenced by position (offset) in  moov.trak.mdia.minf.stbl.stco / co64
-                                                                                   // => They have to be rewritten if the position (offset) of the 'mdat' atom changes
+            /*
+             * -8 because the header has already been read
+             * 
+             * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
+             * => They have to be rewritten if the position (offset) of the 'mdat' atom changes
+             */
+            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin);
             if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTextTrack || isCurrentTrackFirstChapterPicturesTrack)
             {
                 source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
@@ -910,11 +934,11 @@ namespace ATL.AudioData.IO
                             }
                         }
                     }
-                    else // Don't need to save chunks for chapters since they are entirely rewritten
+                    else if (!isCurrentTrackOtherChapterTrack) // Don't need to save chunks for chapters since they are entirely rewritten
                     {
                         string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
                         structureHelper.AddZone(valueLong, 0, zoneName, false, false);
-                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
+                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName, trackZoneName);
                     }
                 } // Chunk offsets
             }
@@ -924,13 +948,14 @@ namespace ATL.AudioData.IO
             return trakSize;
         }
 
-        private uint readQtChapter(
+        private Tuple<uint, string> readQtChapter(
             BinaryReader source,
             ReadTagParams readTagParams,
             long stblPosition,
             long trakPosition,
             uint trakSize,
             int currentTrakIndex,
+            long trackCounterOffset,
             IList<MP4Sample> chapterTrackSamples,
             int mediaTimeScale,
             bool isText
@@ -938,13 +963,14 @@ namespace ATL.AudioData.IO
         {
             uint int32Data = 0;
             byte[] data32 = new byte[4];
+            string zoneName = "";
 
             source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
             if (0 == lookForMP4Atom(source.BaseStream, "stts"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stts atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return Tuple.Create(trakSize, "");
             }
             source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
             int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
@@ -957,7 +983,12 @@ namespace ATL.AudioData.IO
 
                 // Memorize zone
                 if (readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
-                    structureHelper.AddZone(trakPosition, (int)trakSize, isText ? ZONE_MP4_QT_CHAP_TXT_TRAK : ZONE_MP4_QT_CHAP_PIC_TRAK);
+                {
+                    zoneName = isText ? ZONE_MP4_QT_CHAP_TXT_TRAK : ZONE_MP4_QT_CHAP_PIC_TRAK;
+                    structureHelper.AddZone(trakPosition, (int)trakSize, zoneName);
+                    structureHelper.AddCounter(trackCounterOffset, (1 == currentTrakIndex) ? 2 : 1, zoneName);
+                    structureHelper.RemoveZone("track." + currentTrakIndex); // Remove previously recorded generic track zone
+                }
 
                 uint frameCount, sampleDuration;
                 chapterTrackSamples.Clear();
@@ -982,7 +1013,7 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsc atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return Tuple.Create(trakSize, "");
             }
             source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
             int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
@@ -1051,7 +1082,7 @@ namespace ATL.AudioData.IO
                 else
                     chapterPictureTrackEdits = source.ReadBytes((int)edtsSize);
             }
-            return 0;
+            return Tuple.Create(0u, zoneName);
         }
 
         private void readUserData(BinaryReader source, ReadTagParams readTagParams, long moovPosition, uint moovSize)
@@ -1588,7 +1619,9 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Quicktime chapter text track
             {
-                result = writeQTChaptersTrack(w, qtChapterTextTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
+                if (zone.Equals(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Text track ATL suppors
+                    result = writeQTChaptersTrack(w, qtChapterTextTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
+                else return 1; // Other text track ATL doesn't support; needs to appear active
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_PIC_TRAK)) // Quicktime chapter picture track
             {
