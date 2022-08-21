@@ -260,7 +260,7 @@ namespace ATL.AudioData.IO
         private static readonly IDictionary<string, string> frameMapping_v24_3 = new Dictionary<string, string>();
 
         // Frame header (universal)
-        private class FrameHeader
+        private sealed class FrameHeader
         {
             public string ID;                           // Frame ID
             public int Size;                            // Size excluding header
@@ -268,7 +268,7 @@ namespace ATL.AudioData.IO
         }
 
         // ID3v2 header data - for internal use
-        private class TagInfo
+        private sealed class TagInfo
         {
             // Real structure of ID3v2 header
             public char[] ID = new char[3];                            // Always "ID3"
@@ -389,14 +389,14 @@ namespace ATL.AudioData.IO
 #pragma warning restore S2437 // Silly bit operations should not be performed
 
         // Unicode BOM properties
-        private class BomProperties
+        private sealed class BomProperties
         {
             public bool Found = false;          // BOM found
             public int Size = 0;                // Size of BOM
             public Encoding Encoding;           // Corresponding encoding
         }
 
-        private class RichStructure
+        private sealed class RichStructure
         {
             // Comments and unsynch'ed lyrics
             public string LanguageCode;
@@ -446,6 +446,7 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
+#pragma warning disable S3963 // "static" fields should be initialized inline; removed because this initialization is dynamic and can't be done inline as there already are inline initializers
         static ID3v2()
         {
             foreach (string s in frameMapping_v22_4.Keys)
@@ -459,7 +460,11 @@ namespace ATL.AudioData.IO
                 if (frameMapping_v22_3.ContainsKey(frameMapping_v23_4[s])) frameMapping_v22_3[frameMapping_v23_4[s]] = s;
             }
         }
+#pragma warning restore S3963 // "static" fields should be initialized inline
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ID3v2()
         {
             ResetData();

@@ -25,6 +25,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class AIFF : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
+#pragma warning disable S1144 // Unused private types or members should be removed
         public const string AIFF_CONTAINER_ID = "FORM";
 
         private const string FORMTYPE_AIFF = "AIFF";
@@ -44,6 +45,8 @@ namespace ATL.AudioData.IO
         private const string CHUNKTYPE_COPYRIGHT = "(c) ";
         private const string CHUNKTYPE_ANNOTATION = "ANNO"; // Use in discouraged by specs in favour of COMT
         private const string CHUNKTYPE_ID3TAG = "ID3 ";
+#pragma warning restore S1144 // Unused private types or members should be removed
+
 
         // AIFx timestamp are defined as "the number of seconds since January 1, 1904"
         private static DateTime timestampBase = new DateTime(1904, 1, 1);
