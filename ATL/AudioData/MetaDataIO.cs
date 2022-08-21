@@ -501,22 +501,6 @@ namespace ATL.AudioData.IO
             // Constraint-check on non-supported values
             if (FieldCodeFixedLength > 0)
             {
-                if (tag.Pictures != null)
-                {
-                    ISet<PictureInfo> picsToRemove = new HashSet<PictureInfo>();
-                    foreach (PictureInfo picInfo in tag.Pictures)
-                    {
-                        if (PictureInfo.PIC_TYPE.Unsupported.Equals(picInfo.PicType) && (picInfo.TagType.Equals(getImplementedTagType())))
-                        {
-                            if ((-1 == picInfo.NativePicCode) && (Utils.ProtectValue(picInfo.NativePicCodeStr).Length != FieldCodeFixedLength))
-                            {
-                                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + Utils.ProtectValue(picInfo.NativePicCodeStr) + "' is " + Utils.ProtectValue(picInfo.NativePicCodeStr).Length + " characters long and will be ignored");
-                                picsToRemove.Add(picInfo);
-                            }
-                        }
-                    }
-                    foreach (PictureInfo picInfo in picsToRemove) tag.Pictures.Remove(picInfo);
-                }
                 ISet<MetaFieldInfo> infoToRemove = new HashSet<MetaFieldInfo>();
                 foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
                 {
@@ -610,7 +594,7 @@ namespace ATL.AudioData.IO
                             result = result && structureHelper.RewriteHeaders(w, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
                         else
                             result = result && structureHelper.RewriteHeaders(w, null, 0, ACTION.Edit, zone.Name);
-                        }
+                    }
 
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
