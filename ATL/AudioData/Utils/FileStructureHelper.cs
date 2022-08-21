@@ -286,9 +286,22 @@ namespace ATL.AudioData
         /// <summary>
         /// Remove the zone identified with the given name
         /// </summary>
-        public void RemoveZone(string name)
+        public void RemoveZone(string name, bool removeNestedHeaders = true)
         {
             zones.Remove(name);
+            if (removeNestedHeaders)
+            {
+                foreach (Zone zone in zones.Values)
+                {
+                    for (int i = 0; i < zone.Headers.Count; i++)
+                    {
+                        if (zone.Headers[i].ParentZone == name)
+                        {
+                            zone.Headers.RemoveAt(i--);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
