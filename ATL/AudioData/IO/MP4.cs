@@ -18,6 +18,8 @@ namespace ATL.AudioData.IO
     /// Implementation notes
     ///     - If the UDTA atom is absent as a direct child to the MOOV atom, ATL seeks the first TRAK that has an UDTA atom
     ///     and considers that one as the entire file's metadata
+    ///     
+    ///     - When removing a Track, physical chunks belonging to the track (i.e. those indexed by 'stco') won't be removed
     /// 
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
