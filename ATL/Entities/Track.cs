@@ -11,6 +11,9 @@ namespace ATL
 {
     /// <summary>
     /// High-level class for audio file manipulation
+    ///
+    /// Track is the "user-friendly" go-to class you should use for basic operations. Advanced operations should use lower level classes.
+    /// Fields are mapped at the lowest level of the library (AudioData.IO). From there on, information "bubbles up" to Track.
     /// </summary>
     public class Track
     {
