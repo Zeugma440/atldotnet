@@ -515,7 +515,7 @@ namespace ATL.AudioData.IO
                     if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                     {
                         // Zone size = size of chapters
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT);
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT, false);
                         // Zone size header = actual size of the zone that may include audio data
                         structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
                     }
@@ -573,7 +573,7 @@ namespace ATL.AudioData.IO
             int trackId = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddZone(trakPosition, 0, "track." + trackId);
+                structureHelper.AddZone(trakPosition, 0, "track." + trackId, false);
                 structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, "track." + trackId);
             }
 
