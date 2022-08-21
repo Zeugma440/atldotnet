@@ -417,11 +417,22 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(ID, dataOut);
         }
 
+        /// <summary>
+        /// Indicate whether the current MetaIO can handle the given non-standard field
+        /// See https://github.com/Zeugma440/atldotnet/wiki/Focus-on-non-standard-fields
+        /// </summary>
+        /// <param name="code">Code of the non-standard field</param>
+        /// <param name="value">Value of the non-standard field</param>
+        /// <returns></returns>
         protected virtual bool canHandleNonStandardField(string code, string value)
         {
             return false;
         }
 
+        /// <summary>
+        /// Overridable function called when writing the file, just before looping the zones
+        /// </summary>
+        /// <param name="dataToWrite">Metadata to write</param>
         protected virtual void preprocessWrite(TagData dataToWrite)
         {
             // Nothing here; the point is to override when needed
