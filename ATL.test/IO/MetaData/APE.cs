@@ -108,6 +108,9 @@ namespace ATL.test.IO.MetaData
 
                 Assert.AreEqual("03嘿!你写日记吗?", meta.Title);
                 Assert.AreEqual("小虎队队队", meta.Artist);
+
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             } finally
             {
                 ATL.Settings.DefaultTextEncoding = initialEncoding;
