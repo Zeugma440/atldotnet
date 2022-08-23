@@ -90,7 +90,7 @@ namespace ATL.AudioData
             /// </summary>
             public readonly string ParentZone;
             /// <summary>
-            /// Zone to which the header value is pointing to (for post-processing only)
+            /// Zone to which the header value is pointing to (index-type header only; for post-processing only)
             /// </summary>
             public readonly string ValueZone;
             /// <summary>
@@ -286,21 +286,20 @@ namespace ATL.AudioData
         /// <summary>
         /// Remove the zone identified with the given name
         /// </summary>
-        public void RemoveZone(string name, bool removeNestedHeaders = true)
+        public void RemoveZone(string name)
         {
             zones.Remove(name);
-            if (removeNestedHeaders)
+        }
+
+        /// <summary>
+        /// Remove the zones starting with the given name
+        /// </summary>
+        public void RemoveZonesStartingWith(string name)
+        {
+            var keys = new HashSet<string>(zones.Keys); // Don't iterate directly on the collection we want to remove stuff from
+            foreach (var zoneName in keys.Where(zoneName => zoneName.StartsWith(name, StringComparison.OrdinalIgnoreCase)))
             {
-                foreach (Zone zone in zones.Values)
-                {
-                    for (int i = 0; i < zone.Headers.Count; i++)
-                    {
-                        if (zone.Headers[i].ParentZone == name)
-                        {
-                            zone.Headers.RemoveAt(i--);
-                        }
-                    }
-                }
+                zones.Remove(zoneName);
             }
         }
 

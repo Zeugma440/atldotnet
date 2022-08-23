@@ -940,7 +940,7 @@ namespace ATL.AudioData.IO
                     {
                         string zoneName = ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex + "." + i;
                         structureHelper.AddZone(valueLong, 0, zoneName, false, false);
-                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName, trackZoneName);
+                        structureHelper.AddIndex(source.BaseStream.Position - nbBytes, valueObj, false, zoneName);
                     }
                 } // Chunk offsets
             }
@@ -990,6 +990,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(trakPosition, (int)trakSize, zoneName);
                     structureHelper.AddCounter(trackCounterOffset, (1 == currentTrakIndex) ? 2 : 1, zoneName);
                     structureHelper.RemoveZone("track." + currentTrakIndex); // Remove previously recorded generic track zone
+                    structureHelper.RemoveZonesStartingWith(ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex); // Remove chunks associated with previously recorded generic track zone
                 }
 
                 uint frameCount, sampleDuration;
