@@ -113,7 +113,7 @@
         public UrlInfo Url { get; set; }
         /// <summary>
         /// Associated picture
-        /// NB : Only supported by ID3v2
+        /// NB : Only supported by ID3v2 and MP4/M4A
         /// </summary>
         public PictureInfo Picture { get; set; }
 

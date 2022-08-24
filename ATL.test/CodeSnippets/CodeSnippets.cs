@@ -18,7 +18,8 @@ namespace ATL.test.CodeSnippets
         string cuesheetFilePath;
         string playlistFilePath;
         readonly string playlistPath = TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u";
-        readonly string imagePath = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
+        readonly string imagePath1 = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg";
+        readonly string imagePath2 = TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg";
 
         readonly Log theLog = new Log();
         readonly System.Collections.Generic.IList<Log.LogItem> messages = new System.Collections.Generic.List<Log.LogItem>();
@@ -126,7 +127,7 @@ namespace ATL.test.CodeSnippets
             theTrack.EmbeddedPictures.RemoveAt(0);
 
             // Add 'CD' embedded picture
-            PictureInfo newPicture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath), PictureInfo.PIC_TYPE.CD);
+            PictureInfo newPicture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath1), PictureInfo.PIC_TYPE.CD);
             theTrack.EmbeddedPictures.Add(newPicture);
 
             // Save modifications on the disc
@@ -143,27 +144,19 @@ namespace ATL.test.CodeSnippets
             theFile.Chapters = new System.Collections.Generic.List<ChapterInfo>();
 
             ChapterInfo ch = new ChapterInfo();
-            ch.StartTime = 123;
-            ch.StartOffset = 456;
-            ch.EndTime = 789;
-            ch.EndOffset = 101112;
-            ch.UniqueID = "";
-            ch.Title = "aaa";
-            ch.Subtitle = "bbb";
-            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd");
+            ch.StartTime = 0;
+            ch.UniqueID = ""; // Unique ID is specific to ID3v2 chapters
+            ch.Title = "title1";
+            ch.Subtitle = "subtitle1"; // Substitle is specific to ID3v2 chapters
+            ch.Url = new ChapterInfo.UrlInfo("somewhere", "https://some.whe.re");  // Chapter URL is specific to ID3v2 chapters
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath1)); // Pictures are supported by ID3v2 and MP4/M4A
             theFile.Chapters.Add(ch);
 
-            ch = new ChapterInfo();
-            ch.StartTime = 1230;
-            ch.StartOffset = 4560;
-            ch.EndTime = 7890;
-            ch.EndOffset = 1011120;
+            ch = new ChapterInfo(1230, "title2"); // Faster that way :-)
             ch.UniqueID = "002";
-            ch.Title = "aaa0";
-            ch.Subtitle = "bbb0";
-            ch.Url = new ChapterInfo.UrlInfo("ccc", "ddd0");
-            // Add a picture to the 2nd chapter
-            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath));
+            ch.Subtitle = "subtitle2";
+            ch.Url = new ChapterInfo.UrlInfo("anywhere", "https://any.whe.re");
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(imagePath2));
             theFile.Chapters.Add(ch);
 
             // Persists the chapters
