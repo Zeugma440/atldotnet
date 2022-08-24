@@ -959,6 +959,61 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Chapters_QT_Pic_QA()
+        {
+            new ConsoleLogger();
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : file without 'chpl' atom
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+            // Modify elements
+            TagData theTag = new TagData();
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 111;
+            ch.Title = "aaa";
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 10000;
+            ch.Title = "aaa0";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+            IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
+            Assert.IsTrue(logItems.Count > 0);
+            int nbFound = 0;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("First chapter start time is > 0:00")) nbFound++;
+                if (l.Message.Contains("Not all chapters have an associated picture")) nbFound++;
+            }
+            Assert.AreEqual(2, nbFound);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Chapters_CapNero()
         {
             new ConsoleLogger();

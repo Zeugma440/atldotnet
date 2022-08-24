@@ -1548,6 +1548,20 @@ namespace ATL.AudioData.IO
                     break;
                 }
             }
+
+            // Chapter picture-related QA checks specific to MP4/M4A
+            if (dataToWrite.Chapters != null)
+            {
+                long nbPics = dataToWrite.Chapters.LongCount(c => c.Picture != null);
+                if (nbPics > 0)
+                {
+                    if (dataToWrite.Chapters[0].StartTime > 0)
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "First chapter start time is > 0:00 - that might cause chapter picture display issues on some players such as VLC.");
+
+                    if (nbPics < dataToWrite.Chapters.Count)
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Not all chapters have an associated picture - that might cause chapter picture display issues on some players such as VLC.");
+                }
+            }
         }
 
         protected override int write(TagData tag, BinaryWriter w, string zone)
