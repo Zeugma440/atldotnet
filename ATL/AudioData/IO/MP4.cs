@@ -2295,7 +2295,7 @@ namespace ATL.AudioData.IO
             foreach (ChapterInfo chapter in workingChapters)
             {
                 w.Write(StreamUtils.EncodeBEUInt32(1));
-                w.Write(StreamUtils.EncodeBEUInt32((uint)Math.Round((chapter.EndTime - chapter.StartTime) * trackTimescale / 1000.0)));
+                w.Write(StreamUtils.EncodeBEUInt32((uint)Math.Ceiling((chapter.EndTime - chapter.StartTime) * trackTimescale / 1000.0)));
             }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(sttsPos, SeekOrigin.Begin);

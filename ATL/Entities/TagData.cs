@@ -550,7 +550,7 @@ namespace ATL
                     previousChapter = chapter;
                 }
                 // Calculate duration of final chapter with duration of audio
-                if (previousChapter != null && 0 == previousChapter.EndTime) previousChapter.EndTime = (uint)Math.Round(DurationMs);
+                if (previousChapter != null && 0 == previousChapter.EndTime) previousChapter.EndTime = (uint)Math.Floor(DurationMs);
             }
         }
 
