@@ -795,6 +795,53 @@ namespace ATL.test.IO.MetaData
                 }
                 Assert.AreEqual(2, found);
 
+                // Add pictures over title chapters
+                theTag = new TagData();
+
+                theTag.Chapters = new List<ChapterInfo>();
+                expectedChaps.Clear();
+
+                ch = new ChapterInfo(0, "aaa");
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
+                ch.Picture.ComputePicHash();
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo(1230, "aaa0四");
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg"));
+                ch.Picture.ComputePicHash();
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                {
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                        Assert.IsNotNull(chap.Picture);
+                        chap.Picture.ComputePicHash();
+                        Assert.AreEqual(chap.Picture.PictureHash, expectedChaps[chap.StartTime].Picture.PictureHash);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine(chap.StartTime);
+                    }
+                }
+                Assert.AreEqual(2, found);
+
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
