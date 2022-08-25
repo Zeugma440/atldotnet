@@ -283,7 +283,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTextTrackSamples, IList<MP4Sample> chapterPictureTrackSamples, bool readPictures)
+        private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTextTrackSamples, IList<MP4Sample> chapterPictureTrackSamples)
         {
             tagExists = true;
             if (2 == Settings.MP4_readChaptersExclusive) return;
@@ -308,7 +308,7 @@ namespace ATL.AudioData.IO
                     cumulatedDuration += textSample.Duration * 1000;
                     chapter.EndTime = (uint)Math.Round(cumulatedDuration);
 
-                    if (pictureSample != null && pictureSample.ChunkOffset > 0/* && readPictures*/)
+                    if (pictureSample != null && pictureSample.ChunkOffset > 0)
                     {
                         source.BaseStream.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
                         byte[] data = new byte[pictureSample.Size];
@@ -417,7 +417,7 @@ namespace ATL.AudioData.IO
             if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex;
 
             // QT chapters have been detected while browsing tracks
-            if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples, readTagParams.ReadPictures);
+            if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples);
             else if (readTagParams.PrepareForWriting && Settings.MP4_createQuicktimeChapters) // Reserve zones to write QT chapters
             {
                 // TRAK before UDTA
@@ -698,7 +698,7 @@ namespace ATL.AudioData.IO
                     channelsArrangement = GuessFromChannelNumber(channels);
 
                     source.BaseStream.Seek(2, SeekOrigin.Current); // Sample size
-                    source.BaseStream.Seek(/*4*/2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
+                    source.BaseStream.Seek(2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
 
                     sampleRate = (int)StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 }
@@ -762,17 +762,15 @@ namespace ATL.AudioData.IO
             // Read chapters textual data
             if (isCurrentTrackFirstChapterTextTrack)
             {
-                Tuple<uint, string> result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterTextTrackSamples, mediaTimeScale, true);
-                if (result.Item1 > 0) return int32Data; // An error has occured
-                if (result.Item2.Length > 0) trackZoneName = result.Item2;
+                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterTextTrackSamples, mediaTimeScale, true);
+                if (result > 0) return int32Data; // An error has occured
             }
 
             // Read chapters picture data
             if (isCurrentTrackFirstChapterPicturesTrack)
             {
-                Tuple<uint, string> result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterPictureTrackSamples, mediaTimeScale, false);
-                if (result.Item1 > 0) return int32Data; // An error has occured
-                if (result.Item2.Length > 0) trackZoneName = result.Item2;
+                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterPictureTrackSamples, mediaTimeScale, false);
+                if (result > 0) return int32Data; // An error has occured
             }
 
             source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
@@ -950,7 +948,7 @@ namespace ATL.AudioData.IO
             return trakSize;
         }
 
-        private Tuple<uint, string> readQtChapter(
+        private uint readQtChapter(
             BinaryReader source,
             ReadTagParams readTagParams,
             long stblPosition,
@@ -972,7 +970,7 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stts atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return Tuple.Create(trakSize, "");
+                return trakSize;
             }
             source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
             int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
@@ -1016,7 +1014,7 @@ namespace ATL.AudioData.IO
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsc atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return Tuple.Create(trakSize, "");
+                return trakSize;
             }
             source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
             int32Data = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // Number of table entries
@@ -1085,7 +1083,7 @@ namespace ATL.AudioData.IO
                 else
                     chapterPictureTrackEdits = source.ReadBytes((int)edtsSize);
             }
-            return Tuple.Create(0u, zoneName);
+            return 0u;
         }
 
         private void readUserData(BinaryReader source, ReadTagParams readTagParams, long moovPosition, uint moovSize)
@@ -1281,14 +1279,15 @@ namespace ATL.AudioData.IO
                 tagExists = true;
             }
 
-            string atomHeader;
+            StringBuilder atomHeaderBuilder = new StringBuilder();
             // Browse all metadata
             while (iListPosition < iListSize - 8)
             {
+                atomHeaderBuilder.Clear();
                 atomSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                atomHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(4)));
 
-                if ("----".Equals(atomHeader)) // Custom text metadata
+                if ("----".Equals(atomHeaderBuilder.ToString())) // Custom text metadata
                 {
                     metadataSize = lookForMP4Atom(source.BaseStream, "mean"); // "issuer" of the field
                     if (0 == metadataSize)
@@ -1297,7 +1296,7 @@ namespace ATL.AudioData.IO
                         return;
                     }
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                    atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
+                    atomHeaderBuilder.Append(":").Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
 
                     metadataSize = lookForMP4Atom(source.BaseStream, "name"); // field type
                     if (0 == metadataSize)
@@ -1306,8 +1305,9 @@ namespace ATL.AudioData.IO
                         return;
                     }
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                    atomHeader += ":" + Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
+                    atomHeaderBuilder.Append(":").Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
                 }
+                string atomHeader = atomHeaderBuilder.ToString();
 
                 // Having a 'data' header here means we're still on the same field, with a 2nd value
                 // (e.g. multiple embedded pictures)
