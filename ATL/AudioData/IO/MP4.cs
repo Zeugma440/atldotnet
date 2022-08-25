@@ -418,18 +418,22 @@ namespace ATL.AudioData.IO
 
             // QT chapters have been detected while browsing tracks
             if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples);
-            else if (readTagParams.PrepareForWriting && Settings.MP4_createQuicktimeChapters) // Reserve zones to write QT chapters
+            if (readTagParams.PrepareForWriting && Settings.MP4_createQuicktimeChapters
+                && (0 == chapterTextTrackSamples.Count || 0 == chapterPictureTrackSamples.Count)) // Reserve zones to write QT chapters
             {
                 // TRAK before UDTA
                 source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
                 atomSize = lookForMP4Atom(source.BaseStream, "udta");
                 if (atomSize > 0)
                 {
-                    structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
-                    structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
-                    // MDAT at the end of the file
-                    structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
-                    structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
+                    if (0 == chapterTextTrackSamples.Count)
+                    {
+                        structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
+                        // Create a brand new MDAT at the end of the file
+                        structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
+                        structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
+                    }
+                    if (0 == chapterPictureTrackSamples.Count) structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
                 }
             }
 
@@ -2377,7 +2381,7 @@ namespace ATL.AudioData.IO
             //   - Physically located in the TRAK zone
             //   - Child of the TRAK zone (i.e. won't be useful to process if the TRAK zone is deleted)
             // NB : Only works when QT track is located _before_ QT mdat
-            string zoneId = ZONE_MP4_QT_CHAP_TXT_TRAK;
+            string zoneId = isText ? ZONE_MP4_QT_CHAP_TXT_TRAK : ZONE_MP4_QT_CHAP_PIC_TRAK;
             string dataZoneId = ZONE_MP4_QT_CHAP_MDAT;
             Zone chapMdatZone = structureHelper.GetZone(dataZoneId);
 
