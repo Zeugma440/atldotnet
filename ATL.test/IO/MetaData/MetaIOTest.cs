@@ -680,8 +680,8 @@ namespace ATL.test.IO.MetaData
 
                     foreach (PictureInfo pic in meta.EmbeddedPictures)
                     {
-                        if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
-                             (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
+                        if (pic.PicType.Equals(PIC_TYPE.Unsupported) && (pic.NativePicCode.Equals(pictureCode2)
+                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
                            )
                         {
                             using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
