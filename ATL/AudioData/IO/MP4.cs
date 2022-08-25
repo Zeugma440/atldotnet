@@ -1665,7 +1665,8 @@ namespace ATL.AudioData.IO
             w.Write(0); // version and flags
 
             // Handler
-            w.Write(StreamUtils.EncodeBEUInt32(33));
+            long hdlrPos = w.BaseStream.Position;
+            w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
             w.Write(0); // version and flags
             w.Write(0); // quicktime type
@@ -1673,9 +1674,13 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("appl")); // manufacturer
             w.Write(0); // component flags
             w.Write(0); // component flags mask
-            w.Write((byte)0); // component name string end (no name here -> end byte follows flags mask)
+            w.Write(Utils.Latin1Encoding.GetBytes("Metadata (ilst) handler\0")); // component name
 
             long ilstSizePos = w.BaseStream.Position;
+            w.BaseStream.Seek(hdlrPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(ilstSizePos - hdlrPos)));
+
+            w.BaseStream.Seek(ilstSizePos, SeekOrigin.Begin);
             w.Write(ILST_CORE_SIGNATURE);
 
             int result = writeFrames(tag, w);
@@ -2153,6 +2158,7 @@ namespace ATL.AudioData.IO
             // MEDIA HEADER END
 
             // MEDIA HANDLER
+            long hdlrPos = w.BaseStream.Position;
             w.Write(StreamUtils.EncodeBEInt32(33)); // Predetermined size
             w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
             w.Write(0); // Version and flags
@@ -2165,11 +2171,15 @@ namespace ATL.AudioData.IO
             w.Write(0); // Reserved
             w.Write(0); // Reserved
             w.Write(0); // Reserved
-            w.Write((byte)0); // End of empty string
+            w.Write(Utils.Latin1Encoding.GetBytes(isText ? "Chapter titles\0" : "Chapter pictures\0")); // component name
             // MEDIA HANDLER END
 
-            // MEDIA INFORMATION
             long minfPos = w.BaseStream.Position;
+            w.BaseStream.Seek(hdlrPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(minfPos - hdlrPos)));
+
+            // MEDIA INFORMATION
+            w.BaseStream.Seek(minfPos, SeekOrigin.Begin);
             w.Write(0);
             w.Write(Utils.Latin1Encoding.GetBytes("minf"));
 
