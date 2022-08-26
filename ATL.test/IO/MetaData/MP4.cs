@@ -718,7 +718,7 @@ namespace ATL.test.IO.MetaData
                 String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_QT.m4v");
                 AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-                // Check if the two fields are indeed accessible
+                // 1- Read / Check if both fields are indeed accessible
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
                 Assert.IsTrue(theFile.NativeTag.Exists);
@@ -750,12 +750,12 @@ namespace ATL.test.IO.MetaData
                     }
                     else
                     {
-                        System.Console.WriteLine(chap.StartTime);
+                        Console.WriteLine(chap.StartTime);
                     }
                 }
                 Assert.AreEqual(4, found);
 
-                // Modify elements
+                // 2- Modify timecode and title
                 TagData theTag = new TagData();
 
                 theTag.Chapters = new List<ChapterInfo>();
@@ -790,12 +790,12 @@ namespace ATL.test.IO.MetaData
                     }
                     else
                     {
-                        System.Console.WriteLine(chap.StartTime);
+                        Console.WriteLine(chap.StartTime);
                     }
                 }
                 Assert.AreEqual(2, found);
 
-                // Add pictures over title chapters
+                // 3- Add pictures over existing timecode + title chapters
                 theTag = new TagData();
 
                 theTag.Chapters = new List<ChapterInfo>();
@@ -837,7 +837,54 @@ namespace ATL.test.IO.MetaData
                     }
                     else
                     {
-                        System.Console.WriteLine(chap.StartTime);
+                        Console.WriteLine(chap.StartTime);
+                    }
+                }
+                Assert.AreEqual(2, found);
+
+                // 4- Modify existing picture
+                theTag = new TagData();
+
+                theTag.Chapters = new List<ChapterInfo>();
+                expectedChaps.Clear();
+
+                ch = new ChapterInfo(0, "aaa");
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
+                ch.Picture.ComputePicHash();
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                ch = new ChapterInfo(1230, "aaa0四");
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+                ch.Picture.ComputePicHash();
+                theTag.Chapters.Add(ch);
+                expectedChaps.Add(ch.StartTime, ch);
+
+                // Check if they are persisted properly
+                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                Assert.IsNotNull(theFile.NativeTag);
+                Assert.IsTrue(theFile.NativeTag.Exists);
+
+                Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+                // Check if values are the same
+                found = 0;
+                foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+                {
+                    if (expectedChaps.ContainsKey(chap.StartTime))
+                    {
+                        found++;
+                        Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                        Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                        Assert.IsNotNull(chap.Picture);
+                        chap.Picture.ComputePicHash();
+                        Assert.AreEqual(chap.Picture.PictureHash, expectedChaps[chap.StartTime].Picture.PictureHash);
+                    }
+                    else
+                    {
+                        Console.WriteLine(chap.StartTime);
                     }
                 }
                 Assert.AreEqual(2, found);
