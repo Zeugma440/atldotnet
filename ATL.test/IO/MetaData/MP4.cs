@@ -1103,6 +1103,10 @@ namespace ATL.test.IO.MetaData
             }
             Assert.AreEqual(2, nbFound);
 
+            Assert.IsNotNull(theTag.Chapters[1].Picture);
+            var tag = new Track(testFileLocation);
+            Assert.IsNotNull(theTag.Chapters[1].Picture);
+
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
