@@ -20,6 +20,9 @@ namespace ATL.AudioData.IO
     ///     and considers that one as the entire file's metadata
     ///     
     ///     - When removing a Track, physical chunks belonging to the track (i.e. those indexed by 'stco') won't be removed
+    ///     
+    ///     - When adding the exact same chapter picture to multiple chapters, that picture is written as many times as there are chapters
+    ///     instead of being written once and referenced from each chapter
     /// 
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
