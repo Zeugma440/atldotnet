@@ -18,7 +18,7 @@ namespace ATL.AudioData
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
         private readonly AudioDataManager audioManager;
-        private readonly IProgress<float> writeProgress;
+        private readonly ProgressManager writeProgressManager;
 
         // ------------------------------------------------------------------------------------------
 
@@ -34,16 +34,16 @@ namespace ATL.AudioData
             byte alternate = 0;
             bool found = false;
 
+            if (writeProgress != null) writeProgressManager = new ProgressManager(writeProgress, "AudioFileIO");
             audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-            audioManager = new AudioDataManager(audioData, writeProgress);
-            this.writeProgress = writeProgress;
+            audioManager = new AudioDataManager(audioData, writeProgressManager);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-                audioManager = new AudioDataManager(audioData, writeProgress);
+                audioManager = new AudioDataManager(audioData, writeProgressManager);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
@@ -67,15 +67,15 @@ namespace ATL.AudioData
 
             audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
 
-            audioManager = new AudioDataManager(audioData, stream, writeProgress);
-            this.writeProgress = writeProgress;
+            if (writeProgress != null) writeProgressManager = new ProgressManager(writeProgress, "AudioFileIO");
+            audioManager = new AudioDataManager(audioData, stream, writeProgressManager);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
-                audioManager = new AudioDataManager(audioData, stream, writeProgress);
+                audioManager = new AudioDataManager(audioData, stream, writeProgressManager);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
@@ -107,12 +107,11 @@ namespace ATL.AudioData
                 if (0 == availableMetas.Count && supportedMetas.Count > 0) availableMetas.Add(supportedMetas[0]);
             }
 
-            float written = 0;
-            if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
+            if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
             foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
                 result &= audioManager.UpdateTagInFile(data, meta);
-                if (writeProgress != null) writeProgress.Report(written++ / availableMetas.Count);
+                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;
         }
@@ -131,12 +130,11 @@ namespace ATL.AudioData
                 metasToRemove = new List<MetaDataIOFactory.TagType>() { tagType };
             }
 
-            float written = 0;
-            if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
+            if (writeProgressManager != null) writeProgressManager.MaxSections = metasToRemove.Count;
             foreach (MetaDataIOFactory.TagType meta in metasToRemove)
             {
                 result &= audioManager.RemoveTagFromFile(meta);
-                if (writeProgress != null) writeProgress.Report(written++ / metasToRemove.Count);
+                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;
         }

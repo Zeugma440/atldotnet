@@ -109,7 +109,7 @@ namespace ATL.AudioData
         private readonly Stream stream;
 
         private readonly SizeInfo sizeInfo = new SizeInfo();
-        private readonly IProgress<float> writeProgress;
+        private readonly ProgressManager writeProgress;
 
 
         private string fileName
@@ -157,8 +157,8 @@ namespace ATL.AudioData
         /// Create a new instance using the given IAudioDataIO and the given IProgress
         /// </summary>
         /// <param name="audioDataReader">Audio data reader to use</param>
-        /// <param name="writeProgress">IProgress to report with (optional)</param>
-        public AudioDataManager(IAudioDataIO audioDataReader, IProgress<float> writeProgress = null)
+        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
+        internal AudioDataManager(IAudioDataIO audioDataReader, ProgressManager writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
             this.stream = null;
@@ -170,8 +170,8 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="audioDataReader">Audio data reader to use</param>
         /// <param name="stream">Data stream to use</param>
-        /// <param name="writeProgress">IProgress to report with (optional)</param>
-        public AudioDataManager(IAudioDataIO audioDataReader, Stream stream, IProgress<float> writeProgress = null)
+        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
+        internal AudioDataManager(IAudioDataIO audioDataReader, Stream stream, ProgressManager writeProgress = null)
         {
             this.audioDataIO = audioDataReader;
             this.stream = stream;
@@ -395,7 +395,8 @@ namespace ATL.AudioData
                             theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
                         }
 
-                        result = theMetaIO.Write(r, w, theTag, writeProgress);
+                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateIProgress() : null;
+                        result = theMetaIO.Write(r, w, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
                     finally

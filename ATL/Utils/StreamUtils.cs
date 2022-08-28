@@ -101,9 +101,9 @@ namespace ATL
         /// <param name="offsetFrom">Starting offset to copy data from</param>
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length)
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, IProgress<float> progress = null)
         {
-            CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize);
+            CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize, progress);
         }
 
         /// <summary>
@@ -114,14 +114,17 @@ namespace ATL
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
         /// <param name="bufferSize">Buffer size to use during the operation</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize)
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize, IProgress<float> progress = null)
         {
             if (offsetFrom == offsetTo) return;
 
             byte[] data = new byte[bufferSize];
             int bufSize;
             int written = 0;
-            bool forward = (offsetTo > offsetFrom);
+            bool forward = offsetTo > offsetFrom;
+            int nbIterations = (int)Math.Ceiling((float)length / bufferSize);
+            int resolution = (int)Math.Ceiling(nbIterations / 10f);
+            float iteration = 0;
 
             while (written < length)
             {
@@ -140,6 +143,12 @@ namespace ATL
                 }
                 s.Write(data, 0, bufSize);
                 written += bufSize;
+
+                if (progress != null)
+                {
+                    iteration++;
+                    if (0 == iteration % resolution) progress.Report(iteration / nbIterations);
+                }
             }
         }
 
@@ -149,9 +158,9 @@ namespace ATL
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
         /// <param name="endOffset">End offset of the portion of bytes to remove</param>
         /// <param name="delta">Number of bytes to remove</param>
-        public static void ShortenStream(Stream s, long endOffset, uint delta)
+        public static void ShortenStream(Stream s, long endOffset, uint delta, IProgress<float> progress = null)
         {
-            CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset));
+            CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset), progress);
 
             s.SetLength(s.Length - delta);
         }
@@ -163,10 +172,10 @@ namespace ATL
         /// <param name="oldIndex">Offset where to add new bytes</param>
         /// <param name="delta">Number of bytes to add</param>
         /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
-        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false)
+        public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false, IProgress<float> progress = null)
         {
             long newIndex = oldIndex + delta;
-            CopySameStream(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex));
+            CopySameStream(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex), progress);
 
             if (fillZeroes)
             {
