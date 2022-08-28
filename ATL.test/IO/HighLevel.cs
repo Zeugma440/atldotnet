@@ -177,7 +177,8 @@ namespace ATL.test.IO
         private void tagIO_RW_UpdateEmpty(string resource, bool supportsTrack = true)
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
-            Track theTrack = new Track(testFileLocation);
+            IProgress<float> progress = new Progress<float>(p => Console.WriteLine(p));
+            Track theTrack = new Track(testFileLocation, progress);
 
             // Simple field
             theTrack.Artist = "Hey ho";
