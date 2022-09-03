@@ -182,7 +182,13 @@ namespace ATL.AudioData.IO
             IProgress<float> progress = null;
             if (writeProgress != null)
             {
-                writeProgress.MaxSections = zoneRegions.Count;
+                int maxCount = 0;
+                foreach (ZoneRegion region in zoneRegions)
+                {
+                    if (region.IsBufferable) maxCount++; // If region is buffered, actual file I/O may happen once for the entire region
+                    else maxCount += region.Zones.Count; // else it may happen once on each Zone
+                }
+                writeProgress.MaxSections = maxCount;
                 progress = writeProgress.CreateIProgress();
             }
             foreach (ZoneRegion region in zoneRegions)
@@ -221,7 +227,6 @@ namespace ATL.AudioData.IO
                         globalOffsetCorrection = 0;
                     }
 
-                    int zoneIndex = 0;
                     foreach (Zone zone in region.Zones)
                     {
                         bool isNothing;
@@ -231,26 +236,26 @@ namespace ATL.AudioData.IO
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
-                        using (MemoryStream s = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
-                        using (BinaryWriter msw = new BinaryWriter(s, Settings.DefaultTextEncoding))
+                        using (MemoryStream memStream = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
+                        using (BinaryWriter memStreamW = new BinaryWriter(memStream, Settings.DefaultTextEncoding))
                         {
                             // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
                             dataToWrite.DataSizeDelta = globalCumulativeDelta;
-                            WriteResult writeResult = write(msw, dataToWrite, zone);
+                            WriteResult writeResult = write(memStreamW, dataToWrite, zone);
 
                             if (WriteMode.REPLACE == writeResult.RequiredMode)
                             {
                                 if (writeResult.WrittenFields > 0)
                                 {
-                                    newTagSize = s.Length;
+                                    newTagSize = memStream.Length;
 
                                     if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
                                     {
-                                        StreamUtils.LengthenStream(s, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                        s.Position = 0;
-                                        embedder.WriteID3v2EmbeddingHeader(msw, newTagSize);
+                                        StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                        memStream.Position = 0;
+                                        embedder.WriteID3v2EmbeddingHeader(memStreamW, newTagSize);
 
-                                        newTagSize = s.Length;
+                                        newTagSize = memStream.Length;
                                     }
                                 }
                                 else
@@ -304,7 +309,7 @@ namespace ATL.AudioData.IO
                                     if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    StreamUtils.LengthenStream(writer.BaseStream, tagEndOffset, deltaBytes);
+                                    StreamUtils.LengthenStream(writer.BaseStream, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
                                 }
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
@@ -312,7 +317,7 @@ namespace ATL.AudioData.IO
                                     if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    StreamUtils.ShortenStream(writer.BaseStream, tagEndOffset, deltaBytes);
+                                    StreamUtils.ShortenStream(writer.BaseStream, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
                                 }
                             }
 
@@ -320,15 +325,15 @@ namespace ATL.AudioData.IO
                             if (!isNothing)
                             {
                                 writer.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
-                                s.Seek(0, SeekOrigin.Begin);
+                                memStream.Seek(0, SeekOrigin.Begin);
 
                                 if (writeResult.WrittenFields > 0)
                                 {
-                                    StreamUtils.CopyStream(s, writer.BaseStream);
+                                    StreamUtils.CopyStream(memStream, writer.BaseStream);
                                 }
                                 else
                                 {
-                                    if (zone.CoreSignature.Length > 0) msw.Write(zone.CoreSignature);
+                                    if (zone.CoreSignature.Length > 0) memStreamW.Write(zone.CoreSignature);
                                 }
                             }
 
@@ -355,12 +360,15 @@ namespace ATL.AudioData.IO
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 
-                        // Report unbuffered zone progress only if relevant
-                        if (null == buffer && progress != null && !isNothing) progress.Report(++zoneIndex / (float)region.Zones.Count);
+                        if (null == buffer && writeProgress != null)
+                        {
+                            // Make sure final progress of unbuffered zone is reported, especially when no resizing has been involved
+                            progress.Report(1);
+                            // Increment progress section   
+                            writeProgress.CurrentSection++;
+                            progress = writeProgress.CreateIProgress();
+                        }
                     } // Loop through zones
-
-                    // Make sure final progress of unbuffered zones is reported, especially if they all contain "nothing"
-                    if (null == buffer && progress != null) progress.Report(1);
 
                     if (buffer != null)
                     {
@@ -389,6 +397,16 @@ namespace ATL.AudioData.IO
 
                         StreamUtils.CopyStream(buffer, fullScopeWriter.BaseStream);
                     }
+
+                    // Increment progress section
+                    if (buffer != null && writeProgress != null)
+                    {
+                        // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
+                        progress.Report(1);
+                        // Increment progress section   
+                        writeProgress.CurrentSection++;
+                        progress = writeProgress.CreateIProgress();
+                    }
                 }
                 finally // Make sure buffers are properly disallocated
                 {
@@ -400,11 +418,6 @@ namespace ATL.AudioData.IO
                 }
 
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");
-                if (writeProgress != null)
-                {
-                    writeProgress.CurrentSection++;
-                    progress = writeProgress.CreateIProgress();
-                }
             } // Loop through zone regions
 
             // Post-processing changes
