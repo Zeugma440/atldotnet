@@ -1173,8 +1173,8 @@ namespace ATL.AudioData.IO
                 {
                     if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); // No Quicktime chapters previously detected
 
-                    // Overwrites detected Quicktime chapters with Nero chapters only if there are >= of them
-                    if (chapterCount >= tagData.Chapters.Count)
+                    // Overwrites detected Quicktime chapters with Nero chapters only if there are > of them
+                    if (chapterCount > tagData.Chapters.Count)
                     {
                         tagData.Chapters.Clear();
                         byte stringSize;
