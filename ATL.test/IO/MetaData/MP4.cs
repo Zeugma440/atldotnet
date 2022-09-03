@@ -855,7 +855,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 ch = new ChapterInfo(1230, "aaa0四");
-                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+                ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg")); // <-- modified compared to 3-
                 ch.Picture.ComputePicHash();
                 theTag.Chapters.Add(ch);
                 expectedChaps.Add(ch.StartTime, ch);
@@ -1090,7 +1090,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters.Add(ch);
             expectedChaps.Add(ch.StartTime, ch);
 
-            // Check if they are persisted properly
+            // Check if proper warnings have been issued
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
 
             IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
@@ -1102,10 +1102,6 @@ namespace ATL.test.IO.MetaData
                 if (l.Message.Contains("Not all chapters have an associated picture")) nbFound++;
             }
             Assert.AreEqual(2, nbFound);
-
-            Assert.IsNotNull(theTag.Chapters[1].Picture);
-            var tag = new Track(testFileLocation);
-            Assert.IsNotNull(theTag.Chapters[1].Picture);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
