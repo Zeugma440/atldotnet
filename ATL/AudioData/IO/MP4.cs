@@ -487,8 +487,10 @@ namespace ATL.AudioData.IO
             if (chapterTextTrackSamples.Count > 0 && readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
             {
                 long minChapterOffset = chapterTextTrackSamples.Min(sample => sample.ChunkOffset);
-                long chapterSize = chapterTextTrackSamples.Sum(sample => sample.Size);
+                long chapterTextSize = chapterTextTrackSamples.Sum(sample => sample.Size);
+                long chapterPictureSize = chapterPictureTrackSamples.Sum(sample => sample.Size);
 
+                // Detect if QT chapters are interleaved
                 long previousEndOffset = 0;
                 foreach (MP4Sample sample in chapterTextTrackSamples)
                 {
@@ -516,8 +518,8 @@ namespace ATL.AudioData.IO
                     // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
                     if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
                     {
-                        // Zone size = size of chapters
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapterSize + 8, ZONE_MP4_QT_CHAP_MDAT, false);
+                        // Zone size = size of chapter data (text and pictures)
+                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)(chapterTextSize + chapterPictureSize + 8), ZONE_MP4_QT_CHAP_MDAT, false);
                         // Zone size header = actual size of the zone that may include audio data
                         structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
                     }
@@ -1651,7 +1653,7 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersTrack(w, qtChapterPictureTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
             }
-            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter text data
+            else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter data (text and picture data)
             {
                 result = writeQTChaptersData(w, Chapters);
             }
@@ -2066,12 +2068,13 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
-            IList<ChapterInfo> workingChapters = chapters.Where(ch => ch.Picture != null).ToList();
-            foreach (ChapterInfo chapter in workingChapters)
+            foreach (ChapterInfo chapter in chapters)
             {
-                w.Write(chapter.Picture.PictureData);
+                if (chapter.Picture != null)
+                {
+                    w.Write(chapter.Picture.PictureData);
+                }
             }
-
 
             return 1;
         }
