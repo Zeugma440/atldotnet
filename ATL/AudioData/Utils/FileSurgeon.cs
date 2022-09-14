@@ -118,7 +118,7 @@ namespace ATL.AudioData.IO
             IMetaDataEmbedder embedder,
             MetaDataIOFactory.TagType implementedTagType,
             long defaultTagOffset,
-            IProgress<float> writeProgress)
+            Action<float> writeProgress)
         {
             this.structureHelper = structureHelper;
             this.embedder = embedder;
@@ -179,7 +179,7 @@ namespace ATL.AudioData.IO
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
 
             int regionIndex = 0;
-            IProgress<float> progress = null;
+            Action<float> progress = null;
             if (writeProgress != null)
             {
                 int maxCount = 0;
@@ -189,7 +189,7 @@ namespace ATL.AudioData.IO
                     else maxCount += region.Zones.Count; // else it may happen once on each Zone
                 }
                 writeProgress.MaxSections = maxCount;
-                progress = writeProgress.CreateIProgress();
+                progress = writeProgress.CreateAction();
             }
             foreach (ZoneRegion region in zoneRegions)
             {
@@ -363,10 +363,10 @@ namespace ATL.AudioData.IO
                         if (null == buffer && writeProgress != null)
                         {
                             // Make sure final progress of unbuffered zone is reported, especially when no resizing has been involved
-                            progress.Report(1);
+                            progress(1);
                             // Increment progress section   
                             writeProgress.CurrentSection++;
-                            progress = writeProgress.CreateIProgress();
+                            progress = writeProgress.CreateAction();
                         }
                     } // Loop through zones
 
@@ -402,10 +402,10 @@ namespace ATL.AudioData.IO
                     if (buffer != null && writeProgress != null)
                     {
                         // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
-                        progress.Report(1);
+                        progress(1);
                         // Increment progress section   
                         writeProgress.CurrentSection++;
-                        progress = writeProgress.CreateIProgress();
+                        progress = writeProgress.CreateAction();
                     }
                 }
                 finally // Make sure buffers are properly disallocated

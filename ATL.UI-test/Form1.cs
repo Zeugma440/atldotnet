@@ -17,6 +17,7 @@ namespace ATL.UI_test
             String str = (progress * 100).ToString() + "%";
             Console.WriteLine(str);
             ProgressLbl.Text = str;
+            Application.DoEvents();
         }
 
         private void GoBtn_Click(object sender, EventArgs e)
@@ -24,11 +25,11 @@ namespace ATL.UI_test
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            IProgress<float> progress = new Progress<float>(displayProgress);
+            Action<float> progress = new Action<float>(displayProgress);
             processFile(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a", progress);
         }
 
-        private bool processFile(string path, IProgress<float> progress)
+        private bool processFile(string path, Action<float> progress)
         {
             string testFileLocation = TestUtils.GenerateTempTestFile(path);
             Settings.FileBufferSize = 20;

@@ -395,7 +395,7 @@ namespace ATL.AudioData
                             theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
                         }
 
-                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateIProgress() : null;
+                        Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
                         result = theMetaIO.Write(r, w, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }

@@ -4,7 +4,7 @@ namespace ATL
 {
     internal class ProgressManager
     {
-        private readonly IProgress<float> progress;
+        private readonly Action<float> progress;
         private readonly string name;
         private float minProgressBound = 0f;
         private float resolution;
@@ -37,7 +37,7 @@ namespace ATL
             }
         }
 
-        internal ProgressManager(IProgress<float> progress, string name = "", int maxSections = 0)
+        internal ProgressManager(Action<float> progress, string name = "", int maxSections = 0)
         {
             this.progress = progress;
             currentSection = 0;
@@ -51,11 +51,11 @@ namespace ATL
             minProgressBound = resolution * currentSection;
         }
 
-        public IProgress<float> CreateIProgress()
+        public Action<float> CreateAction()
         {
             float minBoundC = minProgressBound;
             float resolutionC = resolution;
-            return new Progress<float>(progress => this.progress.Report(minBoundC + resolutionC * progress));
+            return new Action<float>(progress => this.progress(minBoundC + resolutionC * progress));
         }
     }
 }

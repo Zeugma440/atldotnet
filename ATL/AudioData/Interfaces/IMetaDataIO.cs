@@ -70,7 +70,7 @@ namespace ATL.AudioData
         /// <param name="tag">Tag information to be added</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null);
+        bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null);
 
         /// <summary>
         /// Remove current tag

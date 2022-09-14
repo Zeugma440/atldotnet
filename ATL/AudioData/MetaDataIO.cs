@@ -502,7 +502,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
 

@@ -31,7 +31,7 @@ namespace ATL
         /// <param name="path">Path of the local file to be loaded</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <param name="load">True to load the file when running this constructor (default : true)</param>
-        public Track(string path, IProgress<float> writeProgress = null, bool load = true)
+        public Track(string path, Action<float> writeProgress = null, bool load = true)
         {
             this.Path = path;
             stream = null;
@@ -59,7 +59,7 @@ namespace ATL
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
-        public Track(Stream stream, string mimeType, IProgress<float> writeProgress = null)
+        public Track(Stream stream, string mimeType, Action<float> writeProgress = null)
         {
             this.stream = stream;
             this.mimeType = mimeType;
@@ -261,7 +261,7 @@ namespace ATL
 
 
         //=== TECHNICAL
-        private readonly IProgress<float> writeProgress;
+        private readonly Action<float> writeProgress;
 
 
         /// <summary>

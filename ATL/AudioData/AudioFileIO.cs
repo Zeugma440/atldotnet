@@ -29,7 +29,7 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
+        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, Action<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;
@@ -60,7 +60,7 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
+        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, Action<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;

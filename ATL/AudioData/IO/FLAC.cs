@@ -288,7 +288,7 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
