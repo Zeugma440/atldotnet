@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
@@ -754,7 +755,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -902,18 +903,18 @@ namespace ATL.AudioData.IO
 
                 if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
-                    StreamUtils.LengthenStream(w.BaseStream, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
+                    StreamUtils.LengthenStream(w, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
                 else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
                 {
-                    StreamUtils.ShortenStream(w.BaseStream, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
+                    StreamUtils.ShortenStream(w, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
 
                 // Rewrite Comment and Setup headers
-                w.BaseStream.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
+                w.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
-                StreamUtils.CopyStream(memStream, w.BaseStream);
+                StreamUtils.CopyStream(memStream, w);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             }
@@ -928,18 +929,18 @@ namespace ATL.AudioData.IO
 
                 do
                 {
-                    w.BaseStream.Seek(nextPageOffset, SeekOrigin.Begin);
+                    w.Seek(nextPageOffset, SeekOrigin.Begin);
                     header.ReadFromStream(r);
 
                     if (header.IsValid())
                     {
                         // Rewrite page number
                         writtenPages++;
-                        w.BaseStream.Seek(nextPageOffset + 18, SeekOrigin.Begin);
-                        w.Write(writtenPages);
+                        w.Seek(nextPageOffset + 18, SeekOrigin.Begin);
+                        StreamUtils.WriteInt32(w, writtenPages);
 
                         // Rewrite CRC
-                        w.BaseStream.Seek(nextPageOffset, SeekOrigin.Begin);
+                        w.Seek(nextPageOffset, SeekOrigin.Begin);
                         data = new byte[header.GetHeaderSize() + header.GetPageSize()];
                         r.Read(data, 0, data.Length);
 
@@ -951,7 +952,7 @@ namespace ATL.AudioData.IO
 
                         crc = OggCRC32.CalculateCRC(0, data, (uint)data.Length);
                         r.BaseStream.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
-                        w.Write(crc);
+                        StreamUtils.WriteUInt32(w, crc);
 
                         // To the next header
                         nextPageOffset += data.Length;
@@ -968,12 +969,11 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public bool Remove(BinaryWriter w)
+        public bool Remove(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
 
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+            using (BinaryReader r = new BinaryReader(s, new UTF8Encoding(), true)) return Write(r, s, tag);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

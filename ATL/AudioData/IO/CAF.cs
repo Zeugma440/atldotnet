@@ -411,7 +411,7 @@ namespace ATL.AudioData.IO
         }
 
         // WARNING : NOT IMPLEMENTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream w, string zone)
         {
             throw new System.NotImplementedException();
         }

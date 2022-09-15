@@ -363,7 +363,12 @@ namespace ATL.AudioData.IO
         /// <param name="w">Stream to write tag information to</param>
         /// <param name="zone">Code of the zone to write</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             int tagSize;
             long tagSizePos;

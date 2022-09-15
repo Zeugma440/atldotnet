@@ -5,6 +5,7 @@ using Commons;
 using System.Collections.Generic;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -497,7 +498,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 0;
 
@@ -511,16 +517,16 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
+        public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
         {
-            w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_ID3));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNK_ID3));
             if (isLittleEndian)
             {
-                w.Write((int)tagSize);
+                StreamUtils.WriteInt32(s, (int)tagSize);
             }
             else
             {
-                w.Write(StreamUtils.EncodeBEInt32((int)tagSize));
+                StreamUtils.WriteBytes(s, StreamUtils.EncodeBEInt32((int)tagSize));
             }
         }
 

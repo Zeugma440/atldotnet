@@ -208,6 +208,16 @@ namespace ATL
         }
 
         /// <summary>
+        /// Encode the given value into an array of bytes as an unsigned Little-Endian 16-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeUInt16(ushort value)
+        {
+            return new byte[2] { (byte)(value & 0x00FF), (byte)((value & 0xFF00) >> 8) };
+        }
+
+        /// <summary>
         /// Decode an unsigned Big-Endian 16-bit integer from the given array of bytes
         /// </summary>
         /// <param name="data">Array of bytes to read value from</param>
@@ -362,6 +372,26 @@ namespace ATL
         {
             // Output has to be big-endian
             return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+        }
+
+        /// <summary>
+        /// Encode the given value into an array of bytes as a Little-Endian 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeInt32(int value)
+        {
+            return new byte[4] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
+        }
+
+        /// <summary>
+        /// Encode the given value into an array of bytes as an unsigned Little-Endian 32-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeUInt32(uint value)
+        {
+            return new byte[4] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
         }
 
         /// <summary>
@@ -728,6 +758,31 @@ namespace ATL
             result = (result << (bitPosition % 8)) >> (32 - bitCount);
 
             return result;
+        }
+
+        public static void WriteBytes(Stream s, byte[] data)
+        {
+            s.Write(data, 0, data.Length);
+        }
+
+        public static void WriteUInt16(Stream s, ushort data)
+        {
+            s.Write(EncodeUInt16(data), 0, 2);
+        }
+
+        public static void WriteInt32(Stream s, int data)
+        {
+            s.Write(EncodeInt32(data), 0, 4);
+        }
+
+        public static void WriteUInt32(Stream s, uint data)
+        {
+            s.Write(EncodeUInt32(data), 0, 4);
+        }
+
+        public static void WriteBEInt32(Stream s, int data)
+        {
+            s.Write(EncodeBEInt32(data), 0, 4);
         }
 
         /// <summary>

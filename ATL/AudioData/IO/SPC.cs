@@ -505,20 +505,20 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream w, string zone)
         {
             int result = 0;
 
             if (zone.Equals(ZONE_HEADER))
             {
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 32, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 32, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(AdditionalFields[HEADER_DUMPERNAME.ToString()], 16, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 32, '\0')));
-                w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_DUMPDATE.ToString()]));
-                w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_SONGLENGTH.ToString()]));
-                w.Write(Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_FADE.ToString()]));
-                w.Write(Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 32, '\0')));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 32, '\0')));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 32, '\0')));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(AdditionalFields[HEADER_DUMPERNAME.ToString()], 16, '\0')));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 32, '\0')));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_DUMPDATE.ToString()]));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_SONGLENGTH.ToString()]));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_FADE.ToString()]));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 32, '\0')));
                 result = 8;
             }
             else if (zone.Equals(ZONE_EXTENDED))
@@ -528,9 +528,9 @@ namespace ATL.AudioData.IO
                 //   - or have been truncated when written in header
                 long sizePos;
 
-                w.Write(Utils.Latin1Encoding.GetBytes(XTENDED_TAG));
-                sizePos = w.BaseStream.Position;
-                w.Write(0); // Size placeholder; to be rewritten with actual value at the end of the method
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(XTENDED_TAG));
+                sizePos = w.Position;
+                StreamUtils.WriteInt32(w, 0); // Size placeholder; to be rewritten with actual value at the end of the method
 
                 IDictionary<Field, string> map = tag.ToMap();
 
@@ -561,9 +561,9 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                int size = (int)(w.BaseStream.Position - sizePos);
-                w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                w.Write(size);
+                int size = (int)(w.Position - sizePos);
+                w.Seek(sizePos, SeekOrigin.Begin);
+                StreamUtils.WriteInt32(w, size);
             }
 
             return result;
@@ -578,13 +578,13 @@ namespace ATL.AudioData.IO
             else return true;
         }
 
-        private void writeSubChunk(BinaryWriter writer, byte frameCode, string text)
+        private void writeSubChunk(Stream stream, byte frameCode, string text)
         {
-            writer.Write(frameCode);
+            stream.WriteByte(frameCode);
 
             byte type = 1;
             if (extendedFrameTypes.ContainsKey(frameCode)) type = extendedFrameTypes[frameCode];
-            writer.Write(type);
+            stream.WriteByte(type);
 
             switch (type)
             {
@@ -592,12 +592,12 @@ namespace ATL.AudioData.IO
                     if (frameCode == XID6_TRACK) // Specific case : upper byte is the number 0-99, lower byte is an optional ASCII character
                     {
                         byte trackValue = (byte)Math.Min((ushort)0xFF, TrackUtils.ExtractTrackNumber(text));
-                        writer.Write('\0'); // Optional char support is not implemented
-                        writer.Write(trackValue);
+                        stream.WriteByte(0); // Optional char support is not implemented
+                        stream.WriteByte(trackValue);
                     }
                     else
                     {
-                        writer.Write(ushort.Parse(text)); // Value is directly written as an ushort into the length field
+                        StreamUtils.WriteUInt16(stream, ushort.Parse(text)); // Value is directly written as an ushort into the length field
                     }
                     break;
                 case XID6_TSTR:
@@ -605,19 +605,19 @@ namespace ATL.AudioData.IO
                     else if (text.Length < 3) text = Utils.BuildStrictLengthString(text, 3, ' ');
 
                     byte[] textBinary = Utils.Latin1Encoding.GetBytes(text);
-                    writer.Write((ushort)(textBinary.Length + 1));
-                    writer.Write(textBinary);
-                    writer.Write('\0');
+                    StreamUtils.WriteUInt16(stream, (ushort)(textBinary.Length + 1));
+                    StreamUtils.WriteBytes(stream, textBinary);
+                    stream.WriteByte(0);
                     break;
                 case XID6_TINT:
-                    writer.Write((ushort)4);
-                    writer.Write(Int32.Parse(text));
+                    StreamUtils.WriteUInt16(stream, (ushort)4);
+                    StreamUtils.WriteInt32(stream, Int32.Parse(text));
                     break;
             }
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(BinaryWriter w)
+        public override bool Remove(Stream s)
         {
             // Empty metadata
             TagData tag = new TagData();
@@ -639,8 +639,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+            using (BinaryReader r = new BinaryReader(s, System.Text.Encoding.UTF8, true)) return Write(r, s, tag);
         }
 
     }

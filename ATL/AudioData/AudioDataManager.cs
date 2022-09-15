@@ -382,7 +382,6 @@ namespace ATL.AudioData
 
                     Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
                     BinaryReader r = new BinaryReader(s);
-                    BinaryWriter w = new BinaryWriter(s);
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
@@ -396,7 +395,7 @@ namespace ATL.AudioData
                         }
 
                         Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
-                        result = theMetaIO.Write(r, w, theTag, progress);
+                        result = theMetaIO.Write(r, s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
                     finally
@@ -404,7 +403,6 @@ namespace ATL.AudioData
                         if (null == stream)
                         {
                             r.Close();
-                            w.Close();
                         }
                     }
                 }
@@ -445,7 +443,6 @@ namespace ATL.AudioData
             {
                 Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
                 BinaryReader reader = new BinaryReader(s);
-                BinaryWriter writer = null;
                 try
                 {
                     result = read(reader, false, false, true);
@@ -453,8 +450,7 @@ namespace ATL.AudioData
                     IMetaDataIO metaIO = getMeta(tagType);
                     if (metaIO.Exists)
                     {
-                        writer = new BinaryWriter(s);
-                        metaIO.Remove(writer);
+                        metaIO.Remove(s);
                     }
                 }
                 finally
@@ -462,7 +458,6 @@ namespace ATL.AudioData
                     if (null == stream)
                     {
                         reader.Close();
-                        if (writer != null) writer.Close();
                     }
                 }
             }

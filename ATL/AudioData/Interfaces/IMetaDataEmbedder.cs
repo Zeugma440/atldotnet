@@ -43,6 +43,6 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="w">Stream to write the header to</param>
         /// <param name="tagSize">Tag size to be documented in the header to be written</param>
-        void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize);
+        void WriteID3v2EmbeddingHeader(Stream w, long tagSize);
     }
 }

@@ -407,16 +407,20 @@ namespace ATL.AudioData.IO
             dataToWrite.Cleanup();
 
             // Write new tag to a MemoryStream
-            BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8);
-
-            result = write(dataToWrite, msw, DEFAULT_ZONE_NAME);
-
-            if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
-
-            return result;
+            using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8, true))
+            {
+                result = write(dataToWrite, msw, DEFAULT_ZONE_NAME);
+                if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
+                return result;
+            }
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             long initialWriteOffset = w.BaseStream.Position;
             long counterPos;

@@ -310,7 +310,7 @@ namespace ATL.AudioData.IO
         /// <param name="w">Writer to use</param>
         /// <param name="zone">Code of the zone to write</param>
         /// <returns>Number of written fields; 0 if no field has been added not edited</returns>
-        abstract protected int write(TagData tag, BinaryWriter w, string zone);
+        abstract protected int write(TagData tag, Stream s, string zone);
 
         /// <summary>
         /// Return the default offset of the metadata block
@@ -494,7 +494,7 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        private FileSurgeon.WriteResult writeAdapter(BinaryWriter w, TagData tag, Zone zone)
+        private FileSurgeon.WriteResult writeAdapter(Stream w, TagData tag, Zone zone)
         {
             int result = write(tag, w, zone.Name);
             FileSurgeon.WriteMode writeMode = (result > -1) ? FileSurgeon.WriteMode.REPLACE : FileSurgeon.WriteMode.OVERWRITE;
@@ -502,7 +502,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
 
@@ -572,7 +572,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public virtual bool Remove(BinaryWriter w)
+        public virtual bool Remove(Stream s)
         {
             bool result = true;
             long cumulativeDelta = 0;
@@ -591,20 +591,20 @@ namespace ATL.AudioData.IO
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
 
-                        if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
                         if (zone.CoreSignature.Length > 0)
                         {
-                            w.BaseStream.Position = zone.Offset - cumulativeDelta;
-                            w.Write(zone.CoreSignature);
+                            s.Position = zone.Offset - cumulativeDelta;
+                            StreamUtils.WriteBytes(s, zone.CoreSignature);
                         }
                     }
                     if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
                     {
                         if (zone.IsDeletable)
-                            result = result && structureHelper.RewriteHeaders(w, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
+                            result = result && structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
                         else
-                            result = result && structureHelper.RewriteHeaders(w, null, 0, ACTION.Edit, zone.Name);
+                            result = result && structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
                     }
 
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;

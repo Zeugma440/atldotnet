@@ -1573,7 +1573,12 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             long tagSizePos;
             int result = 0;

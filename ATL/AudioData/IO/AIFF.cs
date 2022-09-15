@@ -481,10 +481,14 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 0;
-
             if (zone.Equals(CHUNKTYPE_NAME))
             {
                 if (tag[Field.TITLE].Length > 0)
@@ -613,10 +617,10 @@ namespace ATL.AudioData.IO
             w.Write(commentData);
         }
 
-        public void WriteID3v2EmbeddingHeader(BinaryWriter w, long tagSize)
+        public void WriteID3v2EmbeddingHeader(Stream w, long tagSize)
         {
-            w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
-            w.Write(StreamUtils.EncodeBEInt32((int)tagSize));
+            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
+            StreamUtils.WriteBEInt32(w, (int)tagSize);
         }
 
         // AIFx timestamps are "the number of seconds since January 1, 1904"

@@ -482,7 +482,7 @@ namespace ATL.AudioData
         /// Perform post-processing modifications to the given stream
         /// </summary>
         /// <param name="writer">Stream to write modifications to</param>
-        public void PostProcessing(BinaryWriter writer)
+        public void PostProcessing(Stream writer)
         {
             foreach (var zoneName in zones.Keys.Where(zoneName => zoneName.StartsWith(POST_PROCESSING_ZONE_NAME)))
             {
@@ -502,8 +502,8 @@ namespace ATL.AudioData
         /// <param name="regionId">ID of the current buffer region; -1 if working on the file itself (global offset correction)</param>
         /// <returns></returns>
         public bool RewriteHeaders(
-            BinaryWriter fullScopeWriter,
-            BinaryWriter bufferedWriter,
+            Stream fullScopeWriter,
+            Stream bufferedWriter,
             long deltaSize,
             ACTION action,
             string zone = DEFAULT_ZONE_NAME,
@@ -558,16 +558,16 @@ namespace ATL.AudioData
                 }
 
                 // If we're about to write outside the buffered writer and the full-scope writer is available, switch to it
-                BinaryWriter w;
-                if (null == bufferedWriter) w = fullScopeWriter;
-                else if (header.Position + offsetPositionCorrection < 0 || header.Position + offsetPositionCorrection > bufferedWriter.BaseStream.Length)
+                Stream s;
+                if (null == bufferedWriter) s = fullScopeWriter;
+                else if (header.Position + offsetPositionCorrection < 0 || header.Position + offsetPositionCorrection > bufferedWriter.Length)
                 {
                     if (null == fullScopeWriter) throw new InvalidDataException("Trying to write outside the buffered writer");
                     Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Trying to write outside the buffered writer - switching to full-scope writer");
-                    w = fullScopeWriter;
+                    s = fullScopeWriter;
                     offsetPositionCorrection = 0;
                 }
-                else w = bufferedWriter;
+                else s = bufferedWriter;
 
 
                 // === Rewrite headers
@@ -592,7 +592,7 @@ namespace ATL.AudioData
                         delta = deltaSize;
                     }
 
-                    w.BaseStream.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
+                    s.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 
                     value = addToValue(header.Value, delta, out updatedValue);
 
@@ -603,7 +603,7 @@ namespace ATL.AudioData
 
                     if (!header.IsLittleEndian) Array.Reverse(value);
 
-                    w.Write(value);
+                    s.Write(value, 0, value.Length);
                 }
                 else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
                 {
@@ -646,8 +646,8 @@ namespace ATL.AudioData
 
                     if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
 
-                    w.BaseStream.Seek(headerPosition, SeekOrigin.Begin);
-                    w.Write(value);
+                    s.Seek(headerPosition, SeekOrigin.Begin);
+                    s.Write(value, 0, value.Length);
                 } // Index & relative index types
             } // Loop through headers
 

@@ -6,6 +6,7 @@ using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.AudioData.IO.FileSurgeon;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FlacHelper;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -288,7 +289,7 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -311,13 +312,18 @@ namespace ATL.AudioData.IO
             surgeon.RewriteZones(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
 
             // Set the 'isLast' bit on the actual last block
-            w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
-            w.Write((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
+            w.Seek(latestBlockOffset, SeekOrigin.Begin);
+            w.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
 
             return true;
         }
 
-        private WriteResult write(BinaryWriter w, TagData tag, Zone zone)
+        private WriteResult write(Stream s, TagData tag, Zone zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private WriteResult write(TagData tag, BinaryWriter w, Zone zone)
         {
             WriteResult result;
 
@@ -467,7 +473,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        public bool Remove(BinaryWriter w)
+        public bool Remove(Stream s)
         {
             bool result = true;
             long cumulativeDelta = 0;
@@ -482,7 +488,7 @@ namespace ATL.AudioData.IO
                 {
                     if (zone.Flag == META_PADDING || zone.Flag == META_PICTURE || zone.Flag == META_VORBIS_COMMENT)
                     {
-                        StreamUtils.ShortenStream(w.BaseStream, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        StreamUtils.ShortenStream(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
                         vorbisTag.Clear();
 
                         cumulativeDelta += zone.Size - zone.CoreSignature.Length;
@@ -492,8 +498,8 @@ namespace ATL.AudioData.IO
                         latestBlockOffset = zone.Offset - cumulativeDelta;
                         latestBlockType = zone.Flag;
 
-                        w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
-                        w.Write(latestBlockType);
+                        s.Seek(latestBlockOffset, SeekOrigin.Begin);
+                        s.WriteByte(latestBlockType);
                     }
                 }
             }
@@ -501,8 +507,8 @@ namespace ATL.AudioData.IO
             // Set the 'isLast' bit on the actual last block
             if (latestBlockOffset > -1)
             {
-                w.BaseStream.Seek(latestBlockOffset, SeekOrigin.Begin);
-                w.Write((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
+                s.Seek(latestBlockOffset, SeekOrigin.Begin);
+                s.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
             }
 
             return result;

@@ -666,7 +666,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             computePicturesDestination(tag.Pictures);
 
@@ -1015,7 +1020,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of non-WM/xxx fields
-        public override bool Remove(BinaryWriter w)
+        public override bool Remove(Stream s)
         {
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
@@ -1033,12 +1038,11 @@ namespace ATL.AudioData.IO
                     tag.AdditionalFields.Add(emptyFieldInfo);
                 }
 
-                BinaryReader r = new BinaryReader(w.BaseStream);
-                return Write(r, w, tag);
+                using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
             }
             else
             {
-                return base.Remove(w);
+                return base.Remove(s);
             }
         }
 

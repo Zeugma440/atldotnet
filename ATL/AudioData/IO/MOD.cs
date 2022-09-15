@@ -498,7 +498,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream w, string zone)
         {
             int result = 0;
 
@@ -507,7 +507,7 @@ namespace ATL.AudioData.IO
                 string title = tag[Field.TITLE];
                 if (title.Length > 20) title = title.Substring(0, 20);
                 else if (title.Length < 20) title = Utils.BuildStrictLengthString(title, 20, '\0');
-                w.Write(Utils.Latin1Encoding.GetBytes(title));
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(title));
                 result = 1;
             }
 

@@ -414,7 +414,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
+        {
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+        }
+
+        private int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 0;
 
@@ -482,7 +487,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(BinaryWriter w)
+        public override bool Remove(Stream s)
         {
             TagData tag = new TagData();
 
@@ -503,9 +508,9 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            w.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
         }
 
     }

@@ -313,7 +313,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
             int result = 0;
             string recordingYear = "";
@@ -337,14 +337,14 @@ namespace ATL.AudioData.IO
             // Supported textual fields
             foreach (Field frameType in map.Keys)
             {
-                foreach (string s in frameMapping.Keys)
+                foreach (string str in frameMapping.Keys)
                 {
-                    if (frameType == frameMapping[s])
+                    if (frameType == frameMapping[str])
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
-                            writeTextFrame(w, s, value);
+                            writeTextFrame(s, str, value);
                             result++;
                         }
                         break;
@@ -357,7 +357,7 @@ namespace ATL.AudioData.IO
             {
                 if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && fieldInfo.NativeFieldCode.Length > 0)
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
+                    writeTextFrame(s, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     result++;
                 }
             }
@@ -365,16 +365,16 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
+        private void writeTextFrame(Stream s, string frameCode, string text)
         {
-            writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(frameCode));
             byte[] textBytes = Encoding.UTF8.GetBytes(text);
-            writer.Write(StreamUtils.EncodeBEUInt32((uint)textBytes.Length));
-            writer.Write(textBytes);
+            StreamUtils.WriteBytes(s, StreamUtils.EncodeBEUInt32((uint)textBytes.Length));
+            StreamUtils.WriteBytes(s, textBytes);
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(BinaryWriter w)
+        public override bool Remove(Stream s)
         {
             TagData tag = new TagData();
 
@@ -395,8 +395,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            BinaryReader r = new BinaryReader(w.BaseStream);
-            return Write(r, w, tag);
+            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
         }
 
     }

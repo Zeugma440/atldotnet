@@ -51,7 +51,7 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, BinaryWriter w, TagData tag, Action<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null)
         {
             return true;
         }
@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
             throw new NotImplementedException();
         }
         /// <inheritdoc/>
-        public bool Remove(BinaryWriter w)
+        public bool Remove(Stream s)
         {
             throw new NotImplementedException();
         }

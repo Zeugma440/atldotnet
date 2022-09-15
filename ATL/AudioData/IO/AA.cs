@@ -316,14 +316,16 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream w, string zone)
         {
             int result = -1; // Default : leave as is
+            byte[] intBuffer;
 
             if (zone.Equals(ZONE_TAGS))
             {
-                long nbTagsOffset = w.BaseStream.Position;
-                w.Write(0); // Number of tags; will be rewritten at the end of the method
+                long nbTagsOffset = w.Position;
+                intBuffer = StreamUtils.EncodeInt32(0);
+                w.Write(intBuffer, 0, 4); // Number of tags; will be rewritten at the end of the method
 
                 // Mapped textual fields
                 IDictionary<Field, string> map = tag.ToMap();
@@ -354,8 +356,9 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                w.BaseStream.Seek(nbTagsOffset, SeekOrigin.Begin);
-                w.Write(StreamUtils.EncodeBEInt32(result)); // Number of tags
+                w.Seek(nbTagsOffset, SeekOrigin.Begin);
+                intBuffer = StreamUtils.EncodeBEInt32(result);
+                w.Write(intBuffer, 0, 4); // Number of tags
             }
             if (zone.Equals(ZONE_IMAGE))
             {
@@ -379,23 +382,23 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTagField(BinaryWriter w, string key, string value)
+        private void writeTagField(Stream w, string key, string value)
         {
-            w.Write('\0'); // Unknown byte; always zero
+            w.WriteByte(0); // Unknown byte; always zero
             byte[] keyB = Encoding.UTF8.GetBytes(key);
             byte[] valueB = Encoding.UTF8.GetBytes(value);
-            w.Write(StreamUtils.EncodeBEInt32(keyB.Length)); // Key length
-            w.Write(StreamUtils.EncodeBEInt32(valueB.Length)); // Value length
-            w.Write(keyB);
-            w.Write(valueB);
+            StreamUtils.WriteBEInt32(w, keyB.Length); // Key length
+            StreamUtils.WriteBEInt32(w, valueB.Length); // Value length
+            StreamUtils.WriteBytes(w, keyB);
+            StreamUtils.WriteBytes(w, valueB);
         }
 
-        private void writePictureFrame(BinaryWriter w, byte[] pictureData)
+        private void writePictureFrame(Stream w, byte[] pictureData)
         {
-            w.Write(StreamUtils.EncodeBEInt32(pictureData.Length)); // Pic size
-            w.Write(0); // Pic data absolute offset; to be rewritten later
+            StreamUtils.WriteBEInt32(w, pictureData.Length); // Pic size
+            StreamUtils.WriteInt32(w, 0); // Pic data absolute offset; to be rewritten later
 
-            w.Write(pictureData);
+            StreamUtils.WriteBytes(w, pictureData);
         }
     }
 }

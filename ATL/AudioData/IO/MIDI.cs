@@ -985,7 +985,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override int write(TagData tag, BinaryWriter w, string zone)
+        protected override int write(TagData tag, Stream w, string zone)
         {
             // Not implemented, as it would require a whole new set of metadata related to tracks and their names
             return 0;

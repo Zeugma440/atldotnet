@@ -97,7 +97,7 @@ namespace ATL.AudioData.IO
 
         private readonly ProgressManager writeProgress;
 
-        public delegate WriteResult WriteDelegate(BinaryWriter w, TagData tag, Zone zone);
+        public delegate WriteResult WriteDelegate(Stream w, TagData tag, Zone zone);
 
 
         public class WriteResult
@@ -129,7 +129,7 @@ namespace ATL.AudioData.IO
 
 
         public bool RewriteZones(
-            BinaryWriter w,
+            Stream w,
             WriteDelegate write,
             ICollection<Zone> zones,
             TagData dataToWrite,
@@ -156,7 +156,7 @@ namespace ATL.AudioData.IO
         /// <param name="useBuffer">True if I/O has to be buffered. Makes I/O faster but consumes more RAM.</param>
         /// <returns>True if the operation succeeded; false if it something unexpected happened during the processing</returns>
         private bool RewriteZones(
-            BinaryWriter fullScopeWriter,
+            Stream fullScopeWriter,
             WriteDelegate write,
             ICollection<Zone> zones,
             TagData dataToWrite,
@@ -170,8 +170,8 @@ namespace ATL.AudioData.IO
             bool result = true;
             bool isBuffered = false;
 
-            IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, fullScopeWriter.BaseStream.Length);
-            BinaryWriter writer;
+            IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, fullScopeWriter.Length);
+            Stream writer;
 
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");
@@ -210,14 +210,15 @@ namespace ATL.AudioData.IO
                         if (initialBufferSize > 0)
                         {
                             if (structureHelper != null)
-                                fullScopeWriter.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
+                                fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
                             else // for classes that don't use FileStructureHelper(FLAC)
-                                fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
+                                fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
 
-                            StreamUtils.CopyStream(fullScopeWriter.BaseStream, buffer, initialBufferSize);
+                            StreamUtils.CopyStream(fullScopeWriter, buffer, initialBufferSize);
                         }
 
-                        writer = new BinaryWriter(buffer, Settings.DefaultTextEncoding);
+                        //writer = new BinaryWriter(buffer, Settings.DefaultTextEncoding);
+                        writer = buffer;
                         globalOffsetCorrection = region.StartOffset;
                     }
                     else
@@ -237,11 +238,10 @@ namespace ATL.AudioData.IO
 
                         // Write new tag to a MemoryStream
                         using (MemoryStream memStream = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
-                        using (BinaryWriter memStreamW = new BinaryWriter(memStream, Settings.DefaultTextEncoding))
                         {
                             // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
                             dataToWrite.DataSizeDelta = globalCumulativeDelta;
-                            WriteResult writeResult = write(memStreamW, dataToWrite, zone);
+                            WriteResult writeResult = write(memStream, dataToWrite, zone);
 
                             if (WriteMode.REPLACE == writeResult.RequiredMode)
                             {
@@ -253,7 +253,7 @@ namespace ATL.AudioData.IO
                                     {
                                         StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
                                         memStream.Position = 0;
-                                        embedder.WriteID3v2EmbeddingHeader(memStreamW, newTagSize);
+                                        embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
 
                                         newTagSize = memStream.Length;
                                     }
@@ -290,7 +290,7 @@ namespace ATL.AudioData.IO
                                 {
                                     switch (defaultTagOffset)
                                     {
-                                        case MetaDataIO.TO_EOF: tagBeginOffset = writer.BaseStream.Length; break;
+                                        case MetaDataIO.TO_EOF: tagBeginOffset = writer.Length; break;
                                         case MetaDataIO.TO_BOF: tagBeginOffset = 0; break;
                                         case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta); break;
                                         default: tagBeginOffset = -1; break;
@@ -309,7 +309,7 @@ namespace ATL.AudioData.IO
                                     if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    StreamUtils.LengthenStream(writer.BaseStream, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
+                                    StreamUtils.LengthenStream(writer, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
                                 }
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
@@ -317,23 +317,23 @@ namespace ATL.AudioData.IO
                                     if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    StreamUtils.ShortenStream(writer.BaseStream, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
+                                    StreamUtils.ShortenStream(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
                                 }
                             }
 
                             // Copy tag contents to the new slot
                             if (!isNothing)
                             {
-                                writer.BaseStream.Seek(tagBeginOffset, SeekOrigin.Begin);
+                                writer.Seek(tagBeginOffset, SeekOrigin.Begin);
                                 memStream.Seek(0, SeekOrigin.Begin);
 
                                 if (writeResult.WrittenFields > 0)
                                 {
-                                    StreamUtils.CopyStream(memStream, writer.BaseStream);
+                                    StreamUtils.CopyStream(memStream, writer);
                                 }
                                 else
                                 {
-                                    if (zone.CoreSignature.Length > 0) memStreamW.Write(zone.CoreSignature);
+                                    if (zone.CoreSignature.Length > 0) memStream.Write(zone.CoreSignature, 0, zone.CoreSignature.Length);
                                 }
                             }
 
@@ -379,23 +379,23 @@ namespace ATL.AudioData.IO
                         if (buffer.Length > initialBufferSize)
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                            StreamUtils.LengthenStream(fullScopeWriter.BaseStream, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
+                            StreamUtils.LengthenStream(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                            StreamUtils.ShortenStream(fullScopeWriter.BaseStream, tagEndOffset, (uint)(initialBufferSize - buffer.Length), progress);
+                            StreamUtils.ShortenStream(fullScopeWriter, tagEndOffset, (uint)(initialBufferSize - buffer.Length), progress);
                         }
 
                         // Copy tag contents to the new slot
                         if (structureHelper != null)
-                            fullScopeWriter.BaseStream.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
+                            fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
                         else // for classes that don't use FileStructureHelper(FLAC)
-                            fullScopeWriter.BaseStream.Seek(region.StartOffset + globalCumulativeDelta - regionCumulativeDelta, SeekOrigin.Begin); // don't apply self-created delta
+                            fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta - regionCumulativeDelta, SeekOrigin.Begin); // don't apply self-created delta
 
                         buffer.Seek(0, SeekOrigin.Begin);
 
-                        StreamUtils.CopyStream(buffer, fullScopeWriter.BaseStream);
+                        StreamUtils.CopyStream(buffer, fullScopeWriter);
                     }
 
                     // Increment progress section
