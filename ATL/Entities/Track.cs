@@ -30,7 +30,7 @@ namespace ATL
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="path">Path of the local file to be loaded</param>
-        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as async saving progresses (default : null = no callback)</param>
         /// <param name="load">True to load the file when running this constructor (default : true)</param>
         public Track(string path, IProgress<float> writeProgress = null, bool load = true)
         {

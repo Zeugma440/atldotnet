@@ -85,14 +85,13 @@ namespace ATL.AudioData
             if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
-        public bool Save(TagData data)
+        private IList<MetaDataIOFactory.TagType> detectAvailableMetas()
         {
-            bool result = true;
-            IList<MetaDataIOFactory.TagType> availableMetas = audioManager.getAvailableMetas();
+            IList<MetaDataIOFactory.TagType> result = audioManager.getAvailableMetas();
             IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
 
-            bool hasNothing = (0 == availableMetas.Count);
-            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
+            bool hasNothing = (0 == result.Count);
+            if (Settings.EnrichID3v1 && 1 == result.Count && result[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
@@ -100,14 +99,21 @@ namespace ATL.AudioData
             {
                 foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
                 {
-                    availableMetas.Add(i);
+                    result.Add(i);
                 }
 
                 // File does not support any of the metas we want to write
                 // => Use the first supported meta available
-                if (0 == availableMetas.Count && supportedMetas.Count > 0) availableMetas.Add(supportedMetas[0]);
+                if (0 == result.Count && supportedMetas.Count > 0) result.Add(supportedMetas[0]);
             }
+            return result;
+        }
 
+        public bool Save(TagData data)
+        {
+            IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
+
+            bool result = true;
             if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
             foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
@@ -119,31 +125,13 @@ namespace ATL.AudioData
 
         public async Task<bool> SaveAsync(TagData data)
         {
+            IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
+
             bool result = true;
-            IList<MetaDataIOFactory.TagType> availableMetas = audioManager.getAvailableMetas();
-            IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
-
-            bool hasNothing = (0 == availableMetas.Count);
-            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
-
-            // File has no existing metadata
-            // => Try writing with one of the metas set in the Settings
-            if (hasNothing)
-            {
-                foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
-                {
-                    availableMetas.Add(i);
-                }
-
-                // File does not support any of the metas we want to write
-                // => Use the first supported meta available
-                if (0 == availableMetas.Count && supportedMetas.Count > 0) availableMetas.Add(supportedMetas[0]);
-            }
-
             if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
             foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
-                result &= await audioManager.UpdateTagInFileAsync(data, meta);
+                result &= await audioManager.UpdateTagInFile(data, meta, true);
                 if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;

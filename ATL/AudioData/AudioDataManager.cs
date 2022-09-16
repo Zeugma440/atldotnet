@@ -370,67 +370,11 @@ namespace ATL.AudioData
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
         {
-            bool result = true;
-            IMetaDataIO theMetaIO;
-            LogDelegator.GetLocateDelegate()(fileName);
-            theTag.DurationMs = audioDataIO.Duration;
-
-            if (audioDataIO.IsMetaSupported(tagType))
-            {
-                try
-                {
-                    theMetaIO = getMeta(tagType);
-
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
-                    BinaryReader r = new BinaryReader(s);
-                    try
-                    {
-                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
-                        if (audioDataIO is IMetaDataEmbedder)
-                        {
-                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
-                            readTagParams.PrepareForWriting = true;
-
-                            audioDataIO.Read(r, sizeInfo, readTagParams);
-                            theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
-                        }
-
-                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
-                        result = theMetaIO.Write(r, s, theTag, progress);
-                        if (result) setMeta(theMetaIO);
-                    }
-                    finally
-                    {
-                        if (null == stream)
-                        {
-                            r.Close();
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    Console.WriteLine(e.StackTrace);
-                    if (e.InnerException != null)
-                    {
-                        Console.WriteLine("Inner Exception BEGIN");
-                        Console.WriteLine(e.InnerException.Message);
-                        Console.WriteLine(e.InnerException.StackTrace);
-                        Console.WriteLine("Inner Exception END");
-                    }
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
-                    result = false;
-                }
-            }
-            else
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
-            }
-
-            return result;
+            // https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/july/async-programming-brownfield-async-development#the-thread-pool-hack
+            return Task.Run(() => UpdateTagInFile(theTag, tagType, false)).GetAwaiter().GetResult();
         }
 
-        public async Task<bool> UpdateTagInFileAsync(TagData theTag, MetaDataIOFactory.TagType tagType)
+        public async Task<bool> UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType, bool asynchronous)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -443,7 +387,9 @@ namespace ATL.AudioData
                 {
                     theMetaIO = getMeta(tagType);
 
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
+                    FileOptions options = fileOptions;
+                    if (asynchronous) options |= FileOptions.Asynchronous;
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, options) : stream;
                     BinaryReader r = new BinaryReader(s);
                     try
                     {
@@ -471,16 +417,7 @@ namespace ATL.AudioData
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
-                    Console.WriteLine(e.StackTrace);
-                    if (e.InnerException != null)
-                    {
-                        Console.WriteLine("Inner Exception BEGIN");
-                        Console.WriteLine(e.InnerException.Message);
-                        Console.WriteLine(e.InnerException.StackTrace);
-                        Console.WriteLine("Inner Exception END");
-                    }
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                    handleWriteException(e);
                     result = false;
                 }
             }
@@ -490,6 +427,20 @@ namespace ATL.AudioData
             }
 
             return result;
+        }
+
+        private void handleWriteException(Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine(e.StackTrace);
+            if (e.InnerException != null)
+            {
+                Console.WriteLine("Inner Exception BEGIN");
+                Console.WriteLine(e.InnerException.Message);
+                Console.WriteLine(e.InnerException.StackTrace);
+                Console.WriteLine("Inner Exception END");
+            }
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
         }
 
         /// <summary>

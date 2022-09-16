@@ -15,25 +15,52 @@ namespace ATL.UI_test
         private void displayProgress(float progress)
         {
             String str = (progress * 100).ToString() + "%";
-            Console.WriteLine(str);
+            //            Console.WriteLine(str);
             ProgressLbl.Text = str;
         }
 
-        private async void GoBtn_Click(object sender, EventArgs e)
+        private void GoSyncBtn_Click(object sender, EventArgs e)
         {
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
             IProgress<float> progress = new Progress<float>(displayProgress);
-            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", progress);
+            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "sync", false).Wait();
         }
 
-        private async Task<bool> processFile(string path, IProgress<float> progress)
+        private async void GoAsyncBtn_Click(object sender, EventArgs e)
+        {
+            ProgressLbl.Text = "";
+            ProgressLbl.Visible = true;
+
+            IProgress<float> progress = new Progress<float>(displayProgress);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async progress", true, progress);
+        }
+
+        private async void GoAsyncSilentBtn_Click(object sender, EventArgs e)
+        {
+            ProgressLbl.Text = "";
+            ProgressLbl.Visible = true;
+
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async silent", true);
+        }
+
+        private async Task<bool> processFile(string path, string method, bool asynchronous, IProgress<float> progress = null)
         {
             ProgressLbl.Text = "Preparing temp file...";
             Application.DoEvents();
-            string testFileLocation = await TestUtils.GenerateTempTestFileAsync(path);
-            Settings.FileBufferSize = 4*1024*1024;
+            string testFileLocation = "";
+            if (asynchronous)
+            {
+                testFileLocation = await TestUtils.GenerateTempTestFileAsync(path);
+            }
+            else
+            {
+                testFileLocation = TestUtils.GenerateTempTestFile(path);
+            }
+
+            long timestamp = DateTime.Now.Ticks;
+            Settings.FileBufferSize = 4 * 1024 * 1024;
             try
             {
                 ProgressLbl.Text = "Reading...";
@@ -56,7 +83,10 @@ namespace ATL.UI_test
                 ProgressLbl.Text = "Saving...";
                 Application.DoEvents();
 
-                return await theFile.SaveAsync();
+                if (asynchronous)
+                    return await theFile.SaveAsync();
+                else
+                    return theFile.Save();
                 /*
                 theFile = new Track(testFileLocation);
 
@@ -72,6 +102,11 @@ namespace ATL.UI_test
             }
             finally
             {
+                long timestamp2 = DateTime.Now.Ticks;
+                Console.WriteLine("Total time : " + (timestamp2 - timestamp) / 1000.0 + "[" + method + "]");
+
+                ProgressLbl.Text = "Done !";
+                Application.DoEvents();
                 File.Delete(testFileLocation);
             }
         }

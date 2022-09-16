@@ -7,7 +7,7 @@ namespace ATL
 {
     // Inspired by https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-disposeasync
 
-    public sealed class AsyncBinaryWriter : IDisposable, IAsyncDisposable
+    public sealed class AsyncBinaryWriter : IDisposable
     {
 
         private readonly Stream stream;
