@@ -17,24 +17,28 @@ namespace ATL.UI_test
             String str = (progress * 100).ToString() + "%";
             Console.WriteLine(str);
             ProgressLbl.Text = str;
-            Application.DoEvents();
         }
 
-        private void GoBtn_Click(object sender, EventArgs e)
+        private async void GoBtn_Click(object sender, EventArgs e)
         {
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            Action<float> progress = new Action<float>(displayProgress);
-            processFile(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a", progress);
+            IProgress<float> progress = new Progress<float>(displayProgress);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", progress);
         }
 
-        private bool processFile(string path, Action<float> progress)
+        private async Task<bool> processFile(string path, IProgress<float> progress)
         {
-            string testFileLocation = TestUtils.GenerateTempTestFile(path);
-            Settings.FileBufferSize = 20;
+            ProgressLbl.Text = "Preparing temp file...";
+            Application.DoEvents();
+            string testFileLocation = await TestUtils.GenerateTempTestFileAsync(path);
+            Settings.FileBufferSize = 4*1024*1024;
             try
             {
+                ProgressLbl.Text = "Reading...";
+                Application.DoEvents();
+
                 Track theFile = new Track(testFileLocation, progress);
 
                 double tDuration = theFile.DurationMs;
@@ -52,7 +56,7 @@ namespace ATL.UI_test
                 ProgressLbl.Text = "Saving...";
                 Application.DoEvents();
 
-                return theFile.Save();
+                return await theFile.SaveAsync();
                 /*
                 theFile = new Track(testFileLocation);
 

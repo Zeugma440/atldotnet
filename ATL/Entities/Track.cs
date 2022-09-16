@@ -6,6 +6,7 @@ using System.IO;
 using static ATL.ChannelsArrangements;
 using System.Linq;
 using static ATL.TagData;
+using System.Threading.Tasks;
 
 namespace ATL
 {
@@ -31,7 +32,7 @@ namespace ATL
         /// <param name="path">Path of the local file to be loaded</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <param name="load">True to load the file when running this constructor (default : true)</param>
-        public Track(string path, Action<float> writeProgress = null, bool load = true)
+        public Track(string path, IProgress<float> writeProgress = null, bool load = true)
         {
             this.Path = path;
             stream = null;
@@ -59,7 +60,7 @@ namespace ATL
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
-        public Track(Stream stream, string mimeType, Action<float> writeProgress = null)
+        public Track(Stream stream, string mimeType, IProgress<float> writeProgress = null)
         {
             this.stream = stream;
             this.mimeType = mimeType;
@@ -261,7 +262,7 @@ namespace ATL
 
 
         //=== TECHNICAL
-        private readonly Action<float> writeProgress;
+        private readonly IProgress<float> writeProgress;
 
 
         /// <summary>
@@ -498,6 +499,19 @@ namespace ATL
         public bool Save()
         {
             bool result = fileIO.Save(toTagData());
+            if (result) Update();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Save Track to disk
+        /// </summary>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        public async Task<bool> SaveAsync()
+        {
+            bool result = await fileIO.SaveAsync(toTagData());
             if (result) Update();
 
             return result;

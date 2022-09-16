@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData
 {
@@ -468,7 +469,12 @@ namespace ATL.AudioData
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null) { throw new NotImplementedException(); }
+        public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null) { throw new NotImplementedException(); }
+
+        public Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <inheritdoc/>
         public bool Remove(Stream w) { throw new NotImplementedException(); }

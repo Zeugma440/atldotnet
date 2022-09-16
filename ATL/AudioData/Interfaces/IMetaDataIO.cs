@@ -2,6 +2,7 @@ using ATL.AudioData.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData
 {
@@ -70,7 +71,9 @@ namespace ATL.AudioData
         /// <param name="tag">Tag information to be added</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null);
+        bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null);
+
+        Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null);
 
         /// <summary>
         /// Remove current tag

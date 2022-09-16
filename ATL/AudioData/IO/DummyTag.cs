@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData.IO
 {
@@ -51,7 +52,12 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream w, TagData tag, Action<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        {
+            return true;
+        }
+        /// <inheritdoc/>
+        public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
         {
             return true;
         }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using static ATL.ChannelsArrangements;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData
 {
@@ -29,7 +30,7 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, Action<float> writeProgress = null)
+        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;
@@ -60,7 +61,7 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, Action<float> writeProgress = null)
+        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
         {
             byte alternate = 0;
             bool found = false;
@@ -111,6 +112,38 @@ namespace ATL.AudioData
             foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
                 result &= audioManager.UpdateTagInFile(data, meta);
+                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+            }
+            return result;
+        }
+
+        public async Task<bool> SaveAsync(TagData data)
+        {
+            bool result = true;
+            IList<MetaDataIOFactory.TagType> availableMetas = audioManager.getAvailableMetas();
+            IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
+
+            bool hasNothing = (0 == availableMetas.Count);
+            if (Settings.EnrichID3v1 && 1 == availableMetas.Count && availableMetas[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
+
+            // File has no existing metadata
+            // => Try writing with one of the metas set in the Settings
+            if (hasNothing)
+            {
+                foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
+                {
+                    availableMetas.Add(i);
+                }
+
+                // File does not support any of the metas we want to write
+                // => Use the first supported meta available
+                if (0 == availableMetas.Count && supportedMetas.Count > 0) availableMetas.Add(supportedMetas[0]);
+            }
+
+            if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
+            foreach (MetaDataIOFactory.TagType meta in availableMetas)
+            {
+                result &= await audioManager.UpdateTagInFileAsync(data, meta);
                 if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;
