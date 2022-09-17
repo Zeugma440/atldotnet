@@ -1076,14 +1076,14 @@ namespace ATL.AudioData.IO
                 await StreamUtilsAsync.CopyStreamAsync(memStream, w);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
-            }
+            } // using MemoryStream memStream
 
             // If the number of written pages is different than the number of previous existing pages,
             // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
             {
                 OggPageHeader header = new OggPageHeader();
-                byte[] data;
+                byte[] data = new byte[0];
                 uint crc;
 
                 do
@@ -1100,8 +1100,9 @@ namespace ATL.AudioData.IO
 
                         // Rewrite CRC
                         w.Seek(nextPageOffset, SeekOrigin.Begin);
-                        data = new byte[header.GetHeaderSize() + header.GetPageSize()];
-                        r.Read(data, 0, data.Length);
+                        int dataSize = header.GetHeaderSize() + header.GetPageSize();
+                        if (data.Length < dataSize) data = new byte[dataSize]; // Only realloc when size is insufficient
+                        r.Read(data, 0, dataSize);
 
                         // Checksum has to include its own location, as if it were 0
                         data[22] = 0;
@@ -1109,12 +1110,12 @@ namespace ATL.AudioData.IO
                         data[24] = 0;
                         data[25] = 0;
 
-                        crc = OggCRC32.CalculateCRC(0, data, (uint)data.Length);
+                        crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
                         r.BaseStream.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
                         StreamUtils.WriteUInt32(w, crc);
 
                         // To the next header
-                        nextPageOffset += data.Length;
+                        nextPageOffset += dataSize;
                     }
                     else
                     {
@@ -1152,10 +1153,11 @@ namespace ATL.AudioData.IO
         private void generatePageCrc32(Stream s, IList<KeyValuePair<long, int>> pageHeaderOffsets)
         {
             uint crc;
+            byte[] data = new byte[0];
             foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
             {
                 s.Seek(kv.Key, SeekOrigin.Begin);
-                byte[] data = new byte[kv.Value];
+                if (data.Length < kv.Value) data = new byte[kv.Value]; // Enlarge only if needed; max size is 0xffff
                 s.Read(data, 0, kv.Value);
                 crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
                 s.Seek(kv.Key + 22, SeekOrigin.Begin); // Position of CRC within OGG header
