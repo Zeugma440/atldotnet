@@ -185,7 +185,7 @@ namespace ATL.test.IO
             // Tricky fields that aren't managed with a 1-to-1 mapping
             theTrack.Year = 1944;
             theTrack.TrackNumber = 10;
-            Assert.IsTrue(theTrack.Save());
+            Assert.IsTrue(theTrack.SaveAsync().Result); // Hack to include async methods in test coverage
 
             theTrack = new Track(testFileLocation);
 

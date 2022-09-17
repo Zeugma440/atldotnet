@@ -505,62 +505,10 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
         {
-            bool result = true;
-
-            structureHelper.Clear();
-            tagData.Pictures.Clear();
-
-            // Constraint-check on non-supported values
-            if (FieldCodeFixedLength > 0)
-            {
-                ISet<MetaFieldInfo> infoToRemove = new HashSet<MetaFieldInfo>();
-                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
-                {
-                    if (fieldInfo.TagType.Equals(getImplementedTagType()) || MetaDataIOFactory.TagType.ANY == fieldInfo.TagType)
-                    {
-                        string fieldCode = Utils.ProtectValue(fieldInfo.NativeFieldCode);
-                        if (fieldCode.Length != FieldCodeFixedLength && !canHandleNonStandardField(fieldCode, Utils.ProtectValue(fieldInfo.Value)))
-                        {
-                            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Field code fixed length is " + FieldCodeFixedLength + "; detected field '" + fieldCode + "' is " + fieldCode.Length + " characters long and will be ignored");
-                            infoToRemove.Add(fieldInfo);
-                        }
-                    }
-                }
-                foreach (MetaFieldInfo info in infoToRemove) tag.AdditionalFields.Remove(info);
-            }
-
-            // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(true, true);
-            readTagParams.PrepareForWriting = true;
-
-            if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
-            {
-                readTagParams.Offset = embedder.HasEmbeddedID3v2;
-            }
-
-            read(r, readTagParams);
-
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
-            {
-                structureHelper.Clear();
-                structureHelper.AddZone(embedder.Id3v2Zone);
-            }
-
-            // Give engine something to work with if the tag is really empty
-            if (!tagExists && 0 == Zones.Count)
-            {
-                structureHelper.AddZone(0, 0);
-            }
-
-            TagData dataToWrite;
-            dataToWrite = tagData;
-            dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
-            dataToWrite.Cleanup();
-
-            preprocessWrite(dataToWrite);
+            TagData dataToWrite = prepareWrite(r, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
+            bool result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
             /* TODO - this implementation is too risky : 
@@ -574,8 +522,23 @@ namespace ATL.AudioData.IO
 
         public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
         {
-            bool result = true;
+            TagData dataToWrite = prepareWrite(r, tag);
 
+            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
+            bool result = await surgeon.RewriteZonesAsync(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
+
+            // Update tag information without calling Read
+            /* TODO - this implementation is too risky : 
+             *   - if one of the writing operations fails, data is updated as if everything went right
+             *   - any picture slot with a markForDeletion flag is recorded as-is in the tag
+             */
+            tagData = dataToWrite;
+
+            return result;
+        }
+
+        private TagData prepareWrite(BinaryReader r, TagData tag)
+        {
             structureHelper.Clear();
             tagData.Pictures.Clear();
 
@@ -627,18 +590,7 @@ namespace ATL.AudioData.IO
             dataToWrite.Cleanup();
 
             preprocessWrite(dataToWrite);
-
-            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            result = await surgeon.RewriteZonesAsync(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
-
-            // Update tag information without calling Read
-            /* TODO - this implementation is too risky : 
-             *   - if one of the writing operations fails, data is updated as if everything went right
-             *   - any picture slot with a markForDeletion flag is recorded as-is in the tag
-             */
-            tagData = dataToWrite;
-
-            return result;
+            return dataToWrite;
         }
 
         /// <inheritdoc/>

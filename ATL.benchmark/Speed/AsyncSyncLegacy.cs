@@ -86,17 +86,16 @@ namespace ATL.benchmark
 
             theFile.Title += "xoxo";
             theFile.EmbeddedPictures.Add(PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg")));
-                /*
-            theFile.Chapters[0].Title += 'x';
-            theFile.Chapters[0].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg"));
-            theFile.Chapters[0].Picture.ComputePicHash();
-            theFile.Chapters[1].Title += 'x';
-            theFile.Chapters[1].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic2.jpeg"));
-            theFile.Chapters[1].Picture.ComputePicHash();
-                */
+            /*
+        theFile.Chapters[0].Title += 'x';
+        theFile.Chapters[0].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg"));
+        theFile.Chapters[0].Picture.ComputePicHash();
+        theFile.Chapters[1].Title += 'x';
+        theFile.Chapters[1].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic2.jpeg"));
+        theFile.Chapters[1].Picture.ComputePicHash();
+            */
 
-            if (0 == method) theFile.SaveLegacy();
-            else if (1 == method) theFile.Save();
+            if (1 == method) theFile.Save();
         }
 
         public async Task performWriteAsync(String filePath, int method)
@@ -116,8 +115,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            if (0 == method) theFile.SaveLegacy();
-            else if (1 == method) theFile.Save();
+            if (1 == method) theFile.Save();
             else if (2 == method) await theFile.SaveAsync();
             else await theFile.SaveAsync();
         }

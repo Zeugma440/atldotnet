@@ -292,34 +292,29 @@ namespace ATL.AudioData.IO
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
         public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
         {
-            // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(true, true);
-            readTagParams.PrepareForWriting = true;
-            bool tagExists = Read(r, readTagParams);
-
-            // Save a snapshot of the initial embedded pictures for processing purposes
-            existingPictureIndex = 0;
-            targetPictureIndex = 0;
-            initialPictures = vorbisTag.EmbeddedPictures;
-
-            // Prepare picture data with freshly read vorbisTag
-            TagData dataToWrite = new TagData();
-            dataToWrite.Pictures = vorbisTag.EmbeddedPictures;
-            dataToWrite.IntegrateValues(tag, true, false); // Merge existing information + new tag information except additional fields which will be merged by VorbisComment
-
-            adjustPictureZones(dataToWrite.Pictures);
+            Tuple<bool, TagData> results = prepareWrite(r, tag);
 
             FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
-            surgeon.RewriteZones(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
+            surgeon.RewriteZones(w, new WriteDelegate(write), zones, results.Item2, results.Item1);
 
-            // Set the 'isLast' bit on the actual last block
-            w.Seek(latestBlockOffset, SeekOrigin.Begin);
-            w.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
+            postWrite(w);
 
             return true;
         }
 
         public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        {
+            Tuple<bool, TagData> results = prepareWrite(r, tag);
+
+            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
+            await surgeon.RewriteZonesAsync(w, new WriteDelegate(write), zones, results.Item2, results.Item1);
+
+            postWrite(w);
+
+            return true;
+        }
+
+        private Tuple<bool, TagData> prepareWrite(BinaryReader r, TagData tag)
         {
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
@@ -337,15 +332,14 @@ namespace ATL.AudioData.IO
             dataToWrite.IntegrateValues(tag, true, false); // Merge existing information + new tag information except additional fields which will be merged by VorbisComment
 
             adjustPictureZones(dataToWrite.Pictures);
+            return Tuple.Create(tagExists, dataToWrite);
+        }
 
-            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
-            await surgeon.RewriteZonesAsync(w, new WriteDelegate(write), zones, dataToWrite, tagExists);
-
+        private void postWrite(Stream w)
+        {
             // Set the 'isLast' bit on the actual last block
             w.Seek(latestBlockOffset, SeekOrigin.Begin);
             w.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
-
-            return true;
         }
 
         private WriteResult write(Stream s, TagData tag, Zone zone)

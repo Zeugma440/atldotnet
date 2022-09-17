@@ -93,8 +93,6 @@ namespace ATL.UI_test
 
                 if (asynchronous)
                     return await theFile.SaveAsync();
-                else if (legacy)
-                    return theFile.SaveLegacy();
                 else
                     return theFile.Save();
                 /*

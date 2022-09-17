@@ -496,19 +496,6 @@ namespace ATL
         /// </summary>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public bool SaveLegacy()
-        {
-            bool result = fileIO.SaveLegacy(toTagData());
-            if (result) Update();
-
-            return result;
-        }
-
-        /// <summary>
-        /// Save Track to disk
-        /// </summary>
-        /// <returns>True if save succeeds; false if it fails
-        /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save()
         {
             bool result = fileIO.Save(toTagData());

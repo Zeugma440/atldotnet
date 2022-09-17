@@ -156,17 +156,17 @@ namespace ATL.AudioData.IO
                 LacingValues = r.ReadBytes(Segments);
             }
 
-            public void WriteToStream(BinaryWriter w)
+            public void WriteToStream(Stream w)
             {
-                w.Write(Utils.Latin1Encoding.GetBytes(ID));
-                w.Write(StreamVersion);
-                w.Write(TypeFlag);
-                w.Write(AbsolutePosition);
-                w.Write(StreamId);
-                w.Write(PageNumber);
-                w.Write(Checksum);
-                w.Write(Segments);
-                w.Write(LacingValues);
+                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(ID));
+                w.WriteByte(StreamVersion);
+                w.WriteByte(TypeFlag);
+                StreamUtils.WriteUInt64(w, AbsolutePosition);
+                StreamUtils.WriteInt32(w, StreamId);
+                StreamUtils.WriteInt32(w, PageNumber);
+                StreamUtils.WriteUInt32(w, Checksum);
+                w.WriteByte(Segments);
+                StreamUtils.WriteBytes(w, LacingValues);
             }
 
             public int GetPageSize()
@@ -806,23 +806,7 @@ namespace ATL.AudioData.IO
 
                 // Construct the entire segments table
                 int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
-                byte commentsHeader_remainingBytesInLastSegment = (byte)(newTagSize % 255);
-
-                byte[] entireSegmentsTable = new byte[commentsHeader_nbSegments + setupHeader_nbSegments];
-                for (int i = 0; i < commentsHeader_nbSegments - 1; i++)
-                {
-                    entireSegmentsTable[i] = 255;
-                }
-                entireSegmentsTable[commentsHeader_nbSegments - 1] = commentsHeader_remainingBytesInLastSegment;
-                if (CONTENTS_VORBIS == contents)
-                {
-                    for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
-                    {
-                        entireSegmentsTable[i] = 255;
-                    }
-                    entireSegmentsTable[commentsHeader_nbSegments + setupHeader_nbSegments - 1] = setupHeader_remainingBytesInLastSegment;
-                }
-
+                byte[] entireSegmentsTable = buildSegmentsTable(newTagSize, commentsHeader_nbSegments, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
                 int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
@@ -851,7 +835,6 @@ namespace ATL.AudioData.IO
                 int pagedBytes = 0;
                 long position;
 
-                BinaryWriter virtualW = new BinaryWriter(memStream);
                 IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
 
                 // Repaging
@@ -870,7 +853,7 @@ namespace ATL.AudioData.IO
 
                     pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
 
-                    header.WriteToStream(virtualW);
+                    header.WriteToStream(memStream);
                     memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
 
                     pagedSegments += header.Segments;
@@ -885,18 +868,7 @@ namespace ATL.AudioData.IO
 
 
                 // Generate CRC32 of created pages
-                uint crc;
-                byte[] data;
-                foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
-                {
-                    crc = 0;
-                    memStream.Seek(kv.Key, SeekOrigin.Begin);
-                    data = new byte[kv.Value];
-                    memStream.Read(data, 0, kv.Value);
-                    crc = OggCRC32.CalculateCRC(crc, data, (uint)kv.Value);
-                    memStream.Seek(kv.Key + 22, SeekOrigin.Begin); // Position of CRC within OGG header
-                    virtualW.Write(crc);
-                }
+                generatePageCrc32(memStream, pageHeaderOffsets);
 
                 // Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
@@ -987,9 +959,9 @@ namespace ATL.AudioData.IO
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
-                    memStream.Write(Utils.Latin1Encoding.GetBytes(VORBIS_COMMENT_ID), 0, VORBIS_COMMENT_ID.Length);
+                    await memStream.WriteAsync(Utils.Latin1Encoding.GetBytes(VORBIS_COMMENT_ID), 0, VORBIS_COMMENT_ID.Length);
                 else if (CONTENTS_OPUS == contents)
-                    memStream.Write(Utils.Latin1Encoding.GetBytes(OPUS_TAG_ID), 0, OPUS_TAG_ID.Length);
+                    await memStream.WriteAsync(Utils.Latin1Encoding.GetBytes(OPUS_TAG_ID), 0, OPUS_TAG_ID.Length);
 
                 vorbisTag.Write(memStream, tag);
 
@@ -1006,7 +978,7 @@ namespace ATL.AudioData.IO
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        StreamUtils.CopyStream(r.BaseStream, memStream, setupHeaderSize);
+                        await StreamUtilsAsync.CopyStreamAsync(r.BaseStream, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -1020,23 +992,7 @@ namespace ATL.AudioData.IO
 
                 // Construct the entire segments table
                 int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
-                byte commentsHeader_remainingBytesInLastSegment = (byte)(newTagSize % 255);
-
-                byte[] entireSegmentsTable = new byte[commentsHeader_nbSegments + setupHeader_nbSegments];
-                for (int i = 0; i < commentsHeader_nbSegments - 1; i++)
-                {
-                    entireSegmentsTable[i] = 255;
-                }
-                entireSegmentsTable[commentsHeader_nbSegments - 1] = commentsHeader_remainingBytesInLastSegment;
-                if (CONTENTS_VORBIS == contents)
-                {
-                    for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
-                    {
-                        entireSegmentsTable[i] = 255;
-                    }
-                    entireSegmentsTable[commentsHeader_nbSegments + setupHeader_nbSegments - 1] = setupHeader_remainingBytesInLastSegment;
-                }
-
+                byte[] entireSegmentsTable = buildSegmentsTable(newTagSize, commentsHeader_nbSegments, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
                 int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
@@ -1065,7 +1021,6 @@ namespace ATL.AudioData.IO
                 int pagedBytes = 0;
                 long position;
 
-                BinaryWriter virtualW = new BinaryWriter(memStream);
                 IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
 
                 // Repaging
@@ -1079,12 +1034,12 @@ namespace ATL.AudioData.IO
 
                     position = memStream.Position;
                     // Push current data to write header
-                    StreamUtils.CopySameStream(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
+                    await StreamUtilsAsync.CopySameStreamAsync(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
                     memStream.Seek(position, SeekOrigin.Begin);
 
                     pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
 
-                    header.WriteToStream(virtualW);
+                    header.WriteToStream(memStream);
                     memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
 
                     pagedSegments += header.Segments;
@@ -1099,18 +1054,7 @@ namespace ATL.AudioData.IO
 
 
                 // Generate CRC32 of created pages
-                uint crc;
-                byte[] data;
-                foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
-                {
-                    crc = 0;
-                    memStream.Seek(kv.Key, SeekOrigin.Begin);
-                    data = new byte[kv.Value];
-                    memStream.Read(data, 0, kv.Value);
-                    crc = OggCRC32.CalculateCRC(crc, data, (uint)kv.Value);
-                    memStream.Seek(kv.Key + 22, SeekOrigin.Begin); // Position of CRC within OGG header
-                    virtualW.Write(crc);
-                }
+                generatePageCrc32(memStream, pageHeaderOffsets);
 
                 // Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
@@ -1182,6 +1126,41 @@ namespace ATL.AudioData.IO
             }
 
             return result;
+        }
+
+        private byte[] buildSegmentsTable(long newTagSize, int commentsHeader_nbSegments, int setupHeader_nbSegments, byte setupHeader_remainingBytesInLastSegment)
+        {
+            byte commentsHeader_remainingBytesInLastSegment = (byte)(newTagSize % 255);
+
+            byte[] entireSegmentsTable = new byte[commentsHeader_nbSegments + setupHeader_nbSegments];
+            for (int i = 0; i < commentsHeader_nbSegments - 1; i++)
+            {
+                entireSegmentsTable[i] = 255;
+            }
+            entireSegmentsTable[commentsHeader_nbSegments - 1] = commentsHeader_remainingBytesInLastSegment;
+            if (CONTENTS_VORBIS == contents)
+            {
+                for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
+                {
+                    entireSegmentsTable[i] = 255;
+                }
+                entireSegmentsTable[commentsHeader_nbSegments + setupHeader_nbSegments - 1] = setupHeader_remainingBytesInLastSegment;
+            }
+            return entireSegmentsTable;
+        }
+
+        private void generatePageCrc32(Stream s, IList<KeyValuePair<long, int>> pageHeaderOffsets)
+        {
+            uint crc;
+            foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
+            {
+                s.Seek(kv.Key, SeekOrigin.Begin);
+                byte[] data = new byte[kv.Value];
+                s.Read(data, 0, kv.Value);
+                crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
+                s.Seek(kv.Key + 22, SeekOrigin.Begin); // Position of CRC within OGG header
+                StreamUtils.WriteUInt32(s, crc);
+            }
         }
 
         public bool Remove(Stream s)

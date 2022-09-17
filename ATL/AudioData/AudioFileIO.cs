@@ -123,20 +123,6 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool SaveLegacy(TagData data)
-        {
-            IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
-
-            bool result = true;
-            if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
-            foreach (MetaDataIOFactory.TagType meta in availableMetas)
-            {
-                result &= audioManager.UpdateTagInFileLegacy(data, meta);
-                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
-            }
-            return result;
-        }
-
         public async Task<bool> SaveAsync(TagData data)
         {
             IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
@@ -145,7 +131,7 @@ namespace ATL.AudioData
             if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
             foreach (MetaDataIOFactory.TagType meta in availableMetas)
             {
-                result &= await audioManager.UpdateTagInFile(data, meta, true);
+                result &= await audioManager.UpdateTagInFileAsync(data, meta);
                 if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;

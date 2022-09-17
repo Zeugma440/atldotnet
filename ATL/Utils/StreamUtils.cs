@@ -6,6 +6,8 @@ namespace ATL
 {
     /// <summary>
     /// Misc. utilities used by binary readers
+    /// 
+    /// TODO : Benchmark against System.Buffers.Binary.BinaryPrimitives when the library's minimum .NET version becomes 5
     /// </summary>
     internal static class StreamUtils
     {
@@ -428,6 +430,16 @@ namespace ATL
         }
 
         /// <summary>
+        /// Encode the given value into an array of bytes as a Little-Endian unsigned 64-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeUInt64(ulong value)
+        {
+            return new byte[8] { (byte)(value & 0x00000000000000FF), (byte)((value & 0x000000000000FF00) >> 8), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0xFF00000000000000) >> 56) };
+        }
+
+        /// <summary>
         /// Encode the given value into an array of bytes as a Big-Endian unsigned 64-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
@@ -784,6 +796,12 @@ namespace ATL
         {
             s.Write(EncodeBEInt32(data), 0, 4);
         }
+
+        public static void WriteUInt64(Stream s, ulong data)
+        {
+            s.Write(EncodeUInt64(data), 0, 8);
+        }
+
 
         /// <summary>
         /// Convert the given extended-format byte array (which is assumed to be in little-endian form) to a .NET Double,

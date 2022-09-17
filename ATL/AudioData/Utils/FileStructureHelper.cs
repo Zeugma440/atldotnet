@@ -32,6 +32,10 @@ namespace ATL.AudioData
         public enum ACTION
         {
             /// <summary>
+            /// No action
+            /// </summary>
+            None = -1,
+            /// <summary>
             /// Existing zone is edited, and not removed
             /// </summary>
             Edit = 0,

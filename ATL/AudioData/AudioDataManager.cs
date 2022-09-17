@@ -368,13 +368,7 @@ namespace ATL.AudioData
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
-        {
-            // https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/july/async-programming-brownfield-async-development#the-thread-pool-hack
-            return Task.Run(() => UpdateTagInFile(theTag, tagType, false)).GetAwaiter().GetResult();
-        }
-
-        public async Task<bool> UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType, bool asynchronous)
+        public async Task<bool> UpdateTagInFileAsync(TagData theTag, MetaDataIOFactory.TagType tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -387,21 +381,12 @@ namespace ATL.AudioData
                 {
                     theMetaIO = getMeta(tagType);
 
-                    FileOptions options = fileOptions;
-                    if (asynchronous) options |= FileOptions.Asynchronous;
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, options) : stream;
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
                     BinaryReader r = new BinaryReader(s);
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
-                        if (audioDataIO is IMetaDataEmbedder)
-                        {
-                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
-                            readTagParams.PrepareForWriting = true;
-
-                            audioDataIO.Read(r, sizeInfo, readTagParams);
-                            theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
-                        }
+                        handleEmbedder(r, theMetaIO);
 
                         IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
                         result = await theMetaIO.WriteAsync(r, s, theTag, progress);
@@ -409,10 +394,7 @@ namespace ATL.AudioData
                     }
                     finally
                     {
-                        if (null == stream)
-                        {
-                            r.Close();
-                        }
+                        if (null == stream) r.Close();
                     }
                 }
                 catch (Exception e)
@@ -429,7 +411,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFileLegacy(TagData theTag, MetaDataIOFactory.TagType tagType)
+        public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -447,14 +429,7 @@ namespace ATL.AudioData
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
-                        if (audioDataIO is IMetaDataEmbedder)
-                        {
-                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
-                            readTagParams.PrepareForWriting = true;
-
-                            audioDataIO.Read(r, sizeInfo, readTagParams);
-                            theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
-                        }
+                        handleEmbedder(r, theMetaIO);
 
                         IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
                         result = theMetaIO.Write(r, s, theTag, progress);
@@ -462,10 +437,7 @@ namespace ATL.AudioData
                     }
                     finally
                     {
-                        if (null == stream)
-                        {
-                            r.Close();
-                        }
+                        if (null == stream) r.Close();
                     }
                 }
                 catch (Exception e)
@@ -480,6 +452,18 @@ namespace ATL.AudioData
             }
 
             return result;
+        }
+
+        private void handleEmbedder(BinaryReader r, IMetaDataIO theMetaIO)
+        {
+            if (audioDataIO is IMetaDataEmbedder)
+            {
+                MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
+                readTagParams.PrepareForWriting = true;
+
+                audioDataIO.Read(r, sizeInfo, readTagParams);
+                theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
+            }
         }
 
         private void handleWriteException(Exception e)
