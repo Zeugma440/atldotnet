@@ -429,6 +429,59 @@ namespace ATL.AudioData
             return result;
         }
 
+        public bool UpdateTagInFileLegacy(TagData theTag, MetaDataIOFactory.TagType tagType)
+        {
+            bool result = true;
+            IMetaDataIO theMetaIO;
+            LogDelegator.GetLocateDelegate()(fileName);
+            theTag.DurationMs = audioDataIO.Duration;
+
+            if (audioDataIO.IsMetaSupported(tagType))
+            {
+                try
+                {
+                    theMetaIO = getMeta(tagType);
+
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
+                    BinaryReader r = new BinaryReader(s);
+                    try
+                    {
+                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
+                        if (audioDataIO is IMetaDataEmbedder)
+                        {
+                            MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
+                            readTagParams.PrepareForWriting = true;
+
+                            audioDataIO.Read(r, sizeInfo, readTagParams);
+                            theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
+                        }
+
+                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
+                        result = theMetaIO.Write(r, s, theTag, progress);
+                        if (result) setMeta(theMetaIO);
+                    }
+                    finally
+                    {
+                        if (null == stream)
+                        {
+                            r.Close();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    handleWriteException(e);
+                    result = false;
+                }
+            }
+            else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
+            }
+
+            return result;
+        }
+
         private void handleWriteException(Exception e)
         {
             Console.WriteLine(e.Message);

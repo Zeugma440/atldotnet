@@ -1,7 +1,5 @@
 ﻿using System.IO;
-using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnostics.Windows.Configs;
 
 namespace ATL.benchmark
 {

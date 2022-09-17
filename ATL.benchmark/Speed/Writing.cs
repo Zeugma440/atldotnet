@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using System.Collections.Generic;
 using System;
+using System.Threading.Tasks;
 
 namespace ATL.benchmark
 {
@@ -53,8 +54,7 @@ namespace ATL.benchmark
 
         public void performWrite(String filePath)
         {
-            Action<float> progress = new Action<float>(displayProgress);
-            Track theFile = new Track(filePath, progress);
+            Track theFile = new Track(filePath, null);
 
             double tDuration = theFile.DurationMs;
             long lDataOffset = theFile.TechnicalInformation.AudioDataOffset;

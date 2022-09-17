@@ -18,6 +18,8 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
+            BenchmarkRunner.Run<AsyncSyncLegacy>();
+
             //compareInfo(@"E:\Music\VGM");
 
             //browseFor(@"E:\Music\", "*.mp3");
@@ -28,7 +30,7 @@ namespace ATL.benchmark
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            writeAt(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+            //writeAt(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
             //displayVersionInfo();
         }
@@ -87,7 +89,7 @@ namespace ATL.benchmark
         {
             Writing w = new Writing();
             w.Setup(fileName);
-            w.Perf_Write();
+            //w.Perf_Write();
             w.Cleanup();
 
             Console.ReadLine();

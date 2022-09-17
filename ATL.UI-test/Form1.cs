@@ -25,7 +25,15 @@ namespace ATL.UI_test
             ProgressLbl.Visible = true;
 
             IProgress<float> progress = new Progress<float>(displayProgress);
-            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "sync", false).Wait();
+            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "sync", false, false).Wait();
+        }
+
+        private void GoLegacyBtn_Click(object sender, EventArgs e)
+        {
+            ProgressLbl.Text = "";
+            ProgressLbl.Visible = true;
+
+            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "legacy", false, true).Wait();
         }
 
         private async void GoAsyncBtn_Click(object sender, EventArgs e)
@@ -34,7 +42,7 @@ namespace ATL.UI_test
             ProgressLbl.Visible = true;
 
             IProgress<float> progress = new Progress<float>(displayProgress);
-            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async progress", true, progress);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async progress", true, false, progress);
         }
 
         private async void GoAsyncSilentBtn_Click(object sender, EventArgs e)
@@ -42,10 +50,10 @@ namespace ATL.UI_test
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async silent", true);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async silent", true, false);
         }
 
-        private async Task<bool> processFile(string path, string method, bool asynchronous, IProgress<float> progress = null)
+        private async Task<bool> processFile(string path, string method, bool asynchronous, bool legacy, IProgress<float> progress = null)
         {
             ProgressLbl.Text = "Preparing temp file...";
             Application.DoEvents();
@@ -85,6 +93,8 @@ namespace ATL.UI_test
 
                 if (asynchronous)
                     return await theFile.SaveAsync();
+                else if (legacy)
+                    return theFile.SaveLegacy();
                 else
                     return theFile.Save();
                 /*

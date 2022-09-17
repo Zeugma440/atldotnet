@@ -32,6 +32,7 @@
             this.ProgressLbl = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GoBtn
@@ -47,7 +48,7 @@
             // ProgressLbl
             // 
             this.ProgressLbl.AutoSize = true;
-            this.ProgressLbl.Location = new System.Drawing.Point(12, 117);
+            this.ProgressLbl.Location = new System.Drawing.Point(12, 152);
             this.ProgressLbl.Name = "ProgressLbl";
             this.ProgressLbl.Size = new System.Drawing.Size(55, 13);
             this.ProgressLbl.TabIndex = 1;
@@ -74,11 +75,22 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.GoAsyncSilentBtn_Click);
             // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(15, 126);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(136, 23);
+            this.button3.TabIndex = 4;
+            this.button3.Text = "GO LEGACY";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.GoLegacyBtn_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(226, 137);
+            this.ClientSize = new System.Drawing.Size(226, 216);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.ProgressLbl);
@@ -96,6 +108,7 @@
         private System.Windows.Forms.Label ProgressLbl;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button3;
     }
 }
 

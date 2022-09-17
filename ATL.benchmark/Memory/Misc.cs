@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using System.Collections;
 using System.Collections.Generic;
 using System;
