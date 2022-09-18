@@ -214,7 +214,7 @@ namespace ATL.AudioData.IO
                 uint tocEntrySize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 Tuple<uint, uint> data = new Tuple<uint, uint>(tocEntryOffset, tocEntrySize);
                 toc[section] = data;
-                structureHelper.AddZone(tocEntryOffset, (int)tocEntrySize, section.ToString());
+                structureHelper.AddZone(tocEntryOffset, (int)tocEntrySize, section.ToString(), isSectionDeletable(section));
                 structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
                 if (TOC_AUDIO == section)
                 {
@@ -234,6 +234,11 @@ namespace ATL.AudioData.IO
                 }
             }
             return true;
+        }
+
+        private static bool isSectionDeletable(int sectionId)
+        {
+            return (TOC_CONTENT_TAGS == sectionId || TOC_COVER_ART == sectionId);
         }
 
         private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
