@@ -207,7 +207,7 @@ namespace ATL.test.IO.MetaData
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -314,6 +314,24 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(originalMD5, testMD5);
                 }
             }
+
+            // Get rid of the working copy
+            if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        protected void test_RW_Remove(string fileName, bool deleteTempFile = true)
+        {
+            new ConsoleLogger();
+
+            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Add a new supported field and a new supported picture
+            Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
+            theFile.ReadFromFile(true, true);
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.AreEqual("", meta.Title);
 
             // Get rid of the working copy
             if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

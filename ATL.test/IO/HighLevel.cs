@@ -107,7 +107,42 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void TagIO_RW_DeleteTag()
+        public void TagIO_RW_DeleteTagAll()
+        {
+            testRemove("AA/aa.aa");
+            testRemove("MP3/APE.mp3");
+            testRemove("MP3/ID3v2.2 3 pictures.mp3");
+            testRemove("MP3/id3v1.mp3");
+            testRemove("MP3/01 - Title Screen.mp3");
+            testRemove("MP4/mp4.m4a");
+            testRemove("OGG/ogg.ogg");
+            testRemove("FLAC/flac.flac");
+        }
+
+        private void testRemove(string fileName)
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
+            bool defaultTitleSetting = ATL.Settings.UseFileNameWhenNoTitle;
+            ATL.Settings.UseFileNameWhenNoTitle = false;
+            try
+            {
+                Track theTrack = new Track(testFileLocation);
+
+                Assert.IsTrue(theTrack.Title.Length > 0);
+                Assert.IsTrue(theTrack.RemoveAsync().Result);
+                Assert.AreEqual("", theTrack.Title);
+
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+            finally
+            {
+                ATL.Settings.UseFileNameWhenNoTitle = defaultTitleSetting;
+            }
+        }
+
+        [TestMethod]
+        public void TagIO_RW_DeleteTagMultiple()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);

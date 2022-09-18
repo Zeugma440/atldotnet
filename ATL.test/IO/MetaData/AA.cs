@@ -59,5 +59,11 @@ namespace ATL.test.IO.MetaData
             // Bit-per-bit comparison not possible yet due to field order differences
             test_RW_Existing(notEmptyFile, 1, true, false); 
         }
+
+        [TestMethod]
+        public void TagIO_RW_AA_Remove()
+        {
+            test_RW_Remove(notEmptyFile);
+        }
     }
 }
