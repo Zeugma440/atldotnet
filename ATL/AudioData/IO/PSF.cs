@@ -6,6 +6,7 @@ using Commons;
 using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData.IO
 {
@@ -489,11 +490,30 @@ namespace ATL.AudioData.IO
         // Specific implementation for conservation of fields that are required for playback
         public override bool Remove(Stream s)
         {
-            TagData tag = new TagData();
+            TagData tag = prepareRemove();
+
+            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
+        }
+
+        // Specific implementation for conservation of fields that are required for playback
+        public override async Task<bool> RemoveAsync(Stream s)
+        {
+            TagData tag = prepareRemove();
+
+            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+        }
+
+        private TagData prepareRemove()
+        {
+            TagData result = new TagData();
 
             foreach (Field b in frameMapping.Values)
             {
-                tag.IntegrateValue(b, "");
+                result.IntegrateValue(b, "");
             }
 
             string fieldCode;
@@ -504,14 +524,11 @@ namespace ATL.AudioData.IO
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;
-                    tag.AdditionalFields.Add(emptyFieldInfo);
+                    result.AdditionalFields.Add(emptyFieldInfo);
                 }
             }
 
-            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-
-            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
+            return result;
         }
-
     }
 }

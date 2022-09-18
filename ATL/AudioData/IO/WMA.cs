@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData.IO
 {
@@ -1024,26 +1025,44 @@ namespace ATL.AudioData.IO
         {
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
-                TagData tag = new TagData();
-
-                foreach (Field b in frameMapping.Values)
-                {
-                    tag.IntegrateValue(b, "");
-                }
-
-                foreach (var fieldInfo in GetAdditionalFields().Where(fieldInfo => fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/")))
-                {
-                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                    emptyFieldInfo.MarkedForDeletion = true;
-                    tag.AdditionalFields.Add(emptyFieldInfo);
-                }
-
+                TagData tag = prepareRemove();
                 using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
             }
             else
             {
                 return base.Remove(s);
             }
+        }
+
+        // Specific implementation for conservation of non-WM/xxx fields
+        public override async Task<bool> RemoveAsync(Stream s)
+        {
+            if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
+            {
+                TagData tag = prepareRemove();
+                using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+            }
+            else
+            {
+                return await base.RemoveAsync(s);
+            }
+        }
+
+        private TagData prepareRemove()
+        {
+            TagData result = new TagData();
+            foreach (Field b in frameMapping.Values)
+            {
+                result.IntegrateValue(b, "");
+            }
+
+            foreach (var fieldInfo in GetAdditionalFields().Where(fieldInfo => fieldInfo.NativeFieldCode.ToUpper().StartsWith("WM/")))
+            {
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
+                emptyFieldInfo.MarkedForDeletion = true;
+                result.AdditionalFields.Add(emptyFieldInfo);
+            }
+            return result;
         }
 
         // Decides whether picture has to be written and set it to their TransientFlag field
