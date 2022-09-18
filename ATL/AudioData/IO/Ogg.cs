@@ -821,10 +821,8 @@ namespace ATL.AudioData.IO
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
                 int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
-
                 // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
                 memStream.SetLength(memStream.Position + totalPageHeadersSize);
-
 
                 // Repage comments header & setup header within the virtual stream
                 memStream.Seek(0, SeekOrigin.Begin);
@@ -958,10 +956,8 @@ namespace ATL.AudioData.IO
                 int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
                 int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
-
                 // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
                 memStream.SetLength(memStream.Position + totalPageHeadersSize);
-
 
                 // Repage comments header & setup header within the virtual stream
                 memStream.Seek(0, SeekOrigin.Begin);

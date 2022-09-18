@@ -194,11 +194,11 @@ namespace ATL.AudioData.IO
         }
 
         // Read header data
-        private void readHeader(BinaryReader source)
+        private bool readHeader(BinaryReader source)
         {
             uint fileSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             int magicNumber = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            if (magicNumber != AA_MAGIC_NUMBER) return;
+            if (magicNumber != AA_MAGIC_NUMBER) return false;
 
             tagExists = true;
             AudioDataOffset = source.BaseStream.Position - 4;
@@ -233,6 +233,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(0, fileSize, section.ToString());
                 }
             }
+            return true;
         }
 
         private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
@@ -295,10 +296,8 @@ namespace ATL.AudioData.IO
 
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
-            bool result = true;
-
             ResetData();
-            readHeader(source);
+            if (!readHeader(source)) return false;
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
                 // toc[TOC_CONTENT_TAGS].Item2 is the size
@@ -313,19 +312,19 @@ namespace ATL.AudioData.IO
             }
             readChapters(source, toc[TOC_AUDIO].Item1, toc[TOC_AUDIO].Item2);
 
-            return result;
+            return true;
         }
 
-        protected override int write(TagData tag, Stream w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
             int result = -1; // Default : leave as is
             byte[] intBuffer;
 
             if (zone.Equals(ZONE_TAGS))
             {
-                long nbTagsOffset = w.Position;
+                long nbTagsOffset = s.Position;
                 intBuffer = StreamUtils.EncodeInt32(0);
-                w.Write(intBuffer, 0, 4); // Number of tags; will be rewritten at the end of the method
+                s.Write(intBuffer, 0, 4); // Number of tags; will be rewritten at the end of the method
 
                 // Mapped textual fields
                 IDictionary<Field, string> map = tag.ToMap();
@@ -333,12 +332,12 @@ namespace ATL.AudioData.IO
                 {
                     if (map[frameType].Length > 0) // No frame with empty value
                     {
-                        foreach (string s in frameMapping.Keys)
+                        foreach (string str in frameMapping.Keys)
                         {
-                            if (frameType == frameMapping[s])
+                            if (frameType == frameMapping[str])
                             {
                                 string value = formatBeforeWriting(frameType, tag, map);
-                                writeTagField(w, s, value);
+                                writeTagField(s, str, value);
                                 result++;
                                 break;
                             }
@@ -351,14 +350,14 @@ namespace ATL.AudioData.IO
                 {
                     if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
                     {
-                        writeTagField(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
+                        writeTagField(s, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                         result++;
                     }
                 }
 
-                w.Seek(nbTagsOffset, SeekOrigin.Begin);
+                s.Seek(nbTagsOffset, SeekOrigin.Begin);
                 intBuffer = StreamUtils.EncodeBEInt32(result);
-                w.Write(intBuffer, 0, 4); // Number of tags
+                s.Write(intBuffer, 0, 4); // Number of tags
             }
             if (zone.Equals(ZONE_IMAGE))
             {
@@ -373,7 +372,7 @@ namespace ATL.AudioData.IO
 
                     if (doWritePicture)
                     {
-                        writePictureFrame(w, picInfo.PictureData);
+                        writePictureFrame(s, picInfo.PictureData);
                         return 1; // Stop here; there can only be one picture in an AA file
                     }
                 }
@@ -382,23 +381,22 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTagField(Stream w, string key, string value)
+        private void writeTagField(Stream s, string key, string value)
         {
-            w.WriteByte(0); // Unknown byte; always zero
+            s.WriteByte(0); // Unknown byte; always zero
             byte[] keyB = Encoding.UTF8.GetBytes(key);
             byte[] valueB = Encoding.UTF8.GetBytes(value);
-            StreamUtils.WriteBEInt32(w, keyB.Length); // Key length
-            StreamUtils.WriteBEInt32(w, valueB.Length); // Value length
-            StreamUtils.WriteBytes(w, keyB);
-            StreamUtils.WriteBytes(w, valueB);
+            StreamUtils.WriteBEInt32(s, keyB.Length); // Key length
+            StreamUtils.WriteBEInt32(s, valueB.Length); // Value length
+            StreamUtils.WriteBytes(s, keyB);
+            StreamUtils.WriteBytes(s, valueB);
         }
 
-        private void writePictureFrame(Stream w, byte[] pictureData)
+        private void writePictureFrame(Stream s, byte[] pictureData)
         {
-            StreamUtils.WriteBEInt32(w, pictureData.Length); // Pic size
-            StreamUtils.WriteInt32(w, 0); // Pic data absolute offset; to be rewritten later
-
-            StreamUtils.WriteBytes(w, pictureData);
+            StreamUtils.WriteBEInt32(s, pictureData.Length); // Pic size
+            StreamUtils.WriteInt32(s, 0); // Pic data absolute offset; to be rewritten later
+            StreamUtils.WriteBytes(s, pictureData);
         }
     }
 }
