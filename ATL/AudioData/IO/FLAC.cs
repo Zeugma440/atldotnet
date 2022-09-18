@@ -527,15 +527,54 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
+            setIsLast(s);
 
-            // Set the 'isLast' bit on the actual last block
+            return result;
+        }
+
+        public async Task<bool> RemoveAsync(Stream s)
+        {
+            bool result = true;
+            long cumulativeDelta = 0;
+
+            // Handling of the 'isLast' bit
+            latestBlockOffset = -1;
+            latestBlockType = 0;
+
+            foreach (Zone zone in zones)
+            {
+                if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
+                {
+                    if (zone.Flag == META_PADDING || zone.Flag == META_PICTURE || zone.Flag == META_VORBIS_COMMENT)
+                    {
+                        await StreamUtilsAsync.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        vorbisTag.Clear();
+
+                        cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                    }
+                    else
+                    {
+                        latestBlockOffset = zone.Offset - cumulativeDelta;
+                        latestBlockType = zone.Flag;
+
+                        s.Seek(latestBlockOffset, SeekOrigin.Begin);
+                        s.WriteByte(latestBlockType);
+                    }
+                }
+            }
+            setIsLast(s);
+
+            return result;
+        }
+
+        // Set the 'isLast' bit on the actual last block
+        private void setIsLast(Stream s)
+        {
             if (latestBlockOffset > -1)
             {
                 s.Seek(latestBlockOffset, SeekOrigin.Begin);
                 s.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
             }
-
-            return result;
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

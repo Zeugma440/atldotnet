@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ATL
 {
@@ -775,6 +776,11 @@ namespace ATL
         public static void WriteBytes(Stream s, byte[] data)
         {
             s.Write(data, 0, data.Length);
+        }
+
+        public static async Task WriteBytesAsync(Stream s, byte[] data)
+        {
+            s.WriteAsync(data, 0, data.Length);
         }
 
         public static void WriteUInt16(Stream s, ushort data)

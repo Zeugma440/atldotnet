@@ -52,12 +52,12 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             return true;
         }
         /// <inheritdoc/>
-        public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             return true;
         }
@@ -68,6 +68,11 @@ namespace ATL.AudioData.IO
         }
         /// <inheritdoc/>
         public bool Remove(Stream s)
+        {
+            throw new NotImplementedException();
+        }
+        /// <inheritdoc/>
+        public async Task<bool> RemoveAsync(Stream s)
         {
             throw new NotImplementedException();
         }

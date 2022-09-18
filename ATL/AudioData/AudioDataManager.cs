@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static ATL.AudioData.MetaDataIOFactory;
 
 namespace ATL.AudioData
 {
@@ -41,7 +42,7 @@ namespace ATL.AudioData
         /// </summary>
         public class SizeInfo
         {
-            private readonly IDictionary<MetaDataIOFactory.TagType, long> TagSizes = new Dictionary<MetaDataIOFactory.TagType, long>();
+            private readonly IDictionary<TagType, long> TagSizes = new Dictionary<TagType, long>();
             private long audioDataSize = -1;
 
             /// <summary>
@@ -54,7 +55,7 @@ namespace ATL.AudioData
             /// </summary>
             /// <param name="type">Tag type to set the size for</param>
             /// <param name="size">Size to set (bytes)</param>
-            public void SetSize(MetaDataIOFactory.TagType type, long size)
+            public void SetSize(TagType type, long size)
             {
                 TagSizes[type] = size;
             }
@@ -62,19 +63,19 @@ namespace ATL.AudioData
             /// <summary>
             /// Size of the ID3v1 tag (bytes)
             /// </summary>
-            public long ID3v1Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.ID3V1) ? TagSizes[MetaDataIOFactory.TagType.ID3V1] : 0; } }
+            public long ID3v1Size { get { return TagSizes.ContainsKey(TagType.ID3V1) ? TagSizes[TagType.ID3V1] : 0; } }
             /// <summary>
             /// Size of the ID3v2 tag (bytes)
             /// </summary>
-            public long ID3v2Size { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.ID3V2) ? TagSizes[MetaDataIOFactory.TagType.ID3V2] : 0; } }
+            public long ID3v2Size { get { return TagSizes.ContainsKey(TagType.ID3V2) ? TagSizes[TagType.ID3V2] : 0; } }
             /// <summary>
             /// Size of the APE tag (bytes)
             /// </summary>
-            public long APESize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.APE) ? TagSizes[MetaDataIOFactory.TagType.APE] : 0; } }
+            public long APESize { get { return TagSizes.ContainsKey(TagType.APE) ? TagSizes[TagType.APE] : 0; } }
             /// <summary>
             /// Size of the native tag (bytes)
             /// </summary>
-            public long NativeSize { get { return TagSizes.ContainsKey(MetaDataIOFactory.TagType.NATIVE) ? TagSizes[MetaDataIOFactory.TagType.NATIVE] : 0; } }
+            public long NativeSize { get { return TagSizes.ContainsKey(TagType.NATIVE) ? TagSizes[TagType.NATIVE] : 0; } }
             /// <summary>
             /// Total size of all tags (bytes)
             /// </summary>
@@ -192,21 +193,21 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="type">Tag type whose presence to check</param>
         /// <returns>True if the current audio file contains a tag of the given type; false if not</returns>
-        public bool hasMeta(MetaDataIOFactory.TagType type)
+        public bool hasMeta(TagType type)
         {
-            if (type.Equals(MetaDataIOFactory.TagType.ID3V1))
+            if (type.Equals(TagType.ID3V1))
             {
                 return (iD3v1 != null) && iD3v1.Exists;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.ID3V2))
+            else if (type.Equals(TagType.ID3V2))
             {
                 return (iD3v2 != null) && iD3v2.Exists;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.APE))
+            else if (type.Equals(TagType.APE))
             {
                 return (aPEtag != null) && aPEtag.Exists;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.NATIVE))
+            else if (type.Equals(TagType.NATIVE))
             {
                 return (nativeTag != null) && nativeTag.Exists;
             }
@@ -219,17 +220,17 @@ namespace ATL.AudioData
         /// <returns>True if the current file supports native tagging; false if it doesn't</returns>
         public bool HasNativeMeta()
         {
-            return audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE);
+            return audioDataIO.IsMetaSupported(TagType.NATIVE);
         }
 
         /// <summary>
         /// List the available tag types of the current file
         /// </summary>
         /// <returns>List of tag types available in the current file</returns>
-        public IList<MetaDataIOFactory.TagType> getAvailableMetas()
+        public IList<TagType> getAvailableMetas()
         {
-            IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
-            foreach (var tagType in from MetaDataIOFactory.TagType tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+            IList<TagType> result = new List<TagType>();
+            foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
                                     where hasMeta(tagType)
                                     select tagType)
             {
@@ -243,10 +244,10 @@ namespace ATL.AudioData
         /// List the tag types supported by the format of the current file
         /// </summary>
         /// <returns>Tag types supported by the format of the current file</returns>
-        public IList<MetaDataIOFactory.TagType> getSupportedMetas()
+        public IList<TagType> getSupportedMetas()
         {
-            IList<MetaDataIOFactory.TagType> result = new List<MetaDataIOFactory.TagType>();
-            foreach (var tagType in from MetaDataIOFactory.TagType tagType in Enum.GetValues(typeof(MetaDataIOFactory.TagType))
+            IList<TagType> result = new List<TagType>();
+            foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
                                     where audioDataIO.IsMetaSupported(tagType)
                                     select tagType)
             {
@@ -261,21 +262,21 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="type">Tag type to retrieve metadata from</param>
         /// <returns>Metadata I/O for the given tag type</returns>
-        public IMetaDataIO getMeta(MetaDataIOFactory.TagType type)
+        public IMetaDataIO getMeta(TagType type)
         {
-            if (type.Equals(MetaDataIOFactory.TagType.ID3V1))
+            if (type.Equals(TagType.ID3V1))
             {
                 return iD3v1;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.ID3V2))
+            else if (type.Equals(TagType.ID3V2))
             {
                 return iD3v2;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.APE))
+            else if (type.Equals(TagType.APE))
             {
                 return aPEtag;
             }
-            else if (type.Equals(MetaDataIOFactory.TagType.NATIVE) && nativeTag != null)
+            else if (type.Equals(TagType.NATIVE) && nativeTag != null)
             {
                 return nativeTag;
             }
@@ -292,22 +293,22 @@ namespace ATL.AudioData
             if (meta is ID3v1)
             {
                 iD3v1 = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V1, iD3v1.Size);
+                sizeInfo.SetSize(TagType.ID3V1, iD3v1.Size);
             }
             else if (meta is ID3v2)
             {
                 iD3v2 = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
+                sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
             }
             else if (meta is APEtag)
             {
                 aPEtag = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TagType.APE, aPEtag.Size);
+                sizeInfo.SetSize(TagType.APE, aPEtag.Size);
             }
             else
             {
                 nativeTag = meta;
-                sizeInfo.SetSize(MetaDataIOFactory.TagType.NATIVE, nativeTag.Size);
+                sizeInfo.SetSize(TagType.NATIVE, nativeTag.Size);
             }
         }
 
@@ -356,7 +357,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(MetaDataHolder holder, MetaDataIOFactory.TagType tagType)
+        public bool UpdateTagInFile(MetaDataHolder holder, TagType tagType)
         {
             return UpdateTagInFile(holder.tagData, tagType);
         }
@@ -368,7 +369,7 @@ namespace ATL.AudioData
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public async Task<bool> UpdateTagInFileAsync(TagData theTag, MetaDataIOFactory.TagType tagType)
+        public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -411,7 +412,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(TagData theTag, MetaDataIOFactory.TagType tagType)
+        public bool UpdateTagInFile(TagData theTag, TagType tagType)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -466,26 +467,12 @@ namespace ATL.AudioData
             }
         }
 
-        private void handleWriteException(Exception e)
-        {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
-            if (e.InnerException != null)
-            {
-                Console.WriteLine("Inner Exception BEGIN");
-                Console.WriteLine(e.InnerException.Message);
-                Console.WriteLine(e.InnerException.StackTrace);
-                Console.WriteLine("Inner Exception END");
-            }
-            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
-        }
-
         /// <summary>
         /// Remove the tagging from the given type (i.e. the whole technical structure, not only values) from the current file
         /// </summary>
         /// <param name="tagType">Type of the tagging to be removed</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool RemoveTagFromFile(MetaDataIOFactory.TagType tagType)
+        public bool RemoveTagFromFile(TagType tagType)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -499,35 +486,64 @@ namespace ATL.AudioData
                     result = read(reader, false, false, true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
-                    if (metaIO.Exists)
-                    {
-                        metaIO.Remove(s);
-                    }
+                    if (metaIO.Exists) metaIO.Remove(s);
                 }
                 finally
                 {
-                    if (null == stream)
-                    {
-                        reader.Close();
-                    }
+                    if (null == stream) reader.Close();
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-                if (e.InnerException != null)
-                {
-                    Console.WriteLine("Inner Exception BEGIN");
-                    Console.WriteLine(e.InnerException.Message);
-                    Console.WriteLine(e.InnerException.StackTrace);
-                    Console.WriteLine("Inner Exception END");
-                }
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                handleWriteException(e);
                 result = false;
             }
 
             return result;
+        }
+
+        public async Task<bool> RemoveTagFromFileAsync(TagType tagType)
+        {
+            bool result = false;
+            LogDelegator.GetLocateDelegate()(fileName);
+
+            try
+            {
+                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
+                BinaryReader reader = new BinaryReader(s);
+                try
+                {
+                    result = read(reader, false, false, true);
+
+                    IMetaDataIO metaIO = getMeta(tagType);
+                    if (metaIO.Exists) await metaIO.RemoveAsync(s);
+                }
+                finally
+                {
+                    if (null == stream) reader.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                handleWriteException(e);
+                result = false;
+            }
+
+            return result;
+        }
+
+        private void handleWriteException(Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine(e.StackTrace);
+            if (e.InnerException != null)
+            {
+                Console.WriteLine("Inner Exception BEGIN");
+                Console.WriteLine(e.InnerException.Message);
+                Console.WriteLine(e.InnerException.StackTrace);
+                Console.WriteLine("Inner Exception END");
+            }
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
         }
 
         private bool read(BinaryReader source, bool readEmbeddedPictures = false, bool readAllMetaFrames = false, bool prepareForWriting = false)
@@ -543,29 +559,29 @@ namespace ATL.AudioData
 
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V1))
+            if (audioDataIO.IsMetaSupported(TagType.ID3V1))
             {
-                if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V1, iD3v1.Size);
+                if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V1, iD3v1.Size);
             }
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.ID3V2))
+            if (audioDataIO.IsMetaSupported(TagType.ID3V2))
             {
                 if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
                 {
-                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
                 }
             }
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.APE))
+            if (audioDataIO.IsMetaSupported(TagType.APE))
             {
-                if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.APE, aPEtag.Size);
+                if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(TagType.APE, aPEtag.Size);
             }
 
             bool result;
-            if (audioDataIO.IsMetaSupported(MetaDataIOFactory.TagType.NATIVE) && audioDataIO is IMetaDataIO)
+            if (audioDataIO.IsMetaSupported(TagType.NATIVE) && audioDataIO is IMetaDataIO)
             {
                 nativeTag = (IMetaDataIO)audioDataIO;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
 
-                if (result) sizeInfo.SetSize(MetaDataIOFactory.TagType.NATIVE, nativeTag.Size);
+                if (result) sizeInfo.SetSize(TagType.NATIVE, nativeTag.Size);
             }
             else
             {
@@ -578,7 +594,7 @@ namespace ATL.AudioData
                 if (embedder.HasEmbeddedID3v2 > 0)
                 {
                     readTagParams.Offset = embedder.HasEmbeddedID3v2;
-                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(MetaDataIOFactory.TagType.ID3V2, iD3v2.Size);
+                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
                 }
                 else
                 {

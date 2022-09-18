@@ -6,6 +6,7 @@ using System.IO;
 using static ATL.ChannelsArrangements;
 using System.Linq;
 using System.Threading.Tasks;
+using static ATL.AudioData.MetaDataIOFactory;
 
 namespace ATL.AudioData
 {
@@ -137,27 +138,38 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
+        public bool Remove(TagType tagType = TagType.ANY)
         {
             bool result = true;
-            IList<MetaDataIOFactory.TagType> metasToRemove;
-
-            if (MetaDataIOFactory.TagType.ANY == tagType)
-            {
-                metasToRemove = audioManager.getAvailableMetas();
-            }
-            else
-            {
-                metasToRemove = new List<MetaDataIOFactory.TagType>() { tagType };
-            }
+            IList<TagType> metasToRemove = getMetasToRemove(tagType);
 
             if (writeProgressManager != null) writeProgressManager.MaxSections = metasToRemove.Count;
-            foreach (MetaDataIOFactory.TagType meta in metasToRemove)
+            foreach (TagType meta in metasToRemove)
             {
                 result &= audioManager.RemoveTagFromFile(meta);
                 if (writeProgressManager != null) writeProgressManager.CurrentSection++;
             }
             return result;
+        }
+
+        public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY)
+        {
+            bool result = true;
+            IList<TagType> metasToRemove = getMetasToRemove(tagType);
+
+            if (writeProgressManager != null) writeProgressManager.MaxSections = metasToRemove.Count;
+            foreach (TagType meta in metasToRemove)
+            {
+                result &= await audioManager.RemoveTagFromFileAsync(meta);
+                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+            }
+            return result;
+        }
+
+        private IList<TagType> getMetasToRemove(TagType tagType)
+        {
+            if (TagType.ANY == tagType) return audioManager.getAvailableMetas();
+            else return new List<TagType>() { tagType };
         }
 
         // ============ FIELD ACCESSORS

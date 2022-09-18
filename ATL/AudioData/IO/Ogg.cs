@@ -767,7 +767,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -878,18 +878,18 @@ namespace ATL.AudioData.IO
 
                 if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
-                    StreamUtils.LengthenStream(w, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
+                    StreamUtils.LengthenStream(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
                 else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
                 {
-                    StreamUtils.ShortenStream(w, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
+                    StreamUtils.ShortenStream(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
 
                 // Rewrite Comment and Setup headers
-                w.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
+                s.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
-                StreamUtils.CopyStream(memStream, w);
+                StreamUtils.CopyStream(memStream, s);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             }
@@ -898,13 +898,13 @@ namespace ATL.AudioData.IO
             // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
             {
-                result &= renumberRemainingPages(w, r, nextPageOffset, writtenPages);
+                result &= renumberRemainingPages(s, r, nextPageOffset, writtenPages);
             }
 
             return result;
         }
 
-        public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -1015,18 +1015,18 @@ namespace ATL.AudioData.IO
 
                 if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
-                    await StreamUtilsAsync.LengthenStreamAsync(w, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
+                    await StreamUtilsAsync.LengthenStreamAsync(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
                 else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
                 {
-                    await StreamUtilsAsync.ShortenStreamAsync(w, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
+                    await StreamUtilsAsync.ShortenStreamAsync(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
 
                 // Rewrite Comment and Setup headers
-                w.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
+                s.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
-                await StreamUtilsAsync.CopyStreamAsync(memStream, w);
+                await StreamUtilsAsync.CopyStreamAsync(memStream, s);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             } // using MemoryStream memStream
@@ -1035,7 +1035,7 @@ namespace ATL.AudioData.IO
             // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
             {
-                result &= renumberRemainingPages(w, r, nextPageOffset, writtenPages);
+                result &= renumberRemainingPages(s, r, nextPageOffset, writtenPages);
             }
 
             return result;
@@ -1077,7 +1077,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private bool renumberRemainingPages(Stream w, BinaryReader r, long nextPageOffset, int writtenPages)
+        private bool renumberRemainingPages(Stream s, BinaryReader r, long nextPageOffset, int writtenPages)
         {
             OggPageHeader header = new OggPageHeader();
             byte[] data = new byte[0];
@@ -1085,18 +1085,18 @@ namespace ATL.AudioData.IO
 
             do
             {
-                w.Seek(nextPageOffset, SeekOrigin.Begin);
+                s.Seek(nextPageOffset, SeekOrigin.Begin);
                 header.ReadFromStream(r);
 
                 if (header.IsValid())
                 {
                     // Rewrite page number
                     writtenPages++;
-                    w.Seek(nextPageOffset + 18, SeekOrigin.Begin);
-                    StreamUtils.WriteInt32(w, writtenPages);
+                    s.Seek(nextPageOffset + 18, SeekOrigin.Begin);
+                    StreamUtils.WriteInt32(s, writtenPages);
 
                     // Rewrite CRC
-                    w.Seek(nextPageOffset, SeekOrigin.Begin);
+                    s.Seek(nextPageOffset, SeekOrigin.Begin);
                     int dataSize = header.GetHeaderSize() + header.GetPageSize();
                     if (data.Length < dataSize) data = new byte[dataSize]; // Only realloc when size is insufficient
                     r.Read(data, 0, dataSize);
@@ -1109,7 +1109,7 @@ namespace ATL.AudioData.IO
 
                     crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
                     r.BaseStream.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
-                    StreamUtils.WriteUInt32(w, crc);
+                    StreamUtils.WriteUInt32(s, crc);
 
                     // To the next header
                     nextPageOffset += dataSize;
@@ -1129,6 +1129,13 @@ namespace ATL.AudioData.IO
             TagData tag = vorbisTag.GetDeletionTagData();
 
             using (BinaryReader r = new BinaryReader(s, new UTF8Encoding(), true)) return Write(r, s, tag);
+        }
+
+        public async Task<bool> RemoveAsync(Stream s)
+        {
+            TagData tag = vorbisTag.GetDeletionTagData();
+
+            using (BinaryReader r = new BinaryReader(s, new UTF8Encoding(), true)) return await WriteAsync(r, s, tag);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

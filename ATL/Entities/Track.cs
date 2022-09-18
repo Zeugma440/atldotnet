@@ -493,6 +493,9 @@ namespace ATL
 
         /// <summary>
         /// Save Track to disk
+        /// Use Save instead of SaveAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback
+        /// (e.g. console app, mass-updating files)
         /// </summary>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
@@ -506,6 +509,8 @@ namespace ATL
 
         /// <summary>
         /// Save Track to disk
+        /// Use SaveAsync instead of Save if you need progress feedback
+        /// (e.g. Windows Forms app with progress bar that updates one file at a time)
         /// </summary>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
@@ -527,6 +532,14 @@ namespace ATL
         public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
         {
             bool result = fileIO.Remove(tagType);
+            if (result) Update();
+
+            return result;
+        }
+
+        public async Task<bool> RemoveAsync(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
+        {
+            bool result = await fileIO.RemoveAsync(tagType);
             if (result) Update();
 
             return result;

@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace ATL.AudioData
 {
-	/// <summary>
-	/// This Interface defines an object aimed at giving audio metadata information
-	/// </summary>
-	public interface IMetaDataIO : IMetaData
-	{
+    /// <summary>
+    /// This Interface defines an object aimed at giving audio metadata information
+    /// </summary>
+    public interface IMetaDataIO : IMetaData
+    {
         /// <summary>
         /// Returns true if this kind of metadata exists in the file, false if not
         /// </summary>
@@ -62,25 +62,42 @@ namespace ATL.AudioData
         bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams);
 
         /// <summary>
-        /// Add the specified information to current tag information :
+        /// Add the specified information to current tag information (direct call variant)
         ///   - Any existing field is overwritten
         ///   - Any non-specified field is kept as is
         /// </summary>
         /// <param name="r">Reader to the resource to edit</param>
-        /// <param name="w">Writer to the resource to edit</param>
+        /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null);
-
-        Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null);
+        bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null);
 
         /// <summary>
-        /// Remove current tag
+        /// Add the specified information to current tag information (async variant)
+        ///   - Any existing field is overwritten
+        ///   - Any non-specified field is kept as is
         /// </summary>
-        /// <param name="w">Writer to the resource to edit</param>
+        /// <param name="r">Reader to the resource to edit</param>
+        /// <param name="s">Stream for the resource to edit</param>
+        /// <param name="tag">Tag information to be added</param>
+        /// <param name="writeProgress">Progress to be updated during write operations</param>
+        /// <returns>true if the operation suceeded; false if not</returns>
+        Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null);
+
+        /// <summary>
+        /// Remove current tag (direct call variant)
+        /// </summary>
+        /// <param name="s">Stream for the resource to edit</param>
         /// <returns>true if the operation suceeded; false if not</returns>
         bool Remove(Stream s);
+
+        /// <summary>
+        /// Remove current tag (async variant)
+        /// </summary>
+        /// <param name="s">Stream for the resource to edit</param>
+        /// <returns>true if the operation suceeded; false if not</returns>
+        Task<bool> RemoveAsync(Stream s);
 
         /// <summary>
         /// Clear all metadata

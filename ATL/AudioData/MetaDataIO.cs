@@ -3,7 +3,6 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using static ATL.TagData;
@@ -503,12 +502,12 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(r, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            bool result = surgeon.RewriteZones(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
+            bool result = surgeon.RewriteZones(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
             /* TODO - this implementation is too risky : 
@@ -520,12 +519,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public async Task<bool> WriteAsync(BinaryReader r, Stream w, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(r, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            bool result = await surgeon.RewriteZonesAsync(w, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
+            bool result = await surgeon.RewriteZonesAsync(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
             /* TODO - this implementation is too risky : 
@@ -596,15 +595,10 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public virtual bool Remove(Stream s)
         {
+            handleEmbedder();
+
             bool result = true;
             long cumulativeDelta = 0;
-
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
-            {
-                structureHelper.Clear();
-                structureHelper.AddZone(embedder.Id3v2Zone);
-            }
-
             foreach (Zone zone in Zones)
             {
                 if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
@@ -621,19 +615,68 @@ namespace ATL.AudioData.IO
                             StreamUtils.WriteBytes(s, zone.CoreSignature);
                         }
                     }
-                    if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
-                    {
-                        if (zone.IsDeletable)
-                            result = result && structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
-                        else
-                            result = result && structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
-                    }
+
+                    result = result && rewriteHeaders(s, zone);
 
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
             }
 
             return result;
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<bool> RemoveAsync(Stream s)
+        {
+            handleEmbedder();
+
+            bool result = true;
+            long cumulativeDelta = 0;
+            foreach (Zone zone in Zones)
+            {
+                if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
+                {
+                    if (zone.IsDeletable)
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
+
+                        if (zone.Size > zone.CoreSignature.Length) await StreamUtilsAsync.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+
+                        if (zone.CoreSignature.Length > 0)
+                        {
+                            s.Position = zone.Offset - cumulativeDelta;
+                            await StreamUtils.WriteBytesAsync(s, zone.CoreSignature);
+                        }
+                    }
+
+                    result = result && rewriteHeaders(s, zone);
+
+                    if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                }
+            }
+
+            return result;
+        }
+
+        private void handleEmbedder()
+        {
+            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
+            {
+                structureHelper.Clear();
+                structureHelper.AddZone(embedder.Id3v2Zone);
+            }
+        }
+
+        private bool rewriteHeaders(Stream s, Zone zone)
+        {
+            if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
+            {
+                if (zone.IsDeletable)
+                    return structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
+                else
+                    return structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
+            }
+            return true;
         }
     }
 }
