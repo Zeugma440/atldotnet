@@ -110,6 +110,8 @@ namespace ATL.test
             Assert.IsTrue(Utils.IsNumeric("-123"));
 
             Assert.IsFalse(Utils.IsNumeric("a"));
+            Assert.IsFalse(Utils.IsNumeric("a", true));
+            Assert.IsFalse(Utils.IsNumeric("a", true, false));
             Assert.IsFalse(Utils.IsNumeric("123,456", true));
             Assert.IsFalse(Utils.IsNumeric("123.456", true));
             Assert.IsFalse(Utils.IsNumeric("-123", true, false));

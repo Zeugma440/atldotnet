@@ -386,7 +386,7 @@ namespace Commons
                 }
                 else
                 {
-                    if (!char.IsDigit(s[i]) && (allowsSigned ^ s[i] == '-')) return false;
+                    if (!(char.IsDigit(s[i]) || (allowsSigned && s[i] == '-'))) return false;
                 }
             }
 
