@@ -329,9 +329,11 @@ namespace ATL.test.IO.MetaData
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
-            theFile.ReadFromFile(true, true);
+            
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.AreEqual("", meta.Title);
+            Assert.IsTrue(0 == meta.EmbeddedPictures.Count);
 
             // Get rid of the working copy
             if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

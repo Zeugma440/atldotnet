@@ -249,6 +249,12 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Remove()
+        {
+            test_RW_Remove(notEmptyFile);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Unsupported_Empty()
         {
             // Source : tag-free M4A
