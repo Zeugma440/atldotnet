@@ -160,7 +160,7 @@ namespace ATL
         /// </summary>
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
         /// <param name="endOffset">End offset of the portion of bytes to remove</param>
-        /// <param name="delta">Number of bytes to remove</param>
+        /// <param name="delta">Number of bytes to remove (starting from endOffset, towards the beginning of the file)</param>
         public static void ShortenStream(Stream s, long endOffset, uint delta, IProgress<float> progress = null)
         {
             CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset), progress);
@@ -801,6 +801,11 @@ namespace ATL
         public static void WriteBEInt32(Stream s, int data)
         {
             s.Write(EncodeBEInt32(data), 0, 4);
+        }
+
+        public static void WriteBEUInt32(Stream s, uint data)
+        {
+            s.Write(EncodeBEUInt32(data), 0, 4);
         }
 
         public static void WriteUInt64(Stream s, ulong data)

@@ -5,6 +5,9 @@ using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
 using System.Globalization;
 using static ATL.TagData;
+using System.Threading.Tasks;
+using static ATL.AudioData.FileStructureHelper;
+using System.Linq;
 using Commons;
 
 namespace ATL.AudioData.IO
@@ -52,11 +55,34 @@ namespace ATL.AudioData.IO
 
 
         private string codec;
+        private long tocOffset;
+        private long tocSize;
 
         private readonly string fileName;
         private readonly Format audioFormat;
 
-        private Dictionary<int, Tuple<uint, uint>> toc;
+        private IDictionary<int, TocEntry> toc;
+
+        private sealed class TocEntry
+        {
+            public readonly long TocOffset;
+            public readonly int Section;
+            public readonly uint Offset;
+            public readonly uint Size;
+
+            public TocEntry(long tocOffset, int section, uint offset, uint size)
+            {
+                TocOffset = tocOffset;
+                Section = section;
+                Offset = offset;
+                Size = size;
+            }
+
+            public override string ToString()
+            {
+                return "[" + Section + "] @" + Offset + " (" + Size + ")";
+            }
+        }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -171,6 +197,9 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             codec = "";
+            tocOffset = 0;
+            tocSize = 0;
+            if (toc != null) toc.Clear();
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
@@ -178,7 +207,7 @@ namespace ATL.AudioData.IO
         public AA(string fileName, Format format)
         {
             this.fileName = fileName;
-            this.audioFormat = format;
+            audioFormat = format;
             resetData();
         }
 
@@ -202,43 +231,57 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
             AudioDataOffset = source.BaseStream.Position - 4;
-            int tocSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            source.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
+            tocOffset = source.BaseStream.Position;
+            toc = readToc(source);
+            tocSize = source.BaseStream.Position - tocOffset;
 
-            // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
-            toc = new Dictionary<int, Tuple<uint, uint>>();
-            for (int i = 0; i < tocSize; i++)
+            foreach (var entry in toc)
             {
-                int section = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                uint tocEntryOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                uint tocEntrySize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                Tuple<uint, uint> data = new Tuple<uint, uint>(tocEntryOffset, tocEntrySize);
-                toc[section] = data;
-                structureHelper.AddZone(tocEntryOffset, (int)tocEntrySize, section.ToString(), isSectionDeletable(section));
-                structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
-                if (TOC_AUDIO == section)
+                structureHelper.AddZone(entry.Value.Offset, (int)entry.Value.Size, entry.Key.ToString(), isSectionDeletable(entry.Key));
+                structureHelper.AddIndex(entry.Value.TocOffset + 4, entry.Value.Offset, false, entry.Key.ToString());
+                structureHelper.AddSize(entry.Value.TocOffset + 8, entry.Value.Size, entry.Key.ToString());
+                if (TOC_AUDIO == entry.Key)
                 {
-                    AudioDataOffset = tocEntryOffset;
-                    AudioDataSize = tocEntrySize;
+                    AudioDataOffset = entry.Value.Offset;
+                    AudioDataSize = entry.Value.Size;
                 }
-                if (TOC_CONTENT_TAGS == section)
+                if (TOC_CONTENT_TAGS == entry.Key)
                 {
-                    structureHelper.AddSize(source.BaseStream.Position - 4, tocEntrySize, section.ToString());
-                    structureHelper.AddSize(0, fileSize, section.ToString());
+                    structureHelper.AddSize(0, fileSize, entry.Key.ToString());
                 }
-                if (TOC_COVER_ART == section)
+                if (TOC_COVER_ART == entry.Key)
                 {
-                    structureHelper.AddSize(source.BaseStream.Position - 4, tocEntrySize, section.ToString());
-                    structureHelper.AddIndex(source.BaseStream.Position - 8, tocEntryOffset, false, section.ToString());
-                    structureHelper.AddSize(0, fileSize, section.ToString());
+                    structureHelper.AddSize(0, fileSize, entry.Key.ToString());
                 }
             }
+
+            // Save TOC as a zone for future editing
+            structureHelper.AddZone(tocOffset, tocSize, ZONE_TOC, false);
+            structureHelper.AddSize(0, fileSize, ZONE_TOC);
+
             return true;
+        }
+
+        // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
+        private IDictionary<int, TocEntry> readToc(BinaryReader s)
+        {
+            IDictionary<int, TocEntry> result = new Dictionary<int, TocEntry>();
+            int nbTocEntries = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
+            s.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
+            for (int i = 0; i < nbTocEntries; i++)
+            {
+                long offset = s.BaseStream.Position;
+                int section = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
+                uint tocEntryOffset = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
+                uint tocEntrySize = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
+                result[section] = new TocEntry(offset, section, tocEntryOffset, tocEntrySize);
+            }
+            return result;
         }
 
         private static bool isSectionDeletable(int sectionId)
         {
-            return (TOC_CONTENT_TAGS == sectionId || TOC_COVER_ART == sectionId);
+            return TOC_CONTENT_TAGS == sectionId || TOC_COVER_ART == sectionId;
         }
 
         private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
@@ -279,7 +322,7 @@ namespace ATL.AudioData.IO
             {
                 uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx);
+                structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx, false); // AA chapters are embedded into the audio chunk; they are _not_ deletable
                 structureHelper.AddIndex(source.BaseStream.Position - 4, chapterOffset, false, "chp" + idx);
 
                 ChapterInfo chapter = new ChapterInfo();
@@ -305,17 +348,16 @@ namespace ATL.AudioData.IO
             if (!readHeader(source)) return false;
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
-                // toc[TOC_CONTENT_TAGS].Item2 is the size
-                readTags(source, toc[TOC_CONTENT_TAGS].Item1, readTagParams);
+                readTags(source, toc[TOC_CONTENT_TAGS].Offset, readTagParams);
             }
             if (toc.ContainsKey(TOC_COVER_ART))
             {
                 if (readTagParams.ReadPictures)
-                    readCover(source, toc[TOC_COVER_ART].Item1, PictureInfo.PIC_TYPE.Generic);
+                    readCover(source, toc[TOC_COVER_ART].Offset, PictureInfo.PIC_TYPE.Generic);
                 else
                     addPictureToken(PictureInfo.PIC_TYPE.Generic);
             }
-            readChapters(source, toc[TOC_AUDIO].Item1, toc[TOC_AUDIO].Item2);
+            readChapters(source, toc[TOC_AUDIO].Offset, toc[TOC_AUDIO].Size);
 
             return true;
         }
@@ -402,6 +444,66 @@ namespace ATL.AudioData.IO
             StreamUtils.WriteBEInt32(s, pictureData.Length); // Pic size
             StreamUtils.WriteInt32(s, 0); // Pic data absolute offset; to be rewritten later
             StreamUtils.WriteBytes(s, pictureData);
+        }
+
+        // Specific implementation for rewriting of the TOC after zone removal
+        public override bool Remove(Stream s)
+        {
+            bool result = base.Remove(s);
+            if (result)
+            {
+                int newTocSize = writeCoreToc(s);
+                finalizeFile(s, newTocSize);
+            }
+            return result;
+        }
+
+        // Specific implementation for rewriting of the TOC after zone removal
+        public override async Task<bool> RemoveAsync(Stream s)
+        {
+            bool result = await base.RemoveAsync(s);
+            if (result)
+            {
+                int newTocSize = writeCoreToc(s);
+                await finalizeFileAsync(s, newTocSize);
+            }
+            return result;
+        }
+
+        private int writeCoreToc(Stream s)
+        {
+            s.Seek(tocOffset, SeekOrigin.Begin);
+            using (BinaryReader br = new BinaryReader(s, Encoding.UTF8, true))
+            {
+                IDictionary<int, TocEntry> newToc = readToc(br);
+                List<TocEntry> finalToc = newToc.Values.Where(e => !isSectionDeletable(e.Section)).ToList();
+                int deltaBytes = (newToc.Count - finalToc.Count) * 12;
+                s.Seek(tocOffset, SeekOrigin.Begin);
+                StreamUtils.WriteBEInt32(s, finalToc.Count);
+                s.Seek(4, SeekOrigin.Current); // Skip unfathomable byte
+                // Rewrite table of contents (<section>, <offset>, <length>)
+                foreach (TocEntry entry in finalToc)
+                {
+                    StreamUtils.WriteBEInt32(s, entry.Section);
+                    StreamUtils.WriteBEUInt32(s, entry.Offset);
+                    StreamUtils.WriteBEUInt32(s, entry.Size);
+                }
+                int newTocSize = (int)(s.Position - tocOffset);
+                // Process TOC resizing
+                structureHelper.RewriteHeaders(s, null, -deltaBytes, ACTION.Edit, ZONE_TOC);
+                return newTocSize;
+            }
+        }
+
+        // Remove unused data
+        private void finalizeFile(Stream s, long newTocSize)
+        {
+            StreamUtils.ShortenStream(s, tocOffset + tocSize, (uint)(tocSize - newTocSize));
+        }
+
+        private async Task finalizeFileAsync(Stream s, long newTocSize)
+        {
+            await StreamUtilsAsync.ShortenStreamAsync(s, tocOffset + tocSize, (uint)(tocSize - newTocSize));
         }
     }
 }
