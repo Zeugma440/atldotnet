@@ -2169,7 +2169,7 @@ namespace ATL.AudioData.IO
 
             // MEDIA HANDLER
             long hdlrPos = w.BaseStream.Position;
-            w.Write(StreamUtils.EncodeBEInt32(33)); // Predetermined size
+            w.Write(0); // Temp; will be rewritten later
             w.Write(Utils.Latin1Encoding.GetBytes("hdlr"));
             w.Write(0); // Version and flags
 
@@ -2182,11 +2182,11 @@ namespace ATL.AudioData.IO
             w.Write(0); // Reserved
             w.Write(0); // Reserved
             w.Write(Utils.Latin1Encoding.GetBytes(isText ? "Chapter titles\0" : "Chapter pictures\0")); // component name
-            // MEDIA HANDLER END
 
             long minfPos = w.BaseStream.Position;
             w.BaseStream.Seek(hdlrPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(minfPos - hdlrPos)));
+            // MEDIA HANDLER END
 
             // MEDIA INFORMATION
             w.BaseStream.Seek(minfPos, SeekOrigin.Begin);
@@ -2361,13 +2361,16 @@ namespace ATL.AudioData.IO
             w.Write(0); // Different block sizes
             w.Write(StreamUtils.EncodeBEInt32(workingChapters.Count));
             long totalTrackTxtSize = 0;
-            foreach (ChapterInfo chapter in workingChapters)
+            foreach (ChapterInfo chapter in chapters)
             {
                 long trackTxtSize = 2 + Encoding.UTF8.GetBytes(chapter.Title).Length + 12;
                 totalTrackTxtSize += trackTxtSize;
-
                 if (isText) w.Write(StreamUtils.EncodeBEUInt32((uint)trackTxtSize));
-                else w.Write(StreamUtils.EncodeBEUInt32((uint)chapter.Picture.PictureData.Length));
+            }
+            if (!isText)
+            {
+                foreach (ChapterInfo chapter in workingChapters)
+                    w.Write(StreamUtils.EncodeBEUInt32((uint)chapter.Picture.PictureData.Length));
             }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stszPos, SeekOrigin.Begin);
