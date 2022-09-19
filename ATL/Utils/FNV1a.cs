@@ -10,18 +10,18 @@ namespace HashDepot
     internal static class FNV1a
 #pragma warning restore S101 // Types should be named in PascalCase
     {
+        private const uint offsetBasis32 = 2166136261;
+        private const uint prime32 = 16777619;
+
         /// <summary>
         /// Calculate 32-bit FNV-1a hash value
         /// </summary>
         public static uint Hash32(byte[] buffer)
         {
-            const uint offsetBasis32 = 2166136261;
-            const uint prime32 = 16777619;
-
             uint result = offsetBasis32;
-            for (uint i=0;i<buffer.Length;i++)
+            foreach (var b in buffer)
             {
-                result = prime32 * (result ^ i);
+                result = prime32 * (result ^ b);
             }
             return result;
         }
