@@ -117,6 +117,10 @@ namespace ATL.test.IO
             testRemove("MP4/mp4.m4a");
             testRemove("OGG/ogg.ogg");
             testRemove("FLAC/flac.flac");
+            testRemove("WMA/wma.wma");
+            testRemove("SPC/spc.spc");
+            testRemove("PSF/psf.psf");
+            testRemove("VQF/vqf.vqf");
         }
 
         private void testRemove(string fileName)
