@@ -138,7 +138,7 @@ namespace ATL.Playlist
 
             foreach (string file in fileList)
             {
-                Track t = new Track(file, null, false); // Empty container
+                Track t = new Track(file, false); // Empty container
                 trackList.Add(t);
             }
 

@@ -217,14 +217,14 @@ namespace ATL.test.IO
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
             IProgress<float> progress = new Progress<float>(p => Console.WriteLine(p));
-            Track theTrack = new Track(testFileLocation, progress);
+            Track theTrack = new Track(testFileLocation);
 
             // Simple field
             theTrack.Artist = "Hey ho";
             // Tricky fields that aren't managed with a 1-to-1 mapping
             theTrack.Year = 1944;
             theTrack.TrackNumber = 10;
-            Assert.IsTrue(theTrack.SaveAsync().Result); // Hack to include async methods in test coverage
+            Assert.IsTrue(theTrack.SaveAsync(progress).Result); // Hack to include async methods in test coverage
 
             theTrack = new Track(testFileLocation);
 

@@ -767,7 +767,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;

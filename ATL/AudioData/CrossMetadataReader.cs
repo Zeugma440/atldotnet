@@ -469,7 +469,7 @@ namespace ATL.AudioData
         public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null) { throw new NotImplementedException(); }
+        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null) { throw new NotImplementedException(); }
 
         public Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {

@@ -25,15 +25,25 @@ namespace ATL.UI_test
             ProgressLbl.Visible = true;
 
             IProgress<float> progress = new Progress<float>(displayProgress);
-            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "sync", false, false).Wait();
+            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "sync", false).Wait();
         }
 
-        private void GoLegacyBtn_Click(object sender, EventArgs e)
+        private void GoSyncProgressBtn_Click(object sender, EventArgs e)
         {
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "legacy", false, true).Wait();
+            Action<float> progress = new Action<float>(displayProgress);
+            processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "legacy", false).Wait();
+        }
+
+        private async void GoAsyncProgressBtn_Click(object sender, EventArgs e)
+        {
+            ProgressLbl.Text = "";
+            ProgressLbl.Visible = true;
+
+            Action<float> progress = new Action<float>(displayProgress);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async progress", true, progress);
         }
 
         private async void GoAsyncBtn_Click(object sender, EventArgs e)
@@ -41,19 +51,10 @@ namespace ATL.UI_test
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            IProgress<float> progress = new Progress<float>(displayProgress);
-            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async progress", true, false, progress);
+            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async silent", true);
         }
 
-        private async void GoAsyncSilentBtn_Click(object sender, EventArgs e)
-        {
-            ProgressLbl.Text = "";
-            ProgressLbl.Visible = true;
-
-            await processFile(@"D:\temp\m4a-mp4\audiobooks\dragon_maiden_orig.m4b", "async silent", true, false);
-        }
-
-        private async Task<bool> processFile(string path, string method, bool asynchronous, bool legacy, IProgress<float> progress = null)
+        private async Task<bool> processFile(string path, string method, bool asynchronous, Action<float> progress = null)
         {
             ProgressLbl.Text = "Preparing temp file...";
             Application.DoEvents();
@@ -74,7 +75,7 @@ namespace ATL.UI_test
                 ProgressLbl.Text = "Reading...";
                 Application.DoEvents();
 
-                Track theFile = new Track(testFileLocation, progress);
+                Track theFile = new Track(testFileLocation);
 
                 double tDuration = theFile.DurationMs;
                 long lDataOffset = theFile.TechnicalInformation.AudioDataOffset;
@@ -92,9 +93,9 @@ namespace ATL.UI_test
                 Application.DoEvents();
 
                 if (asynchronous)
-                    return await theFile.SaveAsync();
+                    return await theFile.SaveAsync((null == progress) ? null : new Progress<float>(progress));
                 else
-                    return theFile.Save();
+                    return theFile.Save(progress);
                 /*
                 theFile = new Track(testFileLocation);
 

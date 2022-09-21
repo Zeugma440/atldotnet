@@ -41,9 +41,9 @@
             this.GoBtn.Name = "GoBtn";
             this.GoBtn.Size = new System.Drawing.Size(136, 23);
             this.GoBtn.TabIndex = 0;
-            this.GoBtn.Text = "GO ASYNC";
+            this.GoBtn.Text = "ASYNC / PROGRESS";
             this.GoBtn.UseVisualStyleBackColor = true;
-            this.GoBtn.Click += new System.EventHandler(this.GoAsyncBtn_Click);
+            this.GoBtn.Click += new System.EventHandler(this.GoAsyncProgressBtn_Click);
             // 
             // ProgressLbl
             // 
@@ -61,7 +61,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(136, 23);
             this.button1.TabIndex = 2;
-            this.button1.Text = "GO SYNC";
+            this.button1.Text = "SYNC";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.GoSyncBtn_Click);
             // 
@@ -71,9 +71,9 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(136, 23);
             this.button2.TabIndex = 3;
-            this.button2.Text = "GO ASYNC / SILENT";
+            this.button2.Text = "ASYNC";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.GoAsyncSilentBtn_Click);
+            this.button2.Click += new System.EventHandler(this.GoAsyncBtn_Click);
             // 
             // button3
             // 
@@ -81,9 +81,9 @@
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(136, 23);
             this.button3.TabIndex = 4;
-            this.button3.Text = "GO LEGACY";
+            this.button3.Text = "SYNC / PROGRESS";
             this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.GoLegacyBtn_Click);
+            this.button3.Click += new System.EventHandler(this.GoSyncProgressBtn_Click);
             // 
             // Form1
             // 

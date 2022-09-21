@@ -20,7 +20,6 @@ namespace ATL.AudioData
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
         private readonly AudioDataManager audioManager;
-        private readonly ProgressManager writeProgressManager;
 
         // ------------------------------------------------------------------------------------------
 
@@ -31,25 +30,24 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
+        public AudioFileIO(string path, bool readEmbeddedPictures, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;
 
-            if (writeProgress != null) writeProgressManager = new ProgressManager(writeProgress, "AudioFileIO");
             audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-            audioManager = new AudioDataManager(audioData, writeProgressManager);
+            audioManager = new AudioDataManager(audioData);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-                audioManager = new AudioDataManager(audioData, writeProgressManager);
+                audioManager = new AudioDataManager(audioData);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
-            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
+            metaData = GetInstance().GetMetaReader(audioManager);
 
             if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
@@ -62,37 +60,36 @@ namespace ATL.AudioData
         /// <param name="readEmbeddedPictures">Embedded pictures will be read if true; ignored if false</param>
         /// <param name="readAllMetaFrames">All metadata frames (including unmapped ones) will be read if true; ignored if false</param>
         /// <param name="writeProgress">Object to use to signal writing progress (optional)</param>
-        public AudioFileIO(Stream stream, String mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false, IProgress<float> writeProgress = null)
+        public AudioFileIO(Stream stream, string mimeType, bool readEmbeddedPictures, bool readAllMetaFrames = false)
         {
             byte alternate = 0;
             bool found = false;
 
             audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
 
-            if (writeProgress != null) writeProgressManager = new ProgressManager(writeProgress, "AudioFileIO");
-            audioManager = new AudioDataManager(audioData, stream, writeProgressManager);
+            audioManager = new AudioDataManager(audioData, stream);
             found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
 
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 alternate++;
                 audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
-                audioManager = new AudioDataManager(audioData, stream, writeProgressManager);
+                audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
 
-            metaData = MetaDataIOFactory.GetInstance().GetMetaReader(audioManager);
+            metaData = GetInstance().GetMetaReader(audioManager);
 
             if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
-        private IList<MetaDataIOFactory.TagType> detectAvailableMetas()
+        private IList<TagType> detectAvailableMetas()
         {
-            IList<MetaDataIOFactory.TagType> result = audioManager.getAvailableMetas();
-            IList<MetaDataIOFactory.TagType> supportedMetas = audioManager.getSupportedMetas();
+            IList<TagType> result = audioManager.getAvailableMetas();
+            IList<TagType> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = (0 == result.Count);
-            if (Settings.EnrichID3v1 && 1 == result.Count && result[0] == MetaDataIOFactory.TagType.ID3V1) hasNothing = true;
+            if (Settings.EnrichID3v1 && 1 == result.Count && result[0] == TagType.ID3V1) hasNothing = true;
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
@@ -110,58 +107,78 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Save(TagData data)
+        public bool Save(TagData data, Action<float> writeProgress = null)
         {
-            IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
+            IList<TagType> availableMetas = detectAvailableMetas();
 
             bool result = true;
-            if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
-            foreach (MetaDataIOFactory.TagType meta in availableMetas)
+            ProgressManager progressManager = null;
+            if (writeProgress != null)
             {
-                result &= audioManager.UpdateTagInFile(data, meta);
-                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
+                progressManager.MaxSections = availableMetas.Count;
+            }
+            foreach (TagType meta in availableMetas)
+            {
+                result &= audioManager.UpdateTagInFile(data, meta, progressManager);
+                if (progressManager != null) progressManager.CurrentSection++;
             }
             return result;
         }
 
-        public async Task<bool> SaveAsync(TagData data)
+        public async Task<bool> SaveAsync(TagData data, IProgress<float> writeProgress = null)
         {
-            IList<MetaDataIOFactory.TagType> availableMetas = detectAvailableMetas();
+            IList<TagType> availableMetas = detectAvailableMetas();
 
             bool result = true;
-            if (writeProgressManager != null) writeProgressManager.MaxSections = availableMetas.Count;
-            foreach (MetaDataIOFactory.TagType meta in availableMetas)
+            ProgressManager progressManager = null;
+            if (writeProgress != null)
             {
-                result &= await audioManager.UpdateTagInFileAsync(data, meta);
-                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
+                progressManager.MaxSections = availableMetas.Count;
+            }
+            foreach (TagType meta in availableMetas)
+            {
+                result &= await audioManager.UpdateTagInFileAsync(data, meta, progressManager);
+                if (progressManager != null) progressManager.CurrentSection++;
             }
             return result;
         }
 
-        public bool Remove(TagType tagType = TagType.ANY)
+        public bool Remove(TagType tagType = TagType.ANY, Action<float> writeProgress = null)
         {
             bool result = true;
             IList<TagType> metasToRemove = getMetasToRemove(tagType);
 
-            if (writeProgressManager != null) writeProgressManager.MaxSections = metasToRemove.Count;
+            ProgressManager progressManager = null;
+            if (writeProgress != null)
+            {
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
+                progressManager.MaxSections = metasToRemove.Count;
+            }
             foreach (TagType meta in metasToRemove)
             {
-                result &= audioManager.RemoveTagFromFile(meta);
-                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+                result &= audioManager.RemoveTagFromFile(meta, progressManager);
+                if (progressManager != null) progressManager.CurrentSection++;
             }
             return result;
         }
 
-        public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY)
+        public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY, IProgress<float> writeProgress = null)
         {
             bool result = true;
             IList<TagType> metasToRemove = getMetasToRemove(tagType);
 
-            if (writeProgressManager != null) writeProgressManager.MaxSections = metasToRemove.Count;
+            ProgressManager progressManager = null;
+            if (writeProgress != null)
+            {
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
+                progressManager.MaxSections = metasToRemove.Count;
+            }
             foreach (TagType meta in metasToRemove)
             {
-                result &= await audioManager.RemoveTagFromFileAsync(meta);
-                if (writeProgressManager != null) writeProgressManager.CurrentSection++;
+                result &= await audioManager.RemoveTagFromFileAsync(meta, progressManager);
+                if (progressManager != null) progressManager.CurrentSection++;
             }
             return result;
         }
@@ -246,7 +263,7 @@ namespace ATL.AudioData
             get => audioData.AudioDataSize;
         }
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public bool IsMetaSupported(TagType metaDataType)
         {
             return audioData.IsMetaSupported(metaDataType);
         }

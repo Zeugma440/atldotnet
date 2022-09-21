@@ -30,27 +30,11 @@ namespace ATL
         /// Only works with local paths; http, ftp and the like do not work.
         /// </summary>
         /// <param name="path">Path of the local file to be loaded</param>
-        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as async saving progresses (default : null = no callback)</param>
         /// <param name="load">True to load the file when running this constructor (default : true)</param>
-        public Track(string path, IProgress<float> writeProgress = null, bool load = true)
+        public Track(string path, bool load = true)
         {
             this.Path = path;
             stream = null;
-            this.writeProgress = writeProgress;
-            if (load) Update();
-        }
-
-        /// <summary>
-        /// Loads the file at the given path
-        /// Only works with local paths; http, ftp and the like do not work.
-        /// </summary>
-        /// <param name="path">Path of the local file to be loaded</param>
-        /// <param name="load">True to load the file when running this constructor (default : true)</param>
-        public Track(string path, bool load)
-        {
-            this.Path = path;
-            stream = null;
-            this.writeProgress = null;
             if (load) Update();
         }
 
@@ -59,13 +43,11 @@ namespace ATL
         /// </summary>
         /// <param name="stream">Stream containing the raw data to be loaded</param>
         /// <param name="mimeType">MIME-type (e.g. "audio/mp3") or file extension (e.g. ".mp3") of the content</param>
-        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
-        public Track(Stream stream, string mimeType, IProgress<float> writeProgress = null)
+        public Track(Stream stream, string mimeType)
         {
             this.stream = stream;
             this.mimeType = mimeType;
             Path = InMemoryPath;
-            this.writeProgress = writeProgress;
             Update();
         }
 
@@ -261,10 +243,6 @@ namespace ATL
         public TechnicalInfo TechnicalInformation { get; internal set; }
 
 
-        //=== TECHNICAL
-        private readonly IProgress<float> writeProgress;
-
-
         /// <summary>
         /// List of pictures stored in the tag
         /// NB1 : PictureInfo.PictureData (raw binary picture data) is valued
@@ -311,8 +289,8 @@ namespace ATL
             if (string.IsNullOrEmpty(Path)) return;
 
             // TODO when tag is not available, customize by naming options // tracks (...)
-            if (null == stream) fileIO = new AudioFileIO(Path, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
-            else fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames, writeProgress);
+            if (null == stream) fileIO = new AudioFileIO(Path, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames);
+            else fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames);
 
             IMetaDataIO metadata = fileIO.Metadata;
             MetadataFormats = new List<Format>(metadata.MetadataFormats);
@@ -497,11 +475,12 @@ namespace ATL
         /// or if you don't need any progress feedback
         /// (e.g. console app, mass-updating files)
         /// </summary>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public bool Save()
+        public bool Save(Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData());
+            bool result = fileIO.Save(toTagData(), writeProgress);
             if (result) Update();
 
             return result;
@@ -512,11 +491,12 @@ namespace ATL
         /// Use SaveAsync instead of Save if you need progress feedback
         /// (e.g. Windows Forms app with progress bar that updates one file at a time)
         /// </summary>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public async Task<bool> SaveAsync()
+        public async Task<bool> SaveAsync(IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData());
+            bool result = await fileIO.SaveAsync(toTagData(), writeProgress);
             if (result) Update();
 
             return result;
@@ -526,20 +506,21 @@ namespace ATL
         /// Remove the given tag type from the Track
         /// </summary>
         /// <param name="tagType">Tag type to remove</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <see cref="MetaDataIOFactory"/>
         /// <returns>True if removal succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
+        public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY, Action<float> writeProgress = null)
         {
-            bool result = fileIO.Remove(tagType);
+            bool result = fileIO.Remove(tagType, writeProgress);
             if (result) Update();
 
             return result;
         }
 
-        public async Task<bool> RemoveAsync(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY)
+        public async Task<bool> RemoveAsync(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY, IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.RemoveAsync(tagType);
+            bool result = await fileIO.RemoveAsync(tagType, writeProgress);
             if (result) Update();
 
             return result;

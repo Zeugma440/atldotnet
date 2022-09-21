@@ -111,7 +111,6 @@ namespace ATL.AudioData
         private readonly Stream stream;
 
         private readonly SizeInfo sizeInfo = new SizeInfo();
-        private readonly ProgressManager writeProgress;
 
 
         private string fileName
@@ -160,11 +159,10 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="audioDataReader">Audio data reader to use</param>
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>
-        internal AudioDataManager(IAudioDataIO audioDataReader, ProgressManager writeProgress = null)
+        internal AudioDataManager(IAudioDataIO audioDataReader)
         {
             this.audioDataIO = audioDataReader;
             this.stream = null;
-            this.writeProgress = writeProgress;
         }
 
         /// <summary>
@@ -173,11 +171,10 @@ namespace ATL.AudioData
         /// <param name="audioDataReader">Audio data reader to use</param>
         /// <param name="stream">Data stream to use</param>
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>
-        internal AudioDataManager(IAudioDataIO audioDataReader, Stream stream, ProgressManager writeProgress = null)
+        internal AudioDataManager(IAudioDataIO audioDataReader, Stream stream)
         {
             this.audioDataIO = audioDataReader;
             this.stream = stream;
-            this.writeProgress = writeProgress;
         }
 
 
@@ -357,9 +354,9 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(MetaDataHolder holder, TagType tagType)
+        public bool UpdateTagInFile(MetaDataHolder holder, TagType tagType, ProgressManager writeProgress = null)
         {
-            return UpdateTagInFile(holder.tagData, tagType);
+            return UpdateTagInFile(holder.tagData, tagType, writeProgress);
         }
 
         /// <summary>
@@ -369,7 +366,7 @@ namespace ATL.AudioData
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType)
+        public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -389,7 +386,7 @@ namespace ATL.AudioData
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         handleEmbedder(r, theMetaIO);
 
-                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
+                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateIProgress() : null;
                         result = await theMetaIO.WriteAsync(r, s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
@@ -412,7 +409,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(TagData theTag, TagType tagType)
+        public bool UpdateTagInFile(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
         {
             bool result = true;
             IMetaDataIO theMetaIO;
@@ -432,7 +429,7 @@ namespace ATL.AudioData
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         handleEmbedder(r, theMetaIO);
 
-                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
+                        Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
                         result = theMetaIO.Write(r, s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
@@ -472,7 +469,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="tagType">Type of the tagging to be removed</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool RemoveTagFromFile(TagType tagType)
+        public bool RemoveTagFromFile(TagType tagType, ProgressManager progressManager = null)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);
@@ -502,7 +499,7 @@ namespace ATL.AudioData
             return result;
         }
 
-        public async Task<bool> RemoveTagFromFileAsync(TagType tagType)
+        public async Task<bool> RemoveTagFromFileAsync(TagType tagType, ProgressManager progressManager = null)
         {
             bool result = false;
             LogDelegator.GetLocateDelegate()(fileName);

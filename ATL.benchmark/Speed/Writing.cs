@@ -54,7 +54,7 @@ namespace ATL.benchmark
 
         public void performWrite(String filePath)
         {
-            Track theFile = new Track(filePath, null);
+            Track theFile = new Track(filePath);
 
             double tDuration = theFile.DurationMs;
             long lDataOffset = theFile.TechnicalInformation.AudioDataOffset;

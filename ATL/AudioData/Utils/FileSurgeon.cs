@@ -128,6 +128,20 @@ namespace ATL.AudioData.IO
             if (writeProgress != null) this.writeProgress = new ProgressManager(writeProgress, "FileSurgeon");
         }
 
+        public FileSurgeon(
+            FileStructureHelper structureHelper,
+            IMetaDataEmbedder embedder,
+            MetaDataIOFactory.TagType implementedTagType,
+            long defaultTagOffset,
+            Action<float> writeProgress)
+        {
+            this.structureHelper = structureHelper;
+            this.embedder = embedder;
+            this.implementedTagType = implementedTagType;
+            this.defaultTagOffset = defaultTagOffset;
+            if (writeProgress != null) this.writeProgress = new ProgressManager(writeProgress, "FileSurgeon");
+        }
+
 
         public bool RewriteZones(
             Stream w,
@@ -191,7 +205,7 @@ namespace ATL.AudioData.IO
             displayRegions(zoneRegions);
 
             int regionIndex = 0;
-            IProgress<float> progress = initProgress(zoneRegions);
+            Action<float> progress = initActionProgress(zoneRegions);
             foreach (ZoneRegion region in zoneRegions)
             {
                 long regionCumulativeDelta = 0;
@@ -323,7 +337,7 @@ namespace ATL.AudioData.IO
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 
-                        if (null == buffer && writeProgress != null) progress = incrementRegionProgress(progress);
+                        if (null == buffer && writeProgress != null) progress = incrementProgress(progress);
                     } // Loop through zones
 
                     if (buffer != null)
@@ -355,7 +369,7 @@ namespace ATL.AudioData.IO
                     }
 
                     // Increment progress section for current region
-                    if (buffer != null && writeProgress != null) progress = incrementRegionProgress(progress);
+                    if (buffer != null && writeProgress != null) progress = incrementProgress(progress);
                 }
                 finally // Make sure buffers are properly disallocated
                 {
@@ -395,7 +409,7 @@ namespace ATL.AudioData.IO
             displayRegions(zoneRegions);
 
             int regionIndex = 0;
-            IProgress<float> progress = initProgress(zoneRegions);
+            IProgress<float> progress = initIProgress(zoneRegions);
             foreach (ZoneRegion region in zoneRegions)
             {
                 long regionCumulativeDelta = 0;
@@ -526,7 +540,7 @@ namespace ATL.AudioData.IO
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 
-                        if (null == buffer && writeProgress != null) progress = incrementRegionProgress(progress);
+                        if (null == buffer && writeProgress != null) progress = incrementProgress(progress);
                     } // Loop through zones
 
                     if (buffer != null)
@@ -558,7 +572,7 @@ namespace ATL.AudioData.IO
                     }
 
                     // Increment progress section for current region
-                    if (buffer != null && writeProgress != null) progress = incrementRegionProgress(progress);
+                    if (buffer != null && writeProgress != null) progress = incrementProgress(progress);
                 }
                 finally // Make sure buffers are properly disallocated
                 {
@@ -585,7 +599,23 @@ namespace ATL.AudioData.IO
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
         }
 
-        private IProgress<float> initProgress(IList<ZoneRegion> zoneRegions)
+        private IProgress<float> initIProgress(IList<ZoneRegion> zoneRegions)
+        {
+            if (writeProgress != null)
+            {
+                int maxCount = 0;
+                foreach (ZoneRegion region in zoneRegions)
+                {
+                    if (region.IsBufferable) maxCount++; // If region is buffered, actual file I/O may happen once for the entire region
+                    else maxCount += region.Zones.Count; // else it may happen once on each Zone
+                }
+                writeProgress.MaxSections = maxCount;
+                return writeProgress.CreateIProgress();
+            }
+            return null;
+        }
+
+        private Action<float> initActionProgress(IList<ZoneRegion> zoneRegions)
         {
             if (writeProgress != null)
             {
@@ -601,19 +631,19 @@ namespace ATL.AudioData.IO
             return null;
         }
 
-        private IProgress<float> incrementZoneProgress(IProgress<float> progress)
-        {
-            // Make sure final progress of unbuffered zone is reported, especially when no resizing has been involved
-            progress.Report(1);
-            // Increment progress section   
-            writeProgress.CurrentSection++;
-            return writeProgress.CreateAction();
-        }
-
-        private IProgress<float> incrementRegionProgress(IProgress<float> progress)
+        private IProgress<float> incrementProgress(IProgress<float> progress)
         {
             // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
             progress.Report(1);
+            // Increment progress section   
+            writeProgress.CurrentSection++;
+            return writeProgress.CreateIProgress();
+        }
+
+        private Action<float> incrementProgress(Action<float> progress)
+        {
+            // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
+            progress(1);
             // Increment progress section   
             writeProgress.CurrentSection++;
             return writeProgress.CreateAction();

@@ -38,51 +38,52 @@ namespace ATL.benchmark
         }
 
         [Benchmark(Baseline = true)]
-        public void Perf_WriteLegacy()
+        public void Perf_WriteNoProgress()
         {
-            performWrite(0);
+            performWrite(false);
         }
 
         [Benchmark]
-        public void Perf_WriteNewSync()
+        public void Perf_WriteProgress()
         {
-            performWrite(1);
+            performWrite(true);
         }
 
         [Benchmark]
         public async Task Perf_WriteAsyncNoProgress()
         {
-            await performWriteAsync(2);
+            await performWriteAsync(false);
         }
 
         [Benchmark]
         public async Task Perf_WriteAsyncProgress()
         {
-            await performWriteAsync(3);
+            await performWriteAsync(true);
         }
 
         private void displayProgress(float progress)
         {
-            Console.WriteLine(progress * 100 + "%");
+            //Console.WriteLine(progress * 100 + "%");
+            // Nothing; don't pollute performance with display instruction
         }
 
-        private void performWrite(int method)
+        private void performWrite(bool withProgress)
         {
             // Mass-read resulting files
-            foreach (string s in tempFiles) performWrite(s, method);
+            foreach (string s in tempFiles) performWrite(s, withProgress);
         }
 
-        private async Task performWriteAsync(int method)
+        private async Task performWriteAsync(bool withProgress)
         {
             // Mass-read resulting files
-            foreach (string s in tempFiles) await performWriteAsync(s, method);
+            foreach (string s in tempFiles) await performWriteAsync(s, withProgress);
         }
 
-        public void performWrite(String filePath, int method)
+        public void performWrite(String filePath, bool withProgress)
         {
-            IProgress<float> progress = (method < 3) ? null : new Progress<float>(displayProgress);
+            Action<float> progress = new Action<float>(displayProgress);
 
-            Track theFile = new Track(filePath, progress);
+            Track theFile = new Track(filePath);
 
             theFile.Title += "xoxo";
             theFile.EmbeddedPictures.Add(PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg")));
@@ -95,14 +96,14 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            if (1 == method) theFile.Save();
+            theFile.Save(withProgress ? progress : null);
         }
 
-        public async Task performWriteAsync(String filePath, int method)
+        public async Task performWriteAsync(String filePath, bool withProgress)
         {
-            IProgress<float> progress = (method < 3) ? null : new Progress<float>(displayProgress);
+            IProgress<float> progress = new Progress<float>(displayProgress);
 
-            Track theFile = new Track(filePath, progress);
+            Track theFile = new Track(filePath);
 
             theFile.Title += "xoxo";
             theFile.EmbeddedPictures.Add(PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg")));
@@ -115,9 +116,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            if (1 == method) theFile.Save();
-            else if (2 == method) await theFile.SaveAsync();
-            else await theFile.SaveAsync();
+            await theFile.SaveAsync(withProgress ? progress : null);
         }
     }
 }

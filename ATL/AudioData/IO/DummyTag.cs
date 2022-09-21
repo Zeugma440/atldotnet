@@ -52,7 +52,7 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null)
         {
             return true;
         }
