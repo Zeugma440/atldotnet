@@ -780,7 +780,7 @@ namespace ATL.AudioData.IO
 
             if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
 
-            // Create the "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
+            // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
@@ -796,7 +796,7 @@ namespace ATL.AudioData.IO
                 int setupHeader_nbSegments = 0;
                 byte setupHeader_remainingBytesInLastSegment = 0;
 
-                // VORBIS: Append the setup header in the "unpaged" virtual stream
+                // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
                     r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
@@ -862,7 +862,7 @@ namespace ATL.AudioData.IO
 
             if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
 
-            // Create the "unpaged" virtual stream to be written, containing the vorbis tag (=comment header)
+            // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
@@ -878,7 +878,7 @@ namespace ATL.AudioData.IO
                 int setupHeader_nbSegments = 0;
                 byte setupHeader_remainingBytesInLastSegment = 0;
 
-                // VORBIS: Append the setup header in the "unpaged" virtual stream
+                // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
                     r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
@@ -899,7 +899,7 @@ namespace ATL.AudioData.IO
 
                 writtenPages = constructSegmentsTable(memStream, newTagSize, setupHeaderSize, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
 
-                // Insert the virtual paged stream into the actual file
+                // Insert the in-memory paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
                 long newHeadersSize = memStream.Length;
 
@@ -960,17 +960,16 @@ namespace ATL.AudioData.IO
             return entireSegmentsTable;
         }
 
-        // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
+        // Resize the whole in-memory stream once and for all to avoid multiple reallocations while repaging
         private void resizeMemStream(Stream memStream, int commentsHeader_nbSegments, int setupHeader_nbSegments)
         {
             int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
             int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
 
-            // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
             memStream.SetLength(memStream.Position + totalPageHeadersSize);
         }
 
-        // Repage comments header & setup header within the memory stream
+        // Repage comments header & setup header within the in-memory stream
         private int repageMemStream(
             Stream memStream,
             long newTagSize,
