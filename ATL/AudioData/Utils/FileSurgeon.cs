@@ -246,6 +246,7 @@ namespace ATL.AudioData.IO
                     {
                         bool isNothing;
                         oldTagSize = zone.Size;
+                        WriteResult writeResult;
 
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
@@ -253,36 +254,44 @@ namespace ATL.AudioData.IO
                         // Write new tag to a MemoryStream
                         using (MemoryStream memStream = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
                         {
-                            // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
-                            dataToWrite.DataSizeDelta = globalCumulativeDelta;
-                            WriteResult writeResult = write(memStream, dataToWrite, zone);
-
-                            if (WriteMode.REPLACE == writeResult.RequiredMode)
+                            if (!zone.IsReadonly)
                             {
-                                if (writeResult.WrittenFields > 0)
+                                // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
+                                dataToWrite.DataSizeDelta = globalCumulativeDelta;
+                                writeResult = write(memStream, dataToWrite, zone);
+
+                                if (WriteMode.REPLACE == writeResult.RequiredMode)
                                 {
-                                    newTagSize = memStream.Length;
-
-                                    if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                    if (writeResult.WrittenFields > 0)
                                     {
-                                        StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                        memStream.Position = 0;
-                                        embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
-
                                         newTagSize = memStream.Length;
+
+                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                        {
+                                            StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                            memStream.Position = 0;
+                                            embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+
+                                            newTagSize = memStream.Length;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        newTagSize = zone.CoreSignature.Length;
                                     }
                                 }
-                                else
+                                else // Overwrite mode
                                 {
-                                    newTagSize = zone.CoreSignature.Length;
+                                    newTagSize = zone.Size;
                                 }
                             }
-                            else // Overwrite mode
+                            else // Read-only zone
                             {
-                                newTagSize = zone.Size;
+                                writeResult = new WriteResult(WriteMode.OVERWRITE, 0);
+                                newTagSize = oldTagSize;
                             }
                             long delta = newTagSize - oldTagSize;
-                            isNothing = (0 == oldTagSize && 0 == delta); // Avoids unnecessary operations to optimize processing time
+                            isNothing = 0 == oldTagSize && 0 == delta; // Avoids unnecessary operations to optimize processing time
 
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "newTagSize : " + Utils.GetBytesReadable(newTagSize));
 
@@ -336,7 +345,7 @@ namespace ATL.AudioData.IO
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 
-                        if (null == buffer && writeProgress != null) progress = incrementProgress(progress);
+                        if (null == buffer && writeProgress != null && !zone.IsReadonly) progress = incrementProgress(progress);
                     } // Loop through zones
 
                     if (buffer != null)
@@ -449,6 +458,7 @@ namespace ATL.AudioData.IO
                     {
                         bool isNothing;
                         oldTagSize = zone.Size;
+                        WriteResult writeResult;
 
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
@@ -456,36 +466,44 @@ namespace ATL.AudioData.IO
                         // Write new tag to a MemoryStream
                         using (MemoryStream memStream = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
                         {
-                            // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
-                            dataToWrite.DataSizeDelta = globalCumulativeDelta;
-                            WriteResult writeResult = write(memStream, dataToWrite, zone);
-
-                            if (WriteMode.REPLACE == writeResult.RequiredMode)
+                            if (!zone.IsReadonly)
                             {
-                                if (writeResult.WrittenFields > 0)
+                                // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
+                                dataToWrite.DataSizeDelta = globalCumulativeDelta;
+                                writeResult = write(memStream, dataToWrite, zone);
+
+                                if (WriteMode.REPLACE == writeResult.RequiredMode)
                                 {
-                                    newTagSize = memStream.Length;
-
-                                    if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                    if (writeResult.WrittenFields > 0)
                                     {
-                                        await StreamUtilsAsync.LengthenStreamAsync(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                        memStream.Position = 0;
-                                        embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
-
                                         newTagSize = memStream.Length;
+
+                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                        {
+                                            await StreamUtilsAsync.LengthenStreamAsync(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                            memStream.Position = 0;
+                                            embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+
+                                            newTagSize = memStream.Length;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        newTagSize = zone.CoreSignature.Length;
                                     }
                                 }
-                                else
+                                else // Overwrite mode
                                 {
-                                    newTagSize = zone.CoreSignature.Length;
+                                    newTagSize = zone.Size;
                                 }
                             }
-                            else // Overwrite mode
+                            else // Read-only zone
                             {
-                                newTagSize = zone.Size;
+                                writeResult = new WriteResult(WriteMode.OVERWRITE, 0);
+                                newTagSize = oldTagSize;
                             }
                             long delta = newTagSize - oldTagSize;
-                            isNothing = (0 == oldTagSize && 0 == delta); // Avoids unnecessary operations to optimize processing time
+                            isNothing = 0 == oldTagSize && 0 == delta; // Avoids unnecessary operations to optimize processing time
 
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "newTagSize : " + Utils.GetBytesReadable(newTagSize));
 
@@ -539,7 +557,7 @@ namespace ATL.AudioData.IO
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 
-                        if (null == buffer && writeProgress != null) progress = incrementProgress(progress);
+                        if (null == buffer && writeProgress != null && !zone.IsReadonly) progress = incrementProgress(progress);
                     } // Loop through zones
 
                     if (buffer != null)
@@ -598,17 +616,22 @@ namespace ATL.AudioData.IO
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
         }
 
+        private void initProgressManager(IList<ZoneRegion> zoneRegions)
+        {
+            int maxCount = 0;
+            foreach (ZoneRegion region in zoneRegions)
+            {
+                if (region.IsBufferable) maxCount++; // If region is buffered, actual file I/O may happen once for the entire region
+                else maxCount += region.Zones.Count(z => !z.IsReadonly); // else it may happen once on each Zone, except for read-only zones
+            }
+            writeProgress.MaxSections = maxCount;
+        }
+
         private IProgress<float> initIProgress(IList<ZoneRegion> zoneRegions)
         {
             if (writeProgress != null)
             {
-                int maxCount = 0;
-                foreach (ZoneRegion region in zoneRegions)
-                {
-                    if (region.IsBufferable) maxCount++; // If region is buffered, actual file I/O may happen once for the entire region
-                    else maxCount += region.Zones.Count; // else it may happen once on each Zone
-                }
-                writeProgress.MaxSections = maxCount;
+                initProgressManager(zoneRegions);
                 return writeProgress.CreateIProgress();
             }
             return null;
@@ -618,13 +641,7 @@ namespace ATL.AudioData.IO
         {
             if (writeProgress != null)
             {
-                int maxCount = 0;
-                foreach (ZoneRegion region in zoneRegions)
-                {
-                    if (region.IsBufferable) maxCount++; // If region is buffered, actual file I/O may happen once for the entire region
-                    else maxCount += region.Zones.Count; // else it may happen once on each Zone
-                }
-                writeProgress.MaxSections = maxCount;
+                initProgressManager(zoneRegions);
                 return writeProgress.CreateAction();
             }
             return null;

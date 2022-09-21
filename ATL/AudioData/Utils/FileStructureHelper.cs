@@ -148,6 +148,13 @@ namespace ATL.AudioData
             /// True if the zone might shrink or enlarge, false if it must keep its original size
             /// </summary>
             public bool IsResizable { get; set; }
+            /// <summary>
+            /// True if the zone can't be edited in any way
+            /// </summary>
+            public bool IsReadonly
+            {
+                get => (0 == Size) && !IsResizable && !IsDeletable;
+            }
 
             /// <summary>
             /// Construct a new Zone using the given field values
