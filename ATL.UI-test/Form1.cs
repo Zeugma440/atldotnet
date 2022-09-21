@@ -16,9 +16,19 @@ namespace ATL.UI_test
 
         private void displayProgress(float progress)
         {
+            displayProgress(progress, false);
+        }
+
+        private void displayProgressForceRefresh(float progress)
+        {
+            displayProgress(progress, true);
+        }
+
+        private void displayProgress(float progress, bool needForceRefresh)
+        {
             String str = (progress * 100).ToString() + "%";
-            //            Console.WriteLine(str);
             ProgressLbl.Text = str;
+            if (needForceRefresh) Application.DoEvents();
         }
 
         private void GoSyncBtn_Click(object sender, EventArgs e)
@@ -34,7 +44,7 @@ namespace ATL.UI_test
             ProgressLbl.Text = "";
             ProgressLbl.Visible = true;
 
-            Action<float> progress = new Action<float>(displayProgress);
+            Action<float> progress = new Action<float>(displayProgressForceRefresh);
             processFile(filePath, "legacy", false, progress).Wait();
         }
 
