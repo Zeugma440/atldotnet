@@ -815,62 +815,9 @@ namespace ATL.AudioData.IO
                     setupHeader_remainingBytesInLastSegment = (byte)(setupHeaderSize % 255);
                 }
 
-                // Construct the entire segments table
-                int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
-                byte[] entireSegmentsTable = buildSegmentsTable(newTagSize, commentsHeader_nbSegments, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
-                int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
-                int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
+                writtenPages = constructSegmentsTable(memStream, newTagSize, setupHeaderSize, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
 
-                // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
-                memStream.SetLength(memStream.Position + totalPageHeadersSize);
-
-                // Repage comments header & setup header within the virtual stream
-                memStream.Seek(0, SeekOrigin.Begin);
-
-                OggPageHeader header = new OggPageHeader(info.AudioStreamId);
-
-                int segmentsLeftToPage = commentsHeader_nbSegments + setupHeader_nbSegments;
-                int bytesLeftToPage = (int)newTagSize + setupHeaderSize;
-                int pagedSegments = 0;
-                int pagedBytes = 0;
-                long position;
-
-                IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
-
-                // Repaging
-                while (segmentsLeftToPage > 0)
-                {
-                    header.Segments = (byte)Math.Min(255, segmentsLeftToPage);
-                    header.LacingValues = new byte[header.Segments];
-                    if (segmentsLeftToPage == header.Segments) header.AbsolutePosition = 0; // Last header page has its absolutePosition = 0
-
-                    Array.Copy(entireSegmentsTable, pagedSegments, header.LacingValues, 0, header.Segments);
-
-                    position = memStream.Position;
-                    // Push current data to write header
-                    StreamUtils.CopySameStream(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
-                    memStream.Seek(position, SeekOrigin.Begin);
-
-                    pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
-
-                    header.WriteToStream(memStream);
-                    memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
-
-                    pagedSegments += header.Segments;
-                    segmentsLeftToPage -= header.Segments;
-                    pagedBytes += header.GetPageSize();
-                    bytesLeftToPage -= header.GetPageSize();
-
-                    header.PageNumber++;
-                    if (0 == header.TypeFlag) header.TypeFlag = 1;
-                }
-                writtenPages = header.PageNumber - 1;
-
-
-                // Generate CRC32 of created pages
-                generatePageCrc32(memStream, pageHeaderOffsets);
-
-                // Insert the virtual paged stream into the actual file
+                // Insert the in-memory paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
                 long newHeadersSize = memStream.Length;
 
@@ -950,60 +897,7 @@ namespace ATL.AudioData.IO
                     setupHeader_remainingBytesInLastSegment = (byte)(setupHeaderSize % 255);
                 }
 
-                // Construct the entire segments table
-                int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
-                byte[] entireSegmentsTable = buildSegmentsTable(newTagSize, commentsHeader_nbSegments, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
-                int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
-                int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
-
-                // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
-                memStream.SetLength(memStream.Position + totalPageHeadersSize);
-
-                // Repage comments header & setup header within the virtual stream
-                memStream.Seek(0, SeekOrigin.Begin);
-
-                OggPageHeader header = new OggPageHeader(info.AudioStreamId);
-
-                int segmentsLeftToPage = commentsHeader_nbSegments + setupHeader_nbSegments;
-                int bytesLeftToPage = (int)newTagSize + setupHeaderSize;
-                int pagedSegments = 0;
-                int pagedBytes = 0;
-                long position;
-
-                IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
-
-                // Repaging
-                while (segmentsLeftToPage > 0)
-                {
-                    header.Segments = (byte)Math.Min(255, segmentsLeftToPage);
-                    header.LacingValues = new byte[header.Segments];
-                    if (segmentsLeftToPage == header.Segments) header.AbsolutePosition = 0; // Last header page has its absolutePosition = 0
-
-                    Array.Copy(entireSegmentsTable, pagedSegments, header.LacingValues, 0, header.Segments);
-
-                    position = memStream.Position;
-                    // Push current data to write header
-                    await StreamUtilsAsync.CopySameStreamAsync(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
-                    memStream.Seek(position, SeekOrigin.Begin);
-
-                    pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
-
-                    header.WriteToStream(memStream);
-                    memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
-
-                    pagedSegments += header.Segments;
-                    segmentsLeftToPage -= header.Segments;
-                    pagedBytes += header.GetPageSize();
-                    bytesLeftToPage -= header.GetPageSize();
-
-                    header.PageNumber++;
-                    if (0 == header.TypeFlag) header.TypeFlag = 1;
-                }
-                writtenPages = header.PageNumber - 1;
-
-
-                // Generate CRC32 of created pages
-                generatePageCrc32(memStream, pageHeaderOffsets);
+                writtenPages = constructSegmentsTable(memStream, newTagSize, setupHeaderSize, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
 
                 // Insert the virtual paged stream into the actual file
                 long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
@@ -1037,6 +931,14 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        // Construct the entire segments table
+        private int constructSegmentsTable(Stream memStream, long newTagSize, int setupHeaderSize, int setupHeader_nbSegments, byte setupHeader_remainingBytesInLastSegment)
+        {
+            int commentsHeader_nbSegments = (int)Math.Ceiling(1.0 * newTagSize / 255);
+            resizeMemStream(memStream, commentsHeader_nbSegments, setupHeader_nbSegments);
+            return repageMemStream(memStream, newTagSize, commentsHeader_nbSegments, setupHeaderSize, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
+        }
+
         private byte[] buildSegmentsTable(long newTagSize, int commentsHeader_nbSegments, int setupHeader_nbSegments, byte setupHeader_remainingBytesInLastSegment)
         {
             byte commentsHeader_remainingBytesInLastSegment = (byte)(newTagSize % 255);
@@ -1058,6 +960,72 @@ namespace ATL.AudioData.IO
             return entireSegmentsTable;
         }
 
+        // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
+        private void resizeMemStream(Stream memStream, int commentsHeader_nbSegments, int setupHeader_nbSegments)
+        {
+            int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
+            int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
+
+            // Resize the whole virtual stream once and for all to avoid multiple reallocations while repaging
+            memStream.SetLength(memStream.Position + totalPageHeadersSize);
+        }
+
+        // Repage comments header & setup header within the memory stream
+        private int repageMemStream(
+            Stream memStream,
+            long newTagSize,
+            int commentsHeader_nbSegments,
+            int setupHeaderSize,
+            int setupHeader_nbSegments,
+            byte setupHeader_remainingBytesInLastSegment)
+        {
+            memStream.Seek(0, SeekOrigin.Begin);
+
+            OggPageHeader header = new OggPageHeader(info.AudioStreamId);
+
+            int segmentsLeftToPage = commentsHeader_nbSegments + setupHeader_nbSegments;
+            int bytesLeftToPage = (int)newTagSize + setupHeaderSize;
+            int pagedSegments = 0;
+            int pagedBytes = 0;
+            long position;
+
+            IList<KeyValuePair<long, int>> pageHeaderOffsets = new List<KeyValuePair<long, int>>();
+
+            // Repaging
+            while (segmentsLeftToPage > 0)
+            {
+                header.Segments = (byte)Math.Min(255, segmentsLeftToPage);
+                header.LacingValues = new byte[header.Segments];
+                if (segmentsLeftToPage == header.Segments) header.AbsolutePosition = 0; // Last header page has its absolutePosition = 0
+
+                byte[] entireSegmentsTable = buildSegmentsTable(newTagSize, commentsHeader_nbSegments, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
+                Array.Copy(entireSegmentsTable, pagedSegments, header.LacingValues, 0, header.Segments);
+
+                position = memStream.Position;
+                // Push current data to write header
+                // NB : We're manipulating the MemoryStream here; calling an async variant won't have any relevant effect on performance
+                StreamUtils.CopySameStream(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
+                memStream.Seek(position, SeekOrigin.Begin);
+
+                pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
+
+                header.WriteToStream(memStream);
+                memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
+
+                pagedSegments += header.Segments;
+                segmentsLeftToPage -= header.Segments;
+                pagedBytes += header.GetPageSize();
+                bytesLeftToPage -= header.GetPageSize();
+
+                header.PageNumber++;
+                if (0 == header.TypeFlag) header.TypeFlag = 1;
+            }
+            generatePageCrc32(memStream, pageHeaderOffsets);
+
+            return header.PageNumber - 1;
+        }
+
+        // Generate CRC32 of created pages
         private void generatePageCrc32(Stream s, IList<KeyValuePair<long, int>> pageHeaderOffsets)
         {
             uint crc;
