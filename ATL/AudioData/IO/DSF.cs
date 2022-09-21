@@ -116,6 +116,9 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public DSF(string filePath, Format format)
         {
             this.filePath = filePath;
@@ -135,6 +138,7 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -221,6 +225,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <inheritdoc/>
         public void WriteID3v2EmbeddingHeader(Stream w, long tagSize)
         {
             // Nothing to do here; DSF format defines no frame header for its embedded ID3v2 tag

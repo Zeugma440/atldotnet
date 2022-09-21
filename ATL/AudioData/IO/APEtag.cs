@@ -360,15 +360,15 @@ namespace ATL.AudioData.IO
         /// Writes the given tag into the given Writer using APEv2 conventions
         /// </summary>
         /// <param name="tag">Tag information to be written</param>
-        /// <param name="w">Stream to write tag information to</param>
+        /// <param name="s">Stream to write tag information to</param>
         /// <param name="zone">Code of the zone to write</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private int write(TagData tag, BinaryWriter w)
         {
             int tagSize;
             long tagSizePos;

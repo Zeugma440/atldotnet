@@ -224,6 +224,9 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public CAF(string filePath, Format format)
         {
             this.filePath = filePath;
@@ -346,11 +349,13 @@ namespace ATL.AudioData.IO
             duration = nbFrames * 1000d / sampleRate;
         }
 
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
 
+        /// <inheritdoc/>
         protected override bool read(BinaryReader source, ReadTagParams readTagParams)
         {
             ResetData();
@@ -411,7 +416,8 @@ namespace ATL.AudioData.IO
         }
 
         // WARNING : NOT IMPLEMENTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
-        protected override int write(TagData tag, Stream w, string zone)
+        /// <inheritdoc/>
+        protected override int write(TagData tag, Stream s, string zone)
         {
             throw new System.NotImplementedException();
         }

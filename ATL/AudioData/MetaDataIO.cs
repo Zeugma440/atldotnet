@@ -307,7 +307,7 @@ namespace ATL.AudioData.IO
         /// Write the given zone's metadata using the given writer
         /// </summary>
         /// <param name="tag">Metadata to write</param>
-        /// <param name="w">Writer to use</param>
+        /// <param name="s">Writer to use</param>
         /// <param name="zone">Code of the zone to write</param>
         /// <returns>Number of written fields; 0 if no field has been added not edited</returns>
         abstract protected int write(TagData tag, Stream s, string zone);

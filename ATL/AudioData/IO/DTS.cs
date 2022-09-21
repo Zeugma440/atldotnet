@@ -95,6 +95,9 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public DTS(string filePath, Format format)
         {
             this.filePath = filePath;
@@ -114,6 +117,7 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
+        /// <inheritdoc/>
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             uint signatureChunk;

@@ -504,7 +504,7 @@ namespace ATL.AudioData.IO
                                     if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    await StreamUtilsAsync.LengthenStreamAsync(writer, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
+                                    await StreamUtilsAsync.LengthenStreamAsync(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
                                 }
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
@@ -552,7 +552,7 @@ namespace ATL.AudioData.IO
                         if (buffer.Length > initialBufferSize)
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
-                            await StreamUtilsAsync.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
+                            await StreamUtilsAsync.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), progress);
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {

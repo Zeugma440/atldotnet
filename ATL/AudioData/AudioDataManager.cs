@@ -158,7 +158,6 @@ namespace ATL.AudioData
         /// Create a new instance using the given IAudioDataIO and the given IProgress
         /// </summary>
         /// <param name="audioDataReader">Audio data reader to use</param>
-        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         internal AudioDataManager(IAudioDataIO audioDataReader)
         {
             this.audioDataIO = audioDataReader;
@@ -170,7 +169,6 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="audioDataReader">Audio data reader to use</param>
         /// <param name="stream">Data stream to use</param>
-        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         internal AudioDataManager(IAudioDataIO audioDataReader, Stream stream)
         {
             this.audioDataIO = audioDataReader;
@@ -354,6 +352,14 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// Update metadata of current file and save it to disk
+        /// Pre-requisite : ReadFromFile must have been called before
+        /// </summary>
+        /// <param name="holder">MetaDataHolder to save</param>
+        /// <param name="tagType">TagType to save the given metadata with</param>
+        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool UpdateTagInFile(MetaDataHolder holder, TagType tagType, ProgressManager writeProgress = null)
         {
             return UpdateTagInFile(holder.tagData, tagType, writeProgress);
@@ -365,6 +371,58 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
+        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
+        public bool UpdateTagInFile(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
+        {
+            bool result = true;
+            IMetaDataIO theMetaIO;
+            LogDelegator.GetLocateDelegate()(fileName);
+            theTag.DurationMs = audioDataIO.Duration;
+
+            if (audioDataIO.IsMetaSupported(tagType))
+            {
+                try
+                {
+                    theMetaIO = getMeta(tagType);
+
+                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
+                    BinaryReader r = new BinaryReader(s);
+                    try
+                    {
+                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
+                        handleEmbedder(r, theMetaIO);
+
+                        Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
+                        result = theMetaIO.Write(r, s, theTag, progress);
+                        if (result) setMeta(theMetaIO);
+                    }
+                    finally
+                    {
+                        if (null == stream) r.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    handleWriteException(e);
+                    result = false;
+                }
+            }
+            else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Update metadata of current file and save it to disk
+        /// Pre-requisite : ReadFromFile must have been called before
+        /// </summary>
+        /// <param name="theTag">Metadata to save</param>
+        /// <param name="tagType">TagType to save the given metadata with</param>
+        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
         {
@@ -409,49 +467,6 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool UpdateTagInFile(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
-        {
-            bool result = true;
-            IMetaDataIO theMetaIO;
-            LogDelegator.GetLocateDelegate()(fileName);
-            theTag.DurationMs = audioDataIO.Duration;
-
-            if (audioDataIO.IsMetaSupported(tagType))
-            {
-                try
-                {
-                    theMetaIO = getMeta(tagType);
-
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
-                    BinaryReader r = new BinaryReader(s);
-                    try
-                    {
-                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
-                        handleEmbedder(r, theMetaIO);
-
-                        Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
-                        result = theMetaIO.Write(r, s, theTag, progress);
-                        if (result) setMeta(theMetaIO);
-                    }
-                    finally
-                    {
-                        if (null == stream) r.Close();
-                    }
-                }
-                catch (Exception e)
-                {
-                    handleWriteException(e);
-                    result = false;
-                }
-            }
-            else
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
-            }
-
-            return result;
-        }
-
         private void handleEmbedder(BinaryReader r, IMetaDataIO theMetaIO)
         {
             if (audioDataIO is IMetaDataEmbedder)
@@ -468,6 +483,7 @@ namespace ATL.AudioData
         /// Remove the tagging from the given type (i.e. the whole technical structure, not only values) from the current file
         /// </summary>
         /// <param name="tagType">Type of the tagging to be removed</param>
+        /// <param name="progressManager">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool RemoveTagFromFile(TagType tagType, ProgressManager progressManager = null)
         {
@@ -499,6 +515,12 @@ namespace ATL.AudioData
             return result;
         }
 
+        /// <summary>
+        /// Remove the tagging from the given type (i.e. the whole technical structure, not only values) from the current file
+        /// </summary>
+        /// <param name="tagType">Type of the tagging to be removed</param>
+        /// <param name="progressManager">ProgressManager to report with (optional)</param>
+        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public async Task<bool> RemoveTagFromFileAsync(TagType tagType, ProgressManager progressManager = null)
         {
             bool result = false;
