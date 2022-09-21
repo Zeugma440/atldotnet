@@ -232,7 +232,6 @@ namespace ATL.AudioData.IO
                             StreamUtils.CopyStream(fullScopeWriter, buffer, initialBufferSize);
                         }
 
-                        //writer = new BinaryWriter(buffer, Settings.DefaultTextEncoding);
                         writer = buffer;
                         globalOffsetCorrection = region.StartOffset;
                     }
