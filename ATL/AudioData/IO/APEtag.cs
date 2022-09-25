@@ -48,7 +48,7 @@ namespace ATL.AudioData.IO
          *      - Disc number : "disc", "discnumber" frames
          *      - Album Artist : "albumartist", "album artist" frames
          */
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
         {
             { "TITLE", Field.TITLE },
             { "ARTIST", Field.ARTIST },

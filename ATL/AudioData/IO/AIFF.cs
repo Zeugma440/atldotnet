@@ -617,10 +617,10 @@ namespace ATL.AudioData.IO
             w.Write(commentData);
         }
 
-        public void WriteID3v2EmbeddingHeader(Stream w, long tagSize)
+        public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
         {
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
-            StreamUtils.WriteBEInt32(w, (int)tagSize);
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
+            StreamUtils.WriteBEInt32(s, (int)tagSize);
         }
 
         // AIFx timestamps are "the number of seconds since January 1, 1904"
