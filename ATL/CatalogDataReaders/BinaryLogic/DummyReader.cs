@@ -3,21 +3,13 @@ using System.Collections.Generic;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
+    /// <summary>
+    /// Dummy Catalog data provider
+    /// </summary>
     public class DummyReader : ICatalogDataReader
     {
-        String path = "";
-
-        public string Path
-        {
-            get
-            {
-                return path;
-            }
-            set
-            {
-                path = value;
-            }
-        }
+        /// <inheritdoc/>
+        public string Path { get; set; } = "";
 
         /// <inheritdoc/>
         public string Title

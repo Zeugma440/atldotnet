@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
 
         private static string getPosition(IList<string> position)
         {
-            string result = "";
+            StringBuilder result = new StringBuilder();
             bool first = true;
 
             foreach (string s in position)
@@ -26,12 +26,12 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    result += ".";
+                    result.Append(".");
                 }
-                result += s;
+                result.Append(s);
             }
 
-            return result;
+            return result.ToString();
         }
 
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
@@ -103,66 +103,65 @@ namespace ATL.AudioData.IO
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = false;
-            settings.Encoding = Encoding.UTF8;
-
-            XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
-            //writer.Formatting = Formatting.None;
-
-
-            writer.WriteStartDocument();
-            writer.WriteStartElement("BWFXML");
-
-            // Path notes : key = node path; value = node name
-            Dictionary<string, string> pathNodes = new Dictionary<string, string>();
-            List<string> previousPathNodes = new List<string>();
-            string subkey;
-            foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("ixml.")))
+            XmlWriterSettings settings = new XmlWriterSettings
             {
-                // Create the list of path nodes
-                List<string> singleNodes = new List<string>(key.Split('.'));
-                singleNodes.RemoveAt(0);// Remove the "ixml" node
-                StringBuilder nodePrefix = new StringBuilder();
-                pathNodes.Clear();
-                foreach (string nodeName in singleNodes)
+                CloseOutput = false,
+                Encoding = Encoding.UTF8
+            };
+
+            using (XmlWriter writer = XmlWriter.Create(w.BaseStream, settings))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("BWFXML");
+
+                // Path notes : key = node path; value = node name
+                Dictionary<string, string> pathNodes = new Dictionary<string, string>();
+                List<string> previousPathNodes = new List<string>();
+                string subkey;
+                foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("ixml.")))
                 {
-                    nodePrefix.Append(".").Append(nodeName);
-                    pathNodes.Add(nodePrefix.ToString(), nodeName);
+                    // Create the list of path nodes
+                    List<string> singleNodes = new List<string>(key.Split('.'));
+                    singleNodes.RemoveAt(0);// Remove the "ixml" node
+                    StringBuilder nodePrefix = new StringBuilder();
+                    pathNodes.Clear();
+                    foreach (string nodeName in singleNodes)
+                    {
+                        nodePrefix.Append(".").Append(nodeName);
+                        pathNodes.Add(nodePrefix.ToString(), nodeName);
+                    }
+                    // Close all terminated (i.e. non present in current path) nodes in reverse order
+                    for (int i = previousPathNodes.Count - 2; i >= 0; i--)
+                    {
+                        if (!pathNodes.ContainsKey(previousPathNodes[i]))
+                        {
+                            writer.WriteEndElement();
+                        }
+                    }
+                    // Opens all new (i.e. non present in previous path) nodes
+                    foreach (string nodePath in pathNodes.Keys)
+                    {
+                        if (!previousPathNodes.Contains(nodePath))
+                        {
+                            subkey = pathNodes[nodePath];
+                            if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
+
+                            if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
+                            writer.WriteStartElement(subkey.ToUpper());
+                        }
+                    }
+                    // Write the last node (=leaf) as a proper value
+                    writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
+                    previousPathNodes = pathNodes.Keys.ToList();
                 }
-                // Close all terminated (i.e. non present in current path) nodes in reverse order
-                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
-                {
-                    if (!pathNodes.ContainsKey(previousPathNodes[i]))
+
+                // Closes all terminated paths
+                if (previousPathNodes != null)
+                    for (int i = previousPathNodes.Count - 2; i >= 0; i--)
                     {
                         writer.WriteEndElement();
                     }
-                }
-                // Opens all new (i.e. non present in previous path) nodes
-                foreach (string nodePath in pathNodes.Keys)
-                {
-                    if (!previousPathNodes.Contains(nodePath))
-                    {
-                        subkey = pathNodes[nodePath];
-                        if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
-
-                        if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
-                        writer.WriteStartElement(subkey.ToUpper());
-                    }
-                }
-                // Write the last node (=leaf) as a proper value
-                writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
-                previousPathNodes = pathNodes.Keys.ToList();
-            }
-
-            // Closes all terminated paths
-            if (previousPathNodes != null)
-                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
-                {
-                    writer.WriteEndElement();
-                }
-            writer.Close();
-
+            } // using XmlWriter
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

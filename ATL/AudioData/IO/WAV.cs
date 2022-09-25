@@ -500,10 +500,10 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(w, zone);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private int write(BinaryWriter w, string zone)
         {
             int result = 0;
 

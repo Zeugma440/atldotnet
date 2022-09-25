@@ -14,7 +14,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
     {
         private string title = "";
         private string artist = "";
-        private string comments = "";
+        private StringBuilder comments = new StringBuilder();
 
         readonly IList<Track> tracks = new List<Track>();
 
@@ -30,7 +30,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         /// <inheritdoc/>
         public string Comments
         {
-            get { return comments; }
+            get { return comments.ToString(); }
         }
 
         /// <inheritdoc/>
@@ -46,8 +46,10 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         }
 
 
-        // ----------------------- Constructor
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="path"></param>
         public Cue(string path)
         {
             this.Path = path;
@@ -115,13 +117,12 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         string firstWord = s.Substring(0, firstBlank);
                         string[] trackInfo = s.Split(' ');
 
-
                         if (null == currentTrack)
                         {
                             if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
-                                if (comments.Length > 0) comments += Settings.InternalValueSeparator;
-                                comments += s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                                if (comments.Length > 0) comments.Append(Settings.InternalValueSeparator);
+                                comments.Append(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                             }
                             else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
@@ -165,7 +166,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         }
                         else
                         {
-                            if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
+                            if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && physicalTrack != null)
                             {
                                 if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
                                 if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
