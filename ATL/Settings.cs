@@ -37,6 +37,13 @@ namespace ATL
         /// </summary>
         public static bool NullAbsentValues = false;
 
+        /// <summary>
+        /// Write stacktraces to stdout
+        /// NB : Regardless of this setting, stacktraces are aways logged to ATL's logging system
+        /// Default : true
+        /// </summary>
+        public static bool OutputStacktracesToConsole = true;
+
 
         /*
          * ========= GENERIC FUNCTIONAL SETTINGS

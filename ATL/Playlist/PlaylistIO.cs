@@ -96,8 +96,7 @@ namespace ATL.Playlist
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                Utils.TraceException(e);
             }
 
             return result;
@@ -121,8 +120,7 @@ namespace ATL.Playlist
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                Utils.TraceException(e);
             }
 
             return result;
@@ -162,8 +160,7 @@ namespace ATL.Playlist
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                Utils.TraceException(e);
             }
         }
 

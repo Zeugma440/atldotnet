@@ -93,7 +93,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, 2048, FileOptions.SequentialScan))
             {
                 // Determine encoding
-                Encoding encoding = Utils.guessTextEncoding(fs);
+                Encoding encoding = Utils.GuessTextEncoding(fs);
                 fs.Seek(0, SeekOrigin.Begin);
 
                 // Read contents

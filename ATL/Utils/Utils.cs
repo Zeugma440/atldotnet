@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using ATL.Logging;
 
 namespace Commons
 {
@@ -507,13 +508,38 @@ namespace Commons
             return encodingCache[code];
         }
 
-        public static Encoding guessTextEncoding(FileStream fs)
+        public static Encoding GuessTextEncoding(FileStream fs)
         {
             Ude.CharsetDetector cdet = new Ude.CharsetDetector();
             cdet.Feed(fs);
             cdet.DataEnd();
             if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
             else return Settings.DefaultTextEncoding;
+        }
+
+        public static void TraceException(Exception e)
+        {
+            if (Settings.OutputStacktracesToConsole)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                if (e.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception BEGIN");
+                    Console.WriteLine(e.InnerException.Message);
+                    Console.WriteLine(e.InnerException.StackTrace);
+                    Console.WriteLine("Inner Exception END");
+                }
+            }
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.StackTrace);
+            if (e.InnerException != null)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Inner Exception BEGIN");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.InnerException.Message);
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.InnerException.StackTrace);
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Inner Exception END");
+            }
         }
     }
 }

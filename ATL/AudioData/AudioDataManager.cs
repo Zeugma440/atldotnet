@@ -1,5 +1,6 @@
 ﻿using ATL.AudioData.IO;
 using ATL.Logging;
+using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -336,16 +337,7 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-                if (e.InnerException != null)
-                {
-                    Console.WriteLine("Inner Exception BEGIN");
-                    Console.WriteLine(e.InnerException.Message);
-                    Console.WriteLine(e.InnerException.StackTrace);
-                    Console.WriteLine("Inner Exception END");
-                }
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
+                Utils.TraceException(e);
                 result = false;
             }
 
@@ -404,7 +396,7 @@ namespace ATL.AudioData
                 }
                 catch (Exception e)
                 {
-                    handleWriteException(e);
+                    Utils.TraceException(e);
                     result = false;
                 }
             }
@@ -455,7 +447,7 @@ namespace ATL.AudioData
                 }
                 catch (Exception e)
                 {
-                    handleWriteException(e);
+                    Utils.TraceException(e);
                     result = false;
                 }
             }
@@ -508,7 +500,7 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
-                handleWriteException(e);
+                Utils.TraceException(e);
                 result = false;
             }
 
@@ -544,25 +536,11 @@ namespace ATL.AudioData
             }
             catch (Exception e)
             {
-                handleWriteException(e);
+                Utils.TraceException(e);
                 result = false;
             }
 
             return result;
-        }
-
-        private void handleWriteException(Exception e)
-        {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
-            if (e.InnerException != null)
-            {
-                Console.WriteLine("Inner Exception BEGIN");
-                Console.WriteLine(e.InnerException.Message);
-                Console.WriteLine(e.InnerException.StackTrace);
-                Console.WriteLine("Inner Exception END");
-            }
-            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
         }
 
         private bool read(BinaryReader source, bool readEmbeddedPictures = false, bool readAllMetaFrames = false, bool prepareForWriting = false)

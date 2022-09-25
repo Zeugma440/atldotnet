@@ -51,7 +51,7 @@ namespace ATL.test.IO.Playlist
             catch
             {
                 IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
-                Assert.AreEqual(1, logItems.Count);
+                Assert.AreEqual(2, logItems.Count); // Message and stacktrace
                 Assert.IsTrue(logItems[0].Message.Contains("efiufhziuefizeub.m3u")); // Can't do much more than than because the exception message is localized
             }
         }
@@ -75,7 +75,7 @@ namespace ATL.test.IO.Playlist
             catch
             {
                 IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
-                Assert.AreEqual(1, logItems.Count);
+                Assert.AreEqual(2, logItems.Count); // Message and stacktrace
                 Assert.IsTrue(logItems[0].Message.Contains("efiufhziuefizeub.m3u")); // Can't do much more than than because the exception message is localized
             }
         }
