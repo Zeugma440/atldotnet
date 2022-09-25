@@ -43,43 +43,43 @@ namespace ATL
         /// <summary>
         /// Tag type where the picture originates from (see <see cref="ATL.AudioData.MetaDataIOFactory"/> static fields)
         /// </summary>
-        public MetaDataIOFactory.TagType TagType;
+        public MetaDataIOFactory.TagType TagType { get; set; }
         /// <summary>
         /// Native field code according to TagType convention
         /// </summary>
-        public string NativeFieldCode;
+        public string NativeFieldCode { get; set; }
         /// <summary>
         /// Index of the stream the field is attached to (if applicable, i.e. for multi-stream files)
         /// </summary>
-        public ushort StreamNumber;
+        public ushort StreamNumber { get; set; }
         /// <summary>
         /// Language the value is written in
         /// </summary>
-        public string Language;
+        public string Language { get; set; }
 
         /// <summary>
         /// Value of the field
         /// </summary>
-        public string Value;
+        public string Value { get; set; }
         /// <summary>
         /// File zone where the value is supposed to appear (ASF format I'm looking at you...)
         /// </summary>
-        public string Zone;
+        public string Zone { get; set; }
 
         /// <summary>
         /// Origin of the field
         /// </summary>
-        public ORIGIN Origin = ORIGIN.Unknown;
+        public ORIGIN Origin { get; set; } = ORIGIN.Unknown;
 
         /// <summary>
         /// Attached data specific to the native format (e.g. AIFx Timestamp and Marker ID)
         /// </summary>
-        public object SpecificData;
+        public object SpecificData { get; set; }
 
         /// <summary>
         /// True if the field has to be deleted during the next call to <see cref="IMetaDataIO.Write"/>
         /// </summary>
-        public bool MarkedForDeletion = false;
+        public bool MarkedForDeletion { get; set; } = false;
 
         // ---------------- CONSTRUCTORS
 

@@ -148,53 +148,56 @@ namespace ATL
         /// Chapters 
         /// NB : The whole chapter list is processed as a whole
         /// </summary>
-        public IList<ChapterInfo> Chapters = null;
+        public IList<ChapterInfo> Chapters { get; set; } = null;
 
         /// <summary>
         /// Lyrics
         /// </summary>
-        public LyricsInfo Lyrics = null;
+        public LyricsInfo Lyrics { get; set; } = null;
 
 
         /// <summary>
         /// Embedded pictures
         /// NB : Each entry is processed as a metadata field on its own
         /// </summary>
-        public IList<PictureInfo> Pictures;
+        public IList<PictureInfo> Pictures { get; set; }
 
-        protected IDictionary<Field, string> Fields;
+        /// <summary>
+        /// All standard fields, stored according to their code
+        /// </summary>
+        protected IDictionary<Field, string> Fields { get; set; }
 
         /// <summary>
         /// Additional fields = non-classic fields
         /// NB : Each entry is processed as a metadata field on its own
         /// </summary>
-        public IList<MetaFieldInfo> AdditionalFields;
+        public IList<MetaFieldInfo> AdditionalFields { get; set; }
 
         /// <summary>
         /// > 0 if Track field is formatted with leading zeroes over X digits
         /// </summary>
-        public int TrackDigitsForLeadingZeroes = 0;
+        public int TrackDigitsForLeadingZeroes { get; set; } = 0;
         /// <summary>
         /// > 0 if Disc field is formatted with leading zeroes over X digits
         /// </summary>
-        public int DiscDigitsForLeadingZeroes = 0;
+        public int DiscDigitsForLeadingZeroes { get; set; } = 0;
 
         /// <summary>
         /// Current difference between written data size vs. initial data size
         /// Used to calculate padding size variation when FileStructureHelper is unavailable
         /// TODO - this is ugly, remove that when FLAC has been redesigned to use a FileStructureHelper
         /// </summary>
-        public long DataSizeDelta = 0;
+        public long DataSizeDelta { get; set; } = 0;
 
         /// <summary>
         /// Size of padding area, if any (target size of padding area, if used as input)
         /// </summary>
-        public long PaddingSize = -1;
+        public long PaddingSize { get; set; } = -1;
 
         /// <summary>
         /// Duration of audio track, in milliseconds
         /// </summary>
-        public double DurationMs = 0;
+        public double DurationMs { get; set; } = 0;
 
 #pragma warning restore S1104 // Fields should not have public accessibility
 
