@@ -372,22 +372,22 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override int write(TagData tag, Stream w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
             // ID3v1 tags are C-String(null-terminated)-based tags
             // they are not unicode-encoded, hence the use of ReadOneByteChars
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(ID3V1_ID));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(ID3V1_ID));
 
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 30, '\0')));
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 30, '\0')));
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 30, '\0')));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 30, '\0')));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 30, '\0')));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 30, '\0')));
             // ID3v1 standard requires the year
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(TrackUtils.ExtractStrYear(tag[Field.RECORDING_YEAR]), 4, '\0')));
-            StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 28, '\0')));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(TrackUtils.ExtractStrYear(tag[Field.RECORDING_YEAR]), 4, '\0')));
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 28, '\0')));
 
             // ID3v1.1 standard
-            w.WriteByte(0);
-            w.WriteByte((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag[Field.TRACK_NUMBER]), Byte.MaxValue));
+            s.WriteByte(0);
+            s.WriteByte((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag[Field.TRACK_NUMBER]), Byte.MaxValue));
 
             byte genre = byte.MaxValue;
             if (tag[Field.GENRE] != null)
@@ -402,7 +402,7 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            w.WriteByte(genre);
+            s.WriteByte(genre);
 
             return 7;
         }

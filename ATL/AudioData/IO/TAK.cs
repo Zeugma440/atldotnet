@@ -17,7 +17,7 @@ namespace ATL.AudioData.IO
         public const int TAK_VERSION_210 = 210;
         public const int TAK_VERSION_220 = 220;
 
-        public const String TAK_ID = "tBaK";
+        public const string TAK_ID = "tBaK";
 
 
         // Private declarations 

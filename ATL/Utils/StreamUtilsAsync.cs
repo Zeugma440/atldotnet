@@ -129,5 +129,17 @@ namespace ATL
         {
             await CopySameStreamAsync(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex), progress);
         }
+
+        /// <summary>
+        /// Write the given data into the given stream
+        /// </summary>
+        /// <param name="s">Stream to write to</param>
+        /// <param name="data">bytes to write</param>
+        /// <returns>Generic Task for async compliance</returns>
+        public static async Task WriteBytesAsync(Stream s, byte[] data)
+        {
+            await s.WriteAsync(data, 0, data.Length);
+        }
+
     }
 }

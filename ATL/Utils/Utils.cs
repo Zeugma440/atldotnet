@@ -508,15 +508,26 @@ namespace Commons
             return encodingCache[code];
         }
 
-        public static Encoding GuessTextEncoding(FileStream fs)
+        /// <summary>
+        /// Guess the given stream's encoding
+        /// </summary>
+        /// <param name="s">Stream to guess the encoding for</param>
+        /// <returns>Guessed encoding, if any; else Settings.DefaultTextEncoding</returns>
+        public static Encoding GuessTextEncoding(Stream s)
         {
             Ude.CharsetDetector cdet = new Ude.CharsetDetector();
-            cdet.Feed(fs);
+            cdet.Feed(s);
             cdet.DataEnd();
             if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
             else return Settings.DefaultTextEncoding;
         }
 
+        /// <summary>
+        /// Trace the given Exception 
+        /// - To the ATL logger 
+        /// - To the Console, if Settings.OutputStacktracesToConsole is true
+        /// </summary>
+        /// <param name="e">Exception to trace</param>
         public static void TraceException(Exception e)
         {
             if (Settings.OutputStacktracesToConsole)

@@ -10,7 +10,7 @@ You may use and modify this software as you wish.
 
 Translated to C# by Zeugma 440
 
-TODO : http://www.musicxml.com/for-developers/ ?
+Other formats : http://www.musicxml.com/for-developers/
 
 ****************************************************************************/
 
@@ -985,10 +985,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override int write(TagData tag, Stream w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
-            // Not implemented, as it would require a whole new set of metadata related to tracks and their names
-            return 0;
+            throw new NotImplementedException();
         }
     }
 }

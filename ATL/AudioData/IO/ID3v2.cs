@@ -1102,24 +1102,24 @@ namespace ATL.AudioData.IO
         }
 
         // Writes tag info using ID3v2.4 conventions
-        internal int writeInternal(TagData tag, BinaryWriter w, string zone)
+        internal int writeInternal(TagData tag, BinaryWriter w)
         {
-            return write(tag, w, zone);
+            return write(tag, w);
         }
 
         /// <summary>
         /// Writes the given tag into the given Writer using ID3v2.4 conventions
         /// </summary>
         /// <param name="tag">Tag information to be written</param>
-        /// <param name="w">Stream to write tag information to</param>
+        /// <param name="s">Stream to write tag information to</param>
         /// <param name="zone">Name of the zone that is currently being written</param>
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private int write(TagData tag, BinaryWriter w)
         {
             int result;
             long tagSizePos;

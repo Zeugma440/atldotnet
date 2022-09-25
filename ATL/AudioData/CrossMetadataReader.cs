@@ -480,7 +480,7 @@ namespace ATL.AudioData
         public bool Remove(Stream s) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
-        public async Task<bool> RemoveAsync(Stream s) { throw new NotImplementedException(); }
+        public Task<bool> RemoveAsync(Stream s) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public void SetEmbedder(IMetaDataEmbedder embedder)

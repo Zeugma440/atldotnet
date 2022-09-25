@@ -343,7 +343,6 @@ namespace ATL.AudioData.IO
 
             sepIndex++;
             sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
-            //if (1 == sStr.Length) sStr = sStr + "0"; // "2:2" means 2:20 and not 2:02
 
             durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
 
@@ -417,10 +416,10 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private int write(TagData tag, BinaryWriter w)
         {
             int result = 0;
 

@@ -506,10 +506,8 @@ namespace ATL.AudioData.IO
                 // 4 identical bytes => MP3 starts with padding bytes => Skip padding
                 if ((headerData[0] == headerData[1]) && (headerData[1] == headerData[2]) && (headerData[2] == headerData[3]))
                 {
-                    // Scan the whole padding until it stops
-                    while (headerData[0] == source.ReadByte()) ;
-
-                    source.Seek(-1, SeekOrigin.Current);
+                    long paddingEndOffset = StreamUtils.TraversePadding(source);
+                    source.Seek(paddingEndOffset, SeekOrigin.Begin);
 
                     // If padding uses 0xFF bytes, take one step back in case MP3 header lies there
                     if (0xFF == headerData[0]) source.Seek(-1, SeekOrigin.Current);
@@ -524,10 +522,10 @@ namespace ATL.AudioData.IO
                     source.Seek(-4, SeekOrigin.Current);
                     long limit = sizeInfo.ID3v2Size + (long)Math.Round((source.Length - sizeInfo.ID3v2Size) * 0.3);
 
-                    // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched that way)
+                    // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched using a static value)
                     while (!result.Found && source.Position < limit)
                     {
-                        while (0xFF != source.ReadByte() && source.Position < limit) ;
+                        while (0xFF != source.ReadByte() && source.Position < limit) { /* just advance the stream */ }
 
                         source.Seek(-1, SeekOrigin.Current);
                         source.Read(headerData, 0, 4);

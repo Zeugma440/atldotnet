@@ -104,6 +104,7 @@ namespace ATL
         /// <param name="offsetFrom">Starting offset to copy data from</param>
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
+        /// <param name="progress">Progress feedback to report with</param>
         public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, Action<float> progress = null)
         {
             CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize, progress);
@@ -117,6 +118,7 @@ namespace ATL
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
         /// <param name="bufferSize">Buffer size to use during the operation</param>
+        /// <param name="progress">Progress feedback to report with</param>
         public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize, Action<float> progress = null)
         {
             if (offsetFrom == offsetTo) return;
@@ -161,6 +163,7 @@ namespace ATL
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
         /// <param name="endOffset">End offset of the portion of bytes to remove</param>
         /// <param name="delta">Number of bytes to remove (starting from endOffset, towards the beginning of the file)</param>
+        /// <param name="progress">Progress feedback to report with</param>
         public static void ShortenStream(Stream s, long endOffset, uint delta, Action<float> progress = null)
         {
             CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset), progress);
@@ -175,6 +178,7 @@ namespace ATL
         /// <param name="oldIndex">Offset where to add new bytes</param>
         /// <param name="delta">Number of bytes to add</param>
         /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
+        /// <param name="progress">Progress feedback to report with</param>
         public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false, Action<float> progress = null)
         {
             long newIndex = oldIndex + delta;
@@ -778,11 +782,6 @@ namespace ATL
             s.Write(data, 0, data.Length);
         }
 
-        public static async Task WriteBytesAsync(Stream s, byte[] data)
-        {
-            s.WriteAsync(data, 0, data.Length);
-        }
-
         public static void WriteUInt16(Stream s, ushort data)
         {
             s.Write(EncodeUInt16(data), 0, 2);
@@ -959,8 +958,8 @@ namespace ATL
         }
 
         /// <summary>
-        /// Advance the given Stream until something else than \0 is encountered.
-        /// NB : A series of successive \0's is called "padding zone"
+        /// Advance the given Stream until a new value is encountered.
+        /// NB : A series of successive identical bytes is called "padding zone"
         /// 
         /// Warning : There is no contract regarding the position within the stream at the end of the call.
         /// It might be anywhere around the end of the padding zone.
@@ -969,17 +968,18 @@ namespace ATL
         /// <returns>Absolute offset of the end of the padding zone within the given Stream</returns>
         public static long TraversePadding(Stream source)
         {
-            // Read until there's something else than zeroes
             byte[] data = new byte[Settings.FileBufferSize];
             long initialPos = source.Position;
             int read, readTotal = 0;
+            int lastValue = -1;
 
             read = source.Read(data, 0, Settings.FileBufferSize);
             while (read > 0)
             {
                 for (int i = 0; i < read; i++)
                 {
-                    if (data[i] > 0) return initialPos + readTotal + i;
+                    if (-1 == lastValue) lastValue = data[i];
+                    if (data[i] != lastValue) return initialPos + readTotal + i;
                 }
                 readTotal += read;
                 read = source.Read(data, 0, Settings.FileBufferSize);

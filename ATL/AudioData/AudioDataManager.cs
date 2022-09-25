@@ -461,13 +461,13 @@ namespace ATL.AudioData
 
         private void handleEmbedder(BinaryReader r, IMetaDataIO theMetaIO)
         {
-            if (audioDataIO is IMetaDataEmbedder)
+            if (audioDataIO is IMetaDataEmbedder embedder)
             {
                 MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
                 readTagParams.PrepareForWriting = true;
 
                 audioDataIO.Read(r, sizeInfo, readTagParams);
-                theMetaIO.SetEmbedder((IMetaDataEmbedder)audioDataIO);
+                theMetaIO.SetEmbedder(embedder);
             }
         }
 
@@ -556,20 +556,18 @@ namespace ATL.AudioData
 
         private bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
-            if (audioDataIO.IsMetaSupported(TagType.ID3V1))
+            if (audioDataIO.IsMetaSupported(TagType.ID3V1) && iD3v1.Read(source, readTagParams))
             {
-                if (iD3v1.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V1, iD3v1.Size);
+                sizeInfo.SetSize(TagType.ID3V1, iD3v1.Size);
             }
-            if (audioDataIO.IsMetaSupported(TagType.ID3V2))
+            // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
+            if (audioDataIO.IsMetaSupported(TagType.ID3V2) && !(audioDataIO is IMetaDataEmbedder) && iD3v2.Read(source, readTagParams))
             {
-                if (!(audioDataIO is IMetaDataEmbedder)) // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
-                {
-                    if (iD3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
-                }
+                sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
             }
-            if (audioDataIO.IsMetaSupported(TagType.APE))
+            if (audioDataIO.IsMetaSupported(TagType.APE) && aPEtag.Read(source, readTagParams))
             {
-                if (aPEtag.Read(source, readTagParams)) sizeInfo.SetSize(TagType.APE, aPEtag.Size);
+                sizeInfo.SetSize(TagType.APE, aPEtag.Size);
             }
 
             bool result;

@@ -243,18 +243,18 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, Stream w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(tag[Field.TITLE], 32, 0, Encoding.UTF8));
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(tag[Field.ALBUM], 32, 0, Encoding.UTF8));
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(tag[Field.COPYRIGHT], 32, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(tag[Field.TITLE], 32, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(tag[Field.ALBUM], 32, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(tag[Field.COPYRIGHT], 32, 0, Encoding.UTF8));
             string str = "";
             if (AdditionalFields.ContainsKey("EMULATOR")) str = AdditionalFields["EMULATOR"];
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
             str = "";
             if (AdditionalFields.ContainsKey("DUMPER")) str = AdditionalFields["DUMPER"];
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
-            StreamUtils.WriteBytes(w, Utils.BuildStrictLengthStringBytes(tag[Field.COMMENT], 256, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(str, 32, 0, Encoding.UTF8));
+            StreamUtils.WriteBytes(s, Utils.BuildStrictLengthStringBytes(tag[Field.COMMENT], 256, 0, Encoding.UTF8));
 
             return 6;
         }

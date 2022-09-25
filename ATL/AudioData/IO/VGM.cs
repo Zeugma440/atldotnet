@@ -306,10 +306,10 @@ namespace ATL.AudioData.IO
         // Write GD3 tag
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private int write(TagData tag, BinaryWriter w)
         {
             byte[] endString = new byte[2] { 0, 0 };
             int result = 11; // 11 field to write

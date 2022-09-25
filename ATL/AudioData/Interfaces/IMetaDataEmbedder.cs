@@ -41,8 +41,8 @@ namespace ATL.AudioData
         /// <summary>
         /// Writes the native header that precedes the ID3v2 embedded tag in the given stream, using the given tag size
         /// </summary>
-        /// <param name="w">Stream to write the header to</param>
+        /// <param name="s">Stream to write the header to</param>
         /// <param name="tagSize">Tag size to be documented in the header to be written</param>
-        void WriteID3v2EmbeddingHeader(Stream w, long tagSize);
+        void WriteID3v2EmbeddingHeader(Stream s, long tagSize);
     }
 }

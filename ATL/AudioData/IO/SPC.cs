@@ -298,11 +298,8 @@ namespace ATL.AudioData.IO
             int songRes = isText(song);
             int fadeRes = isText(fade);
 
-            //if ( 0 == (dateRes | songRes | fadeRes) ) // No time nor date -> use default
-            //{
             bin = true;
-            //}
-            //else
+
             if ((songRes != -1) && (fadeRes != -1)) // No time, or time is text
             {
                 if (dateRes > 0)                    //If date is text, then tag is text
@@ -506,20 +503,20 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        protected override int write(TagData tag, Stream w, string zone)
+        protected override int write(TagData tag, Stream s, string zone)
         {
             int result = 0;
 
             if (zone.Equals(ZONE_HEADER))
             {
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 32, '\0')));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 32, '\0')));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(AdditionalFields[HEADER_DUMPERNAME.ToString()], 16, '\0')));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 32, '\0')));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_DUMPDATE.ToString()]));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_SONGLENGTH.ToString()]));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_FADE.ToString()]));
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 32, '\0')));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.TITLE], 32, '\0')));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ALBUM], 32, '\0')));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(AdditionalFields[HEADER_DUMPERNAME.ToString()], 16, '\0')));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.COMMENT], 32, '\0')));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_DUMPDATE.ToString()]));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_SONGLENGTH.ToString()]));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(AdditionalFields[HEADER_FADE.ToString()]));
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(Utils.BuildStrictLengthString(tag[Field.ARTIST], 32, '\0')));
                 result = 8;
             }
             else if (zone.Equals(ZONE_EXTENDED))
@@ -529,9 +526,9 @@ namespace ATL.AudioData.IO
                 //   - or have been truncated when written in header
                 long sizePos;
 
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(XTENDED_TAG));
-                sizePos = w.Position;
-                StreamUtils.WriteInt32(w, 0); // Size placeholder; to be rewritten with actual value at the end of the method
+                StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(XTENDED_TAG));
+                sizePos = s.Position;
+                StreamUtils.WriteInt32(s, 0); // Size placeholder; to be rewritten with actual value at the end of the method
 
                 IDictionary<Field, string> map = tag.ToMap();
 
@@ -544,7 +541,7 @@ namespace ATL.AudioData.IO
                         {
                             if (map[frameType].Length > 0 && canBeWrittenInExtendedMetadata(frameType, map[frameType])) // No frame with empty value
                             {
-                                writeSubChunk(w, b, map[frameType]);
+                                writeSubChunk(s, b, map[frameType]);
                                 result++;
                             }
                             break;
@@ -557,14 +554,14 @@ namespace ATL.AudioData.IO
                 {
                     if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.Zone.Equals(ZONE_HEADER) && fieldInfo.Value.Length > 0)
                     {
-                        writeSubChunk(w, Byte.Parse(fieldInfo.NativeFieldCode), FormatBeforeWriting(fieldInfo.Value));
+                        writeSubChunk(s, Byte.Parse(fieldInfo.NativeFieldCode), FormatBeforeWriting(fieldInfo.Value));
                         result++;
                     }
                 }
 
-                int size = (int)(w.Position - sizePos);
-                w.Seek(sizePos, SeekOrigin.Begin);
-                StreamUtils.WriteInt32(w, size);
+                int size = (int)(s.Position - sizePos);
+                s.Seek(sizePos, SeekOrigin.Begin);
+                StreamUtils.WriteInt32(s, size);
             }
 
             return result;

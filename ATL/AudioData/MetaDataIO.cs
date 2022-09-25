@@ -645,7 +645,7 @@ namespace ATL.AudioData.IO
                         if (zone.CoreSignature.Length > 0)
                         {
                             s.Position = zone.Offset - cumulativeDelta;
-                            await StreamUtils.WriteBytesAsync(s, zone.CoreSignature);
+                            await StreamUtilsAsync.WriteBytesAsync(s, zone.CoreSignature);
                         }
                     }
 
