@@ -248,7 +248,7 @@ namespace ATL.AudioData.IO
                         oldTagSize = zone.Size;
                         WriteResult writeResult;
 
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + "@" + zone.Offset);
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + (zone.IsReadonly ? " (read-only) " : "") + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
@@ -356,7 +356,7 @@ namespace ATL.AudioData.IO
                         // Need to build a larger file
                         if (buffer.Length > initialBufferSize)
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
                             StreamUtils.LengthenStream(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
@@ -460,7 +460,7 @@ namespace ATL.AudioData.IO
                         oldTagSize = zone.Size;
                         WriteResult writeResult;
 
-                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + "@" + zone.Offset);
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + (zone.IsReadonly ? " (read-only) " : "") + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
 
                         // Write new tag to a MemoryStream
@@ -568,7 +568,7 @@ namespace ATL.AudioData.IO
                         // Need to build a larger file
                         if (buffer.Length > initialBufferSize)
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
                             await StreamUtilsAsync.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), progress);
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
@@ -777,7 +777,7 @@ namespace ATL.AudioData.IO
             // Finalize current region
             result.Add(region);
 
-            return result;
+            return result.OrderBy(z => z.StartOffset).ToList();
         }
 
         /// <summary>
