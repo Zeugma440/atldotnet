@@ -93,7 +93,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_R_VorbisFLAC_multipleArtists()
+        public void TagIO_RW_VorbisFLAC_multipleArtists()
         {
             new ConsoleLogger();
 
