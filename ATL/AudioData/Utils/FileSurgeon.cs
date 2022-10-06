@@ -351,7 +351,12 @@ namespace ATL.AudioData.IO
                     if (buffer != null)
                     {
                         // -- Adjust file slot to new size of buffer --
-                        long tagEndOffset = region.StartOffset + initialBufferSize;
+                        //long tagEndOffset = region.StartOffset + initialBufferSize;
+                        long tagEndOffset;
+                        if (structureHelper != null)
+                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
+                        else // for classes that don't use FileStructureHelper(FLAC)
+                            tagEndOffset = region.StartOffset + globalCumulativeDelta - regionCumulativeDelta + initialBufferSize;
 
                         // Need to build a larger file
                         if (buffer.Length > initialBufferSize)
@@ -361,7 +366,7 @@ namespace ATL.AudioData.IO
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
                             StreamUtils.ShortenStream(fullScopeWriter, tagEndOffset, (uint)(initialBufferSize - buffer.Length), progress);
                         }
 
@@ -392,6 +397,7 @@ namespace ATL.AudioData.IO
             } // Loop through zone regions
 
             applyPostProcessing(fullScopeWriter);
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "DONE");
 
             return result;
         }
@@ -563,7 +569,12 @@ namespace ATL.AudioData.IO
                     if (buffer != null)
                     {
                         // -- Adjust file slot to new size of buffer --
-                        long tagEndOffset = region.StartOffset + initialBufferSize;
+                        //long tagEndOffset = region.StartOffset + initialBufferSize;
+                        long tagEndOffset;
+                        if (structureHelper != null)
+                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
+                        else // for classes that don't use FileStructureHelper(FLAC)
+                            tagEndOffset = region.StartOffset + globalCumulativeDelta - regionCumulativeDelta + initialBufferSize;
 
                         // Need to build a larger file
                         if (buffer.Length > initialBufferSize)
@@ -573,7 +584,7 @@ namespace ATL.AudioData.IO
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + ")");
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
                             await StreamUtilsAsync.ShortenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(initialBufferSize - buffer.Length), progress);
                         }
 
@@ -604,6 +615,7 @@ namespace ATL.AudioData.IO
             } // Loop through zone regions
 
             applyPostProcessing(fullScopeWriter);
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "DONE");
 
             return result;
         }

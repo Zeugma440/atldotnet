@@ -415,34 +415,119 @@ namespace ATL.AudioData.IO
             }
             while (trakSize > 0);
 
+            // Seek audio data segment to calculate mean bitrate 
+            // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
+
+            // == Audio binary data, chapter or subtitle data
+            // Per convention, audio binary data always seems to be in the 1st mdat atom of the file
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            uint mdatSize = navigateToAtom(source.BaseStream, "mdat");
+            if (0 == mdatSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
+                return false;
+            }
+            long mdatOffset = source.BaseStream.Position;
+            AudioDataOffset = mdatOffset - 8;
+            AudioDataSize = mdatSize;
+            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
+
+
+            // == Quicktime chapters management
+
             // No QT chapter track found -> Assign free track ID
             if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex++;
             if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex;
 
             // QT chapters have been detected while browsing tracks
             if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples);
-            if (readTagParams.PrepareForWriting && Settings.MP4_createQuicktimeChapters
-                && (0 == chapterTextTrackSamples.Count || 0 == chapterPictureTrackSamples.Count)) // Reserve zones to write QT chapters
+
+            // If QT chapters data is missing, reserve zones to write QT chapters
+            if (readTagParams.PrepareForWriting)
             {
-                // TRAK before UDTA
-                source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
-                atomSize = navigateToAtom(source.BaseStream, "udta");
-                if (atomSize > 0)
+                // Candidates for chapters MDAT zone
+                // NB : limit zone size to the actual size of the chapters
+                long chapMdatOffset = -1; // Offset of the MDAT atom hosting chapters
+                long chapMdatDataSize = -1; // Size of chapters data inside the MDAT atom
+                uint chapMdatChapSize = 0; // Size of the entire MDAT atom (to properly rewrite the zone size header)
+
+                if (Settings.MP4_createQuicktimeChapters && (0 == chapterTextTrackSamples.Count || 0 == chapterPictureTrackSamples.Count))
                 {
-                    if (0 == chapterTextTrackSamples.Count)
+                    source.BaseStream.Seek(moovPosition, SeekOrigin.Begin); // TRAK before UDTA
+                    atomSize = navigateToAtom(source.BaseStream, "udta");
+                    if (atomSize > 0)
                     {
-                        structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
-                        // Create a brand new MDAT at the end of the file
-                        structureHelper.AddZone(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT);
-                        structureHelper.AddSize(source.BaseStream.Length, 0, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
+                        if (0 == chapterTextTrackSamples.Count) structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_TXT_TRAK);
+                        if (0 == chapterPictureTrackSamples.Count) structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
                     }
-                    if (0 == chapterPictureTrackSamples.Count) structureHelper.AddZone(source.BaseStream.Position - 8, 0, ZONE_MP4_QT_CHAP_PIC_TRAK);
+
+                    // By default, attach to-be text and image data to the first MDAT atom
+                    chapMdatOffset = AudioDataOffset;
+                    chapMdatDataSize = 0;
+                    chapMdatChapSize = mdatSize;
                 }
-            }
+
+                // If QT chapters are present, record the current zone for chapters data
+                if (chapterTextTrackSamples.Count > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
+                {
+                    long minChapterOffset = chapterTextTrackSamples.Min(sample => sample.ChunkOffset);
+
+                    // Detect if QT chapters are interleaved
+                    long previousEndOffset = 0;
+                    foreach (MP4Sample sample in chapterTextTrackSamples)
+                    {
+                        if (0 == previousEndOffset) previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
+                        else if (previousEndOffset == sample.ChunkOffset + sample.RelativeOffset)
+                        {
+                            previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
+                        }
+                        else
+                        {
+                            structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_NOTREF);
+                            structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_CHAP);
+                            structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_TRAK);
+                            structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
+                            structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT);
+                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
+                            return true;
+                        }
+                    }
+
+                    // Scan all MDAT atoms starting from the first one to detect the one containing existing chapters
+                    source.BaseStream.Seek(mdatOffset, SeekOrigin.Begin);
+                    long chapterTextSize = chapterTextTrackSamples.Sum(sample => sample.Size);
+                    long chapterPictureSize = chapterPictureTrackSamples.Sum(sample => sample.Size);
+                    do
+                    {
+                        // On some files, there's a single MDAT atom that contains both chapter references and audio data
+                        // => limit zone size to the actual size of the chapters
+                        // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
+                        if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
+                        {
+                            chapMdatOffset = source.BaseStream.Position - 8;
+                            // Zone size = size of chapter data (text and pictures)
+                            chapMdatDataSize = chapterTextSize + chapterPictureSize;
+                            chapMdatChapSize = mdatSize;
+                        }
+
+                        source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
+                        mdatSize = navigateToAtom(source.BaseStream, "mdat");
+                    } while (mdatSize > 0);
+                } // QT chapters are present
+
+                // Memorize the definitive chapter data location as a zone
+                if (chapMdatDataSize > -1)
+                {
+                    structureHelper.AddZone(chapMdatOffset + 8, chapMdatDataSize, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddSize(chapMdatOffset, chapMdatChapSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
+                }
+            } // Write mode
+
 
             // Read user data which contains metadata and Nero chapters
             readUserData(source, readTagParams, moovPosition, moovSize);
 
+            // == Padding management
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             initialPaddingSize = navigateToAtom(source.BaseStream, "free");
@@ -467,81 +552,20 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            // Seek audio data segment to calculate mean bitrate 
-            // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
-
-            // === Audio binary data, chapter or subtitle data
-            // Per convention, audio binary data always seems to be in the 1st mdat atom of the file
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            uint mdatSize = navigateToAtom(source.BaseStream, "mdat");
-            if (0 == mdatSize)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
-                return false;
-            }
-            AudioDataOffset = source.BaseStream.Position - 8;
-            AudioDataSize = mdatSize;
-            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
-
-            // If QT chapters are present record the current zone for chapters data
-            if (chapterTextTrackSamples.Count > 0 && readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
-            {
-                long minChapterOffset = chapterTextTrackSamples.Min(sample => sample.ChunkOffset);
-                long chapterTextSize = chapterTextTrackSamples.Sum(sample => sample.Size);
-                long chapterPictureSize = chapterPictureTrackSamples.Sum(sample => sample.Size);
-
-                // Detect if QT chapters are interleaved
-                long previousEndOffset = 0;
-                foreach (MP4Sample sample in chapterTextTrackSamples)
-                {
-                    if (0 == previousEndOffset) previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
-                    else if (previousEndOffset == sample.ChunkOffset + sample.RelativeOffset)
-                    {
-                        previousEndOffset = sample.ChunkOffset + sample.RelativeOffset + sample.Size;
-                    }
-                    else
-                    {
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_NOTREF);
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_CHAP);
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_TXT_TRAK);
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
-                        structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT);
-                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
-                        return true;
-                    }
-                }
-
-                do
-                {
-                    // On some files, there's a single mdat atom that contains both chapter references and audio data
-                    // => limit zone size to the actual size of the chapters
-                    // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
-                    if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
-                    {
-                        // Zone size = size of chapter data (text and pictures)
-                        structureHelper.AddZone(source.BaseStream.Position - 8, (int)(chapterTextSize + chapterPictureSize + 8), ZONE_MP4_QT_CHAP_MDAT, false);
-                        // Zone size header = actual size of the zone that may include audio data
-                        structureHelper.AddSize(source.BaseStream.Position - 8, mdatSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
-                    }
-
-                    source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
-                    mdatSize = navigateToAtom(source.BaseStream, "mdat");
-                } while (mdatSize > 0);
-            }
             return true;
         }
 
         private long readTrack(
-            BinaryReader source,
-            ReadTagParams readTagParams,
-            int currentTrakIndex,
-            IList<MP4Sample> chapterTextTrackSamples,
-            IList<MP4Sample> chapterPictureTrackSamples,
-            IDictionary<int, IList<int>> chapterTrackIndexes,
-            IList<long> mediaTrackOffsets,
-            long trackCounterOffset,
-            long moovPosition,
-            long moovSize)
+        BinaryReader source,
+        ReadTagParams readTagParams,
+        int currentTrakIndex,
+        IList<MP4Sample> chapterTextTrackSamples,
+        IList<MP4Sample> chapterPictureTrackSamples,
+        IDictionary<int, IList<int>> chapterTrackIndexes,
+        IList<long> mediaTrackOffsets,
+        long trackCounterOffset,
+        long moovPosition,
+        long moovSize)
         {
             long trakPosition;
             int mediaTimeScale = 1000;
@@ -869,11 +893,11 @@ namespace ATL.AudioData.IO
             }
 
             /*
-             * -8 because the header has already been read
-             * 
-             * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
-             * => They have to be rewritten if the position (offset) of the 'mdat' atom changes
-             */
+            * -8 because the header has already been read
+            * 
+            * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
+            * => They have to be rewritten if the position (offset) of the 'mdat' atom changes
+            */
             source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin);
             if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTextTrack || isCurrentTrackFirstChapterPicturesTrack)
             {
@@ -2060,8 +2084,6 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            w.Write(0);
-            w.Write(Utils.Latin1Encoding.GetBytes("mdat"));
             foreach (ChapterInfo chapter in chapters)
             {
                 byte[] titleBytes = Encoding.UTF8.GetBytes(chapter.Title);
@@ -2399,7 +2421,7 @@ namespace ATL.AudioData.IO
             string dataZoneId = ZONE_MP4_QT_CHAP_MDAT;
             Zone chapMdatZone = structureHelper.GetZone(dataZoneId);
 
-            uint offset = (uint)(chapMdatZone.Offset + 8 + (isText ? 0 : totalTrackTxtSize));
+            uint offset = (uint)(chapMdatZone.Offset + (isText ? 0 : totalTrackTxtSize));
             structureHelper.AddPostProcessingIndex(w.BaseStream.Position, offset, false, dataZoneId, zoneId, zoneId);
             w.Write(StreamUtils.EncodeBEUInt32(offset)); // TODO switch to co64 when needed ?
 
