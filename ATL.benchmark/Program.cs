@@ -18,7 +18,7 @@ namespace ATL.benchmark
 
             //BenchmarkRunner.Run<Misc>();
 
-            BenchmarkRunner.Run<AsyncSyncLegacy>();
+            //BenchmarkRunner.Run<AsyncSyncLegacy>();
 
             //compareInfo(@"E:\Music\VGM");
 
@@ -31,6 +31,8 @@ namespace ATL.benchmark
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
             //writeAt(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+
+            reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
             //displayVersionInfo();
         }
@@ -118,6 +120,11 @@ namespace ATL.benchmark
             {
                 File.Delete(testFileLocation);
             }
+        }
+
+        static private void reduce(String filePath)
+        {
+            new Reduce().reduce(filePath);
         }
 
         static private void info(String filePath)
