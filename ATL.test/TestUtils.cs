@@ -103,6 +103,12 @@ namespace ATL.test
             }
         }
 
+        public static long GetFileSize(string path)
+        {
+            FileInfo fi = new FileInfo(path);
+            return fi.Length;
+        }
+
     }
 
 }

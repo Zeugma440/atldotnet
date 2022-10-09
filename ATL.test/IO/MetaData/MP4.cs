@@ -1328,5 +1328,77 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE);
         }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_RemoveTag()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks.m4a");
+
+            Track track = new Track(testFileLocation);
+            double preDuration = track.DurationMs; System.Console.WriteLine("Pre Duration: " + preDuration);
+            double preSize = TestUtils.GetFileSize(testFileLocation); System.Console.WriteLine("Pre File Length: " + preSize);
+            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            track = new Track(testFileLocation);
+            double dPostLength = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("POST Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("POST File Length: " + dPostLength);
+
+            Assert.AreEqual(preDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(preSize > dPostLength, "File should be smaller.");
+            Assert.AreEqual(133922, dPostLength, "File should be " + 133922 + " once tags are removed.");
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_AddChap2Image_then_RemoveTag()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks.m4a");
+            string testImageLocation = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
+
+            Track track = new Track(testFileLocation);
+            System.Console.WriteLine("# Initial Details #");
+            double tDuration = track.DurationMs; System.Console.WriteLine("Duration: " + tDuration);
+            double dLenght = TestUtils.GetFileSize(testFileLocation); System.Console.WriteLine("File Length: " + dLenght);
+            System.Console.WriteLine("Chapters: " + track.Chapters.Count.ToString());
+            System.Console.WriteLine("Chapters(1) Image: " + (track.Chapters[0].Picture != null));
+            System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
+
+            System.Console.WriteLine("# Chap 2 Image added #");
+            track.Chapters[1].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation));
+            track.Save();
+            track = new Track(testFileLocation);
+            System.Console.WriteLine("Duration: " + track.DurationMs);
+            System.Console.WriteLine("File Length: " + TestUtils.GetFileSize(testFileLocation));
+            System.Console.WriteLine("Chapters: " + track.Chapters.Count.ToString());
+            System.Console.WriteLine("Chapters(1) Image: " + (track.Chapters[0].Picture != null));
+            System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
+
+            //Switch these Assertions for expected editing.
+            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should should exist in Chap 1 due to MP4 format limitation.");
+            Assert.IsTrue(track.Chapters[1].Picture == null, "Picture is no longer in Chap 2 due to MP4 format limitation.");
+
+            System.Console.WriteLine("# Remove Tags #");
+            new ConsoleLogger();
+            track.Remove(ATL.AudioData.MetaDataIOFactory.TagType.NATIVE);
+            track = new Track(testFileLocation);
+            double dPostLength = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("File Length: " + dPostLength);
+            System.Console.WriteLine("Chapters: " + track.Chapters.Count.ToString());
+            if (track.Chapters.Count > 0)
+            {
+                System.Console.WriteLine("Chapters(1) Image: " + (track.Chapters[0].Picture != null));
+                System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
+            }
+
+            Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(dLenght > dPostLength, "File should be smaller.");
+            Assert.AreEqual(133922 - 8, dPostLength, "File should be " + (133922 - 8) + " once tags are removed - As per test CS_RemoveTag.");
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
     }
 }
