@@ -1329,10 +1329,12 @@ namespace ATL.test.IO.MetaData
             test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE);
         }
 
+        private const long twoTracksQTchapsEmptySize = 133914;
+
         [TestMethod]
         public void TagIO_RW_MP4_RemoveTag()
         {
-            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks.m4a");
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
 
             Track track = new Track(testFileLocation);
             double preDuration = track.DurationMs; System.Console.WriteLine("Pre Duration: " + preDuration);
@@ -1345,7 +1347,9 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(preDuration, track.DurationMs, "Duration should be the same.");
             Assert.IsTrue(preSize > dPostLength, "File should be smaller.");
-            Assert.AreEqual(133922, dPostLength, "File should be " + 133922 + " once tags are removed.");
+            // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
+            // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
+            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLength, "File should be " + twoTracksQTchapsEmptySize + 8 + " once tags are removed.");
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1354,7 +1358,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_AddChap2Image_then_RemoveTag()
         {
-            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks.m4a");
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
             string testImageLocation = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
 
             Track track = new Track(testFileLocation);
@@ -1395,7 +1399,8 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
             Assert.IsTrue(dLenght > dPostLength, "File should be smaller.");
-            Assert.AreEqual(133922 - 8, dPostLength, "File should be " + (133922 - 8) + " once tags are removed - As per test CS_RemoveTag.");
+            // File 
+            Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLength, "File should be " + twoTracksQTchapsEmptySize + " once tags are removed - As per test CS_RemoveTag.");
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
