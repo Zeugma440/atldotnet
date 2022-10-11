@@ -351,7 +351,6 @@ namespace ATL.AudioData.IO
                     if (buffer != null)
                     {
                         // -- Adjust file slot to new size of buffer --
-                        //long tagEndOffset = region.StartOffset + initialBufferSize;
                         long tagEndOffset;
                         if (structureHelper != null)
                             tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
@@ -569,7 +568,6 @@ namespace ATL.AudioData.IO
                     if (buffer != null)
                     {
                         // -- Adjust file slot to new size of buffer --
-                        //long tagEndOffset = region.StartOffset + initialBufferSize;
                         long tagEndOffset;
                         if (structureHelper != null)
                             tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
