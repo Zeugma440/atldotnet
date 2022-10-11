@@ -2,6 +2,7 @@
 using ATL.AudioData;
 using System.Collections.Generic;
 using ATL.AudioData.IO;
+using System.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -335,6 +336,44 @@ namespace ATL.test.IO.MetaData
         {
             initCueTestRWData();
             test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_GEOB_Existing()
+        {
+            new ConsoleLogger();
+
+            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            string location = TestUtils.GetResourceLocationRoot() + "WAV/id3v2_geob.wav";
+            string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/id3v2_geob.wav");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            
+            byte initialSubversion = ATL.Settings.ID3v2_tagSubVersion;
+            ATL.Settings.ID3v2_tagSubVersion = 3; // Write ID3v2.3
+
+            try
+            {
+                Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+                AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                TagHolder theTag = new TagHolder();
+                theTag.GeneralDescription = "ho";
+                Assert.IsTrue(theFile2.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+                Assert.IsTrue(theFile2.ReadFromFile(true, true));
+
+                Assert.AreEqual(theFile.ID3v2.AdditionalFields.Count, theFile2.ID3v2.AdditionalFields.Count);
+                foreach (var v in theFile.ID3v2.AdditionalFields)
+                {
+                    Assert.IsTrue(theFile2.ID3v2.AdditionalFields.ContainsKey(v.Key));
+                    Assert.AreEqual(theFile2.ID3v2.AdditionalFields[v.Key], v.Value);
+                }
+            } finally
+            {
+                ATL.Settings.ID3v2_tagSubVersion = initialSubversion;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
     }
 }

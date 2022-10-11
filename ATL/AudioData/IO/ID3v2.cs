@@ -40,7 +40,13 @@ namespace ATL.AudioData.IO
     ///     
     ///     Even though specs allow ID3v2.4 tags to be located at the end of the file, I have yet to find a valid sample.
     ///     => Prepended tags are not supported until someone asks for it.
-    ///
+    ///     
+    ///     6. Extended support for GEOB fields
+    ///     
+    ///     Current support for General Encapsulated Object (GEOB) fields are simplified that way :
+    ///     - MIME-type is always "application/octet-stream" (read time + write time)
+    ///     - File name is always empty (read time + write time)
+    ///     - Frame encoding is always Latin-1 (write-time only)
     /// </summary>
     public class ID3v2 : MetaDataIO
     {
@@ -751,6 +757,17 @@ namespace ATL.AudioData.IO
                 dataSize++;
             }
 
+            // General Encapsulated Object
+            if (Frame.ID.StartsWith("GEO"))
+            {
+                long geoStartOffset = source.Position;
+                StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Mime-type; unused
+                StreamUtils.ReadNullTerminatedString(source, frameEncoding); // File name; unused
+                string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
+                Frame.ID += "." + cDesc;
+                dataSize -= (int)(source.Position - geoStartOffset);
+            }
+
 
             // == READ ACTUAL FRAME DATA
 
@@ -1272,20 +1289,20 @@ namespace ATL.AudioData.IO
             if (4 == Settings.ID3v2_tagSubVersion && recordingYear.Length > 0)
             {
                 if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) // Make sure we don't erase an existing, same date with less detailed (year only) information
-                    map[TagData.Field.RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+                    map[Field.RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
             }
             else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length) // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
             {
-                map[TagData.Field.RECORDING_YEAR] = recordingDate.Substring(0, 4);
+                map[Field.RECORDING_YEAR] = recordingDate.Substring(0, 4);
                 if (recordingDate.Length > 9)
                 {
-                    map[TagData.Field.RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                    map[Field.RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
                     if (recordingDate.Length > 15)
                     {
-                        map[TagData.Field.RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
+                        map[Field.RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
                     }
                 }
-                map.Remove(TagData.Field.RECORDING_DATE);
+                map.Remove(Field.RECORDING_DATE);
             }
 
             IDictionary<string, Field> mapping = frameMapping_v24;
@@ -1600,7 +1617,14 @@ namespace ATL.AudioData.IO
             w.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string value, Encoding tagEncoding, string language = "", string description = "", bool isInsideUnsynch = false)
+        private void writeTextFrame(
+            BinaryWriter writer,
+            string frameCode,
+            string value,
+            Encoding tagEncoding,
+            string language = "",
+            string description = "",
+            bool isInsideUnsynch = false)
         {
             string actualFrameCode; // Used for writing TXXX frames
             long frameSizePos, frameDataPos, finalFramePos, frameOffset;
@@ -1645,6 +1669,16 @@ namespace ATL.AudioData.IO
             {
                 frameCode = "COMM";
                 isCommentCode = true;
+            }
+            // If frame is a General Encapsulated object, its code has to be broken down ("GEOB.FileName")
+            else if (frameCode.StartsWith("GEO", StringComparison.OrdinalIgnoreCase))
+            {
+                string[] parts = frameCode.Split('.');
+                if (parts.Length > 1)
+                {
+                    frameCode = parts[0];
+                    actualFrameCode = parts[1];
+                }
             }
             // If frame is not standard, it has to be added through TXXX frame ("user-defined text information frame")
             else if (!standardFrames.Contains(frameCode))
@@ -1744,6 +1778,20 @@ namespace ATL.AudioData.IO
                 w.Write(url);
 
                 writeValue = false;
+            }
+            else if (frameCode.StartsWith("GEO")) // General encapsulated object
+            {
+                Encoding geoEncoding = Utils.Latin1Encoding;
+                w.Write(encodeID3v2CharEncoding(geoEncoding));
+                w.Write(Utils.Latin1Encoding.GetBytes("application/octet-stream\0")); // MIME-type; unsupported for now
+                w.Write((byte)0); // File name; unsupported for now
+                w.Write(getBomFromEncoding(geoEncoding));
+                w.Write(geoEncoding.GetBytes(actualFrameCode + '\0')); // Content description
+                w.Write(getBomFromEncoding(geoEncoding));
+
+                isExplicitLatin1Encoding = true; // Writing something else than Latin-1 is unsupported for now
+                writeTextEncoding = false;
+                writeNullTermination = true;
             }
             else if (value.Contains(Settings.DisplayValueSeparator + ""))
             {
