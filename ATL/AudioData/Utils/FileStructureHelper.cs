@@ -291,6 +291,7 @@ namespace ATL.AudioData
                 zones[name].Size = size;
                 zones[name].CoreSignature = coreSignature;
                 zones[name].IsDeletable = isDeletable;
+                zones[name].IsResizable = resizable;
             }
         }
 
