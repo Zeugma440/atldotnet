@@ -129,8 +129,13 @@ namespace ATL.AudioData.IO
                 WavHelper.writeFieldIntValue(key + ".PlayCount", additionalFields, w, 0);
             }
 
-            // Write actual sample loops data size
             long finalPos = w.BaseStream.Position;
+
+            // Add the extra padding byte if needed
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+            // Write actual sample loops data size
             w.BaseStream.Seek(sampleLoopsPos, SeekOrigin.Begin);
             w.Write((int)(finalPos - sampleLoopsPos - 4));
 

@@ -6,7 +6,7 @@ namespace ATL.AudioData
 {
     /// <summary>
     /// Describes an audio file that embeds standard metadata (e.g. ID3v2) in a native structure instead of keeping it at beginning/end of file as per standard use
-    /// Currently used for AIFF/AIFC and DSF embedded ID3v2
+    /// Currently used for AIFF/AIFC, DSF and WAV embedded ID3v2
     /// </summary>
     public interface IMetaDataEmbedder
     {
@@ -39,10 +39,17 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Writes the native header that precedes the ID3v2 embedded tag in the given stream, using the given tag size
+        /// Writes the native header that immediately precedes the ID3v2 embedded tag in the given stream, using the given tag size
         /// </summary>
         /// <param name="s">Stream to write the header to</param>
-        /// <param name="tagSize">Tag size to be documented in the header to be written</param>
+        /// <param name="tagSize">Size of the written metadata</param>
         void WriteID3v2EmbeddingHeader(Stream s, long tagSize);
+
+        /// <summary>
+        /// Writes the native footer that immediately follows the ID3v2 embedded tag in the given stream, using the given tag size
+        /// </summary>
+        /// <param name="s">Stream to write the header to</param>
+        /// <param name="tagSize">Size of the written metadata</param>
+        void WriteID3v2EmbeddingFooter(Stream s, long tagSize);
     }
 }

@@ -264,7 +264,7 @@ namespace ATL.AudioData.IO
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
 
             // Needs one byte of padding if data size is odd
-            int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
+            int paddingByte = (buffer.Length + 1) % 2;
 
             int size = buffer.Length + 1 + 4; // Size shouldn't take padding byte into account, per specs
 
@@ -291,7 +291,7 @@ namespace ATL.AudioData.IO
             byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
 
             // Needs one byte of padding if data size is odd
-            int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
+            int paddingByte = (buffer.Length + 1) % 2;
 
             int size = buffer.Length + 1 + 20; // Size shouldn't take padding byte into account, per specs
 
@@ -319,7 +319,7 @@ namespace ATL.AudioData.IO
 
             byte[] buffer = Utils.Latin1Encoding.GetBytes(value);
             // Needs one byte of padding if data size is odd
-            int paddingByte = ((buffer.Length + 1) % 2 > 0) ? 1 : 0;
+            int paddingByte = (buffer.Length + 1) % 2;
             w.Write(buffer.Length + 1 + paddingByte);
             w.Write(buffer);
             w.Write((byte)0); // String is null-terminated

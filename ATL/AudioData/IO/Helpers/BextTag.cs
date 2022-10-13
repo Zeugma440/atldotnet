@@ -204,8 +204,12 @@ namespace ATL.AudioData.IO
             // Emulation of the BWFMetaEdit padding behaviour (256 characters)
             for (int i = 0; i < 256 - ((textData.Length + 2) % 256); i++) w.Write((byte)0);
 
-            // Write actual tag size
+            // Add the extra padding byte if needed
             long finalPos = w.BaseStream.Position;
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+            // Write actual tag size
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)
             {

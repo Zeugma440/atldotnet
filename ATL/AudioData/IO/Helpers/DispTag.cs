@@ -146,9 +146,12 @@ namespace ATL.AudioData.IO
                 w.Write(value);
             }
 
-
-            // Write actual tag size
+            // Add the extra padding byte if needed
             long finalPos = w.BaseStream.Position;
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+            // Write actual chunk size
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)
             {
@@ -159,7 +162,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
             }
 
-            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+            w.BaseStream.Seek(finalPos + paddingSize, SeekOrigin.Begin);
         }
     }
 }

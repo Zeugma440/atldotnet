@@ -93,9 +93,12 @@ namespace ATL.AudioData.IO
                 WavHelper.writeFieldIntValue(key + ".SampleOffset", additionalFields, w, 0);
             }
 
-            // Write actual tag size
+            // Add the extra padding byte if needed
             long finalPos = w.BaseStream.Position;
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.BaseStream.WriteByte(0);
 
+            // Write actual tag size
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)
             {

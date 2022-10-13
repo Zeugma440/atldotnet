@@ -628,5 +628,10 @@ namespace ATL.AudioData.IO
         {
             return (uint)Math.Round((when.Ticks - timestampBase.Ticks) * 1.0 / TimeSpan.TicksPerSecond);
         }
+
+        public void WriteID3v2EmbeddingFooter(Stream s, long tagSize)
+        {
+            // Nothing to do here
+        }
     }
 }

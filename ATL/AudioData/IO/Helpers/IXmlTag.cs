@@ -163,7 +163,11 @@ namespace ATL.AudioData.IO
                     }
             } // using XmlWriter
 
+            // Add the extra padding byte if needed
             long finalPos = w.BaseStream.Position;
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
             if (isLittleEndian)
             {

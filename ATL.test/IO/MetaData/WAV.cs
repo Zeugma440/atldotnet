@@ -344,10 +344,9 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
-            string location = TestUtils.GetResourceLocationRoot() + "WAV/id3v2_geob.wav";
             string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/id3v2_geob.wav");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-            
+
             byte initialSubversion = ATL.Settings.ID3v2_tagSubVersion;
             ATL.Settings.ID3v2_tagSubVersion = 3; // Write ID3v2.3
 
@@ -357,7 +356,7 @@ namespace ATL.test.IO.MetaData
 
                 AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
                 TagHolder theTag = new TagHolder();
-                theTag.GeneralDescription = "ho";
+                theTag.Comment = "something";
                 Assert.IsTrue(theFile2.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
                 Assert.IsTrue(theFile2.ReadFromFile(true, true));
 
@@ -367,9 +366,41 @@ namespace ATL.test.IO.MetaData
                     Assert.IsTrue(theFile2.ID3v2.AdditionalFields.ContainsKey(v.Key));
                     Assert.AreEqual(theFile2.ID3v2.AdditionalFields[v.Key], v.Value);
                 }
-            } finally
+            }
+            finally
             {
                 ATL.Settings.ID3v2_tagSubVersion = initialSubversion;
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_Even_ID3()
+        {
+            new ConsoleLogger();
+
+            // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
+            string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/id3v2_geob.wav");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            TagHolder theTag = new TagHolder();
+            theTag.Comment = "somethin";
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+
+            // Chunk must have an even size (actual size, not declared size)
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                StreamUtils.FindSequence(s, Commons.Utils.Latin1Encoding.GetBytes("id3 "));
+                byte[] intBytes = new byte[4];
+                s.Read(intBytes, 0, intBytes.Length);
+                int chunkSize = StreamUtils.DecodeInt32(intBytes);
+                Assert.IsTrue(chunkSize % 2 > 0); // Odd declared chunk size...
+                s.Seek(chunkSize, SeekOrigin.Current);
+                Assert.IsTrue(0 == s.ReadByte()); // ...word-aligned with the spec-compliant padding byte
             }
 
             // Get rid of the working copy

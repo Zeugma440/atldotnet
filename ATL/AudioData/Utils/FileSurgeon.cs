@@ -266,11 +266,18 @@ namespace ATL.AudioData.IO
                                     {
                                         newTagSize = memStream.Length;
 
-                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                                         {
-                                            StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                            memStream.Position = 0;
-                                            embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+                                            // Insert header before the written metadata
+                                            if (embedder.ID3v2EmbeddingHeaderSize > 0)
+                                            {
+                                                StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                                memStream.Position = 0;
+                                                embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+                                            }
+                                            // Write footer after the written metadata
+                                            memStream.Seek(0, SeekOrigin.End);
+                                            embedder.WriteID3v2EmbeddingFooter(memStream, newTagSize);
 
                                             newTagSize = memStream.Length;
                                         }
@@ -483,11 +490,18 @@ namespace ATL.AudioData.IO
                                     {
                                         newTagSize = memStream.Length;
 
-                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2 && embedder.ID3v2EmbeddingHeaderSize > 0)
+                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                                         {
-                                            await StreamUtilsAsync.LengthenStreamAsync(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
-                                            memStream.Position = 0;
-                                            embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+                                            // Insert header before the written metadata
+                                            if (embedder.ID3v2EmbeddingHeaderSize > 0)
+                                            {
+                                                StreamUtils.LengthenStream(memStream, 0, embedder.ID3v2EmbeddingHeaderSize);
+                                                memStream.Position = 0;
+                                                embedder.WriteID3v2EmbeddingHeader(memStream, newTagSize);
+                                            }
+                                            // Write footer after the written metadata
+                                            memStream.Seek(0, SeekOrigin.End);
+                                            embedder.WriteID3v2EmbeddingFooter(memStream, newTagSize);
 
                                             newTagSize = memStream.Length;
                                         }

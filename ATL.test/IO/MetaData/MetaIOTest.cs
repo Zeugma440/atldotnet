@@ -232,7 +232,7 @@ namespace ATL.test.IO.MetaData
             }
             testData = new TagHolder(theTag.tagData);
 
-            PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
+            PictureInfo picInfo = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
             var testPics = theTag.EmbeddedPictures;
             testPics.Add(picInfo);
             theTag.EmbeddedPictures = testPics;
