@@ -1337,19 +1337,25 @@ namespace ATL.test.IO.MetaData
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
 
             Track track = new Track(testFileLocation);
-            double preDuration = track.DurationMs; System.Console.WriteLine("Pre Duration: " + preDuration);
-            double preSize = TestUtils.GetFileSize(testFileLocation); System.Console.WriteLine("Pre File Length: " + preSize);
+            double preDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + preDuration);
+            double preSize = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + preSize);
             track.Remove(MetaDataIOFactory.TagType.NATIVE);
+
+            var log = new ArrayLogger();
             track = new Track(testFileLocation);
             double dPostLength = TestUtils.GetFileSize(testFileLocation);
-            System.Console.WriteLine("POST Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("POST File Length: " + dPostLength);
+            Console.WriteLine("POST Duration: " + track.DurationMs.ToString());
+            Console.WriteLine("POST File Length: " + dPostLength);
 
             Assert.AreEqual(preDuration, track.DurationMs, "Duration should be the same.");
             Assert.IsTrue(preSize > dPostLength, "File should be smaller.");
             // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
             // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
             Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLength, "File should be " + twoTracksQTchapsEmptySize + 8 + " once tags are removed.");
+
+            foreach (LogItem l in log.GetAllItems(LV_ERROR)) Console.WriteLine("[E] " + l.Message);
+            foreach (LogItem l in log.GetAllItems(LV_WARNING)) Console.WriteLine("[W] " + l.Message);
+            Assert.AreEqual(0, log.GetAllItems(LV_ERROR).Count + log.GetAllItems(LV_WARNING).Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

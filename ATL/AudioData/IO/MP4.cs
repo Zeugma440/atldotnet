@@ -519,7 +519,7 @@ namespace ATL.AudioData.IO
                 if (chapMdatDataSize > -1)
                 {
                     structureHelper.AddZone(chapMdatOffset + 8, chapMdatDataSize, ZONE_MP4_QT_CHAP_MDAT);
-                    structureHelper.AddSize(chapMdatOffset, chapMdatChapSize, ZONE_MP4_QT_CHAP_MDAT, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddSize(chapMdatOffset, chapMdatChapSize, ZONE_MP4_QT_CHAP_MDAT);
                 }
             } // Write mode
 
@@ -2078,11 +2078,7 @@ namespace ATL.AudioData.IO
 
         private int writeQTChaptersData(BinaryWriter w, IList<ChapterInfo> chapters)
         {
-            if (null == chapters || 0 == chapters.Count)
-            {
-                structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT); // Current zone commits suicide so that its size header doesn't get written
-                return 0;
-            }
+            if (null == chapters || 0 == chapters.Count) return 0;
 
             foreach (ChapterInfo chapter in chapters)
             {
@@ -2095,12 +2091,9 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
-            foreach (ChapterInfo chapter in chapters)
+            foreach (var chapter in chapters.Where(chapter => chapter.Picture != null))
             {
-                if (chapter.Picture != null)
-                {
-                    w.Write(chapter.Picture.PictureData);
-                }
+                w.Write(chapter.Picture.PictureData);
             }
 
             return 1;
