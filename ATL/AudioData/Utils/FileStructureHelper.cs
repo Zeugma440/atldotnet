@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 
@@ -178,7 +179,7 @@ namespace ATL.AudioData
         private readonly IDictionary<string, Zone> zones;
 
         // Stores offset variations caused by zone editing (add/remove/shrink/expand) within current file
-        //      1st dictionary key  : region id
+        //      1st dictionary key  : region id (-1 for file-wide offset correction)
         //      2nd dictionary key  : zone name
         //      KVP Key         : initial end offset of given zone (i.e. position of last byte within zone)
         //      KVP Value       : variation applied to given zone (can be positive or negative)
@@ -663,21 +664,26 @@ namespace ATL.AudioData
                 } // Index & relative index types
             } // Loop through headers
 
-            // Update local dynamic offset if non-null
-            if (deltaSize != 0 && !localDynamicOffsetCorrection.ContainsKey(zone))
-                localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
-
-            // If applicable, update global dynamic offset
-            if (regionId > -1)
+            // Record size variations into dynamic offset correction
+            if (deltaSize != 0)
             {
-                IDictionary<string, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
-                // Add new region
-                if (!globalRegion.ContainsKey(zone))
-                    globalRegion.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
-                else // Increment current delta to existing region
+                // Update local dynamic offset if non-null
+                if (!localDynamicOffsetCorrection.ContainsKey(zone))
+                    localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+
+                // If applicable, update global dynamic offset
+                if (regionId > -1)
                 {
-                    KeyValuePair<long, long> currentValues = globalRegion[zone];
-                    globalRegion[zone] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
+                    IDictionary<string, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
+                    // Add new region
+                    if (!globalRegion.ContainsKey(zone))
+                        globalRegion.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+                    else // Increment current delta to existing region
+                    {
+                        KeyValuePair<long, long> currentValues = globalRegion[zone];
+                        globalRegion[zone] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
+                    }
+
                 }
             }
 
