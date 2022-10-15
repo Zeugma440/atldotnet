@@ -225,7 +225,7 @@ namespace ATL.AudioData.IO
                         if (initialBufferSize > 0)
                         {
                             if (structureHelper != null)
-                                fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
+                                fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
                             else // for classes that don't use FileStructureHelper(FLAC)
                                 fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
 
@@ -360,7 +360,7 @@ namespace ATL.AudioData.IO
                         // -- Adjust file slot to new size of buffer --
                         long tagEndOffset;
                         if (structureHelper != null)
-                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
+                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false, region.Id) + initialBufferSize;
                         else // for classes that don't use FileStructureHelper(FLAC)
                             tagEndOffset = region.StartOffset + globalCumulativeDelta - regionCumulativeDelta + initialBufferSize;
 
@@ -378,7 +378,7 @@ namespace ATL.AudioData.IO
 
                         // Copy tag contents to the new slot
                         if (structureHelper != null)
-                            fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
+                            fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false, region.Id), SeekOrigin.Begin);
                         else // for classes that don't use FileStructureHelper(FLAC)
                             fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta - regionCumulativeDelta, SeekOrigin.Begin); // don't apply self-created delta
 
@@ -449,7 +449,7 @@ namespace ATL.AudioData.IO
                         if (initialBufferSize > 0)
                         {
                             if (structureHelper != null)
-                                fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset), SeekOrigin.Begin);
+                                fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
                             else // for classes that don't use FileStructureHelper(FLAC)
                                 fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta, SeekOrigin.Begin);
 
@@ -584,7 +584,7 @@ namespace ATL.AudioData.IO
                         // -- Adjust file slot to new size of buffer --
                         long tagEndOffset;
                         if (structureHelper != null)
-                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false) + initialBufferSize;
+                            tagEndOffset = structureHelper.getCorrectedOffset(region.StartOffset, false, region.Id) + initialBufferSize;
                         else // for classes that don't use FileStructureHelper(FLAC)
                             tagEndOffset = region.StartOffset + globalCumulativeDelta - regionCumulativeDelta + initialBufferSize;
 
@@ -602,7 +602,7 @@ namespace ATL.AudioData.IO
 
                         // Copy tag contents to the new slot
                         if (structureHelper != null)
-                            fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false), SeekOrigin.Begin);
+                            fullScopeWriter.Seek(structureHelper.getCorrectedOffset(region.StartOffset, false, region.Id), SeekOrigin.Begin);
                         else // for classes that don't use FileStructureHelper(FLAC)
                             fullScopeWriter.Seek(region.StartOffset + globalCumulativeDelta - regionCumulativeDelta, SeekOrigin.Begin); // don't apply self-created delta
 

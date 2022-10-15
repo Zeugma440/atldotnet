@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Commons;
+using HashDepot;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 
@@ -175,15 +176,49 @@ namespace ATL.AudioData
             }
         }
 
+        private sealed class ZoneInfo
+        {
+            public string Name { get; set; }
+            public int RegionId { get; set; }
+
+            public ZoneInfo(string name, int regionId)
+            {
+                Name = name;
+                RegionId = regionId;
+            }
+
+            public override string ToString()
+            {
+                return RegionId + ":" + Name;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+
+                // Actually check the type, should not throw exception from Equals override
+                if (obj.GetType() != this.GetType()) return false;
+
+                return (RegionId == ((ZoneInfo)obj).RegionId)
+                    && (Name == ((ZoneInfo)obj).Name);
+            }
+
+            public override int GetHashCode()
+            {
+                return (int)FNV1a.Hash32(Utils.Latin1Encoding.GetBytes(ToString()));
+            }
+        }
+
         // Recorded zones
         private readonly IDictionary<string, Zone> zones;
 
         // Stores offset variations caused by zone editing (add/remove/shrink/expand) within current file
-        //      1st dictionary key  : region id (-1 for file-wide offset correction)
-        //      2nd dictionary key  : zone name
+        //      1st dictionary key  : region id (-1 = file-wide offset correction that records cumulative changes across all regions)
+        //      2nd dictionary key  : zone information
         //      KVP Key         : initial end offset of given zone (i.e. position of last byte within zone)
         //      KVP Value       : variation applied to given zone (can be positive or negative)
-        private readonly IDictionary<int, IDictionary<string, KeyValuePair<long, long>>> dynamicOffsetCorrection = new Dictionary<int, IDictionary<string, KeyValuePair<long, long>>>();
+        private readonly IDictionary<int, IDictionary<ZoneInfo, KeyValuePair<long, long>>> dynamicOffsetCorrection = new Dictionary<int, IDictionary<ZoneInfo, KeyValuePair<long, long>>>();
 
         // True if attached file uses little-endian convention for number representation; false if big-endian
         private readonly bool isLittleEndian;
@@ -224,7 +259,7 @@ namespace ATL.AudioData
             zones = new Dictionary<string, Zone>();
 
             // Init global region
-            dynamicOffsetCorrection.Add(-1, new Dictionary<string, KeyValuePair<long, long>>());
+            dynamicOffsetCorrection.Add(-1, new Dictionary<ZoneInfo, KeyValuePair<long, long>>());
         }
 
         /// <summary>
@@ -241,7 +276,7 @@ namespace ATL.AudioData
                 zones.Clear();
             }
             dynamicOffsetCorrection.Clear();
-            dynamicOffsetCorrection.Add(-1, new Dictionary<string, KeyValuePair<long, long>>());
+            dynamicOffsetCorrection.Add(-1, new Dictionary<ZoneInfo, KeyValuePair<long, long>>());
         }
 
         /// <summary>
@@ -480,12 +515,16 @@ namespace ATL.AudioData
         /// <param name="offset">Offset to correct</param>
         /// <param name="includeItself">True if offset corrections starting at the exact given offset should be applied</param>
         /// <returns>Corrected offset</returns>
-        public long getCorrectedOffset(long offset, bool includeItself = true)
+        public long getCorrectedOffset(long offset, bool includeItself = true, int regionId = -1)
         {
             long offsetPositionCorrection = 0;
-            foreach (KeyValuePair<long, long> offsetDelta in dynamicOffsetCorrection[-1].Values) // Search in global repo
+            foreach (ZoneInfo info in dynamicOffsetCorrection[-1].Keys) // Search in global repo
             {
-                if (offset > offsetDelta.Key || (includeItself && offset == offsetDelta.Key)) offsetPositionCorrection += offsetDelta.Value;
+                if (includeItself || regionId != info.RegionId)
+                {
+                    KeyValuePair<long, long> offsetDelta = dynamicOffsetCorrection[-1][info];
+                    if (offset >= offsetDelta.Key) offsetPositionCorrection += offsetDelta.Value;
+                }
             }
 
             return offset + offsetPositionCorrection;
@@ -510,7 +549,7 @@ namespace ATL.AudioData
         /// <param name="bufferedWriter">Buffered stream to write modifications to</param>
         /// <param name="deltaSize">Evolution of zone size (in bytes; positive or negative)</param>
         /// <param name="action">Action applied to zone</param>
-        /// <param name="zone">Name of zone to process</param>
+        /// <param name="zoneName">Name of zone to process</param>
         /// <param name="globalOffsetCorrection">Offset correction to apply to the zone to process</param>
         /// <param name="regionId">ID of the current buffer region; -1 if working on the file itself (global offset correction)</param>
         /// <returns></returns>
@@ -519,7 +558,7 @@ namespace ATL.AudioData
             Stream bufferedWriter,
             long deltaSize,
             ACTION action,
-            string zone = DEFAULT_ZONE_NAME,
+            string zoneName = DEFAULT_ZONE_NAME,
             long globalOffsetCorrection = 0,
             int regionId = -1)
         {
@@ -533,18 +572,18 @@ namespace ATL.AudioData
 
 
             if (null == zones) return false;
-            if (!zones.TryGetValue(zone, out Zone currentZone)) return true; // No effect
+            if (!zones.TryGetValue(zoneName, out Zone currentZone)) return true; // No effect
 
 
             // Get the dynamic correction map from the proper region
-            IDictionary<string, KeyValuePair<long, long>> localDynamicOffsetCorrection;
+            IDictionary<ZoneInfo, KeyValuePair<long, long>> localDynamicOffsetCorrection;
             if (!dynamicOffsetCorrection.ContainsKey(regionId))
-                dynamicOffsetCorrection.Add(regionId, new Dictionary<string, KeyValuePair<long, long>>());
+                dynamicOffsetCorrection.Add(regionId, new Dictionary<ZoneInfo, KeyValuePair<long, long>>());
 
             localDynamicOffsetCorrection = dynamicOffsetCorrection[regionId];
 
             // Don't reprocess the position of a post-processing zone
-            bool isPostReprocessing = zone.StartsWith(POST_PROCESSING_ZONE_NAME);
+            bool isPostReprocessing = zoneName.StartsWith(POST_PROCESSING_ZONE_NAME);
 
             // == Update the current zone's headers
             foreach (FrameHeader header in currentZone.Headers)
@@ -556,11 +595,11 @@ namespace ATL.AudioData
                 passedParentZone = false;
                 passedValueZone = false;
 
-                foreach (string dynamicZone in localDynamicOffsetCorrection.Keys)
+                foreach (ZoneInfo dynamicZone in localDynamicOffsetCorrection.Keys)
                 {
                     // Don't need to process zones located further than we are
-                    if (dynamicZone == header.ParentZone) passedParentZone = true;
-                    if (dynamicZone == header.ValueZone) passedValueZone = true;
+                    if (dynamicZone.Name == header.ParentZone) passedParentZone = true;
+                    if (dynamicZone.Name == header.ValueZone) passedValueZone = true;
                     if (passedParentZone && passedValueZone) continue;
 
                     KeyValuePair<long, long> offsetDelta = localDynamicOffsetCorrection[dynamicZone];
@@ -586,7 +625,7 @@ namespace ATL.AudioData
                 // === Rewrite headers
 
                 // If we're going to delete the zone, and the header is located inside it, don't write it !
-                if (header.ParentZone == zone && ACTION.Delete == action) continue;
+                if (header.ParentZone == zoneName && ACTION.Delete == action) continue;
 
                 if (FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type)
                 {
@@ -609,7 +648,7 @@ namespace ATL.AudioData
 
                     value = addToValue(header.Value, delta, out updatedValue);
 
-                    if (null == value) throw new NotSupportedException("Value type not supported for " + zone + "@" + header.Position + " : " + header.Value.GetType());
+                    if (null == value) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
 
                     // The very same frame header is referenced from another frame and must be updated to its new value
                     updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);
@@ -657,31 +696,32 @@ namespace ATL.AudioData
                         }
                     }
 
-                    if (null == value) throw new NotSupportedException("Value type not supported for index in " + zone + "@" + header.Position + " : " + header.Value.GetType());
+                    if (null == value) throw new NotSupportedException("Value type not supported for index in " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
 
                     s.Seek(headerPosition, SeekOrigin.Begin);
                     s.Write(value, 0, value.Length);
                 } // Index & relative index types
             } // Loop through headers
 
-            // Record size variations into dynamic offset correction
+            // Record size variations into dynamic offset corrections
             if (deltaSize != 0)
             {
-                // Update local dynamic offset if non-null
-                if (!localDynamicOffsetCorrection.ContainsKey(zone))
-                    localDynamicOffsetCorrection.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+                ZoneInfo zoneInfo = new ZoneInfo(zoneName, regionId);
+                // Update local dynamic offset correction if non-null
+                if (!localDynamicOffsetCorrection.ContainsKey(zoneInfo))
+                    localDynamicOffsetCorrection.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
 
-                // If applicable, update global dynamic offset
+                // If working with local dynamic offset correction, update global dynamic offset correction
                 if (regionId > -1)
                 {
-                    IDictionary<string, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
+                    IDictionary<ZoneInfo, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
                     // Add new region
-                    if (!globalRegion.ContainsKey(zone))
-                        globalRegion.Add(zone, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+                    if (!globalRegion.ContainsKey(zoneInfo))
+                        globalRegion.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
                     else // Increment current delta to existing region
                     {
-                        KeyValuePair<long, long> currentValues = globalRegion[zone];
-                        globalRegion[zone] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
+                        KeyValuePair<long, long> currentValues = globalRegion[zoneInfo];
+                        globalRegion[zoneInfo] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
                     }
 
                 }
