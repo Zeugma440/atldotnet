@@ -83,6 +83,14 @@ namespace ATL.test.IO.MetaData
             testData.Publisher = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
             testData.ProductId = "THIS IS A GOOD ID";
+            testData.SortAlbum = "SortAlbum";
+            testData.SortAlbumArtist = "SortAlbumArtist";
+            testData.SortArtist = "SortArtist";
+            testData.SortTitle = "SortTitle";
+            testData.Group = "Group";
+            testData.SeriesTitle = "SeriesTitle";
+            testData.SeriesPart = "2";
+            testData.LongDescription = "LongDescription";
 
             testData.AdditionalFields = new Dictionary<string, string>
             {

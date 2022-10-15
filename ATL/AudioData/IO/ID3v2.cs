@@ -157,7 +157,6 @@ namespace ATL.AudioData.IO
         // Mapping between standard fields and ID3v2.3 identifiers
         private static readonly IDictionary<string, Field> frameMapping_v23 = new Dictionary<string, Field>
             {
-                { "TIT1", Field.GENERAL_DESCRIPTION },
                 { "TIT2", Field.TITLE },
                 { "TPE1", Field.ARTIST },
                 { "TPE2", Field.ALBUM_ARTIST }, // De facto standard, regardless of spec
@@ -177,13 +176,20 @@ namespace ATL.AudioData.IO
                 { "TCON", Field.GENRE },
                 { "TCOP", Field.COPYRIGHT },
                 { "TPUB", Field.PUBLISHER },
-                { "CTOC", Field.CHAPTERS_TOC_DESCRIPTION }
+                { "CTOC", Field.CHAPTERS_TOC_DESCRIPTION },
+                { "TSOA", Field.SORT_ALBUM },
+                { "TSO2", Field.SORT_ALBUM_ARTIST }, // Not part of ID3v2.3 standard
+                { "TSOP", Field.SORT_ARTIST },
+                { "TSOT", Field.SORT_TITLE },
+                { "TIT1", Field.GROUP },
+                { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.3 standard
+                { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.3 standard
+                { "TDES", Field.LONG_DESCRIPTION } // Not part of ID3v2.3 standard
             };
 
         // Mapping between standard fields and ID3v2.4 identifiers
         private static readonly IDictionary<string, Field> frameMapping_v24 = new Dictionary<string, Field>
             {
-                { "TIT1", Field.GENERAL_DESCRIPTION },
                 { "TIT2", Field.TITLE },
                 { "TPE1", Field.ARTIST },
                 { "TPE2", Field.ALBUM_ARTIST }, // De facto standard, regardless of spec
@@ -201,7 +207,15 @@ namespace ATL.AudioData.IO
                 { "TCOP", Field.COPYRIGHT },
                 { "TPUB", Field.PUBLISHER },
                 { "CTOC", Field.CHAPTERS_TOC_DESCRIPTION },
-                { "TDRL", Field.PUBLISHING_DATE }
+                { "TDRL", Field.PUBLISHING_DATE },
+                { "TSOA", Field.SORT_ALBUM },
+                { "TSO2", Field.SORT_ALBUM_ARTIST }, // Not part of ID3v2.4 standard
+                { "TSOP", Field.SORT_ARTIST },
+                { "TSOT", Field.SORT_TITLE },
+                { "TIT1", Field.GROUP },
+                { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.4 standard
+                { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.4 standard
+                { "TDES", Field.LONG_DESCRIPTION } // Not part of ID3v2.4 standard
             };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions

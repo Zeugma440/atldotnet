@@ -104,7 +104,11 @@ namespace ATL.AudioData.IO
             { "WM/Composer", Field.COMPOSER },
             { "WM/AlbumArtist", Field.ALBUM_ARTIST },
             { "WM/Conductor", Field.CONDUCTOR },
-            { "WM/Lyrics", Field.LYRICS_UNSYNCH }
+            { "WM/Lyrics", Field.LYRICS_UNSYNCH },
+            { "WM/AlbumSortOrder", Field.SORT_ALBUM },
+            { "WM/ArtistSortOrder", Field.SORT_ARTIST },
+            { "WM/TitleSortOrder", Field.SORT_TITLE },
+            { "WM/ContentGroupDescription", Field.GROUP }
         };
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>

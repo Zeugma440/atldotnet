@@ -137,7 +137,39 @@ namespace ATL
             /// <summary>
             /// Product ID
             /// </summary>
-            PRODUCT_ID = 28
+            PRODUCT_ID = 28,
+            /// <summary>
+            /// Album sort order
+            /// </summary>
+            SORT_ALBUM = 29,
+            /// <summary>
+            /// Album artist sort order
+            /// </summary>
+            SORT_ALBUM_ARTIST = 30,
+            /// <summary>
+            /// Artist sort order
+            /// </summary>
+            SORT_ARTIST = 31,
+            /// <summary>
+            /// Title sort order
+            /// </summary>
+            SORT_TITLE = 32,
+            /// <summary>
+            /// Content group description
+            /// </summary>
+            GROUP = 33,
+            /// <summary>
+            /// Series title / Movement name
+            /// </summary>
+            SERIES_TITLE = 34,
+            /// <summary>
+            /// Series part / Movement index
+            /// </summary>
+            SERIES_PART = 35,
+            /// <summary>
+            /// Long description
+            /// </summary>
+            LONG_DESCRIPTION = 36
         }
 
         private static readonly ICollection<Field> numericFields = new HashSet<Field>() {

@@ -344,6 +344,118 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        public string SortAlbum
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SortAlbum;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string SortAlbumArtist
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SortAlbumArtist;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string SortArtist
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SortArtist;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string SortTitle
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SortTitle;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string Group
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Group;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string SeriesTitle
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SeriesTitle;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string SeriesPart
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.SeriesPart;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public string LongDescription
+        {
+            get
+            {
+                String result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.LongDescription;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+
         /// <inheritdoc/>
         public float? Popularity
         {

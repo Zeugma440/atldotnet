@@ -255,6 +255,55 @@ namespace ATL
             get => Utils.ProtectValue(tagData[Field.PRODUCT_ID]);
             set => tagData.IntegrateValue(Field.PRODUCT_ID, value);
         }
+        /// <inheritdoc/>
+        public string SortAlbum
+        {
+            get => Utils.ProtectValue(tagData[Field.SORT_ALBUM]);
+            set => tagData.IntegrateValue(Field.SORT_ALBUM, value);
+        }
+        /// <inheritdoc/>
+        public string SortAlbumArtist
+        {
+            get => Utils.ProtectValue(tagData[Field.SORT_ALBUM_ARTIST]);
+            set => tagData.IntegrateValue(Field.SORT_ALBUM_ARTIST, value);
+        }
+        /// <inheritdoc/>
+        public string SortArtist
+        {
+            get => Utils.ProtectValue(tagData[Field.SORT_ARTIST]);
+            set => tagData.IntegrateValue(Field.SORT_ARTIST, value);
+        }
+        /// <inheritdoc/>
+        public string SortTitle
+        {
+            get => Utils.ProtectValue(tagData[Field.SORT_TITLE]);
+            set => tagData.IntegrateValue(Field.SORT_TITLE, value);
+        }
+        /// <inheritdoc/>
+        public string Group
+        {
+            get => Utils.ProtectValue(tagData[Field.GROUP]);
+            set => tagData.IntegrateValue(Field.GROUP, value);
+        }
+        /// <inheritdoc/>
+        public string SeriesTitle
+        {
+            get => Utils.ProtectValue(tagData[Field.SERIES_TITLE]);
+            set => tagData.IntegrateValue(Field.SERIES_TITLE, value);
+        }
+        /// <inheritdoc/>
+        public string SeriesPart
+        {
+            get => Utils.ProtectValue(tagData[Field.SERIES_PART]);
+            set => tagData.IntegrateValue(Field.SERIES_PART, value);
+        }
+        /// <inheritdoc/>
+        public string LongDescription
+        {
+            get => Utils.ProtectValue(tagData[Field.LONG_DESCRIPTION]);
+            set => tagData.IntegrateValue(Field.LONG_DESCRIPTION, value);
+        }
+
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
         /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available

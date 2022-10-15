@@ -78,7 +78,15 @@ namespace ATL.AudioData.IO
             { "©pub", Field.PUBLISHER },
             { "rldt", Field.PUBLISHING_DATE},
             { "prID", Field.PRODUCT_ID},
-            { "----:com.apple.iTunes:CONDUCTOR", Field.CONDUCTOR }
+            { "----:com.apple.iTunes:CONDUCTOR", Field.CONDUCTOR },
+            { "soal", Field.SORT_ALBUM },
+            { "soaa", Field.SORT_ALBUM_ARTIST },
+            { "soar", Field.SORT_ARTIST },
+            { "sonm", Field.SORT_TITLE },
+            { "©grp", Field.GROUP },
+            { "©mvi", Field.SERIES_PART},
+            { "©mvn", Field.SERIES_TITLE },
+            { "ldes", Field.LONG_DESCRIPTION }
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)

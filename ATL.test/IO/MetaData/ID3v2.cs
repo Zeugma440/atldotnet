@@ -26,6 +26,14 @@ namespace ATL.test.IO.MetaData
             notEmptyFile = "MP3/id3v2.3_UTF16.mp3";
 
             testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
+            testData.SortAlbum = "SortAlbum";
+            testData.SortAlbumArtist = "SortAlbumArtist";
+            testData.SortArtist = "SortArtist";
+            testData.SortTitle = "SortTitle";
+            testData.Group = "Group";
+            testData.SeriesTitle = "SeriesTitle";
+            testData.SeriesPart = "2";
+            testData.LongDescription = "LongDescription";
 
             tagType = MetaDataIOFactory.TagType.ID3V2;
             var pics = testData.EmbeddedPictures;

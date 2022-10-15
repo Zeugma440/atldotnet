@@ -5,11 +5,11 @@ using System.IO;
 
 namespace ATL.AudioData
 {
-	/// <summary>
-	/// This Interface defines an object aimed at giving audio metadata information
-	/// </summary>
-	public interface IMetaData
-	{
+    /// <summary>
+    /// This Interface defines an object aimed at giving audio metadata information
+    /// </summary>
+    public interface IMetaData
+    {
         /// <summary>
         /// Available metadata formats
         /// </summary>
@@ -22,16 +22,16 @@ namespace ATL.AudioData
         /// Title of the track
         /// </summary>
         string Title
-		{
-			get;
-		}
-		/// <summary>
-		/// Artist
-		/// </summary>
-		string Artist
-		{
-			get;
-		}
+        {
+            get;
+        }
+        /// <summary>
+        /// Artist
+        /// </summary>
+        string Artist
+        {
+            get;
+        }
         /// <summary>
         /// Composer
         /// </summary>
@@ -39,27 +39,27 @@ namespace ATL.AudioData
         {
             get;
         }
-		/// <summary>
-		/// Comments
-		/// </summary>
-		string Comment
-		{
-			get;
-		}
-		/// <summary>
-		/// Genre
-		/// </summary>
-		string Genre
-		{
-			get;
-		}
-		/// <summary>
-		/// Track number
-		/// </summary>
-		ushort TrackNumber
-		{
-			get;
-		}
+        /// <summary>
+        /// Comments
+        /// </summary>
+        string Comment
+        {
+            get;
+        }
+        /// <summary>
+        /// Genre
+        /// </summary>
+        string Genre
+        {
+            get;
+        }
+        /// <summary>
+        /// Track number
+        /// </summary>
+        ushort TrackNumber
+        {
+            get;
+        }
         /// <summary>
 		/// Total track number
 		/// </summary>
@@ -71,9 +71,9 @@ namespace ATL.AudioData
         /// Disc number
         /// </summary>
         ushort DiscNumber
-		{
-			get;
-		}
+        {
+            get;
+        }
         /// <summary>
         /// Total disc number
         /// </summary>
@@ -88,13 +88,13 @@ namespace ATL.AudioData
         {
             get;
         }
-		/// <summary>
-		/// Title of the album
-		/// </summary>
-		string Album
-		{
-			get;
-		}
+        /// <summary>
+        /// Title of the album
+        /// </summary>
+        string Album
+        {
+            get;
+        }
         /// <summary>
         /// Rating of the track, from 0% to 100%
         /// </summary>
@@ -162,6 +162,68 @@ namespace ATL.AudioData
         /// Product ID
         /// </summary>
         string ProductId
+        {
+            get;
+        }
+        /// <summary>
+        /// Album sort order
+        /// A string which should be used instead of the album name for sorting purposes
+        /// </summary>
+        string SortAlbum
+        {
+            get;
+        }
+        /// <summary>
+        /// Album artist sort order
+        /// A string which should be used instead of the album artist for sorting purposes
+        /// </summary>
+        string SortAlbumArtist
+        {
+            get;
+        }
+        /// <summary>
+        /// Artist sort order
+        /// A string which should be used instead of the artist for sorting purposes
+        /// </summary>
+        string SortArtist
+        {
+            get;
+        }
+        /// <summary>
+        /// Title sort order
+        /// A string which should be used instead of the title for sorting purposes
+        /// </summary>
+        string SortTitle
+        {
+            get;
+        }
+        /// <summary>
+        /// Content group description
+        /// Used if the sound belongs to a larger category of sounds/music.
+        /// For example, classical music is often sorted in different musical sections (e.g. "Piano Concerto").
+        /// </summary>
+        string Group
+        {
+            get;
+        }
+        /// <summary>
+        /// Series title / Movement name
+        /// </summary>
+        string SeriesTitle
+        {
+            get;
+        }
+        /// <summary>
+        /// Series part / Movement index
+        /// </summary>
+        string SeriesPart
+        {
+            get;
+        }
+        /// <summary>
+        /// Long description (may also be called "Podcast description")
+        /// </summary>
+        string LongDescription
         {
             get;
         }

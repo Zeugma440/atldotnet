@@ -63,6 +63,10 @@ namespace ATL.test.IO.MetaData
 
             testData.Conductor = null;
             testData.Date = DateTime.MinValue;
+            testData.SortAlbum = "SortAlbum";
+            testData.SortArtist = "SortArtist";
+            testData.SortTitle = "SortTitle";
+            testData.Group = "Group";
         }
 
         [TestMethod]
