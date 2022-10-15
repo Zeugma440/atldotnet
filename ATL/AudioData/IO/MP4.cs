@@ -748,7 +748,7 @@ namespace ATL.AudioData.IO
             // Look for "trak.tref.chap" atom to detect QT chapters for current track
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
             uint trefSize = navigateToAtom(source.BaseStream, "tref");
-            if (trefSize > 0 && 0 == chapterTrackIndexes.Count)
+            if (trefSize > 8 && 0 == chapterTrackIndexes.Count)
             {
                 long trefPosition = source.BaseStream.Position - 8;
                 bool parsePreviousTracks = false;
@@ -1539,7 +1539,7 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            return atomSize;
+            return (atomKey.Equals(atomHeader)) ? atomSize : 0;
         }
 
 
