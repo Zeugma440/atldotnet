@@ -2065,7 +2065,9 @@ namespace ATL.AudioData.IO
 
             if (qtChapterTextTrackNum > 0)
                 w.Write(StreamUtils.EncodeBEInt32(qtChapterTextTrackNum));
-            if (qtChapterPictureTrackNum > 0)
+
+            int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
+            if (qtChapterPictureTrackNum > 0 && nbActualChapterImages > 0)
                 w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum));
 
             long finalFramePos = w.BaseStream.Position;
