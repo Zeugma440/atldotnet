@@ -1380,7 +1380,7 @@ namespace ATL.test.IO.MetaData
             System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
 
             //Switch these Assertions for expected editing.
-            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should should exist in Chap 1 due to MP4 format limitation.");
+            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should exist in Chap 1 due to MP4 format limitation.");
             Assert.IsTrue(track.Chapters[1].Picture == null, "Picture is no longer in Chap 2 due to MP4 format limitation.");
 
             System.Console.WriteLine("# Remove Tags #");
@@ -1400,7 +1400,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
             Assert.IsTrue(dLenght > dPostLength, "File should be smaller.");
             // File 
-            Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLength, "File should be " + twoTracksQTchapsEmptySize + " once tags are removed - As per test CS_RemoveTag.");
+            Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLength, "File should be " + twoTracksQTchapsEmptySize + " once tags are removed - As per test TagIO_RW_MP4_RemoveTag.");
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
