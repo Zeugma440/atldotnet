@@ -63,6 +63,8 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __Playlists and Cuesheets__
 
+* ATL supports [async calls](https://github.com/Zeugma440/atldotnet/wiki/Progress-feedback) on writing operations
+
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
