@@ -67,9 +67,9 @@ namespace ATL.AudioData.IO
         private const byte HEADER_ARTIST = 0xA7;
 
         //Data types
-        private const byte XID6_TVAL = 0x00;
-        private const byte XID6_TSTR = 0x01;
-        private const byte XID6_TINT = 0x04;
+        private const byte XID6_TVAL = 0x00; // int16
+        private const byte XID6_TSTR = 0x01; // ANSI string
+        private const byte XID6_TINT = 0x04; // int32
 
         //Timer stuff
         private const int XID6_MAXTICKS = 383999999;            //Max ticks possible for any field (99:59.99 * 64k)
@@ -91,22 +91,22 @@ namespace ATL.AudioData.IO
         // Mapping between SPC extended frame codes and ATL frame codes
         private static IDictionary<byte, Field> extendedFrameMapping = new Dictionary<byte, Field>
         {
-            { XID6_SONG, TagData.Field.TITLE },
-            { XID6_GAME, TagData.Field.ALBUM }, // Small innocent semantic shortcut
-            { XID6_ARTIST, TagData.Field.ARTIST },
-            { XID6_CMNTS, TagData.Field.COMMENT },
-            { XID6_COPY, TagData.Field.RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
-            { XID6_TRACK, TagData.Field.TRACK_NUMBER },
-            { XID6_DISC, TagData.Field.DISC_NUMBER },
-            { XID6_PUB, TagData.Field.PUBLISHER }
+            { XID6_SONG, Field.TITLE },
+            { XID6_GAME, Field.ALBUM }, // Small innocent semantic shortcut
+            { XID6_ARTIST, Field.ARTIST },
+            { XID6_CMNTS, Field.COMMENT },
+            { XID6_COPY, Field.RECORDING_YEAR }, // Actual field name is "Copyright year", which makes that legit
+            { XID6_TRACK, Field.TRACK_NUMBER },
+            { XID6_DISC, Field.DISC_NUMBER },
+            { XID6_PUB, Field.PUBLISHER }
         };
         // Mapping between SPC header frame codes and ATL frame codes
         private static IDictionary<byte, Field> headerFrameMapping = new Dictionary<byte, Field>
         {
-            { HEADER_TITLE, TagData.Field.TITLE },
-            { HEADER_ALBUM, TagData.Field.ALBUM },
-            { HEADER_ARTIST, TagData.Field.ARTIST },
-            { HEADER_COMMENT, TagData.Field.COMMENT }
+            { HEADER_TITLE, Field.TITLE },
+            { HEADER_ALBUM, Field.ALBUM },
+            { HEADER_ARTIST, Field.ARTIST },
+            { HEADER_COMMENT, Field.COMMENT }
         };
         // Frames that are required for playback
         private static IList<byte> playbackFrames = new List<byte>
@@ -121,7 +121,7 @@ namespace ATL.AudioData.IO
             HEADER_SONGLENGTH,
             HEADER_FADE
         };
-        // Mapping between SPC frame codes and frame types that aren't type 1 (ANSI string)
+        // Mapping between SPC frame codes and frame data types that aren't type 1
         private static IDictionary<byte, byte> extendedFrameTypes = new Dictionary<byte, byte>()
         {
             { XID6_DATE, 4 },
