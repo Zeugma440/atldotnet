@@ -1330,6 +1330,7 @@ namespace ATL.test.IO.MetaData
         }
 
         private const long twoTracksQTchapsEmptySize = 133914;
+        private const int nbLoops = 5;
 
         [TestMethod]
         public void TagIO_RW_MP4_RemoveTag()
@@ -1366,11 +1367,11 @@ namespace ATL.test.IO.MetaData
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
             string testImageLocation = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
-
             Track track = new Track(testFileLocation);
+
             System.Console.WriteLine("# Initial Details #");
             double tDuration = track.DurationMs; System.Console.WriteLine("Duration: " + tDuration);
-            double dLenght = TestUtils.GetFileSize(testFileLocation); System.Console.WriteLine("File Length: " + dLenght);
+            double dLength = TestUtils.GetFileSize(testFileLocation); System.Console.WriteLine("File Length: " + dLength);
             System.Console.WriteLine("Chapters: " + track.Chapters.Count.ToString());
             System.Console.WriteLine("Chapters(1) Image: " + (track.Chapters[0].Picture != null));
             System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
@@ -1404,12 +1405,207 @@ namespace ATL.test.IO.MetaData
             }
 
             Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
-            Assert.IsTrue(dLenght > dPostLength, "File should be smaller.");
+            Assert.IsTrue(dLength > dPostLength, "File should be smaller.");
             // File 
             Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLength, "File should be " + twoTracksQTchapsEmptySize + " once tags are removed - As per test TagIO_RW_MP4_RemoveTag.");
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        /// <summary>
+        /// Test Track.Remove() and editing still works using a loop.
+        /// </summary>
+        [TestMethod]
+        public void TagIO_RW_MP4_RemoveTag_AddMetaLoop()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
+            string testImageLocation = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
+            
+            Track track = new Track(testFileLocation);
+            double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
+            double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
+
+            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            
+            track = new Track(testFileLocation);
+            double dPostLength = TestUtils.GetFileSize(testFileLocation);
+            Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
+            Console.WriteLine("Clear File Length: " + dPostLength);
+
+            Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(dLength > dPostLength, "File should be smaller.");
+            // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
+            // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
+            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLength, $"File should be {twoTracksQTchapsEmptySize + 8} once tags are removed.");
+
+            //Add Meta again
+            bool WithErrors = false;
+            for (int n = 0; n <= nbLoops; n++)
+            {
+                System.Console.WriteLine($"Save {n}: ");
+                var log = new ArrayLogger();
+                track = new Track(testFileLocation);
+                track.Description = "New Description" + n.ToString();
+                track.Title = "New Title" + n.ToString();
+                track.Album = "New Album" + n.ToString();
+                Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+                if (!track.Save(progress))
+                    Assert.Fail("Failed to save.");
+                System.Console.WriteLine($"ErrorLOG: {n} ");
+                foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+                    System.Console.WriteLine("- " + l.Message);
+                WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+            }
+
+            track = new Track(testFileLocation);
+            dPostLength = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("POST Add File Length: " + dPostLength);
+            Assert.AreEqual($"New Description{nbLoops}", track.Description, "Description should be the same.");
+            Assert.AreEqual($"New Title{nbLoops}", track.Title, "Title should be the same.");
+            Assert.AreEqual($"New Album{nbLoops}", track.Album, "Album should be the same.");
+
+            if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+        }
+
+        /// <summary>
+        /// Test Track.Remove() and editing still works using a loop.
+        /// </summary>
+        [TestMethod]
+        public void TagIO_RW_MP4_RemoveTag_AddMetaAndChapImagesLoop()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
+            string testImageLocation1 = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
+            string testImageLocation2 = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg";
+            
+            Track track = new Track(testFileLocation);
+            double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
+            double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
+
+            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            
+            track = new Track(testFileLocation);
+            double dPostLength = TestUtils.GetFileSize(testFileLocation);
+            Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
+            Console.WriteLine("Clear File Length: " + dPostLength);
+
+            Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(dLength > dPostLength, "File should be smaller.");
+            // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
+            // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
+            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLength, $"File should be {twoTracksQTchapsEmptySize + 8} once tags are removed.");
+
+            bool WithErrors = false;
+            //Add Meta again
+            System.Console.WriteLine("Initial Save Meta: ");
+            var log = new ArrayLogger();
+            track = new Track(testFileLocation);
+            track.Description = "New Description";
+            track.Title = "New Title";
+            track.Album = "New Album";
+            track.Chapters = new List<ChapterInfo>();
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "New Chap0";
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+            track.Chapters.Add(ch);
+            ch = new ChapterInfo();
+            ch.StartTime = 10000;
+            ch.Title = "New Chap1";
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
+            track.Chapters.Add(ch);
+            Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+            if (!track.Save(progress))
+                Assert.Fail("Failed to save.");
+            System.Console.WriteLine("ErrorLOG: ");
+            foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+                System.Console.WriteLine("- " + l.Message);
+            WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+
+            PictureInfo picture1 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation1));
+            PictureInfo picture2 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation2));
+
+            //Add Meta again
+            for (int n = 0; n <= nbLoops; n++)
+            {
+                System.Console.WriteLine($"Save {n}: ");
+                log = new ArrayLogger();
+                track = new Track(testFileLocation);
+                Assert.IsTrue(track.Description.Length > 0, "Description not found!");
+                track.Description = "New Description" + n.ToString();
+                track.Title = "New Title" + n.ToString();
+                track.Album = "New Album" + n.ToString();
+                Assert.AreEqual(2, track.Chapters.Count, "Chapters not found!");
+                track.Chapters[0].Title = "New Chap0-" + n.ToString();
+                track.Chapters[0].Picture = (n % 2 > 0) ? picture1 : picture2;
+                track.Chapters[1].Title = "New Chap1-" + n.ToString();
+                track.Chapters[1].Picture = (n % 2 > 0) ? picture1 : picture2;
+                progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+                if (!track.Save(progress))
+                    Assert.Fail("Failed to save.");
+                System.Console.WriteLine($"ErrorLOG: {n} ");
+                foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+                    System.Console.WriteLine("- " + l.Message);
+                WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+            }
+
+            track = new Track(testFileLocation);
+            dPostLength = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("POST Add File Length: " + dPostLength);
+            Assert.AreEqual($"New Description{nbLoops}", track.Description, "Description should be the same.");
+            Assert.AreEqual($"New Title{nbLoops}", track.Title, "Title should be the same.");
+            Assert.AreEqual($"New Album{nbLoops}", track.Album, "Album should be the same.");
+            Assert.AreEqual($"New Chap0-{nbLoops}", track.Chapters[0].Title, "Title 0 should be the same.");
+            Assert.AreEqual($"New Chap1-{nbLoops}", track.Chapters[1].Title, "Title 1 should be the same.");
+
+            if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+        }
+
+        /// <summary>
+        /// Test Track.Remove() and editing still works using a loop.
+        /// </summary>
+        [TestMethod]
+        public void TagIO_RW_MP4_ChangeMetaAndChapLoop()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
+            
+            Track track = new Track(testFileLocation);
+            double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
+            double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
+
+            //Update Meta again
+            int TopEdit = 100; bool WithErrors = false;
+            for (int n = 0; n <= TopEdit; n++)
+            {
+                System.Console.WriteLine($"Save {n}: ");
+                var log = new ArrayLogger();
+                track = new Track(testFileLocation);
+                track.Description = "New Description" + n.ToString();
+                track.Title = "New Title" + n.ToString();
+                track.Album = "New Album" + n.ToString();
+                track.Chapters[0].Title = "New Chap0-" + n.ToString();
+                track.Chapters[1].Title = "New Chap1-" + n.ToString();
+                Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+                if (!track.Save(progress))
+                    Assert.Fail("Failed to save.");
+                System.Console.WriteLine($"ErrorLOG: {n} ");
+                foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+                    System.Console.WriteLine("- " + l.Message);
+                WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+            }
+
+            track = new Track(testFileLocation);
+            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("POST Add File Length: " + TestUtils.GetFileSize(testFileLocation));
+            Assert.AreEqual($"New Description{TopEdit}", track.Description, "Description should be the same.");
+            Assert.AreEqual($"New Title{TopEdit}", track.Title, "Title should be the same.");
+            Assert.AreEqual($"New Album{TopEdit}", track.Album, "Album should be the same.");
+            Assert.AreEqual($"New Chap0-{TopEdit}", track.Chapters[0].Title, "Album should be the same.");
+            Assert.AreEqual($"New Chap1-{TopEdit}", track.Chapters[1].Title, "Album should be the same.");
+
+            if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
         }
     }
 }
