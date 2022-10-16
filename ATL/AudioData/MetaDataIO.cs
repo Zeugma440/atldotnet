@@ -519,6 +519,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <inheritdoc/>
         public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(r, tag);

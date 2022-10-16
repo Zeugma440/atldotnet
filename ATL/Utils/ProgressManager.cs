@@ -2,7 +2,11 @@
 
 namespace ATL
 {
-    public class ProgressManager
+    /// <summary>
+    /// Class to handle progress report for sync and async operations
+    /// at multiple levels
+    /// </summary>
+    public sealed class ProgressManager
     {
         private readonly IProgress<float> progress = null;
         private readonly Action<float> actionProgress = null;
@@ -13,6 +17,9 @@ namespace ATL
         private int maxSections = 0;
         private int currentSection = 0;
 
+        /// <summary>
+        /// Maximum number of managed sections
+        /// </summary>
         public int MaxSections
         {
             get
@@ -25,6 +32,10 @@ namespace ATL
                 ComputeBounds();
             }
         }
+
+        /// <summary>
+        /// Section whose progress report is currently reported
+        /// </summary>
         public int CurrentSection
         {
             get
@@ -60,6 +71,10 @@ namespace ATL
             minProgressBound = resolution * currentSection;
         }
 
+        /// <summary>
+        /// Create an Action to report sync progress for current section
+        /// </summary>
+        /// <returns>Action to report sync progress for current section</returns>
         public Action<float> CreateAction()
         {
             float minBoundC = minProgressBound;
@@ -67,6 +82,10 @@ namespace ATL
             return new Action<float>(progress => this.actionProgress(minBoundC + resolutionC * progress));
         }
 
+        /// <summary>
+        /// Create an IProgress to report async progress for current section
+        /// </summary>
+        /// <returns>IProgress to report async progress for current section</returns>
         public IProgress<float> CreateIProgress()
         {
             float minBoundC = minProgressBound;

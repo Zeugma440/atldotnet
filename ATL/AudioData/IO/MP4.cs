@@ -2470,26 +2470,29 @@ namespace ATL.AudioData.IO
         }
 
         // reduce the useful MDAT to a few Kbs (for dev purposes only)
-        /*
-        public override bool Remove(Stream s)
-        {
-            long chapDataSize = 0;
-            foreach (Zone zone in Zones)
-            {
-                if (zone.Name.Equals(ZONE_MP4_QT_CHAP_MDAT))
-                {
-                    chapDataSize = zone.Size;
-                    break;
-                }
-            }
-            s.Seek(AudioDataOffset, SeekOrigin.Begin);
-            long newSize = chapDataSize + 32000;
-            StreamUtils.WriteBEInt32(s, (int)newSize);
-            s.Seek(4 + newSize, SeekOrigin.Current);
-            StreamUtils.ShortenStream(s, AudioDataOffset + AudioDataSize, (uint)(AudioDataSize - newSize));
 
-            return true;
-        }
-        */
+#pragma warning disable S125 // Sections of code should not be commented out
+        /*
+                public override bool Remove(Stream s)
+                {
+                    long chapDataSize = 0;
+                    foreach (Zone zone in Zones)
+                    {
+                        if (zone.Name.Equals(ZONE_MP4_QT_CHAP_MDAT))
+                        {
+                            chapDataSize = zone.Size;
+                            break;
+                        }
+                    }
+                    s.Seek(AudioDataOffset, SeekOrigin.Begin);
+                    long newSize = chapDataSize + 32000;
+                    StreamUtils.WriteBEInt32(s, (int)newSize);
+                    s.Seek(4 + newSize, SeekOrigin.Current);
+                    StreamUtils.ShortenStream(s, AudioDataOffset + AudioDataSize, (uint)(AudioDataSize - newSize));
+
+                    return true;
+                }
+                */
     }
+#pragma warning restore S125 // Sections of code should not be commented out
 }

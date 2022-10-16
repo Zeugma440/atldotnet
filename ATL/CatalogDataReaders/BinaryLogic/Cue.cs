@@ -14,7 +14,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
     {
         private string title = "";
         private string artist = "";
-        private StringBuilder comments = new StringBuilder();
+        private readonly StringBuilder comments = new StringBuilder();
 
         readonly IList<Track> tracks = new List<Track>();
 

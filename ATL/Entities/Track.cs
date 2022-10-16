@@ -527,8 +527,7 @@ namespace ATL
         /// <summary>
         /// Save Track to disk
         /// Use Save instead of SaveAsync if you're looking for pure performance
-        /// or if you don't need any progress feedback
-        /// (e.g. console app, mass-updating files)
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         /// </summary>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
@@ -559,6 +558,8 @@ namespace ATL
 
         /// <summary>
         /// Remove the given tag type from the Track
+        /// Use Remove instead of RemoveAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         /// </summary>
         /// <param name="tagType">Tag type to remove</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -573,6 +574,16 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Remove the given tag type from the Track
+        /// Use RemoveAsync instead of Remove if you need progress feedback
+        /// (e.g. Windows Forms app with progress bar that updates one file at a time)
+        /// </summary>
+        /// <param name="tagType">Tag type to remove</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <see cref="MetaDataIOFactory"/>
+        /// <returns>True if removal succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> RemoveAsync(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY, IProgress<float> writeProgress = null)
         {
             bool result = await fileIO.RemoveAsync(tagType, writeProgress);
