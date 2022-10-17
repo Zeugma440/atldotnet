@@ -450,12 +450,12 @@ namespace ATL.AudioData.IO
             if (0 == qtChapterTextTrackId)
             {
                 qtChapterTextTrackId = currentTrakIndex++;
-                trackTimescales.Add(qtChapterTextTrackId, 1000); // Easier to encode base 10 timecodes
+                trackTimescales[qtChapterTextTrackId] = 1000; // Easier to encode base 10 timecodes
             }
             if (0 == qtChapterPictureTrackId)
             {
                 qtChapterPictureTrackId = currentTrakIndex;
-                trackTimescales.Add(qtChapterPictureTrackId, 1000); // Easier to encode base 10 timecodes
+                trackTimescales[qtChapterPictureTrackId] = 1000; // Easier to encode base 10 timecodes
             }
 
             // QT chapters have been detected while browsing tracks
@@ -658,7 +658,7 @@ namespace ATL.AudioData.IO
 
                 source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
             }
-            trackTimescales.Add(trackId, mediaTimeScale);
+            trackTimescales[trackId] = mediaTimeScale;
 
             if (0 == navigateToAtom(source.BaseStream, "hdlr"))
             {
