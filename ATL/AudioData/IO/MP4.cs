@@ -122,8 +122,9 @@ namespace ATL.AudioData.IO
 
         // Inner technical information to remember for writing purposes
         private uint globalTimeScale;
-        private int qtChapterTextTrackNum;
-        private int qtChapterPictureTrackNum;
+        private readonly IDictionary<int, int> trackTimescales = new Dictionary<int, int>();
+        private int qtChapterTextTrackId;
+        private int qtChapterPictureTrackId;
         private long initialPaddingOffset;
         private uint initialPaddingSize;
         private byte[] chapterTextTrackEdits = null;
@@ -232,17 +233,19 @@ namespace ATL.AudioData.IO
             headerTypeID = MP4_HEADER_TYPE_UNKNOWN;
             bitrateTypeID = MP4_BITRATE_TYPE_UNKNOWN;
 
-            bitrate = 0;
-            sampleRate = 0;
-            calculatedDurationMs = 0;
             globalTimeScale = 0;
-            qtChapterTextTrackNum = 0;
-            qtChapterPictureTrackNum = 0;
+            trackTimescales.Clear();
+            qtChapterTextTrackId = 0;
+            qtChapterPictureTrackId = 0;
             initialPaddingSize = 0;
             initialPaddingOffset = -1;
             AudioDataOffset = -1;
             AudioDataSize = 0;
             udtaOffset = 0;
+
+            bitrate = 0;
+            sampleRate = 0;
+            calculatedDurationMs = 0;
 
             chapterTextTrackEdits = null;
             chapterPictureTrackEdits = null;
@@ -444,8 +447,16 @@ namespace ATL.AudioData.IO
             // == Quicktime chapters management
 
             // No QT chapter track found -> Assign free track ID
-            if (0 == qtChapterTextTrackNum) qtChapterTextTrackNum = currentTrakIndex++;
-            if (0 == qtChapterPictureTrackNum) qtChapterPictureTrackNum = currentTrakIndex;
+            if (0 == qtChapterTextTrackId)
+            {
+                qtChapterTextTrackId = currentTrakIndex++;
+                trackTimescales.Add(qtChapterTextTrackId, 1000); // Easier to encode base 10 timecodes
+            }
+            if (0 == qtChapterPictureTrackId)
+            {
+                qtChapterPictureTrackId = currentTrakIndex;
+                trackTimescales.Add(qtChapterPictureTrackId, 1000); // Easier to encode base 10 timecodes
+            }
 
             // QT chapters have been detected while browsing tracks
             if (chapterTextTrackSamples.Count > 0) readQTChapters(source, chapterTextTrackSamples, chapterPictureTrackSamples);
@@ -647,6 +658,7 @@ namespace ATL.AudioData.IO
 
                 source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
             }
+            trackTimescales.Add(trackId, mediaTimeScale);
 
             if (0 == navigateToAtom(source.BaseStream, "hdlr"))
             {
@@ -1018,9 +1030,9 @@ namespace ATL.AudioData.IO
             if (int32Data > 0)
             {
                 if (isText)
-                    qtChapterTextTrackNum = currentTrakIndex;
+                    qtChapterTextTrackId = currentTrakIndex;
                 else
-                    qtChapterPictureTrackNum = currentTrakIndex;
+                    qtChapterPictureTrackId = currentTrakIndex;
 
                 // Memorize zone
                 if (readTagParams.PrepareForWriting && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
@@ -1674,21 +1686,21 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_NOTREF)) // Write a new tref atom for quicktime chapters
             {
-                result = writeQTChaptersTref(w, qtChapterTextTrackNum, qtChapterPictureTrackNum, Chapters);
+                result = writeQTChaptersTref(w, qtChapterTextTrackId, qtChapterPictureTrackId, Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_CHAP)) // Reference to Quicktime chapter track from an audio/video track
             {
-                result = writeQTChaptersChap(w, qtChapterTextTrackNum, qtChapterPictureTrackNum, Chapters);
+                result = writeQTChaptersChap(w, qtChapterTextTrackId, qtChapterPictureTrackId, Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Quicktime chapter text track
             {
                 if (zone.Equals(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Text track ATL suppors
-                    result = writeQTChaptersTrack(w, qtChapterTextTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
+                    result = writeQTChaptersTrack(w, qtChapterTextTrackId, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
                 else return 1; // Other text track ATL doesn't support; needs to appear active
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_PIC_TRAK)) // Quicktime chapter picture track
             {
-                result = writeQTChaptersTrack(w, qtChapterPictureTrackNum, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
+                result = writeQTChaptersTrack(w, qtChapterPictureTrackId, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter data (text and picture data)
             {
@@ -2111,7 +2123,7 @@ namespace ATL.AudioData.IO
 
         private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDurationMs, bool isText)
         {
-            long trackTimescale = 44100;
+            long trackTimescale = trackTimescales[trackNum];
 
             if (null == chapters || 0 == chapters.Count) return 0;
             IList<ChapterInfo> workingChapters = isText ? chapters : chapters.Where(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0).ToList();
