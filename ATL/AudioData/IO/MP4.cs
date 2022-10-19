@@ -322,7 +322,7 @@ namespace ATL.AudioData.IO
                     cumulatedDuration += textSample.Duration * 1000;
                     chapter.EndTime = (uint)Math.Round(cumulatedDuration);
 
-                    if (pictureSample != null && pictureSample.ChunkOffset > 0)
+                    if (pictureSample != null && pictureSample.ChunkOffset > 0 && pictureSample.Size > 0)
                     {
                         source.BaseStream.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
                         byte[] data = new byte[pictureSample.Size];
@@ -836,7 +836,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
 
-            // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
+            // Samples analysis
             atomSize = navigateToAtom(source.BaseStream, "stsz");
             if (0 == atomSize)
             {
@@ -844,7 +844,6 @@ namespace ATL.AudioData.IO
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
                 return trakSize;
             }
-            atomPosition = source.BaseStream.Position;
             source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
             uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
@@ -864,18 +863,15 @@ namespace ATL.AudioData.IO
                     if (isCurrentTrackFirstChapterPicturesTrack) chapterPictureTrackSamples[i].Size = int32Data;
                 }
 
-                if ((min * 1.01) < max)
+                // VBR detection : if the gap between the smallest and the largest sample size is no more than 1%, we can consider the file is CBR; if not, VBR
+                if (isCurrentTrackFirstAudioTrack)
                 {
-                    bitrateTypeID = MP4_BITRATE_TYPE_VBR;
-                }
-                else
-                {
-                    bitrateTypeID = MP4_BITRATE_TYPE_CBR;
+                    bitrateTypeID = ((min * 1.01) < max) ? MP4_BITRATE_TYPE_VBR : MP4_BITRATE_TYPE_CBR;
                 }
             }
             else
             {
-                bitrateTypeID = MP4_BITRATE_TYPE_CBR;
+                if (isCurrentTrackFirstAudioTrack) bitrateTypeID = MP4_BITRATE_TYPE_CBR;
                 if (isCurrentTrackFirstChapterTextTrack) for (int i = 0; i < chapterTextTrackSamples.Count; i++) chapterTextTrackSamples[i].Size = blocByteSizeForAll;
                 if (isCurrentTrackFirstChapterPicturesTrack) for (int i = 0; i < chapterPictureTrackSamples.Count; i++) chapterPictureTrackSamples[i].Size = blocByteSizeForAll;
             }
@@ -921,12 +917,10 @@ namespace ATL.AudioData.IO
             }
 
             /*
-            * -8 because the header has already been read
-            * 
             * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
             * => They have to be rewritten if the position (offset) of the 'mdat' atom changes
             */
-            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin);
+            //            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
             if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTextTrack || isCurrentTrackFirstChapterPicturesTrack)
             {
                 source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
