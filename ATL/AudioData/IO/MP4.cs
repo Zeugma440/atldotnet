@@ -773,7 +773,6 @@ namespace ATL.AudioData.IO
             {
                 bool parsePreviousTracks = false;
                 uint chapSize = navigateToAtom(source.BaseStream, "chap");
-                // TODO - handle the case where tref is present, but not chap
                 if (chapSize > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createQuicktimeChapters))
                 {
                     structureHelper.AddZone(source.BaseStream.Position - 8, (int)chapSize, ZONE_MP4_QT_CHAP_CHAP);
@@ -920,7 +919,6 @@ namespace ATL.AudioData.IO
             * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
             * => They have to be rewritten if the position (offset) of the 'mdat' atom changes
             */
-            //            source.BaseStream.Seek(atomPosition + atomSize - 8, SeekOrigin.Begin); // -8 because the header has already been read
             if (readTagParams.PrepareForWriting || isCurrentTrackFirstChapterTextTrack || isCurrentTrackFirstChapterPicturesTrack)
             {
                 source.BaseStream.Seek(stblPosition, SeekOrigin.Begin);
