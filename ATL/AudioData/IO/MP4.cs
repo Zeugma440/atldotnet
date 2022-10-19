@@ -768,9 +768,9 @@ namespace ATL.AudioData.IO
             // Look for "trak.tref.chap" atom to detect QT chapters for current track
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
             uint trefSize = navigateToAtom(source.BaseStream, "tref");
+            long trefPosition = source.BaseStream.Position - 8;
             if (trefSize > 8 && 0 == chapterTrackIndexes.Count)
             {
-                long trefPosition = source.BaseStream.Position - 8;
                 bool parsePreviousTracks = false;
                 uint chapSize = navigateToAtom(source.BaseStream, "chap");
                 // TODO - handle the case where tref is present, but not chap
@@ -806,10 +806,18 @@ namespace ATL.AudioData.IO
                     return -1;
                 }
             }
-            else if (0 == trefSize && isCurrentTrackFirstAudioTrack && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
+            else if (isCurrentTrackFirstAudioTrack && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
             {
-                structureHelper.AddZone(trakPosition + trakSize, 0, ZONE_MP4_QT_CHAP_NOTREF);
-                structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_NOTREF);
+                if (0 == trefSize) // No atom at all
+                {
+                    structureHelper.AddZone(trakPosition + trakSize, 0, ZONE_MP4_QT_CHAP_NOTREF);
+                    structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_NOTREF);
+                }
+                else if (trefSize <= 8) // Existing empty atom
+                {
+                    structureHelper.AddZone(trefPosition, trefSize, ZONE_MP4_QT_CHAP_NOTREF);
+                    structureHelper.AddSize(trakPosition, trakSize, ZONE_MP4_QT_CHAP_NOTREF);
+                }
             }
 
             // Read chapters textual data
