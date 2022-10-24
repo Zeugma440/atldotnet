@@ -1475,6 +1475,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual($"New Album{nbLoops}", track.Album, "Album should be the same.");
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         /// <summary>
@@ -1524,13 +1527,14 @@ namespace ATL.test.IO.MetaData
             ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
             track.Chapters.Add(ch);
             Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+            new ConsoleLogger();
             if (!track.Save(progress))
                 Assert.Fail("Failed to save.");
             System.Console.WriteLine("ErrorLOG: ");
             foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
                 System.Console.WriteLine("- " + l.Message);
             WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
-
+            
             PictureInfo picture1 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation1));
             PictureInfo picture2 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation2));
 
@@ -1569,6 +1573,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual($"New Chap1-{nbLoops}", track.Chapters[1].Title, "Title 1 should be the same.");
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         /// <summary>
@@ -1614,6 +1621,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual($"New Chap1-{TopEdit}", track.Chapters[1].Title, "Album should be the same.");
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         /// <summary>
@@ -1692,7 +1702,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLenghtEnd, $"File should be {twoTracksQTchapsEmptySize} once tags are removed.");
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
-        }
 
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
     }
 }
