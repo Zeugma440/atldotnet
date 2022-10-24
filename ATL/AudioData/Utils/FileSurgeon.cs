@@ -79,6 +79,11 @@ namespace ATL.AudioData.IO
 
             public long Size => EndOffset - StartOffset;
 
+            public bool IsReadonly
+            {
+                get => Zones.All(x => x.IsReadonly);
+            }
+
             public override string ToString()
             {
                 return "#" + Id + " : " + StartOffset + "->" + EndOffset + "(" + Utils.GetBytesReadable(Size) + ") IsBufferable = " + IsBufferable;
@@ -801,7 +806,7 @@ namespace ATL.AudioData.IO
             // Finalize current region
             result.Add(region);
 
-            return result.OrderBy(z => z.StartOffset).ToList();
+            return result.OrderBy(r => r.IsReadonly).ToList();
         }
 
         /// <summary>

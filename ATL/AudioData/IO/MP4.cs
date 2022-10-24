@@ -769,6 +769,7 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
             uint trefSize = navigateToAtom(source.BaseStream, "tref");
             long trefPosition = source.BaseStream.Position - 8;
+            // Existing, non-empty tref atom
             if (trefSize > 8 && 0 == chapterTrackIndexes.Count)
             {
                 bool parsePreviousTracks = false;

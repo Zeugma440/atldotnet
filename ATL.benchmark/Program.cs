@@ -30,9 +30,9 @@ namespace ATL.benchmark
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            //writeAt(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+            writeAt(@"D:\temp\m4a-mp4\160\LongBook-Orig.mp4");
 
-            reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+            //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
             //displayVersionInfo();
         }
@@ -103,8 +103,8 @@ namespace ATL.benchmark
             try
             {
                 //Settings.ForceDiskIO = true;
-                //Settings.FileBufferSize = 2 * 1024 * 1024;
-                Settings.FileBufferSize = 512;
+                Settings.FileBufferSize = 2 * 1024 * 1024;
+                //Settings.FileBufferSize = 512;
                 //                Settings.ID3v2_tagSubVersion = 3;
 
                 //ConsoleLogger logger = new ConsoleLogger();

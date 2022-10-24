@@ -54,6 +54,7 @@ namespace ATL.benchmark
 
         public void performWrite(String filePath)
         {
+            new ConsoleLogger();
             Track theFile = new Track(filePath);
 
             double tDuration = theFile.DurationMs;
@@ -70,7 +71,7 @@ namespace ATL.benchmark
 
             theFile.Save();
             theFile = new Track(filePath);
-
+            /*
             theFile.Chapters[0].Picture.ComputePicHash();
             Console.WriteLine(theFile.Chapters[0].Picture.PictureHash);
             theFile.Chapters[1].Picture.ComputePicHash();
@@ -79,6 +80,10 @@ namespace ATL.benchmark
             theFile.Chapters[1].Picture = null;
 
             theFile.Save();
-        }
+            *
+            */
+            System.Console.WriteLine(theFile.Album);
+                }
+
     }
 }
