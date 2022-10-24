@@ -1615,5 +1615,84 @@ namespace ATL.test.IO.MetaData
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
         }
+
+        /// <summary>
+        /// Test Track.Remove() and editing with chapters and images still works using a loop.
+        /// </summary>
+        [TestMethod]
+        public void TagIO_RW_MP4_RemoveTag_AddMetaAndChap2Images_RemoveTag()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
+
+            Track track = new Track(testFileLocation);
+            double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
+            double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
+
+            //1. Remove Tag first
+            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            track = new Track(testFileLocation);
+            double dPostLenght = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("Clear File Length: " + dPostLenght);
+
+            Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(dLength > dPostLenght, "File should be smaller.");
+            // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
+            // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
+            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLenght, $"File should be {twoTracksQTchapsEmptySize + 8} once tags are removed.");
+
+            bool WithErrors = false;
+            //2. Add Meta again and Image to chap 2 only
+            System.Console.WriteLine("Initial Save Meta: ");
+            var log = new ArrayLogger();
+            track = new Track(testFileLocation);
+            track.Description = "New Description";
+            track.Title = "New Title";
+            track.Album = "New Album";
+            track.Chapters = new List<ChapterInfo>();
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 0;
+            ch.Title = "New Chap0";
+            //ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+            track.Chapters.Add(ch);
+            ch = new ChapterInfo();
+            ch.StartTime = 10000;
+            ch.Title = "New Chap1";
+            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
+            track.Chapters.Add(ch);
+            Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+            if (track.Save(progress) == false)
+                Assert.Fail("Failed to save.");
+            System.Console.WriteLine("ErrorLOG: ");
+            foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+                System.Console.WriteLine("- " + l.Message);
+            WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+
+            track = new Track(testFileLocation); //Reload
+            dPostLenght = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("POST Add File Length: " + dPostLenght);
+            Assert.AreEqual($"New Description", track.Description, "Description should be the same.");
+            Assert.AreEqual($"New Title", track.Title, "Title should be the same.");
+            Assert.AreEqual($"New Album", track.Album, "Album should be the same.");
+            Assert.AreEqual($"New Chap0", track.Chapters[0].Title, "Chapter0 Title should be the same.");
+            Assert.AreEqual($"New Chap1", track.Chapters[1].Title, "Chapter1 should be the same.");
+            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should exist in Chap 1 due to MP4 format limitation.");
+            Assert.IsTrue(track.Chapters[1].Picture == null, "Picture is no longer in Chap 2 due to MP4 format limitation.");
+
+            //3. Remove Tag first
+            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            track = new Track(testFileLocation);
+            double dPostLenghtEnd = TestUtils.GetFileSize(testFileLocation);
+            System.Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
+            System.Console.WriteLine("Clear File Length: " + dPostLenght);
+            Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
+            Assert.IsTrue(dLength > dPostLenghtEnd, "File should be smaller.");
+            // Should be the same size as the empty file obtained at step 1
+            Assert.AreEqual(twoTracksQTchapsEmptySize, dPostLenghtEnd, $"File should be {twoTracksQTchapsEmptySize} once tags are removed.");
+
+            if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
+        }
+
     }
 }
