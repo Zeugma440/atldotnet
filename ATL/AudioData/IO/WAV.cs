@@ -283,11 +283,13 @@ namespace ATL.AudioData.IO
                     {
                         // Align to the correct position
                         source.Seek(-1, SeekOrigin.Current);
+
                         // Update zone size (remove and replace zone with updated size)
-                        FileStructureHelper.Zone previousZone = structureHelper.GetZone(subChunkId);
+                        FileStructureHelper sHelper = (subChunkId == CHUNK_ID3) ? id3v2StructureHelper : structureHelper;
+                        FileStructureHelper.Zone previousZone = sHelper.GetZone(subChunkId);
                         previousZone.Size--;
-                        structureHelper.RemoveZone(subChunkId);
-                        structureHelper.AddZone(previousZone);
+                        sHelper.RemoveZone(subChunkId);
+                        sHelper.AddZone(previousZone);
                     }
                 }
                 source.Read(data, 0, 4);
