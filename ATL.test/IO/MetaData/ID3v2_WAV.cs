@@ -26,8 +26,8 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WAV_ID3v2()
         {
-            String location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -39,7 +39,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_AIF_ID3v2_Empty()
+        public void TagIO_RW_WAV_ID3v2_Empty()
         {
             test_RW_Empty(emptyFile, true, true, true);
         }
