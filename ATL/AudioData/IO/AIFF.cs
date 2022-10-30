@@ -237,18 +237,36 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="source">Source where to read header information</param>
         /// <param name="limit">Maximum absolute position to search to</param>
+        /// <param name="previousChunkId">ID of the previous chunk</param>
         /// <returns>Local chunk header information</returns>
-        private ChunkHeader seekNextChunkHeader(BinaryReader source, long limit)
+        private ChunkHeader seekNextChunkHeader(BinaryReader source, long limit, string previousChunkId)
         {
             ChunkHeader header = new ChunkHeader();
             byte[] aByte = new byte[1];
+            int previousChunkSizeCorrection = 0;
 
             source.BaseStream.Read(aByte, 0, 1);
-            // In case previous field size is not correctly documented, tries to advance to find a suitable first character for an ID
-            while (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.BaseStream.Position < limit)
+            // In case previous chunk has a padding byte, seek a suitable first character for an ID
+            if (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.BaseStream.Position <= limit)
             {
-                source.BaseStream.Read(aByte, 0, 1);
+                previousChunkSizeCorrection++;
+                if (source.BaseStream.Position < limit) source.BaseStream.Read(aByte, 0, 1);
             }
+
+            // Update zone size (remove and replace zone with updated size)
+            if (previousChunkId.Length > 0 && previousChunkSizeCorrection > 0)
+            {
+                FileStructureHelper sHelper = (previousChunkId == CHUNKTYPE_ID3TAG) ? id3v2StructureHelper : structureHelper;
+                FileStructureHelper.Zone previousZone = sHelper.GetZone(previousChunkId);
+                if (previousZone != null)
+                {
+                    previousZone.Size += previousChunkSizeCorrection;
+                    sHelper.RemoveZone(previousChunkId);
+                    sHelper.AddZone(previousZone);
+                }
+            }
+
+            // Write actual tag size
 
             if (source.BaseStream.Position < limit)
             {
@@ -311,10 +329,12 @@ namespace ATL.AudioData.IO
 
                     int annotationIndex = 0;
                     int commentIndex = 0;
+                    string chunkId = "";
 
                     while (source.BaseStream.Position < limit)
                     {
-                        ChunkHeader header = seekNextChunkHeader(source, limit);
+                        ChunkHeader header = seekNextChunkHeader(source, limit, chunkId);
+                        chunkId = header.ID;
 
                         position = source.BaseStream.Position;
 
@@ -383,6 +403,7 @@ namespace ATL.AudioData.IO
                         else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
                             annotationIndex++;
+                            chunkId = header.ID + annotationIndex;
                             structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + annotationIndex);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + annotationIndex);
 
@@ -393,6 +414,7 @@ namespace ATL.AudioData.IO
                         else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
                             commentIndex++;
+                            chunkId = header.ID + commentIndex;
                             structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + commentIndex);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + commentIndex);
 
@@ -432,9 +454,7 @@ namespace ATL.AudioData.IO
                         }
 
                         source.BaseStream.Position = position + header.Size;
-
-                        if (header.ID.Equals(CHUNKTYPE_SOUND) && header.Size % 2 > 0) source.BaseStream.Position += 1; // Sound chunk size must be even
-                    }
+                    } // Loop through file
 
                     tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
 
@@ -475,8 +495,8 @@ namespace ATL.AudioData.IO
                     }
 
                     result = true;
-                }
-            }
+                } // AIFF / AIFC format check
+            } // Magic number check
 
             return result;
         }
@@ -500,6 +520,12 @@ namespace ATL.AudioData.IO
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
                     w.Write(strBytes);
 
+                    // Add the extra padding byte if needed
+                    long finalPos = w.BaseStream.Position;
+                    long paddingSize = (finalPos - sizePos) % 2;
+                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                    // Write actual tag size
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
                     w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
@@ -517,6 +543,12 @@ namespace ATL.AudioData.IO
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
                     w.Write(strBytes);
 
+                    // Add the extra padding byte if needed
+                    long finalPos = w.BaseStream.Position;
+                    long paddingSize = (finalPos - sizePos) % 2;
+                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                    // Write actual tag size
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
                     w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
@@ -534,6 +566,12 @@ namespace ATL.AudioData.IO
                     byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
                     w.Write(strBytes);
 
+                    // Add the extra padding byte if needed
+                    long finalPos = w.BaseStream.Position;
+                    long paddingSize = (finalPos - sizePos) % 2;
+                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                    // Write actual tag size
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
                     w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
@@ -585,6 +623,12 @@ namespace ATL.AudioData.IO
 
                     long dataEndPos = w.BaseStream.Position;
 
+                    // Add the extra padding byte if needed
+                    long finalPos = w.BaseStream.Position;
+                    long paddingSize = (finalPos - sizePos) % 2;
+                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                    // Write actual tag size
                     w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
                     w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
                     w.Write(StreamUtils.EncodeBEUInt16(numComments));
@@ -617,21 +661,21 @@ namespace ATL.AudioData.IO
             w.Write(commentData);
         }
 
-        public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
-        {
-            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
-            StreamUtils.WriteBEInt32(s, (int)tagSize);
-        }
-
         // AIFx timestamps are "the number of seconds since January 1, 1904"
         private static uint encodeTimestamp(DateTime when)
         {
             return (uint)Math.Round((when.Ticks - timestampBase.Ticks) * 1.0 / TimeSpan.TicksPerSecond);
         }
 
+        public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
+        {
+            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
+            StreamUtils.WriteBEInt32(s, (int)tagSize);
+        }
+
         public void WriteID3v2EmbeddingFooter(Stream s, long tagSize)
         {
-            // Nothing to do here
+            if (tagSize % 2 > 0) s.WriteByte(0);
         }
     }
 }
