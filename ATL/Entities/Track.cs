@@ -512,7 +512,9 @@ namespace ATL
                 // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
                 foreach (PictureInfo picInfo in initialEmbeddedPictures)
                 {
-                    if (!currentEmbeddedPictures.Contains(picInfo))
+                    PictureInfo targetPic = currentEmbeddedPictures.FirstOrDefault(pi => picInfo.EqualsProper(pi));
+
+                    if (null == targetPic)
                     {
                         PictureInfo picToDelete = new PictureInfo(picInfo);
                         picToDelete.MarkedForDeletion = true;
