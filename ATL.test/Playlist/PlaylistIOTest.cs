@@ -1,6 +1,7 @@
 ﻿using ATL.Logging;
 using ATL.Playlist;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.Logging.Log;
@@ -95,7 +96,7 @@ namespace ATL.test.IO.Playlist
             var replacements = new List<KeyValuePair<string, string>>();
             var resourceRoot = TestUtils.GetResourceLocationRoot(false);
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            
+
             // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
             var noDiskPath = Path.DirectorySeparatorChar != '\\'
                 ? resourceRoot
@@ -104,12 +105,18 @@ namespace ATL.test.IO.Playlist
             replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
+            bool foundHttp = false;
             try
             {
                 theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                Assert.AreEqual(3, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                Assert.AreEqual(4, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {
@@ -125,9 +132,14 @@ namespace ATL.test.IO.Playlist
             try
             {
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.AreEqual(4, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                bool foundHttp = false;
+                Assert.AreEqual(5, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {
@@ -141,7 +153,7 @@ namespace ATL.test.IO.Playlist
             var replacements = new List<KeyValuePair<string, string>>();
             var resourceRoot = TestUtils.GetResourceLocationRoot(false);
             replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
-            
+
             // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
             var noDiskPath = Path.DirectorySeparatorChar != '\\'
                 ? resourceRoot
@@ -153,9 +165,14 @@ namespace ATL.test.IO.Playlist
             try
             {
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.AreEqual(3, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                bool foundHttp = false;
+                Assert.AreEqual(4, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {
@@ -172,9 +189,14 @@ namespace ATL.test.IO.Playlist
             {
 
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.AreEqual(4, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                bool foundHttp = false;
+                Assert.AreEqual(5, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {
@@ -190,9 +212,14 @@ namespace ATL.test.IO.Playlist
             try
             {
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.AreEqual(3, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                bool foundHttp = false;
+                Assert.AreEqual(4, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {
@@ -204,13 +231,18 @@ namespace ATL.test.IO.Playlist
         public void PL_PLS()
         {
             string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.pls", "$PATH", TestUtils.GetResourceLocationRoot(false));
-
+            bool foundHttp = false;
             try
             {
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                Assert.AreEqual(4, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
+                Assert.AreEqual(5, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
+                }
+                Assert.IsTrue(foundHttp);
             }
             finally
             {

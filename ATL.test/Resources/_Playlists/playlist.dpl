@@ -13,3 +13,4 @@ saveplaypos=0
 3*played*1
 3*duration2*104000
 4*file*$PATH\MP3\empty.mp3
+5*file*http://uk3.internet-radio.com:8405/live

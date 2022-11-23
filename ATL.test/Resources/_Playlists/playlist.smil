@@ -5,6 +5,7 @@
 	  <media src="local.MID" />
       <media src="file:///$NODISK_PATH/OGG/empty.ogg" />
       <media src="file:///$PATH/MP3/empty.mp3" />
+	  <media src="http://uk3.internet-radio.com:8405/live" />
     </seq>
   </body>
 </smil>

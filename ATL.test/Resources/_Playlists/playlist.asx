@@ -14,4 +14,7 @@
 	<ENTRY>
 		<REF HREF = "file:///$PATH/MP3/01%20-%20Title%20Screen_pic.mp3" />
 	</ENTRY>
+	<ENTRY>
+		<REF HREF = "http://uk3.internet-radio.com:8405/live" />
+	</ENTRY>
 </ASX>

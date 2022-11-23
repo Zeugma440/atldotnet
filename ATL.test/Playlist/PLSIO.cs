@@ -1,5 +1,6 @@
 ﻿using ATL.Playlist;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -15,12 +16,19 @@ namespace ATL.test.IO.Playlist
 
             try
             {
-                IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
+                IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(4, pls.FilePaths.Count);
-                foreach (string s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-                foreach (Track t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
+                Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
+                Assert.AreEqual(5, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(System.IO.File.Exists(s));
+                }
+                foreach (Track t in theReader.Tracks)
+                {
+                    // Ensure the track has been parsed when it points to a file
+                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
+                }
             }
             finally
             {
@@ -34,10 +42,12 @@ namespace ATL.test.IO.Playlist
             IList<string> pathsToWrite = new List<string>();
             pathsToWrite.Add("aaa.mp3");
             pathsToWrite.Add("bbb.mp3");
+            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3", "empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD", "mod.mod")));
+            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.pls");
@@ -68,15 +78,18 @@ namespace ATL.test.IO.Playlist
                         Assert.AreEqual("Title2=bbb", sr.ReadLine());
                         Assert.AreEqual("Length2=-1", sr.ReadLine());
                         sr.ReadLine();
-                        Assert.AreEqual("NumberOfEntries=2", sr.ReadLine());
+                        Assert.AreEqual("File3=http://this-is-a-stre.am:8405/live", sr.ReadLine());
+                        Assert.AreEqual("Title3=live", sr.ReadLine());
+                        Assert.AreEqual("Length3=-1", sr.ReadLine());
+                        sr.ReadLine();
+                        Assert.AreEqual("NumberOfEntries="+pathsToWrite.Count, sr.ReadLine());
                         Assert.AreEqual("Version=2", sr.ReadLine());
                         Assert.IsTrue(sr.EndOfStream);
                     }
                 }
                 IList<string> filePaths = pls.FilePaths;
-                Assert.AreEqual(2, filePaths.Count);
-                Assert.IsTrue(filePaths[0].EndsWith(pathsToWrite[0]));
-                Assert.IsTrue(filePaths[1].EndsWith(pathsToWrite[1]));
+                Assert.AreEqual(pathsToWrite.Count, filePaths.Count);
+                for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
                 // Test Track writing
@@ -90,21 +103,20 @@ namespace ATL.test.IO.Playlist
                     foreach (Track t in tracksToWrite)
                     {
                         sr.ReadLine();
-                        Assert.AreEqual("File"+counter+"="+t.Path, sr.ReadLine());
+                        Assert.AreEqual("File" + counter + "=" + t.Path, sr.ReadLine());
                         Assert.AreEqual("Title" + counter + "=" + t.Title, sr.ReadLine());
-                        Assert.AreEqual("Length" + counter + "=" + t.Duration, sr.ReadLine());
+                        Assert.AreEqual("Length" + counter + "=" + ((t.Duration > 0) ? t.Duration : -1), sr.ReadLine());
                         counter++;
                     }
                     sr.ReadLine();
-                    Assert.AreEqual("NumberOfEntries=2", sr.ReadLine());
+                    Assert.AreEqual("NumberOfEntries="+tracksToWrite.Count, sr.ReadLine());
                     Assert.AreEqual("Version=2", sr.ReadLine());
                     Assert.IsTrue(sr.EndOfStream);
                 }
 
                 IList<Track> tracks = pls.Tracks;
-                Assert.AreEqual(2, tracks.Count);
-                Assert.AreEqual(tracksToWrite[0].Path, tracks[0].Path);
-                Assert.AreEqual(tracksToWrite[1].Path, tracks[1].Path);
+                Assert.AreEqual(tracksToWrite.Count, tracks.Count);
+                for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
             }
             finally
             {

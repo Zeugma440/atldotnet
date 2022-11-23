@@ -15,7 +15,7 @@ namespace ATL.test.IO.Playlist
         {
             var replacements = new List<KeyValuePair<string, string>>();
             var resourceRoot = TestUtils.GetResourceLocationRoot(false);
-            
+
             // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
             var noDiskPath = Path.DirectorySeparatorChar != '\\'
                 ? resourceRoot
@@ -30,9 +30,16 @@ namespace ATL.test.IO.Playlist
                 IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
                 Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(3, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-                foreach (Track t in theReader.Tracks) Assert.IsTrue(t.Duration > 0);
+                Assert.AreEqual(4, theReader.FilePaths.Count);
+                foreach (string s in theReader.FilePaths)
+                {
+                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(System.IO.File.Exists(s));
+                }
+                foreach (Track t in theReader.Tracks)
+                {
+                    // Ensure the track has been parsed when it points to a file
+                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
+                }
             }
             finally
             {
@@ -46,10 +53,12 @@ namespace ATL.test.IO.Playlist
             IList<string> pathsToWrite = new List<string>();
             pathsToWrite.Add("aaa.mp3");
             pathsToWrite.Add("bbb.mp3");
+            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3", "empty.mp3")));
+            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD", "mod.mod")));
+            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.smil");
@@ -88,12 +97,11 @@ namespace ATL.test.IO.Playlist
                         }
                     }
                 }
-                Assert.AreEqual(3, parents.Count);
+                Assert.AreEqual(pathsToWrite.Count, parents.Count);
 
                 IList<string> filePaths = pls.FilePaths;
-                Assert.AreEqual(2, filePaths.Count);
-                Assert.IsTrue(filePaths[0].EndsWith(pathsToWrite[0]));
-                Assert.IsTrue(filePaths[1].EndsWith(pathsToWrite[1]));
+                Assert.AreEqual(pathsToWrite.Count, filePaths.Count);
+                for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
                 // Test Track writing
@@ -114,21 +122,23 @@ namespace ATL.test.IO.Playlist
                             else if (source.Name.Equals("media", StringComparison.OrdinalIgnoreCase) && parents.Contains("seq"))
                             {
                                 index++;
-                                // fix file:////, which is happening on *nix systems
-                                var expected = ("file:///" + tracksToWrite[index].Path.Replace('\\', '/'))
-                                    .Replace("file:////", "file:///");
+                                var expected = tracksToWrite[index].Path;
+                                if (!expected.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    // fix file:////, which is happening on *nix systems
+                                    expected = ("file:///" + expected.Replace('\\', '/')).Replace("file:////", "file:///");
+                                }
                                 var actual = source.GetAttribute("src");
                                 Assert.AreEqual(expected, actual);
                             }
                         }
                     }
                 }
-                Assert.AreEqual(3, parents.Count);
+                Assert.AreEqual(tracksToWrite.Count, parents.Count);
 
                 IList<Track> tracks = pls.Tracks;
-                Assert.AreEqual(2, tracks.Count);
-                Assert.AreEqual(tracksToWrite[0].Path, tracks[0].Path);
-                Assert.AreEqual(tracksToWrite[1].Path, tracks[1].Path);
+                Assert.AreEqual(tracksToWrite.Count, tracks.Count);
+                for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
             }
             finally
             {

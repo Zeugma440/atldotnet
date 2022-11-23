@@ -16,5 +16,9 @@
       <Name>empty.ogg</Name>
       <Length>7645</Length>
     </entry>
+	<!-- URL -->
+	<entry Playstring="http://uk3.internet-radio.com:8405/live">
+      <Name>live</Name>
+    </entry>
   </playlist>
  </WinampXML>

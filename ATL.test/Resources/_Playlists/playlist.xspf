@@ -42,11 +42,19 @@
 				<vlc:id>3</vlc:id>
 			</extension>
 		</track>
+		<track>
+			<location>http://uk3.internet-radio.com:8405/live</location>
+			<duration>8000</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
 	</trackList>
 	<extension application="http://www.videolan.org/vlc/playlist/0">
 			<vlc:item tid="0"/>
 			<vlc:item tid="1"/>
 			<vlc:item tid="2"/>
 			<vlc:item tid="3"/>
+			<vlc:item tid="4"/>
 	</extension>
 </playlist>

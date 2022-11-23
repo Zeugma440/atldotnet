@@ -257,10 +257,14 @@ namespace ATL.Playlist
                 }
             }
 
-            href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "").Replace('\\', System.IO.Path.DirectorySeparatorChar);
-            if (!System.IO.Path.IsPathRooted(href))
+            href = href.Trim();
+            if (!href.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
             {
-                href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);
+                href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "").Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                if (!System.IO.Path.IsPathRooted(href))
+                {
+                    href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);
+                }
             }
             return href;
         }
