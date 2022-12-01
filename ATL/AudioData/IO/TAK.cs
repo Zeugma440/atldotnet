@@ -35,10 +35,6 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
-        public uint Bits
-        {
-            get { return bits; }
-        }
         public double CompressionRatio
         {
             get { return getCompressionRatio(); }
@@ -71,6 +67,7 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+        public int BitDepth => (bits > 0) ? (int)bits : -1;
         public double Duration
         {
             get { return duration; }
@@ -165,8 +162,9 @@ namespace ATL.AudioData.IO
 
                         sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
 
-                        sampleRate = ((restOfData >> 4) & 0x03ffff) + 6000; // bits 4 to 21
-                        channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)((restOfData >> 27) & 0x0F) + 1); // bits 28 to 31
+                        sampleRate = ((restOfData >> 4) & 0x03ffff) + 6000; // bits 5 to 22
+                        bits = ((restOfData >> 22) & 0x1f) + 8; // bits 23 to 27
+                        channelsArrangement = GuessFromChannelNumber((int)((restOfData >> 27) & 0x0f) + 1); // bits 28 to 31
 
                         if (sampleCount > 0)
                         {

@@ -53,6 +53,9 @@ namespace ATL.AudioData.IO
         {
             get { return (int)this.sampleRate; }
         }
+
+        public int BitDepth => -1; // Irrelevant for lossy formats
+
         public ChannelsArrangement ChannelsArrangement
         {
             get { return channelsArrangement; }

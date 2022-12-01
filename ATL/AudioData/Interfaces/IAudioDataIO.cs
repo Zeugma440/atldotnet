@@ -38,6 +38,14 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
+		/// Bit depth (bits per sample)
+        /// -1 if bit depth is not relevant to that audio format
+		/// </summary>
+		int BitDepth
+        {
+            get;
+        }
+        /// <summary>
         /// Returns true if the bitrate is variable; false if not
         /// </summary>
         bool IsVBR

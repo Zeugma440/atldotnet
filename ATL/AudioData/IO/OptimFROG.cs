@@ -89,6 +89,7 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+        public int BitDepth => getBits();
         public double Duration
         {
             get { return duration; }
@@ -151,6 +152,11 @@ namespace ATL.AudioData.IO
         private double getBitrate()
         {
             return ((sizeInfo.FileSize - header.Size - sizeInfo.TotalTagSize) * 8 / Duration);
+        }
+
+        private sbyte getBits()
+        {
+            return OFR_BITS[header.SampleType];
         }
 
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

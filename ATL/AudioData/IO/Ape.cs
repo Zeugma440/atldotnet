@@ -118,10 +118,6 @@ namespace ATL.AudioData.IO
         {
             get { return channelsArrangement; }
         }
-        public int Bits
-        {
-            get { return bits; }
-        }
         public uint PeakLevel
         {
             get { return peakLevel; }
@@ -190,6 +186,9 @@ namespace ATL.AudioData.IO
         {
             get { return duration; }
         }
+
+        public int BitDepth => bits;
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);

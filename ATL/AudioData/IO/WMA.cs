@@ -155,9 +155,10 @@ namespace ATL.AudioData.IO
                 return isLossless ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
             }
         }
-        public string FileName { get { return filePath; } }
-        public double BitRate { get { return bitrate; } }
-        public double Duration { get { return duration; } }
+        public string FileName => filePath;
+        public double BitRate => bitrate;
+        public int BitDepth => 16; // Seems to be constant
+        public double Duration => duration;
         public ChannelsArrangement ChannelsArrangement
         {
             get { return channelsArrangement; }

@@ -35,10 +35,6 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
-        public uint Bits
-        {
-            get { return bits; }
-        }
         public double CompressionRatio
         {
             get { return getCompressionRatio(); }
@@ -71,6 +67,9 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+
+        public int BitDepth => (int)bits;
+
         public double Duration
         {
             get { return duration; }

@@ -38,6 +38,10 @@ namespace ATL.AudioData.IO
         {
             get { return 0; }
         }
+
+        /// <inheritdoc/>
+        public int BitDepth => -1;
+
         /// <inheritdoc/>
         public bool IsVBR
         {

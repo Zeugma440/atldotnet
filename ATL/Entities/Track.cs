@@ -242,6 +242,11 @@ namespace ATL
         /// </summary>
 		public int Bitrate { get; internal set; }
         /// <summary>
+		/// Bit depth (bits per sample)
+        /// -1 if bit depth is not relevant to that audio format
+		/// </summary>
+		public int BitDepth { get; internal set; }
+        /// <summary>
 		/// Sample rate (Hz)
 		/// </summary>
         public double SampleRate { get; internal set; }
@@ -407,6 +412,7 @@ namespace ATL
 
             // Physical information
             Bitrate = fileIO.IntBitRate;
+            BitDepth = fileIO.BitDepth;
             CodecFamily = fileIO.CodecFamily;
             AudioFormat = fileIO.AudioFormat;
 

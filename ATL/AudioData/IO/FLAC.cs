@@ -93,6 +93,7 @@ namespace ATL.AudioData.IO
         {
             get { return Math.Round(((double)(sizeInfo.FileSize - AudioDataOffset)) * 8 / Duration); }
         }
+        public int BitDepth => bitsPerSample;
         public double Duration
         {
             get { return getDuration(); }

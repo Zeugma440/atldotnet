@@ -236,6 +236,11 @@ namespace ATL.AudioData
             get => audioData.BitRate;
         }
         /// <inheritdoc/>
+        public int BitDepth
+        {
+            get => audioData.BitDepth;
+        }
+        /// <inheritdoc/>
         public int SampleRate
         {
             get => audioData.SampleRate;

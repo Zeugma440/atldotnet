@@ -161,6 +161,7 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate / 1000.0; }
         }
+        public int BitDepth => -1; // Irrelevant for lossy formats
         public double Duration
         {
             get { return getDuration(); }

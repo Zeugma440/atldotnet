@@ -16,6 +16,7 @@ namespace ATL.AudioData.IO
 
         private string encoder;
 
+        private int bits;
         private int sampleRate;
         private double bitrate;
         private double duration;
@@ -133,34 +134,17 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public int SampleRate
-        {
-            get { return sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return codecFamily; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
-        public double Duration
-        {
-            get { return duration; }
-        }
+        public int SampleRate => sampleRate;
+        public bool IsVBR => false;
+        public int CodecFamily => codecFamily;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
+        public int BitDepth => bits;
+        public double Duration => duration;
         public ChannelsArrangement ChannelsArrangement
         {
             get { return channelsArrangement; }
@@ -181,6 +165,7 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             codecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
+            bits = -1;
             sampleRate = 0;
             encoder = "";
 
@@ -256,6 +241,7 @@ namespace ATL.AudioData.IO
 
                 uint samples = wvh4.total_samples;
                 sampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
+                bits = (int)((wvh4.flags & 3) * 16);
                 if ((sampleRate > 14) || (sampleRate < 0))
                 {
                     sampleRate = 44100;
@@ -392,6 +378,7 @@ namespace ATL.AudioData.IO
                             // Encoder guess
                             if (wvh3.bits > 0)
                             {
+                                bits = wvh3.bits + 3;
                                 if ((wvh3.flags & NEW_HIGH_FLAG_v3) > 0)
                                 {
                                     encoder = "hybrid";

@@ -234,6 +234,7 @@ namespace ATL.AudioData.IO
         public VBRData VBR { get => vbrData; }
         public bool IsVBR { get => vbrData.Found; }
         public double BitRate { get => getBitRate(); }
+        public int BitDepth => -1; // Irrelevant for lossy formats
         public double Duration { get => getDuration(); }
         public ChannelsArrangement ChannelsArrangement { get => getChannelsArrangement(HeaderFrame); }
         public int SampleRate { get => getSampleRate(); }

@@ -958,6 +958,7 @@ namespace ATL.test.IO
 
                 Assert.AreEqual(33, theTrack.Duration);
                 Assert.AreEqual(69, theTrack.Bitrate);
+                Assert.AreEqual(-1, theTrack.BitDepth);
                 Assert.AreEqual(22050, theTrack.SampleRate);
                 Assert.AreEqual(true, theTrack.IsVBR);
                 Assert.AreEqual(23125, theTrack.TechnicalInformation.AudioDataOffset);

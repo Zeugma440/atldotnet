@@ -64,7 +64,7 @@ namespace ATL.AudioData.IO
         }
 
         // Private declarations 
-        private uint bits;
+        private int bits;
 
         private string compression;
         private byte versionID;
@@ -93,10 +93,6 @@ namespace ATL.AudioData.IO
         public byte VersionID // Version code
         {
             get { return this.versionID; }
-        }
-        public uint Bits
-        {
-            get { return bits; }
         }
         public double CompressionRatio
         {
@@ -132,6 +128,9 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+
+        public int BitDepth => (bits > 0) ? bits : -1;
+
         public double Duration
         {
             get { return duration; }
@@ -352,7 +351,7 @@ namespace ATL.AudioData.IO
                             }
 
                             uint numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                            short sampleSize = StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
+                            bits = StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
                             byte[] byteArray = source.ReadBytes(10);
                             Array.Reverse(byteArray);
                             double aSampleRate = StreamUtils.ExtendedToDouble(byteArray);
@@ -373,12 +372,12 @@ namespace ATL.AudioData.IO
 
                                 if (!compression.Equals(COMPRESSION_NONE)) // Sample size is specific to selected compression method
                                 {
-                                    if (compression.ToLower().Equals("fl32")) sampleSize = 32;
-                                    else if (compression.ToLower().Equals("fl64")) sampleSize = 64;
-                                    else if (compression.ToLower().Equals("alaw")) sampleSize = 8;
-                                    else if (compression.ToLower().Equals("ulaw")) sampleSize = 8;
+                                    if (compression.ToLower().Equals("fl32")) bits = 32;
+                                    else if (compression.ToLower().Equals("fl64")) bits = 64;
+                                    else if (compression.ToLower().Equals("alaw")) bits = 8;
+                                    else if (compression.ToLower().Equals("ulaw")) bits = 8;
                                 }
-                                if (duration > 0) bitrate = sampleSize * numSampleFrames * channelsArrangement.NbChannels / duration;
+                                if (duration > 0) bitrate = bits * numSampleFrames * channelsArrangement.NbChannels / duration;
                             }
                         }
                         else if (header.ID.Equals(CHUNKTYPE_SOUND))

@@ -146,6 +146,9 @@ namespace ATL.AudioData.IO
                 }
             }
         }
+
+        public int BitDepth => -1; // Irrelevant for lossy formats
+
         public string FileName
         {
             get { return fileName; }

@@ -129,6 +129,7 @@ namespace ATL.AudioData.IO
         private double bitrate;
         private double duration;
         private uint channelsPerFrame;
+        private uint bitsPerChannel;
         double secondsPerByte;
         private ChannelsArrangement channelsArrangement;
 
@@ -163,6 +164,9 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+
+        public int BitDepth => (int)(bitsPerChannel * channelsPerFrame);
+
         public double Duration
         {
             get { return duration; }
@@ -217,6 +221,7 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             isVbr = false;
             codecFamily = 0;
+            bitsPerChannel = 0;
             channelsPerFrame = 0;
             channelsArrangement = null;
             secondsPerByte = 0;
@@ -256,7 +261,7 @@ namespace ATL.AudioData.IO
             uint bytesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             uint framesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             channelsPerFrame = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            source.BaseStream.Seek(4, SeekOrigin.Current); // bits per channel
+            bitsPerChannel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
             sampleRate = (uint)Math.Round(m_sampleRate);
 

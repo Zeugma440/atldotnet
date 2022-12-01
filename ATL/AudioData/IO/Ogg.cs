@@ -71,6 +71,7 @@ namespace ATL.AudioData.IO
 
         private int contents;
 
+        private int bits;
         private int sampleRate;
         private ushort bitRateNominal;
         private ulong samples;
@@ -100,6 +101,7 @@ namespace ATL.AudioData.IO
         {
             get { return getBitRate(); }
         }
+        public int BitDepth => bits; // Only for embedded FLAC
         public double Duration
         {
             get { return getDuration(); }
@@ -312,6 +314,7 @@ namespace ATL.AudioData.IO
         {
             sampleRate = 0;
             bitRateNominal = 0;
+            bits = -1;
             samples = 0;
             contents = -1;
             AudioDataOffset = -1;
@@ -750,6 +753,7 @@ namespace ATL.AudioData.IO
                 {
                     channelsArrangement = info.FlacParameters.getChannelsArrangement();
                     sampleRate = info.FlacParameters.SampleRate;
+                    bits = info.FlacParameters.BitsPerSample;
                     // No nominal bitrate for FLAC
                 }
 

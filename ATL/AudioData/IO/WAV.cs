@@ -95,14 +95,6 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate
-        {
-            get { return (int)this.sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
         public Format AudioFormat
         {
             get
@@ -112,26 +104,14 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
+        public int SampleRate => (int)sampleRate;
+        public bool IsVBR => false;
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
+        public int BitDepth => bitsPerSample;
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.NATIVE; // Native for bext, info and iXML chunks
