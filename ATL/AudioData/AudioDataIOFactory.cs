@@ -165,7 +165,9 @@ namespace ATL.AudioData
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_FLAC, "Free Lossless Audio Codec", "FLAC");
+                    tempFmt.AddMimeType("audio/flac");
                     tempFmt.AddMimeType("audio/x-flac");
+                    tempFmt.AddMimeType("audio/x-ogg");
                     tempFmt.AddExtension(".flac");
                     theFactory.addFormat(tempFmt);
 
