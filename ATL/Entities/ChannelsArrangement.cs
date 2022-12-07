@@ -32,14 +32,15 @@
         public static readonly ChannelsArrangement JOINT_STEREO_MID_SIDE = new ChannelsArrangement(2, "Joint Stereo - mid/side");
         public static readonly ChannelsArrangement STEREO_LEFT_RIGHT_TOTAL = new ChannelsArrangement(2, "Stereo - Left & Right Total (matrix)");
         public static readonly ChannelsArrangement LRCS = new ChannelsArrangement(4, "Left - Right - Center - Surround");
+        public static readonly ChannelsArrangement LRCLFE = new ChannelsArrangement(4, "Left - Right - Center - LFE");
+        public static readonly ChannelsArrangement DVD_5 = new ChannelsArrangement(4, "Left - Right - LFE - Center surround");
+        public static readonly ChannelsArrangement DVD_11 = new ChannelsArrangement(5, "Left - Right - Center - LFE - Center surround");
+        public static readonly ChannelsArrangement DVD_18 = new ChannelsArrangement(5, "Left - Right - Left surround - Right surround - LFE");
         public static readonly ChannelsArrangement LRCLFECrLssRss = new ChannelsArrangement(7, "Left front - Right front - Center front - LFE - Center rear - Left side - Right side"); // 6.1 ?
         public static readonly ChannelsArrangement LRCLFELrRrLssRss = new ChannelsArrangement(8, "Left front - Right front - Center front - LFE - Left rear - Right rear - Left side - Right side"); // 7.1 ?
 
         // AIFF specifics
         public static readonly ChannelsArrangement LRLcRcCS = new ChannelsArrangement(6, "Left - Right - Left center - Right center - Center - Surround");
-
-        // DSF specifics
-        public static readonly ChannelsArrangement LRCLFE = new ChannelsArrangement(4, "Left - Right - Center - LFE");
 
         // DTS specifics
         public static readonly ChannelsArrangement STEREO_SUM_DIFFERENCE = new ChannelsArrangement(2, "Stereo - Sum & Difference");
@@ -47,8 +48,14 @@
         public static readonly ChannelsArrangement CLRLRRRO = new ChannelsArrangement(6, "Center - Left - Right - Left rear - Right rear - Overhead");
         public static readonly ChannelsArrangement CFCRLFRFLRRR = new ChannelsArrangement(6, "Center front - Center rear - Left front - Right front - Left rear - Right rear");
         public static readonly ChannelsArrangement CLCCRLRSLSR = new ChannelsArrangement(7, "Left center - Center - Right center - Left - Right - Left surround - Right surround");
+        public static readonly ChannelsArrangement CLCRLRSLSR_LFE = new ChannelsArrangement(7, "Left center - Right center - Left - Right - Left surround - Right surround - LFE");
+        public static readonly ChannelsArrangement CLRLRRRO_LFE = new ChannelsArrangement(7, "Center - Left - Right - Left rear - Right rear - Overhead - LFE");
+        public static readonly ChannelsArrangement CFCRLFRFLRRR_LFE = new ChannelsArrangement(7, "Center front - Center rear - Left front - Right front - Left rear - Right rear - LFE");
         public static readonly ChannelsArrangement CLCRLRSL1SL2SR1SR2 = new ChannelsArrangement(8, "Left center - Right center - Left - Right - Left surround 1 - Left surround 2 - Right surround 1 - Right surround 2");
         public static readonly ChannelsArrangement CLCCRLRSLSSR = new ChannelsArrangement(8, "Left center - Center - Right center - Left - Right - Left surround - Surround - Right surround");
+        public static readonly ChannelsArrangement CLCCRLRSLSR_LFE = new ChannelsArrangement(8, "Left center - Center - Right center - Left - Right - Left surround - Right surround - LFE");
+        public static readonly ChannelsArrangement CLCRLRSL1SL2SR1SR2_LFE = new ChannelsArrangement(9, "Left center - Right center - Left - Right - Left surround 1 - Left surround 2 - Right surround 1 - Right surround 2 - LFE");
+        public static readonly ChannelsArrangement CLCCRLRSLSSR_LFE = new ChannelsArrangement(9, "Left center - Center - Right center - Left - Right - Left surround - Surround - Right surround - LFE");
 
         // CAF specifics
         public static readonly ChannelsArrangement STEREO_XY = new ChannelsArrangement(2, "Stereo - XY");
@@ -64,11 +71,8 @@
         public static readonly ChannelsArrangement ITU_2_1 = new ChannelsArrangement(2, "Left - Right - Center surround");
         public static readonly ChannelsArrangement ITU_2_2 = new ChannelsArrangement(4, "Left - Right - Left surround - Right surround");
         public static readonly ChannelsArrangement DVD_4 = new ChannelsArrangement(3, "Left - Right - LFE");
-        public static readonly ChannelsArrangement DVD_5 = new ChannelsArrangement(4, "Left - Right - LFE - Center surround");
         public static readonly ChannelsArrangement DVD_6 = new ChannelsArrangement(5, "Left - Right - LFE - Left surround - Right surround");
         public static readonly ChannelsArrangement DVD_10 = new ChannelsArrangement(4, "Left - Right - Center - LFE");
-        public static readonly ChannelsArrangement DVD_11 = new ChannelsArrangement(5, "Left - Right - Center - LFE - Center surround");
-        public static readonly ChannelsArrangement DVD_18 = new ChannelsArrangement(5, "Left - Right - Left surround - Right surround - LFE");
         public static readonly ChannelsArrangement AUDIOUNIT_6_0 = new ChannelsArrangement(6, "Left - Right - Left surround - Right surround - Center - Center surround");
         public static readonly ChannelsArrangement AUDIOUNIT_7_0 = new ChannelsArrangement(7, "Left - Right - Left surround - Right surround - Center - Left rear surround - Right rear surround");
         public static readonly ChannelsArrangement AAC_6_0 = new ChannelsArrangement(6, "Center - Left - Right - Left surround - Right surround - Center surround");

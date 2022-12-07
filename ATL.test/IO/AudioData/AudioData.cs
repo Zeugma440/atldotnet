@@ -126,7 +126,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_DTS()
         {
-            testGenericAudio("DTS/dts.dts", 9834, 1536, 24, 96000, false, CF_LOSSY, ISO_3_2_0, "Digital Theatre System", 0, 1888194);
+            testGenericAudio("DTS/dts.dts", 9834, 1536, 24, 96000, false, CF_LOSSY, ISO_3_2_1, "Digital Theatre System", 0, 1888194);
         }
 
         [TestMethod]

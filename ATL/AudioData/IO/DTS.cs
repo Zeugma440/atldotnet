@@ -116,28 +116,26 @@ namespace ATL.AudioData.IO
 
         private ChannelsArrangement getChannelsArrangement(uint amode, bool isLfePresent)
         {
-            ChannelsArrangement result;
             switch (amode)
             {
-                case 0: result = MONO; break;
-                case 1: result = DUAL_MONO; break;
-                case 2: result = STEREO; break;
-                case 3: result = STEREO_SUM_DIFFERENCE; break;
-                case 4: result = STEREO_LEFT_RIGHT_TOTAL; break;
-                case 5: result = ISO_3_0_0; break;
-                case 6: result = ISO_2_1_0; break;
-                case 7: result = LRCS; break;
-                case 8: result = QUAD; break;
-                case 9: result = ISO_3_2_0; break;
-                case 10: result = CLCRLRSLSR; break;
-                case 11: result = CLRLRRRO; break;
-                case 12: result = CFCRLFRFLRRR; break;
-                case 13: result = CLCCRLRSLSR; break;
-                case 14: result = CLCRLRSL1SL2SR1SR2; break;
-                case 15: result = CLCCRLRSLSSR; break;
-                default: result = UNKNOWN; break;
+                case 0: return MONO;
+                case 1: return DUAL_MONO;
+                case 2: return STEREO;
+                case 3: return STEREO_SUM_DIFFERENCE;
+                case 4: return STEREO_LEFT_RIGHT_TOTAL;
+                case 5: return isLfePresent ? LRCLFE : ISO_3_0_0;
+                case 6: return isLfePresent ? DVD_5 : ISO_2_1_0;
+                case 7: return isLfePresent ? DVD_11 : LRCS;
+                case 8: return isLfePresent ? DVD_18 : QUAD;
+                case 9: return isLfePresent ? ISO_3_2_1 : ISO_3_2_0;
+                case 10: return isLfePresent ? CLCRLRSLSR_LFE : CLCRLRSLSR;
+                case 11: return isLfePresent ? CLRLRRRO_LFE : CLRLRRRO;
+                case 12: return isLfePresent ? CFCRLFRFLRRR_LFE : CFCRLFRFLRRR;
+                case 13: return isLfePresent ? CLCCRLRSLSR_LFE : CLCCRLRSLSR;
+                case 14: return isLfePresent ? CLCRLRSL1SL2SR1SR2_LFE : CLCRLRSL1SL2SR1SR2;
+                case 15: return isLfePresent ? CLCCRLRSLSSR_LFE : CLCCRLRSLSSR;
+                default: return UNKNOWN;
             }
-            return result;
         }
 
         /// <inheritdoc/>
