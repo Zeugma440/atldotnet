@@ -23,58 +23,25 @@ namespace ATL.AudioData.IO
 
         private double bitrate;
         private double duration;
-        private bool isValid;
 
-        private SizeInfo sizeInfo;
         private readonly string filePath;
-
-
-        // Public declarations
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public bool IsVBR
-        {
-            get { return false; }
-        }
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
-        public int SampleRate
-        {
-            get { return (int)sampleRate; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public bool IsVBR => false;
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+        public int SampleRate => (int)sampleRate;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => (int)bits;
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return false;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => false;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -87,7 +54,6 @@ namespace ATL.AudioData.IO
             sampleRate = 0;
             bitrate = 0;
             duration = 0;
-            isValid = false;
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
@@ -104,15 +70,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SUPPORT METHODS
-
-        private double getCompressionRatio()
-        {
-            // Get compression ratio
-            if (isValid)
-                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
-            else
-                return 0;
-        }
 
         private ChannelsArrangement getChannelsArrangement(uint amode, bool isLfePresent)
         {
@@ -144,14 +101,12 @@ namespace ATL.AudioData.IO
             uint value;
             bool result = false;
 
-            this.sizeInfo = sizeInfo;
-
             resetData();
 
             uint signatureChunk = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // SYNC
             if (0x7FFE8001 == signatureChunk) // Core substream
             {
-                isValid = true;
+                result = true;
                 AudioDataOffset = source.BaseStream.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                 int coreFrameBitOffset = (int)(AudioDataOffset * 8);
@@ -200,8 +155,6 @@ namespace ATL.AudioData.IO
                 }
 
                 duration = sizeInfo.FileSize * 8.0 / bitrate;
-
-                result = true;
             }
 
             return result;
