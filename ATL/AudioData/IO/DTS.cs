@@ -114,53 +114,56 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
+        private ChannelsArrangement getChannelsArrangement(uint amode, bool isLfePresent)
+        {
+            ChannelsArrangement result;
+            switch (amode)
+            {
+                case 0: result = MONO; break;
+                case 1: result = DUAL_MONO; break;
+                case 2: result = STEREO; break;
+                case 3: result = STEREO_SUM_DIFFERENCE; break;
+                case 4: result = STEREO_LEFT_RIGHT_TOTAL; break;
+                case 5: result = ISO_3_0_0; break;
+                case 6: result = ISO_2_1_0; break;
+                case 7: result = LRCS; break;
+                case 8: result = QUAD; break;
+                case 9: result = ISO_3_2_0; break;
+                case 10: result = CLCRLRSLSR; break;
+                case 11: result = CLRLRRRO; break;
+                case 12: result = CFCRLFRFLRRR; break;
+                case 13: result = CLCCRLRSLSR; break;
+                case 14: result = CLCRLRSL1SL2SR1SR2; break;
+                case 15: result = CLCCRLRSLSSR; break;
+                default: result = UNKNOWN; break;
+            }
+            return result;
+        }
+
         /// <inheritdoc/>
         public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            uint signatureChunk;
-            ushort aWord;
-            byte[] specDTS;
+            uint value;
             bool result = false;
 
             this.sizeInfo = sizeInfo;
 
             resetData();
 
-            signatureChunk = source.ReadUInt32();
-            if ( /*0x7FFE8001*/ 25230975 == signatureChunk)
+            uint signatureChunk = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // SYNC
+            if (0x7FFE8001 == signatureChunk) // Core substream
             {
+                isValid = true;
                 AudioDataOffset = source.BaseStream.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                int coreFrameBitOffset = (int)(AudioDataOffset * 8);
 
-                source.BaseStream.Seek(3, SeekOrigin.Current);
-                specDTS = source.ReadBytes(8);
+                uint cpf = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 38, 1); // CPF
 
-                isValid = true;
+                uint amode = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 60, 6); // AMODE
 
-                aWord = (ushort)(specDTS[1] | (specDTS[0] << 8));
-
-                switch ((aWord & 0x0FC0) >> 6)
-                {
-                    case 0: channelsArrangement = MONO; break;
-                    case 1: channelsArrangement = DUAL_MONO; break;
-                    case 2: channelsArrangement = STEREO; break;
-                    case 3: channelsArrangement = STEREO_SUM_DIFFERENCE; break;
-                    case 4: channelsArrangement = STEREO_LEFT_RIGHT_TOTAL; break;
-                    case 5: channelsArrangement = ISO_3_0_0; break;
-                    case 6: channelsArrangement = ISO_2_1_0; break;
-                    case 7: channelsArrangement = LRCS; break;
-                    case 8: channelsArrangement = QUAD; break;
-                    case 9: channelsArrangement = ISO_3_2_0; break;
-                    case 10: channelsArrangement = CLCRLRSLSR; break;
-                    case 11: channelsArrangement = CLRLRRRO; break;
-                    case 12: channelsArrangement = CFCRLFRFLRRR; break;
-                    case 13: channelsArrangement = CLCCRLRSLSR; break;
-                    case 14: channelsArrangement = CLCRLRSL1SL2SR1SR2; break;
-                    case 15: channelsArrangement = CLCCRLRSLSSR; break;
-                    default: channelsArrangement = UNKNOWN; break;
-                }
-
-                switch ((aWord & 0x3C) >> 2)
+                value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 66, 4); // SFREQ
+                switch (value)
                 {
                     case 1: sampleRate = 8000; break;
                     case 2: sampleRate = 16000; break;
@@ -174,18 +177,27 @@ namespace ATL.AudioData.IO
                     default: sampleRate = 0; break;
                 }
 
-                aWord = (ushort)(specDTS[2] | (specDTS[1] << 8));
-                bitrate = (ushort)BITRATES[(aWord & 0x03E0) >> 5];
+                value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 70, 5); // RATE
+                bitrate = (ushort)BITRATES[value];
 
-                aWord = (ushort)(specDTS[7] | (specDTS[6] << 8));
-                switch ((aWord & 0x01C0) >> 6)
+                value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 80, 3); // EXT_AUDIO_ID
+                uint extAudio = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 83, 1); // EXT_AUDIO
+                if (1 == extAudio && 2 == value) sampleRate = 96000; // X96 frequency extension
+
+                value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 85, 2); // LFF
+                bool isLfePresent = (1 == value || 2 == value);
+                channelsArrangement = getChannelsArrangement(amode, isLfePresent);
+
+                int filtsOffset = coreFrameBitOffset + 88 + ((1 == cpf) ? 16 : 0);
+                value = StreamUtils.ReadBEBits(source, filtsOffset + 7, 3); // PCMR
+                switch (value)
                 {
                     case 0:
                     case 1: bits = 16; break;
                     case 2:
                     case 3: bits = 20; break;
-                    case 4:
-                    case 5: bits = 24; break;
+                    case 6:
+                    case 5: bits = 24; break; // This is not a typo; the table actually skips 4
                     default: bits = 16; break;
                 }
 

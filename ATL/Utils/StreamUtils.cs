@@ -763,7 +763,7 @@ namespace ATL
         /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning) </param>
         /// <param name="bitCount">Number of bits to read</param>
         /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
-        public static uint ReadBits(BinaryReader source, int bitPosition, int bitCount)
+        public static uint ReadBEBits(BinaryReader source, int bitPosition, int bitCount)
         {
             if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
             byte[] buffer;

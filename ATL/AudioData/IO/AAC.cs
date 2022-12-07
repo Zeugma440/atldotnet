@@ -178,14 +178,14 @@ namespace ATL.AudioData.IO
             int Position;
 
             Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
-            if (0 == StreamUtils.ReadBits(Source, Position, 1)) Position += 3;
+            if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) Position += 3;
             else Position += 75;
-            if (0 == StreamUtils.ReadBits(Source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
             else bitrateTypeID = AAC_BITRATE_TYPE_VBR;
 
             Position++;
 
-            bitrate = (int)StreamUtils.ReadBits(Source, Position, 23);
+            bitrate = (int)StreamUtils.ReadBEBits(Source, Position, 23);
 
             if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) Position += 51;
             else Position += 31;
@@ -193,15 +193,15 @@ namespace ATL.AudioData.IO
             Position += 2;
 
             uint channels = 1;
-            sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, Position, 4)];
+            sampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(Source, Position, 4)];
             Position += 4;
-            channels += StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(Source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(Source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(Source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBits(Source, Position, 2);
+            channels += StreamUtils.ReadBEBits(Source, Position, 2);
             channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
         }
 
@@ -217,22 +217,22 @@ namespace ATL.AudioData.IO
                 frames++;
                 position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
-                if (StreamUtils.ReadBits(Source, position, 12) != 0xFFF) break;
+                if (StreamUtils.ReadBEBits(Source, position, 12) != 0xFFF) break;
 
                 position += 18;
 
-                sampleRate = SAMPLE_RATE[StreamUtils.ReadBits(Source, position, 4)];
+                sampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(Source, position, 4)];
                 position += 5;
 
-                uint channels = StreamUtils.ReadBits(Source, position, 3);
+                uint channels = StreamUtils.ReadBEBits(Source, position, 3);
                 channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
 
                 position += 7;
 
-                totalSize += (int)StreamUtils.ReadBits(Source, position, 13);
+                totalSize += (int)StreamUtils.ReadBEBits(Source, position, 13);
                 position += 13;
 
-                if (0x7FF == StreamUtils.ReadBits(Source, position, 11))
+                if (0x7FF == StreamUtils.ReadBEBits(Source, position, 11))
                     bitrateTypeID = AAC_BITRATE_TYPE_VBR;
                 else
                     bitrateTypeID = AAC_BITRATE_TYPE_CBR;
