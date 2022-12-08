@@ -324,6 +324,7 @@ namespace ATL.AudioData.IO
         {
             get { return bitrate; }
         }
+        /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
         /// <inheritdoc/>
         public double Duration
