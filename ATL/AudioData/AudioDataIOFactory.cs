@@ -1,3 +1,4 @@
+using ATL.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -323,7 +324,10 @@ namespace ATL.AudioData
             if (formats != null && formats.Count > alternate)
                 theFormat = formats[alternate];
             else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Unrecognized file extension : " + path);
                 theFormat = UNKNOWN_FORMAT;
+            }
 
             return getFromFormat(path, theFormat);
         }
@@ -346,7 +350,10 @@ namespace ATL.AudioData
             if (formats != null && formats.Count > alternate)
                 theFormat = formats[alternate];
             else
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Unrecognized MIME type : " + mimeType);
                 theFormat = UNKNOWN_FORMAT;
+            }
 
             return getFromFormat(path, theFormat);
         }
