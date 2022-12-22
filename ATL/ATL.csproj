@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/Zeugma440/atldotnet</PackageProjectUrl>
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
-    <FileVersion>4.16.0.0</FileVersion>
+    <FileVersion>4.17.0.0</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
     <Version>4.17.0</Version>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>

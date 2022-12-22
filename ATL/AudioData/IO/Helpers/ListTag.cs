@@ -4,6 +4,7 @@ using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
+using System;
 
 namespace ATL.AudioData.IO
 {
@@ -85,7 +86,7 @@ namespace ATL.AudioData.IO
                     else if (id.Equals(CHUNK_NOTE, System.StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                     else if (id.Equals(CHUNK_LABELED_TEXT, System.StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
 
-                    // Manage parasite zeroes at the end of data
+                    // Manage padding bytes at the end of data
                     if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
 
                     position++;
@@ -95,7 +96,7 @@ namespace ATL.AudioData.IO
 
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
-            byte[] data = new byte[size - 4];
+            byte[] data = new byte[Math.Max(4, size - 4)];
             WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
@@ -107,7 +108,7 @@ namespace ATL.AudioData.IO
 
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
-            byte[] data = new byte[size - 4];
+            byte[] data = new byte[Math.Max(4, size - 4)];
             WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
             WavHelper.readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
             WavHelper.readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
