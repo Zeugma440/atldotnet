@@ -33,15 +33,9 @@ namespace ATL.AudioData
         {
             byte alternate = 0;
             bool found = false;
-
-            audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
-            audioManager = new AudioDataManager(audioData);
-            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
-
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
-                alternate++;
-                audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate);
+                audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate++);
                 audioManager = new AudioDataManager(audioData);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
@@ -62,16 +56,9 @@ namespace ATL.AudioData
         {
             byte alternate = 0;
             bool found = false;
-
-            audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
-
-            audioManager = new AudioDataManager(audioData, stream);
-            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
-
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
-                alternate++;
-                audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate);
+                audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate++);
                 audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
@@ -81,12 +68,17 @@ namespace ATL.AudioData
             if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
         }
 
+        private void read()
+        {
+
+        }
+
         private IList<TagType> detectAvailableMetas()
         {
             IList<TagType> result = audioManager.getAvailableMetas();
             IList<TagType> supportedMetas = audioManager.getSupportedMetas();
 
-            bool hasNothing = (0 == result.Count);
+            bool hasNothing = 0 == result.Count;
             if (Settings.EnrichID3v1 && 1 == result.Count && result[0] == TagType.ID3V1) hasNothing = true;
 
             // File has no existing metadata
@@ -192,79 +184,37 @@ namespace ATL.AudioData
         /// <summary>
         /// Metadata fields container
         /// </summary>
-        public IMetaDataIO Metadata
-        {
-            get => metaData;
-        }
+        public IMetaDataIO Metadata => metaData;
         /// <inheritdoc/>
-        public string FileName
-        {
-            get => audioData.FileName;
-        }
+        public string FileName => audioData.FileName;
         /// <summary>
         /// Track duration (seconds), rounded
         /// </summary>
-        public int IntDuration
-        {
-            get => (int)Math.Round(audioData.Duration);
-        }
+        public int IntDuration => (int)Math.Round(audioData.Duration);
         /// <summary>
         /// Track bitrate (KBit/s), rounded
         /// </summary>
-        public int IntBitRate
-        {
-            get => (int)Math.Round(audioData.BitRate);
-        }
+        public int IntBitRate => (int)Math.Round(audioData.BitRate);
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get => audioData.AudioFormat;
-        }
+        public Format AudioFormat => audioData.AudioFormat;
         /// <inheritdoc/>
-        public int CodecFamily
-        {
-            get => audioData.CodecFamily;
-        }
+        public int CodecFamily => audioData.CodecFamily;
         /// <inheritdoc/>
-        public bool IsVBR
-        {
-            get => audioData.IsVBR;
-        }
+        public bool IsVBR => audioData.IsVBR;
         /// <inheritdoc/>
-        public double BitRate
-        {
-            get => audioData.BitRate;
-        }
+        public double BitRate => audioData.BitRate;
         /// <inheritdoc/>
-        public int BitDepth
-        {
-            get => audioData.BitDepth;
-        }
+        public int BitDepth => audioData.BitDepth;
         /// <inheritdoc/>
-        public int SampleRate
-        {
-            get => audioData.SampleRate;
-        }
+        public int SampleRate => audioData.SampleRate;
         /// <inheritdoc/>
-        public double Duration
-        {
-            get => audioData.Duration;
-        }
+        public double Duration => audioData.Duration;
         /// <inheritdoc/>
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get => audioData.ChannelsArrangement;
-        }
+        public ChannelsArrangement ChannelsArrangement => audioData.ChannelsArrangement;
         /// <inheritdoc/>
-        public long AudioDataOffset
-        {
-            get => audioData.AudioDataOffset;
-        }
+        public long AudioDataOffset => audioData.AudioDataOffset;
         /// <inheritdoc/>
-        public long AudioDataSize
-        {
-            get => audioData.AudioDataSize;
-        }
+        public long AudioDataSize => audioData.AudioDataSize;
         /// <inheritdoc/>
         public bool IsMetaSupported(TagType metaDataType)
         {
