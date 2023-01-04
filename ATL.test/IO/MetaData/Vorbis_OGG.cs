@@ -601,10 +601,15 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_VorbisOGG_Chapters()
         {
+            tagIO_RW_VorbisOGG_Chapters("OGG/chapters.ogg");
+            tagIO_RW_VorbisOGG_Chapters("OGG/chapters_0indexed.ogg");
+        }
+        private void tagIO_RW_VorbisOGG_Chapters(string file)
+        {
             new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
-            String testFileLocation = TestUtils.CopyAsTempTestFile("OGG/chapters.ogg");
+            String testFileLocation = TestUtils.CopyAsTempTestFile(file);
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible

@@ -98,7 +98,8 @@
 
         /// <summary>
         /// Unique ID
-        /// NB : Only supported by ID3v2
+        /// ID3v2 : Unique ID
+        /// Vorbis : Chapter index (0,1,2...)
         /// </summary>
         public string UniqueID { get; set; }
         /// <summary>

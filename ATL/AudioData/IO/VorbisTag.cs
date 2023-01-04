@@ -150,7 +150,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void setChapter(string fieldName, string fieldValue)
+        private void setChapterData(string fieldName, string fieldValue)
         {
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
 
@@ -158,29 +158,34 @@ namespace ATL.AudioData.IO
             // NB : Handled this way to retrieve badly formatted chapter indexes (e.g. CHAPTER2, CHAPTER02NAME...)
             int i = 7;
             while (i < fieldName.Length && char.IsDigit(fieldName[i])) i++;
-            int chapterIndex = int.Parse(fieldName.Substring(7, i - 7));
+            int chapterId = int.Parse(fieldName.Substring(7, i - 7));
 
-            // Ensure there is a slot to record the chapter
-            while (tagData.Chapters.Count < chapterIndex) tagData.Chapters.Add(new ChapterInfo());
+            ChapterInfo info = tagData.Chapters.FirstOrDefault(c => int.Parse(c.UniqueID) == chapterId);
+            if (null == info)
+            {
+                info = new ChapterInfo();
+                info.UniqueID = chapterId.ToString();
+                tagData.Chapters.Add(info);
+            }
 
             if (fieldName.EndsWith("NAME", StringComparison.OrdinalIgnoreCase)) // Chapter name
             {
-                tagData.Chapters[chapterIndex - 1].Title = fieldValue;
+                info.Title = fieldValue;
             }
             else if (fieldName.EndsWith("URL", StringComparison.OrdinalIgnoreCase)) // Chapter url
             {
-                tagData.Chapters[chapterIndex - 1].Url = new ChapterInfo.UrlInfo("", fieldValue);
+                info.Url = new ChapterInfo.UrlInfo("", fieldValue);
             }
             else // Chapter start time
             {
                 int result = Utils.DecodeTimecodeToMs(fieldValue);
                 if (-1 == result)
                 {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + chapterIndex + " : " + fieldValue);
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + info.UniqueID + " : " + fieldValue);
                 }
                 else
                 {
-                    tagData.Chapters[chapterIndex - 1].StartTime = (uint)result;
+                    info.StartTime = (uint)result;
                 }
             }
         }
@@ -361,7 +366,7 @@ namespace ATL.AudioData.IO
 
                         if (tagId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
                         {
-                            setChapter(tagId, strData);
+                            setChapterData(tagId, strData);
                         }
                         else // Standard textual field
                         {
@@ -547,18 +552,22 @@ namespace ATL.AudioData.IO
 
         private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
-            string chapterIndex;
-
-            for (int i = 0; i < chapters.Count; i++)
+            int chapterIndex = 0;
+            string formattedIndex;
+            foreach (ChapterInfo chapterInfo in chapters)
             {
-                chapterIndex = Utils.BuildStrictLengthString((i + 1).ToString(), 3, '0', false);
-                writeTextFrame(writer, "CHAPTER" + chapterIndex, Utils.EncodeTimecode_ms(chapters[i].StartTime));
-                if (chapters[i].Title.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "NAME", chapters[i].Title);
-                if (chapters[i].Url != null && chapters[i].Url.Url.Length > 0) writeTextFrame(writer, "CHAPTER" + chapterIndex + "URL", chapters[i].Url.Url);
+                // Take the valued index if existing; take the current numerical index if not
+                if (chapterInfo.UniqueID.Length > 0) chapterIndex = int.Parse(chapterInfo.UniqueID);
+                // Specs says chapter index if formatted over 3 chars
+                formattedIndex = Utils.BuildStrictLengthString(chapterIndex++, 3, '0', false);
+                writeTextFrame(writer, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
+                if (chapterInfo.Title.Length > 0) writeTextFrame(writer, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
+                if (chapterInfo.Url != null && chapterInfo.Url.Url.Length > 0)
+                    writeTextFrame(writer, "CHAPTER" + formattedIndex + "URL", chapterInfo.Url.Url);
             }
         }
 
-        private void writeTextFrame(BinaryWriter writer, String frameCode, String text)
+        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             long frameSizePos;
             long finalFramePos;
