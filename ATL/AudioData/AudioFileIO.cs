@@ -7,6 +7,7 @@ using static ATL.ChannelsArrangements;
 using System.Linq;
 using System.Threading.Tasks;
 using static ATL.AudioData.MetaDataIOFactory;
+using static ATL.LyricsInfo;
 
 namespace ATL.AudioData
 {
@@ -39,10 +40,7 @@ namespace ATL.AudioData
                 audioManager = new AudioDataManager(audioData);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
-
-            metaData = GetInstance().GetMetaReader(audioManager);
-
-            if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+            metaData = getAndCheckMetadata();
         }
 
         /// <summary>
@@ -62,15 +60,44 @@ namespace ATL.AudioData
                 audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
-
-            metaData = GetInstance().GetMetaReader(audioManager);
-
-            if (metaData is DummyTag && (0 == audioManager.getAvailableMetas().Count)) LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+            metaData = getAndCheckMetadata();
         }
 
-        private void read()
+        private IMetaDataIO getAndCheckMetadata()
         {
+            IMetaDataIO result = GetInstance().GetMetaReader(audioManager);
 
+            if (result is DummyTag && (0 == audioManager.getAvailableMetas().Count))
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
+
+            // Consistency checks
+            if (result.TrackTotal > 0 && result.TrackNumber > result.TrackTotal)
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track number (" + result.TrackNumber + ") is > total tracks (" + result.TrackTotal + ")");
+
+            if (result.DiscTotal > 0 && result.DiscNumber > result.DiscTotal)
+                LogDelegator.GetLogDelegate()(Log.LV_INFO, "Disc number (" + result.DiscNumber + ") is > total discs (" + result.DiscTotal + ")");
+
+            if (result.Chapters != null && result.Chapters.Count > 0)
+            {
+                foreach (ChapterInfo chapter in result.Chapters)
+                {
+                    if (chapter.StartTime > audioData.Duration)
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Chapter " + chapter.Title + " : start timestamp goes beyond file duration !");
+                    if (chapter.EndTime > audioData.Duration)
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Chapter " + chapter.Title + " : end timestamp goes beyond file duration !");
+                }
+            }
+
+            if (result.Lyrics != null && result.Lyrics.SynchronizedLyrics.Count > 0)
+            {
+                foreach (LyricsPhrase phrase in result.Lyrics.SynchronizedLyrics)
+                {
+                    if (phrase.TimestampMs > audioData.Duration)
+                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics phrase " + phrase.Text + " : start timestamp goes beyond file duration !");
+                }
+            }
+
+            return result;
         }
 
         private IList<TagType> detectAvailableMetas()

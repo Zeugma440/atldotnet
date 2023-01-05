@@ -609,7 +609,7 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             // Source : OGG with existing tag incl. chapters
-            String testFileLocation = TestUtils.CopyAsTempTestFile(file);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(file);
             AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check if the two fields are indeed accessible

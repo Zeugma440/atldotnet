@@ -6,6 +6,7 @@ using ATL.test.IO.MetaData;
 using System.Collections.Generic;
 using static ATL.Logging.Log;
 using System;
+using ATL.Logging;
 
 namespace ATL.test.IO
 {
@@ -1081,6 +1082,52 @@ namespace ATL.test.IO
             {
                 ATL.Settings.EnrichID3v1 = defaultSettings;
             }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void Chapters_Consistency()
+        {
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : OGG with existing tag incl. chapters
+            string testFileLocation = TestUtils.CopyAsTempTestFile("OGG/chapters.ogg");
+            new Track(testFileLocation);
+
+            IList<LogItem> logItems = log.GetAllItems(Log.LV_INFO);
+            Assert.IsTrue(logItems.Count > 0);
+            int nbFound = 0;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("is > total tracks")) nbFound++;
+                if (l.Message.Contains("is > total discs")) nbFound++;
+                if (l.Message.Contains("start timestamp goes beyond file duration")) nbFound++;
+            }
+            Assert.AreEqual(8, nbFound);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void Lyrics_Consistency()
+        {
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : OGG with existing tag incl. chapters
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_invalid.mp3");
+            new Track(testFileLocation);
+
+            IList<LogItem> logItems = log.GetAllItems(Log.LV_INFO);
+            Assert.IsTrue(logItems.Count > 0);
+            int nbFound = 0;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("start timestamp goes beyond file duration")) nbFound++;
+            }
+            Assert.AreEqual(1, nbFound);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
