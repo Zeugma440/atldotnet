@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -986,6 +988,49 @@ namespace ATL
             }
 
             return initialPos + readTotal;
+        }
+
+        /// <summary>
+        /// Skip the given bytes in the given Stream, starting from its current position, in forward direction
+        /// Returns with the given Stream positioned on the first non-skipped byte
+        /// </summary>
+        /// <param name="source">Stream to browse</param>
+        /// <param name="dataToSkip">Value of the bytes to skip</param>
+        /// <returns>Number of bytes skipped</returns>
+        public static int SkipValues(Stream source, int[] dataToSkip)
+        {
+            int b;
+            int nbBytes = -1;
+            do
+            {
+                b = source.ReadByte();
+                nbBytes++;
+            }
+            while (dataToSkip.Contains(b));
+            source.Position = source.Position - 1;
+            return nbBytes;
+        }
+
+        /// <summary>
+        /// Skip the given bytes in the given Stream, starting from its current position, in reverse direction
+        /// Returns with the given Stream positioned on the first non-skipped byte
+        /// </summary>
+        /// <param name="source">Stream to browse</param>
+        /// <param name="dataToSkip">Value of the bytes to skip</param>
+        /// <returns>Number of bytes skipped</returns>
+        public static int SkipValuesEnd(Stream source, int[] dataToSkip)
+        {
+            int b;
+            int nbBytes = -1;
+            do
+            {
+                nbBytes++;
+                source.Seek(-nbBytes - 1, SeekOrigin.Current);
+                b = source.ReadByte();
+            }
+            while (dataToSkip.Contains(b));
+            source.Position = source.Position + 1;
+            return nbBytes;
         }
     }
 }

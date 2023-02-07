@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
+using System.Collections;
 
 namespace ATL.AudioData.IO
 {
@@ -37,53 +38,74 @@ namespace ATL.AudioData.IO
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
         {
             IList<string> position = new List<string>();
+            position.Add("ixml");
+
+            long initialOffset = source.Position;
+            int nbSkipBegin = StreamUtils.SkipValues(source, new int[4] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
+            source.Seek(initialOffset + chunkSize, SeekOrigin.Begin);
+            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new int[4] { 10, 13, 32, 0 }); // Ignore ending CR, LF, whitespace, null
+            source.Seek(initialOffset + nbSkipBegin, SeekOrigin.Begin);
+
+            using (MemoryStream mem = new MemoryStream((int)chunkSize - nbSkipBegin - nbSkipEnd))
+            {
+                StreamUtils.CopyStream(source, mem, (int)chunkSize - nbSkipBegin - nbSkipEnd); // Isolate XML structure in a clean memory chunk
+                mem.Seek(0, SeekOrigin.Begin);
+
+                try
+                {
+                    // Try using the declared encoding
+                    readXml(mem, null, position, meta, readTagParams);
+                }
+                catch (Exception) // Fallback to forcing UTF-8 when the declared encoding is invalid (e.g. "UTF - 8")
+                {
+                    mem.Seek(0, SeekOrigin.Begin);
+                    readXml(mem, Encoding.UTF8, position, meta, readTagParams);
+                }
+            }
+        }
+
+        private static void readXml(MemoryStream mem, Encoding encoding, IList<string> position, MetaDataIO meta, ReadTagParams readTagParams)
+        {
             bool inList = false;
             int listDepth = 0;
             int listCounter = 1;
-            position.Add("ixml");
 
-            using (MemoryStream mem = new MemoryStream((int)chunkSize))
+            using (XmlReader reader = (null == encoding) ? XmlReader.Create(mem) : XmlReader.Create(new StreamReader(mem, encoding)))
             {
-                StreamUtils.CopyStream(source, mem, (int)chunkSize); // Isolate XML structure in a clean memory chunk
-                mem.Seek(0, SeekOrigin.Begin);
-
-                using (XmlReader reader = XmlReader.Create(mem))
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    switch (reader.NodeType)
                     {
-                        switch (reader.NodeType)
-                        {
-                            case XmlNodeType.Element: // Element start
-                                string key = reader.Name;
-                                if (inList && reader.Depth == listDepth + 1 && !key.EndsWith("COUNT", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    key = key + "[" + listCounter + "]";
-                                    listCounter++;
-                                }
-                                if (!key.Equals("BWFXML", StringComparison.OrdinalIgnoreCase)) position.Add(key);
-                                if (!inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    inList = true;
-                                    listDepth = reader.Depth;
-                                    listCounter = 1;
-                                }
-                                break;
+                        case XmlNodeType.Element: // Element start
+                            string key = reader.Name;
+                            if (inList && reader.Depth == listDepth + 1 && !key.EndsWith("COUNT", StringComparison.OrdinalIgnoreCase))
+                            {
+                                key = key + "[" + listCounter + "]";
+                                listCounter++;
+                            }
+                            if (!key.Equals("BWFXML", StringComparison.OrdinalIgnoreCase)) position.Add(key);
+                            if (!inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inList = true;
+                                listDepth = reader.Depth;
+                                listCounter = 1;
+                            }
+                            break;
 
-                            case XmlNodeType.Text:
-                                if (reader.Value != null && reader.Value.Length > 0)
-                                {
-                                    meta.SetMetaField(getPosition(position), reader.Value, readTagParams.ReadAllMetaFrames);
-                                }
-                                break;
+                        case XmlNodeType.Text:
+                            if (reader.Value != null && reader.Value.Length > 0)
+                            {
+                                meta.SetMetaField(getPosition(position), reader.Value, readTagParams.ReadAllMetaFrames);
+                            }
+                            break;
 
-                            case XmlNodeType.EndElement: // Element end
-                                position.RemoveAt(position.Count - 1);
-                                if (inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    inList = false;
-                                }
-                                break;
-                        }
+                        case XmlNodeType.EndElement: // Element end
+                            position.RemoveAt(position.Count - 1);
+                            if (inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
+                            {
+                                inList = false;
+                            }
+                            break;
                     }
                 }
             }
