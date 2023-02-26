@@ -4,9 +4,9 @@
     <Description>Fully managed, portable and easy-to-use C# library to read and edit audio data and metadata (tags) from various audio formats, playlists and CUE sheets</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company />
-    <AssemblyVersion>4.20.0.0</AssemblyVersion>
+    <AssemblyVersion>4.21.0.0</AssemblyVersion>
     <PackageId>z440.atl.core</PackageId>
-    <PackageVersion>4.19.0</PackageVersion>
+    <PackageVersion>4.20.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>audio metadata tag mp3 mp4 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -15,7 +15,7 @@
     <Product>Audio Tools Library (ATL) for .NET</Product>
     <FileVersion>4.20.0.0</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Version>4.20.0</Version>
+    <Version>4.21.0</Version>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
