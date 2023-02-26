@@ -1,7 +1,5 @@
-using ATL.AudioData.IO;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace ATL.AudioData
 {
@@ -85,6 +83,13 @@ namespace ATL.AudioData
         /// Recording date (DateTime.MinValue if field does not exist)
         /// </summary>
         DateTime Date
+        {
+            get;
+        }
+        /// <summary>
+        /// True if the provided Date only has Year as a valid field
+        /// </summary>
+        bool IsDateYearOnly
         {
             get;
         }

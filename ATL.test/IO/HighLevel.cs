@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using static ATL.Logging.Log;
 using System;
 using ATL.Logging;
+using Commons;
 
 namespace ATL.test.IO
 {
@@ -1028,7 +1029,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void ID3v1_Ignore_RW()
+        public void TagIO_RW_ID3v1_Ignore()
         {
             string resource = "MP3/id3v1.mp3";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
@@ -1059,7 +1060,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void ID3v1_Focus_RW()
+        public void TagIO_RW_ID3v1_Focus()
         {
             string resource = "MP3/id3v1.mp3";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
@@ -1088,7 +1089,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void Chapters_Consistency()
+        public void TagIO_RW_Chapters_Consistency()
         {
             ArrayLogger log = new ArrayLogger();
 
@@ -1112,7 +1113,7 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void Lyrics_Consistency()
+        public void TagIO_RW_Lyrics_Consistency()
         {
             ArrayLogger log = new ArrayLogger();
 
@@ -1133,5 +1134,114 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
+        [TestMethod]
+        public void TagIO_RW_MP4_Year_or_Date_On_File()
+        {
+            // == 1a- Add a YEAR to an empty file
+            string emptyResource = "MP4/empty.m4a";
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.Year = 1993;
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(1993, theTrack.Year);
+            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 1b- Add a DATE to an empty file
+            testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+            theTrack = new Track(testFileLocation);
+
+            DateTime date = new DateTime(2001, 4, 20);
+            theTrack.Date = date;
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
+            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+
+            // == 2a- Add a YEAR to a file tagged with a DATE
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4_date_in_©day.m4a");
+            theTrack = new Track(testFileLocation);
+
+            theTrack.Year = 1993;
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(1993, theTrack.Year);
+            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 2b- Add a DATE to a file tagged with a YEAR
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4.m4a");
+            theTrack = new Track(testFileLocation);
+
+            theTrack.Date = date;
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
+            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+
+            // == 3a- Keep YEAR after rewriting file
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4.m4a");
+            theTrack = new Track(testFileLocation);
+
+            int year = theTrack.Year.Value;
+            theTrack.Title = "That's some new title you got here!";
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(year, theTrack.Year);
+            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 3b- Keep DATE after rewriting file
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4_date_in_©day.m4a");
+            theTrack = new Track(testFileLocation);
+
+            date = theTrack.Date.Value;
+            theTrack.Title = "That's some new title you got here!";
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
+            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private int getDayFieldLength(string filePath)
+        {
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("©day")));
+                byte[] buffer = new byte[4];
+                fs.Read(buffer, 0, 4);
+                return StreamUtils.DecodeBEInt32(buffer);
+            }
+        }
     }
 }

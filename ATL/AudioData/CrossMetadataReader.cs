@@ -46,7 +46,7 @@ namespace ATL.AudioData
         /// <inheritdoc/>
         public bool Exists
         {
-            get { return (metaReaders.Count > 0); }
+            get { return metaReaders.Count > 0; }
         }
         /// <inheritdoc/>
         public IList<Format> MetadataFormats
@@ -204,12 +204,26 @@ namespace ATL.AudioData
                 return date;
             }
         }
+
         /// <inheritdoc/>
-        public String Album
+        public bool IsDateYearOnly
         {
             get
             {
-                String album = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.Date != DateTime.MinValue) return reader.IsDateYearOnly;
+                }
+                return false;
+            }
+        }
+
+        /// <inheritdoc/>
+        public string Album
+        {
+            get
+            {
+                string album = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     album = reader.Album;

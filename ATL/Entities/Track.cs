@@ -159,7 +159,15 @@ namespace ATL
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
-        public DateTime? Date { get; set; }
+        public DateTime? Date 
+        {
+            get => date;
+            set
+            {
+                date = value;
+                isYearExplicit = false;
+            }
+        }
         /// <summary>
 		/// Recording Year
 		/// </summary>
@@ -176,6 +184,7 @@ namespace ATL
                 if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1);
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
+                isYearExplicit = true;
             }
         }
         /// <summary>
@@ -228,6 +237,9 @@ namespace ATL
 
         private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
+
+        private DateTime? date = null;
+        private bool isYearExplicit = false;
 
         /// <summary>
         /// Format of the tagging systems
@@ -388,7 +400,15 @@ namespace ATL
             SeriesPart = Utils.ProtectValue(processString(metadata.SeriesPart));
             LongDescription = Utils.ProtectValue(processString(metadata.LongDescription));
             Album = Utils.ProtectValue(processString(metadata.Album));
-            Date = update(metadata.Date);
+            isYearExplicit = metadata.IsDateYearOnly;
+            if (metadata.IsDateYearOnly)
+            {
+                Year = update(metadata.Date.Year);
+            }
+            else
+            {
+                Date = update(metadata.Date);
+            }
             PublishingDate = update(metadata.PublishingDate);
             TrackNumber = update(metadata.TrackNumber);
             TrackTotal = update(metadata.TrackTotal);
@@ -454,8 +474,16 @@ namespace ATL
             result.IntegrateValue(Field.SERIES_TITLE, SeriesTitle);
             result.IntegrateValue(Field.SERIES_PART, SeriesPart);
             result.IntegrateValue(Field.LONG_DESCRIPTION, LongDescription);
-            result.IntegrateValue(Field.RECORDING_DATE, toTagValue(Date));
-            result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
+            if (isYearExplicit)
+            {
+                result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
+                result.IntegrateValue(Field.RECORDING_DATE, toTagValue(Year));
+            }
+            else
+            {
+                result.IntegrateValue(Field.RECORDING_DATE, toTagValue(Date));
+                result.IntegrateValue(Field.RECORDING_YEAR, "");
+            }
             result.IntegrateValue(Field.ALBUM, Album);
             result.IntegrateValue(Field.TRACK_NUMBER, toTagValue(TrackNumber));
             result.IntegrateValue(Field.TRACK_TOTAL, toTagValue(TrackTotal));
