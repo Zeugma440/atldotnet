@@ -219,21 +219,21 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
-            BufferedBinaryReader bufferedSource = new BufferedBinaryReader(source.BaseStream); // Optimize parsing speed
+            BufferedBinaryReader bufferedSource = new BufferedBinaryReader(source); // Optimize parsing speed
 
             resetData();
 
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            source.Seek(0, SeekOrigin.Begin);
 
             if (readHeader(bufferedSource, readTagParams))
             {

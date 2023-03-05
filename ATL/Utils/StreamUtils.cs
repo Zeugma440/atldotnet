@@ -426,6 +426,17 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decode a signed Little-Endian 64-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="data">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static long DecodeInt64(byte[] data)
+        {
+            if (data.Length < 8) throw new InvalidDataException("data should be at least 8 bytes long; found " + data.Length + " bytes");
+            return (data[0]) | ((long)data[1] << 8) | ((long)data[2] << 16) | ((long)data[3] << 24) | ((long)data[4] << 32) | ((long)data[5] << 40) | ((long)data[6] << 48) | ((long)data[7] << 56);
+        }
+
+        /// <summary>
         /// Decode a signed Big-Endian 64-bit integer from the given array of bytes
         /// </summary>
         /// <param name="data">Array of bytes to read value from</param>
@@ -761,18 +772,18 @@ namespace ATL
         /// 
         /// NB : reader position _always_ progresses by 4, no matter how many bits are needed
         /// </summary>
-        /// <param name="source">BinaryReader to read the data from</param>
+        /// <param name="source">Stream to read the data from</param>
         /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning) </param>
         /// <param name="bitCount">Number of bits to read</param>
         /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
-        public static uint ReadBEBits(BinaryReader source, int bitPosition, int bitCount)
+        public static uint ReadBEBits(Stream source, int bitPosition, int bitCount)
         {
             if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
-            byte[] buffer;
+            byte[] buffer = new byte[4];
 
             // Read a number of bits from file at the given position
-            source.BaseStream.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
-            buffer = source.ReadBytes(4);
+            source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
+            source.Read(buffer, 0, buffer.Length);
             uint result = (uint)((buffer[0] << 24) + (buffer[1] << 16) + (buffer[2] << 8) + buffer[3]);
             result = (result << (bitPosition % 8)) >> (32 - bitCount);
 

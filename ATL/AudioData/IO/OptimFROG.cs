@@ -1,3 +1,4 @@
+using Commons;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -159,25 +160,35 @@ namespace ATL.AudioData.IO
             return OFR_BITS[header.SampleType];
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
             this.sizeInfo = sizeInfo;
             resetData();
 
             // Read header data
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            long initialPos = source.BaseStream.Position;
-            header.ID = source.ReadChars(4);
-            header.Size = source.ReadUInt32();
-            header.Length = source.ReadUInt32();
-            header.HiLength = source.ReadUInt16();
-            header.SampleType = source.ReadByte();
-            header.ChannelMode = source.ReadByte();
-            header.SampleRate = source.ReadInt32();
-            header.EncoderID = source.ReadUInt16();
-            header.CompressionID = source.ReadByte();
+            long initialPos = source.Position;
+            byte[] buffer = new byte[4];
+
+            source.Read(buffer, 0, 4);
+            header.ID = Utils.Latin1Encoding.GetChars(buffer);
+            source.Read(buffer, 0, 4);
+            header.Size = StreamUtils.DecodeUInt32(buffer);
+            source.Read(buffer, 0, 4);
+            header.Length = StreamUtils.DecodeUInt32(buffer);
+            source.Read(buffer, 0, 2);
+            header.HiLength = StreamUtils.DecodeUInt16(buffer);
+            source.Read(buffer, 0, 2);
+            header.SampleType = buffer[0];
+            header.ChannelMode = buffer[1];
+            source.Read(buffer, 0, 4);
+            header.SampleRate = StreamUtils.DecodeInt32(buffer);
+            source.Read(buffer, 0, 2);
+            header.EncoderID = StreamUtils.DecodeUInt16(buffer);
+            source.Read(buffer, 0, 1);
+            header.CompressionID = buffer[0];
 
             if (StreamUtils.StringEqualsArr(OFR_SIGNATURE, header.ID))
             {

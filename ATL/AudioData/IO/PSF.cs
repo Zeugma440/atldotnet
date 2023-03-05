@@ -209,14 +209,19 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private bool readHeader(BinaryReader source, ref PSFHeader header)
+        private bool readHeader(Stream source, ref PSFHeader header)
         {
-            header.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
+            byte[] buffer = new byte[4];
+            source.Read(buffer, 0, 3);
+            header.FormatTag = Utils.Latin1Encoding.GetString(buffer, 0, 3);
             if (PSF_FORMAT_TAG == header.FormatTag)
             {
-                header.VersionByte = source.ReadByte();
-                header.ReservedAreaLength = source.ReadUInt32();
-                header.CompressedProgramLength = source.ReadUInt32();
+                source.Read(buffer, 0, 1);
+                header.VersionByte = buffer[0];
+                source.Read(buffer, 0, 4);
+                header.ReservedAreaLength = StreamUtils.DecodeUInt32(buffer);
+                source.Read(buffer, 0, 4);
+                header.CompressedProgramLength = StreamUtils.DecodeUInt32(buffer);
                 return true;
             }
             else
@@ -251,15 +256,18 @@ namespace ATL.AudioData.IO
             return encoding.GetString(data, 0, data.Length - (hasEOL ? 1 : 0)).Trim(); // -1 because we don't want to include LINE_FEED in the result
         }
 
-        private bool readTag(BinaryReader source, ref PSFTag tag, ReadTagParams readTagParams)
+        private bool readTag(Stream source, ref PSFTag tag, ReadTagParams readTagParams)
         {
-            long initialPosition = source.BaseStream.Position;
+            long initialPosition = source.Position;
             Encoding encoding = Utils.Latin1Encoding;
 
-            tag.TagHeader = Utils.Latin1Encoding.GetString(source.ReadBytes(5));
+            byte[] buffer = new byte[5];
+            source.Read(buffer, 0, buffer.Length);
+            tag.TagHeader = Utils.Latin1Encoding.GetString(buffer);
+
             if (TAG_HEADER == tag.TagHeader)
             {
-                string s = readPSFLine(source.BaseStream, encoding);
+                string s = readPSFLine(source, encoding);
 
                 int equalIndex;
                 string keyStr, valueStr, lowKeyStr;
@@ -297,14 +305,14 @@ namespace ATL.AudioData.IO
                         lastKey = keyStr;
                     }
 
-                    s = readPSFLine(source.BaseStream, encoding);
+                    s = readPSFLine(source, encoding);
                 } // Metadata lines 
                 SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
                 if (!lengthFieldFound) duration = PSF_DEFAULT_DURATION;
 
-                tag.size = (int)(source.BaseStream.Position - initialPosition);
+                tag.size = (int)(source.Position - initialPosition);
                 if (readTagParams.PrepareForWriting)
                 {
                     structureHelper.AddZone(initialPosition, tag.size);
@@ -377,14 +385,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
             PSFHeader header = new PSFHeader();
@@ -398,9 +406,9 @@ namespace ATL.AudioData.IO
 
             AudioDataOffset = 0;
 
-            if (source.BaseStream.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
+            if (source.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
             {
-                source.BaseStream.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
+                source.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
 
                 if (!readTag(source, ref tag, readTagParams)) throw new InvalidDataException("Not a PSF tag");
 
@@ -494,7 +502,7 @@ namespace ATL.AudioData.IO
 
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
+            return Write(s, s, tag);
         }
 
         // Specific implementation for conservation of fields that are required for playback
@@ -504,7 +512,7 @@ namespace ATL.AudioData.IO
 
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+            return await WriteAsync(s, s, tag);
         }
 
         private TagData prepareRemove()

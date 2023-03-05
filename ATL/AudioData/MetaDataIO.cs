@@ -301,7 +301,7 @@ namespace ATL.AudioData.IO
         /// <param name="source">Source to read metadata from</param>
         /// <param name="readTagParams">Read parameters</param>
         /// <returns>True if read has been successful, false if it failed</returns>
-        abstract protected bool read(BinaryReader source, ReadTagParams readTagParams);
+        abstract protected bool read(Stream source, ReadTagParams readTagParams);
 
         /// <summary>
         /// Write the given zone's metadata using the given writer
@@ -487,7 +487,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public bool Read(Stream source, ReadTagParams readTagParams)
         {
             if (readTagParams.PrepareForWriting) structureHelper.Clear();
 
@@ -502,7 +502,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(r, tag);
 
@@ -520,7 +520,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(r, tag);
 
@@ -537,7 +537,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private TagData prepareWrite(BinaryReader r, TagData tag)
+        private TagData prepareWrite(Stream r, TagData tag)
         {
             structureHelper.Clear();
             tagData.Pictures.Clear();

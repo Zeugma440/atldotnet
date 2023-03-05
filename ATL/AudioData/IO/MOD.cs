@@ -104,14 +104,11 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return 0; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        /// <inheritdoc/>
+        public int SampleRate => 0;
+        /// <inheritdoc/>
+        public bool IsVBR => false;
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get
@@ -124,44 +121,31 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        /// <inheritdoc/>
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+        /// <inheritdoc/>
+        public string FileName => filePath;
+        /// <inheritdoc/>
+        public double BitRate => bitrate;
+        /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return ChannelsArrangements.STEREO; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
-        }
+        /// <inheritdoc/>
+        public double Duration => duration;
+        /// <inheritdoc/>
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+        /// <inheritdoc/>
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        /// <inheritdoc/>
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+        /// <inheritdoc/>
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
+        /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
@@ -348,18 +332,18 @@ namespace ATL.AudioData.IO
             return result * 1000.0;
         }
 
-        private byte detectNbSamples(BinaryReader source)
+        private byte detectNbSamples(BufferedBinaryReader source)
         {
             byte result = 31;
-            long position = source.BaseStream.Position;
+            long position = source.Position;
 
-            source.BaseStream.Seek(1080, SeekOrigin.Begin);
+            source.Seek(1080, SeekOrigin.Begin);
 
             formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
 
             if (!modFormats.ContainsKey(formatTag)) result = 15;
 
-            source.BaseStream.Seek(position, SeekOrigin.Begin);
+            source.Seek(position, SeekOrigin.Begin);
 
             return result;
         }
@@ -367,14 +351,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
             int maxPatterns = -1;
@@ -389,9 +373,10 @@ namespace ATL.AudioData.IO
 
             resetData();
 
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             // == TITLE ==
-            readString = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            readString = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
             if (readString.Equals(SIG_POWERPACKER))
             {
                 throw new InvalidDataException("MOD files compressed with PowerPacker are not supported yet");
@@ -400,45 +385,45 @@ namespace ATL.AudioData.IO
             tagExists = true;
 
             // Restart from beginning, else parser might miss empty titles
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            reader.Seek(0, SeekOrigin.Begin);
 
             // Title = max first 20 chars; null-terminated
-            string title = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 20);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(reader, Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(TagData.Field.TITLE, title.Trim());
 
-            AudioDataOffset = source.BaseStream.Position;
+            AudioDataOffset = reader.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             // == SAMPLES ==
-            nbSamples = detectNbSamples(source);
+            nbSamples = detectNbSamples(reader);
             string charOne = Utils.Latin1Encoding.GetString(new byte[] { 1 });
 
             for (int i = 0; i < nbSamples; i++)
             {
                 sample = new Sample();
-                sample.Name = StreamUtils.ReadNullTerminatedStringFixed(source, System.Text.Encoding.ASCII, 22).Trim();
+                sample.Name = StreamUtils.ReadNullTerminatedStringFixed(reader, Encoding.ASCII, 22).Trim();
                 sample.Name = sample.Name.Replace("\0", "");
                 sample.Name = sample.Name.Replace(charOne, "");
-                sample.Size = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
-                sample.Finetune = source.ReadSByte();
-                sample.Volume = source.ReadByte();
-                sample.RepeatOffset = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
-                sample.RepeatLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)) * 2;
+                sample.Size = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
+                sample.Finetune = reader.ReadSByte();
+                sample.Volume = reader.ReadByte();
+                sample.RepeatOffset = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
+                sample.RepeatLength = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
                 FSamples.Add(sample);
             }
 
 
             // == SONG ==
-            nbValidPatterns = source.ReadByte();
-            source.BaseStream.Seek(1, SeekOrigin.Current); // Controversial byte; no real use here
-            for (int i = 0; i < 128; i++) FPatternTable.Add(source.ReadByte()); // Pattern table
+            nbValidPatterns = reader.ReadByte();
+            reader.Seek(1, SeekOrigin.Current); // Controversial byte; no real use here
+            for (int i = 0; i < 128; i++) FPatternTable.Add(reader.ReadByte()); // Pattern table
 
             // File format tag
-            formatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).Trim();
+            formatTag = Utils.Latin1Encoding.GetString(reader.ReadBytes(4)).Trim();
             if (modFormats.ContainsKey(formatTag))
             {
                 nbChannels = modFormats[formatTag].NbChannels;
@@ -476,7 +461,7 @@ namespace ATL.AudioData.IO
                     row = pattern[pattern.Count - 1];
                     for (int c = 0; c < nbChannels; c++) // Channels loop
                     {
-                        row.Add(StreamUtils.DecodeBEInt32(source.ReadBytes(4)));
+                        row.Add(StreamUtils.DecodeBEInt32(reader.ReadBytes(4)));
                     } // end channels loop
                 } // end rows loop
             } // end patterns loop

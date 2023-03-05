@@ -102,13 +102,13 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private bool readHeader(BinaryReader source, ref HeaderRecord Header)
+        private bool readHeader(Stream source, ref HeaderRecord Header)
         {
             bool result = true;
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // Read header and get file size
-            Header.ByteArray = source.ReadBytes(32);
+            source.Read(Header.ByteArray, 0, Header.ByteArray.Length);
 
             // if transfer is not complete
             int temp;
@@ -128,12 +128,14 @@ namespace ATL.AudioData.IO
                 bool headerFound = false;
 
                 // Let's go back right after the 32-bit version marker
-                source.BaseStream.Seek(sizeInfo.ID3v2Size + 4, SeekOrigin.Begin);
+                source.Seek(sizeInfo.ID3v2Size + 4, SeekOrigin.Begin);
 
+                byte[] buffer = new byte[2];
                 while (!headerFound)
                 {
-                    long initialPos = source.BaseStream.Position;
-                    packetKey = Utils.Latin1Encoding.GetString(source.ReadBytes(2));
+                    long initialPos = source.Position;
+                    source.Read(buffer, 0, 2);
+                    packetKey = Utils.Latin1Encoding.GetString(buffer);
 
                     readVariableSizeInteger(source); // Packet size (unused)
 
@@ -142,18 +144,18 @@ namespace ATL.AudioData.IO
                     {
                         AudioDataOffset = initialPos;
                         // Skip CRC-32 and stream version
-                        source.BaseStream.Seek(5, SeekOrigin.Current);
+                        source.Seek(5, SeekOrigin.Current);
                         long sampleCount = readVariableSizeInteger(source);
                         readVariableSizeInteger(source); // Skip beginning silence
 
-                        byte b = source.ReadByte(); // Sample frequency (3) + Max used bands (5)
-                        sampleRate = MPP_SAMPLERATES[(b & 0b11100000) >> 5]; // First 3 bits
+                        source.Read(buffer, 0, 1);// Sample frequency (3) + Max used bands (5)
+                        sampleRate = MPP_SAMPLERATES[(buffer[0] & 0b11100000) >> 5]; // First 3 bits
 
-                        b = source.ReadByte(); // Channel count (4) + Mid/Side Stereo used (1) + Audio block frames (3)
-                        int channelCount = (b & 0b11110000) >> 4; // First 4 bits
-                        bool isMidSideStereo = (b & 0b00001000) > 0; // First 4 bits
+                        source.Read(buffer, 0, 1); // Channel count (4) + Mid/Side Stereo used (1) + Audio block frames (3)
+                        int channelCount = (buffer[0] & 0b11110000) >> 4; // First 4 bits
+                        bool isMidSideStereo = (buffer[0] & 0b00001000) > 0; // First 4 bits
                         if (isMidSideStereo) channelsArrangement = JOINT_STEREO_MID_SIDE;
-                        else channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channelCount);
+                        else channelsArrangement = GuessFromChannelNumber(channelCount);
 
                         // MPC has variable bitrate; only MPC versions < 7 display fixed bitrate
                         duration = sampleCount * 1000.0 / sampleRate;
@@ -162,7 +164,7 @@ namespace ATL.AudioData.IO
                         headerFound = true;
                     }
                     // Continue searching for header
-                    source.BaseStream.Seek(initialPos + 2, SeekOrigin.Begin);
+                    source.Seek(initialPos + 2, SeekOrigin.Begin);
                 }
             }
             else
@@ -268,7 +270,7 @@ namespace ATL.AudioData.IO
         }
 
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             HeaderRecord Header = new HeaderRecord();
             bool result;
@@ -303,15 +305,17 @@ namespace ATL.AudioData.IO
 
         // Specific to MPC SV8
         // See specifications
-        private static long readVariableSizeInteger(BinaryReader source)
+        private static long readVariableSizeInteger(Stream source)
         {
             long result = 0;
             byte b = 128;
+            byte[] buffer = new byte[1];
 
             // Data is coded with a Big-endian, 7-byte variable-length record
             while ((b & 128) > 0)
             {
-                b = source.ReadByte();
+                source.Read(buffer, 0, 1);
+                b = buffer[0];
                 result = (result << 7) + (b & 127); // Big-endian
             }
 

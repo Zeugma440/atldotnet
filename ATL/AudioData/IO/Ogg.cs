@@ -143,20 +143,30 @@ namespace ATL.AudioData.IO
                 Checksum = 0;
             }
 
-            public void ReadFromStream(BufferedBinaryReader r)
+            public void ReadFromStream(Stream r)
             {
-                ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
-                StreamVersion = r.ReadByte();
-                TypeFlag = r.ReadByte();
-                AbsolutePosition = r.ReadUInt64();
-                StreamId = r.ReadInt32();
-                PageNumber = r.ReadInt32();
-                Checksum = r.ReadUInt32();
-                Segments = r.ReadByte();
-                LacingValues = r.ReadBytes(Segments);
+                byte[] buffer = new byte[8];
+                r.Read(buffer, 0, 4);
+                ID = Utils.Latin1Encoding.GetString(buffer, 0, 4);
+                r.Read(buffer, 0, 2);
+                StreamVersion = buffer[0];
+                TypeFlag = buffer[1];
+                r.Read(buffer, 0, 8);
+                AbsolutePosition = StreamUtils.DecodeUInt64(buffer);
+                r.Read(buffer, 0, 4);
+                StreamId = StreamUtils.DecodeInt32(buffer);
+                r.Read(buffer, 0, 4);
+                PageNumber = StreamUtils.DecodeInt32(buffer);
+                r.Read(buffer, 0, 4);
+                Checksum = StreamUtils.DecodeUInt32(buffer);
+                r.Read(buffer, 0, 1);
+                Segments = buffer[0];
+
+                LacingValues = new byte[Segments];
+                r.Read(LacingValues, 0, Segments);
             }
 
-            public void ReadFromStream(BinaryReader r)
+            public void ReadFromStream(BufferedBinaryReader r)
             {
                 ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
                 StreamVersion = r.ReadByte();
@@ -658,7 +668,7 @@ namespace ATL.AudioData.IO
             if (isValidTagHeader)
             {
                 tag.Clear();
-                tag.Read(source, readTagParams);
+                tag.Read(source.BaseStream, readTagParams);
             }
         }
 
@@ -719,18 +729,18 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return Read(source, readTagParams);
         }
 
-        public bool Read(BinaryReader source, ReadTagParams readTagParams)
+        public bool Read(Stream source, ReadTagParams readTagParams)
         {
             bool result = false;
 
-            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             if (readTagParams.ReadTag && null == vorbisTag) createVorbisTag(true, true, true, true);
             info.Reset();
@@ -771,7 +781,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -803,11 +813,11 @@ namespace ATL.AudioData.IO
                 // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
-                    r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
+                    r.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        StreamUtils.CopyStream(r.BaseStream, memStream, setupHeaderSize);
+                        StreamUtils.CopyStream(r, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -853,7 +863,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public async Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -885,11 +895,11 @@ namespace ATL.AudioData.IO
                 // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
-                    r.BaseStream.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
+                    r.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        await StreamUtilsAsync.CopyStreamAsync(r.BaseStream, memStream, setupHeaderSize);
+                        await StreamUtilsAsync.CopyStreamAsync(r, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -1044,7 +1054,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private bool renumberRemainingPages(Stream s, BinaryReader r, long nextPageOffset, int writtenPages)
+        private bool renumberRemainingPages(Stream s, Stream r, long nextPageOffset, int writtenPages)
         {
             OggPageHeader header = new OggPageHeader();
             byte[] data = new byte[0];
@@ -1075,7 +1085,7 @@ namespace ATL.AudioData.IO
                     data[25] = 0;
 
                     crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
-                    r.BaseStream.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
+                    r.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
                     StreamUtils.WriteUInt32(s, crc);
 
                     // To the next header
@@ -1094,15 +1104,13 @@ namespace ATL.AudioData.IO
         public bool Remove(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
-
-            using (BinaryReader r = new BinaryReader(s, new UTF8Encoding(), true)) return Write(r, s, tag);
+            return Write(s, s, tag);
         }
 
         public async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
-
-            using (BinaryReader r = new BinaryReader(s, new UTF8Encoding(), true)) return await WriteAsync(r, s, tag);
+            return await WriteAsync(s, s, tag);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

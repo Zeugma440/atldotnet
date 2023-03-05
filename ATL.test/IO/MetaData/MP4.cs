@@ -1429,13 +1429,13 @@ namespace ATL.test.IO.MetaData
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
             string testImageLocation = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
-            
+
             Track track = new Track(testFileLocation);
             double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
             double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
 
             track.Remove(MetaDataIOFactory.TagType.NATIVE);
-            
+
             track = new Track(testFileLocation);
             double dPostLength = TestUtils.GetFileSize(testFileLocation);
             Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
@@ -1489,13 +1489,13 @@ namespace ATL.test.IO.MetaData
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
             string testImageLocation1 = TestUtils.GetResourceLocationRoot() + "_Images/big.jpg";
             string testImageLocation2 = TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg";
-            
+
             Track track = new Track(testFileLocation);
             double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
             double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
 
             track.Remove(MetaDataIOFactory.TagType.NATIVE);
-            
+
             track = new Track(testFileLocation);
             double dPostLength = TestUtils.GetFileSize(testFileLocation);
             Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
@@ -1524,24 +1524,24 @@ namespace ATL.test.IO.MetaData
             ch = new ChapterInfo();
             ch.StartTime = 10000;
             ch.Title = "New Chap1";
-            ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
+            ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
             track.Chapters.Add(ch);
-            Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+            Action<float> progress = new Action<float>(x => Console.WriteLine(x.ToString()));
             new ConsoleLogger();
             if (!track.Save(progress))
                 Assert.Fail("Failed to save.");
-            System.Console.WriteLine("ErrorLOG: ");
-            foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
-                System.Console.WriteLine("- " + l.Message);
-            WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
-            
-            PictureInfo picture1 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation1));
-            PictureInfo picture2 = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(testImageLocation2));
+            Console.WriteLine("ErrorLOG: ");
+            foreach (LogItem l in log.GetAllItems(LV_ERROR))
+                Console.WriteLine("- " + l.Message);
+            WithErrors = (WithErrors || log.GetAllItems(LV_ERROR).Count > 0);
+
+            PictureInfo picture1 = PictureInfo.fromBinaryData(File.ReadAllBytes(testImageLocation1));
+            PictureInfo picture2 = PictureInfo.fromBinaryData(File.ReadAllBytes(testImageLocation2));
 
             //Add Meta again
             for (int n = 0; n <= nbLoops; n++)
             {
-                System.Console.WriteLine($"Save {n}: ");
+                Console.WriteLine($"Save {n}: ");
                 log = new ArrayLogger();
                 track = new Track(testFileLocation);
                 Assert.IsTrue(track.Description.Length > 0, "Description not found!");
@@ -1553,19 +1553,19 @@ namespace ATL.test.IO.MetaData
                 track.Chapters[0].Picture = (n % 2 > 0) ? picture1 : picture2;
                 track.Chapters[1].Title = "New Chap1-" + n.ToString();
                 track.Chapters[1].Picture = (n % 2 > 0) ? picture1 : picture2;
-                progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+                progress = new Action<float>(x => Console.WriteLine(x.ToString()));
                 if (!track.Save(progress))
                     Assert.Fail("Failed to save.");
-                System.Console.WriteLine($"ErrorLOG: {n} ");
-                foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
-                    System.Console.WriteLine("- " + l.Message);
-                WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+                Console.WriteLine($"ErrorLOG: {n} ");
+                foreach (LogItem l in log.GetAllItems(LV_ERROR))
+                    Console.WriteLine("- " + l.Message);
+                WithErrors = (WithErrors || log.GetAllItems(LV_ERROR).Count > 0);
             }
 
             track = new Track(testFileLocation);
             dPostLength = TestUtils.GetFileSize(testFileLocation);
-            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("POST Add File Length: " + dPostLength);
+            Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            Console.WriteLine("POST Add File Length: " + dPostLength);
             Assert.AreEqual($"New Description{nbLoops}", track.Description, "Description should be the same.");
             Assert.AreEqual($"New Title{nbLoops}", track.Title, "Title should be the same.");
             Assert.AreEqual($"New Album{nbLoops}", track.Album, "Album should be the same.");
@@ -1585,16 +1585,16 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_ChangeMetaAndChapLoop()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/2tracks_QTchaps.m4a");
-            
+
             Track track = new Track(testFileLocation);
             double tDuration = track.DurationMs; Console.WriteLine("Pre Duration: " + tDuration);
             double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
 
             //Update Meta again
-            int TopEdit = 100; bool WithErrors = false;
-            for (int n = 0; n <= TopEdit; n++)
+            bool WithErrors = false;
+            for (int n = 0; n <= nbLoops; n++)
             {
-                System.Console.WriteLine($"Save {n}: ");
+                Console.WriteLine($"Save {n}: ");
                 var log = new ArrayLogger();
                 track = new Track(testFileLocation);
                 track.Description = "New Description" + n.ToString();
@@ -1602,23 +1602,23 @@ namespace ATL.test.IO.MetaData
                 track.Album = "New Album" + n.ToString();
                 track.Chapters[0].Title = "New Chap0-" + n.ToString();
                 track.Chapters[1].Title = "New Chap1-" + n.ToString();
-                Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
+                Action<float> progress = new Action<float>(x => Console.WriteLine(x.ToString()));
                 if (!track.Save(progress))
                     Assert.Fail("Failed to save.");
-                System.Console.WriteLine($"ErrorLOG: {n} ");
-                foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
-                    System.Console.WriteLine("- " + l.Message);
-                WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+                Console.WriteLine($"ErrorLOG: {n} ");
+                foreach (LogItem l in log.GetAllItems(LV_ERROR))
+                    Console.WriteLine("- " + l.Message);
+                WithErrors = WithErrors || log.GetAllItems(LV_ERROR).Count > 0;
             }
 
             track = new Track(testFileLocation);
-            System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("POST Add File Length: " + TestUtils.GetFileSize(testFileLocation));
-            Assert.AreEqual($"New Description{TopEdit}", track.Description, "Description should be the same.");
-            Assert.AreEqual($"New Title{TopEdit}", track.Title, "Title should be the same.");
-            Assert.AreEqual($"New Album{TopEdit}", track.Album, "Album should be the same.");
-            Assert.AreEqual($"New Chap0-{TopEdit}", track.Chapters[0].Title, "Album should be the same.");
-            Assert.AreEqual($"New Chap1-{TopEdit}", track.Chapters[1].Title, "Album should be the same.");
+            Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
+            Console.WriteLine("POST Add File Length: " + TestUtils.GetFileSize(testFileLocation));
+            Assert.AreEqual($"New Description{nbLoops}", track.Description, "Description should be the same.");
+            Assert.AreEqual($"New Title{nbLoops}", track.Title, "Title should be the same.");
+            Assert.AreEqual($"New Album{nbLoops}", track.Album, "Album should be the same.");
+            Assert.AreEqual($"New Chap0-{nbLoops}", track.Chapters[0].Title, "Album should be the same.");
+            Assert.AreEqual($"New Chap1-{nbLoops}", track.Chapters[1].Title, "Album should be the same.");
 
             if (WithErrors) Assert.Fail("There were errors noted in the Logs on saving;");
 
@@ -1674,9 +1674,9 @@ namespace ATL.test.IO.MetaData
             if (track.Save(progress) == false)
                 Assert.Fail("Failed to save.");
             System.Console.WriteLine("ErrorLOG: ");
-            foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
+            foreach (Logging.Log.LogItem l in log.GetAllItems(LV_ERROR))
                 System.Console.WriteLine("- " + l.Message);
-            WithErrors = (WithErrors || log.GetAllItems(Logging.Log.LV_ERROR).Count > 0);
+            WithErrors = (WithErrors || log.GetAllItems(LV_ERROR).Count > 0);
 
             track = new Track(testFileLocation); //Reload
             dPostLenght = TestUtils.GetFileSize(testFileLocation);

@@ -226,17 +226,17 @@ namespace ATL.AudioData.IO
         }
 
         // Read header data
-        private bool readHeader(BinaryReader source)
+        private bool readHeader(BufferedBinaryReader source)
         {
             uint fileSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             int magicNumber = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             if (magicNumber != AA_MAGIC_NUMBER) return false;
 
             tagExists = true;
-            AudioDataOffset = source.BaseStream.Position - 4;
-            tocOffset = source.BaseStream.Position;
+            AudioDataOffset = source.Position - 4;
+            tocOffset = source.Position;
             toc = readToc(source);
-            tocSize = source.BaseStream.Position - tocOffset;
+            tocSize = source.Position - tocOffset;
 
             foreach (var entry in toc)
             {
@@ -266,14 +266,14 @@ namespace ATL.AudioData.IO
         }
 
         // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
-        private IDictionary<int, TocEntry> readToc(BinaryReader s)
+        private IDictionary<int, TocEntry> readToc(BufferedBinaryReader s)
         {
             IDictionary<int, TocEntry> result = new Dictionary<int, TocEntry>();
             int nbTocEntries = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
-            s.BaseStream.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
+            s.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
             for (int i = 0; i < nbTocEntries; i++)
             {
-                long offset = s.BaseStream.Position;
+                long offset = s.Position;
                 int section = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
                 uint tocEntryOffset = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
                 uint tocEntrySize = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
@@ -287,13 +287,13 @@ namespace ATL.AudioData.IO
             return TOC_CONTENT_TAGS == sectionId || TOC_COVER_ART == sectionId;
         }
 
-        private void readTags(BinaryReader source, long offset, ReadTagParams readTagParams)
+        private void readTags(BufferedBinaryReader source, long offset, ReadTagParams readTagParams)
         {
-            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            source.Seek(offset, SeekOrigin.Begin);
             int nbTags = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             for (int i = 0; i < nbTags; i++)
             {
-                source.BaseStream.Seek(1, SeekOrigin.Current); // No idea what this byte is
+                source.Seek(1, SeekOrigin.Current); // No idea what this byte is
                 int keyLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                 int valueLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                 string key = Encoding.UTF8.GetString(source.ReadBytes(keyLength));
@@ -303,30 +303,30 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readCover(BinaryReader source, long offset, PictureInfo.PIC_TYPE pictureType)
+        private void readCover(BufferedBinaryReader source, long offset, PictureInfo.PIC_TYPE pictureType)
         {
-            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            source.Seek(offset, SeekOrigin.Begin);
             int pictureSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
             int picOffset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            structureHelper.AddIndex(source.BaseStream.Position - 4, (uint)picOffset, false, ZONE_IMAGE);
-            source.BaseStream.Seek(picOffset, SeekOrigin.Begin);
+            structureHelper.AddIndex(source.Position - 4, (uint)picOffset, false, ZONE_IMAGE);
+            source.Seek(picOffset, SeekOrigin.Begin);
 
-            PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, pictureSize, pictureType, getImplementedTagType(), TOC_COVER_ART);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(source, pictureSize, pictureType, getImplementedTagType(), TOC_COVER_ART);
             tagData.Pictures.Add(picInfo);
         }
 
-        private void readChapters(BinaryReader source, long offset, long size)
+        private void readChapters(BufferedBinaryReader source, long offset, long size)
         {
-            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            source.Seek(offset, SeekOrigin.Begin);
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
             double cumulatedDuration = 0;
             int idx = 1;
-            while (source.BaseStream.Position < offset + size)
+            while (source.Position < offset + size)
             {
                 uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx, false); // AA chapters are embedded into the audio chunk; they are _not_ deletable
-                structureHelper.AddIndex(source.BaseStream.Position - 4, chapterOffset, false, "chp" + idx);
+                structureHelper.AddIndex(source.Position - 4, chapterOffset, false, "chp" + idx);
 
                 ChapterInfo chapter = new ChapterInfo();
                 chapter.Title = "Chapter " + idx++; // Chapters have no title metatada in the AA format
@@ -335,32 +335,33 @@ namespace ATL.AudioData.IO
                 chapter.EndTime = (uint)Math.Round(cumulatedDuration);
                 tagData.Chapters.Add(chapter);
 
-                source.BaseStream.Seek(chapterSize, SeekOrigin.Current);
+                source.Seek(chapterSize, SeekOrigin.Current);
             }
         }
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
             ResetData();
-            if (!readHeader(source)) return false;
+            if (!readHeader(reader)) return false;
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
-                readTags(source, toc[TOC_CONTENT_TAGS].Offset, readTagParams);
+                readTags(reader, toc[TOC_CONTENT_TAGS].Offset, readTagParams);
             }
             if (toc.ContainsKey(TOC_COVER_ART))
             {
                 if (readTagParams.ReadPictures)
-                    readCover(source, toc[TOC_COVER_ART].Offset, PictureInfo.PIC_TYPE.Generic);
+                    readCover(reader, toc[TOC_COVER_ART].Offset, PictureInfo.PIC_TYPE.Generic);
                 else
                     addPictureToken(PictureInfo.PIC_TYPE.Generic);
             }
-            readChapters(source, toc[TOC_AUDIO].Offset, toc[TOC_AUDIO].Size);
+            readChapters(reader, toc[TOC_AUDIO].Offset, toc[TOC_AUDIO].Size);
 
             return true;
         }
@@ -476,26 +477,25 @@ namespace ATL.AudioData.IO
         private int writeCoreToc(Stream s)
         {
             s.Seek(tocOffset, SeekOrigin.Begin);
-            using (BinaryReader br = new BinaryReader(s, Encoding.UTF8, true))
+            BufferedBinaryReader br = new BufferedBinaryReader(s);
+
+            IDictionary<int, TocEntry> newToc = readToc(br);
+            List<TocEntry> finalToc = newToc.Values.Where(e => !isSectionDeletable(e.Section)).ToList();
+            int deltaBytes = (newToc.Count - finalToc.Count) * 12;
+            s.Seek(tocOffset, SeekOrigin.Begin);
+            StreamUtils.WriteBEInt32(s, finalToc.Count);
+            s.Seek(4, SeekOrigin.Current); // Skip unfathomable byte
+                                           // Rewrite table of contents (<section>, <offset>, <length>)
+            foreach (TocEntry entry in finalToc)
             {
-                IDictionary<int, TocEntry> newToc = readToc(br);
-                List<TocEntry> finalToc = newToc.Values.Where(e => !isSectionDeletable(e.Section)).ToList();
-                int deltaBytes = (newToc.Count - finalToc.Count) * 12;
-                s.Seek(tocOffset, SeekOrigin.Begin);
-                StreamUtils.WriteBEInt32(s, finalToc.Count);
-                s.Seek(4, SeekOrigin.Current); // Skip unfathomable byte
-                // Rewrite table of contents (<section>, <offset>, <length>)
-                foreach (TocEntry entry in finalToc)
-                {
-                    StreamUtils.WriteBEInt32(s, entry.Section);
-                    StreamUtils.WriteBEUInt32(s, entry.Offset);
-                    StreamUtils.WriteBEUInt32(s, entry.Size);
-                }
-                int newTocSize = (int)(s.Position - tocOffset);
-                // Process TOC resizing
-                structureHelper.RewriteHeaders(s, null, -deltaBytes, ACTION.Edit, ZONE_TOC);
-                return newTocSize;
+                StreamUtils.WriteBEInt32(s, entry.Section);
+                StreamUtils.WriteBEUInt32(s, entry.Offset);
+                StreamUtils.WriteBEUInt32(s, entry.Size);
             }
+            int newTocSize = (int)(s.Position - tocOffset);
+            // Process TOC resizing
+            structureHelper.RewriteHeaders(s, null, -deltaBytes, ACTION.Edit, ZONE_TOC);
+            return newTocSize;
         }
 
         // Remove unused data

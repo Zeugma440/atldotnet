@@ -304,7 +304,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readContentDescription(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readContentDescription(BufferedBinaryReader source, MetaDataIO.ReadTagParams readTagParams)
         {
             ushort[] fieldSize = new ushort[5];
             string fieldValue;
@@ -333,7 +333,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readHeaderExtended(BinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
+        private void readHeaderExtended(BufferedBinaryReader source, long sizePosition1, ulong size1, long sizePosition2, ulong size2, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] headerExtensionObjectId;
             ulong headerExtensionObjectSize = 0;
@@ -341,18 +341,18 @@ namespace ATL.AudioData.IO
             ulong limit;
             ushort streamNumber, languageIndex;
 
-            source.BaseStream.Seek(16, SeekOrigin.Current); // Reserved field 1
-            source.BaseStream.Seek(2, SeekOrigin.Current); // Reserved field 2
+            source.Seek(16, SeekOrigin.Current); // Reserved field 1
+            source.Seek(2, SeekOrigin.Current); // Reserved field 2
 
-            sizePosition3 = source.BaseStream.Position;
+            sizePosition3 = source.Position;
             uint headerExtendedSize = source.ReadUInt32(); // Size of actual data
 
             // Looping through header extension objects
-            position = source.BaseStream.Position;
+            position = source.Position;
             limit = (ulong)position + headerExtendedSize;
             while ((ulong)position < limit)
             {
-                framePosition = source.BaseStream.Position;
+                framePosition = source.Position;
                 headerExtensionObjectId = source.ReadBytes(16);
                 headerExtensionObjectSize = source.ReadUInt64();
 
@@ -386,15 +386,15 @@ namespace ATL.AudioData.IO
                         fieldDataSize = source.ReadInt32();
                         fieldName = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(nameSize)));
 
-                        dataPosition = source.BaseStream.Position;
+                        dataPosition = source.Position;
                         readTagField(source, zoneCode, fieldName, fieldDataType, fieldDataSize, readTagParams, true, languageIndex, streamNumber);
 
-                        source.BaseStream.Seek(dataPosition + fieldDataSize, SeekOrigin.Begin);
+                        source.Seek(dataPosition + fieldDataSize, SeekOrigin.Begin);
                     }
                 }
 
-                source.BaseStream.Seek(position + (long)headerExtensionObjectSize, SeekOrigin.Begin);
-                position = source.BaseStream.Position;
+                source.Seek(position + (long)headerExtensionObjectSize, SeekOrigin.Begin);
+                position = source.Position;
             }
 
             // Add absent zone definitions for further editing
@@ -402,14 +402,14 @@ namespace ATL.AudioData.IO
             {
                 if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_HEADER_METADATA))
                 {
-                    structureHelper.AddZone(source.BaseStream.Position, 0, ZONE_EXTENDED_HEADER_METADATA);
+                    structureHelper.AddZone(source.Position, 0, ZONE_EXTENDED_HEADER_METADATA);
                     structureHelper.AddSize(sizePosition1, size1, ZONE_EXTENDED_HEADER_METADATA);
                     structureHelper.AddSize(sizePosition2, size2, ZONE_EXTENDED_HEADER_METADATA);
                     structureHelper.AddSize(sizePosition3, headerExtendedSize, ZONE_EXTENDED_HEADER_METADATA);
                 }
                 if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_HEADER_METADATA_LIBRARY))
                 {
-                    structureHelper.AddZone(source.BaseStream.Position, 0, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
+                    structureHelper.AddZone(source.Position, 0, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
                     structureHelper.AddSize(sizePosition1, size1, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
                     structureHelper.AddSize(sizePosition2, size2, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
                     structureHelper.AddSize(sizePosition3, headerExtendedSize, ZONE_EXTENDED_HEADER_METADATA_LIBRARY);
@@ -417,7 +417,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readExtendedContentDescription(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        private void readExtendedContentDescription(BufferedBinaryReader source, ReadTagParams readTagParams)
         {
             long dataPosition;
             ushort fieldCount;
@@ -436,14 +436,14 @@ namespace ATL.AudioData.IO
                 dataType = source.ReadUInt16();
                 dataSize = source.ReadUInt16();
 
-                dataPosition = source.BaseStream.Position;
+                dataPosition = source.Position;
                 readTagField(source, ZONE_EXTENDED_CONTENT_DESCRIPTION, fieldName, dataType, dataSize, readTagParams);
 
-                source.BaseStream.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
             }
         }
 
-        public void readTagField(BinaryReader source, string zoneCode, string fieldName, ushort fieldDataType, int fieldDataSize, ReadTagParams readTagParams, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        public void readTagField(BufferedBinaryReader source, string zoneCode, string fieldName, ushort fieldDataType, int fieldDataSize, ReadTagParams readTagParams, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             string fieldValue = "";
             bool setMeta = true;
@@ -480,7 +480,7 @@ namespace ATL.AudioData.IO
                         string mimeType = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
                         string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
 
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, picSize, picType, getImplementedTagType(), picCode, picturePosition);
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(source, picSize, picType, getImplementedTagType(), picCode, picturePosition);
                         picInfo.Description = description;
 
                         tagData.Pictures.Add(picInfo);
@@ -489,7 +489,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+                    source.Seek(fieldDataSize, SeekOrigin.Current);
                 }
             }
             else if (2 == fieldDataType) // 16-bit Boolean (metadata); 32-bit Boolean (extended header)
@@ -513,16 +513,14 @@ namespace ATL.AudioData.IO
             }
             else if (6 == fieldDataType) // 128-bit GUID; unused for now
             {
-                source.BaseStream.Seek(fieldDataSize, SeekOrigin.Current);
+                source.Seek(fieldDataSize, SeekOrigin.Current);
             }
 
-            if (setMeta) SetMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source.BaseStream, languageIndex));
+            if (setMeta) SetMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source, languageIndex));
         }
 
-        private bool readData(BinaryReader source, ReadTagParams readTagParams)
+        private bool readData(Stream source, ReadTagParams readTagParams)
         {
-            Stream fs = source.BaseStream;
-
             byte[] ID;
             uint objectCount;
             ulong headerSize, objectSize;
@@ -532,47 +530,49 @@ namespace ATL.AudioData.IO
 
             if (languages != null) languages.Clear();
 
-            fs.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
-            initialPos = fs.Position;
+            reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+
+            initialPos = reader.Position;
 
             // Check for existing header
-            ID = source.ReadBytes(16);
+            ID = reader.ReadBytes(16);
 
             // Header (mandatory; one only)
             if (StreamUtils.ArrEqualsArr(WMA_HEADER_ID, ID))
             {
-                sizePosition1 = fs.Position;
-                headerSize = source.ReadUInt64();
-                countPosition = fs.Position;
-                objectCount = source.ReadUInt32();
-                fs.Seek(2, SeekOrigin.Current); // Reserved data
+                sizePosition1 = reader.Position;
+                headerSize = reader.ReadUInt64();
+                countPosition = reader.Position;
+                objectCount = reader.ReadUInt32();
+                reader.Seek(2, SeekOrigin.Current); // Reserved data
                 fileData.ObjectCount = objectCount;
-                fileData.ObjectListOffset = fs.Position;
+                fileData.ObjectListOffset = reader.Position;
 
                 // Read all objects in header and get needed data
                 for (int i = 0; i < objectCount; i++)
                 {
-                    position = fs.Position;
-                    ID = source.ReadBytes(16);
-                    sizePosition2 = fs.Position;
-                    objectSize = source.ReadUInt64();
+                    position = reader.Position;
+                    ID = reader.ReadBytes(16);
+                    sizePosition2 = reader.Position;
+                    objectSize = reader.ReadUInt64();
 
                     // File properties (mandatory; one only)
                     if (StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID, ID))
                     {
-                        source.BaseStream.Seek(40, SeekOrigin.Current);
-                        duration = source.ReadUInt64() / 10000.0;       // Play duration (100-nanoseconds)
-                        source.BaseStream.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
-                        duration -= source.ReadUInt64();                // Preroll duration (ms)
+                        reader.Seek(40, SeekOrigin.Current);
+                        duration = reader.ReadUInt64() / 10000.0;       // Play duration (100-nanoseconds)
+                        reader.Seek(8, SeekOrigin.Current);  // Send duration; unused for now
+                        duration -= reader.ReadUInt64();                // Preroll duration (ms)
                     }
                     // Stream properties (mandatory; one per stream)
                     else if (StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID, ID))
                     {
-                        source.BaseStream.Seek(54, SeekOrigin.Current);
-                        fileData.FormatTag = source.ReadUInt16();
-                        fileData.Channels = source.ReadUInt16();
-                        fileData.SampleRate = source.ReadInt32();
+                        reader.Seek(54, SeekOrigin.Current);
+                        fileData.FormatTag = reader.ReadUInt16();
+                        fileData.Channels = reader.ReadUInt16();
+                        fileData.SampleRate = reader.ReadInt32();
                     }
                     // Content description (optional; one only)
                     // -> standard, pre-defined metadata
@@ -586,7 +586,7 @@ namespace ATL.AudioData.IO
                             structureHelper.AddSize(sizePosition1, headerSize, ZONE_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
                         }
-                        readContentDescription(source, readTagParams);
+                        readContentDescription(reader, readTagParams);
                     }
                     // Extended content description (optional; one only)
                     // -> extended, dynamic metadata
@@ -600,16 +600,16 @@ namespace ATL.AudioData.IO
                             structureHelper.AddSize(sizePosition1, headerSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                             structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         }
-                        readExtendedContentDescription(source, readTagParams);
+                        readExtendedContentDescription(reader, readTagParams);
                     }
                     // Header extension (mandatory; one only)
                     // -> extended, dynamic additional metadata such as additional embedded pictures (any picture after the 1st one stored in extended content)
                     else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
                     {
-                        readHeaderExtended(source, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
+                        readHeaderExtended(reader, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
                     }
 
-                    fs.Seek(position + (long)objectSize, SeekOrigin.Begin);
+                    reader.Seek(position + (long)objectSize, SeekOrigin.Begin);
                 }
 
                 // Add absent zone definitions for further editing
@@ -617,13 +617,13 @@ namespace ATL.AudioData.IO
                 {
                     if (!structureHelper.ZoneNames.Contains(ZONE_CONTENT_DESCRIPTION))
                     {
-                        structureHelper.AddZone(fs.Position, 0, ZONE_CONTENT_DESCRIPTION);
+                        structureHelper.AddZone(reader.Position, 0, ZONE_CONTENT_DESCRIPTION);
                         structureHelper.AddSize(sizePosition1, headerSize, ZONE_CONTENT_DESCRIPTION);
                         structureHelper.AddCounter(countPosition, objectCount, ZONE_CONTENT_DESCRIPTION);
                     }
                     if (!structureHelper.ZoneNames.Contains(ZONE_EXTENDED_CONTENT_DESCRIPTION))
                     {
-                        structureHelper.AddZone(fs.Position, 0, ZONE_EXTENDED_CONTENT_DESCRIPTION);
+                        structureHelper.AddZone(reader.Position, 0, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         structureHelper.AddSize(sizePosition1, headerSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         structureHelper.AddCounter(countPosition, objectCount, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                     }
@@ -632,9 +632,9 @@ namespace ATL.AudioData.IO
                 result = true;
             }
 
-            fileData.HeaderSize = fs.Position - initialPos;
+            fileData.HeaderSize = reader.Position - initialPos;
 
-            AudioDataOffset = fs.Position;
+            AudioDataOffset = reader.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             return result;
@@ -645,14 +645,14 @@ namespace ATL.AudioData.IO
             return (Data.Channels > 0) && (Data.SampleRate >= 8000) && (Data.SampleRate <= 96000);
         }
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             fileData = new FileData();
 
@@ -662,7 +662,7 @@ namespace ATL.AudioData.IO
             // Process data if loaded and valid
             if (result && isValid(fileData))
             {
-                channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(fileData.Channels);
+                channelsArrangement = GuessFromChannelNumber(fileData.Channels);
                 sampleRate = fileData.SampleRate;
                 bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / duration;
                 isVBR = (WMA_GSM_VBR_ID == fileData.FormatTag);
@@ -1031,7 +1031,7 @@ namespace ATL.AudioData.IO
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = prepareRemove();
-                using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
+                return Write(s, s, tag);
             }
             else
             {
@@ -1045,7 +1045,7 @@ namespace ATL.AudioData.IO
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = prepareRemove();
-                using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+                return await WriteAsync(s, s, tag);
             }
             else
             {

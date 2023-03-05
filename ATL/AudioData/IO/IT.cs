@@ -48,56 +48,48 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // IAudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return 0; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        /// <inheritdoc/>
+        public int SampleRate => 0;
+
+        /// <inheritdoc/>
+        public bool IsVBR => false;
+
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        /// <inheritdoc/>
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+        /// <inheritdoc/>
+        public string FileName => filePath;
+        /// <inheritdoc/>
+        public double BitRate => bitrate;
+        /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return ChannelsArrangements.STEREO; }
-        }
+        /// <inheritdoc/>
+        public double Duration => duration;
+        /// <inheritdoc/>
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+        /// <inheritdoc/>
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.NATIVE;
         }
+        /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
+        /// <inheritdoc/>
         public long AudioDataSize { get; set; }
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+
+        /// <inheritdoc/>
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+
+        /// <inheritdoc/>
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
+
+        /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
@@ -136,8 +128,8 @@ namespace ATL.AudioData.IO
 
         private sealed class Instrument
         {
-            public String FileName = "";
-            public String DisplayName = "";
+            public string FileName = "";
+            public string DisplayName = "";
             // Other fields not useful for ATL
         }
 
@@ -285,9 +277,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void readSamples(BufferedBinaryReader source, IList<UInt32> samplePointers)
+        private void readSamples(BufferedBinaryReader source, IList<uint> samplePointers)
         {
-            foreach (UInt32 pos in samplePointers)
+            foreach (uint pos in samplePointers)
             {
                 source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
@@ -305,9 +297,9 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstruments(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstruments(BufferedBinaryReader source, IList<uint> instrumentPointers)
         {
-            foreach (UInt32 pos in instrumentPointers)
+            foreach (uint pos in instrumentPointers)
             {
                 source.Seek(pos, SeekOrigin.Begin);
                 Instrument instrument = new Instrument();
@@ -325,13 +317,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readInstrumentsOld(BufferedBinaryReader source, IList<UInt32> instrumentPointers)
+        private void readInstrumentsOld(BufferedBinaryReader source, IList<uint> instrumentPointers)
         {
             // The fileName and displayName fields have the same offset in the new and old format
             readInstruments(source, instrumentPointers);
         }
 
-        private void readPatterns(BufferedBinaryReader source, IList<UInt32> patternPointers)
+        private void readPatterns(BufferedBinaryReader source, IList<uint> patternPointers)
         {
             ushort nbRows;
             byte rowNum;
@@ -341,7 +333,7 @@ namespace ATL.AudioData.IO
             IList<IList<Event>> aPattern;
             IDictionary<int, byte> maskVariables = new Dictionary<int, byte>();
 
-            foreach (UInt32 pos in patternPointers)
+            foreach (uint pos in patternPointers)
             {
                 aPattern = new List<IList<Event>>();
                 if (pos > 0)
@@ -359,8 +351,10 @@ namespace ATL.AudioData.IO
 
                         if (what > 0)
                         {
-                            Event theEvent = new Event();
-                            theEvent.Channel = (what - 1) & 63;
+                            Event theEvent = new Event
+                            {
+                                Channel = (what - 1) & 63
+                            };
                             if ((what & 128) > 0)
                             {
                                 maskVariable = source.ReadByte();
@@ -402,14 +396,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -427,14 +421,14 @@ namespace ATL.AudioData.IO
 
             ushort messageLength;
             uint messageOffset;
-            String message = "";
+            string message = "";
 
-            IList<UInt32> patternPointers = new List<UInt32>();
-            IList<UInt32> instrumentPointers = new List<UInt32>();
-            IList<UInt32> samplePointers = new List<UInt32>();
+            IList<uint> patternPointers = new List<uint>();
+            IList<uint> instrumentPointers = new List<uint>();
+            IList<uint> samplePointers = new List<uint>();
 
             resetData();
-            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source);
 
 
             if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))

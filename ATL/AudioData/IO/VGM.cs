@@ -135,7 +135,7 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE METHODS ===
 
-        private bool readHeader(BinaryReader source, ReadTagParams readTagParams)
+        private bool readHeader(BufferedBinaryReader source, ReadTagParams readTagParams)
         {
             int nbSamples, loopNbSamples;
             int nbLoops = LOOP_COUNT_DEFAULT;
@@ -144,16 +144,16 @@ namespace ATL.AudioData.IO
             byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
             if (VGM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(headerSignature)))
             {
-                AudioDataOffset = source.BaseStream.Position;
+                AudioDataOffset = source.Position;
 
-                source.BaseStream.Seek(4, SeekOrigin.Current); // EOF offset
+                source.Seek(4, SeekOrigin.Current); // EOF offset
                 int version = source.ReadInt32();
-                source.BaseStream.Seek(8, SeekOrigin.Current); // Clocks
+                source.Seek(8, SeekOrigin.Current); // Clocks
                 gd3TagOffset = source.ReadInt32();
 
                 if (gd3TagOffset > 0)
                 {
-                    gd3TagOffset += (int)source.BaseStream.Position - 4;
+                    gd3TagOffset += (int)source.Position - 4;
                     AudioDataSize = gd3TagOffset;
                 }
                 else
@@ -164,18 +164,18 @@ namespace ATL.AudioData.IO
                     if (gd3TagOffset > VGM_HEADER_SIZE)
                     {
                         structureHelper.AddZone(gd3TagOffset, (int)sizeInfo.FileSize - gd3TagOffset);
-                        structureHelper.AddIndex(source.BaseStream.Position - 4, gd3TagOffset, true);
+                        structureHelper.AddIndex(source.Position - 4, gd3TagOffset, true);
                     }
                     else
                     {
                         structureHelper.AddZone(sizeInfo.FileSize, 0);
-                        structureHelper.AddIndex(source.BaseStream.Position - 4, (int)sizeInfo.FileSize, true);
+                        structureHelper.AddIndex(source.Position - 4, (int)sizeInfo.FileSize, true);
                     }
                 }
 
                 nbSamples = source.ReadInt32();
 
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Loop offset
+                source.Seek(4, SeekOrigin.Current); // Loop offset
 
                 loopNbSamples = source.ReadInt32();
                 if (version >= 0x00000101)
@@ -184,19 +184,19 @@ namespace ATL.AudioData.IO
                 }
                 if (version >= 0x00000160)
                 {
-                    source.BaseStream.Seek(0x7E, SeekOrigin.Begin);
+                    source.Seek(0x7E, SeekOrigin.Begin);
                     nbLoops -= source.ReadSByte();                  // Loop base
                 }
                 if (version >= 0x00000151)
                 {
-                    source.BaseStream.Seek(0x7F, SeekOrigin.Begin);
-                    nbLoops = nbLoops * source.ReadByte();          // Loop modifier
+                    source.Seek(0x7F, SeekOrigin.Begin);
+                    nbLoops *= source.ReadByte();          // Loop modifier
                 }
 
                 duration = (nbSamples * 1000.0 / sampleRate) + (nbLoops * (loopNbSamples * 1000.0 / sampleRate));
                 if (Settings.GYM_VGM_playbackRate > 0)
                 {
-                    duration = duration * (Settings.GYM_VGM_playbackRate / (double)recordingRate);
+                    duration *= (Settings.GYM_VGM_playbackRate / (double)recordingRate);
                 }
                 if (nbLoops > 0) duration += FADEOUT_DURATION_DEFAULT;
 
@@ -211,15 +211,15 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readGd3Tag(BinaryReader source, int offset)
+        private void readGd3Tag(BufferedBinaryReader source, int offset)
         {
-            source.BaseStream.Seek(offset, SeekOrigin.Begin);
+            source.Seek(offset, SeekOrigin.Begin);
             string str;
 
             if (GD3_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GD3_SIGNATURE.Length))))
             {
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Version number
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Length
+                source.Seek(4, SeekOrigin.Current); // Version number
+                source.Seek(4, SeekOrigin.Current); // Length
 
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
                 tagData.IntegrateValue(Field.TITLE, str);
@@ -258,26 +258,27 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
 
             resetData();
 
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            reader.Seek(0, SeekOrigin.Begin);
 
             MemoryStream memStream = null;
-            BinaryReader usedSource = source;
+            BufferedBinaryReader usedSource = reader;
 
-            byte[] headerSignature = source.ReadBytes(2);
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            byte[] headerSignature = reader.ReadBytes(2);
+            reader.Seek(0, SeekOrigin.Begin);
             if (headerSignature[0] == 0x1f && headerSignature[1] == 0x8b) // File is GZIP-compressed
             {
                 if (readTagParams.PrepareForWriting)
@@ -286,12 +287,12 @@ namespace ATL.AudioData.IO
                     return false;
                 }
 
-                using (GZipStream gzStream = new GZipStream(source.BaseStream, CompressionMode.Decompress))
+                using (GZipStream gzStream = new GZipStream(reader, CompressionMode.Decompress))
                 {
                     memStream = new MemoryStream();
                     StreamUtils.CopyStream(gzStream, memStream);
                     memStream.Seek(0, SeekOrigin.Begin);
-                    usedSource = new BinaryReader(memStream);
+                    usedSource = new BufferedBinaryReader(memStream);
                 }
             }
 

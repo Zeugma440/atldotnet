@@ -119,46 +119,52 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
             bool doLoop = true;
             long position;
 
-            UInt16 readData16;
-            UInt32 readData32;
+            ushort readData16;
+            uint readData32;
 
-            UInt32 metaType;
-            UInt32 metaSize;
+            uint metaType;
+            uint metaSize;
             long sampleCount = 0;
             int frameSizeType = -1;
+            byte[] buffer = new byte[4];
 
             this.sizeInfo = sizeInfo;
             resetData();
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            if (TAK_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            source.Read(buffer, 0, 4);
+            if (TAK_ID.Equals(Utils.Latin1Encoding.GetString(buffer)))
             {
                 result = true;
-                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
                 do // Loop metadata
                 {
-                    readData32 = source.ReadUInt32();
+                    source.Read(buffer, 0, 4);
+                    readData32 = StreamUtils.DecodeUInt32(buffer);
 
                     metaType = readData32 & 0x7F;
                     metaSize = readData32 >> 8;
 
-                    position = source.BaseStream.Position;
+                    position = source.Position;
 
                     if (0 == metaType) doLoop = false; // End of metadata
                     else if (0x01 == metaType) // Stream info
                     {
-                        readData16 = source.ReadUInt16();
+                        source.Read(buffer, 0, 2);
+                        readData16 = StreamUtils.DecodeUInt16(buffer);
                         frameSizeType = readData16 & 0x003C; // bits 11 to 14
-                        readData32 = source.ReadUInt32();
-                        uint restOfData = source.ReadUInt32();
+                        source.Read(buffer, 0, 4);
+                        readData32 = StreamUtils.DecodeUInt32(buffer);
+                        source.Read(buffer, 0, 4);
+                        uint restOfData = StreamUtils.DecodeUInt32(buffer);
 
                         sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
 
@@ -169,18 +175,19 @@ namespace ATL.AudioData.IO
                         if (sampleCount > 0)
                         {
                             duration = (double)sampleCount * 1000.0 / sampleRate;
-                            bitrate = Math.Round(((double)(sizeInfo.FileSize - source.BaseStream.Position)) * 8 / duration); //time to calculate average bitrate
+                            bitrate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / duration); //time to calculate average bitrate
                         }
                     }
                     else if (0x04 == metaType) // Encoder info
                     {
-                        readData32 = source.ReadUInt32();
+                        source.Read(buffer, 0, 4);
+                        readData32 = StreamUtils.DecodeUInt32(buffer);
                         formatVersion = 100 * ((readData32 & 0x00ff0000) >> 16);
                         formatVersion += 10 * ((readData32 & 0x0000ff00) >> 8);
                         formatVersion += (readData32 & 0x000000ff);
                     }
 
-                    source.BaseStream.Seek(position + metaSize, SeekOrigin.Begin);
+                    source.Seek(position + metaSize, SeekOrigin.Begin);
                 } while (doLoop); // End of metadata loop
             }
 

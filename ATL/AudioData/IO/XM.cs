@@ -369,21 +369,21 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
             ushort trackerVersion;
             StringBuilder comment = new StringBuilder("");
 
             resetData();
-            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source);
 
             // File format signature
             if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(17))))
@@ -397,7 +397,7 @@ namespace ATL.AudioData.IO
             {
                 structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
-            tagData.IntegrateValue(TagData.Field.TITLE, title.Trim());
+            tagData.IntegrateValue(Field.TITLE, title.Trim());
 
             // File format signature
             if (!0x1a.Equals(bSource.ReadByte()))
@@ -407,7 +407,7 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
 
-            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20).Trim();
+            trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20).Trim();
 
             trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
             trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);
@@ -447,7 +447,7 @@ namespace ATL.AudioData.IO
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
-            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
+            tagData.IntegrateValue(Field.COMMENT, comment.ToString());
             bitrate = sizeInfo.FileSize / duration;
 
             return result;

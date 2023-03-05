@@ -56,34 +56,34 @@ namespace ATL.AudioData
         /// <summary>
         /// Parse binary data read from the given stream
         /// </summary>
-        /// <param name="source">Reader to parse data from</param>
+        /// <param name="source">Stream to parse data from</param>
         /// <param name="readTagParams">Tag reading parameters</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams);
+        bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams);
 
         /// <summary>
         /// Add the specified information to current tag information (direct call variant)
         ///   - Any existing field is overwritten
         ///   - Any non-specified field is kept as is
         /// </summary>
-        /// <param name="r">Reader to the resource to edit</param>
+        /// <param name="r">Stream to the resource to edit</param>
         /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null);
+        bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null);
 
         /// <summary>
         /// Add the specified information to current tag information (async variant)
         ///   - Any existing field is overwritten
         ///   - Any non-specified field is kept as is
         /// </summary>
-        /// <param name="r">Reader to the resource to edit</param>
+        /// <param name="r">Stream to the resource to edit</param>
         /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null);
+        Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null);
 
         /// <summary>
         /// Remove current tag (direct call variant)

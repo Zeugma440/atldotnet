@@ -100,10 +100,10 @@ namespace ATL.AudioData
         /// NB1 : Standard metadata (i.e. ID3v2, ID3v1 and APE) have to be read _before_ calling this method, and their size stored in sizeInfo
         /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller
         /// </summary>
-        /// <param name="source">BinaryReader opened on the stream to read</param>
+        /// <param name="source">Stream to read</param>
         /// <param name="sizeInfo">Description of the size of the undelying stream and associated metadata</param>
         /// <param name="readTagParams">Reading parameters and options</param>
         /// <returns>True if the stream has been successfuly read; false if not</returns>
-        bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
+        bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
     }
 }

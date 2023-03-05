@@ -172,13 +172,13 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private static bool readHeader(BinaryReader source, ref HeaderInfo Header)
+        private static bool readHeader(BufferedBinaryReader source, ref HeaderInfo Header)
         {
             bool result = true;
 
             // Read header and get file size
-            Header.ID = source.ReadChars(4);
-            Header.Version = source.ReadChars(8);
+            Header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).ToCharArray();
+            Header.Version = Utils.Latin1Encoding.GetString(source.ReadBytes(8)).ToCharArray();
             Header.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             Header.Common.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
             Header.Common.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
@@ -227,21 +227,21 @@ namespace ATL.AudioData.IO
         private static bool headerEndReached(ChunkHeader Chunk)
         {
             // Check for header end
-            return (((byte)(Chunk.ID[0]) < 32) ||
-                ((byte)(Chunk.ID[1]) < 32) ||
-                ((byte)(Chunk.ID[2]) < 32) ||
-                ((byte)(Chunk.ID[3]) < 32) ||
-                "DSIZ".Equals(Chunk.ID));
+            return ((byte)Chunk.ID[0] < 32) ||
+                ((byte)Chunk.ID[1] < 32) ||
+                ((byte)Chunk.ID[2] < 32) ||
+                ((byte)Chunk.ID[3] < 32) ||
+                "DSIZ".Equals(Chunk.ID);
         }
 
-        private void readTag(BinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
+        private void readTag(BufferedBinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
         {
             ChunkHeader chunk = new ChunkHeader();
             string data;
             bool first = true;
             long tagStart = -1;
 
-            source.BaseStream.Seek(40, SeekOrigin.Begin);
+            source.Seek(40, SeekOrigin.Begin);
             do
             {
                 // Read chunk header (length : 8 bytes)
@@ -253,7 +253,7 @@ namespace ATL.AudioData.IO
 
                 if (first)
                 {
-                    tagStart = source.BaseStream.Position - 8;
+                    tagStart = source.Position - 8;
                     first = false;
                 }
                 tagExists = true; // If something else than mandatory info is stored, we can consider metadata is present
@@ -261,13 +261,13 @@ namespace ATL.AudioData.IO
 
                 SetMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
             }
-            while (source.BaseStream.Position < source.BaseStream.Length);
+            while (source.Position < source.Length);
 
             if (readTagParams.PrepareForWriting)
             {
                 // Metadata zone goes from the first field after COMM to the last field before DSIZ
-                if (-1 == tagStart) structureHelper.AddZone(source.BaseStream.Position - 8, 0);
-                else structureHelper.AddZone(tagStart, (int)(source.BaseStream.Position - tagStart - 8));
+                if (-1 == tagStart) structureHelper.AddZone(source.Position - 8, 0);
+                else structureHelper.AddZone(tagStart, (int)(source.Position - tagStart - 8));
                 structureHelper.AddSize(12, Header.Size);
             }
         }
@@ -282,21 +282,22 @@ namespace ATL.AudioData.IO
                 (duration < 0.1) || (duration > 10000));
         }
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             HeaderInfo Header = new HeaderInfo();
 
             resetData();
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            bool result = readHeader(source, ref Header);
+            bool result = readHeader(reader, ref Header);
             // Process data if loaded and header valid
             if (result && StreamUtils.StringEqualsArr(TWIN_ID, Header.ID))
             {
@@ -307,9 +308,9 @@ namespace ATL.AudioData.IO
                 sampleRate = GetSampleRate(Header);
                 duration = getDuration(Header);
                 // Get tag information and fill properties
-                readTag(source, Header, readTagParams);
+                readTag(reader, Header, readTagParams);
 
-                AudioDataOffset = source.BaseStream.Position;
+                AudioDataOffset = reader.Position;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             return result;
@@ -379,14 +380,14 @@ namespace ATL.AudioData.IO
         public override bool Remove(Stream s)
         {
             TagData tag = prepareRemove();
-            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return Write(r, s, tag);
+            return Write(s, s, tag);
         }
 
         // Specific implementation for conservation of fields that are required for playback
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();
-            using (BinaryReader r = new BinaryReader(s, Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+            return await WriteAsync(s, s, tag);
         }
 
         private TagData prepareRemove()

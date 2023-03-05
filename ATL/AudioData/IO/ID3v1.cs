@@ -348,9 +348,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             // Reset and load tag data from file to variable
             ResetData();

@@ -242,22 +242,22 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private bool readFileHeader(BinaryReader source)
+        private bool readFileHeader(BufferedBinaryReader source)
         {
             uint fileType = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             if (fileType != CAF_MAGIC_NUMBER) return false;
 
-            AudioDataOffset = source.BaseStream.Position - 4;
-            source.BaseStream.Seek(4, SeekOrigin.Current); // Useless here
+            AudioDataOffset = source.Position - 4;
+            source.Seek(4, SeekOrigin.Current); // Useless here
 
             return true;
         }
 
-        private void readAudioDescriptionChunk(BinaryReader source)
+        private void readAudioDescriptionChunk(BufferedBinaryReader source)
         {
             double m_sampleRate = StreamUtils.DecodeBEDouble(source.ReadBytes(8)); // aka frames per second
             string formatId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            source.BaseStream.Seek(4, SeekOrigin.Current); // format flags
+            source.Seek(4, SeekOrigin.Current); // format flags
             uint bytesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             uint framesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             channelsPerFrame = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
@@ -296,7 +296,7 @@ namespace ATL.AudioData.IO
                 containeeAudioFormat = formatsMapping["none"];
         }
 
-        private void readChannelLayoutChunk(BinaryReader source)
+        private void readChannelLayoutChunk(BufferedBinaryReader source)
         {
             uint channelLayout = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             // we don't need anything else
@@ -305,14 +305,14 @@ namespace ATL.AudioData.IO
         }
 
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
-        private void readStringChunk(BinaryReader source, string id, long chunkSize)
+        private void readStringChunk(BufferedBinaryReader source, string id, long chunkSize)
         {
             string cookieStr = Utils.Latin1Encoding.GetString(source.ReadBytes((int)chunkSize));
             SetMetaField(id, cookieStr, true);
         }
 
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
-        private void readStringsChunk(BinaryReader source)
+        private void readStringsChunk(BufferedBinaryReader source)
         {
             uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
@@ -323,19 +323,19 @@ namespace ATL.AudioData.IO
                 long stringOffset = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
                 stringIds.Add(stringId, stringOffset);
             }
-            long initialPos = source.BaseStream.Position;
+            long initialPos = source.Position;
 
             string stringValue;
             foreach (uint id in stringIds.Keys)
             {
-                source.BaseStream.Seek(initialPos + stringIds[id], SeekOrigin.Begin);
+                source.Seek(initialPos + stringIds[id], SeekOrigin.Begin);
                 stringValue = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
                 SetMetaField("str-" + id, stringValue, true);
             }
         }
 
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
-        private void readInfoChunk(BinaryReader source, bool readAllMetaFrames)
+        private void readInfoChunk(BufferedBinaryReader source, bool readAllMetaFrames)
         {
             uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             for (int i = 0; i < nbEntries; i++)
@@ -346,55 +346,56 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readPaktChunk(BinaryReader source)
+        private void readPaktChunk(BufferedBinaryReader source)
         {
-            source.BaseStream.Seek(8, SeekOrigin.Current); // nbPackets
+            source.Seek(8, SeekOrigin.Current); // nbPackets
             long nbFrames = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
 
             duration = nbFrames * 1000d / sampleRate;
         }
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
 
         /// <inheritdoc/>
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             ResetData();
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            reader.Seek(0, SeekOrigin.Begin);
 
-            bool result = readFileHeader(source);
-            long cursorPos = source.BaseStream.Position;
+            bool result = readFileHeader(reader);
+            long cursorPos = reader.Position;
             long audioChunkSize = 0;
 
             // Iterate through chunks
-            while (cursorPos < source.BaseStream.Length)
+            while (cursorPos < reader.Length)
             {
-                string chunkType = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                long chunkSize = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
+                string chunkType = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
+                long chunkSize = StreamUtils.DecodeBEInt64(reader.ReadBytes(8));
 
                 if (readTagParams.PrepareForWriting) structureHelper.AddZone(cursorPos, chunkSize + 12, chunkType);
 
                 switch (chunkType)
                 {
                     case CHUNK_AUDIO_DESC:
-                        readAudioDescriptionChunk(source);
+                        readAudioDescriptionChunk(reader);
                         break;
                     case CHUNK_CHANNEL_LAYOUT:
-                        readChannelLayoutChunk(source);
+                        readChannelLayoutChunk(reader);
                         break;
                     case CHUNK_COOKIE:
                     case CHUNK_UMID:
-                        if (readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames) readStringChunk(source, chunkType, chunkSize);
+                        if (readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames) readStringChunk(reader, chunkType, chunkSize);
                         break;
                     case CHUNK_STRINGS:
-                        if (readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames) readStringsChunk(source);
+                        if (readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames) readStringsChunk(reader);
                         break;
                     case CHUNK_INFO:
-                        readInfoChunk(source, readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames);
+                        readInfoChunk(reader, readTagParams.PrepareForWriting || readTagParams.ReadAllMetaFrames);
                         break;
                     case CHUNK_AUDIO:
                         AudioDataOffset = cursorPos;
@@ -403,11 +404,11 @@ namespace ATL.AudioData.IO
                         if (secondsPerByte > 0) duration = chunkSize * secondsPerByte * 1000;
                         break;
                     case CHUNK_PACKET_TABLE:
-                        if (0 == secondsPerByte) readPaktChunk(source);
+                        if (0 == secondsPerByte) readPaktChunk(reader);
                         break;
                 }
-                source.BaseStream.Seek(cursorPos + chunkSize + 12, SeekOrigin.Begin);
-                cursorPos = source.BaseStream.Position;
+                reader.Seek(cursorPos + chunkSize + 12, SeekOrigin.Begin);
+                cursorPos = reader.Position;
             }
             bitrate = audioChunkSize * 8d / duration;
             if (null == channelsArrangement)

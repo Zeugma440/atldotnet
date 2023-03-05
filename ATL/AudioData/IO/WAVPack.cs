@@ -183,7 +183,7 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             char[] marker;
             bool result = false;
@@ -191,26 +191,28 @@ namespace ATL.AudioData.IO
             this.sizeInfo = sizeInfo;
             resetData();
 
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
-            marker = source.ReadChars(4);
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+
+            reader.Seek(0, SeekOrigin.Begin);
+            marker = reader.ReadChars(4);
+            reader.Seek(0, SeekOrigin.Begin);
 
             if (StreamUtils.StringEqualsArr("RIFF", marker))
             {
-                result = _ReadV3(source);
+                result = _ReadV3(reader);
             }
             else
             {
                 if (StreamUtils.StringEqualsArr("wvpk", marker))
                 {
-                    result = _ReadV4(source);
+                    result = _ReadV4(reader);
                 }
             }
 
             return result;
         }
 
-        private bool _ReadV4(BinaryReader source)
+        private bool _ReadV4(BufferedBinaryReader source)
         {
             WavPackHeader4 wvh4 = new WavPackHeader4();
             byte[] EncBuf = new byte[4096];
@@ -264,7 +266,7 @@ namespace ATL.AudioData.IO
 
                 duration = wvh4.total_samples * 1000.0 / sampleRate;
 
-                long initPos = source.BaseStream.Position;
+                long initPos = source.Position;
                 Array.Clear(EncBuf, 0, 4096);
                 EncBuf = source.ReadBytes(4096);
 
@@ -292,7 +294,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool _ReadV3(BinaryReader r)
+        private bool _ReadV3(BufferedBinaryReader r)
         {
             RiffChunk chunk = new RiffChunk();
             char[] wavchunk;
@@ -316,7 +318,7 @@ namespace ATL.AudioData.IO
             // start looking for chunks
             chunk.Reset();
 
-            while (r.BaseStream.Position < r.BaseStream.Length)
+            while (r.Position < r.Length)
             {
                 chunk.id = r.ReadChars(4);
                 chunk.size = r.ReadUInt32();
@@ -351,7 +353,7 @@ namespace ATL.AudioData.IO
                     {
                         wvh3.Reset();
 
-                        long initialPos = r.BaseStream.Position;
+                        long initialPos = r.Position;
                         wvh3.ckID = r.ReadChars(4);
                         wvh3.ckSize = r.ReadUInt32();
                         wvh3.version = r.ReadUInt16();

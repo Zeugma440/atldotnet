@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             ushort signatureChunk;
             byte aByte;
@@ -102,18 +102,20 @@ namespace ATL.AudioData.IO
 
             bool result = false;
 
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
-            signatureChunk = source.ReadUInt16();
+            byte[] buffer = new byte[2];
+            source.Seek(0, SeekOrigin.Begin);
+            source.Read(buffer, 0, buffer.Length);
+            signatureChunk = StreamUtils.DecodeUInt16(buffer);
 
             if (30475 == signatureChunk)
             {
-                AudioDataOffset = source.BaseStream.Position - 2;
+                AudioDataOffset = source.Position - 2;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                source.BaseStream.Seek(2, SeekOrigin.Current);
-                aByte = source.ReadByte();
+                source.Seek(2, SeekOrigin.Current);
+                source.Read(buffer, 0, 1);
 
-                switch (aByte & 0xC0)
+                switch (buffer[0] & 0xC0)
                 {
                     case 0: sampleRate = 48000; break;
                     case 0x40: sampleRate = 44100; break;
@@ -121,12 +123,12 @@ namespace ATL.AudioData.IO
                     default: sampleRate = 0; break;
                 }
 
-                bitrate = BITRATES[(aByte & 0x3F) >> 1];
+                bitrate = BITRATES[(buffer[0] & 0x3F) >> 1];
 
-                source.BaseStream.Seek(1, SeekOrigin.Current);
-                aByte = source.ReadByte();
+                source.Seek(1, SeekOrigin.Current);
+                source.Read(buffer, 0, 1);
 
-                switch (aByte & 0xE0)
+                switch (buffer[0] & 0xE0)
                 {
                     case 0: channelsArrangement = DUAL_MONO; break;
                     case 0x20: channelsArrangement = MONO; break;

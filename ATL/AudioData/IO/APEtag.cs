@@ -153,30 +153,30 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        private bool readFooter(BinaryReader SourceFile, TagInfo Tag)
+        private bool readFooter(BufferedBinaryReader source, TagInfo Tag)
         {
             string tagID;
             bool result = true;
 
             // Load footer from file to variable
-            Tag.FileSize = SourceFile.BaseStream.Length;
+            Tag.FileSize = source.Length;
 
             // Check for existing ID3v1 tag in order to get the correct offset for APEtag packet
-            SourceFile.BaseStream.Seek(Tag.FileSize - ID3v1.ID3V1_TAG_SIZE, SeekOrigin.Begin);
-            tagID = Utils.Latin1Encoding.GetString(SourceFile.ReadBytes(3));
+            source.Seek(Tag.FileSize - ID3v1.ID3V1_TAG_SIZE, SeekOrigin.Begin);
+            tagID = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
             if (ID3v1.ID3V1_ID.Equals(tagID)) Tag.DataShift = ID3v1.ID3V1_TAG_SIZE;
 
             // Read APEtag footer data
-            SourceFile.BaseStream.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
+            source.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
 
-            Tag.ID = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(8));
+            Tag.ID = Utils.Latin1Encoding.GetChars(source.ReadBytes(8));
             if (StreamUtils.StringEqualsArr(APE_ID, Tag.ID))
             {
-                Tag.Version = SourceFile.ReadInt32();
-                Tag.Size = SourceFile.ReadInt32();
-                Tag.FrameCount = SourceFile.ReadInt32();
-                Tag.Flags = SourceFile.ReadInt32();
-                Tag.Reserved = Utils.Latin1Encoding.GetChars(SourceFile.ReadBytes(8));
+                Tag.Version = source.ReadInt32();
+                Tag.Size = source.ReadInt32();
+                Tag.FrameCount = source.ReadInt32();
+                Tag.Flags = source.ReadInt32();
+                Tag.Reserved = Utils.Latin1Encoding.GetChars(source.ReadBytes(8));
             }
             else
             {
@@ -186,22 +186,22 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool readFrames(BinaryReader source, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
+        private bool readFrames(BufferedBinaryReader source, TagInfo Tag, MetaDataIO.ReadTagParams readTagParams)
         {
             string frameName;
             string strValue;
             int frameDataSize;
             long valuePosition;
 
-            source.BaseStream.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
+            source.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
             // Read all stored fields
             for (int iterator = 0; iterator < Tag.FrameCount; iterator++)
             {
                 frameDataSize = source.ReadInt32();
-                source.BaseStream.Seek(4, SeekOrigin.Current); // Frame flags
+                source.Seek(4, SeekOrigin.Current); // Frame flags
                 frameName = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Slightly more permissive than what APE specs indicate in terms of allowed characters ("Space(0x20), Slash(0x2F), Digits(0x30...0x39), Letters(0x41...0x5A, 0x61...0x7A)")
 
-                valuePosition = source.BaseStream.Position;
+                valuePosition = source.Position;
 
                 if (frameDataSize < 0 || valuePosition + frameDataSize > Tag.FileSize)
                 {
@@ -244,12 +244,12 @@ namespace ATL.AudioData.IO
                         //    * A byte (0x2E)
                         //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
                         string description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, frameDataSize - description.Length - 1, picType, getImplementedTagType(), frameName, picturePosition);
+                        PictureInfo picInfo = PictureInfo.fromBinaryData(source, frameDataSize - description.Length - 1, picType, getImplementedTagType(), frameName, picturePosition);
                         picInfo.Description = description;
                         tagData.Pictures.Add(picInfo);
                     }
                 }
-                source.BaseStream.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
+                source.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
             }
 
             return true;
@@ -322,7 +322,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             TagInfo Tag = new TagInfo();
 
@@ -330,7 +330,8 @@ namespace ATL.AudioData.IO
             ResetData();
             Tag.Reset();
 
-            bool result = readFooter(source, Tag);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            bool result = readFooter(reader, Tag);
 
             // Process data if loaded and footer valid
             if (result)
@@ -350,7 +351,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(tagOffset, tagSize);
 
                 // Get information from fields
-                result = readFrames(source, Tag, readTagParams);
+                result = readFrames(reader, Tag, readTagParams);
             }
 
             return result;

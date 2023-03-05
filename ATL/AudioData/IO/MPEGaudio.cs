@@ -585,12 +585,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
             resetData();
 
-            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             HeaderFrame = findFrame(reader, ref vbrData, sizeInfo);

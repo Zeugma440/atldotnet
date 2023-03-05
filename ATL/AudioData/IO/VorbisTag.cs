@@ -296,7 +296,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             int size;
             string strData;
@@ -316,15 +316,16 @@ namespace ATL.AudioData.IO
                 readTagParams.ReadPictures = true;
             }
 
-            initialTagOffset = source.BaseStream.Position;
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            initialTagOffset = reader.Position;
             do
             {
-                size = source.ReadInt32();
-                position = source.BaseStream.Position;
+                size = reader.ReadInt32();
+                position = reader.Position;
 
                 if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
-                    strData = Encoding.UTF8.GetString(source.ReadBytes(size)).Trim();
+                    strData = Encoding.UTF8.GetString(reader.ReadBytes(size)).Trim();
                     SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
                 }
                 else
@@ -337,7 +338,7 @@ namespace ATL.AudioData.IO
 
                     while (-1 == equalsIndex)
                     {
-                        source.BaseStream.Read(stringData, 0, KEY_BUFFER);
+                        reader.Read(stringData, 0, KEY_BUFFER);
                         nbBuffered++;
 
                         for (int i = 0; i < KEY_BUFFER; i++)
@@ -352,17 +353,17 @@ namespace ATL.AudioData.IO
                         tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex));
                     }
                     equalsIndex += KEY_BUFFER * nbBuffered;
-                    source.BaseStream.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
+                    reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
 
                     string tagId = tagIdBuilder.ToString();
 
                     if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
                     {
-                        SetPictureItem(source.BaseStream, tagId, size, readTagParams);
+                        SetPictureItem(reader, tagId, size, readTagParams);
                     }
                     else
                     {
-                        strData = Encoding.UTF8.GetString(source.ReadBytes(size - equalsIndex - 1)).Trim();
+                        strData = Encoding.UTF8.GetString(reader.ReadBytes(size - equalsIndex - 1)).Trim();
 
                         if (tagId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
                         {
@@ -374,28 +375,28 @@ namespace ATL.AudioData.IO
                         }
                     }
                 }
-                source.BaseStream.Seek(position + size, SeekOrigin.Begin);
+                reader.Seek(position + size, SeekOrigin.Begin);
 
-                if (0 == index) nbFields = source.ReadInt32();
+                if (0 == index) nbFields = reader.ReadInt32();
 
                 index++;
             } while (index <= nbFields);
 
             // All fields have been read
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialTagOffset, (int)(source.BaseStream.Position - initialTagOffset), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
+            structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
 
             if (readTagParams.PrepareForWriting)
             {
                 // Skip framing bit
-                if (1 == source.PeekChar()) source.BaseStream.Seek(1, SeekOrigin.Current);
+                if (reader.PeekChar()) reader.Seek(1, SeekOrigin.Current);
 
-                long streamPos = source.BaseStream.Position;
+                long streamPos = reader.Position;
                 // Prod to see if there's padding after the last field
-                if (streamPos + 4 < source.BaseStream.Length && 0 == source.ReadInt32())
+                if (streamPos + 4 < reader.Length && 0 == reader.ReadInt32())
                 {
                     initialPaddingOffset = streamPos;
-                    initialPaddingSize = StreamUtils.TraversePadding(source.BaseStream) - initialPaddingOffset;
+                    initialPaddingSize = StreamUtils.TraversePadding(reader) - initialPaddingOffset;
                     tagData.PaddingSize = initialPaddingSize;
                 }
             }

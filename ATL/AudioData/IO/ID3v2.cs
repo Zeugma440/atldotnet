@@ -1085,7 +1085,7 @@ namespace ATL.AudioData.IO
         // ********************** Public functions & voids **********************
 
         /// <inheritdoc/>
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             return Read(source, readTagParams.Offset, readTagParams);
         }
@@ -1097,11 +1097,11 @@ namespace ATL.AudioData.IO
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
         /// <param name="readTagParams">Reading parameters</param>
         /// <returns>True if the reading operation has succeeded; false if not</returns>
-        public bool Read(BinaryReader source, long offset, ReadTagParams readTagParams)
+        public bool Read(Stream source, long offset, ReadTagParams readTagParams)
         {
             tagHeader = new TagInfo();
 
-            BufferedBinaryReader reader = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             // Reset data and load header from file to variable
             ResetData();

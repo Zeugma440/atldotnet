@@ -398,7 +398,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.ReadBEBits(new BinaryReader(new MemoryStream()), 0, 0);
+                StreamUtils.ReadBEBits(new MemoryStream(), 0, 0);
                 Assert.Fail();
             }
             catch
@@ -408,7 +408,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.ReadBEBits(new BinaryReader(new MemoryStream()), 0, 33);
+                StreamUtils.ReadBEBits(new MemoryStream(), 0, 33);
                 Assert.Fail();
             }
             catch

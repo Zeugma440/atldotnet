@@ -296,9 +296,9 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private String getTrackerName(ushort trackerVersion)
+        private string getTrackerName(ushort trackerVersion)
         {
-            String result = "";
+            string result = "";
 
             switch ((trackerVersion & 0xF000) >> 12)
             {
@@ -318,11 +318,11 @@ namespace ATL.AudioData.IO
             foreach (ushort pos in instrumentPointers)
             {
                 source.Seek(pos << 4, SeekOrigin.Begin);
-                Instrument instrument = new Instrument();
-                instrument.Type = source.ReadByte();
-                instrument.FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim();
-                instrument.FileName = instrument.FileName.Replace("\0", "");
-
+                Instrument instrument = new Instrument
+                {
+                    Type = source.ReadByte(),
+                    FileName = Utils.Latin1Encoding.GetString(source.ReadBytes(12)).Trim().Replace("\0", "")
+                };
                 if (instrument.Type > 0) // Same offsets for PCM and AdLib display names
                 {
                     source.Seek(35, SeekOrigin.Current);
@@ -385,14 +385,14 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
 
@@ -409,10 +409,10 @@ namespace ATL.AudioData.IO
             IList<ushort> instrumentPointers = new List<ushort>();
 
             resetData();
-            BufferedBinaryReader bSource = new BufferedBinaryReader(source.BaseStream);
+            BufferedBinaryReader bSource = new BufferedBinaryReader(source);
 
             // Title = first 28 chars
-            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 28);
+            string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 28);
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);

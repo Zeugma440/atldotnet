@@ -592,12 +592,12 @@ namespace ATL.AudioData
         }
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
+        public bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
-        public bool Write(BinaryReader r, Stream s, TagData tag, Action<float> writeProgress = null) { throw new NotImplementedException(); }
+        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null) { throw new NotImplementedException(); }
 
-        public Task<bool> WriteAsync(BinaryReader r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             throw new NotImplementedException();
         }

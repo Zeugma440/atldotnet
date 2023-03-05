@@ -96,18 +96,20 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             uint value;
             bool result = false;
 
             resetData();
 
-            uint signatureChunk = StreamUtils.DecodeBEUInt32(source.ReadBytes(4)); // SYNC
+            byte[] buffer = new byte[4];
+            source.Read(buffer, 0, buffer.Length);
+            uint signatureChunk = StreamUtils.DecodeBEUInt32(buffer); // SYNC
             if (0x7FFE8001 == signatureChunk) // Core substream
             {
                 result = true;
-                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
                 int coreFrameBitOffset = (int)(AudioDataOffset * 8);
 

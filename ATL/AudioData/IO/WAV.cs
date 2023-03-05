@@ -460,28 +460,28 @@ namespace ATL.AudioData.IO
             if ((sampleNumber == 0) && (bytesPerSecond > 0))
                 result = (double)(sizeInfo.FileSize - headerSize - sizeInfo.ID3v1Size) / bytesPerSecond;
             if ((sampleNumber > 0) && (sampleRate > 0))
-                result = (double)(sampleNumber / sampleRate);
+                result = sampleNumber / sampleRate;
 
             return result * 1000.0;
         }
 
         private double getBitrate()
         {
-            return Math.Round((double)bitsPerSample / 1000.0 * sampleRate * channelsArrangement.NbChannels);
+            return Math.Round(bitsPerSample / 1000.0 * sampleRate * channelsArrangement.NbChannels);
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             resetData();
 
-            bool result = readWAV(source.BaseStream, readTagParams);
+            bool result = readWAV(source, readTagParams);
 
             // Process data if loaded and header valid
             if (result)

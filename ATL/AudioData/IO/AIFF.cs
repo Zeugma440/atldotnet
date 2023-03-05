@@ -238,18 +238,18 @@ namespace ATL.AudioData.IO
         /// <param name="limit">Maximum absolute position to search to</param>
         /// <param name="previousChunkId">ID of the previous chunk</param>
         /// <returns>Local chunk header information</returns>
-        private ChunkHeader seekNextChunkHeader(BinaryReader source, long limit, string previousChunkId)
+        private ChunkHeader seekNextChunkHeader(BufferedBinaryReader source, long limit, string previousChunkId)
         {
             ChunkHeader header = new ChunkHeader();
             byte[] aByte = new byte[1];
             int previousChunkSizeCorrection = 0;
 
-            source.BaseStream.Read(aByte, 0, 1);
+            source.Read(aByte, 0, 1);
             // In case previous chunk has a padding byte, seek a suitable first character for an ID
-            if (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.BaseStream.Position <= limit)
+            if (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.Position <= limit)
             {
                 previousChunkSizeCorrection++;
-                if (source.BaseStream.Position < limit) source.BaseStream.Read(aByte, 0, 1);
+                if (source.Position < limit) source.Read(aByte, 0, 1);
             }
 
             // Update zone size (remove and replace zone with updated size)
@@ -267,9 +267,9 @@ namespace ATL.AudioData.IO
 
             // Write actual tag size
 
-            if (source.BaseStream.Position < limit)
+            if (source.Position < limit)
             {
-                source.BaseStream.Seek(-1, SeekOrigin.Current);
+                source.Seek(-1, SeekOrigin.Current);
 
                 // Chunk ID
                 header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
@@ -284,34 +284,35 @@ namespace ATL.AudioData.IO
             return header;
         }
 
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = false;
             long position;
 
             resetData();
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            reader.Seek(0, SeekOrigin.Begin);
 
-            if (AIFF_CONTAINER_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            if (AIFF_CONTAINER_ID.Equals(Utils.Latin1Encoding.GetString(reader.ReadBytes(4))))
             {
                 // Container chunk size
-                long containerChunkPos = source.BaseStream.Position;
-                int containerChunkSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                long containerChunkPos = reader.Position;
+                int containerChunkSize = StreamUtils.DecodeBEInt32(reader.ReadBytes(4));
 
-                if (containerChunkPos + containerChunkSize + 4 != source.BaseStream.Length)
+                if (containerChunkPos + containerChunkSize + 4 != reader.Length)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Header size is incoherent with file size");
                 }
 
                 // Form type
-                string format = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                string format = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
 
                 if (format.Equals(FORMTYPE_AIFF) || format.Equals(FORMTYPE_AIFC))
                 {
@@ -324,22 +325,22 @@ namespace ATL.AudioData.IO
                     bool authorFound = false;
                     bool copyrightFound = false;
                     bool commentsFound = false;
-                    long limit = Math.Min(containerChunkPos + containerChunkSize + 4, source.BaseStream.Length);
+                    long limit = Math.Min(containerChunkPos + containerChunkSize + 4, reader.Length);
 
                     int annotationIndex = 0;
                     int commentIndex = 0;
                     string chunkId = "";
 
-                    while (source.BaseStream.Position < limit)
+                    while (reader.Position < limit)
                     {
-                        ChunkHeader header = seekNextChunkHeader(source, limit, chunkId);
+                        ChunkHeader header = seekNextChunkHeader(reader, limit, chunkId);
                         chunkId = header.ID;
 
-                        position = source.BaseStream.Position;
+                        position = reader.Position;
 
                         if (header.ID.Equals(CHUNKTYPE_COMMON))
                         {
-                            short channels = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                            short channels = StreamUtils.DecodeBEInt16(reader.ReadBytes(2));
                             switch (channels)
                             {
                                 case 1: channelsArrangement = MONO; break;
@@ -350,15 +351,15 @@ namespace ATL.AudioData.IO
                                 default: channelsArrangement = UNKNOWN; break;
                             }
 
-                            uint numSampleFrames = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                            bits = StreamUtils.DecodeBEInt16(source.ReadBytes(2)); // This sample size is for uncompressed data only
-                            byte[] byteArray = source.ReadBytes(10);
+                            uint numSampleFrames = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4));
+                            bits = StreamUtils.DecodeBEInt16(reader.ReadBytes(2)); // This sample size is for uncompressed data only
+                            byte[] byteArray = reader.ReadBytes(10);
                             Array.Reverse(byteArray);
                             double aSampleRate = StreamUtils.ExtendedToDouble(byteArray);
 
                             if (format.Equals(FORMTYPE_AIFC))
                             {
-                                compression = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                                compression = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
                             }
                             else // AIFF <=> no compression
                             {
@@ -382,14 +383,14 @@ namespace ATL.AudioData.IO
                         }
                         else if (header.ID.Equals(CHUNKTYPE_SOUND))
                         {
-                            soundChunkPosition = source.BaseStream.Position - 8;
+                            soundChunkPosition = reader.Position - 8;
                             soundChunkSize = header.Size + 8;
                             AudioDataOffset = soundChunkPosition;
                             AudioDataSize = soundChunkSize;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR) || header.ID.Equals(CHUNKTYPE_COPYRIGHT))
                         {
-                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID);
+                            structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
 
                             tagExists = true;
@@ -397,41 +398,41 @@ namespace ATL.AudioData.IO
                             if (header.ID.Equals(CHUNKTYPE_AUTHOR)) authorFound = true;
                             if (header.ID.Equals(CHUNKTYPE_COPYRIGHT)) copyrightFound = true;
 
-                            SetMetaField(header.ID, Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
+                            SetMetaField(header.ID, Utils.Latin1Encoding.GetString(reader.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
                         }
                         else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
                         {
                             annotationIndex++;
                             chunkId = header.ID + annotationIndex;
-                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + annotationIndex);
+                            structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID + annotationIndex);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + annotationIndex);
 
                             if (commentStr.Length > 0) commentStr.Append(Settings.InternalValueSeparator);
-                            commentStr.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(header.Size)));
+                            commentStr.Append(Utils.Latin1Encoding.GetString(reader.ReadBytes(header.Size)));
                             tagExists = true;
                         }
                         else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
                         {
                             commentIndex++;
                             chunkId = header.ID + commentIndex;
-                            structureHelper.AddZone(source.BaseStream.Position - 8, header.Size + 8, header.ID + commentIndex);
+                            structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID + commentIndex);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + commentIndex);
 
                             tagExists = true;
                             commentsFound = true;
 
-                            ushort numComs = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                            ushort numComs = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
 
                             for (int i = 0; i < numComs; i++)
                             {
                                 CommentData cmtData = new CommentData();
-                                cmtData.Timestamp = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                                cmtData.MarkerId = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                                cmtData.Timestamp = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4));
+                                cmtData.MarkerId = StreamUtils.DecodeBEInt16(reader.ReadBytes(2));
 
                                 // Comments length
-                                ushort comLength = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+                                ushort comLength = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
                                 MetaFieldInfo comment = new MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex);
-                                comment.Value = Utils.Latin1Encoding.GetString(source.ReadBytes(comLength));
+                                comment.Value = Utils.Latin1Encoding.GetString(reader.ReadBytes(comLength));
                                 comment.SpecificData = cmtData;
                                 tagData.AdditionalFields.Add(comment);
 
@@ -445,14 +446,14 @@ namespace ATL.AudioData.IO
                         }
                         else if (header.ID.Equals(CHUNKTYPE_ID3TAG))
                         {
-                            id3v2Offset = source.BaseStream.Position;
+                            id3v2Offset = reader.Position;
 
                             // Zone is already added by Id3v2.Read
                             id3v2StructureHelper.AddZone(id3v2Offset - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
                             id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
                         }
 
-                        source.BaseStream.Position = position + header.Size;
+                        reader.Position = position + header.Size;
                     } // Loop through file
 
                     tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());

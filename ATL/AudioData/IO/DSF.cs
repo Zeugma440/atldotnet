@@ -138,24 +138,29 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
             bool result = false;
+            byte[] buffer = new byte[8];
 
             resetData();
 
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
-            if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            source.Seek(0, SeekOrigin.Begin);
+            source.Read(buffer, 0, 4);
+            if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(buffer, 0, 4)))
             {
-                source.BaseStream.Seek(16, SeekOrigin.Current); // Chunk size and file size
-                id3v2Offset = source.ReadInt64();
+                source.Seek(16, SeekOrigin.Current); // Chunk size and file size
+                source.Read(buffer, 0, 8);
+                id3v2Offset = StreamUtils.DecodeInt64(buffer);
 
-                if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+                source.Read(buffer, 0, 4);
+                if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(buffer, 0, 4)))
                 {
-                    source.BaseStream.Seek(8, SeekOrigin.Current); // Chunk size
+                    source.Seek(8, SeekOrigin.Current); // Chunk size
 
-                    int formatVersion = source.ReadInt32();
+                    source.Read(buffer, 0, 4);
+                    int formatVersion = StreamUtils.DecodeInt32(buffer);
 
                     if (formatVersion > 1)
                     {
@@ -165,9 +170,10 @@ namespace ATL.AudioData.IO
 
                     isValid = true;
 
-                    source.BaseStream.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
+                    source.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
-                    uint channels = source.ReadUInt32();
+                    source.Read(buffer, 0, 4);
+                    uint channels = StreamUtils.DecodeUInt32(buffer);
                     switch (channels)
                     {
                         case 1: channelsArrangement = MONO; break;
@@ -180,15 +186,18 @@ namespace ATL.AudioData.IO
                         default: channelsArrangement = UNKNOWN; break;
                     }
 
-                    sampleRate = source.ReadUInt32();
-                    bits = source.ReadUInt32();
+                    source.Read(buffer, 0, 4);
+                    sampleRate = StreamUtils.DecodeUInt32(buffer);
+                    source.Read(buffer, 0, 4);
+                    bits = StreamUtils.DecodeUInt32(buffer);
 
-                    ulong sampleCount = source.ReadUInt64();
+                    source.Read(buffer, 0, 8);
+                    ulong sampleCount = StreamUtils.DecodeUInt64(buffer);
 
-                    duration = (double)sampleCount * 1000.0 / sampleRate;
-                    bitrate = Math.Round(((double)(sizeInfo.FileSize - source.BaseStream.Position)) * 8 / duration); //time to calculate average bitrate
+                    duration = sampleCount * 1000.0 / sampleRate;
+                    bitrate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / duration); //time to calculate average bitrate
 
-                    AudioDataOffset = source.BaseStream.Position + 8;
+                    AudioDataOffset = source.Position + 8;
                     if (id3v2Offset > 0)
                         AudioDataSize = id3v2Offset - AudioDataOffset;
                     else
@@ -202,8 +211,8 @@ namespace ATL.AudioData.IO
                 {
                     if (readTagParams.PrepareForWriting)
                     {
-                        id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.BaseStream.Length - id3v2Offset));
-                        id3v2StructureHelper.AddSize(12, source.BaseStream.Length);
+                        id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.Length - id3v2Offset));
+                        id3v2StructureHelper.AddSize(12, source.Length);
                         id3v2StructureHelper.AddIndex(20, id3v2Offset);
                     }
                 }
@@ -214,9 +223,9 @@ namespace ATL.AudioData.IO
                     if (readTagParams.PrepareForWriting)
                     {
                         // Add EOF zone for future tag writing
-                        id3v2StructureHelper.AddZone(source.BaseStream.Length, 0);
-                        id3v2StructureHelper.AddSize(12, source.BaseStream.Length);
-                        id3v2StructureHelper.AddIndex(20, source.BaseStream.Length);
+                        id3v2StructureHelper.AddZone(source.Length, 0);
+                        id3v2StructureHelper.AddSize(12, source.Length);
+                        id3v2StructureHelper.AddIndex(20, source.Length);
                     }
                 }
             }

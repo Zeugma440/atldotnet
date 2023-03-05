@@ -248,7 +248,7 @@ namespace ATL.AudioData
             return audioData.IsMetaSupported(metaDataType);
         }
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return audioData.Read(source, sizeInfo, readTagParams);
         }

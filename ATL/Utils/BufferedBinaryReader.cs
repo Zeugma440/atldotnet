@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Commons;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -101,27 +102,29 @@ namespace ATL
         private bool fillBuffer(int previousBytesToKeep = 0)
         {
             if (previousBytesToKeep > 0) Array.Copy(buffer, cursorPosition, buffer, 0, previousBytesToKeep);
-            int bytesToRead = (int)Math.Min(bufferDefaultSize - previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep);
+            int bytesToRead = (int)Math.Max(0, Math.Min(bufferDefaultSize - previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep));
+
+            bufferOffset = streamPosition;
+            cursorPosition = 0;
 
             if (bytesToRead > 0)
             {
-                bufferOffset = streamPosition;
                 stream.Read(buffer, previousBytesToKeep, bytesToRead);
                 streamPosition += bytesToRead;
                 bufferSize = bytesToRead;
-                cursorPosition = 0;
                 return true;
             }
 
             return false;
         }
 
-        private void prepareBuffer(int bytesToRead)
+        private bool prepareBuffer(int bytesToRead)
         {
             if (bufferSize - cursorPosition < bytesToRead)
             {
-                fillBuffer(Math.Max(0, bufferSize - cursorPosition));
+                return fillBuffer(Math.Max(0, bufferSize - cursorPosition));
             }
+            return false;
         }
 
         /// Mandatory override to Stream.Seek
@@ -136,7 +139,7 @@ namespace ATL
             }
             else if (origin.Equals(SeekOrigin.End))
             {
-                delta = (streamSize + offset) - Position;
+                delta = streamSize + offset - Position;
             }
 
             if (0 == delta) return Position;
@@ -203,6 +206,11 @@ namespace ATL
             }
         }
 
+        public bool PeekChar()
+        {
+            return prepareBuffer(1);
+        }
+
         /// <summary>
         /// Read an array of bytes of the given length from the current position
         /// </summary>
@@ -218,6 +226,16 @@ namespace ATL
         }
 
         /// <summary>
+        /// Read an array of Latin-1 encoded chars of the given length from the current position
+        /// </summary>
+        /// <param name="nbBytes">Number of bytes to read</param>
+        /// <returns>Array of Latin-1 encoded chars of the given length read from the current position</returns>
+        public char[] ReadChars(int nbBytes)
+        {
+            return Utils.Latin1Encoding.GetChars(ReadBytes(nbBytes));
+        }
+
+        /// <summary>
         /// Read a single byte from the current position
         /// </summary>
         /// <returns>Byte read from the current position</returns>
@@ -225,6 +243,18 @@ namespace ATL
         {
             prepareBuffer(1);
             byte val = buffer[cursorPosition];
+            cursorPosition++;
+            return val;
+        }
+
+        /// <summary>
+        /// Read a single signed byte from the current position
+        /// </summary>
+        /// <returns>Signed byte read from the current position</returns>
+        public sbyte ReadSByte()
+        {
+            prepareBuffer(1);
+            sbyte val = (sbyte)buffer[cursorPosition];
             cursorPosition++;
             return val;
         }

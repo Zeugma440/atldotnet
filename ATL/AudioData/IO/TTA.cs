@@ -30,50 +30,23 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations    
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
-        public uint Samples // Number of samples
-        {
-            get { return samplesSize; }
-        }
+        public double CompressionRatio => getCompressionRatio();
+        public uint Samples => samplesSize;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public int SampleRate
-        {
-            get { return (int)sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => (int)sampleRate;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => (int)bitsPerSample;
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
@@ -119,30 +92,38 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
             resetData();
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             bool result = false;
 
-            if (TTA_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4))))
+            byte[] buffer = new byte[4];
+            source.Read(buffer, 0, buffer.Length);
+            if (TTA_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(buffer)))
             {
                 isValid = true;
 
-                AudioDataOffset = source.BaseStream.Position - 4;
+                AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                audioFormat = source.ReadUInt16();
-                channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(source.ReadUInt16());
-                bitsPerSample = source.ReadUInt16();
-                sampleRate = source.ReadUInt32();
-                samplesSize = source.ReadUInt32();
-                cRC32 = source.ReadUInt32();
+                source.Read(buffer, 0, 2);
+                audioFormat = StreamUtils.DecodeUInt16(buffer);
+                source.Read(buffer, 0, 2);
+                channelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
+                source.Read(buffer, 0, 2);
+                bitsPerSample = StreamUtils.DecodeUInt16(buffer);
+                source.Read(buffer, 0, 4);
+                sampleRate = StreamUtils.DecodeUInt32(buffer);
+                source.Read(buffer, 0, 4);
+                samplesSize = StreamUtils.DecodeUInt32(buffer);
+                source.Read(buffer, 0, 4);
+                cRC32 = StreamUtils.DecodeUInt32(buffer);
 
-                bitrate = (double)(sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / ((double)samplesSize * 1000.0 / sampleRate);
-                duration = (double)samplesSize * 1000.0 / sampleRate;
+                bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
+                duration = samplesSize * 1000.0 / sampleRate;
 
                 result = true;
             }

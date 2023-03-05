@@ -19,18 +19,18 @@ namespace ATL.AudioData
         /// <param name="source">Source to read the fields from</param>
         /// <param name="atomDataSize">Max size of the zone to read</param>
         /// <returns>List of the detected metadata fields</returns>
-        public static IList<KeyValuePair<string, string>> ReadFields(BinaryReader source, long atomDataSize)
+        public static IList<KeyValuePair<string, string>> ReadFields(BufferedBinaryReader source, long atomDataSize)
         {
             IList<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
 
-            long initialPos = source.BaseStream.Position;
+            long initialPos = source.Position;
             long pos = initialPos;
             while (pos < initialPos + atomDataSize)
             {
                 int fieldSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                 int stringDataSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                 string fieldName = Utils.Latin1Encoding.GetString(source.ReadBytes(stringDataSize));
-                source.BaseStream.Seek(4, SeekOrigin.Current);
+                source.Seek(4, SeekOrigin.Current);
                 stringDataSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
 
                 string fieldValue;
@@ -41,7 +41,7 @@ namespace ATL.AudioData
                     fieldValue = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(stringDataSize - 6)));
 
                 result.Add(new KeyValuePair<string, string>(fieldName, fieldValue));
-                source.BaseStream.Seek(pos + fieldSize, SeekOrigin.Begin);
+                source.Seek(pos + fieldSize, SeekOrigin.Begin);
                 pos += fieldSize;
             }
 

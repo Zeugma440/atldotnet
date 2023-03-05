@@ -1,5 +1,7 @@
+using Commons;
 using System;
 using System.IO;
+using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 
@@ -230,15 +232,15 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private void readCommonHeader(BinaryReader source)
+        private void readCommonHeader(BufferedBinaryReader source)
         {
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            header.cID = source.ReadChars(4);
+            header.cID = Utils.Latin1Encoding.GetChars(source.ReadBytes(4));
             header.nVersion = source.ReadUInt16();
         }
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             ApeHeaderOld APE_OLD = new ApeHeaderOld();  // old header   <= 3.97
             ApeHeaderNew APE_NEW = new ApeHeaderNew();  // new header   >= 3.98
@@ -251,13 +253,14 @@ namespace ATL.AudioData.IO
             this.sizeInfo = sizeInfo;
             resetData();
 
+            BufferedBinaryReader reader = new BufferedBinaryReader(source);
             // Read data from file
-            readCommonHeader(source);
+            readCommonHeader(reader);
 
             if (StreamUtils.StringEqualsArr("MAC ", header.cID))
             {
                 version = header.nVersion;
-                AudioDataOffset = source.BaseStream.Position - 6;
+                AudioDataOffset = reader.Position - 6;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
                 // Load New Monkey's Audio Header for version >= 3.98
@@ -273,18 +276,18 @@ namespace ATL.AudioData.IO
                     APE_DESC.nTerminatingDataBytes = 0;
                     Array.Clear(APE_DESC.cFileMD5, 0, APE_DESC.cFileMD5.Length);
 
-                    APE_DESC.padded = source.ReadUInt16();
-                    APE_DESC.nDescriptorBytes = source.ReadUInt32();
-                    APE_DESC.nHeaderBytes = source.ReadUInt32();
-                    APE_DESC.nSeekTableBytes = source.ReadUInt32();
-                    APE_DESC.nHeaderDataBytes = source.ReadUInt32();
-                    APE_DESC.nAPEFrameDataBytes = source.ReadUInt32();
-                    APE_DESC.nAPEFrameDataBytesHigh = source.ReadUInt32();
-                    APE_DESC.nTerminatingDataBytes = source.ReadUInt32();
-                    APE_DESC.cFileMD5 = source.ReadBytes(16);
+                    APE_DESC.padded = reader.ReadUInt16();
+                    APE_DESC.nDescriptorBytes = reader.ReadUInt32();
+                    APE_DESC.nHeaderBytes = reader.ReadUInt32();
+                    APE_DESC.nSeekTableBytes = reader.ReadUInt32();
+                    APE_DESC.nHeaderDataBytes = reader.ReadUInt32();
+                    APE_DESC.nAPEFrameDataBytes = reader.ReadUInt32();
+                    APE_DESC.nAPEFrameDataBytesHigh = reader.ReadUInt32();
+                    APE_DESC.nTerminatingDataBytes = reader.ReadUInt32();
+                    APE_DESC.cFileMD5 = reader.ReadBytes(16);
 
                     // seek past description header
-                    if (APE_DESC.nDescriptorBytes != 52) source.BaseStream.Seek(APE_DESC.nDescriptorBytes - 52, SeekOrigin.Current);
+                    if (APE_DESC.nDescriptorBytes != 52) reader.Seek(APE_DESC.nDescriptorBytes - 52, SeekOrigin.Current);
                     // load new ape_header
                     if (APE_DESC.nHeaderBytes > 24/*sizeof(APE_NEW)*/) APE_DESC.nHeaderBytes = 24/*sizeof(APE_NEW)*/;
 
@@ -297,18 +300,18 @@ namespace ATL.AudioData.IO
                     APE_NEW.nChannels = 0;
                     APE_NEW.nSampleRate = 0;
 
-                    APE_NEW.nCompressionLevel = source.ReadUInt16();
-                    APE_NEW.nFormatFlags = source.ReadUInt16();
-                    APE_NEW.nBlocksPerFrame = source.ReadUInt32();
-                    APE_NEW.nFinalFrameBlocks = source.ReadUInt32();
-                    APE_NEW.nTotalFrames = source.ReadUInt32();
-                    APE_NEW.nBitsPerSample = source.ReadUInt16();
-                    APE_NEW.nChannels = source.ReadUInt16();
-                    APE_NEW.nSampleRate = source.ReadUInt32();
+                    APE_NEW.nCompressionLevel = reader.ReadUInt16();
+                    APE_NEW.nFormatFlags = reader.ReadUInt16();
+                    APE_NEW.nBlocksPerFrame = reader.ReadUInt32();
+                    APE_NEW.nFinalFrameBlocks = reader.ReadUInt32();
+                    APE_NEW.nTotalFrames = reader.ReadUInt32();
+                    APE_NEW.nBitsPerSample = reader.ReadUInt16();
+                    APE_NEW.nChannels = reader.ReadUInt16();
+                    APE_NEW.nSampleRate = reader.ReadUInt32();
 
                     // based on MAC SDK 3.98a1 (APEinfo.h)
                     sampleRate = (int)APE_NEW.nSampleRate;
-                    channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(APE_NEW.nChannels);
+                    channelsArrangement = GuessFromChannelNumber(APE_NEW.nChannels);
                     formatFlags = APE_NEW.nFormatFlags;
                     bits = APE_NEW.nBitsPerSample;
                     compressionMode = APE_NEW.nCompressionLevel;
@@ -335,15 +338,15 @@ namespace ATL.AudioData.IO
                     APE_OLD.nFinalFrameBlocks = 0;
                     APE_OLD.nInt = 0;
 
-                    APE_OLD.nCompressionLevel = source.ReadUInt16();
-                    APE_OLD.nFormatFlags = source.ReadUInt16();
-                    APE_OLD.nChannels = source.ReadUInt16();
-                    APE_OLD.nSampleRate = source.ReadUInt32();
-                    APE_OLD.nHeaderBytes = source.ReadUInt32();
-                    APE_OLD.nTerminatingBytes = source.ReadUInt32();
-                    APE_OLD.nTotalFrames = source.ReadUInt32();
-                    APE_OLD.nFinalFrameBlocks = source.ReadUInt32();
-                    APE_OLD.nInt = source.ReadInt32();
+                    APE_OLD.nCompressionLevel = reader.ReadUInt16();
+                    APE_OLD.nFormatFlags = reader.ReadUInt16();
+                    APE_OLD.nChannels = reader.ReadUInt16();
+                    APE_OLD.nSampleRate = reader.ReadUInt32();
+                    APE_OLD.nHeaderBytes = reader.ReadUInt32();
+                    APE_OLD.nTerminatingBytes = reader.ReadUInt32();
+                    APE_OLD.nTotalFrames = reader.ReadUInt32();
+                    APE_OLD.nFinalFrameBlocks = reader.ReadUInt32();
+                    APE_OLD.nInt = reader.ReadInt32();
 
                     compressionMode = APE_OLD.nCompressionLevel;
                     sampleRate = (int)APE_OLD.nSampleRate;

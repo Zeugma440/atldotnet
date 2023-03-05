@@ -295,52 +295,28 @@ namespace ATL.AudioData.IO
         // From IAudioDataIO
 
         /// <inheritdoc/>
-        public int SampleRate
-        {
-            get { return 0; }
-        }
+        public int SampleRate => 0;
         /// <inheritdoc/>
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public bool IsVBR => false;
         /// <inheritdoc/>
         public Format AudioFormat
         {
             get;
         }
         /// <inheritdoc/>
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ;
         /// <inheritdoc/>
-        public string FileName
-        {
-            get { return filePath; }
-        }
+        public string FileName => filePath;
         /// <inheritdoc/>
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public double BitRate => bitrate;
         /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
         /// <inheritdoc/>
-        public double Duration
-        {
-            get { return duration; }
-        }
+        public double Duration => duration;
         /// <inheritdoc/>
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return ChannelsArrangements.STEREO; }
-        }
+        public ChannelsArrangement ChannelsArrangement => STEREO;
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE; // Only for comments
-        }
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE; // Only for comments
         /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
         /// <inheritdoc/>
@@ -350,15 +326,9 @@ namespace ATL.AudioData.IO
         // From IMetaDataIO
 
         /// <inheritdoc/>
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
         /// <inheritdoc/>
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
         /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -441,7 +411,7 @@ namespace ATL.AudioData.IO
 		****************************************************************************/
 
         /// <inheritdoc/>
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
@@ -449,28 +419,28 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            byte[] header;
+            byte[] buffer = new byte[10];
             string trigger;
 
             resetData();
 
             // Ignores everything (comments) written before the MIDI header
-            StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_FILE_HEADER));
+            StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(MIDI_FILE_HEADER));
 
             // Ready to read header data...
-            header = source.ReadBytes(10);
-            if ((header[0] != 0) ||
-                (header[1] != 0) ||
-                (header[2] != 0) ||
-                (header[3] != 6)
+            source.Read(buffer, 0, buffer.Length);
+            if ((buffer[0] != 0) ||
+                (buffer[1] != 0) ||
+                (buffer[2] != 0) ||
+                (buffer[3] != 6)
                 )
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
                 return false;
             }
-            type = header[5];
+            type = buffer[5];
 
             // MIDI STRUCTURE TYPE
             // 0 - single-track 
@@ -478,12 +448,12 @@ namespace ATL.AudioData.IO
             // 2 - multiple tracks, asynchronous
             if (type > 1)
             {
-                Logging.LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
             }
 
             tagExists = true;
 
-            timebase = (header[8] << 8) + header[9];
+            timebase = (buffer[8] << 8) + buffer[9];
 
             tempo = 0; // maybe (hopefully!) overwritten by parseTrack
 
@@ -491,25 +461,29 @@ namespace ATL.AudioData.IO
             int nbTrack = 0;
             comment = new StringBuilder("");
 
-            AudioDataOffset = source.BaseStream.Position;
+            AudioDataOffset = source.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
             IList<MidiTrack> m_tracks = new List<MidiTrack>();
             // Ready to read track data...
-            while (source.BaseStream.Position < sizeInfo.FileSize - 4)
+            while (source.Position < sizeInfo.FileSize - 4)
             {
-                trigger = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                source.Read(buffer, 0, 4);
+                trigger = Utils.Latin1Encoding.GetString(buffer, 0, 4);
 
                 if (trigger != MIDI_TRACK_HEADER)
                 {
-                    source.BaseStream.Seek(-3, SeekOrigin.Current);
-                    if (!StreamUtils.FindSequence(source.BaseStream, Utils.Latin1Encoding.GetBytes(MIDI_TRACK_HEADER))) break;
+                    source.Seek(-3, SeekOrigin.Current);
+                    if (!StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(MIDI_TRACK_HEADER))) break;
                 }
 
                 // trackSize is stored in big endian -> needs inverting
-                trackSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                source.Read(buffer, 0, 4);
+                trackSize = StreamUtils.DecodeBEInt32(buffer);
 
-                m_tracks.Add(parseTrack(source.ReadBytes(trackSize), nbTrack));
+                byte[] trackData = new byte[trackSize];
+                source.Read(trackData, 0, trackSize);
+                m_tracks.Add(parseTrack(trackData, nbTrack));
                 nbTrack++;
             }
 

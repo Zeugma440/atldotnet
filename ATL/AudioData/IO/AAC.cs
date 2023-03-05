@@ -146,34 +146,34 @@ namespace ATL.AudioData.IO
         }
 
         // Get header type of the file
-        private byte recognizeHeaderType(BinaryReader Source)
+        private byte recognizeHeaderType(Stream source)
         {
             byte result;
-            byte[] header;
             string headerStr;
+            byte[] header = new byte[4];
 
             result = AAC_HEADER_TYPE_UNKNOWN;
-            Source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            header = Source.ReadBytes(4);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Read(header, 0, header.Length);
             headerStr = Utils.Latin1Encoding.GetString(header);
 
             if ("ADIF".Equals(headerStr))
             {
                 result = AAC_HEADER_TYPE_ADIF;
-                AudioDataOffset = Source.BaseStream.Position - 4;
+                AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             else if ((0xFF == header[0]) && (0xF0 == ((header[0]) & 0xF0)))
             {
                 result = AAC_HEADER_TYPE_ADTS;
-                AudioDataOffset = Source.BaseStream.Position - 4;
+                AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
             return result;
         }
 
         // Read ADIF header data
-        private void readADIF(BinaryReader Source)
+        private void readADIF(Stream Source)
         {
             int Position;
 
@@ -206,7 +206,7 @@ namespace ATL.AudioData.IO
         }
 
         // Read ADTS header data
-        private void readADTS(BinaryReader Source)
+        private void readADTS(Stream source)
         {
             int frames = 0;
             int totalSize = 0;
@@ -217,41 +217,41 @@ namespace ATL.AudioData.IO
                 frames++;
                 position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
-                if (StreamUtils.ReadBEBits(Source, position, 12) != 0xFFF) break;
+                if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) break;
 
                 position += 18;
 
-                sampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(Source, position, 4)];
+                sampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, position, 4)];
                 position += 5;
 
-                uint channels = StreamUtils.ReadBEBits(Source, position, 3);
+                uint channels = StreamUtils.ReadBEBits(source, position, 3);
                 channelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
 
                 position += 7;
 
-                totalSize += (int)StreamUtils.ReadBEBits(Source, position, 13);
+                totalSize += (int)StreamUtils.ReadBEBits(source, position, 13);
                 position += 13;
 
-                if (0x7FF == StreamUtils.ReadBEBits(Source, position, 11))
+                if (0x7FF == StreamUtils.ReadBEBits(source, position, 11))
                     bitrateTypeID = AAC_BITRATE_TYPE_VBR;
                 else
                     bitrateTypeID = AAC_BITRATE_TYPE_CBR;
 
                 if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) break;
             }
-            while (Source.BaseStream.Length > sizeInfo.ID3v2Size + totalSize);
+            while (source.Length > sizeInfo.ID3v2Size + totalSize);
             bitrate = (int)Math.Round(8 * totalSize / 1024.0 / frames * sampleRate);
         }
 
         // Read data from file
-        public bool Read(BinaryReader source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected bool read(BinaryReader source, MetaDataIO.ReadTagParams readTagParams)
+        protected bool read(Stream source, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = true;
 

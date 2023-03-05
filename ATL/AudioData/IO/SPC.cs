@@ -258,17 +258,20 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE METHODS ===
 
-        private bool readHeader(BinaryReader source, ref SpcHeader header)
+        private bool readHeader(Stream source, ref SpcHeader header)
         {
-            source.BaseStream.Seek(0, SeekOrigin.Begin);
+            source.Seek(0, SeekOrigin.Begin);
 
-            long initialPosition = source.BaseStream.Position;
-            if (SPC_FORMAT_TAG.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(SPC_FORMAT_TAG.Length))))
+            long initialPosition = source.Position;
+            byte[] buffer = new byte[SPC_FORMAT_TAG.Length];
+            source.Read(buffer, 0, buffer.Length);
+            if (SPC_FORMAT_TAG.Equals(Utils.Latin1Encoding.GetString(buffer)))
             {
-                source.BaseStream.Seek(8, SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
-                header.TagInHeader = source.ReadByte();
-                header.VersionByte = source.ReadByte();
-                header.Size = source.BaseStream.Position - initialPosition;
+                source.Seek(8, SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
+                source.Read(buffer, 0, 2);
+                header.TagInHeader = buffer[0];
+                header.VersionByte = buffer[1];
+                header.Size = source.Position - initialPosition;
                 return true;
             }
             else
@@ -277,22 +280,29 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void readHeaderTags(BinaryReader source, ref SpcHeader header, ReadTagParams readTagParams)
+        private void readHeaderTags(Stream source, ref SpcHeader header, ReadTagParams readTagParams)
         {
-            long initialPosition = source.BaseStream.Position;
+            byte[] buffer = new byte[32];
+            long initialPosition = source.Position;
 
-            SetMetaField(HEADER_TITLE.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            SetMetaField(HEADER_ALBUM.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            SetMetaField(HEADER_DUMPERNAME.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(16)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            SetMetaField(HEADER_COMMENT.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            source.Read(buffer, 0, 32);
+            SetMetaField(HEADER_TITLE.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            source.Read(buffer, 0, 32);
+            SetMetaField(HEADER_ALBUM.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            source.Read(buffer, 0, 16);
+            SetMetaField(HEADER_DUMPERNAME.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            source.Read(buffer, 0, 32);
+            SetMetaField(HEADER_COMMENT.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
-            byte[] date, song, fade;
+            byte[] date = new byte[11];
+            byte[] song = new byte[3];
+            byte[] fade = new byte[5];
 
             // NB : Dump date is used to determine if the tag is binary or text-based.
             // It won't be recorded as a property of TSPC
-            date = source.ReadBytes(11);
-            song = source.ReadBytes(3);
-            fade = source.ReadBytes(5);
+            source.Read(date, 0, date.Length);
+            source.Read(song, 0, song.Length);
+            source.Read(fade, 0, fade.Length);
 
             bool bin;
             int dateRes = isText(date);
@@ -340,7 +350,7 @@ namespace ATL.AudioData.IO
                 songVal = song[0] * 0x01 + song[1] * 0x10;
                 if (songVal > 959) songVal = 959;
 
-                source.BaseStream.Seek(-1, SeekOrigin.Current); // We're one byte ahead
+                source.Seek(-1, SeekOrigin.Current); // We're one byte ahead
                 SetMetaField(HEADER_FADE.ToString(), Utils.Latin1Encoding.GetString(fade), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             }
             else
@@ -357,12 +367,13 @@ namespace ATL.AudioData.IO
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
             if (songVal > 0) duration = fadeVal + songVal;
 
-            SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(source.ReadBytes(32)).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            header.Size += source.BaseStream.Position - initialPosition;
+            source.Read(buffer, 0, 32);
+            SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
+            header.Size += source.Position - initialPosition;
 
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddZone(initialPosition, (int)(source.BaseStream.Position - initialPosition), ZONE_HEADER);
+                structureHelper.AddZone(initialPosition, (int)(source.Position - initialPosition), ZONE_HEADER);
             }
         }
 
@@ -378,14 +389,17 @@ namespace ATL.AudioData.IO
                 return -1;
         }
 
-        private void readExtendedData(BinaryReader source, ref SpcExTags footer, ReadTagParams readTagParams)
+        private void readExtendedData(Stream source, ref SpcExTags footer, ReadTagParams readTagParams)
         {
-            long initialPosition = source.BaseStream.Position;
-            footer.FormatTag = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            long initialPosition = source.Position;
+            byte[] buffer = new byte[4];
+            source.Read(buffer, 0, buffer.Length);
+            footer.FormatTag = Utils.Latin1Encoding.GetString(buffer);
             if (XTENDED_TAG == footer.FormatTag)
             {
                 tagExists = true;
-                footer.Size = source.ReadUInt32();
+                source.Read(buffer, 0, buffer.Length);
+                footer.Size = StreamUtils.DecodeUInt32(buffer);
 
                 byte ID, type;
                 ushort size;
@@ -393,12 +407,14 @@ namespace ATL.AudioData.IO
                 int intData = 0;
                 long ticks = 0;
 
-                long dataPosition = source.BaseStream.Position;
-                while (source.BaseStream.Position < dataPosition + footer.Size - 4)
+                long dataPosition = source.Position;
+                while (source.Position < dataPosition + footer.Size - 4)
                 {
-                    ID = source.ReadByte();
-                    type = source.ReadByte();
-                    size = source.ReadUInt16();
+                    source.Read(buffer, 0, 2);
+                    ID = buffer[0];
+                    type = buffer[1];
+                    source.Read(buffer, 0, 2);
+                    size = StreamUtils.DecodeUInt16(buffer);
 
                     switch (type)
                     {
@@ -422,19 +438,22 @@ namespace ATL.AudioData.IO
                             break;
                         case XID6_TSTR:
                             intData = 0;
-                            strData = Utils.Latin1Encoding.GetString(source.ReadBytes(size)).Replace("\0", "").Trim();
+                            byte[] strDatab = new byte[size];
+                            source.Read(strDatab, 0, size);
+                            strData = Utils.Latin1Encoding.GetString(strDatab).Replace("\0", "").Trim();
 
-                            while (source.BaseStream.Position < source.BaseStream.Length && 0 == source.ReadByte()) ; // Skip parasite ending zeroes
-                            if (source.BaseStream.Position < source.BaseStream.Length) source.BaseStream.Seek(-1, SeekOrigin.Current);
+                            while (source.Position < source.Length && 0 == source.ReadByte()) ; // Skip parasite ending zeroes
+                            if (source.Position < source.Length) source.Seek(-1, SeekOrigin.Current);
                             break;
                         case XID6_TINT:
-                            intData = source.ReadInt32();
+                            source.Read(buffer, 0, 4);
+                            intData = StreamUtils.DecodeInt32(buffer);
                             strData = intData.ToString();
                             break;
                     }
 
                     if (XID6_LOOP == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
-                    else if (XID6_LOOPX == ID) ticks = ticks * Math.Min(XID6_MAXLOOP, (int)size);
+                    else if (XID6_LOOPX == ID) ticks *= Math.Min(XID6_MAXLOOP, (int)size);
                     else if (XID6_INTRO == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
                     else if (XID6_END == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
                     else if (XID6_FADE == ID) ticks += Math.Min(XID6_MAXTICKS, intData);
@@ -446,21 +465,21 @@ namespace ATL.AudioData.IO
 
                 if (readTagParams.PrepareForWriting)
                 {
-                    structureHelper.AddZone(initialPosition, (int)(source.BaseStream.Position - initialPosition), ZONE_EXTENDED);
+                    structureHelper.AddZone(initialPosition, (int)(source.Position - initialPosition), ZONE_EXTENDED);
                 }
             }
         }
 
         // === PUBLIC METHODS ===
 
-        public bool Read(BinaryReader source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
 
-        protected override bool read(BinaryReader source, ReadTagParams readTagParams)
+        protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
             SpcHeader header = new SpcHeader();
@@ -470,7 +489,7 @@ namespace ATL.AudioData.IO
             footer.Reset();
             resetData();
 
-            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             if (!readHeader(source, ref header)) throw new InvalidDataException("Not a SPC file");
 
@@ -478,16 +497,16 @@ namespace ATL.AudioData.IO
             if (SpcHeader.TAG_IN_HEADER == header.TagInHeader)
             {
                 tagExists = true;
-                source.BaseStream.Seek(REGISTERS_LENGTH, SeekOrigin.Current);
+                source.Seek(REGISTERS_LENGTH, SeekOrigin.Current);
                 readHeaderTags(source, ref header, readTagParams);
             }
 
-            AudioDataOffset = source.BaseStream.Position;
+            AudioDataOffset = source.Position;
 
             // Reads extended tag
-            if (source.BaseStream.Length > SPC_RAW_LENGTH)
+            if (source.Length > SPC_RAW_LENGTH)
             {
-                source.BaseStream.Seek(SPC_RAW_LENGTH, SeekOrigin.Begin);
+                source.Seek(SPC_RAW_LENGTH, SeekOrigin.Begin);
                 readExtendedData(source, ref footer, readTagParams);
             }
             else
@@ -619,14 +638,14 @@ namespace ATL.AudioData.IO
         public override bool Remove(Stream s)
         {
             TagData tag = prepareRemove();
-            using (BinaryReader r = new BinaryReader(s, System.Text.Encoding.UTF8, true)) return Write(r, s, tag);
+            return Write(s, s, tag);
         }
 
         // Specific implementation for conservation of fields that are required for playback
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();
-            using (BinaryReader r = new BinaryReader(s, System.Text.Encoding.UTF8, true)) return await WriteAsync(r, s, tag);
+            return await WriteAsync(s, s, tag);
         }
 
         private TagData prepareRemove()
