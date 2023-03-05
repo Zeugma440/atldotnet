@@ -345,46 +345,46 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    switch ((TagRestrictions & 0xC0) >> 6)
+                    return ((TagRestrictions & 0xC0) >> 6) switch
                     {
-                        case 0: return 128;
-                        case 1: return 64;
-                        case 2: return 32;
-                        case 3: return 32;
-                        default: return -1;
-                    }
+                        0 => 128,
+                        1 => 64,
+                        2 => 32,
+                        3 => 32,
+                        _ => -1,
+                    };
                 }
             }
             public int TagSizeRestrictionKB
             {
                 get
                 {
-                    switch ((TagRestrictions & 0xC0) >> 6)
+                    return ((TagRestrictions & 0xC0) >> 6) switch
                     {
-                        case 0: return 1024;
-                        case 1: return 128;
-                        case 2: return 40;
-                        case 3: return 4;
-                        default: return -1;
-                    }
+                        0 => 1024,
+                        1 => 128,
+                        2 => 40,
+                        3 => 4,
+                        _ => -1,
+                    };
                 }
             }
             public bool HasTextEncodingRestriction
             {
-                get { return (((TagRestrictions & 0x20) >> 5) > 0); }
+                get { return ((TagRestrictions & 0x20) >> 5) > 0; }
             }
             public int TextFieldSizeRestriction
             {
                 get
                 {
-                    switch ((TagRestrictions & 0x18) >> 3)
+                    return ((TagRestrictions & 0x18) >> 3) switch
                     {
-                        case 0: return -1;
-                        case 1: return 1024;
-                        case 2: return 128;
-                        case 3: return 30;
-                        default: return -1;
-                    }
+                        0 => -1,
+                        1 => 1024,
+                        2 => 128,
+                        3 => 30,
+                        _ => -1,
+                    };
                 }
             }
             public bool HasPictureEncodingRestriction
@@ -395,14 +395,14 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    switch (TagRestrictions & 0x03)
+                    return (TagRestrictions & 0x03) switch
                     {
-                        case 0: return -1;  // No restriction
-                        case 1: return 256; // 256x256 or less
-                        case 2: return 63;  // 64x64 or less
-                        case 3: return 64;  // Exactly 64x64
-                        default: return -1;
-                    }
+                        0 => -1,// No restriction
+                        1 => 256,// 256x256 or less
+                        2 => 63,// 64x64 or less
+                        3 => 64,// Exactly 64x64
+                        _ => -1,
+                    };
                 }
             }
         }
