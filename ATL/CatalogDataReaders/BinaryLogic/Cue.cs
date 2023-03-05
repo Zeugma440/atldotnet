@@ -156,7 +156,6 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                                     currentTrack.Bitrate = physicalTrack.Bitrate;
                                     currentTrack.CodecFamily = physicalTrack.CodecFamily;
                                     currentTrack.Year = physicalTrack.Year;
-                                    currentTrack.PictureTokens = physicalTrack.PictureTokens;
                                     currentTrack.DiscNumber = physicalTrack.DiscNumber;
                                 }
                                 currentTrack.Artist = "";
@@ -185,7 +184,6 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                                 currentTrack.Bitrate = physicalTrack.Bitrate;
                                 currentTrack.CodecFamily = physicalTrack.CodecFamily;
                                 currentTrack.Year = physicalTrack.Year;
-                                currentTrack.PictureTokens = physicalTrack.PictureTokens;
                                 currentTrack.DiscNumber = physicalTrack.DiscNumber;
                                 currentTrack.Artist = "";
                                 currentTrack.Title = "";

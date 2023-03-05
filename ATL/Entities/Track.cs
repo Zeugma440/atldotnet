@@ -159,7 +159,7 @@ namespace ATL
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
 		/// </summary>
-        public DateTime? Date 
+        public DateTime? Date
         {
             get => date;
             set
@@ -208,14 +208,6 @@ namespace ATL
         /// e.g. 3.5 stars = 70%
 		/// </summary>
         public float? Popularity { get; set; }
-        /// <summary>
-        /// List of picture IDs stored in the tag
-        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
-        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
-        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
-        /// </summary>
-        [Obsolete("Use PictureInfo instead", false)]
-        public IList<PictureInfo> PictureTokens { get; set; } = null;
         /// <summary>
         /// Chapters table of content description
         /// </summary>
@@ -427,8 +419,6 @@ namespace ATL
                 AdditionalFields.Add(key, processString(metadata.AdditionalFields[key]));
             }
             initialAdditionalFields = metadata.AdditionalFields.Keys;
-
-            PictureTokens = new List<PictureInfo>(metadata.PictureTokens);
 
             // Physical information
             Bitrate = fileIO.IntBitRate;

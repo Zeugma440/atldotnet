@@ -354,12 +354,9 @@ namespace ATL.AudioData.IO
             {
                 readTags(reader, toc[TOC_CONTENT_TAGS].Offset, readTagParams);
             }
-            if (toc.ContainsKey(TOC_COVER_ART))
+            if (toc.ContainsKey(TOC_COVER_ART) && readTagParams.ReadPictures)
             {
-                if (readTagParams.ReadPictures)
-                    readCover(reader, toc[TOC_COVER_ART].Offset, PictureInfo.PIC_TYPE.Generic);
-                else
-                    addPictureToken(PictureInfo.PIC_TYPE.Generic);
+                readCover(reader, toc[TOC_COVER_ART].Offset, PictureInfo.PIC_TYPE.Generic);
             }
             readChapters(reader, toc[TOC_AUDIO].Offset, toc[TOC_AUDIO].Size);
 

@@ -973,12 +973,10 @@ namespace ATL.AudioData.IO
                     {
                         if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                         {
-                            addPictureToken(MetaDataIOFactory.TagType.ID3V2, picCode);
                             picturePosition = takePicturePosition(MetaDataIOFactory.TagType.ID3V2, picCode);
                         }
                         else
                         {
-                            addPictureToken(picType);
                             picturePosition = takePicturePosition(picType);
                         }
                     }

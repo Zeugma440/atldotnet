@@ -465,12 +465,10 @@ namespace ATL.AudioData.IO
                     int picturePosition;
                     if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
-                        addPictureToken(MetaDataIOFactory.TagType.NATIVE, picCode);
                         picturePosition = takePicturePosition(MetaDataIOFactory.TagType.NATIVE, picCode);
                     }
                     else
                     {
-                        addPictureToken(picType);
                         picturePosition = takePicturePosition(picType);
                     }
 

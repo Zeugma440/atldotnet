@@ -20,18 +20,6 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// List of picture IDs stored in the tag
-        ///     PictureInfo.PIC_TYPE : internal, normalized picture type
-        ///     PictureInfo.NativePicCode : native picture code (useful when exploiting the UNSUPPORTED picture type)
-        ///     NB : PictureInfo.PictureData (raw binary picture data) is _not_ valued here; see EmbeddedPictures field
-        /// </summary>
-        [Obsolete("Use PictureInfo instead", false)]
-        IList<PictureInfo> PictureTokens
-        {
-            get;
-        }
-
-        /// <summary>
         /// Size of padding area, if any
         /// </summary>
         long PaddingSize

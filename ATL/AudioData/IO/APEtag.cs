@@ -228,12 +228,10 @@ namespace ATL.AudioData.IO
 
                     if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
-                        addPictureToken(getImplementedTagType(), frameName);
                         picturePosition = takePicturePosition(getImplementedTagType(), frameName);
                     }
                     else
                     {
-                        addPictureToken(picType);
                         picturePosition = takePicturePosition(picType);
                     }
 

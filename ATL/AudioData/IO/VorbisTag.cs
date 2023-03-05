@@ -218,8 +218,6 @@ namespace ATL.AudioData.IO
                 PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
                 int picturePosition = takePicturePosition(picType);
 
-                addPictureToken(picType);
-
                 if (readTagParams.ReadPictures)
                 {
                     size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
@@ -243,12 +241,10 @@ namespace ATL.AudioData.IO
 
             if (block.picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
             {
-                addPictureToken(getImplementedTagType(), (byte)block.nativePicCode);
                 picturePosition = takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode);
             }
             else
             {
-                addPictureToken(block.picType);
                 picturePosition = takePicturePosition(block.picType);
             }
 

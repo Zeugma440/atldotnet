@@ -53,14 +53,6 @@ namespace ATL.AudioData.IO
             }
         }
         /// <inheritdoc/>
-        public IList<PictureInfo> PictureTokens
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PictureTokens;
-            }
-        }
-        /// <inheritdoc/>
         public long Size
         {
             get

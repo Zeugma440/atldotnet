@@ -42,11 +42,6 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public IList<PictureInfo> PictureTokens
-        {
-            get { return new List<PictureInfo>(); }
-        }
-        /// <inheritdoc/>
         public long PaddingSize
         {
             get { return 0; }

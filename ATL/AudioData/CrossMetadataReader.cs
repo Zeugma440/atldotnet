@@ -510,17 +510,6 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public IList<PictureInfo> PictureTokens
-        {
-            get
-            {
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.PictureTokens.Count > 0);
-                if (reader != null) return reader.PictureTokens;
-                return new List<PictureInfo>();
-            }
-        }
-
-        /// <inheritdoc/>
         public IDictionary<string, string> AdditionalFields
         {
             get

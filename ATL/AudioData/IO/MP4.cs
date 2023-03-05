@@ -1424,7 +1424,6 @@ namespace ATL.AudioData.IO
 
                     do
                     {
-                        addPictureToken(picType);
                         picturePosition = takePicturePosition(picType);
 
                         if (readTagParams.ReadPictures)

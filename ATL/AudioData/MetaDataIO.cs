@@ -104,11 +104,6 @@ namespace ATL.AudioData.IO
         /// </summary>
         protected int tagVersion;
         /// <summary>
-        /// Picture tokens (i.e. presence of pictures, without its binary data)
-        /// </summary>
-        [Obsolete("Use PictureInfo instead", false)]
-        protected IList<PictureInfo> pictureTokens;
-        /// <summary>
         /// Tag embedder (3rd party tagging system within the tag)
         /// </summary>
         protected IMetaDataEmbedder embedder;
@@ -179,13 +174,6 @@ namespace ATL.AudioData.IO
         {
             get { return tagData.PaddingSize; }
         }
-
-        /// <inheritdoc/>
-        [Obsolete("Use PictureInfo instead", false)]
-        public IList<PictureInfo> PictureTokens
-        {
-            get { return pictureTokens; }
-        }
         /// <summary>
         /// Rating convention to use to format Popularity for the current tagging format
         /// </summary>
@@ -222,35 +210,6 @@ namespace ATL.AudioData.IO
         }
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
-
-        /// <summary>
-        /// Add a picture token of the given type
-        /// </summary>
-        /// <param name="picType">Type of the picture token to add</param>
-        protected void addPictureToken(PictureInfo.PIC_TYPE picType)
-        {
-            pictureTokens.Add(new PictureInfo(picType));
-        }
-
-        /// <summary>
-        /// Add a picture token for the given tag type, with the given code as a byte
-        /// </summary>
-        /// <param name="tagType">Tag type to use</param>
-        /// <param name="nativePicCode">Native code to use</param>
-        protected void addPictureToken(MetaDataIOFactory.TagType tagType, byte nativePicCode)
-        {
-            pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
-        }
-
-        /// <summary>
-        /// Add a picture token for the given tag type, with the given code as a string
-        /// </summary>
-        /// <param name="tagType">Tag type to use</param>
-        /// <param name="nativePicCode">Native code to use</param>
-        protected void addPictureToken(MetaDataIOFactory.TagType tagType, string nativePicCode)
-        {
-            pictureTokens.Add(new PictureInfo(tagType, nativePicCode));
-        }
 
         protected int takePicturePosition(PictureInfo.PIC_TYPE picType)
         {
@@ -348,7 +307,6 @@ namespace ATL.AudioData.IO
             tagVersion = 0;
 
             if (null == tagData) tagData = new TagData(); else tagData.Clear();
-            if (null == pictureTokens) pictureTokens = new List<PictureInfo>(); else pictureTokens.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
