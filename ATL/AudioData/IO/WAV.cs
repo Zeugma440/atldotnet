@@ -460,7 +460,7 @@ namespace ATL.AudioData.IO
             if ((sampleNumber == 0) && (bytesPerSecond > 0))
                 result = (double)(sizeInfo.FileSize - headerSize - sizeInfo.ID3v1Size) / bytesPerSecond;
             if ((sampleNumber > 0) && (sampleRate > 0))
-                result = sampleNumber / sampleRate;
+                result = sampleNumber * 1.0 / sampleRate;
 
             return result * 1000.0;
         }
