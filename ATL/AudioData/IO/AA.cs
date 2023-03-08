@@ -214,6 +214,15 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            // Bytes 4 to 7
+            byte[] usefulData = new byte[4];
+            Array.Copy(data, 4, usefulData, 0, 4);
+
+            return AA_MAGIC_NUMBER == StreamUtils.DecodeBEInt32(usefulData);
+        }
+
         // ********************** Private functions & procedures *********************
 
         // Calculate duration time
@@ -228,9 +237,11 @@ namespace ATL.AudioData.IO
         // Read header data
         private bool readHeader(BufferedBinaryReader source)
         {
-            uint fileSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            int magicNumber = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            if (magicNumber != AA_MAGIC_NUMBER) return false;
+            byte[] buffer = new byte[8];
+            source.Read(buffer, 0, buffer.Length);
+            if (!IsValidHeader(buffer)) return false;
+
+            uint fileSize = StreamUtils.DecodeBEUInt32(buffer);
 
             tagExists = true;
             AudioDataOffset = source.Position - 4;

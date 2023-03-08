@@ -1,6 +1,8 @@
+using ATL.AudioData.IO;
 using ATL.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL.AudioData
 {
@@ -103,6 +105,8 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".mp1");
                     tempFmt.AddExtension(".mp2");
                     tempFmt.AddExtension(".mp3");
+                    tempFmt.CheckHeader = MPEGaudio.IsValidFrameHeader;
+                    tempFmt.SearchHeader = MPEGaudio.HasValidFrame;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_OGG, "OGG", "OGG");
@@ -113,6 +117,7 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".ogg");
                     tempFmt.AddExtension(".oga");
                     tempFmt.AddExtension(".opus");
+                    tempFmt.CheckHeader = Ogg.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_MPC, "Musepack / MPEGplus", "MPC");
@@ -120,6 +125,7 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/musepack");
                     tempFmt.AddExtension(".mp+");
                     tempFmt.AddExtension(".mpc");
+                    tempFmt.CheckHeader = MPEGplus.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_WMA, "Windows Media Audio", "WMA");
@@ -127,11 +133,13 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("video/x-ms-asf");
                     tempFmt.AddExtension(".asf");
                     tempFmt.AddExtension(".wma");
+                    tempFmt.CheckHeader = WMA.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_AAC, "Advanced Audio Coding");
                     tempFmt.AddMimeType("audio/aac");
                     tempFmt.AddExtension(".aac");
+                    tempFmt.CheckHeader = AAC.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_MP4, "MPEG-4 Part 14", "MPEG-4");
@@ -145,23 +153,27 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".m4r");
                     tempFmt.AddExtension(".m4v");
                     tempFmt.AddExtension(".aax");
+                    tempFmt.CheckHeader = MP4.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_AC3, "Dolby Digital", "Dolby");
                     tempFmt.AddMimeType("audio/ac3");
                     tempFmt.AddExtension(".ac3");
+                    tempFmt.CheckHeader = AC3.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_DTS, "Digital Theatre System", "DTS");
                     tempFmt.AddMimeType("audio/vnd.dts");
                     tempFmt.AddMimeType("audio/vnd.dts.hd");
                     tempFmt.AddExtension(".dts");
+                    tempFmt.CheckHeader = DTS.IsValidHeader;
                     tempFmt.Readable = false;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_VQF, "TwinVQ");
                     tempFmt.AddExtension(".vqf");
                     tempFmt.AddMimeType("audio/x-twinvq");
+                    tempFmt.CheckHeader = TwinVQ.IsValidHeader;
                     tempFmt.Readable = false;
                     theFactory.addFormat(tempFmt);
 
@@ -170,12 +182,14 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-flac");
                     tempFmt.AddMimeType("audio/x-ogg");
                     tempFmt.AddExtension(".flac");
+                    tempFmt.CheckHeader = FlacHelper.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_APE, "Monkey's Audio", "APE");
                     tempFmt.AddMimeType("audio/ape");
                     tempFmt.AddMimeType("audio/x-ape");
                     tempFmt.AddExtension(".ape");
+                    tempFmt.CheckHeader = APE.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_OFR, "OptimFROG");
@@ -183,12 +197,14 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-ofr");
                     tempFmt.AddExtension(".ofr");
                     tempFmt.AddExtension(".ofs");
+                    tempFmt.CheckHeader = OptimFrog.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_WAVPACK, "WAVPack");
                     tempFmt.AddMimeType("audio/x-wavpack");
                     tempFmt.AddMimeType("audio/wavpack");
                     tempFmt.AddExtension(".wv");
+                    tempFmt.CheckHeader = WAVPack.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_WAV, "PCM (uncompressed audio)", "WAV");
@@ -197,12 +213,15 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".wav");
                     tempFmt.AddExtension(".bwf");
                     tempFmt.AddExtension(".bwav");
+                    tempFmt.CheckHeader = WAV.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_MIDI, "Musical Instruments Digital Interface", "MIDI");
                     tempFmt.AddMimeType("audio/mid");
                     tempFmt.AddExtension(".mid");
                     tempFmt.AddExtension(".midi");
+                    tempFmt.CheckHeader = Midi.IsValidHeader;
+                    tempFmt.SearchHeader = Midi.FindValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_DSF, "Direct Stream Digital", "DSD");
@@ -212,6 +231,7 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-dsd");
                     tempFmt.AddExtension(".dsf");
                     tempFmt.AddExtension(".dsd");
+                    tempFmt.CheckHeader = DSF.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_PSF, "Portable Sound Format", "PSF");
@@ -231,24 +251,28 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".minigsf");
                     tempFmt.AddExtension(".qsf");
                     tempFmt.AddExtension(".miniqsf");
+                    tempFmt.CheckHeader = PSF.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_SPC, "SPC700 Sound Files", "SPC");
                     tempFmt.AddMimeType("audio/spc");   // Unofficial
                     tempFmt.AddMimeType("audio/x-spc"); // Unofficial
                     tempFmt.AddExtension(".spc");
+                    tempFmt.CheckHeader = SPC.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_TTA, "True Audio");
                     tempFmt.AddMimeType("audio/tta");
                     tempFmt.AddMimeType("audio/x-tta");
                     tempFmt.AddExtension(".tta");
+                    tempFmt.CheckHeader = TTA.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_TAK, "Tom's lossless Audio Kompressor", "TAK");
                     tempFmt.AddMimeType("audio/tak");   // Unofficial
                     tempFmt.AddMimeType("audio/x-tak"); // Unofficial
                     tempFmt.AddExtension(".tak");
+                    tempFmt.CheckHeader = TAK.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_MOD, "Tracker Module", "MOD");
@@ -266,11 +290,13 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/xm");
                     tempFmt.AddMimeType("audio/x-xm");
                     tempFmt.AddExtension(".xm");
+                    tempFmt.CheckHeader = XM.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_IT, "Impulse Tracker", "IT");
                     tempFmt.AddMimeType("audio/it");
                     tempFmt.AddExtension(".it");
+                    tempFmt.CheckHeader = IT.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_AIFF, "Audio Interchange File Format", "AIFF");
@@ -279,6 +305,7 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".aiff");
                     tempFmt.AddExtension(".aifc");
                     tempFmt.AddExtension(".snd");
+                    tempFmt.CheckHeader = AIFF.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_VGM, "Video Game Music", "VGM");
@@ -286,23 +313,27 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-vgm"); // Unofficial
                     tempFmt.AddExtension(".vgm");
                     tempFmt.AddExtension(".vgz");
+                    tempFmt.CheckHeader = VGM.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_GYM, "Genesis YM2612", "GYM");
                     tempFmt.AddMimeType("audio/gym");   // Unofficial
                     tempFmt.AddMimeType("audio/x-gym"); // Unofficial
                     tempFmt.AddExtension(".gym");
+                    tempFmt.CheckHeader = GYM.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_AA, "Audible (legacy)", "AA");
                     tempFmt.AddMimeType("audio/audible");
                     tempFmt.AddMimeType("audio/x-pn-audibleaudio");
+                    tempFmt.CheckHeader = AA.IsValidHeader;
                     tempFmt.AddExtension(".aa");
                     theFactory.addFormat(tempFmt);
 
                     tempFmt = new Format(CID_CAF, "Apple Core Audio", "CAF");
                     tempFmt.AddMimeType("audio/x-caf");
                     tempFmt.AddExtension(".caf");
+                    tempFmt.CheckHeader = CAF.IsValidHeader;
                     theFactory.addFormat(tempFmt);
                 }
             }
@@ -358,70 +389,108 @@ namespace ATL.AudioData
             return getFromFormat(path, theFormat);
         }
 
+        public IAudioDataIO GetFromStream(Stream s)
+        {
+            // TODO : memorize initial offset?
+            s.Seek(0, SeekOrigin.Begin);
+            byte[] data = new byte[32];
+            long offset = 0;
+            s.Read(data, 0, 32);
+            // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
+            if (ID3v2.isValidHeader(data))
+            {
+                byte[] data2 = new byte[4];
+                Array.Copy(data, 6, data2, 0, 4); // bytes 6-9 only
+                int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
+                s.Seek(id3v2Size, SeekOrigin.Begin);
+                offset = s.Position;
+                s.Read(data, 0, 32);
+            }
+            try
+            {
+                List<Format> expensiveFormats = new List<Format>();
+                foreach (Format f in getFormats())
+                {
+                    if (f.CheckHeader != null && f.CheckHeader(data)) return getFromFormat("in-memory", f);
+                    if (f.SearchHeader != null) expensiveFormats.Add(f);
+                }
+                foreach (Format f in expensiveFormats)
+                {
+                    s.Seek(offset, SeekOrigin.Begin);
+                    if (f.SearchHeader(s)) return getFromFormat("in-memory", f);
+                }
+                return getFromFormat("in-memory", UNKNOWN_FORMAT);
+            }
+            finally
+            {
+                s.Seek(0, SeekOrigin.Begin);
+            }
+        }
+
         private IAudioDataIO getFromFormat(string path, Format theFormat)
         {
             switch (theFormat.ID)
             {
                 case CID_MP3:
-                    return new IO.MPEGaudio(path, theFormat);
+                    return new MPEGaudio(path, theFormat);
                 case CID_AAC:
-                    return new IO.AAC(path, theFormat);
+                    return new AAC(path, theFormat);
                 case CID_MP4:
-                    return new IO.MP4(path, theFormat);
+                    return new MP4(path, theFormat);
                 case CID_WMA:
-                    return new IO.WMA(path, theFormat);
+                    return new WMA(path, theFormat);
                 case CID_OGG:
-                    return new IO.Ogg(path, theFormat);
+                    return new Ogg(path, theFormat);
                 case CID_FLAC:
-                    return new IO.FLAC(path, theFormat);
+                    return new FLAC(path, theFormat);
                 case CID_MPC:
-                    return new IO.MPEGplus(path, theFormat);
+                    return new MPEGplus(path, theFormat);
                 case CID_AC3:
-                    return new IO.AC3(path, theFormat);
+                    return new AC3(path, theFormat);
                 case CID_DSF:
-                    return new IO.DSF(path, theFormat);
+                    return new DSF(path, theFormat);
                 case CID_DTS:
-                    return new IO.DTS(path, theFormat);
+                    return new DTS(path, theFormat);
                 case CID_IT:
-                    return new IO.IT(path, theFormat);
+                    return new IT(path, theFormat);
                 case CID_MIDI:
-                    return new IO.Midi(path, theFormat);
+                    return new Midi(path, theFormat);
                 case CID_MOD:
-                    return new IO.MOD(path, theFormat);
+                    return new MOD(path, theFormat);
                 case CID_APE:
-                    return new IO.APE(path, theFormat);
+                    return new APE(path, theFormat);
                 case CID_OFR:
-                    return new IO.OptimFrog(path, theFormat);
+                    return new OptimFrog(path, theFormat);
                 case CID_WAVPACK:
-                    return new IO.WAVPack(path, theFormat);
+                    return new WAVPack(path, theFormat);
                 case CID_WAV:
-                    return new IO.WAV(path, theFormat);
+                    return new WAV(path, theFormat);
                 case CID_PSF:
-                    return new IO.PSF(path, theFormat);
+                    return new PSF(path, theFormat);
                 case CID_SPC:
-                    return new IO.SPC(path, theFormat);
+                    return new SPC(path, theFormat);
                 case CID_TAK:
-                    return new IO.TAK(path, theFormat);
+                    return new TAK(path, theFormat);
                 case CID_S3M:
-                    return new IO.S3M(path, theFormat);
+                    return new S3M(path, theFormat);
                 case CID_XM:
-                    return new IO.XM(path, theFormat);
+                    return new XM(path, theFormat);
                 case CID_TTA:
-                    return new IO.TTA(path, theFormat);
+                    return new TTA(path, theFormat);
                 case CID_VQF:
-                    return new IO.TwinVQ(path, theFormat);
+                    return new TwinVQ(path, theFormat);
                 case CID_AIFF:
-                    return new IO.AIFF(path, theFormat);
+                    return new AIFF(path, theFormat);
                 case CID_VGM:
-                    return new IO.VGM(path, theFormat);
+                    return new VGM(path, theFormat);
                 case CID_GYM:
-                    return new IO.GYM(path, theFormat);
+                    return new GYM(path, theFormat);
                 case CID_AA:
-                    return new IO.AA(path, theFormat);
+                    return new AA(path, theFormat);
                 case CID_CAF:
-                    return new IO.CAF(path, theFormat);
+                    return new CAF(path, theFormat);
                 default:
-                    return new IO.DummyReader(path);
+                    return new DummyReader(path);
             }
         }
     }

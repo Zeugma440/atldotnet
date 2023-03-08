@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -94,20 +95,22 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return 30475 == StreamUtils.DecodeUInt16(data);
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            ushort signatureChunk;
-            byte aByte;
             resetData();
 
             bool result = false;
 
             byte[] buffer = new byte[2];
             source.Seek(0, SeekOrigin.Begin);
-            source.Read(buffer, 0, buffer.Length);
-            signatureChunk = StreamUtils.DecodeUInt16(buffer);
+            source.Read(buffer, 0, 2);
 
-            if (30475 == signatureChunk)
+            if (IsValidHeader(buffer))
             {
                 AudioDataOffset = source.Position - 2;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ATL
 {
@@ -8,6 +9,10 @@ namespace ATL
     /// </summary>
     public class Format : IEnumerable
     {
+        public delegate bool CheckHeaderDelegate(byte[] data);
+
+        public delegate bool SearchHeaderDelegate(Stream data);
+
         /// <summary>
         /// MIME types associated with the format
         /// </summary>
@@ -49,6 +54,8 @@ namespace ATL
             mimeList = new Dictionary<string, int>(iFormat.mimeList);
             extList = new Dictionary<string, int>(iFormat.extList);
             Readable = iFormat.Readable;
+            CheckHeader = iFormat.CheckHeader;
+            SearchHeader = iFormat.SearchHeader;
         }
 
         /// <summary>
@@ -93,9 +100,15 @@ namespace ATL
         public int ID { get; set; }
 
         /// <summary>
-        /// True if the format is readable by ATL
+        /// Check if the given data matches that format's header signature
         /// </summary>
-        public bool Readable { get; set; }
+        public CheckHeaderDelegate CheckHeader { get; set; }
+
+        /// <summary>
+        /// Search the format's header signature inside the given Stream
+        /// NB : May take a long time
+        /// </summary>
+        public SearchHeaderDelegate SearchHeader { get; set; }
 
         /// <summary>
         /// MIME types associated with the format
@@ -104,6 +117,12 @@ namespace ATL
         {
             get { return mimeList.Keys; }
         }
+
+        /// <summary>
+        /// True if the format is readable by ATL
+        /// </summary>
+        public bool Readable { get; set; }
+
 
         #region Code for IEnumerable implementation
 

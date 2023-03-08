@@ -35,8 +35,8 @@ namespace ATL.AudioData.IO
         public const string WAV_FORMAT_DVI_IMA_ADPCM = "DVI/IMA ADPCM";
         public const string WAV_FORMAT_MP3 = "MPEG Layer III";
 
-        private const string HEADER_RIFF = "RIFF";
-        private const string HEADER_RIFX = "RIFX";
+        private static readonly byte[] HEADER_RIFF = Utils.Latin1Encoding.GetBytes("RIFF");
+        private static readonly byte[] HEADER_RIFX = Utils.Latin1Encoding.GetBytes("RIFX");
 
         private const string FORMAT_WAVE = "WAVE";
 
@@ -200,6 +200,11 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, HEADER_RIFF) || StreamUtils.ArrBeginsWith(data, HEADER_RIFX);
+        }
+
         private bool readWAV(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
@@ -211,12 +216,12 @@ namespace ATL.AudioData.IO
 
             // Read header
             source.Read(data, 0, 4);
-            string str = Utils.Latin1Encoding.GetString(data);
-            if (str.Equals(HEADER_RIFF))
+
+            if (StreamUtils.ArrEqualsArr(data, HEADER_RIFF))
             {
                 _isLittleEndian = true;
             }
-            else if (str.Equals(HEADER_RIFX))
+            else if (StreamUtils.ArrEqualsArr(data, HEADER_RIFX))
             {
                 _isLittleEndian = false;
             }
@@ -235,7 +240,7 @@ namespace ATL.AudioData.IO
 
             // Format code
             source.Read(data, 0, 4);
-            str = Utils.Latin1Encoding.GetString(data);
+            string str = Utils.Latin1Encoding.GetString(data);
             if (!str.Equals(FORMAT_WAVE)) return false;
 
 

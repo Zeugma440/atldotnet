@@ -22,8 +22,8 @@ namespace ATL.AudioData.IO
     /// </summary>
     class VGM : MetaDataIO, IAudioDataIO
     {
-        private const string VGM_SIGNATURE = "Vgm ";
-        private const string GD3_SIGNATURE = "Gd3 ";
+        private static readonly byte[] VGM_SIGNATURE = Utils.Latin1Encoding.GetBytes("Vgm ");
+        private static readonly byte[] GD3_SIGNATURE = Utils.Latin1Encoding.GetBytes("Gd3 ");
 
         private const int VGM_HEADER_SIZE = 256;
 
@@ -132,6 +132,11 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, VGM_SIGNATURE);
+        }
+
 
         // === PRIVATE METHODS ===
 
@@ -142,7 +147,7 @@ namespace ATL.AudioData.IO
             int recordingRate = RECORDING_RATE_DEFAULT;
 
             byte[] headerSignature = source.ReadBytes(VGM_SIGNATURE.Length);
-            if (VGM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(headerSignature)))
+            if (IsValidHeader(headerSignature))
             {
                 AudioDataOffset = source.Position;
 
@@ -216,7 +221,7 @@ namespace ATL.AudioData.IO
             source.Seek(offset, SeekOrigin.Begin);
             string str;
 
-            if (GD3_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GD3_SIGNATURE.Length))))
+            if (StreamUtils.ArrEqualsArr(GD3_SIGNATURE, source.ReadBytes(GD3_SIGNATURE.Length)))
             {
                 source.Seek(4, SeekOrigin.Current); // Version number
                 source.Seek(4, SeekOrigin.Current); // Length
@@ -319,7 +324,7 @@ namespace ATL.AudioData.IO
             string str;
             Encoding unicodeEncoder = Encoding.Unicode;
 
-            w.Write(Utils.Latin1Encoding.GetBytes(GD3_SIGNATURE));
+            w.Write(GD3_SIGNATURE);
             w.Write(0x00000100); // Version number
 
             sizePos = w.BaseStream.Position;

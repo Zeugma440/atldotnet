@@ -17,7 +17,7 @@ namespace ATL.AudioData.IO
         public const int TAK_VERSION_210 = 210;
         public const int TAK_VERSION_220 = 220;
 
-        public const string TAK_ID = "tBaK";
+        public static readonly byte[] TAK_ID = Utils.Latin1Encoding.GetBytes("tBaK");
 
 
         // Private declarations 
@@ -35,51 +35,24 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
+        public double CompressionRatio => getCompressionRatio();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public int SampleRate
-        {
-            get { return (int)sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => (int)sampleRate;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => (bits > 0) ? (int)bits : -1;
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.APE;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.APE;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -114,9 +87,14 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio 
             if (isValid)
-                return (double)sizeInfo.FileSize / (duration * sampleRate * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
+                return sizeInfo.FileSize / (duration * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100.0;
             else
                 return 0;
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, TAK_ID);
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
@@ -139,7 +117,7 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             source.Read(buffer, 0, 4);
-            if (TAK_ID.Equals(Utils.Latin1Encoding.GetString(buffer)))
+            if (IsValidHeader(buffer))
             {
                 result = true;
                 AudioDataOffset = source.Position - 4;

@@ -16,7 +16,7 @@ namespace ATL.AudioData.IO
 	class TwinVQ : MetaDataIO, IAudioDataIO
     {
         // Twin VQ header ID
-        private const string TWIN_ID = "TWIN";
+        private static readonly byte[] TWIN_ID = Utils.Latin1Encoding.GetBytes("TWIN");
 
         // Mapping between TwinVQ frame codes and ATL frame codes
         private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
@@ -73,7 +73,7 @@ namespace ATL.AudioData.IO
         private sealed class HeaderInfo
         {
             // Real structure of TwinVQ file header
-            public char[] ID = new char[4];                           // Always "TWIN"
+            public byte[] ID = new byte[4];                           // Always "TWIN"
             public char[] Version = new char[8];                         // Version ID
             public uint Size;                                           // Header size
             public ChunkHeader Common = new ChunkHeader();      // Common chunk header
@@ -177,7 +177,7 @@ namespace ATL.AudioData.IO
             bool result = true;
 
             // Read header and get file size
-            Header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4)).ToCharArray();
+            Header.ID = source.ReadBytes(4);
             Header.Version = Utils.Latin1Encoding.GetString(source.ReadBytes(8)).ToCharArray();
             Header.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             Header.Common.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
@@ -289,6 +289,11 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, TWIN_ID);
+        }
+
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             HeaderInfo Header = new HeaderInfo();
@@ -299,7 +304,7 @@ namespace ATL.AudioData.IO
 
             bool result = readHeader(reader, ref Header);
             // Process data if loaded and header valid
-            if (result && StreamUtils.StringEqualsArr(TWIN_ID, Header.ID))
+            if (result && IsValidHeader(Header.ID))
             {
                 isValid = true;
                 // Fill properties with header data

@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class TTA : IAudioDataIO
     {
-        private const string TTA_SIGNATURE = "TTA1";
+        private static readonly byte[] TTA_SIGNATURE = Utils.Latin1Encoding.GetBytes("TTA1");
 
         // Private declarations
         private uint audioFormat;
@@ -92,6 +92,11 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, TTA_SIGNATURE);
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -102,7 +107,7 @@ namespace ATL.AudioData.IO
 
             byte[] buffer = new byte[4];
             source.Read(buffer, 0, buffer.Length);
-            if (TTA_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(buffer)))
+            if (IsValidHeader(buffer))
             {
                 isValid = true;
 

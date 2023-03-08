@@ -276,7 +276,7 @@ namespace ATL.AudioData.IO
                                                               "Gunshot"};
         #endregion
 
-        private const string MIDI_FILE_HEADER = "MThd";
+        private static readonly byte[] MIDI_FILE_HEADER = Utils.Latin1Encoding.GetBytes("MThd");
         private const string MIDI_TRACK_HEADER = "MTrk";
 
         private const int DEFAULT_TEMPO = 500; // Default MIDI tempo is 120bpm, 500ms per beat
@@ -418,6 +418,16 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, MIDI_FILE_HEADER);
+        }
+
+        public static bool FindValidHeader(Stream source)
+        {
+            return StreamUtils.FindSequence(source, MIDI_FILE_HEADER);
+        }
+
         /// <inheritdoc/>
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
@@ -427,7 +437,7 @@ namespace ATL.AudioData.IO
             resetData();
 
             // Ignores everything (comments) written before the MIDI header
-            StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(MIDI_FILE_HEADER));
+            FindValidHeader(source);
 
             // Ready to read header data...
             source.Read(buffer, 0, buffer.Length);

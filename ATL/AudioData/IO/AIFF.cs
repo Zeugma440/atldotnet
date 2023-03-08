@@ -26,7 +26,7 @@ namespace ATL.AudioData.IO
 	class AIFF : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
-        public const string AIFF_CONTAINER_ID = "FORM";
+        public static readonly byte[] AIFF_CONTAINER_ID = Utils.Latin1Encoding.GetBytes("FORM");
 
         private const string FORMTYPE_AIFF = "AIFF";
         private const string FORMTYPE_AIFC = "AIFC";
@@ -284,6 +284,11 @@ namespace ATL.AudioData.IO
             return header;
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, AIFF_CONTAINER_ID);
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -300,7 +305,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             reader.Seek(0, SeekOrigin.Begin);
 
-            if (AIFF_CONTAINER_ID.Equals(Utils.Latin1Encoding.GetString(reader.ReadBytes(4))))
+            if (IsValidHeader(reader.ReadBytes(4)))
             {
                 // Container chunk size
                 long containerChunkPos = reader.Position;

@@ -393,7 +393,7 @@ namespace ATL.AudioData.IO
             {
                 structureHelper.AddZone(0, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
-            tagData.IntegrateValue(TagData.Field.TITLE, title.Trim());
+            tagData.IntegrateValue(Field.TITLE, title.Trim());
 
             AudioDataOffset = reader.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -477,7 +477,7 @@ namespace ATL.AudioData.IO
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
-            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
+            tagData.IntegrateValue(Field.COMMENT, comment.ToString());
 
             bitrate = sizeInfo.FileSize / duration;
 

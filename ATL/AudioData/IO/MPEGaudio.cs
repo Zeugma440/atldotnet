@@ -281,20 +281,20 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        private static bool isValidFrameHeader(byte[] HeaderData)
+        public static bool IsValidFrameHeader(byte[] data)
         {
-            if (HeaderData.Length != 4) return false;
+            if (data.Length < 4) return false;
 
             // Check for valid frame header
             return !(
-                (HeaderData[0] != 0xFF) ||                                  // First 11 bits are set
-                ((HeaderData[1] & 0xE0) != 0xE0) ||                         // First 11 bits are set
-                (((HeaderData[1] >> 3) & 3) == MPEG_VERSION_UNKNOWN) ||     // MPEG version > 1
-                (((HeaderData[1] >> 1) & 3) == MPEG_LAYER_UNKNOWN) ||       // Layer I, II or III
-                ((HeaderData[2] & 0xF0) == 0xF0) ||                         // Bitrate index is not 'bad'
-                ((HeaderData[2] & 0xF0) == 0) ||                            // Bitrate index is not 'free'
-                (((HeaderData[2] >> 2) & 3) == MPEG_SAMPLE_RATE_UNKNOWN) || // Sampling rate is not 'reserved'
-                ((HeaderData[3] & 3) == MPEG_EMPHASIS_UNKNOWN)              // Emphasis is not 'reserved'
+                (data[0] != 0xFF) ||                                  // First 11 bits are set
+                ((data[1] & 0xE0) != 0xE0) ||                         // First 11 bits are set
+                (((data[1] >> 3) & 3) == MPEG_VERSION_UNKNOWN) ||     // MPEG version > 1
+                (((data[1] >> 1) & 3) == MPEG_LAYER_UNKNOWN) ||       // Layer I, II or III
+                ((data[2] & 0xF0) == 0xF0) ||                         // Bitrate index is not 'bad'
+                ((data[2] & 0xF0) == 0) ||                            // Bitrate index is not 'free'
+                (((data[2] >> 2) & 3) == MPEG_SAMPLE_RATE_UNKNOWN) || // Sampling rate is not 'reserved'
+                ((data[3] & 3) == MPEG_EMPHASIS_UNKNOWN)              // Emphasis is not 'reserved'
                 );
         }
 
@@ -357,7 +357,7 @@ namespace ATL.AudioData.IO
             return (int)Math.Floor(getCoefficient(Frame) * getBitRate(Frame) * 1000.0 / getSampleRate(Frame)) + getPadding(Frame);
         }
 
-        private static VBRData getXingInfo(BufferedBinaryReader source)
+        private static VBRData getXingInfo(Stream source)
         {
             VBRData result = new VBRData();
             byte[] data = new byte[8];
@@ -380,14 +380,15 @@ namespace ATL.AudioData.IO
 
             source.Seek(103, SeekOrigin.Current);
 
-            result.Scale = source.ReadByte();
+            source.Read(data, 0, 1);
+            result.Scale = data[0];
             source.Read(data, 0, 8);
             result.VendorID = Utils.Latin1Encoding.GetString(data, 0, 8);
 
             return result;
         }
 
-        private static VBRData getFhGInfo(BufferedBinaryReader source)
+        private static VBRData getFhGInfo(Stream source)
         {
             VBRData result = new VBRData();
             byte[] data = new byte[9];
@@ -415,7 +416,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static VBRData findVBR(BufferedBinaryReader source, long position)
+        private static VBRData findVBR(Stream source, long position)
         {
             VBRData result;
             byte[] data = new byte[4];
@@ -482,13 +483,19 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private static FrameHeader findFrame(BufferedBinaryReader source, ref VBRData oVBR, SizeInfo sizeInfo)
+        public static bool HasValidFrame(Stream source)
+        {
+            VBRData dummyVbr = null;
+            return findFrame(source, ref dummyVbr, null).Found;
+        }
+
+        private static FrameHeader findFrame(Stream source, ref VBRData oVBR, SizeInfo sizeInfo)
         {
             byte[] headerData = new byte[4];
             FrameHeader result = new FrameHeader();
 
             source.Read(headerData, 0, 4);
-            result.Found = isValidFrameHeader(headerData);
+            result.Found = IsValidFrameHeader(headerData);
 
             /*
              * Many things can actually be found before a proper MP3 header :
@@ -514,14 +521,15 @@ namespace ATL.AudioData.IO
                     if (0xFF == headerData[0]) source.Seek(-1, SeekOrigin.Current);
 
                     source.Read(headerData, 0, 4);
-                    result.Found = isValidFrameHeader(headerData);
+                    result.Found = IsValidFrameHeader(headerData);
                 }
 
                 // Blindly look for the MP3 header
                 if (!result.Found)
                 {
                     source.Seek(-4, SeekOrigin.Current);
-                    long limit = sizeInfo.ID3v2Size + (long)Math.Round((source.Length - sizeInfo.ID3v2Size) * 0.3);
+                    long id3v2Size = (null == sizeInfo) ? 0 : sizeInfo.ID3v2Size;
+                    long limit = id3v2Size + (long)Math.Round((source.Length - id3v2Size) * 0.3);
 
                     // Look for the beginning of the MP3 header (2nd byte is variable, so it cannot be searched using a static value)
                     while (!result.Found && source.Position < limit)
@@ -530,7 +538,7 @@ namespace ATL.AudioData.IO
 
                         source.Seek(-1, SeekOrigin.Current);
                         source.Read(headerData, 0, 4);
-                        result.Found = isValidFrameHeader(headerData);
+                        result.Found = IsValidFrameHeader(headerData);
 
                         // Valid header candidate found
                         // => let's see if it is a legit MP3 header by using its Size descriptor to find the next header
@@ -545,7 +553,7 @@ namespace ATL.AudioData.IO
                             byte[] nextHeaderData = new byte[4];
                             source.Seek(result.Position + result.Size, SeekOrigin.Begin);
                             source.Read(nextHeaderData, 0, 4);
-                            result.Found = isValidFrameHeader(nextHeaderData);
+                            result.Found = IsValidFrameHeader(nextHeaderData);
 
                             if (result.Found)
                             {
@@ -572,7 +580,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (result.Found)
+            if (result.Found && oVBR != null)
             {
                 result.LoadFromByteArray(headerData);
 

@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
         private const int MAX_PAGE_SIZE = 255 * 255;
 
         // Ogg page header ID
-        private const string OGG_PAGE_ID = "OggS";
+        private static readonly byte[] OGG_PAGE_ID = Utils.Latin1Encoding.GetBytes("OggS");
 
         // Vorbis identification packet (frame) ID
         private static readonly string VORBIS_HEADER_ID = (char)1 + "vorbis";
@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
         // Ogg page header
         private sealed class OggPageHeader
         {
-            public string ID;                                               // Always "OggS"
+            public byte[] ID;                                               // Always "OggS"
             public byte StreamVersion;                           // Stream structure version
             public byte TypeFlag;                                        // Header type flag
             public ulong AbsolutePosition;                      // Absolute granule position
@@ -147,7 +147,8 @@ namespace ATL.AudioData.IO
             {
                 byte[] buffer = new byte[8];
                 r.Read(buffer, 0, 4);
-                ID = Utils.Latin1Encoding.GetString(buffer, 0, 4);
+                ID = new byte[4];
+                Array.Copy(buffer, ID, 4);
                 r.Read(buffer, 0, 2);
                 StreamVersion = buffer[0];
                 TypeFlag = buffer[1];
@@ -168,7 +169,7 @@ namespace ATL.AudioData.IO
 
             public void ReadFromStream(BufferedBinaryReader r)
             {
-                ID = Utils.Latin1Encoding.GetString(r.ReadBytes(4));
+                ID = r.ReadBytes(4);
                 StreamVersion = r.ReadByte();
                 TypeFlag = r.ReadByte();
                 AbsolutePosition = r.ReadUInt64();
@@ -181,7 +182,7 @@ namespace ATL.AudioData.IO
 
             public void WriteToStream(Stream w)
             {
-                StreamUtils.WriteBytes(w, Utils.Latin1Encoding.GetBytes(ID));
+                StreamUtils.WriteBytes(w, ID);
                 w.WriteByte(StreamVersion);
                 w.WriteByte(TypeFlag);
                 StreamUtils.WriteUInt64(w, AbsolutePosition);
@@ -209,7 +210,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return (ID != null) && ID.Equals(OGG_PAGE_ID);
+                return (ID != null) && StreamUtils.ArrEqualsArr(ID, OGG_PAGE_ID);
             }
 
             public bool IsFirstPage()
@@ -385,7 +386,6 @@ namespace ATL.AudioData.IO
         // Read total samples of OGG file, which are located on the very last page of the file
         private ulong getSamples(BufferedBinaryReader source)
         {
-            string headerId;
             byte typeFlag;
             byte[] lacingValues = new byte[255];
             byte nbLacingValues = 0;
@@ -399,7 +399,7 @@ namespace ATL.AudioData.IO
             while (!found && seekDistanceRatio <= 1)
             {
                 source.Seek(-seekDistance, SeekOrigin.End);
-                found = StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(OGG_PAGE_ID));
+                found = StreamUtils.FindSequence(source, OGG_PAGE_ID);
                 if (!found) // Increase seek distance if not found
                 {
                     seekDistanceRatio += 0.1;
@@ -422,10 +422,7 @@ namespace ATL.AudioData.IO
                 }
 
                 source.Seek(nextPageOffset, SeekOrigin.Current);
-
-                headerId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-
-                if (headerId.Equals(OGG_PAGE_ID))
+                if (StreamUtils.ArrEqualsArr(source.ReadBytes(4), OGG_PAGE_ID))
                 {
                     source.Seek(1, SeekOrigin.Current);
                     typeFlag = source.ReadByte();
@@ -575,6 +572,11 @@ namespace ATL.AudioData.IO
                 }
             }
             return isValidHeader;
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, OGG_PAGE_ID);
         }
 
         private bool readIdentificationPacket(BinaryReader source)

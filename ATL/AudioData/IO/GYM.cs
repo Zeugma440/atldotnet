@@ -24,7 +24,7 @@ namespace ATL.AudioData.IO
     /// </summary>
     class GYM : MetaDataIO, IAudioDataIO
     {
-        private const string GYM_SIGNATURE = "GYMX";
+        private static readonly byte[] GYM_SIGNATURE = Utils.Latin1Encoding.GetBytes("GYMX");
 
         private const int GYM_HEADER_SIZE = 428;
 
@@ -126,6 +126,11 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, GYM_SIGNATURE);
+        }
+
 
         // === PRIVATE METHODS ===
 
@@ -133,7 +138,7 @@ namespace ATL.AudioData.IO
         {
             string str;
 
-            if (GYM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(GYM_SIGNATURE.Length))))
+            if (IsValidHeader(source.ReadBytes(GYM_SIGNATURE.Length)))
             {
                 if (readTagParams.PrepareForWriting)
                 {

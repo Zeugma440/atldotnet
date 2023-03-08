@@ -514,10 +514,10 @@ namespace ATL.AudioData.IO
             return true; // Will be transformed to a TXXX field
         }
 
-        public static bool isHeader(byte[] data)
+        public static bool isValidHeader(byte[] data)
         {
             if (data.Length < 3) return false;
-            return StreamUtils.ArrEqualsArr(Utils.Latin1Encoding.GetBytes(ID3V2_ID), data);
+            return Utils.Latin1Encoding.GetString(data).StartsWith(ID3V2_ID);
         }
 
         private bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
@@ -528,7 +528,7 @@ namespace ATL.AudioData.IO
             SourceFile.Seek(offset, SeekOrigin.Begin);
             Tag.ID = SourceFile.ReadBytes(3);
 
-            if (!isHeader(Tag.ID)) return false;
+            if (!isValidHeader(Tag.ID)) return false;
 
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
@@ -1113,7 +1113,7 @@ namespace ATL.AudioData.IO
             tagData.PaddingSize = tagHeader.GetPaddingSize();
 
             // Process data if loaded and header valid
-            if (result && isHeader(tagHeader.ID))
+            if (result && isValidHeader(tagHeader.ID))
             {
                 tagExists = true;
                 // Fill properties with header data

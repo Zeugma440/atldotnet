@@ -15,9 +15,9 @@ namespace ATL.AudioData.IO
         private static readonly int[] MPP_SAMPLERATES = new int[4] { 44100, 48000, 37800, 32000 };
 
         // ID code for stream version > 6
-        private const long STREAM_VERSION_7_ID = 120279117;  // 120279117 = 'MP+' + #7
-        private const long STREAM_VERSION_71_ID = 388714573; // 388714573 = 'MP+' + #23
-        private const long STREAM_VERSION_8_ID = 0x4D50434B; // 'MPCK'
+        private const long STREAM_VERSION_7_ID = 0x4D502B07;  // 'MP+' + #7
+        private const long STREAM_VERSION_71_ID = 0x4D502B17; // 'MP+' + #23
+        private const long STREAM_VERSION_8_ID = 0x4D50434B;  // 'MPCK'
 
 
         private int frameCount;
@@ -36,43 +36,51 @@ namespace ATL.AudioData.IO
         {
             public byte[] ByteArray = new byte[32];               // Data as byte array
             public int[] IntegerArray = new int[8];            // Data as integer array
+            private int version = 0;
+
+            public static int GetVersion(byte[] data)
+            {
+                if (data.Length < 4) return 0;
+                int dataAsInt = StreamUtils.DecodeBEInt32(data);
+
+                // Get MPEGplus stream version
+                if (STREAM_VERSION_7_ID == dataAsInt) return 70;
+                else if (STREAM_VERSION_71_ID == dataAsInt) return 71;
+                else if (STREAM_VERSION_8_ID == dataAsInt) return 80;
+                else
+                {
+                    switch (data[1] % 32 / 2) // Int division
+                    {
+                        case 3: return 40;
+                        case 7: return 50;
+                        case 11: return 60;
+                        default: return 0;
+                    }
+                }
+            }
+
+            public void computeVersion()
+            {
+                version = GetVersion(ByteArray);
+            }
+
+            public int Version => version;
         }
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public bool IsVBR
-        {
-            get { return true; }
-        }
+        public bool IsVBR => true;
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for lossy formats
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public int SampleRate
-        {
-            get { return sampleRate; }
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public int SampleRate => sampleRate;
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE);
@@ -102,27 +110,30 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private bool readHeader(Stream source, ref HeaderRecord Header)
+        public static bool IsValidHeader(byte[] data)
+        {
+            return HeaderRecord.GetVersion(data) > 60; // <v7 not auto-detected (no specs available)
+        }
+
+        private bool readHeader(Stream source, ref HeaderRecord header)
         {
             bool result = true;
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // Read header and get file size
-            source.Read(Header.ByteArray, 0, Header.ByteArray.Length);
+            source.Read(header.ByteArray, 0, header.ByteArray.Length);
 
             // if transfer is not complete
-            int temp;
-            for (int i = 0; i < Header.IntegerArray.Length; i++)
+            byte[] temp = new byte[4];
+            for (int i = 0; i < header.IntegerArray.Length; i++)
             {
-                temp = Header.ByteArray[i * 4] * 0x00000001 +
-                        Header.ByteArray[(i * 4) + 1] * 0x00000100 +
-                        Header.ByteArray[(i * 4) + 2] * 0x00010000 +
-                        Header.ByteArray[(i * 4) + 3] * 0x01000000;
-                Header.IntegerArray[i] = temp;
+                Array.Copy(header.ByteArray, i * 4, temp, 0, 4);
+                header.IntegerArray[i] = StreamUtils.DecodeInt32(temp);
             }
+            header.computeVersion();
 
             // If VS8 file, looks for the (mandatory) stream header packet
-            if (80 == getStreamVersion(Header))
+            if (80 == header.Version)
             {
                 string packetKey;
                 bool headerFound = false;
@@ -176,34 +187,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private static byte getStreamVersion(HeaderRecord Header)
-        {
-            byte result;
-
-            // Get MPEGplus stream version
-            if (STREAM_VERSION_7_ID == Header.IntegerArray[0]) result = 70;
-            else if (STREAM_VERSION_71_ID == Header.IntegerArray[0]) result = 71;
-            else if (STREAM_VERSION_8_ID == StreamUtils.ReverseInt32(Header.IntegerArray[0])) result = 80;
-            else
-            {
-                switch ((Header.ByteArray[1] % 32) / 2) //Int division
-                {
-                    case 3: result = 40; break;
-                    case 7: result = 50; break;
-                    case 11: result = 60; break;
-                    default: result = 0; break;
-                }
-            }
-
-            return result;
-        }
-
         /* Get samplerate from header
             Note: this is the same byte where profile is stored
         */
         private static int getSV7SampleRate(HeaderRecord header)
         {
-            if (getStreamVersion(header) > 50)
+            if (header.Version > 50)
             {
                 return MPP_SAMPLERATES[header.ByteArray[10] & 3];
             }
@@ -213,31 +202,30 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private static ChannelsArrangement getSV7ChannelsArrangement(HeaderRecord Header)
+        private static ChannelsArrangement getSV7ChannelsArrangement(HeaderRecord header)
         {
             ChannelsArrangement result;
 
-            if ((70 == getStreamVersion(Header)) || (71 == getStreamVersion(Header)))
+            if ((70 == header.Version) || (71 == header.Version))
                 // Get channel mode for stream version 7
-                if ((Header.ByteArray[11] % 128) < 64) result = STEREO;
+                if ((header.ByteArray[11] % 128) < 64) result = STEREO;
                 else result = JOINT_STEREO; // TODO - could actually be either intensity stereo or mid/side stereo; however that code is obscure....
             else
                 // Get channel mode for stream version 4-6
-                if (0 == (Header.ByteArray[2] % 128)) result = STEREO;
+                if (0 == (header.ByteArray[2] % 128)) result = STEREO;
             else result = JOINT_STEREO;
 
             return result;
         }
 
-        private static int getSV7FrameCount(HeaderRecord Header)
+        private static int getSV7FrameCount(HeaderRecord header)
         {
             int result;
 
-            // Get frame count
-            if (40 == getStreamVersion(Header)) result = Header.IntegerArray[1] >> 16;
-            else if ((50 <= getStreamVersion(Header)) && (getStreamVersion(Header) <= 71))
+            if (40 == header.Version) result = header.IntegerArray[1] >> 16;
+            else if ((50 <= header.Version) && (header.Version <= 71))
             {
-                result = Header.IntegerArray[1];
+                result = header.IntegerArray[1];
             }
             else result = 0;
 
@@ -246,7 +234,6 @@ namespace ATL.AudioData.IO
 
         private double getSV7BitRate()
         {
-            // Calculate bit rate
             return calculateAverageBitrate(getSV7Duration());
         }
 
@@ -272,25 +259,23 @@ namespace ATL.AudioData.IO
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            HeaderRecord Header = new HeaderRecord();
+            HeaderRecord header = new HeaderRecord();
             bool result;
-            byte version;
             this.sizeInfo = sizeInfo;
 
             resetData();
 
             // Load header from file to variable
-            result = readHeader(source, ref Header);
-            version = getStreamVersion(Header);
+            result = readHeader(source, ref header);
             // Process data if loaded and file valid
-            if (result && (sizeInfo.FileSize > 0) && (version > 0))
+            if (result && (sizeInfo.FileSize > 0) && (header.Version > 0))
             {
-                if (version < 80)
+                if (header.Version < 80)
                 {
                     // Fill properties with SV7 header data
-                    sampleRate = getSV7SampleRate(Header);
-                    channelsArrangement = getSV7ChannelsArrangement(Header);
-                    frameCount = getSV7FrameCount(Header);
+                    sampleRate = getSV7SampleRate(header);
+                    channelsArrangement = getSV7ChannelsArrangement(header);
+                    frameCount = getSV7FrameCount(header);
                     bitrate = getSV7BitRate();
                     duration = getSV7Duration();
                 }

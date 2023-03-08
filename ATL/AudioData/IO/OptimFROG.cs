@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class OptimFrog : IAudioDataIO
     {
-        private const string OFR_SIGNATURE = "OFR ";
+        static private readonly byte[] OFR_SIGNATURE = Utils.Latin1Encoding.GetBytes("OFR ");
 
 #pragma warning disable S1144 // Unused private types or members should be removed
         private static readonly string[] OFR_COMPRESSION = new string[10]
@@ -31,7 +31,7 @@ namespace ATL.AudioData.IO
         // Real structure of OptimFROG header
         public class TOfrHeader
         {
-            public char[] ID = new char[4];                      // Always 'OFR '
+            public byte[] ID = new byte[4];                      // Always 'OFR '
             public uint Size;
             public uint Length;
             public ushort HiLength;
@@ -152,12 +152,17 @@ namespace ATL.AudioData.IO
 
         private double getBitrate()
         {
-            return ((sizeInfo.FileSize - header.Size - sizeInfo.TotalTagSize) * 8 / Duration);
+            return (sizeInfo.FileSize - header.Size - sizeInfo.TotalTagSize) * 8 / Duration;
         }
 
         private sbyte getBits()
         {
             return OFR_BITS[header.SampleType];
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, OFR_SIGNATURE);
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
@@ -172,8 +177,7 @@ namespace ATL.AudioData.IO
             long initialPos = source.Position;
             byte[] buffer = new byte[4];
 
-            source.Read(buffer, 0, 4);
-            header.ID = Utils.Latin1Encoding.GetChars(buffer);
+            source.Read(header.ID, 0, 4);
             source.Read(buffer, 0, 4);
             header.Size = StreamUtils.DecodeUInt32(buffer);
             source.Read(buffer, 0, 4);
@@ -190,7 +194,7 @@ namespace ATL.AudioData.IO
             source.Read(buffer, 0, 1);
             header.CompressionID = buffer[0];
 
-            if (StreamUtils.StringEqualsArr(OFR_SIGNATURE, header.ID))
+            if (IsValidHeader(header.ID))
             {
                 result = true;
                 AudioDataOffset = initialPos;

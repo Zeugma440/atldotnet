@@ -517,6 +517,11 @@ namespace ATL.AudioData.IO
             if (setMeta) SetMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source, languageIndex));
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, WMA_HEADER_ID);
+        }
+
         private bool readData(Stream source, ReadTagParams readTagParams)
         {
             byte[] ID;
@@ -538,7 +543,7 @@ namespace ATL.AudioData.IO
             ID = reader.ReadBytes(16);
 
             // Header (mandatory; one only)
-            if (StreamUtils.ArrEqualsArr(WMA_HEADER_ID, ID))
+            if (IsValidHeader(ID))
             {
                 sizePosition1 = reader.Position;
                 headerSize = reader.ReadUInt64();

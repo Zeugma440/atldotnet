@@ -1,4 +1,5 @@
 using ATL.Logging;
+using Commons;
 using System;
 using System.IO;
 using System.Text;
@@ -12,6 +13,8 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class WAVPack : IAudioDataIO
     {
+        private static readonly byte[] WAVPACK_HEADER = Utils.Latin1Encoding.GetBytes("wvpk");
+
         private ChannelsArrangement channelsArrangement;
 
         private string encoder;
@@ -28,7 +31,7 @@ namespace ATL.AudioData.IO
 #pragma warning disable S4487 // Unread "private" fields should be removed
         private sealed class WavpackHeader3
         {
-            public char[] ckID = new char[4];
+            public byte[] ckID = new byte[4];
             public uint ckSize;
             public ushort version;
             public ushort bits;
@@ -60,7 +63,7 @@ namespace ATL.AudioData.IO
 
         private sealed class WavPackHeader4
         {
-            public char[] ckID = new char[4];
+            public byte[] ckID = new byte[4];
             public uint ckSize;
             public ushort version;
             public byte track_no;
@@ -145,14 +148,8 @@ namespace ATL.AudioData.IO
         public double BitRate => bitrate;
         public int BitDepth => bits;
         public double Duration => duration;
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.APE;
-        }
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.APE;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -183,9 +180,13 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, WAVPACK_HEADER); // No auto-detection for V3
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            char[] marker;
             bool result = false;
 
             this.sizeInfo = sizeInfo;
@@ -194,16 +195,16 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
             reader.Seek(0, SeekOrigin.Begin);
-            marker = reader.ReadChars(4);
+            byte[] marker = reader.ReadBytes(4);
             reader.Seek(0, SeekOrigin.Begin);
 
-            if (StreamUtils.StringEqualsArr("RIFF", marker))
+            if (WAV.IsValidHeader(marker))
             {
                 result = _ReadV3(reader);
             }
             else
             {
-                if (StreamUtils.StringEqualsArr("wvpk", marker))
+                if (IsValidHeader(marker))
                 {
                     result = _ReadV4(reader);
                 }
@@ -223,7 +224,7 @@ namespace ATL.AudioData.IO
 
             wvh4.Reset();
 
-            wvh4.ckID = source.ReadChars(4);
+            wvh4.ckID = source.ReadBytes(4);
             wvh4.ckSize = source.ReadUInt32();
             wvh4.version = source.ReadUInt16();
             wvh4.track_no = source.ReadByte();
@@ -236,7 +237,7 @@ namespace ATL.AudioData.IO
 
             StringBuilder encoderBuilder = new StringBuilder();
 
-            if (StreamUtils.StringEqualsArr("wvpk", wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
+            if (StreamUtils.ArrEqualsArr(WAVPACK_HEADER, wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
             {
                 result = true;
                 channelsArrangement = GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
@@ -297,7 +298,6 @@ namespace ATL.AudioData.IO
         private bool _ReadV3(BufferedBinaryReader r)
         {
             RiffChunk chunk = new RiffChunk();
-            char[] wavchunk;
             FormatChunk fmt;
             bool hasfmt;
             WavpackHeader3 wvh3 = new WavpackHeader3();
@@ -311,7 +311,7 @@ namespace ATL.AudioData.IO
 
             chunk.id = r.ReadChars(4);
             chunk.size = r.ReadUInt32();
-            wavchunk = r.ReadChars(4);
+            char[] wavchunk = r.ReadChars(4);
 
             if (!StreamUtils.StringEqualsArr("WAVE", wavchunk)) return result;
 
@@ -325,9 +325,9 @@ namespace ATL.AudioData.IO
 
                 if (chunk.size <= 0) break;
 
-                if (StreamUtils.StringEqualsArr("fmt ", chunk.id))  // Format chunk found read it
+                if (StreamUtils.StringEqualsArr("fmt ", chunk.id))  // Format chunk found
                 {
-                    if (chunk.size >= 16/*sizeof(fmt_chunk)*/ )
+                    if (chunk.size >= 16)
                     {
                         fmt.wformattag = r.ReadUInt16();
                         fmt.wchannels = r.ReadUInt16();
@@ -338,7 +338,7 @@ namespace ATL.AudioData.IO
 
                         hasfmt = true;
                         result = true;
-                        channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(fmt.wchannels);
+                        channelsArrangement = GuessFromChannelNumber(fmt.wchannels);
                         sampleRate = (int)fmt.dwsamplespersec;
                         bitrate = (double)fmt.dwavgbytespersec * 8;
                     }
@@ -354,7 +354,7 @@ namespace ATL.AudioData.IO
                         wvh3.Reset();
 
                         long initialPos = r.Position;
-                        wvh3.ckID = r.ReadChars(4);
+                        wvh3.ckID = r.ReadBytes(4);
                         wvh3.ckSize = r.ReadUInt32();
                         wvh3.version = r.ReadUInt16();
                         wvh3.bits = r.ReadUInt16();
@@ -367,7 +367,7 @@ namespace ATL.AudioData.IO
                         wvh3.extra_bc = r.ReadByte();
                         wvh3.extras = r.ReadChars(3);
 
-                        if (StreamUtils.StringEqualsArr("wvpk", wvh3.ckID))  // wavpack header found
+                        if (StreamUtils.ArrEqualsArr(WAVPACK_HEADER, wvh3.ckID))  // wavpack header found
                         {
                             result = true;
                             AudioDataOffset = initialPos;

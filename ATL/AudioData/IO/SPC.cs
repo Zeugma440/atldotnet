@@ -18,7 +18,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_EXTENDED = "extended";
         private const string ZONE_HEADER = "header";
 
-        private const String SPC_FORMAT_TAG = "SNES-SPC700 Sound File Data";
+        private static readonly byte[] SPC_FORMAT_TAG = Utils.Latin1Encoding.GetBytes("SNES-SPC700 Sound File Data");
         private const String XTENDED_TAG = "xid6";
 
 #pragma warning disable S1144 // Unused private types or members should be removed
@@ -258,6 +258,11 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE METHODS ===
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, SPC_FORMAT_TAG);
+        }
+
         private bool readHeader(Stream source, ref SpcHeader header)
         {
             source.Seek(0, SeekOrigin.Begin);
@@ -265,7 +270,7 @@ namespace ATL.AudioData.IO
             long initialPosition = source.Position;
             byte[] buffer = new byte[SPC_FORMAT_TAG.Length];
             source.Read(buffer, 0, buffer.Length);
-            if (SPC_FORMAT_TAG.Equals(Utils.Latin1Encoding.GetString(buffer)))
+            if (IsValidHeader(buffer))
             {
                 source.Seek(8, SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
                 source.Read(buffer, 0, 2);

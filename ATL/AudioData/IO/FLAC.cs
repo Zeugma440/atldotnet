@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FlacHelper;
 using System.Text;
 using System.Threading.Tasks;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -26,7 +27,7 @@ namespace ATL.AudioData.IO
         private const byte META_PICTURE = 6;
 #pragma warning restore S1144 // Unused private types or members should be removed
 
-        public const string FLAC_ID = "fLaC";
+        public static readonly byte[] FLAC_ID = Utils.Latin1Encoding.GetBytes("fLaC");
 
         private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 

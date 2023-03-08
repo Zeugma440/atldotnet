@@ -66,6 +66,22 @@ namespace ATL
         }
 
         /// <summary>
+        /// Determines if the given byte array begins with the other
+        /// </summary>
+        /// <param name="data">First array to be tested</param>
+        /// <param name="beginning">Second array to be tested</param>
+        /// <returns>True if the first array begins with all bytes from the second array; false if not</returns>
+        public static bool ArrBeginsWith(byte[] data, byte[] beginning)
+        {
+            if (data.Length < beginning.Length) return false;
+            for (int i = 0; i < beginning.Length; i++)
+            {
+                if (data[i] != beginning[i]) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Copies a given number of bytes from a given stream to another, starting at current stream positions
         /// i.e. first byte will be read at from.Position and written at to.Position
         /// NB : This method cannot be used to move data within one single stream; use CopySameStream instead
@@ -667,7 +683,7 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt32(byte[] data)
         {
-            if (data.Length != 4) throw new ArgumentException("Array length has to be 4 bytes; found : " + data.Length + " bytes");
+            if (data.Length < 4) throw new ArgumentException("Array length has to be at least 4 bytes; found : " + data.Length + " bytes");
 
             return
                 data[0] * 0x200000 +   //2^21

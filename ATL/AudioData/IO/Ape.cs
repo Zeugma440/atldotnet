@@ -1,6 +1,7 @@
 using Commons;
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -34,6 +35,8 @@ namespace ATL.AudioData.IO
         // Channel mode names
         public static readonly string[] MONKEY_MODE = new string[3] { "Unknown", "Mono", "Stereo" };
 
+        private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("MAC ");
+
 
         readonly ApeHeader header = new ApeHeader();             // common header
 
@@ -66,7 +69,7 @@ namespace ATL.AudioData.IO
         // common header for all versions
         private sealed class ApeHeader
         {
-            public char[] cID = new char[4]; // should equal 'MAC '
+            public byte[] cID = new byte[4]; // should equal 'MAC '
             public ushort nVersion;          // version number * 1000 (3.81 = 3810)
         }
 
@@ -236,8 +239,13 @@ namespace ATL.AudioData.IO
         {
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            header.cID = Utils.Latin1Encoding.GetChars(source.ReadBytes(4));
+            header.cID = source.ReadBytes(4);
             header.nVersion = source.ReadUInt16();
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, FILE_HEADER);
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
@@ -257,7 +265,7 @@ namespace ATL.AudioData.IO
             // Read data from file
             readCommonHeader(reader);
 
-            if (StreamUtils.StringEqualsArr("MAC ", header.cID))
+            if (IsValidHeader(header.cID))
             {
                 version = header.nVersion;
                 AudioDataOffset = reader.Position - 6;

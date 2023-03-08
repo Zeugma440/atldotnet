@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     /// </summary>
     class IT : MetaDataIO, IAudioDataIO
     {
-        private const string IT_SIGNATURE = "IMPM";
+        private static readonly byte[] IT_SIGNATURE = Utils.Latin1Encoding.GetBytes("IMPM");
 
         private const string ZONE_TITLE = "title";
 
@@ -396,6 +396,11 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, IT_SIGNATURE);
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -431,7 +436,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader bSource = new BufferedBinaryReader(source);
 
 
-            if (!IT_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(4))))
+            if (!IsValidHeader(bSource.ReadBytes(4)))
             {
                 throw new InvalidDataException(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
             }

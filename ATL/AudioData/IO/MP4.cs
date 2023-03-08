@@ -27,14 +27,12 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
     {
-        // Header type codes
-        public const byte MP4_HEADER_TYPE_UNKNOWN = 0;                       // Unknown
-        public const byte MP4_HEADER_TYPE_MP4 = 3;                           // MP4
-
         // Bit rate type codes
         public const byte MP4_BITRATE_TYPE_UNKNOWN = 0;                      // Unknown
         public const byte MP4_BITRATE_TYPE_CBR = 1;                          // CBR
         public const byte MP4_BITRATE_TYPE_VBR = 2;                          // VBR
+
+        private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         // Bit rate type names
         public static readonly string[] MP4_BITRATE_TYPE = { "Unknown", "CBR", "VBR" };
@@ -231,7 +229,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            headerTypeID = MP4_HEADER_TYPE_UNKNOWN;
             bitrateTypeID = MP4_BITRATE_TYPE_UNKNOWN;
 
             globalTimeScale = 0;
@@ -271,31 +268,22 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (headerTypeID == MP4_HEADER_TYPE_MP4)
-            {
-                return calculatedDurationMs;
-            }
-            else
-            {
-                if (0 == bitrate)
-                    return 0;
-                else
-                    return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
-            }
+            return calculatedDurationMs;
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            // Examine bytes 4 to 8
+            byte[] usefulData = new byte[4];
+            Array.Copy(data, 4, usefulData, 0, 4);
+            return StreamUtils.ArrBeginsWith(usefulData, FILE_HEADER);
         }
 
         // Get header type of the file
-        private byte recognizeHeaderType(BufferedBinaryReader Source)
+        private bool recognizeHeaderType(BufferedBinaryReader Source)
         {
-            byte result;
-            string headerStr;
-
-            result = MP4_HEADER_TYPE_UNKNOWN;
-            Source.Seek(sizeInfo.ID3v2Size + 4, SeekOrigin.Begin);
-            headerStr = Utils.Latin1Encoding.GetString(Source.ReadBytes(4)); // bytes 4 to 8
-            if ("ftyp".Equals(headerStr)) result = MP4_HEADER_TYPE_MP4;
-
-            return result;
+            Source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            return IsValidHeader(Source.ReadBytes(8));
         }
 
         private void readQTChapters(BufferedBinaryReader source, IList<MP4Sample> chapterTextTrackSamples, IList<MP4Sample> chapterPictureTrackSamples)
@@ -1580,9 +1568,7 @@ namespace ATL.AudioData.IO
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
-            headerTypeID = recognizeHeaderType(reader);
-            // Read header data
-            if (MP4_HEADER_TYPE_MP4 == headerTypeID) return readMP4(reader, readTagParams);
+            if (recognizeHeaderType(reader)) return readMP4(reader, readTagParams);
             else
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "unknown header type");

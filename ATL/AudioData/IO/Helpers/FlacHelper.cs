@@ -18,7 +18,7 @@ namespace ATL.AudioData
         {
             private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 
-            private string StreamMarker;
+            private byte[] StreamMarker = new byte[4];
             private readonly byte[] MetaDataBlockHeader = new byte[4];
             private readonly byte[] Info = new byte[18];
             // 16-bytes MD5 Sum only applies to audio data
@@ -36,7 +36,7 @@ namespace ATL.AudioData
             /// </summary>
             public void Reset()
             {
-                StreamMarker = "";
+                StreamMarker = new byte[4];
                 Array.Clear(MetaDataBlockHeader, 0, 4);
                 Array.Clear(Info, 0, 18);
             }
@@ -47,9 +47,7 @@ namespace ATL.AudioData
             /// <param name="source">Stream to read data from</param>
             public void fromStream(Stream source)
             {
-                byte[] data = new byte[4];
-                source.Read(data, 0, 4);
-                StreamMarker = Utils.Latin1Encoding.GetString(data, 0, 4);
+                source.Read(StreamMarker, 0, 4);
                 source.Read(MetaDataBlockHeader, 0, 4);
                 source.Read(Info, 0, 18); // METADATA_BLOCK_STREAMINFO
                 source.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
@@ -61,7 +59,7 @@ namespace ATL.AudioData
             /// <returns></returns>
             public bool IsValid()
             {
-                return StreamMarker.Equals(FLAC.FLAC_ID);
+                return IsValidHeader(StreamMarker);
             }
 
             /// <summary>
@@ -107,6 +105,11 @@ namespace ATL.AudioData
             /// Number of samples
             /// </summary>
             public long NbSamples { get => Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17]; }
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, FLAC.FLAC_ID);
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace ATL.AudioData.IO
         public const string TAG_LENGTH = "length";
         public const string TAG_FADE = "fade";
 
-        private const string PSF_FORMAT_TAG = "PSF";
+        private static readonly byte[] PSF_FORMAT_TAG = Utils.Latin1Encoding.GetBytes("PSF");
         private const string TAG_HEADER = "[TAG]";
         private const uint HEADER_LENGTH = 16;
 
@@ -51,14 +51,14 @@ namespace ATL.AudioData.IO
         // Mapping between PSF frame codes and ATL frame codes
         private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
-            { "title", TagData.Field.TITLE },
-            { "game", TagData.Field.ALBUM }, // Small innocent semantic shortcut
-            { "artist", TagData.Field.ARTIST },
-            { "copyright", TagData.Field.COPYRIGHT },
-            { "comment", TagData.Field.COMMENT },
-            { "year", TagData.Field.RECORDING_YEAR },
-            { "genre", TagData.Field.GENRE },
-            { "rating", TagData.Field.RATING } // Does not belong to the predefined standard PSF tags
+            { "title", Field.TITLE },
+            { "game", Field.ALBUM }, // Small innocent semantic shortcut
+            { "artist", Field.ARTIST },
+            { "copyright", Field.COPYRIGHT },
+            { "comment", Field.COMMENT },
+            { "year", Field.RECORDING_YEAR },
+            { "genre", Field.GENRE },
+            { "rating", Field.RATING } // Does not belong to the predefined standard PSF tags
         };
         // Frames that are required for playback
         private static IList<string> playbackFrames = new List<string>
@@ -75,14 +75,8 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return this.sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => sampleRate;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
             get
@@ -92,43 +86,19 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return STEREO; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;
@@ -144,14 +114,14 @@ namespace ATL.AudioData.IO
 
         private sealed class PSFHeader
         {
-            public string FormatTag;                    // Format tag (should be PSF_FORMAT_TAG)
+            public byte[] FormatTag = new byte[3];      // Format tag (should be PSF_FORMAT_TAG)
             public byte VersionByte;                    // Version mark
             public uint ReservedAreaLength;             // Length of reserved area (bytes)
             public uint CompressedProgramLength;        // Length of compressed program (bytes)
 
             public void Reset()
             {
-                FormatTag = "";
+                FormatTag = new byte[3];
                 VersionByte = 0;
                 ReservedAreaLength = 0;
                 CompressedProgramLength = 0;
@@ -209,12 +179,16 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, PSF_FORMAT_TAG);
+        }
+
         private bool readHeader(Stream source, ref PSFHeader header)
         {
             byte[] buffer = new byte[4];
-            source.Read(buffer, 0, 3);
-            header.FormatTag = Utils.Latin1Encoding.GetString(buffer, 0, 3);
-            if (PSF_FORMAT_TAG == header.FormatTag)
+            source.Read(header.FormatTag, 0, 3);
+            if (IsValidHeader(header.FormatTag))
             {
                 source.Read(buffer, 0, 1);
                 header.VersionByte = buffer[0];

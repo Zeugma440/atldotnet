@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.AudioDataIOFactory;
+using System.IO;
+using System.Data.SqlTypes;
 
 namespace ATL.test.IO
 {
@@ -28,16 +30,43 @@ namespace ATL.test.IO
             string formatName,
             long audioDataOffset,
             long audioDataSize,
+            bool testStream = true,
             int alternate = 0)
         {
             new ConsoleLogger();
+
             string theResource = TestUtils.GetResourceLocationRoot() + resource;
 
-            IAudioDataIO theReader = GetInstance().GetFromPath(theResource, alternate);
+            // Test detect format from file name
+            testReader(GetInstance().GetFromPath(theResource, alternate), null, duration, bitrate, bitDepth, samplerate, isVbr, codecFamily, channelsArrangement, formatName, audioDataOffset, audioDataSize);
 
+            // Test detect format from stream
+            if (testStream)
+            {
+                using (FileStream fs = new FileStream(theResource, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    testReader(GetInstance().GetFromStream(fs), fs, duration, bitrate, bitDepth, samplerate, isVbr, codecFamily, channelsArrangement, formatName, audioDataOffset, audioDataSize);
+                }
+            }
+        }
+
+        private void testReader(
+            IAudioDataIO theReader,
+            Stream stream,
+            int duration,
+            int bitrate,
+            int bitDepth,
+            int samplerate,
+            bool isVbr,
+            int codecFamily,
+            ChannelsArrangement channelsArrangement,
+            string formatName,
+            long audioDataOffset,
+            long audioDataSize)
+        {
             Assert.IsNotInstanceOfType(theReader, typeof(ATL.AudioData.IO.DummyReader));
 
-            AudioDataManager manager = new AudioDataManager(theReader);
+            AudioDataManager manager = new AudioDataManager(theReader, stream);
             manager.ReadFromFile();
 
             Assert.AreEqual(duration, (int)Math.Round(theReader.Duration));
@@ -113,8 +142,9 @@ namespace ATL.test.IO
         {
             testGenericAudio("MPC/SV8.mpc", 7646, 127, -1, 44100, true, CF_LOSSY, JOINT_STEREO_MID_SIDE, "Musepack / MPEGplus", 4, 121061);
             testGenericAudio("MPC/SV7.mpc", 7654, 131, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "Musepack / MPEGplus", 0, 125432); // should be 7646 ms as well
-            testGenericAudio("MPC/SV5.mp+", 7654, 112, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "Musepack / MPEGplus", 0, 107160); // should be 7646 ms as well
-            testGenericAudio("MPC/SV4.mp+", 7654, 112, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "Musepack / MPEGplus", 0, 107156); // should be 7646 ms as well
+            // should be 7646 ms as well; <V7 won't be detected from stream
+            testGenericAudio("MPC/SV5.mp+", 7654, 112, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "Musepack / MPEGplus", 0, 107160, false);
+            testGenericAudio("MPC/SV4.mp+", 7654, 112, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "Musepack / MPEGplus", 0, 107156, false); // should be 7646 ms as well
         }
 
         [TestMethod]
@@ -162,8 +192,8 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_MOD()
         {
-            testGenericAudio("MOD/empty.mod", 158976, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 42042);
-            testGenericAudio("MOD/mod.mod", 330240, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 99986);
+            testGenericAudio("MOD/empty.mod", 158976, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 42042, false); // No distinctive header
+            testGenericAudio("MOD/mod.mod", 330240, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 99986, false); // No distinctive header
         }
 
         [TestMethod]
@@ -176,12 +206,12 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_S3M()
         {
-            testGenericAudio("S3M/empty.s3m", 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 13936);
-            testGenericAudio("S3M/s3m.s3m", 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 626624);
+            testGenericAudio("S3M/empty.s3m", 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 13936, false); // No distinctive header
+            testGenericAudio("S3M/s3m.s3m", 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 626624, false); // No distinctive header
             // This one contains extra instructions
-            testGenericAudio("S3M/s3m2.s3m", 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 17870);
+            testGenericAudio("S3M/s3m2.s3m", 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 17870, false); // No distinctive header
             // This one contains yet other extra instructions
-            testGenericAudio("S3M/s3m3.s3m", 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 375488);
+            testGenericAudio("S3M/s3m3.s3m", 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 375488, false); // No distinctive header
         }
 
         [TestMethod]
@@ -196,13 +226,13 @@ namespace ATL.test.IO
         {
             testGenericAudio("PSF/psf.psf", 159000, 10, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Playstation)", 0, 204788);
             testGenericAudio("PSF/nolength.psf", 180000, 13, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Playstation)", 0, 287437);
-            testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", 26200, 0, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Dreamcast)", 0, 30, 1);
+            testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", 26200, 0, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Dreamcast)", 0, 30, true, 1);
         }
 
         [TestMethod]
         public void Audio_SPC()
         {
-            testGenericAudio("SPC/spc.spc", 69, 7635, -1, 32000, false, CF_SEQ_WAV, STEREO, "SPC700 Sound Files", 209, 65852); ;
+            testGenericAudio("SPC/spc.spc", 69, 7635, -1, 32000, false, CF_SEQ_WAV, STEREO, "SPC700 Sound Files", 209, 65852);
         }
 
         [TestMethod]
@@ -221,14 +251,15 @@ namespace ATL.test.IO
         public void Audio_WAV()
         {
             testGenericAudio("WAV/wav.wav", 7646, 1411, 16, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Windows PCM)", 44, 1348720);
-            testGenericAudio("WAV/rifx.wav", 0, 2117, 24, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 39690);
+            testGenericAudio("WAV/rifx.wav", 150, 2117, 24, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 39690);
         }
 
         [TestMethod]
         public void Audio_WV()
         {
-            testGenericAudio("WV/losslessv3.wv", 7646, 659, -1, 44100, false, CF_LOSSLESS, STEREO, "WAVPack", 44, 629811);
-            testGenericAudio("WV/lossyv3.wv", 7646, 342, 4, 44100, false, CF_LOSSY, STEREO, "WAVPack", 44, 326945);
+            // V3 won't be auto-detected from data stream
+            testGenericAudio("WV/losslessv3.wv", 7646, 659, -1, 44100, false, CF_LOSSLESS, STEREO, "WAVPack", 44, 629811, false);
+            testGenericAudio("WV/lossyv3.wv", 7646, 342, 4, 44100, false, CF_LOSSY, STEREO, "WAVPack", 44, 326945, false);
             testGenericAudio("WV/lossyv440.wv", 7646, 206, 16, 44100, false, CF_LOSSY, STEREO, "WAVPack", 132, 196658);
             testGenericAudio("WV/losslessv4.wv", 6082, 645, 16, 44100, false, CF_LOSSLESS, STEREO, "WAVPack", 154, 490420);
         }
@@ -261,7 +292,7 @@ namespace ATL.test.IO
         public void Audio_VGM()
         {
             testGenericAudio("VGM/vgm.vgm", 86840, 1, -1, 44100, false, CF_SEQ_WAV, STEREO, "Video Game Music", 4, 7708);
-            testGenericAudio("VGM/vgz.vgz", 232584, 3, -1, 44100, false, CF_SEQ_WAV, STEREO, "Video Game Music", 4, 589589);
+            testGenericAudio("VGM/vgz.vgz", 232584, 3, -1, 44100, false, CF_SEQ_WAV, STEREO, "Video Game Music", 4, 589589, false); // Can't autodetect that
         }
 
         [TestMethod]

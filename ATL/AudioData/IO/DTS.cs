@@ -95,18 +95,22 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return 0x7FFE8001 == StreamUtils.DecodeBEUInt32(data);
+        }
+
         /// <inheritdoc/>
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
             uint value;
             bool result = false;
+            byte[] buffer = new byte[4];
 
             resetData();
 
-            byte[] buffer = new byte[4];
-            source.Read(buffer, 0, buffer.Length);
-            uint signatureChunk = StreamUtils.DecodeBEUInt32(buffer); // SYNC
-            if (0x7FFE8001 == signatureChunk) // Core substream
+            source.Read(buffer, 0, 4);
+            if (IsValidHeader(buffer))
             {
                 result = true;
                 AudioDataOffset = source.Position - 4;

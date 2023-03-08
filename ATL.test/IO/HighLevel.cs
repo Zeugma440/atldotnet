@@ -954,9 +954,25 @@ namespace ATL.test.IO
             string resource = "OGG/ogg.ogg";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
+            // With Mime-type
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 Track theTrack = new Track(fs, "audio/ogg");
+
+                Assert.AreEqual(33, theTrack.Duration);
+                Assert.AreEqual(69, theTrack.Bitrate);
+                Assert.AreEqual(-1, theTrack.BitDepth);
+                Assert.AreEqual(22050, theTrack.SampleRate);
+                Assert.AreEqual(true, theTrack.IsVBR);
+                Assert.AreEqual(23125, theTrack.TechnicalInformation.AudioDataOffset);
+                Assert.AreEqual(278029, theTrack.TechnicalInformation.AudioDataSize);
+                Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
+            }
+
+            // Without Mime-type (autodetect)
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                Track theTrack = new Track(fs);
 
                 Assert.AreEqual(33, theTrack.Duration);
                 Assert.AreEqual(69, theTrack.Bitrate);

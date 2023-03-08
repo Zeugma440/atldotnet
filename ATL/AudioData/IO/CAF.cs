@@ -239,13 +239,17 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return CAF_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
+        }
+
 
         // ---------- SUPPORT METHODS
 
         private bool readFileHeader(BufferedBinaryReader source)
         {
-            uint fileType = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            if (fileType != CAF_MAGIC_NUMBER) return false;
+            if (!IsValidHeader(source.ReadBytes(4))) return false;
 
             AudioDataOffset = source.Position - 4;
             source.Seek(4, SeekOrigin.Current); // Useless here

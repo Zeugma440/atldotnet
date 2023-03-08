@@ -145,27 +145,37 @@ namespace ATL.AudioData.IO
                 return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
         }
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return recognizeHeaderType(data) != AAC_BITRATE_TYPE_UNKNOWN;
+        }
+
+        private static byte recognizeHeaderType(byte[] data)
+        {
+            if (data.Length < 4) return AAC_BITRATE_TYPE_UNKNOWN;
+
+            if ("ADIF".Equals(Utils.Latin1Encoding.GetString(data, 0, 4)))
+            {
+                return AAC_HEADER_TYPE_ADIF;
+            }
+            else if ((0xFF == data[0]) && (0xF0 == ((data[1]) & 0xF0)))
+            {
+                return AAC_HEADER_TYPE_ADTS;
+            }
+            else return AAC_BITRATE_TYPE_UNKNOWN;
+        }
+
         // Get header type of the file
         private byte recognizeHeaderType(Stream source)
         {
-            byte result;
-            string headerStr;
             byte[] header = new byte[4];
 
-            result = AAC_HEADER_TYPE_UNKNOWN;
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             source.Read(header, 0, header.Length);
-            headerStr = Utils.Latin1Encoding.GetString(header);
 
-            if ("ADIF".Equals(headerStr))
+            byte result = recognizeHeaderType(header);
+            if (result != AAC_BITRATE_TYPE_UNKNOWN)
             {
-                result = AAC_HEADER_TYPE_ADIF;
-                AudioDataOffset = source.Position - 4;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
-            }
-            else if ((0xFF == header[0]) && (0xF0 == ((header[0]) & 0xF0)))
-            {
-                result = AAC_HEADER_TYPE_ADTS;
                 AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }

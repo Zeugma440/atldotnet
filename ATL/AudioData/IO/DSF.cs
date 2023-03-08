@@ -13,9 +13,9 @@ namespace ATL.AudioData.IO
 	class DSF : IAudioDataIO, IMetaDataEmbedder
     {
         // Headers ID
-        public const string DSD_ID = "DSD ";
-        public const string FMT_ID = "fmt ";
-        public const string DATA_ID = "data";
+        private static readonly byte[] DSD_ID = Utils.Latin1Encoding.GetBytes("DSD ");
+        private static readonly byte[] FMT_ID = Utils.Latin1Encoding.GetBytes("fmt ");
+        private static readonly byte[] DATA_ID = Utils.Latin1Encoding.GetBytes("data");
 
 
         // Private declarations 
@@ -35,67 +35,29 @@ namespace ATL.AudioData.IO
 
 
         // Public declarations 
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
+        public double CompressionRatio => getCompressionRatio();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public int SampleRate
-        {
-            get { return (int)sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => (int)sampleRate;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
-
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => (int)bits;
-
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.ID3V2;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.ID3V2;
 
         // IMetaDataEmbedder
-        public long HasEmbeddedID3v2
-        {
-            get { return id3v2Offset; }
-        }
-        public uint ID3v2EmbeddingHeaderSize
-        {
-            get { return 0; }
-        }
-        public FileStructureHelper.Zone Id3v2Zone
-        {
-            get { return id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME); }
-        }
+        public long HasEmbeddedID3v2 => id3v2Offset;
+        public uint ID3v2EmbeddingHeaderSize => 0;
+        public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -132,9 +94,14 @@ namespace ATL.AudioData.IO
         private double getCompressionRatio()
         {
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
+                return sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
             else
                 return 0;
+        }
+
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, DSD_ID);
         }
 
         /// <inheritdoc/>
@@ -148,14 +115,14 @@ namespace ATL.AudioData.IO
 
             source.Seek(0, SeekOrigin.Begin);
             source.Read(buffer, 0, 4);
-            if (DSD_ID.Equals(Utils.Latin1Encoding.GetString(buffer, 0, 4)))
+            if (StreamUtils.ArrBeginsWith(buffer, DSD_ID))
             {
                 source.Seek(16, SeekOrigin.Current); // Chunk size and file size
                 source.Read(buffer, 0, 8);
                 id3v2Offset = StreamUtils.DecodeInt64(buffer);
 
                 source.Read(buffer, 0, 4);
-                if (FMT_ID.Equals(Utils.Latin1Encoding.GetString(buffer, 0, 4)))
+                if (StreamUtils.ArrBeginsWith(buffer, FMT_ID))
                 {
                     source.Seek(8, SeekOrigin.Current); // Chunk size
 

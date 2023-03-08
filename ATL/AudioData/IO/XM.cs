@@ -18,7 +18,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String XM_SIGNATURE = "Extended Module: ";
+        private static readonly byte[] XM_SIGNATURE = Utils.Latin1Encoding.GetBytes("Extended Module: ");
 
 #pragma warning disable S1144 // Unused private types or members should be removed
         // Effects (NB : very close to the MOD effect codes)
@@ -54,55 +54,25 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return 0; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => 0;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return STEREO; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
@@ -369,6 +339,11 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
+        public static bool IsValidHeader(byte[] data)
+        {
+            return StreamUtils.ArrBeginsWith(data, XM_SIGNATURE);
+        }
+
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             this.sizeInfo = sizeInfo;
@@ -386,7 +361,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader bSource = new BufferedBinaryReader(source);
 
             // File format signature
-            if (!XM_SIGNATURE.Equals(Utils.Latin1Encoding.GetString(bSource.ReadBytes(17))))
+            if (!IsValidHeader(bSource.ReadBytes(17)))
             {
                 throw new InvalidDataException("Invalid XM file (file signature String mismatch)");
             }
