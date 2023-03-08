@@ -19,26 +19,40 @@ namespace ATL.AudioData
         /// <param name="source">Source to read the fields from</param>
         /// <param name="atomDataSize">Max size of the zone to read</param>
         /// <returns>List of the detected metadata fields</returns>
-        public static IList<KeyValuePair<string, string>> ReadFields(BufferedBinaryReader source, long atomDataSize)
+        public static IList<KeyValuePair<string, string>> ReadFields(Stream source, long atomDataSize)
         {
             IList<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
+            byte[] buffer = new byte[8];
 
             long initialPos = source.Position;
             long pos = initialPos;
             while (pos < initialPos + atomDataSize)
             {
-                int fieldSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                int stringDataSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                string fieldName = Utils.Latin1Encoding.GetString(source.ReadBytes(stringDataSize));
+                source.Read(buffer, 0, 4);
+                int fieldSize = StreamUtils.DecodeBEInt32(buffer);
+                source.Read(buffer, 0, 4);
+                int stringDataSize = StreamUtils.DecodeBEInt32(buffer);
+                byte[] data = new byte[stringDataSize];
+                source.Read(data, 0, stringDataSize);
+                string fieldName = Utils.Latin1Encoding.GetString(data);
                 source.Seek(4, SeekOrigin.Current);
-                stringDataSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                source.Read(buffer, 0, 4);
+                stringDataSize = StreamUtils.DecodeBEInt32(buffer);
 
                 string fieldValue;
-                int fieldType = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                source.Read(buffer, 0, 2);
+                int fieldType = StreamUtils.DecodeBEInt16(buffer);
                 if (19 == fieldType) // Numeric
-                    fieldValue = source.ReadInt64() + "";
+                {
+                    source.Read(buffer, 0, 8);
+                    fieldValue = StreamUtils.DecodeInt64(buffer) + "";
+                }
                 else
-                    fieldValue = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(source.ReadBytes(stringDataSize - 6)));
+                {
+                    data = new byte[stringDataSize - 6];
+                    source.Read(data, 0, stringDataSize - 6);
+                    fieldValue = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(data, 0, stringDataSize - 6));
+                }
 
                 result.Add(new KeyValuePair<string, string>(fieldName, fieldValue));
                 source.Seek(pos + fieldSize, SeekOrigin.Begin);
