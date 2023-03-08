@@ -1034,7 +1034,7 @@ namespace ATL.AudioData.IO
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = prepareRemove();
-                return Write(s, s, tag);
+                return Write(s, tag);
             }
             else
             {
@@ -1048,7 +1048,7 @@ namespace ATL.AudioData.IO
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = prepareRemove();
-                return await WriteAsync(s, s, tag);
+                return await WriteAsync(s, tag);
             }
             else
             {

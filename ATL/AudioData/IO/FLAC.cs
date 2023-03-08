@@ -304,9 +304,9 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
         {
-            Tuple<bool, TagData> results = prepareWrite(r, tag);
+            Tuple<bool, TagData> results = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
             surgeon.RewriteZones(s, new WriteDelegate(write), zones, results.Item2, results.Item1);
@@ -316,9 +316,9 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        public async Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
-            Tuple<bool, TagData> results = prepareWrite(r, tag);
+            Tuple<bool, TagData> results = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
             await surgeon.RewriteZonesAsync(s, new WriteDelegate(write), zones, results.Item2, results.Item1);

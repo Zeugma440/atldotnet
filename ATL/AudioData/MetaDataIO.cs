@@ -460,9 +460,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
         {
-            TagData dataToWrite = prepareWrite(r, tag);
+            TagData dataToWrite = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
             bool result = surgeon.RewriteZones(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
@@ -478,9 +478,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public async Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
-            TagData dataToWrite = prepareWrite(r, tag);
+            TagData dataToWrite = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
             bool result = await surgeon.RewriteZonesAsync(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);

@@ -384,7 +384,7 @@ namespace ATL.AudioData
                         handleEmbedder(s, theMetaIO);
 
                         Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
-                        result = theMetaIO.Write(s, s, theTag, progress);
+                        result = theMetaIO.Write(s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
                     finally
@@ -434,7 +434,7 @@ namespace ATL.AudioData
                         handleEmbedder(s, theMetaIO);
 
                         IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateIProgress() : null;
-                        result = await theMetaIO.WriteAsync(s, s, theTag, progress);
+                        result = await theMetaIO.WriteAsync(s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
                     finally

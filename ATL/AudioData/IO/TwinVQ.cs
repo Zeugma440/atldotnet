@@ -385,14 +385,14 @@ namespace ATL.AudioData.IO
         public override bool Remove(Stream s)
         {
             TagData tag = prepareRemove();
-            return Write(s, s, tag);
+            return Write(s, tag);
         }
 
         // Specific implementation for conservation of fields that are required for playback
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();
-            return await WriteAsync(s, s, tag);
+            return await WriteAsync(s, tag);
         }
 
         private TagData prepareRemove()

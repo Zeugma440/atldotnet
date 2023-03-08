@@ -476,7 +476,7 @@ namespace ATL.AudioData.IO
 
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            return Write(s, s, tag);
+            return Write(s, tag);
         }
 
         // Specific implementation for conservation of fields that are required for playback
@@ -486,7 +486,7 @@ namespace ATL.AudioData.IO
 
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            return await WriteAsync(s, s, tag);
+            return await WriteAsync(s, tag);
         }
 
         private TagData prepareRemove()

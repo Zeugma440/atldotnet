@@ -47,12 +47,12 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
         {
             return true;
         }
         /// <inheritdoc/>
-        public Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             return Task.FromResult(true);
         }

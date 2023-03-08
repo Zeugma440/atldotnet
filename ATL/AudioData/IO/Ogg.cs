@@ -783,7 +783,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
 
-        public bool Write(Stream r, Stream s, TagData tag, Action<float> writeProgress = null)
+        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -792,7 +792,7 @@ namespace ATL.AudioData.IO
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
-            Read(r, readTagParams);
+            Read(s, readTagParams);
 
             if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
 
@@ -815,11 +815,11 @@ namespace ATL.AudioData.IO
                 // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
-                    r.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
+                    s.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        StreamUtils.CopyStream(r, memStream, setupHeaderSize);
+                        StreamUtils.CopyStream(s, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -859,13 +859,13 @@ namespace ATL.AudioData.IO
             // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
             {
-                result &= renumberRemainingPages(s, r, nextPageOffset, writtenPages);
+                result &= renumberRemainingPages(s, nextPageOffset, writtenPages);
             }
 
             return result;
         }
 
-        public async Task<bool> WriteAsync(Stream r, Stream s, TagData tag, IProgress<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -874,7 +874,7 @@ namespace ATL.AudioData.IO
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
-            Read(r, readTagParams);
+            Read(s, readTagParams);
 
             if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
 
@@ -897,11 +897,11 @@ namespace ATL.AudioData.IO
                 // VORBIS: Append the setup header in the "unpaged" in-memory stream
                 if (CONTENTS_VORBIS == contents)
                 {
-                    r.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
+                    s.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        await StreamUtilsAsync.CopyStreamAsync(r, memStream, setupHeaderSize);
+                        await StreamUtilsAsync.CopyStreamAsync(s, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -941,7 +941,7 @@ namespace ATL.AudioData.IO
             // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
             if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
             {
-                result &= renumberRemainingPages(s, r, nextPageOffset, writtenPages);
+                result &= renumberRemainingPages(s, nextPageOffset, writtenPages);
             }
 
             return result;
@@ -1056,7 +1056,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private bool renumberRemainingPages(Stream s, Stream r, long nextPageOffset, int writtenPages)
+        private bool renumberRemainingPages(Stream s, long nextPageOffset, int writtenPages)
         {
             OggPageHeader header = new OggPageHeader();
             byte[] data = new byte[0];
@@ -1065,7 +1065,7 @@ namespace ATL.AudioData.IO
             do
             {
                 s.Seek(nextPageOffset, SeekOrigin.Begin);
-                header.ReadFromStream(r);
+                header.ReadFromStream(s);
 
                 if (header.IsValid())
                 {
@@ -1078,7 +1078,7 @@ namespace ATL.AudioData.IO
                     s.Seek(nextPageOffset, SeekOrigin.Begin);
                     int dataSize = header.GetHeaderSize() + header.GetPageSize();
                     if (data.Length < dataSize) data = new byte[dataSize]; // Only realloc when size is insufficient
-                    r.Read(data, 0, dataSize);
+                    s.Read(data, 0, dataSize);
 
                     // Checksum has to include its own location, as if it were 0
                     data[22] = 0;
@@ -1087,7 +1087,7 @@ namespace ATL.AudioData.IO
                     data[25] = 0;
 
                     crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
-                    r.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
+                    s.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
                     StreamUtils.WriteUInt32(s, crc);
 
                     // To the next header
@@ -1106,13 +1106,13 @@ namespace ATL.AudioData.IO
         public bool Remove(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
-            return Write(s, s, tag);
+            return Write(s, tag);
         }
 
         public async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
-            return await WriteAsync(s, s, tag);
+            return await WriteAsync(s, tag);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)
