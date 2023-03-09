@@ -9,8 +9,20 @@ namespace ATL
     /// </summary>
     public class Format : IEnumerable
     {
+        /// <summary>
+        /// Check if the given byte array matches the Format's signature (aka "magic number")
+        /// NB : This operation has to be fast
+        /// </summary>
+        /// <param name="data">byte array to check</param>
+        /// <returns>True if the given byte array matches the Format's signature</returns>
         public delegate bool CheckHeaderDelegate(byte[] data);
 
+        /// <summary>
+        /// Search the Format's signature inside the given Stream
+        /// NB : This operation may be slow
+        /// </summary>
+        /// <param name="data">Stream to search the signature with</param>
+        /// <returns>True if the Format's signature has been found inside the given Stream; false if not</returns>
         public delegate bool SearchHeaderDelegate(Stream data);
 
         /// <summary>

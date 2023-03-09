@@ -93,10 +93,11 @@ namespace ATL.AudioData
             {
                 if (null == theFactory)
                 {
-                    theFactory = new AudioDataIOFactory();
-
-                    theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
-                    theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
+                    theFactory = new AudioDataIOFactory
+                    {
+                        formatListByExt = new Dictionary<string, IList<Format>>(),
+                        formatListByMime = new Dictionary<string, IList<Format>>()
+                    };
 
                     Format tempFmt = new Format(CID_MP3, "MPEG Audio", "MPEG");
                     tempFmt.AddMimeType("audio/mp3");
@@ -389,6 +390,12 @@ namespace ATL.AudioData
             return getFromFormat(path, theFormat);
         }
 
+        /// <summary>
+        /// Get the proper IAudioDataIO to exploit the data of the given Stream,
+        /// or a dummy object if no proper IAudioDataIO has been found
+        /// </summary>
+        /// <param name="s">Stream to exploit</param>
+        /// <returns>Appropriate IAudioDataIO to exploit the data of the given Stream, or dummy object if no proper IAudioDataIO has been found</returns>
         public IAudioDataIO GetFromStream(Stream s)
         {
             // TODO : memorize initial offset?

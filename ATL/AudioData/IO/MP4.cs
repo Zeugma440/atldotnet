@@ -129,7 +129,6 @@ namespace ATL.AudioData.IO
         private byte[] chapterPictureTrackEdits = null;
         private long udtaOffset;
 
-        private byte headerTypeID;
         private byte bitrateTypeID;
         private double bitrate;
         private double calculatedDurationMs; // Calculated track duration, in milliseconds

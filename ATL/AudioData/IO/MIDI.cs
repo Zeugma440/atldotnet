@@ -37,7 +37,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Musical Instruments Digital Interface files manipulation (extension : .MID, .MIDI)
     /// </summary>
-    public class Midi : MetaDataIO, IAudioDataIO
+    class Midi : MetaDataIO, IAudioDataIO
     {
         /// <summary>
         /// Tracks of the song

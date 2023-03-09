@@ -15,7 +15,6 @@ namespace ATL.AudioData.IO
         // Headers ID
         private static readonly byte[] DSD_ID = Utils.Latin1Encoding.GetBytes("DSD ");
         private static readonly byte[] FMT_ID = Utils.Latin1Encoding.GetBytes("fmt ");
-        private static readonly byte[] DATA_ID = Utils.Latin1Encoding.GetBytes("data");
 
 
         // Private declarations 
