@@ -15,6 +15,7 @@ This library is aimed at giving .NET developers a managed, portable and easy-to-
 ```csharp
 using ATL.AudioData;
 
+// Initialize with a file path
 Track theTrack = new Track(audioFilePath);
 
 // Works the same way on any supported format (MP3, FLAC, WMA, SPC...)
@@ -24,6 +25,9 @@ System.Console.WriteLine("Duration (ms) : " + theTrack.DurationMs);
 theTrack.Composer = "Oscar Wilde (アイドル)"; // Support for "exotic" charsets
 theTrack.AdditionalFields["customField"] = "fancyValue"; // Support for custom fields
 theTrack.Save();
+
+// Can alternatively be initialized with a Stream
+theTrack = new Track(stream);
 ```
 
 You'll find more working code on the [Code snippets section of the Documentation](https://github.com/Zeugma440/atldotnet/wiki/3.-Usage-_-Code-snippets), including what you need to manage embedded pictures (e.g. cover), chapters , lyrics and playlists
@@ -50,6 +54,8 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 ## Why would I want to use ATL while TagLib is out there ?
 
 * ATL has a __full C# implementation__ and does not use any dependency, which makes portability trivial if your app is already based on .NET or Mono frameworks
+
+* ATL can __auto-detect the format__ of the audio data you're using, even if the file extension has the wrong label or if you're feeding it raw data witout context
 
 * ATL features a __flexible logging system__ which allows you to catch and record audio file reading/writing incidents into your app
 
