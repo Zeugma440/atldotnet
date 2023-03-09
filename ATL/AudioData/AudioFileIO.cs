@@ -37,8 +37,33 @@ namespace ATL.AudioData
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
                 audioData = AudioDataIOFactory.GetInstance().GetFromPath(path, alternate++);
-                audioManager = new AudioDataManager(audioData);
-                found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
+                if (!(audioData is DummyReader))
+                {
+                    audioManager = new AudioDataManager(audioData);
+                    found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
+                }
+            }
+            // Try auto-detecting if nothing worked
+            if (!found)
+            {
+                if (File.Exists(path))
+                {
+                    alternate = 0;
+                    using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, Settings.FileBufferSize, FileOptions.RandomAccess))
+                    {
+                        while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
+                        {
+                            audioData = AudioDataIOFactory.GetInstance().GetFromStream(fs);
+                            audioManager = new AudioDataManager(audioData, fs);
+                            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
+                        }
+                    }
+                }
+                else // Invalid path
+                {
+                    audioData = new DummyReader(path);
+                    audioManager = new AudioDataManager(audioData);
+                }
             }
             metaData = getAndCheckMetadata();
         }

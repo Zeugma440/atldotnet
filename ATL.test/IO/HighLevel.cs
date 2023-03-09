@@ -953,11 +953,12 @@ namespace ATL.test.IO
         {
             string resource = "OGG/ogg.ogg";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
+            Track theTrack;
 
             // With Mime-type
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Track theTrack = new Track(fs, "audio/ogg");
+                theTrack = new Track(fs, "audio/ogg");
 
                 Assert.AreEqual(33, theTrack.Duration);
                 Assert.AreEqual(69, theTrack.Bitrate);
@@ -969,10 +970,10 @@ namespace ATL.test.IO
                 Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
             }
 
-            // Without Mime-type (autodetect)
+            // Stream without Mime-type (autodetect)
             using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Track theTrack = new Track(fs);
+                theTrack = new Track(fs);
 
                 Assert.AreEqual(33, theTrack.Duration);
                 Assert.AreEqual(69, theTrack.Bitrate);
@@ -983,9 +984,26 @@ namespace ATL.test.IO
                 Assert.AreEqual(278029, theTrack.TechnicalInformation.AudioDataSize);
                 Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
             }
+
+            // File without extension (autodetect)
+            int dotIndex = testFileLocation.LastIndexOf("ogg.ogg");
+            string testFileLocation2 = testFileLocation.Substring(0, dotIndex + 3);
+            File.Copy(testFileLocation, testFileLocation2);
+
+            theTrack = new Track(testFileLocation2);
+
+            Assert.AreEqual(33, theTrack.Duration);
+            Assert.AreEqual(69, theTrack.Bitrate);
+            Assert.AreEqual(-1, theTrack.BitDepth);
+            Assert.AreEqual(22050, theTrack.SampleRate);
+            Assert.AreEqual(true, theTrack.IsVBR);
+            Assert.AreEqual(23125, theTrack.TechnicalInformation.AudioDataOffset);
+            Assert.AreEqual(278029, theTrack.TechnicalInformation.AudioDataSize);
+            Assert.AreEqual(AudioDataIOFactory.CF_LOSSY, theTrack.CodecFamily);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation2);
         }
 
         [TestMethod]
