@@ -48,15 +48,11 @@ namespace ATL.AudioData
             {
                 if (File.Exists(path))
                 {
-                    alternate = 0;
                     using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, Settings.FileBufferSize, FileOptions.RandomAccess))
                     {
-                        while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
-                        {
-                            audioData = AudioDataIOFactory.GetInstance().GetFromStream(fs);
-                            audioManager = new AudioDataManager(audioData, fs);
-                            found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
-                        }
+                        audioData = AudioDataIOFactory.GetInstance().GetFromStream(fs);
+                        audioManager = new AudioDataManager(audioData, fs);
+                        audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
                     }
                 }
                 else // Invalid path
