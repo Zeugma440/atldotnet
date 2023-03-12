@@ -170,5 +170,23 @@ namespace ATL.AudioData.IO
 
             w.Write((short)defaultValue);
         }
+
+        /// <summary>
+        /// Skips WAV padding byte in the given Stream, if it exists, 
+        /// while not crossing the given maximum position
+        /// 
+        /// NB : WAV specs say padding should only be zeroes, but other values can be found in the wild
+        /// => expects a _displayable_ character as part of next header ID
+        /// </summary>
+        /// <param name="s">Stream to use</param>
+        /// <param name="maxPos">Maximum position not to cross</param>
+        public static void skipEndPadding(Stream s, long maxPos)
+        {
+            if (s.Position < maxPos)
+            {
+                int b = s.ReadByte();
+                if (b > 31 && b < 255) s.Seek(-1, SeekOrigin.Current);
+            }
+        }
     }
 }

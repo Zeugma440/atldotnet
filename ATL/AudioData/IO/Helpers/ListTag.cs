@@ -34,8 +34,8 @@ namespace ATL.AudioData.IO
 
             long maxPos = initialPos + chunkSize - 4; // 4 being the purpose 32bits tag that belongs to the chunk
 
-            if (typeId.Equals(PURPOSE_INFO, System.StringComparison.OrdinalIgnoreCase)) readInfoPurpose(source, meta, readTagParams, chunkSize, maxPos);
-            else if (typeId.Equals(PURPOSE_ADTL, System.StringComparison.OrdinalIgnoreCase)) readDataListPurpose(source, meta, readTagParams, maxPos);
+            if (typeId.Equals(PURPOSE_INFO, StringComparison.OrdinalIgnoreCase)) readInfoPurpose(source, meta, readTagParams, chunkSize, maxPos);
+            else if (typeId.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) readDataListPurpose(source, meta, readTagParams, maxPos);
         }
 
         private static void readInfoPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize, long maxPos)
@@ -60,6 +60,8 @@ namespace ATL.AudioData.IO
                     if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
                     value = Utils.Latin1Encoding.GetString(data, 0, size);
                     meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
+
+                    WavHelper.skipEndPadding(source, maxPos);
                 }
             }
         }
@@ -82,13 +84,11 @@ namespace ATL.AudioData.IO
                 if (size > 0)
                 {
                     meta.SetMetaField("info.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
-                    if (id.Equals(CHUNK_LABEL, System.StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
-                    else if (id.Equals(CHUNK_NOTE, System.StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
-                    else if (id.Equals(CHUNK_LABELED_TEXT, System.StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
+                    if (id.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
+                    else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
+                    else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
 
-                    // Manage padding bytes at the end of data
-                    if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
-
+                    WavHelper.skipEndPadding(source, maxPos);
                     position++;
                 }
             }
@@ -101,7 +101,7 @@ namespace ATL.AudioData.IO
 
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
-            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero and the even padding
+            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
             meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
@@ -119,7 +119,7 @@ namespace ATL.AudioData.IO
 
             source.Read(data, 0, size - 20);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
-            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero and the even padding
+            value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
             meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
@@ -130,7 +130,7 @@ namespace ATL.AudioData.IO
             if (meta.Artist.Length > 0) return true;
             if (meta.Comment.Length > 0) return true;
             if (meta.Genre.Length > 0) return true;
-            if (meta.Date > System.DateTime.MinValue) return true;
+            if (meta.Date > DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
             if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
@@ -152,8 +152,8 @@ namespace ATL.AudioData.IO
 
             w.Write(Utils.Latin1Encoding.GetBytes(typeId));
 
-            if (typeId.Equals(PURPOSE_INFO, System.StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
-            else if (typeId.Equals(PURPOSE_ADTL, System.StringComparison.OrdinalIgnoreCase)) writeDataListPurpose(w, isLittleEndian, additionalFields);
+            if (typeId.Equals(PURPOSE_INFO, StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
+            else if (typeId.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) writeDataListPurpose(w, isLittleEndian, additionalFields);
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
@@ -244,9 +244,9 @@ namespace ATL.AudioData.IO
                 w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
                 int writtenSize = 0;
-                if (type.Equals(CHUNK_LABEL, System.StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabelSubChunk(w, key, additionalFields);
-                else if (type.Equals(CHUNK_NOTE, System.StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabelSubChunk(w, key, additionalFields);
-                else if (type.Equals(CHUNK_LABELED_TEXT, System.StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabeledTextSubChunk(w, key, additionalFields);
+                if (type.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabelSubChunk(w, key, additionalFields);
+                else if (type.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabelSubChunk(w, key, additionalFields);
+                else if (type.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) writtenSize = writeLabeledTextSubChunk(w, key, additionalFields);
 
                 long finalPos = w.BaseStream.Position;
                 w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
