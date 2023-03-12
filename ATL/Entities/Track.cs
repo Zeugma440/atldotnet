@@ -220,6 +220,8 @@ namespace ATL
         /// Synchronized and unsynchronized lyrics
         /// </summary>
         public LyricsInfo Lyrics { get; set; }
+        private LyricsInfo initialLyrics; // Initial field, used to identify removal
+
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
         /// Use MetaDataHolder.DATETIME_PREFIX + DateTime.ToFileTime() to set dates. ATL will format them properly.
@@ -411,6 +413,7 @@ namespace ATL
             Chapters = metadata.Chapters;
             ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
             Lyrics = metadata.Lyrics;
+            initialLyrics = metadata.Lyrics;
 
             // Deep copy
             AdditionalFields = new Dictionary<string, string>();
@@ -487,9 +490,10 @@ namespace ATL
                 result.Chapters.Add(new ChapterInfo(chapter));
             }
 
-            if (Lyrics != null)
+            if (Lyrics != null) result.Lyrics = new LyricsInfo(Lyrics);
+            else if (initialLyrics != null)
             {
-                result.Lyrics = new LyricsInfo(Lyrics);
+                result.Lyrics = LyricsInfo.ForRemoval();
             }
 
             foreach (string s in AdditionalFields.Keys)

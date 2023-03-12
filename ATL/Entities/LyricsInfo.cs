@@ -110,8 +110,25 @@ namespace ATL
         /// Data of unsynhronized (i.e. with associated timestamps) lyrics
         /// </summary>
         public IList<LyricsPhrase> SynchronizedLyrics { get; set; }
+        /// <summary>
+        /// Indicate if this object is marked for removal
+        /// </summary>
+        public bool IsMarkedForRemoval => isRemoval;
+        private bool isRemoval = false;
+
 
         // ---------------- CONSTRUCTORS
+
+        /// <summary>
+        /// Create a new object marked for removal
+        /// </summary>
+        /// <returns>New object marked for removal</returns>
+        public static LyricsInfo ForRemoval()
+        {
+            LyricsInfo result = new LyricsInfo();
+            result.isRemoval = true;
+            return result;
+        }
 
         /// <summary>
         /// Construct empty lyrics information
@@ -146,6 +163,7 @@ namespace ATL
             Description = "";
             LanguageCode = "";
             UnsynchronizedLyrics = "";
+            isRemoval = false;
             ContentType = LyricsType.LYRICS;
             SynchronizedLyrics.Clear();
         }

@@ -1155,7 +1155,7 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_invalid.mp3");
             new Track(testFileLocation);
 
-            IList<LogItem> logItems = log.GetAllItems(Log.LV_INFO);
+            IList<LogItem> logItems = log.GetAllItems(LV_INFO);
             Assert.IsTrue(logItems.Count > 0);
             int nbFound = 0;
             foreach (LogItem l in logItems)
@@ -1163,6 +1163,43 @@ namespace ATL.test.IO
                 if (l.Message.Contains("start timestamp goes beyond file duration")) nbFound++;
             }
             Assert.AreEqual(1, nbFound);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_Lyrics_Remove()
+        {
+            new ConsoleLogger();
+
+            // 1- Synched lyrics
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_cn.mp3");
+            Track t = new Track(testFileLocation);
+
+            Assert.IsTrue(t.Lyrics.SynchronizedLyrics.Count > 0);
+
+            t.Lyrics = null;
+            t.Save();
+
+            t = new Track(testFileLocation);
+            Assert.IsTrue(0 == t.Lyrics.SynchronizedLyrics.Count);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // 2- Unsynched lyrics
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
+            t = new Track(testFileLocation);
+
+            Assert.IsTrue(t.Lyrics.UnsynchronizedLyrics.Length > 0);
+
+            t.Lyrics = null;
+            t.Save();
+
+            t = new Track(testFileLocation);
+            Assert.IsTrue(0 == t.Lyrics.UnsynchronizedLyrics.Length);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1276,6 +1313,12 @@ namespace ATL.test.IO
                 fs.Read(buffer, 0, 4);
                 return StreamUtils.DecodeBEInt32(buffer);
             }
+        }
+
+        [TestMethod]
+        public void VersionExists()
+        {
+            Assert.IsTrue(ATL.Version.getVersion().Length > 0);
         }
     }
 }

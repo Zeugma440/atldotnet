@@ -427,7 +427,10 @@ namespace ATL
             }
 
             if (targetData.Lyrics != null)
-                Lyrics = new LyricsInfo(targetData.Lyrics);
+            {
+                if (targetData.Lyrics.IsMarkedForRemoval) Lyrics = null;
+                else Lyrics = new LyricsInfo(targetData.Lyrics);
+            }
 
             DurationMs = targetData.DurationMs;
         }

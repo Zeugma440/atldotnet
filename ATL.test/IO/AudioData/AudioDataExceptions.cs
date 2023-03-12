@@ -33,7 +33,7 @@ namespace ATL.test.IO
                 IList<LogItem> logItems = log.GetAllItems(logLevel);
                 Assert.IsTrue(logItems.Count > 0);
                 bool found = false;
-                foreach(LogItem l in logItems)
+                foreach (LogItem l in logItems)
                 {
                     if (l.Message.Contains(atomCaption + " atom could not be found")) found = true;
                 }
@@ -47,9 +47,9 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_X_MP4()
         {
-            audio_X_MP4_Atom("mp4.m4a","moov");
+            audio_X_MP4_Atom("mp4.m4a", "moov");
             audio_X_MP4_Atom("mp4.m4a", "mvhd");
-//            audio_X_MP4_Atom("mp4.m4a", "trak", Log.LV_DEBUG);
+            //            audio_X_MP4_Atom("mp4.m4a", "trak", Log.LV_DEBUG);
             audio_X_MP4_Atom("mp4.m4a", "mdia", Log.LV_DEBUG);
             audio_X_MP4_Atom("mp4.m4a", "hdlr", Log.LV_DEBUG, "mdia.hdlr");
             audio_X_MP4_Atom("mp4.m4a", "minf", Log.LV_DEBUG, "mdia.minf");
