@@ -252,6 +252,7 @@ namespace ATL.test.IO
         {
             testGenericAudio("WAV/wav.wav", 7646, 1411, 16, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Windows PCM)", 44, 1348720);
             testGenericAudio("WAV/rifx.wav", 150, 2117, 24, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 39690);
+            testGenericAudio("WAV/cortissimo.wav", 187, 6144, 32, 96000, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 143544);
         }
 
         [TestMethod]

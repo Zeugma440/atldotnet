@@ -206,7 +206,7 @@ namespace ATL.AudioData.IO
 
         public static bool IsValidHeader(byte[] data)
         {
-            return StreamUtils.ArrBeginsWith(data, HEADER_RIFF) || StreamUtils.ArrBeginsWith(data, HEADER_RIFX);
+            return StreamUtils.ArrBeginsWith(data, HEADER_RIFF) || StreamUtils.ArrBeginsWith(data, HEADER_RIFX) || StreamUtils.ArrBeginsWith(data, HEADER_RF64);
         }
 
         private bool readWAV(Stream source, ReadTagParams readTagParams)
