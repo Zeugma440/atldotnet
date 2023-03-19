@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
+using Commons;
 using System;
 using System.IO;
 
@@ -30,7 +31,7 @@ namespace ATL.benchmark
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            writeAt(@"D:\temp\m4a-mp4\160\LongBook-Orig.mp4");
+            info(@"D:\temp\wav\185\Largo.WAV");
 
             //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
@@ -132,9 +133,12 @@ namespace ATL.benchmark
             ConsoleLogger logger = new ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
 
-            AudioData.IAudioDataIO dataIO = ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(filePath);
+            Track t = new Track(filePath);
 
-            Console.WriteLine(">>> WRITE : END");
+            Console.WriteLine(t.Path + "......." + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
+            Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year);
+
+            Console.WriteLine(">>> INFO : END");
 
             Console.ReadLine();
         }
