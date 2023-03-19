@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
             return result.ToString();
         }
 
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
+        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             IList<string> position = new List<string>();
             position.Add("ixml");

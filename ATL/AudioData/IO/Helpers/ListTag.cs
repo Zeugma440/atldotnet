@@ -21,7 +21,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_NOTE = "note";
         private const string CHUNK_LABELED_TEXT = "ltxt";
 
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
+        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             long position = source.Position;
             long initialPos = position;
@@ -38,7 +38,7 @@ namespace ATL.AudioData.IO
             else if (typeId.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) readDataListPurpose(source, meta, readTagParams, maxPos);
         }
 
-        private static void readInfoPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize, long maxPos)
+        private static void readInfoPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize, long maxPos)
         {
             byte[] data = new byte[chunkSize];
             string key, value;

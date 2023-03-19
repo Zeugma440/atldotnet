@@ -43,7 +43,7 @@ namespace ATL.AudioData.IO
         /// <param name="meta">Metadata I/O to copy metadata to</param>
         /// <param name="readTagParams">Read parameters to use</param>
         /// <param name="chunkSize">Size of the chunk to read</param>
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, uint chunkSize)
+        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             if (chunkSize <= 4) return;
             byte[] data = new byte[chunkSize - 4];
