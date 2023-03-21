@@ -167,19 +167,6 @@ namespace ATL.AudioData.IO
                 r.Read(LacingValues, 0, Segments);
             }
 
-            public void ReadFromStream(BufferedBinaryReader r)
-            {
-                ID = r.ReadBytes(4);
-                StreamVersion = r.ReadByte();
-                TypeFlag = r.ReadByte();
-                AbsolutePosition = r.ReadUInt64();
-                StreamId = r.ReadInt32();
-                PageNumber = r.ReadInt32();
-                Checksum = r.ReadUInt32();
-                Segments = r.ReadByte();
-                LacingValues = r.ReadBytes(Segments);
-            }
-
             public void WriteToStream(Stream w)
             {
                 StreamUtils.WriteBytes(w, ID);
@@ -384,7 +371,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Read total samples of OGG file, which are located on the very last page of the file
-        private ulong getSamples(BufferedBinaryReader source)
+        private ulong getSamples(Stream source)
         {
             byte typeFlag;
             byte[] lacingValues = new byte[255];
@@ -413,6 +400,7 @@ namespace ATL.AudioData.IO
             }
             source.Seek(-4, SeekOrigin.Current);
 
+            byte[] buffer = new byte[8];
             // Iterate until last page is encountered
             do
             {
@@ -422,12 +410,14 @@ namespace ATL.AudioData.IO
                 }
 
                 source.Seek(nextPageOffset, SeekOrigin.Current);
-                if (StreamUtils.ArrEqualsArr(source.ReadBytes(4), OGG_PAGE_ID))
+                source.Read(buffer, 0, 4);
+                if (StreamUtils.ArrBeginsWith(buffer, OGG_PAGE_ID))
                 {
-                    source.Seek(1, SeekOrigin.Current);
-                    typeFlag = source.ReadByte();
+                    source.Read(buffer, 0, 2);
+                    typeFlag = buffer[1];
                     source.Seek(20, SeekOrigin.Current);
-                    nbLacingValues = source.ReadByte();
+                    source.Read(buffer, 0, 1);
+                    nbLacingValues = buffer[0];
                     nextPageOffset = 0;
                     source.Read(lacingValues, 0, nbLacingValues);
                     for (int i = 0; i < nbLacingValues; i++)
@@ -446,11 +436,12 @@ namespace ATL.AudioData.IO
 
             // Stream is positioned at the end of the last page header; backtracking to read AbsolutePosition field
             source.Seek(-nbLacingValues - 21, SeekOrigin.Current);
+            source.Read(buffer, 0, 8);
 
-            return source.ReadUInt64();
+            return StreamUtils.DecodeUInt64(buffer);
         }
 
-        private bool getInfo(BufferedBinaryReader source, FileInfo info, ReadTagParams readTagParams)
+        private bool getInfo(Stream source, FileInfo info, ReadTagParams readTagParams)
         {
             IList<long> pageOffsets = new List<long>();
             IDictionary<int, MemoryStream> bitstreams = new Dictionary<int, MemoryStream>();
@@ -489,7 +480,7 @@ namespace ATL.AudioData.IO
                         pageCount.Add(pageHeader.StreamId, 1);
                     }
 
-                    if (pageCount[pageHeader.StreamId] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
+                    if (pageCount[pageHeader.StreamId] < 3) StreamUtils.CopyStream(source, stream, pageHeader.GetPageSize());
                 } while (pageCount[pageHeader.StreamId] < 3);
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
@@ -742,12 +733,10 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
 
-            BufferedBinaryReader reader = new BufferedBinaryReader(source);
-
             if (readTagParams.ReadTag && null == vorbisTag) createVorbisTag(true, true, true, true);
             info.Reset();
 
-            if (getInfo(reader, info, readTagParams))
+            if (getInfo(source, info, readTagParams))
             {
                 if (contents.Equals(CONTENTS_VORBIS))
                 {
