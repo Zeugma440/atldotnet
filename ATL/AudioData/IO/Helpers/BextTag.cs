@@ -18,6 +18,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const string CHUNK_BEXT = "bext";
 
+        private static readonly byte[] CR_LF = new byte[2] { 13, 10 };
+
         /// <summary>
         /// Read a bext chunk from the given source into the given Metadata I/O, using the given read parameters
         /// </summary>
@@ -103,7 +105,7 @@ namespace ATL.AudioData.IO
 
             // CodingHistory
             long initialPos = source.Position;
-            if (StreamUtils.FindSequence(source, new byte[2] { 13, 10 } /* CR LF */ ))
+            if (StreamUtils.FindSequence(source, CR_LF))
             {
                 long endPos = source.Position - 2;
                 source.Seek(initialPos, SeekOrigin.Begin);
