@@ -22,6 +22,8 @@ namespace ATL.AudioData.IO
     ///   1. CRC's : Current implementation does not test OGG page header CRC's
     ///   2. Page numbers : Current implementation does not test page numbers consistency
     ///   3. Writing metadata is not supported yet on embedded FLAC files
+    ///   4. When the file has multiple bitstreams, only those whose headers 
+    ///   are positioned at the beginning of the file are detected
     /// 
     /// </summary>
 	class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
@@ -81,39 +83,15 @@ namespace ATL.AudioData.IO
 
 
 
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return sampleRate; }
-        }
-        public ushort BitRateNominal // Nominal bit rate
-        {
-            get { return bitRateNominal; }
-        }
-        public bool Valid // True if file valid
-        {
-            get { return isValid(); }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return getBitRate(); }
-        }
+        public int SampleRate => sampleRate;
+        public ushort BitRateNominal => bitRateNominal;
+        public bool Valid => isValid();
+        public string FileName => filePath;
+        public double BitRate => getBitRate();
         public int BitDepth => bits; // Only for embedded FLAC
-        public double Duration
-        {
-            get { return getDuration(); }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsVBR
-        {
-            get { return contents != CONTENTS_FLAC; }
-        }
+        public double Duration => getDuration();
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public bool IsVBR => contents != CONTENTS_FLAC;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -459,8 +437,15 @@ namespace ATL.AudioData.IO
 
             try
             {
-                // Reads all Vorbis pages that describe metadata (i.e. Identification, Comment and Setup packets)
+                // Reads all Vorbis pages that describe bitstream metadata (i.e. Identification, Comment and Setup packets)
                 // and concatenate their content into a single, continuous data stream
+                //
+                // As per OGG specs :
+                //   - ID packet is alone on the 1st single page of its stream
+                //   - Comment and Setup packets are together on the 2nd set of pages and may share its last page
+                //   - Audio data starts on a fresh page
+                //
+                // NB : Only detects bitstream headers positioned at the beginning of the file
                 OggPageHeader pageHeader;
                 source.Seek(0, SeekOrigin.Begin);
                 do
@@ -490,7 +475,7 @@ namespace ATL.AudioData.IO
                     }
 
                     if (pageCount[pageHeader.StreamId] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
-                } while (pageCount[pageHeader.StreamId] < 3);
+                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first sets of pages (containing ID, Comment and Setup packet) have been scanned
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
