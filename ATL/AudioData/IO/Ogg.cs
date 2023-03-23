@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -439,8 +440,8 @@ namespace ATL.AudioData.IO
             IDictionary<int, MemoryStream> bitstreams = new Dictionary<int, MemoryStream>();
             IDictionary<int, int> pageCount = new Dictionary<int, int>();
             IDictionary<int, bool> isSupported = new Dictionary<int, bool>();
+            IDictionary<int, bool> multiPagecommentPacket = new Dictionary<int, bool>();
             bool isValidHeader = false;
-            int totalPageCount = 0;
 
             try
             {
@@ -449,7 +450,7 @@ namespace ATL.AudioData.IO
                 //
                 // As per OGG specs :
                 //   - ID packet is alone on the 1st single page of its stream
-                //   - Comment and Setup packets are together on the 2nd page and may share its last page segment
+                //   - Comment and Setup packets are together on the 2nd page and may share its last sub-page
                 //   - Audio data starts on a fresh page
                 //
                 // NB : Only detects bitstream headers positioned at the beginning of the file
@@ -460,8 +461,9 @@ namespace ATL.AudioData.IO
                     pageOffsets.Add(source.Position);
 
                     pageHeader = OggPageHeader.ReadFromStream(source);
+                    int pageSize = pageHeader.GetPageSize();
 
-                    if (bitstreams.ContainsKey(pageHeader.StreamId))
+                    if (pageCount.ContainsKey(pageHeader.StreamId))
                     {
                         if (pageHeader.IsFirstPage())
                         {
@@ -470,22 +472,44 @@ namespace ATL.AudioData.IO
                             if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
                             else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
                         }
-                        if (isSupported[pageHeader.StreamId] && pageCount[pageHeader.StreamId] < 3)
+                        if (isSupported[pageHeader.StreamId] && 2 == pageCount[pageHeader.StreamId]) // Comment packet
                         {
-                            MemoryStream stream = bitstreams[pageHeader.StreamId];
-                            stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
+                            // Load all Comment packet sub-pages into a MemoryStream to read them later in one go
+                            // NB : Detection does not work when the 1st subpage of many uses less than 255 segments
+                            // or when there is only one subpage that actually takes up 255 segments
+                            if (pageHeader.Segments == 255 || multiPagecommentPacket[pageHeader.StreamId])
+                            {
+                                multiPagecommentPacket[pageHeader.StreamId] = true;
+                                MemoryStream stream;
+                                if (bitstreams.ContainsKey(pageHeader.StreamId)) stream = bitstreams[pageHeader.StreamId];
+                                else
+                                {
+                                    stream = new MemoryStream();
+                                    bitstreams[pageHeader.StreamId] = stream;
+                                }
+                                stream.Write(source.ReadBytes(pageSize), 0, pageSize);
+                            }
+                            else // Read Comment packet page directly
+                            {
+                                readCommentPacket(source, contents, vorbisTag, readTagParams);
+                            }
                         }
                     }
                     else // 1st page of a new stream
                     {
-                        bitstreams[pageHeader.StreamId] = new MemoryStream();
                         pageCount[pageHeader.StreamId] = 1;
+                        multiPagecommentPacket[pageHeader.StreamId] = false;
                         // The very first page of any given stream is its Identification packet
-                        isSupported[pageHeader.StreamId] = readIdentificationPacket(source);
+                        bool supported = readIdentificationPacket(source);
+                        isSupported[pageHeader.StreamId] = supported;
+                        if (supported)
+                        {
+                            info.AudioStreamId = pageHeader.StreamId;
+                            isValidHeader = true;
+                        }
                     }
-                    source.Seek(pageHeader.Offset + pageHeader.GetHeaderSize() + pageHeader.GetPageSize(), SeekOrigin.Begin);
-                    totalPageCount++;
-                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first page (containing ID, Comment and Setup packets) have been scanned
+                    source.Seek(pageHeader.Offset + pageHeader.GetHeaderSize() + pageSize, SeekOrigin.Begin);
+                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first pages (containing ID, Comment and Setup packets) have been scanned
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -540,12 +564,9 @@ namespace ATL.AudioData.IO
                 // Get total number of samples
                 info.Samples = getSamples(source);
 
-                // Read through all streams to detect audio ones
-                foreach (KeyValuePair<int, MemoryStream> kvp in bitstreams)
+                // Read metadata from Comment pages that span over multiple segments
+                foreach (var kvp in bitstreams)
                 {
-                    if (!isSupported[kvp.Key]) continue;
-                    isValidHeader = true;
-                    info.AudioStreamId = kvp.Key;
                     using (BufferedBinaryReader reader = new BufferedBinaryReader(kvp.Value))
                     {
                         reader.Position = 0;
@@ -555,7 +576,7 @@ namespace ATL.AudioData.IO
             }
             finally
             {
-                // Liberate all resources
+                // Liberate all MemoryStreams
                 foreach (KeyValuePair<int, MemoryStream> entry in bitstreams)
                 {
                     entry.Value.Close();
