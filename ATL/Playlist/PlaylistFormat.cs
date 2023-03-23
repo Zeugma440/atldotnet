@@ -71,23 +71,25 @@
         /// <param name="ID">Format ID</param>
         /// <param name="iName">Format name</param>
 
-        public PlaylistFormat(int ID, string iName) : base(ID, iName) { }
+        public PlaylistFormat(int ID, string iName)
+        {
+            init(ID, iName);
+        }
 
         /// <summary>
         /// Instanciate a new PlaylistFormat by copying the given PlaylistFormat's attributes
         /// </summary>
         /// <param name="f">PlaylistFormat object to copy attributes from</param>
-        public PlaylistFormat(PlaylistFormat f) : base(f) { }
-
-        /// <summary>
-        /// Copy the attributes of the given Format object
-        /// </summary>
-        /// <param name="iFormat">Format object to copy attributes from</param>
-        protected override void copyFrom(Format iFormat)
+        public PlaylistFormat(PlaylistFormat f)
         {
-            base.copyFrom(iFormat);
-            LocationFormat = ((PlaylistFormat)iFormat).LocationFormat;
-            Encoding = ((PlaylistFormat)iFormat).Encoding;
+            copyFrom(f);
+        }
+
+        private void copyFrom(PlaylistFormat f)
+        {
+            base.copyFrom(f);
+            LocationFormat = f.LocationFormat;
+            Encoding = f.Encoding;
         }
 
         /// <summary>
@@ -95,7 +97,7 @@
         /// </summary>
         /// <param name="id">Format ID</param>
         /// <param name="name">Format name</param>
-        protected override void init(int id, string name)
+        protected void init(int id, string name)
         {
             base.init(id, name);
             LocationFormat = LocationFormatting.FilePath;

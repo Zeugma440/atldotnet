@@ -10,7 +10,9 @@ namespace ATL
     {
         private readonly IProgress<float> progress = null;
         private readonly Action<float> actionProgress = null;
+#pragma warning disable S4487 // Unread "private" fields should be removed (field is used for debugging / logging purposes)
         private readonly string name;
+#pragma warning restore S4487
         private float minProgressBound = 0f;
         private float resolution;
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -54,30 +55,22 @@ namespace ATL
             copyFrom(f);
         }
 
+        public Format() { }
+
         /// <summary>
         /// Integrate data from the given Format object
         /// </summary>
-        /// <param name="iFormat">Format to copy data from</param>
-        protected virtual void copyFrom(Format iFormat)
+        /// <param name="f">Format to copy data from</param>
+        protected void copyFrom(Format f)
         {
-            ID = iFormat.ID;
-            Name = iFormat.Name;
-            ShortName = iFormat.ShortName;
-            mimeList = new Dictionary<string, int>(iFormat.mimeList);
-            extList = new Dictionary<string, int>(iFormat.extList);
-            Readable = iFormat.Readable;
-            CheckHeader = iFormat.CheckHeader;
-            SearchHeader = iFormat.SearchHeader;
-        }
-
-        /// <summary>
-        /// Initialize the object from its parts
-        /// </summary>
-        /// <param name="id">Unique ID</param>
-        /// <param name="name">Name</param>
-        protected virtual void init(int id, string name)
-        {
-            init(id, name, "");
+            ID = f.ID;
+            Name = f.Name;
+            ShortName = f.ShortName;
+            mimeList = new Dictionary<string, int>(f.mimeList);
+            extList = new Dictionary<string, int>(f.extList);
+            Readable = f.Readable;
+            CheckHeader = f.CheckHeader;
+            SearchHeader = f.SearchHeader;
         }
 
         /// <summary>
@@ -86,12 +79,12 @@ namespace ATL
         /// <param name="id">Unique ID</param>
         /// <param name="name">Name</param>
         /// <param name="shortName">Short name</param>
-        protected virtual void init(int id, string name, string shortName)
+        protected void init(int id, string name, string shortName = "")
         {
-            this.ID = id;
-            this.Name = name;
-            this.ShortName = (0 == shortName.Length) ? name : shortName;
-            this.Readable = true;
+            ID = id;
+            Name = name;
+            ShortName = (0 == shortName.Length) ? name : shortName;
+            Readable = true;
             extList = new Dictionary<string, int>();
             mimeList = new Dictionary<string, int>();
         }
