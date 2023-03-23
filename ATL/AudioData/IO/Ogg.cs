@@ -3,7 +3,6 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
@@ -40,28 +39,28 @@ namespace ATL.AudioData.IO
         private static readonly byte[] OGG_PAGE_ID = Utils.Latin1Encoding.GetBytes("OggS");
 
         // Vorbis identification packet (frame) ID
-        private static readonly string VORBIS_HEADER_ID = (char)1 + "vorbis";
+        private static readonly byte[] VORBIS_HEADER_ID = new byte[] { 1, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 1 + "vorbis"
 
         // Vorbis comment (tags) packet (frame) ID
-        private static readonly string VORBIS_COMMENT_ID = (char)3 + "vorbis";
+        private static readonly byte[] VORBIS_COMMENT_ID = new byte[] { 3, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 3 + "vorbis"
 
         // Vorbis setup packet (frame) ID
-        private static readonly string VORBIS_SETUP_ID = (char)5 + "vorbis";
+        private static readonly byte[] VORBIS_SETUP_ID = new byte[] { 5, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 5 + "vorbis"
 
 
         // Theora identification packet (frame) ID
-        private static readonly string THEORA_HEADER_ID = (char)0x80 + "theora";
+        private static readonly byte[] THEORA_HEADER_ID = new byte[] { 0x80, 0x74, 0x68, 0x65, 0x6F, 0x72, 0x61 }; // 0x80 + "theora"
 
 
         // Opus parameter frame ID
-        private const string OPUS_HEADER_ID = "OpusHead";
+        private static readonly byte[] OPUS_HEADER_ID = Utils.Latin1Encoding.GetBytes("OpusHead");
 
         // Opus tag frame ID
-        private const string OPUS_TAG_ID = "OpusTags";
+        private static readonly byte[] OPUS_TAG_ID = Utils.Latin1Encoding.GetBytes("OpusTags");
 
 
         // FLAC identification packet (frame) ID
-        private static readonly string FLAC_HEADER_ID = (char)0x7f + "FLAC";
+        private static readonly byte[] FLAC_HEADER_ID = new byte[] { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
 
@@ -104,11 +103,12 @@ namespace ATL.AudioData.IO
             public byte StreamVersion;                           // Stream structure version
             public byte TypeFlag;                                        // Header type flag
             public ulong AbsolutePosition;                      // Absolute granule position
-            public int StreamId;                                       // Stream serial number
+            public int StreamId;                                     // Stream serial number
             public int PageNumber;                                   // Page sequence number
             public uint Checksum;                                              // Page CRC32
             public byte Segments;                                 // Number of page segments
             public byte[] LacingValues;                     // Lacing values - segment sizes
+            public long Offset;                                             // Header offset
 
             public OggPageHeader(int streamId = 0)
             {
@@ -119,10 +119,12 @@ namespace ATL.AudioData.IO
                 StreamId = streamId;
                 PageNumber = 1;
                 Checksum = 0;
+                Offset = 0;
             }
 
             public void ReadFromStream(Stream r)
             {
+                Offset = r.Position;
                 byte[] buffer = new byte[8];
                 r.Read(buffer, 0, 4);
                 ID = new byte[4];
@@ -145,17 +147,20 @@ namespace ATL.AudioData.IO
                 r.Read(LacingValues, 0, Segments);
             }
 
-            public void ReadFromStream(BufferedBinaryReader r)
+            public static OggPageHeader ReadFromStream(BufferedBinaryReader r)
             {
-                ID = r.ReadBytes(4);
-                StreamVersion = r.ReadByte();
-                TypeFlag = r.ReadByte();
-                AbsolutePosition = r.ReadUInt64();
-                StreamId = r.ReadInt32();
-                PageNumber = r.ReadInt32();
-                Checksum = r.ReadUInt32();
-                Segments = r.ReadByte();
-                LacingValues = r.ReadBytes(Segments);
+                OggPageHeader result = new OggPageHeader();
+                result.Offset = r.Position;
+                result.ID = r.ReadBytes(4);
+                result.StreamVersion = r.ReadByte();
+                result.TypeFlag = r.ReadByte();
+                result.AbsolutePosition = r.ReadUInt64();
+                result.StreamId = r.ReadInt32();
+                result.PageNumber = r.ReadInt32();
+                result.Checksum = r.ReadUInt32();
+                result.Segments = r.ReadByte();
+                result.LacingValues = r.ReadBytes(result.Segments);
+                return result;
             }
 
             public void WriteToStream(Stream w)
@@ -173,12 +178,12 @@ namespace ATL.AudioData.IO
 
             public int GetPageSize()
             {
-                int length = 0;
+                int result = 0;
                 for (int i = 0; i < Segments; i++)
                 {
-                    length += LacingValues[i];
+                    result += LacingValues[i];
                 }
-                return length;
+                return result;
             }
 
             public int GetHeaderSize()
@@ -201,7 +206,7 @@ namespace ATL.AudioData.IO
         // Vorbis parameter header
         private sealed class VorbisHeader
         {
-            public String ID;
+            public byte[] ID;
             public byte[] BitstreamVersion = new byte[4];  // Bitstream version number
             public byte ChannelMode;                             // Number of channels
             public int SampleRate;                                 // Sample rate (hz)
@@ -213,7 +218,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                ID = "";
+                ID = new byte[0];
                 Array.Clear(BitstreamVersion, 0, BitstreamVersion.Length);
                 ChannelMode = 0;
                 SampleRate = 0;
@@ -228,7 +233,7 @@ namespace ATL.AudioData.IO
         // Opus parameter header
         private sealed class OpusHeader
         {
-            public string ID;
+            public byte[] ID;
             public byte Version;
             public byte OutputChannelCount;
             public UInt16 PreSkip;
@@ -242,7 +247,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                ID = "";
+                ID = new byte[0];
                 Version = 0;
                 OutputChannelCount = 0;
                 PreSkip = 0;
@@ -433,7 +438,9 @@ namespace ATL.AudioData.IO
             IList<long> pageOffsets = new List<long>();
             IDictionary<int, MemoryStream> bitstreams = new Dictionary<int, MemoryStream>();
             IDictionary<int, int> pageCount = new Dictionary<int, int>();
+            IDictionary<int, bool> isSupported = new Dictionary<int, bool>();
             bool isValidHeader = false;
+            int totalPageCount = 0;
 
             try
             {
@@ -442,7 +449,7 @@ namespace ATL.AudioData.IO
                 //
                 // As per OGG specs :
                 //   - ID packet is alone on the 1st single page of its stream
-                //   - Comment and Setup packets are together on the 2nd set of pages and may share its last page
+                //   - Comment and Setup packets are together on the 2nd page and may share its last page segment
                 //   - Audio data starts on a fresh page
                 //
                 // NB : Only detects bitstream headers positioned at the beginning of the file
@@ -452,13 +459,10 @@ namespace ATL.AudioData.IO
                 {
                     pageOffsets.Add(source.Position);
 
-                    pageHeader = new OggPageHeader();
-                    pageHeader.ReadFromStream(source);
+                    pageHeader = OggPageHeader.ReadFromStream(source);
 
-                    MemoryStream stream;
                     if (bitstreams.ContainsKey(pageHeader.StreamId))
                     {
-                        stream = bitstreams[pageHeader.StreamId];
                         if (pageHeader.IsFirstPage())
                         {
                             int newPageCount = pageCount[pageHeader.StreamId] + 1;
@@ -466,16 +470,22 @@ namespace ATL.AudioData.IO
                             if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
                             else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
                         }
+                        if (isSupported[pageHeader.StreamId] && pageCount[pageHeader.StreamId] < 3)
+                        {
+                            MemoryStream stream = bitstreams[pageHeader.StreamId];
+                            stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
+                        }
                     }
-                    else
+                    else // 1st page of a new stream
                     {
-                        stream = new MemoryStream();
-                        bitstreams.Add(pageHeader.StreamId, stream);
-                        pageCount.Add(pageHeader.StreamId, 1);
+                        bitstreams[pageHeader.StreamId] = new MemoryStream();
+                        pageCount[pageHeader.StreamId] = 1;
+                        // The very first page of any given stream is its Identification packet
+                        isSupported[pageHeader.StreamId] = readIdentificationPacket(source);
                     }
-
-                    if (pageCount[pageHeader.StreamId] < 3) stream.Write(source.ReadBytes(pageHeader.GetPageSize()), 0, pageHeader.GetPageSize());
-                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first sets of pages (containing ID, Comment and Setup packet) have been scanned
+                    source.Seek(pageHeader.Offset + pageHeader.GetHeaderSize() + pageHeader.GetPageSize(), SeekOrigin.Begin);
+                    totalPageCount++;
+                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first page (containing ID, Comment and Setup packets) have been scanned
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -486,7 +496,7 @@ namespace ATL.AudioData.IO
                     {
                         // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
                         if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
-                        if (StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(VORBIS_SETUP_ID)))
+                        if (StreamUtils.FindSequence(source, VORBIS_SETUP_ID))
                         {
                             info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
                             info.CommentHeaderEnd = info.SetupHeaderStart;
@@ -533,17 +543,12 @@ namespace ATL.AudioData.IO
                 // Read through all streams to detect audio ones
                 foreach (KeyValuePair<int, MemoryStream> kvp in bitstreams)
                 {
-                    using (BinaryReader reader = new BinaryReader(kvp.Value))
+                    if (!isSupported[kvp.Key]) continue;
+                    isValidHeader = true;
+                    info.AudioStreamId = kvp.Key;
+                    using (BufferedBinaryReader reader = new BufferedBinaryReader(kvp.Value))
                     {
-                        reader.BaseStream.Position = 0;
-
-                        bool isSupported = readIdentificationPacket(reader);
-                        if (!isSupported) continue;
-
-                        isValidHeader = true;
-
-                        info.AudioStreamId = kvp.Key;
-
+                        reader.Position = 0;
                         readCommentPacket(reader, contents, vorbisTag, readTagParams);
                     }
                 }
@@ -564,19 +569,19 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, OGG_PAGE_ID);
         }
 
-        private bool readIdentificationPacket(BinaryReader source)
+        private bool readIdentificationPacket(BufferedBinaryReader source)
         {
             bool isSupportedHeader = false;
-            long initialOffset = source.BaseStream.Position;
+            long initialOffset = source.Position;
 
-            string headerStart = Utils.Latin1Encoding.GetString(source.ReadBytes(3));
-            source.BaseStream.Seek(initialOffset, SeekOrigin.Begin);
+            byte[] headerStart = source.ReadBytes(3);
+            source.Seek(initialOffset, SeekOrigin.Begin);
 
-            if (VORBIS_HEADER_ID.StartsWith(headerStart))
+            if (StreamUtils.ArrBeginsWith(VORBIS_HEADER_ID, headerStart))
             {
                 contents = CONTENTS_VORBIS;
-                info.VorbisParameters.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(7));
-                isSupportedHeader = VORBIS_HEADER_ID.Equals(info.VorbisParameters.ID);
+                info.VorbisParameters.ID = source.ReadBytes(7);
+                isSupportedHeader = StreamUtils.ArrBeginsWith(info.VorbisParameters.ID, VORBIS_HEADER_ID);
 
                 info.VorbisParameters.BitstreamVersion = source.ReadBytes(4);
                 info.VorbisParameters.ChannelMode = source.ReadByte();
@@ -587,17 +592,17 @@ namespace ATL.AudioData.IO
                 info.VorbisParameters.BlockSize = source.ReadByte();
                 info.VorbisParameters.StopFlag = source.ReadByte();
             }
-            else if (OPUS_HEADER_ID.StartsWith(headerStart))
+            else if (StreamUtils.ArrBeginsWith(OPUS_HEADER_ID, headerStart))
             {
                 contents = CONTENTS_OPUS;
-                info.OpusParameters.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(8));
-                isSupportedHeader = OPUS_HEADER_ID.Equals(info.OpusParameters.ID);
+                info.OpusParameters.ID = source.ReadBytes(8);
+                isSupportedHeader = StreamUtils.ArrBeginsWith(info.OpusParameters.ID, OPUS_HEADER_ID);
 
                 info.OpusParameters.Version = source.ReadByte();
                 info.OpusParameters.OutputChannelCount = source.ReadByte();
                 info.OpusParameters.PreSkip = source.ReadUInt16();
                 info.OpusParameters.InputSampleRate = 48000; // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
-                source.BaseStream.Seek(4, SeekOrigin.Current);
+                source.Seek(4, SeekOrigin.Current);
                 info.OpusParameters.OutputGain = source.ReadInt16();
 
                 info.OpusParameters.ChannelMappingFamily = source.ReadByte();
@@ -614,35 +619,35 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            else if (FLAC_HEADER_ID.StartsWith(headerStart))
+            else if (StreamUtils.ArrBeginsWith(FLAC_HEADER_ID, headerStart))
             {
                 contents = CONTENTS_FLAC;
-                source.BaseStream.Seek(FLAC_HEADER_ID.Length, SeekOrigin.Current); // Skip the entire FLAC segment header
-                source.BaseStream.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
+                source.Seek(FLAC_HEADER_ID.Length, SeekOrigin.Current); // Skip the entire FLAC segment header
+                source.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
                 short nbHeaderPackets = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
-                info.FlacParameters = FlacHelper.readHeader(source.BaseStream);
+                info.FlacParameters = FlacHelper.readHeader(source);
                 isSupportedHeader = info.FlacParameters.IsValid();
             }
-            else if (THEORA_HEADER_ID.StartsWith(headerStart))
+            else if (StreamUtils.ArrBeginsWith(THEORA_HEADER_ID, headerStart))
             {
-                // ATL doesn't support video data; stop examining this bitstream
+                // ATL doesn't support video data; don't examine this bitstream
             }
             return isSupportedHeader;
         }
 
-        private static void readCommentPacket(BinaryReader source, int contentType, VorbisTag tag, ReadTagParams readTagParams)
+        private static void readCommentPacket(BufferedBinaryReader source, int contentType, VorbisTag tag, ReadTagParams readTagParams)
         {
-            string tagId;
+            byte[] tagId;
             bool isValidTagHeader = false;
             if (contentType.Equals(CONTENTS_VORBIS))
             {
-                tagId = Utils.Latin1Encoding.GetString(source.ReadBytes(7));
-                isValidTagHeader = VORBIS_COMMENT_ID.Equals(tagId);
+                tagId = source.ReadBytes(7);
+                isValidTagHeader = StreamUtils.ArrBeginsWith(tagId, VORBIS_COMMENT_ID);
             }
             else if (contentType.Equals(CONTENTS_OPUS))
             {
-                tagId = Utils.Latin1Encoding.GetString(source.ReadBytes(8));
-                isValidTagHeader = OPUS_TAG_ID.Equals(tagId);
+                tagId = source.ReadBytes(8);
+                isValidTagHeader = StreamUtils.ArrBeginsWith(tagId, OPUS_TAG_ID);
             }
             else if (contentType.Equals(CONTENTS_FLAC))
             {
@@ -655,7 +660,7 @@ namespace ATL.AudioData.IO
             if (isValidTagHeader)
             {
                 tag.Clear();
-                tag.Read(source.BaseStream, readTagParams);
+                tag.Read(source, readTagParams);
             }
         }
 
@@ -785,9 +790,9 @@ namespace ATL.AudioData.IO
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
-                    memStream.Write(Utils.Latin1Encoding.GetBytes(VORBIS_COMMENT_ID), 0, VORBIS_COMMENT_ID.Length);
+                    memStream.Write(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
                 else if (CONTENTS_OPUS == contents)
-                    memStream.Write(Utils.Latin1Encoding.GetBytes(OPUS_TAG_ID), 0, OPUS_TAG_ID.Length);
+                    memStream.Write(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
 
                 vorbisTag.Write(memStream, tag);
 
@@ -867,9 +872,9 @@ namespace ATL.AudioData.IO
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
-                    await memStream.WriteAsync(Utils.Latin1Encoding.GetBytes(VORBIS_COMMENT_ID), 0, VORBIS_COMMENT_ID.Length);
+                    await memStream.WriteAsync(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
                 else if (CONTENTS_OPUS == contents)
-                    await memStream.WriteAsync(Utils.Latin1Encoding.GetBytes(OPUS_TAG_ID), 0, OPUS_TAG_ID.Length);
+                    await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
 
                 vorbisTag.Write(memStream, tag);
 
