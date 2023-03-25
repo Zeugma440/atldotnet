@@ -17,8 +17,6 @@ namespace ATL.AudioData.IO
 
         private ChannelsArrangement channelsArrangement;
 
-        private string encoder;
-
         private int bits;
         private int sampleRate;
         private double bitrate;
@@ -164,7 +162,6 @@ namespace ATL.AudioData.IO
 
             bits = -1;
             sampleRate = 0;
-            encoder = "";
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -217,6 +214,7 @@ namespace ATL.AudioData.IO
         {
             WavPackHeader4 wvh4 = new WavPackHeader4();
             byte[] EncBuf = new byte[4096];
+            string encoder;
             byte encoderbyte;
 
             bool result = false;
@@ -301,8 +299,9 @@ namespace ATL.AudioData.IO
             FormatChunk fmt;
             bool hasfmt;
             WavpackHeader3 wvh3 = new WavpackHeader3();
-            bool result = false;
             StringBuilder encoderBuilder = new StringBuilder();
+            string encoder;
+            bool result = false;
 
             hasfmt = false;
 
