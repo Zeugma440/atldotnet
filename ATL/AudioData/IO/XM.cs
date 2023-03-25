@@ -50,6 +50,7 @@ namespace ATL.AudioData.IO
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
+        private readonly Format audioFormat;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -58,7 +59,12 @@ namespace ATL.AudioData.IO
         public bool IsVBR => false;
         public Format AudioFormat
         {
-            get;
+            get
+            {
+                Format f = new Format(audioFormat);
+                f.Name = f.Name + " (" + trackerName + ")";
+                return f;
+            }
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
         public string FileName => filePath;
@@ -119,7 +125,7 @@ namespace ATL.AudioData.IO
         public XM(string filePath, Format format)
         {
             this.filePath = filePath;
-            AudioFormat = format;
+            audioFormat = format;
             resetData();
         }
 
@@ -384,8 +390,7 @@ namespace ATL.AudioData.IO
 
             trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20).Trim();
 
-            trackerVersion = bSource.ReadUInt16(); // hi-byte major and low-byte minor
-            trackerName += (trackerVersion << 8) + "." + (trackerVersion & 0xFF00);
+            bSource.Seek(2, SeekOrigin.Current); // Tracker version (unused)
 
             AudioDataOffset = bSource.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;

@@ -210,15 +210,11 @@ namespace ATL.AudioData.IO
         {
             public const int TAG_IN_HEADER = 26;
 
-            public string FormatTag;					// Format tag (should be SPC_FORMAT_TAG)
             public long Size;
             public byte TagInHeader;                    // Set to TAG_IN_HEADER if header contains ID666 info
-            public byte VersionByte;                    // Version mark
 
             public void Reset()
             {
-                FormatTag = "";
-                VersionByte = 0;
                 Size = 0;
             }
         }
@@ -275,7 +271,6 @@ namespace ATL.AudioData.IO
                 source.Seek(8, SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
                 source.Read(buffer, 0, 2);
                 header.TagInHeader = buffer[0];
-                header.VersionByte = buffer[1];
                 header.Size = source.Position - initialPosition;
                 return true;
             }

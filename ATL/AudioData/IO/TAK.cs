@@ -12,16 +12,9 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class TAK : IAudioDataIO
     {
-        // Headers ID
-        public const int TAK_VERSION_100 = 0;
-        public const int TAK_VERSION_210 = 210;
-        public const int TAK_VERSION_220 = 220;
-
         public static readonly byte[] TAK_ID = Utils.Latin1Encoding.GetBytes("tBaK");
 
-
         // Private declarations 
-        private uint formatVersion;
         private uint bits;
         private uint sampleRate;
 
@@ -65,7 +58,6 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             isValid = false;
 
-            formatVersion = 0;
             bits = 0;
             sampleRate = 0;
 
@@ -110,6 +102,7 @@ namespace ATL.AudioData.IO
             uint metaSize;
             long sampleCount = 0;
             int frameSizeType = -1;
+            uint formatVersion;
             byte[] buffer = new byte[4];
 
             this.sizeInfo = sizeInfo;
@@ -162,7 +155,7 @@ namespace ATL.AudioData.IO
                         readData32 = StreamUtils.DecodeUInt32(buffer);
                         formatVersion = 100 * ((readData32 & 0x00ff0000) >> 16);
                         formatVersion += 10 * ((readData32 & 0x0000ff00) >> 8);
-                        formatVersion += (readData32 & 0x000000ff);
+                        formatVersion += readData32 & 0x000000ff;
                     }
 
                     source.Seek(position + metaSize, SeekOrigin.Begin);

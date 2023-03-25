@@ -91,7 +91,6 @@ namespace ATL.AudioData.IO
         private byte nbValidPatterns;
         private string formatTag;
         private byte nbChannels;
-        private string trackerName;
 
         private double bitrate;
         private double duration;
@@ -202,7 +201,6 @@ namespace ATL.AudioData.IO
             FPatternTable = new List<byte>();
             nbValidPatterns = 0;
             formatTag = "";
-            trackerName = "";
             nbChannels = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -427,7 +425,6 @@ namespace ATL.AudioData.IO
             if (modFormats.ContainsKey(formatTag))
             {
                 nbChannels = modFormats[formatTag].NbChannels;
-                trackerName = modFormats[formatTag].Name;
             }
             else // Default
             {

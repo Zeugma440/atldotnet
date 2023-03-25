@@ -114,7 +114,7 @@ namespace ATL.AudioData.IO
 
 
         //version 3 flags
-        private const int MONO_FLAG_v3 = 1;     // not stereo
+        private const int MONO_FLAG_v3 = 1;         // not stereo
         private const int FAST_FLAG_v3 = 2;         // non-adaptive predictor and stereo mode
                                                     //private const 	int 	RAW_FLAG_v3			= 4;   		// raw mode (no .wav header)
                                                     //private const 	int 	CALC_NOISE_v3		= 8;   		// calc noise in lossy mode (no longer stored)

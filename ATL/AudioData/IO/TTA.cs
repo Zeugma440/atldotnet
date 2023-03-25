@@ -8,17 +8,17 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for True Audio files manipulation (extensions : .TTA)
+    /// 
+    /// NB : Only supports TTA1
     /// </summary>
 	class TTA : IAudioDataIO
     {
         private static readonly byte[] TTA_SIGNATURE = Utils.Latin1Encoding.GetBytes("TTA1");
 
         // Private declarations
-        private uint audioFormat;
         private uint bitsPerSample;
         private uint sampleRate;
         private uint samplesSize;
-        private uint cRC32;
 
         private double bitrate;
         private double duration;
@@ -63,11 +63,9 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             isValid = false;
 
-            audioFormat = 0;
             bitsPerSample = 0;
             sampleRate = 0;
             samplesSize = 0;
-            cRC32 = 0;
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -114,8 +112,7 @@ namespace ATL.AudioData.IO
                 AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                source.Read(buffer, 0, 2);
-                audioFormat = StreamUtils.DecodeUInt16(buffer);
+                source.Seek(2, SeekOrigin.Current); // audio format
                 source.Read(buffer, 0, 2);
                 channelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
                 source.Read(buffer, 0, 2);
@@ -124,8 +121,7 @@ namespace ATL.AudioData.IO
                 sampleRate = StreamUtils.DecodeUInt32(buffer);
                 source.Read(buffer, 0, 4);
                 samplesSize = StreamUtils.DecodeUInt32(buffer);
-                source.Read(buffer, 0, 4);
-                cRC32 = StreamUtils.DecodeUInt32(buffer);
+                source.Seek(4, SeekOrigin.Current); // CRC
 
                 bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
                 duration = samplesSize * 1000.0 / sampleRate;

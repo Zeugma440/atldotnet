@@ -44,67 +44,42 @@ namespace ATL.AudioData.IO
 
         private byte initialSpeed;
         private byte initialTempo;
-        private byte nbChannels;
-        private String trackerName;
+        private string trackerName;
         private double bitrate;
         private double duration;
 
         private SizeInfo sizeInfo;
         private readonly string filePath;
+        private readonly Format audioFormat;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return 0; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => 0;
+        public bool IsVBR => false;
         public Format AudioFormat
         {
-            get;
+            get
+            {
+                Format f = new Format(audioFormat);
+                f.Name = f.Name + " (" + trackerName + ")";
+                return f;
+            }
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+        public string FileName => filePath;
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return ChannelsArrangements.STEREO; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
-        }
+        public double Duration => duration;
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();
@@ -144,7 +119,6 @@ namespace ATL.AudioData.IO
             FInstruments = new List<Instrument>();
 
             trackerName = "";
-            nbChannels = 0;
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -155,7 +129,7 @@ namespace ATL.AudioData.IO
         public S3M(string filePath, Format format)
         {
             this.filePath = filePath;
-            AudioFormat = format;
+            audioFormat = format;
             resetData();
         }
 
@@ -399,6 +373,7 @@ namespace ATL.AudioData.IO
             ushort nbOrders = 0;
             ushort nbPatterns = 0;
             ushort nbInstruments = 0;
+            byte nbChannels = 0;
 
             ushort flags;
             ushort trackerVersion;
@@ -417,7 +392,7 @@ namespace ATL.AudioData.IO
             {
                 structureHelper.AddZone(0, 28, new byte[28] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
-            tagData.IntegrateValue(TagData.Field.TITLE, title.Trim());
+            tagData.IntegrateValue(Field.TITLE, title.Trim());
             bSource.Seek(4, SeekOrigin.Current);
 
             AudioDataOffset = bSource.Position;
@@ -490,7 +465,7 @@ namespace ATL.AudioData.IO
             }
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
-            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
+            tagData.IntegrateValue(Field.COMMENT, comment.ToString());
             bitrate = sizeInfo.FileSize / duration;
 
             return result;

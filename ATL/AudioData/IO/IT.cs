@@ -30,9 +30,7 @@ namespace ATL.AudioData.IO
 
 
         // Standard fields
-        private IList<byte> ordersTable;
         private IList<byte> patternTable;
-        private IList<byte> sampleTable;
         private IList<IList<IList<Event>>> patterns;
         private IList<Instrument> instruments;
 
@@ -103,9 +101,7 @@ namespace ATL.AudioData.IO
             duration = 0;
             bitrate = 0;
 
-            ordersTable = new List<byte>();
             patternTable = new List<byte>();
-            sampleTable = new List<byte>();
 
             patterns = new List<IList<IList<Event>>>();
             instruments = new List<Instrument>();

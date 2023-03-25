@@ -206,19 +206,19 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_S3M()
         {
-            testGenericAudio("S3M/empty.s3m", 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 13936, false); // No distinctive header
-            testGenericAudio("S3M/s3m.s3m", 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 626624, false); // No distinctive header
+            testGenericAudio("S3M/empty.s3m", 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (OpenMPT)", 32, 13936, false); // No distinctive header
+            testGenericAudio("S3M/s3m.s3m", 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 626624, false); // No distinctive header
             // This one contains extra instructions
-            testGenericAudio("S3M/s3m2.s3m", 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 17870, false); // No distinctive header
+            testGenericAudio("S3M/s3m2.s3m", 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 17870, false); // No distinctive header
             // This one contains yet other extra instructions
-            testGenericAudio("S3M/s3m3.s3m", 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module", 32, 375488, false); // No distinctive header
+            testGenericAudio("S3M/s3m3.s3m", 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 375488, false); // No distinctive header
         }
 
         [TestMethod]
         public void Audio_XM()
         {
-            testGenericAudio("XM/empty.xm", 55172, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module", 60, 55729);
-            testGenericAudio("XM/xm.xm", 260667, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module", 60, 430062);
+            testGenericAudio("XM/empty.xm", 55172, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module (OpenMPT 1.26.14.00)", 60, 55729);
+            testGenericAudio("XM/xm.xm", 260667, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module (FastTracker v2.00)", 60, 430062);
         }
 
         [TestMethod]

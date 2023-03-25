@@ -78,7 +78,7 @@ namespace ATL.AudioData.IO
             public int Version;                                                // Tag version
             public int Size;                   // Tag size including footer, excluding header
             public int FrameCount;                                        // Number of fields
-            public int Flags;                                                    // Tag flags
+            // Flags (unused)
             public char[] Reserved = new char[8];                  // Reserved for later use
                                                                    // Extended data
             public byte DataShift;                                 // Used if ID3v1 tag found
@@ -88,7 +88,6 @@ namespace ATL.AudioData.IO
             {
                 Array.Clear(ID, 0, ID.Length);
                 Version = 0;
-                Flags = 0;
                 FrameCount = 0;
                 Size = 0;
                 Array.Clear(Reserved, 0, Reserved.Length);
@@ -175,7 +174,7 @@ namespace ATL.AudioData.IO
                 Tag.Version = source.ReadInt32();
                 Tag.Size = source.ReadInt32();
                 Tag.FrameCount = source.ReadInt32();
-                Tag.Flags = source.ReadInt32();
+                source.Seek(4, SeekOrigin.Current); // Flags
                 Tag.Reserved = Utils.Latin1Encoding.GetChars(source.ReadBytes(8));
             }
             else

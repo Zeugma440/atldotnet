@@ -55,7 +55,10 @@ namespace ATL
             copyFrom(f);
         }
 
-        public Format() { }
+        /// <summary>
+        /// Base constructor
+        /// </summary>
+        protected Format() { }
 
         /// <summary>
         /// Integrate data from the given Format object
