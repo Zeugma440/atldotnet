@@ -13,6 +13,8 @@ namespace ATL.AudioData.IO
     /// </summary>
     internal class FileSurgeon
     {
+        private const long BUFFER_LIMIT = 150 * 1024 * 1024; // 150 MB
+
         /// <summary>
         /// Modes for zone block modification
         /// </summary>
@@ -220,7 +222,7 @@ namespace ATL.AudioData.IO
                 MemoryStream buffer = null;
                 try
                 {
-                    if (useBuffer && region.IsBufferable)
+                    if (useBuffer && region.IsBufferable && initialBufferSize < BUFFER_LIMIT)
                     {
                         isBuffered = true;
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
@@ -444,7 +446,7 @@ namespace ATL.AudioData.IO
                 MemoryStream buffer = null;
                 try
                 {
-                    if (useBuffer && region.IsBufferable)
+                    if (useBuffer && region.IsBufferable && initialBufferSize < BUFFER_LIMIT)
                     {
                         isBuffered = true;
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
