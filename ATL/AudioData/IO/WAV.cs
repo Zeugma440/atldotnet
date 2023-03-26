@@ -268,7 +268,7 @@ namespace ATL.AudioData.IO
             bool foundIXml = false;
 
             // Sub-chunks loop
-            // NB : uint.MaxValue is when the size decalred in the traditional 32-bit header is discarded for the RF64 64-bit header
+            // NB : uint.MaxValue is when the size declared in the traditional 32-bit header is discarded for the RF64 64-bit header
             while (source.Position < riffChunkSize + 8 || uint.MaxValue == riffChunkSize)
             {
                 if (paddingSize > 0)
@@ -423,8 +423,8 @@ namespace ATL.AudioData.IO
                     id3v2Offset = source.Position;
 
                     // Zone is already added by Id3v2.Read
-                    id3v2StructureHelper.AddZone(id3v2Offset - 8, (int)(chunkSize + paddingSize + 8), subChunkId);
-                    id3v2StructureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
+                    id3v2StructureHelper.AddZone(id3v2Offset - 8, (int)(chunkSize + paddingSize + 8), CHUNK_ID3);
+                    id3v2StructureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_ID3);
                 }
 
                 source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
