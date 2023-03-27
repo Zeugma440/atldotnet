@@ -8,38 +8,6 @@ namespace ATL.AudioData
     /// </summary>
     public class MetaDataIOFactory : Factory
     {
-        // Defines the types of supported "cross-format" metadata
-        /// <summary>
-        /// ID3v1
-        /// </summary>
-        [Obsolete("Use TagType.ID3V1 instead", false)]
-        public const TagType TAG_ID3V1 = TagType.ID3V1;
-        /// <summary>
-        /// ID3v2
-        /// </summary>
-        [Obsolete("Use TagType.ID3V2 instead", false)]
-        public const TagType TAG_ID3V2 = TagType.ID3V2;
-        /// <summary>
-        /// APEtag
-        /// </summary>
-        [Obsolete("Use TagType.APE instead", false)]
-        public const TagType TAG_APE = TagType.APE;
-        /// <summary>
-        /// Native tag format associated with the audio container (ex : MP4 built-in tagging format)
-        /// </summary>
-        [Obsolete("Use TagType.NATIVE instead", false)]
-        public const TagType TAG_NATIVE = TagType.NATIVE;
-        /// <summary>
-        /// Whenever tag type is not known in advance and may apply to any available tag
-        /// </summary>
-        [Obsolete("Use TagType.ANY instead", false)]
-        public const TagType TAG_ANY = TagType.ANY;
-
-        /// <summary>
-        /// Count of the types defined above, excluding "any" type
-        /// </summary>
-        public static readonly int TAG_TYPE_COUNT = 4;
-
         /// <summary>
         /// Metadata type
         /// </summary>
@@ -66,6 +34,12 @@ namespace ATL.AudioData
             /// </summary>
             ANY = 99
         }
+
+        /// <summary>
+        /// Count of the types defined above, excluding "any" type
+        /// </summary>
+        public static readonly int TAG_TYPE_COUNT = Enum.GetNames(typeof(TagType)).Length - 1;
+
 
         // The instance of this factory
         private static MetaDataIOFactory theFactory = null;
