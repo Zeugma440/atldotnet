@@ -1,6 +1,7 @@
 ﻿using ATL.AudioData;
 using Commons;
 using HashDepot;
+using System.Linq;
 
 namespace ATL
 {
@@ -38,6 +39,10 @@ namespace ATL
             /// Custom non-standard field (i.e. any other fancy value written regardless of standard)
             /// </summary>
             Custom = 5
+        };
+
+        private static string[] reservedNativePrefix = new string[7] {
+            "info", "adtl", "ixml", "disp", "cue", "bext", "sample"
         };
 
         /// <summary>
@@ -104,6 +109,14 @@ namespace ATL
         public MetaFieldInfo(MetaFieldInfo info)
         {
             TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone; Origin = info.Origin;
+        }
+
+        internal static bool IsAdditionalDataNative(string key)
+        {
+            int dotIndex = key.IndexOf('.');
+            if (-1 == dotIndex) return false;
+            string prefix = key.Substring(0, dotIndex);
+            return reservedNativePrefix.Contains(prefix);
         }
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS

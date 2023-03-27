@@ -498,7 +498,9 @@ namespace ATL
 
             foreach (string s in AdditionalFields.Keys)
             {
-                result.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, s, AdditionalFields[s]));
+                MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
+                if (MetaFieldInfo.IsAdditionalDataNative(s)) tagType = MetaDataIOFactory.TagType.NATIVE;
+                result.AdditionalFields.Add(new MetaFieldInfo(tagType, s, AdditionalFields[s]));
             }
 
             // Detect and tag deleted Additional fields (=those which were in initialAdditionalFields and do not appear in AdditionalFields anymore)
