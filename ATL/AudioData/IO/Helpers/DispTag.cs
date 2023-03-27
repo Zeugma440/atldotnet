@@ -48,13 +48,13 @@ namespace ATL.AudioData.IO
             if (chunkSize <= 4) return;
             byte[] data = new byte[chunkSize - 4];
 
-            IList<string> keys = WavHelper.getEligibleKeys("disp", meta.AdditionalFields.Keys);
+            IList<string> keys = WavHelper.getEligibleKeys("disp.entry", meta.AdditionalFields.Keys);
             int index = keys.Count;
 
             // Type
             source.Read(data, 0, 4);
             int type = StreamUtils.DecodeInt32(data);
-            meta.SetMetaField("disp[" + index + "].type", getCfLabel(type), readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("disp.entry[" + index + "].type", getCfLabel(type), readTagParams.ReadAllMetaFrames);
 
             // Data
             source.Read(data, 0, (int)chunkSize - 4);
@@ -64,7 +64,7 @@ namespace ATL.AudioData.IO
             {
                 dataStr = Utils.Latin1Encoding.GetString(Utils.EncodeTo64(data));
             }
-            meta.SetMetaField("disp[" + index + "].value", dataStr, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("disp.entry[" + index + "].value", dataStr, readTagParams.ReadAllMetaFrames);
         }
 
         private static string getCfLabel(int code)
@@ -100,7 +100,7 @@ namespace ATL.AudioData.IO
         /// <returns>True if the given Metadata I/O contains data relevant to the Disp format; false if it doesn't</returns>
         public static bool IsDataEligible(MetaDataIO meta)
         {
-            return WavHelper.IsDataEligible(meta, "disp[");
+            return WavHelper.IsDataEligible(meta, "disp.entry");
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace ATL.AudioData.IO
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
 
-            IList<string> keys = WavHelper.getEligibleKeys("disp", additionalFields.Keys);
+            IList<string> keys = WavHelper.getEligibleKeys("disp.entry", additionalFields.Keys);
             foreach (string key in keys) writeDispChunk(w, isLittleEndian, additionalFields, key);
 
             return keys.Count;

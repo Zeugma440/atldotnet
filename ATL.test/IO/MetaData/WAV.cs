@@ -87,16 +87,16 @@ namespace ATL.test.IO.MetaData
             testData = new TagHolder();
 
             IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("disp[0].type", "CF_TEXT"));
-            tags.Add(new KeyValuePair<string, string>("disp[0].value", "blah"));
-            tags.Add(new KeyValuePair<string, string>("disp[1].type", "CF_BITMAP"));
-            tags.Add(new KeyValuePair<string, string>("disp[1].value", "YmxhaCBibGFo"));
-            tags.Add(new KeyValuePair<string, string>("disp[2].type", "CF_METAFILE"));
-            tags.Add(new KeyValuePair<string, string>("disp[2].value", "YmxlaCBibGVo"));
-            tags.Add(new KeyValuePair<string, string>("disp[3].type", "CF_DIB"));
-            tags.Add(new KeyValuePair<string, string>("disp[3].value", "Ymx1aCBibHVo"));
-            tags.Add(new KeyValuePair<string, string>("disp[4].type", "CF_PALETTE"));
-            tags.Add(new KeyValuePair<string, string>("disp[4].value", "YmzDvGggYmzDvGg="));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[0].type", "CF_TEXT"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[0].value", "blah"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[1].type", "CF_BITMAP"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[1].value", "YmxhaCBibGFo"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[2].type", "CF_METAFILE"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[2].value", "YmxlaCBibGVo"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[3].type", "CF_DIB"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[3].value", "Ymx1aCBibHVo"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[4].type", "CF_PALETTE"));
+            tags.Add(new KeyValuePair<string, string>("disp.entry[4].value", "YmzDvGggYmzDvGg="));
             testData.AdditionalFields = tags;
         }
 
@@ -162,12 +162,12 @@ namespace ATL.test.IO.MetaData
             tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].BlockStart", "0"));
             tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].SampleOffset", "1730925"));
 
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[9].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[9].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[9].Text", "MARKEURRRR 8"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Text", "MARKEURRRR 1"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].Text", "MARKEURRRR 8"));
             testData.AdditionalFields = tags;
         }
 
@@ -191,23 +191,23 @@ namespace ATL.test.IO.MetaData
             tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].BlockStart", "0"));
             tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].SampleOffset", "1730925"));
 
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[0].Text", "MARKEURRRR 1"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Type", "labl"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].CuePointId", "1"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Text", "MARKEURRRR 1"));
 
-            tags.Add(new KeyValuePair<string, string>("info.Labels[1].Type", "note"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[1].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[1].Text", "MARKEURRRR 8"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].Type", "note"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].CuePointId", "10"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].Text", "MARKEURRRR 8"));
 
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Type", "ltxt"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].CuePointId", "11"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].SampleLength", "1234"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].PurposeId", "5678"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Country", "2"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Language", "4"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Dialect", "6"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].CodePage", "8"));
-            tags.Add(new KeyValuePair<string, string>("info.Labels[2].Text", "HEYHEY 10"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Type", "ltxt"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].CuePointId", "11"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].SampleLength", "1234"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].PurposeId", "5678"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Country", "2"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Language", "4"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Dialect", "6"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].CodePage", "8"));
+            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Text", "HEYHEY 10"));
             testData.AdditionalFields = tags;
         }
 

@@ -13,15 +13,15 @@ namespace ATL.AudioData.IO
         public const string CHUNK_LIST = "LIST";
 
         // Purposes
-        private const string PURPOSE_INFO = "INFO";
-        private const string PURPOSE_ADTL = "adtl";
+        public const string PURPOSE_INFO = "INFO";
+        public const string PURPOSE_ADTL = "adtl";
 
         // Associated Data List (adtl) sub-chunks
         private const string CHUNK_LABEL = "labl";
         private const string CHUNK_NOTE = "note";
         private const string CHUNK_LABELED_TEXT = "ltxt";
 
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
+        public static string FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             long position = source.Position;
             long initialPos = position;
@@ -30,12 +30,13 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[4];
             source.Read(data, 0, 4);
             string typeId = Utils.Latin1Encoding.GetString(data, 0, 4);
-            meta.SetMetaField("list.TypeId", typeId, readTagParams.ReadAllMetaFrames);
 
             long maxPos = initialPos + chunkSize - 4; // 4 being the purpose 32bits tag that belongs to the chunk
 
             if (typeId.Equals(PURPOSE_INFO, StringComparison.OrdinalIgnoreCase)) readInfoPurpose(source, meta, readTagParams, chunkSize, maxPos);
             else if (typeId.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) readDataListPurpose(source, meta, readTagParams, maxPos);
+
+            return typeId;
         }
 
         private static void readInfoPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize, long maxPos)
@@ -83,7 +84,7 @@ namespace ATL.AudioData.IO
                 size = StreamUtils.DecodeInt32(data);
                 if (size > 0)
                 {
-                    meta.SetMetaField("info.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
+                    meta.SetMetaField("adtl.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
                     if (id.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                     else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                     else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
@@ -97,31 +98,31 @@ namespace ATL.AudioData.IO
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
-            meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt32(source, meta, "info.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "info.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 20);
             string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
-            meta.SetMetaField("info.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
         public static bool IsDataEligible(MetaDataIO meta)
@@ -135,10 +136,10 @@ namespace ATL.AudioData.IO
             if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
 
-            return WavHelper.IsDataEligible(meta, "info.");
+            return WavHelper.IsDataEligible(meta, "info.") || WavHelper.IsDataEligible(meta, "adtl.");
         }
 
-        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        public static int ToStream(BinaryWriter w, bool isLittleEndian, string purpose, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_LIST));
@@ -146,14 +147,10 @@ namespace ATL.AudioData.IO
             long sizePos = w.BaseStream.Position;
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
-            string typeId = PURPOSE_INFO;
-            if (additionalFields.ContainsKey("list.TypeId")) typeId = additionalFields["list.TypeId"];
-            else if (additionalFields.Keys.Any(key => key.StartsWith("info.Labels"))) typeId = PURPOSE_ADTL;
+            w.Write(Utils.Latin1Encoding.GetBytes(purpose));
 
-            w.Write(Utils.Latin1Encoding.GetBytes(typeId));
-
-            if (typeId.Equals(PURPOSE_INFO, StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
-            else if (typeId.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) writeDataListPurpose(w, isLittleEndian, additionalFields);
+            if (purpose.Equals(PURPOSE_INFO, StringComparison.OrdinalIgnoreCase)) writeInfoPurpose(w, meta);
+            else if (purpose.Equals(PURPOSE_ADTL, StringComparison.OrdinalIgnoreCase)) writeDataListPurpose(w, isLittleEndian, additionalFields);
 
             long finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
@@ -227,7 +224,7 @@ namespace ATL.AudioData.IO
         {
             // Inventory of all positions
             IList<string> keys = new List<string>();
-            foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("info.Labels")))
+            foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("adtl.Labels")))
             {
                 string key = s.Substring(0, s.IndexOf("]") + 1);
                 if (!keys.Contains(key)) keys.Add(key);
@@ -327,7 +324,11 @@ namespace ATL.AudioData.IO
             if (paddingByte > 0) // Add padding byte if needed
                 w.Write((byte)0);
 
-            writtenFields.Add("info." + key, value);
+            string keyFull = "info." + key;
+            if (writtenFields.ContainsKey(keyFull)) {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : already written");
+            }
+            else writtenFields.Add(keyFull, value);
         }
     }
 }

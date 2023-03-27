@@ -18,11 +18,6 @@ namespace ATL.AudioData.IO
     ///     
     ///     UMID field is decoded "as is" using the hex notation. No additional interpretation has been done so far.
     ///     
-    /// 
-    ///     2. Multi-purpose LIST chunks
-    ///     
-    ///     ATL does not support LIST chunks with multiple purposes (e.g. adtl _and_ info)
-    ///     
     /// </summary>
 	class WAV : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
@@ -379,13 +374,15 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_LIST, StringComparison.OrdinalIgnoreCase))
                 {
-                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + 8), subChunkId);
-                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
+                    long initialPosition = source.Position - 8;
 
                     foundList = true;
                     tagExists = true;
 
-                    List.FromStream(source, this, readTagParams, chunkSize);
+                    string purpose = List.FromStream(source, this, readTagParams, chunkSize);
+
+                    structureHelper.AddZone(initialPosition, (int)(chunkSize + 8), CHUNK_LIST + "." + purpose);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST + "." + purpose);
                 }
                 else if (subChunkId.Equals(CHUNK_DISP, StringComparison.OrdinalIgnoreCase))
                 {
@@ -445,8 +442,11 @@ namespace ATL.AudioData.IO
                 }
                 if (!foundList)
                 {
-                    structureHelper.AddZone(source.Position, 0, CHUNK_LIST);
-                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST);
+                    structureHelper.AddZone(source.Position, 0, CHUNK_LIST + "." + List.PURPOSE_INFO);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST + "." + List.PURPOSE_INFO);
+
+                    structureHelper.AddZone(source.Position, 0, CHUNK_LIST + "." + List.PURPOSE_ADTL);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST + "." + List.PURPOSE_ADTL);
                 }
                 if (!foundDisp)
                 {
@@ -552,7 +552,11 @@ namespace ATL.AudioData.IO
 
             if (zone.Equals(CHUNK_SAMPLE) && SampleTag.IsDataEligible(this)) result += SampleTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_CUE) && CueTag.IsDataEligible(this)) result += CueTag.ToStream(w, isLittleEndian, this);
-            else if (zone.Equals(CHUNK_LIST) && List.IsDataEligible(this)) result += List.ToStream(w, isLittleEndian, this);
+            else if (zone.StartsWith(CHUNK_LIST) && List.IsDataEligible(this))
+            {
+                string[] zoneParts = zone.Split('.');
+                if (zoneParts.Length > 1) result += List.ToStream(w, isLittleEndian, zoneParts[1], this);
+            }
             else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
             else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
             else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
