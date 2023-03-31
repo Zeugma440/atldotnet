@@ -49,7 +49,7 @@ namespace ATL.AudioData.IO
                 { "ARTIST", Field.ARTIST },
                 { "TITLE", Field.TITLE },
                 { "ALBUM", Field.ALBUM },
-                { "DATE", Field.RECORDING_DATE },
+                { "DATE", Field.RECORDING_DATE_OR_YEAR },
                 { "GENRE", Field.GENRE },
                 { "COMPOSER", Field.COMPOSER },
                 { "TRACKNUMBER", Field.TRACK_NUMBER },

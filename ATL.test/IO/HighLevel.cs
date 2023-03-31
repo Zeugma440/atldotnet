@@ -1218,7 +1218,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(1993, theTrack.Year);
-            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1234,7 +1234,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1250,7 +1250,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(1993, theTrack.Year);
-            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1265,7 +1265,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1282,7 +1282,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(year, theTrack.Year);
-            Assert.AreEqual(20, getDayFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1298,21 +1298,85 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDayFieldLength(testFileLocation)); // Date stored as Date
+            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        private int getDayFieldLength(string filePath)
+        [TestMethod]
+        public void TagIO_RW_Vorbis_YearConsistency()
+        {
+            new ConsoleLogger();
+
+            // Source : Vorbis tag with year formatted as plain YYYY
+            string emptyResource = "OGG/chapters.ogg";
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+
+            // Make sure in-file date is YYYY form
+            Assert.IsTrue(9 == getDateFieldLength(testFileLocation));
+
+            // Read it as a Track, then save it without touching Year
+            Track theTrack = new Track(testFileLocation);
+            Assert.AreEqual(2013, theTrack.Year);
+            theTrack.Save();
+
+            // Make sure in-file date is _still_ YYYY form
+            Assert.IsTrue(9 == getDateFieldLength(testFileLocation));
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_YearConsistency()
+        {
+            new ConsoleLogger();
+
+            // Source : MP4 tag with year formatted as plain YYYY
+            string emptyResource = "MP4/mp4.m4a";
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+
+            // Make sure in-file date is YYYY form
+            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+
+            // Read it as a Track, then save it without touching Year
+            Track theTrack = new Track(testFileLocation);
+            Assert.AreEqual(1997, theTrack.Year);
+            theTrack.Save();
+
+            // Make sure in-file date is _still_ YYYY form
+            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private int getDateFieldLength(string filePath)
         {
             using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
-                Assert.AreEqual(true, StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("©day")));
-                byte[] buffer = new byte[4];
-                fs.Read(buffer, 0, 4);
-                return StreamUtils.DecodeBEInt32(buffer);
+                if (filePath.EndsWith("ogg")) return getVorbisDateFieldLength(fs);
+                if (filePath.EndsWith("m4a")) return getMP4DateFieldLength(fs);
+                return -1;
             }
+        }
+
+        private int getVorbisDateFieldLength(Stream s)
+        {
+            Assert.AreEqual(true, StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("DATE=")));
+            s.Seek(-9, SeekOrigin.Current);
+            byte[] buffer = new byte[4];
+            s.Read(buffer, 0, 4);
+            return StreamUtils.DecodeInt32(buffer);
+        }
+
+        private int getMP4DateFieldLength(Stream s)
+        {
+            Assert.AreEqual(true, StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("©day")));
+            byte[] buffer = new byte[4];
+            s.Read(buffer, 0, 4);
+            return StreamUtils.DecodeBEInt32(buffer);
         }
 
         [TestMethod]
