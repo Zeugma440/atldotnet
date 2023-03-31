@@ -8,6 +8,7 @@ using static ATL.Logging.Log;
 using System;
 using ATL.Logging;
 using Commons;
+using System.ComponentModel;
 
 namespace ATL.test.IO
 {
@@ -1206,11 +1207,21 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Year_or_Date_On_File()
+        public void TagIO_RW_Year_or_Date_On_File()
+        {
+            tagIO_RW_Year_or_Date_On_File("MP4/empty.m4a", "MP4/mp4.m4a", "MP4/mp4_date_in_©day.m4a", 20, 26);
+            tagIO_RW_Year_or_Date_On_File("OGG/empty.ogg", "OGG/chapters.ogg", "OGG/ogg.ogg", 9, 15);
+        }
+
+        private void tagIO_RW_Year_or_Date_On_File(
+            string emptyFile,
+            string yearFile,
+            string dateFile,
+            int yearTagLength,
+            int dateTagLength)
         {
             // == 1a- Add a YEAR to an empty file
-            string emptyResource = "MP4/empty.m4a";
-            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             Track theTrack = new Track(testFileLocation);
 
             theTrack.Year = 1993;
@@ -1218,14 +1229,14 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(1993, theTrack.Year);
-            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(yearTagLength, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 
             // == 1b- Add a DATE to an empty file
-            testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
+            testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
             theTrack = new Track(testFileLocation);
 
             DateTime date = new DateTime(2001, 4, 20);
@@ -1234,7 +1245,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
+            Assert.AreEqual(dateTagLength, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1242,7 +1253,7 @@ namespace ATL.test.IO
 
 
             // == 2a- Add a YEAR to a file tagged with a DATE
-            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4_date_in_©day.m4a");
+            testFileLocation = TestUtils.CopyAsTempTestFile(dateFile);
             theTrack = new Track(testFileLocation);
 
             theTrack.Year = 1993;
@@ -1250,14 +1261,14 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(1993, theTrack.Year);
-            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(yearTagLength, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 
             // == 2b- Add a DATE to a file tagged with a YEAR
-            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4.m4a");
+            testFileLocation = TestUtils.CopyAsTempTestFile(yearFile);
             theTrack = new Track(testFileLocation);
 
             theTrack.Date = date;
@@ -1265,7 +1276,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
+            Assert.AreEqual(dateTagLength, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1273,7 +1284,7 @@ namespace ATL.test.IO
 
 
             // == 3a- Keep YEAR after rewriting file
-            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4.m4a");
+            testFileLocation = TestUtils.CopyAsTempTestFile(yearFile);
             theTrack = new Track(testFileLocation);
 
             int year = theTrack.Year.Value;
@@ -1282,14 +1293,14 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(year, theTrack.Year);
-            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(yearTagLength, getDateFieldLength(testFileLocation)); // Date stored as Year
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 
             // == 3b- Keep DATE after rewriting file
-            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/mp4_date_in_©day.m4a");
+            testFileLocation = TestUtils.CopyAsTempTestFile(dateFile);
             theTrack = new Track(testFileLocation);
 
             date = theTrack.Date.Value;
@@ -1298,55 +1309,7 @@ namespace ATL.test.IO
 
             theTrack = new Track(testFileLocation);
             Assert.AreEqual(date.ToString(), theTrack.Date.ToString());
-            Assert.AreEqual(26, getDateFieldLength(testFileLocation)); // Date stored as Date
-
-            // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_Vorbis_YearConsistency()
-        {
-            new ConsoleLogger();
-
-            // Source : Vorbis tag with year formatted as plain YYYY
-            string emptyResource = "OGG/chapters.ogg";
-            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
-
-            // Make sure in-file date is YYYY form
-            Assert.IsTrue(9 == getDateFieldLength(testFileLocation));
-
-            // Read it as a Track, then save it without touching Year
-            Track theTrack = new Track(testFileLocation);
-            Assert.AreEqual(2013, theTrack.Year);
-            theTrack.Save();
-
-            // Make sure in-file date is _still_ YYYY form
-            Assert.IsTrue(9 == getDateFieldLength(testFileLocation));
-
-            // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_MP4_YearConsistency()
-        {
-            new ConsoleLogger();
-
-            // Source : MP4 tag with year formatted as plain YYYY
-            string emptyResource = "MP4/mp4.m4a";
-            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyResource);
-
-            // Make sure in-file date is YYYY form
-            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
-
-            // Read it as a Track, then save it without touching Year
-            Track theTrack = new Track(testFileLocation);
-            Assert.AreEqual(1997, theTrack.Year);
-            theTrack.Save();
-
-            // Make sure in-file date is _still_ YYYY form
-            Assert.AreEqual(20, getDateFieldLength(testFileLocation)); // Date stored as Year
+            Assert.AreEqual(dateTagLength, getDateFieldLength(testFileLocation)); // Date stored as Date
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

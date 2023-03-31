@@ -475,12 +475,6 @@ namespace ATL.AudioData.IO
             uint nbFrames = 0;
 
             IDictionary<Field, string> map = tag.ToMap();
-            string recordingYear = Utils.ProtectValue(tag[Field.RECORDING_YEAR]);
-            if (recordingYear.Length > 0)
-            {
-                string recordingDate = Utils.ProtectValue(tag[Field.RECORDING_DATE]);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[Field.RECORDING_DATE] = recordingYear;
-            }
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)
