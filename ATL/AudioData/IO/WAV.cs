@@ -340,7 +340,9 @@ namespace ATL.AudioData.IO
                 else if (subChunkId.Equals(CHUNK_DATA, StringComparison.OrdinalIgnoreCase))
                 {
                     AudioDataOffset = chunkDataPos;
-                    if (uint.MaxValue == chunkSize) chunkSize = AudioDataSize; // Already set by DS64
+                    // Handle RF64 where size has already been set by DS64
+                    // NB : Some files in the wild can have an erroneous size of 0x00FFFFFF
+                    if (AudioDataSize > 0 && (uint.MaxValue == chunkSize || 0x00FFFFFF == chunkSize)) chunkSize = AudioDataSize;
                     else AudioDataSize = chunkSize;
                     headerSize = riffChunkSize - AudioDataSize;
                     formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
