@@ -305,6 +305,7 @@ namespace ATL.AudioData.IO
                     {
                         riffChunkSize = StreamUtils.DecodeInt64(data64);
                         riffChunkSizePos = source.Position - 8;
+                        formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
                     }
 
                     source.Read(data64, 0, 8); // dataSize
@@ -345,7 +346,6 @@ namespace ATL.AudioData.IO
                     if (AudioDataSize > 0 && (uint.MaxValue == chunkSize || 0x00FFFFFF == chunkSize)) chunkSize = AudioDataSize;
                     else AudioDataSize = chunkSize;
                     headerSize = riffChunkSize - AudioDataSize;
-                    formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
                 }
                 else if (subChunkId.Equals(CHUNK_FACT, StringComparison.OrdinalIgnoreCase))
                 {
