@@ -89,7 +89,7 @@ namespace ATL
         /// <param name="from">Stream to start copy from</param>
         /// <param name="to">Stream to copy to</param>
         /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the 'from' stream)</param>
-        public static void CopyStream(Stream from, Stream to, int length = 0)
+        public static void CopyStream(Stream from, Stream to, long length = 0)
         {
             byte[] data = new byte[Settings.FileBufferSize];
             int bytesToRead;
@@ -99,7 +99,7 @@ namespace ATL
             {
                 if (length > 0)
                 {
-                    if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = length - totalBytesRead;
+                    if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = toInt(length - totalBytesRead);
                 }
                 else // Read everything we can
                 {
@@ -123,7 +123,7 @@ namespace ATL
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
         /// <param name="progress">Progress feedback to report with</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, Action<float> progress = null)
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, long length, Action<float> progress = null)
         {
             CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize, progress);
         }
@@ -137,21 +137,21 @@ namespace ATL
         /// <param name="length">Length of the data to copy</param>
         /// <param name="bufferSize">Buffer size to use during the operation</param>
         /// <param name="progress">Progress feedback to report with</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, int length, int bufferSize, Action<float> progress = null)
+        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, long length, int bufferSize, Action<float> progress = null)
         {
             if (offsetFrom == offsetTo) return;
 
             byte[] data = new byte[bufferSize];
             int bufSize;
-            int written = 0;
+            long written = 0;
             bool forward = offsetTo > offsetFrom;
-            int nbIterations = (int)Math.Ceiling((float)length / bufferSize);
-            int resolution = (int)Math.Ceiling(nbIterations / 10f);
+            long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
+            long resolution = (long)Math.Ceiling(nbIterations / 10f);
             float iteration = 0;
 
             while (written < length)
             {
-                bufSize = Math.Min(bufferSize, length - written);
+                bufSize = Math.Min(bufferSize, toInt(length - written));
                 if (forward)
                 {
                     s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
@@ -176,6 +176,16 @@ namespace ATL
         }
 
         /// <summary>
+        /// Convenient converter for the use of CopySameStream only, where this goes into Min immediately
+        /// </summary>
+        /// <param name="value">Value to convert</param>
+        /// <returns>Same value as int, or int.MaxValue if out of bounds</returns>
+        private static int toInt(long value)
+        {
+            if (value > int.MaxValue) return int.MaxValue; else return Convert.ToInt32(value);
+        }
+
+        /// <summary>
         /// Remove a portion of bytes within the given stream
         /// </summary>
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
@@ -184,8 +194,7 @@ namespace ATL
         /// <param name="progress">Progress feedback to report with</param>
         public static void ShortenStream(Stream s, long endOffset, uint delta, Action<float> progress = null)
         {
-            CopySameStream(s, endOffset, endOffset - delta, (int)(s.Length - endOffset), progress);
-
+            CopySameStream(s, endOffset, endOffset - delta, s.Length - endOffset, progress);
             s.SetLength(s.Length - delta);
         }
 
@@ -200,7 +209,7 @@ namespace ATL
         public static void LengthenStream(Stream s, long oldIndex, uint delta, bool fillZeroes = false, Action<float> progress = null)
         {
             long newIndex = oldIndex + delta;
-            CopySameStream(s, oldIndex, oldIndex + delta, (int)(s.Length - oldIndex), progress);
+            CopySameStream(s, oldIndex, oldIndex + delta, s.Length - oldIndex, progress);
 
             if (fillZeroes)
             {

@@ -48,7 +48,7 @@ namespace ATL.AudioData.IO
 
             using (MemoryStream mem = new MemoryStream((int)chunkSize - nbSkipBegin - nbSkipEnd))
             {
-                StreamUtils.CopyStream(source, mem, (int)chunkSize - nbSkipBegin - nbSkipEnd); // Isolate XML structure in a clean memory chunk
+                StreamUtils.CopyStream(source, mem, chunkSize - nbSkipBegin - nbSkipEnd); // Isolate XML structure in a clean memory chunk
                 mem.Seek(0, SeekOrigin.Begin);
 
                 try
