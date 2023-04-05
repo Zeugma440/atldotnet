@@ -222,7 +222,7 @@ namespace ATL.AudioData.IO
                 MemoryStream buffer = null;
                 try
                 {
-                    if (useBuffer && region.IsBufferable && initialBufferSize < BUFFER_LIMIT)
+                    if (useBuffer && region.IsBufferable)
                     {
                         isBuffered = true;
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
@@ -320,7 +320,7 @@ namespace ATL.AudioData.IO
                                 if (newTagSize > zone.Size)
                                 {
                                     uint deltaBytes = (uint)(newTagSize - zone.Size);
-                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
                                     StreamUtils.LengthenStream(writer, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
@@ -328,7 +328,7 @@ namespace ATL.AudioData.IO
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
                                     uint deltaBytes = (uint)(zone.Size - newTagSize);
-                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
 
                                     StreamUtils.ShortenStream(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
@@ -446,7 +446,7 @@ namespace ATL.AudioData.IO
                 MemoryStream buffer = null;
                 try
                 {
-                    if (useBuffer && region.IsBufferable && initialBufferSize < BUFFER_LIMIT)
+                    if (useBuffer && region.IsBufferable)
                     {
                         isBuffered = true;
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffering " + Utils.GetBytesReadable(initialBufferSize));
@@ -544,7 +544,7 @@ namespace ATL.AudioData.IO
                                 if (newTagSize > zone.Size)
                                 {
                                     uint deltaBytes = (uint)(newTagSize - zone.Size);
-                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
                                     await StreamUtilsAsync.LengthenStreamAsync(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
@@ -552,7 +552,7 @@ namespace ATL.AudioData.IO
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
                                     uint deltaBytes = (uint)(zone.Size - newTagSize);
-                                    if (!useBuffer) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
+                                    if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
 
                                     await StreamUtilsAsync.ShortenStreamAsync(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
@@ -794,6 +794,7 @@ namespace ATL.AudioData.IO
                     )
                     )
                 {
+                    region.IsBufferable &= region.Size < BUFFER_LIMIT;
                     result.Add(region);
                     region = new ZoneRegion(regionId++);
                     region.IsBufferable = zone.IsResizable;
@@ -806,6 +807,7 @@ namespace ATL.AudioData.IO
             }
 
             // Finalize current region
+            region.IsBufferable &= region.Size < BUFFER_LIMIT;
             result.Add(region);
 
             return result.OrderBy(r => r.IsReadonly).ToList();
