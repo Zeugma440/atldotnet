@@ -36,17 +36,26 @@ jobs:
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
-
-
-  sonarcloud:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
+    - name: SonarCloud
+      uses: highbyte/sonarscan-dotnet@v2.2.2
       with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
+        # The key of the SonarQube project
+        sonarProjectKey: Zeugma440_atldotnet
+        # The name of the SonarQube project
+        sonarProjectName:  atldotnet
+        # The name of the SonarQube organization in SonarCloud. For hosted SonarQube, skip this setting.
+        sonarOrganization: zeugma440-github
+        # Optional command arguments to dotnet test
+        dotnetTestArguments: --logger trx --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        # Optional extra command arguments the the SonarScanner 'begin' command
+        sonarBeginArguments: /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" -d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: CodeCov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: /TestResults/**/coverage.opencover.xml # optional
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)
