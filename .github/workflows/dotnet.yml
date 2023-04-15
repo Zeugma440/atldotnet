@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: "SET JAVA_HOME=JAVA_HOME_11_X64"
+    - run : "SET PATH=%JAVA_HOME_11_X64%\\bin;%PATH%"
     - name: Install SonarScanner
       run: choco install "sonarscanner-msbuild-net46" -y
     - name: Setup .NET
