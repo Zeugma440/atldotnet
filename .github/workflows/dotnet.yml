@@ -28,6 +28,15 @@ jobs:
       run: dotnet build ATL.test --no-restore
     - name: Test
       run: dotnet test ATL.test --no-build --verbosity normal
+    - name: Coverlet coverage test
+      uses: b3b00/coverlet-action@1.2.5
+      with:
+        testProject: 'ATL.test/ATL.test.csproj'
+        output: 'lcov.info'
+        outputFormat: 'opencover'
+        excludes: '[program]*,[test]test.*'
+        threshold: 80
+
 
   sonarcloud:
     runs-on: ubuntu-latest
