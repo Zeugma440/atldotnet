@@ -22,7 +22,9 @@ jobs:
         dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
+    - name: Build ATL
+      run: dotnet build ATL --no-restore
+    - name: Build ATL.test
+      run: dotnet build ATL.test --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test ATL.test --no-build --verbosity normal
