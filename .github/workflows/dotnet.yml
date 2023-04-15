@@ -40,18 +40,6 @@ jobs:
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
-    - name: 'Upload Artifact1'
-      uses: actions/upload-artifact@v3
-      with:
-        name: lcov.info
-        path: lcov.info
-        retention-days: 1
-    - name: 'Upload Artifact2'
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage.opencover.xml
-        path: coverage.opencover.xml
-        retention-days: 1
     - name: CodeCov
       uses: codecov/codecov-action@v3
       with:
