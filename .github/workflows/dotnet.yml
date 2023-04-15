@@ -16,12 +16,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install SonarScanner
+      run: choco install "sonarscanner-msbuild-net46" -y
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+       dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
+    - name: Run SonarScanner
+      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.opencover.xml"
     - name: Build ATL
       run: dotnet build ATL --no-restore
     - name: Build ATL.test
@@ -36,22 +40,6 @@ jobs:
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
-    - name: SonarCloud
-      uses: highbyte/sonarscan-dotnet@v2.2.2
-      with:
-        # The key of the SonarQube project
-        sonarProjectKey: Zeugma440_atldotnet
-        # The name of the SonarQube project
-        sonarProjectName:  atldotnet
-        # The name of the SonarQube organization in SonarCloud. For hosted SonarQube, skip this setting.
-        sonarOrganization: zeugma440-github
-        # Optional command arguments to dotnet test
-        dotnetTestArguments: --logger trx --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-        # Optional extra command arguments the the SonarScanner 'begin' command
-        sonarBeginArguments: /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" -d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - name: CodeCov
       uses: codecov/codecov-action@v3
       with:
@@ -59,3 +47,5 @@ jobs:
         files: /TestResults/**/coverage.opencover.xml # optional
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
+    - name: Upload to SonarScanner
+      run : SonarScanner.MSBuild.exe end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
