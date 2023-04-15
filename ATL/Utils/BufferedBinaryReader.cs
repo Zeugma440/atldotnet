@@ -104,7 +104,7 @@ namespace ATL
             if (previousBytesToKeep > 0) Array.Copy(buffer, cursorPosition, buffer, 0, previousBytesToKeep);
             int bytesToRead = (int)Math.Max(0, Math.Min(bufferDefaultSize - previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep));
 
-            bufferOffset = streamPosition;
+            bufferOffset = streamPosition - previousBytesToKeep;
             cursorPosition = 0;
 
             if (bytesToRead > 0)
