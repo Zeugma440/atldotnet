@@ -17,7 +17,7 @@ namespace ATL.test
             {
                 locationRoot = Environment.CurrentDirectory;
 
-                locationRoot = locationRoot.Substring(0, locationRoot.IndexOf(REPO_NAME) + REPO_NAME.Length);
+                locationRoot = locationRoot.Substring(0, locationRoot.LastIndexOf(REPO_NAME) + REPO_NAME.Length);
 
                 locationRoot += Path.DirectorySeparatorChar + "ATL.test" + Path.DirectorySeparatorChar + "Resources";
             }
