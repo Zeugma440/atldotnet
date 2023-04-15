@@ -19,7 +19,7 @@ jobs:
     - name: Java 11
       uses: actions/setup-java@v3
       with:
-        distribution: 'oracle'
+        distribution: 'temurin'
         java-version: '11'
     - name: Install SonarScanner
       run: choco install "sonarscanner-msbuild-net46" -y
