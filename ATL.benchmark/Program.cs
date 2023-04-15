@@ -130,13 +130,15 @@ namespace ATL.benchmark
 
         static private void info(String filePath)
         {
-            ConsoleLogger logger = new ConsoleLogger();
+            new ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
 
             Track t = new Track(filePath);
 
             Console.WriteLine(t.Path + "......." + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
-            Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + "......." + t.DiscNumber + " | " + t.TrackNumber + " | " + t.Title + " | " + t.Artist + " | " + t.Album + " | " + t.Year);
+            Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
+
+            Console.WriteLine("images : " + t.EmbeddedPictures.Count);
 
             Console.WriteLine(">>> INFO : END");
 
