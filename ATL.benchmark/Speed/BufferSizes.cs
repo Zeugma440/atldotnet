@@ -16,7 +16,7 @@ namespace ATL.benchmark
 
 
         //static string LOCATION = TestUtils.GetResourceLocationRoot()+"MP3/01 - Title Screen_pic.mp3";
-        [Params("MP3/01 - Title Screen_pic.mp3", "OGG/ogg_bigPicture.ogg")]
+        [Params("MP3/01 - Title Screen_pic.mp3", "OGG/bigPicture.ogg", "WAV/wav.wav", "FLAC/flac.flac", "WMA/wma.wma", "MP4/mp4.m4a")]
         public string initialFileLocation;
 
         private IList<string> tempFiles = new List<string>();
@@ -79,11 +79,11 @@ namespace ATL.benchmark
             tempFiles.Clear();
         }
 
-        [Benchmark(Baseline =true)]
+        [Benchmark]
         public void Perf_Massread_NO_buf4096()
         {
             AudioDataManager.SetFileOptions(FileOptions.None);
-            AudioDataManager.SetBufferSize(4096);
+            Settings.FileBufferSize = 4096;
 
             performMassRead();
         }
@@ -92,7 +92,7 @@ namespace ATL.benchmark
         public void Perf_Massread_RA_buf4096()
         {
             AudioDataManager.SetFileOptions(FileOptions.RandomAccess);
-            AudioDataManager.SetBufferSize(4096);
+            Settings.FileBufferSize = 4096;
 
             performMassRead();
         }
@@ -101,7 +101,7 @@ namespace ATL.benchmark
         public void Perf_Massread_RA_buf8192()
         {
             AudioDataManager.SetFileOptions(FileOptions.RandomAccess);
-            AudioDataManager.SetBufferSize(8192);
+            Settings.FileBufferSize = 8192;
 
             performMassRead();
         }
@@ -110,7 +110,7 @@ namespace ATL.benchmark
         public void Perf_Massread_RA_buf2048()
         {
             AudioDataManager.SetFileOptions(FileOptions.RandomAccess);
-            AudioDataManager.SetBufferSize(2048);
+            Settings.FileBufferSize = 2048;
 
             performMassRead();
         }
@@ -119,16 +119,16 @@ namespace ATL.benchmark
         public void Perf_Massread_RA_buf1024()
         {
             AudioDataManager.SetFileOptions(FileOptions.RandomAccess);
-            AudioDataManager.SetBufferSize(1024);
+            Settings.FileBufferSize = 1024;
 
             performMassRead();
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public void Perf_Massread_RA_buf512()
         {
             AudioDataManager.SetFileOptions(FileOptions.RandomAccess);
-            AudioDataManager.SetBufferSize(512);
+            Settings.FileBufferSize = 512;
 
             performMassRead();
         }
@@ -137,7 +137,7 @@ namespace ATL.benchmark
         public void Perf_Massread_NO_buf2048()
         {
             AudioDataManager.SetFileOptions(FileOptions.None);
-            AudioDataManager.SetBufferSize(2048);
+            Settings.FileBufferSize = 2048;
 
             performMassRead();
         }
@@ -146,7 +146,7 @@ namespace ATL.benchmark
         public void Perf_Massread_NO_buf1024()
         {
             AudioDataManager.SetFileOptions(FileOptions.None);
-            AudioDataManager.SetBufferSize(1024);
+            Settings.FileBufferSize = 1024;
 
             performMassRead();
         }
@@ -155,7 +155,7 @@ namespace ATL.benchmark
         public void Perf_Massread_NO_buf512()
         {
             AudioDataManager.SetFileOptions(FileOptions.None);
-            AudioDataManager.SetBufferSize(512);
+            Settings.FileBufferSize = 512;
 
             performMassRead();
         }
