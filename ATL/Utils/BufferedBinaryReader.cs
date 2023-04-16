@@ -10,7 +10,7 @@ namespace ATL
     /// <summary>
     /// Reads data from the given Stream using a forward buffer in order to reduce disk stress and have better control of when data is actually read from the disk.
     /// 
-    /// NB1 : Using BufferedBinaryReader instead of the classic BinaryReader create a 10% speed gain on the dev environment (MS .NET under Windows)
+    /// NB1 : Using BufferedBinaryReader instead of the classic BinaryReader creates a ~10% speed gain on the dev environment (MS .NET under Windows)
     /// 
     /// NB2 : The interface of this class is designed to be called exactly like a BinaryReader in order to facilitate swapping in classes that use BinaryReader
     /// However, is does _not_ give access to BaseStream, in order to keep control on buffer and cursor positions.
@@ -19,8 +19,6 @@ namespace ATL
     /// </summary>
     internal sealed class BufferedBinaryReader : Stream, IDisposable
     {
-        private const int DEFAULT_BUFFER_SIZE = 512;
-
         private readonly Stream stream;
         private readonly int bufferDefaultSize;
         private readonly long streamSize;
@@ -76,7 +74,7 @@ namespace ATL
         public BufferedBinaryReader(Stream stream)
         {
             this.stream = stream;
-            bufferDefaultSize = DEFAULT_BUFFER_SIZE;
+            bufferDefaultSize = Settings.FileBufferSize;
             buffer = new byte[bufferDefaultSize];
             streamSize = stream.Length;
             streamPosition = stream.Position;
