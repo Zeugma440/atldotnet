@@ -109,7 +109,7 @@ namespace ATL
             {
                 stream.Read(buffer, previousBytesToKeep, bytesToRead);
                 streamPosition += bytesToRead;
-                bufferSize = bytesToRead;
+                bufferSize = bytesToRead + previousBytesToKeep;
                 return true;
             }
 
