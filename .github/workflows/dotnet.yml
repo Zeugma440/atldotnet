@@ -30,7 +30,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Run SonarScanner
-      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="%CD%\coverage.opencover.xml"
+      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="lcov.info"
     - name: Build ATL
       run: dotnet build ATL --no-restore
     - name: Build ATL.test
