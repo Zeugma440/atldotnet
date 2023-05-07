@@ -573,7 +573,7 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            source.Seek(-3, SeekOrigin.Current);
+                            if (source.Position < limit) source.Seek(-3, SeekOrigin.Current);
                             result.Found = false;
                         }
                     }
