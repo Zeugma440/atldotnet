@@ -487,7 +487,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    source.Seek(fieldDataSize, SeekOrigin.Current);
+                    fieldValue = Utils.Latin1Encoding.GetString(Utils.EncodeTo64(source.ReadBytes(fieldDataSize)));
                 }
             }
             else if (2 == fieldDataType) // 16-bit Boolean (metadata); 32-bit Boolean (extended header)
@@ -511,7 +511,7 @@ namespace ATL.AudioData.IO
             }
             else if (6 == fieldDataType) // 128-bit GUID; unused for now
             {
-                source.Seek(fieldDataSize, SeekOrigin.Current);
+                fieldValue = Utils.Latin1Encoding.GetString(Utils.EncodeTo64(source.ReadBytes(fieldDataSize)));
             }
 
             if (setMeta) SetMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source, languageIndex));
@@ -930,9 +930,9 @@ namespace ATL.AudioData.IO
             {
                 writer.Write(Encoding.Unicode.GetBytes(text + '\0'));
             }
-            else if (1 == frameClass) // Byte array
+            else if (1 == frameClass) // Non-picture byte array
             {
-                // Only used for embedded pictures
+                writer.Write(Utils.DecodeFrom64(Utils.Latin1Encoding.GetBytes(text)));
             }
             else if (2 == frameClass) // 32-bit boolean; 16-bit boolean if in extended header
             {
@@ -953,7 +953,7 @@ namespace ATL.AudioData.IO
             }
             else if (6 == frameClass) // 128-bit GUID
             {
-                // Unused for now
+                writer.Write(Utils.DecodeFrom64(Utils.Latin1Encoding.GetBytes(text)));
             }
 
             // Go back to frame size locations to write their actual size 

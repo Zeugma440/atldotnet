@@ -110,7 +110,7 @@ namespace ATL.test.IO.MetaData
             theTag.TrackTotal = 1;
             theTag.DiscNumber = 2;
             theTag.Composer = "Me";
-            theTag.Popularity = 2.0f/5;
+            theTag.Popularity = 2.0f / 5;
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
 
@@ -329,9 +329,8 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WMA_Unsupported_Empty()
         {
             // Source : tag-free file
-            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -441,6 +440,40 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual(1, found);
 
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WMA_Unsupported_Classes_1_6()
+        {
+            // Source : file with classes 1 and 6 fields (MediaClassPrimaryID, LeakyBucketPairs)
+            string testFileLocation = TestUtils.CopyAsTempTestFile("WMA/classes1&6.wma");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            string mediaClassPrimaryIdValue64 = "vH1g0SPj4kuGoUikKihEHg==";
+            string leakyValue64 = "AADAXQAAEY8kADB1AAB3mhwAyK8AAP/+EQCQ4gAAtz0NAADCAQBpEgUAgKkDAEbIAAAwVwUAzAAAACChBwCPAAAAkCMLAGIAAABAQg8ARwAAAMBcFQAzAAAAIAsgACIAAABAS0wADgAAAICWmAAHAAAA";
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(mediaClassPrimaryIdValue64, theFile.NativeTag.AdditionalFields["WM/MediaClassPrimaryID"]);
+            Assert.AreEqual(leakyValue64, theFile.NativeTag.AdditionalFields["ASFLeakyBucketPairs"]);
+
+            TagHolder theTag = new TagHolder();
+            theTag.Conductor = "John Jackman";
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(mediaClassPrimaryIdValue64, theFile.NativeTag.AdditionalFields["WM/MediaClassPrimaryID"]);
+            Assert.AreEqual(leakyValue64, theFile.NativeTag.AdditionalFields["ASFLeakyBucketPairs"]);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
