@@ -7,6 +7,7 @@ using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 using System.Collections;
+using ATL.Logging;
 
 namespace ATL.AudioData.IO
 {
@@ -37,9 +38,7 @@ namespace ATL.AudioData.IO
 
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
-            IList<string> position = new List<string>();
-            position.Add("ixml");
-
+            IList<string> position = new List<string> { "ixml" };
             long initialOffset = source.Position;
             int nbSkipBegin = StreamUtils.SkipValues(source, new int[4] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
             source.Seek(initialOffset + chunkSize, SeekOrigin.Begin);
@@ -56,9 +55,11 @@ namespace ATL.AudioData.IO
                     // Try using the declared encoding
                     readXml(mem, null, position, meta, readTagParams);
                 }
-                catch (Exception) // Fallback to forcing UTF-8 when the declared encoding is invalid (e.g. "UTF - 8")
+                catch (Exception e) // Fallback to forcing UTF-8 when the declared encoding is invalid (e.g. "UTF - 8")
                 {
+                    Utils.TraceException(e, Log.LV_DEBUG);
                     mem.Seek(0, SeekOrigin.Begin);
+                    position = new List<string> { "ixml" };
                     readXml(mem, Encoding.UTF8, position, meta, readTagParams);
                 }
             }

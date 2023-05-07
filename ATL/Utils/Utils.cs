@@ -528,7 +528,8 @@ namespace Commons
         /// - To the Console, if Settings.OutputStacktracesToConsole is true
         /// </summary>
         /// <param name="e">Exception to trace</param>
-        public static void TraceException(Exception e)
+        /// <param name="level">Trace level (default : LV_ERROR)=</param>
+        public static void TraceException(Exception e, int level = Log.LV_ERROR)
         {
             if (Settings.OutputStacktracesToConsole)
             {
@@ -542,14 +543,14 @@ namespace Commons
                     Console.WriteLine("Inner Exception END");
                 }
             }
-            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.Message);
-            LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.StackTrace);
+            LogDelegator.GetLogDelegate()(level, e.Message);
+            LogDelegator.GetLogDelegate()(level, e.StackTrace);
             if (e.InnerException != null)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Inner Exception BEGIN");
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.InnerException.Message);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, e.InnerException.StackTrace);
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Inner Exception END");
+                LogDelegator.GetLogDelegate()(level, "Inner Exception BEGIN");
+                LogDelegator.GetLogDelegate()(level, e.InnerException.Message);
+                LogDelegator.GetLogDelegate()(level, e.InnerException.StackTrace);
+                LogDelegator.GetLogDelegate()(level, "Inner Exception END");
             }
         }
     }

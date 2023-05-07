@@ -1058,11 +1058,13 @@ namespace ATL
         {
             int b;
             int nbBytes = -1;
+            bool isFirst = true;
             do
             {
-                nbBytes++;
-                source.Seek(-nbBytes - 1, SeekOrigin.Current);
+                source.Seek(isFirst ? -1 : -2, SeekOrigin.Current);
                 b = source.ReadByte();
+                nbBytes++;
+                isFirst = false;
             }
             while (dataToSkip.Contains(b));
             source.Position = source.Position + 1;
