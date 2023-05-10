@@ -47,6 +47,7 @@ namespace ATL.benchmark
             {
                 Track t = new Track(f.FullName);
                 string found = "";
+                /*
                 if (t.AdditionalFields != null)
                 {
                     if (t.AdditionalFields.Keys.Contains("uslt")) found = lookForLyrics(t, "uslt");
@@ -56,6 +57,8 @@ namespace ATL.benchmark
 
                     if (found.Length > 0) Console.WriteLine("FOUND " + found + " IN " + f.FullName);
                 }
+                */
+                Console.WriteLine(f.Name + " : " + t.Title);
             }
         }
 
