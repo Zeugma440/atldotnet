@@ -118,6 +118,7 @@ namespace ATL
 
         private bool prepareBuffer(int bytesToRead)
         {
+
             if (bufferSize - cursorPosition < bytesToRead)
             {
                 return fillBuffer(Math.Max(0, bufferSize - cursorPosition));
@@ -143,10 +144,16 @@ namespace ATL
             if (0 == delta) return Position;
             else if (delta < 0)
             {
-                // If cursor is still within buffer, jump within buffer
+                // Jump inside buffer
                 if ((cursorPosition + delta < bufferSize) && (cursorPosition + delta >= 0))
                 {
                     cursorPosition += (int)delta;
+                    // Reset stream position to the end of the buffer if it ever got further (read beyond)
+                    if (streamPosition > bufferOffset + bufferSize)
+                    {
+                        streamPosition = bufferOffset + bufferSize;
+                        stream.Position = streamPosition;
+                    }
                 }
                 else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
                 {
@@ -155,7 +162,7 @@ namespace ATL
                     fillBuffer();
                 }
             }
-            else if (cursorPosition + delta < bufferSize) // Jump within buffer
+            else if (cursorPosition + delta < bufferSize) // Jump inside buffer
             {
                 cursorPosition += (int)delta;
             }
@@ -181,7 +188,7 @@ namespace ATL
             }
             else
             {
-                // First retrieve buffered data if possible
+                // First retrieve buffered data if possible...
                 int availableBytes = bufferSize - cursorPosition;
                 if (availableBytes > 0)
                 {
@@ -192,7 +199,7 @@ namespace ATL
                     availableBytes = 0;
                 }
 
-                // Then retrieve the rest by reading the stream
+                // ...then retrieve the rest by reading the stream
                 int readBytes = stream.Read(buffer, offset + availableBytes, count - availableBytes);
 
                 streamPosition += readBytes;
@@ -200,7 +207,7 @@ namespace ATL
 
                 cursorPosition += availableBytes + readBytes; // Virtual position outside buffer zone
 
-                return (availableBytes + readBytes);
+                return availableBytes + readBytes;
             }
         }
 
@@ -300,7 +307,7 @@ namespace ATL
         public int ReadInt32()
         {
             prepareBuffer(4);
-            int val = (buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24);
+            int val = buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24;
             cursorPosition += 4;
             return val;
         }
