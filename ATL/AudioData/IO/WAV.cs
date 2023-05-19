@@ -263,8 +263,10 @@ namespace ATL.AudioData.IO
             bool foundIXml = false;
 
             // Sub-chunks loop
-            // NB : uint.MaxValue is when the size declared in the traditional 32-bit header is discarded for the RF64 64-bit header
-            while (source.Position < riffChunkSize + 8 || uint.MaxValue == riffChunkSize)
+            // NB1 : we're testing source.Position + 8 because the chunk header (chunk ID and size) takes up 8 bytes
+            // NB2 : uint.MaxValue is when the size declared in the traditional 32-bit header is discarded for the RF64 64-bit header
+            long totalFileSize = riffChunkSize + 8;
+            while (source.Position + 8 < totalFileSize || uint.MaxValue == riffChunkSize)
             {
                 if (paddingSize > 0)
                 {
