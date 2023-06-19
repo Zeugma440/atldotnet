@@ -149,6 +149,8 @@ namespace ATL.AudioData.IO
             string description = Utils.ProtectValue(meta.GeneralDescription);
             if (0 == description.Length && additionalFields.Keys.Contains("bext.description")) description = additionalFields["bext.description"];
 
+            // Modified writeFixedTextValue fuction to make it able to introduce 
+            // specified encoder
             WavHelper.writeFixedTextValue(description, 256, w, Utils.UtfEncoding);
             WavHelper.writeFixedFieldTextValue("bext.originator", additionalFields, 32, w);
             WavHelper.writeFixedFieldTextValue("bext.originatorReference", additionalFields, 32, w);

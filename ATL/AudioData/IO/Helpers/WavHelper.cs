@@ -108,6 +108,7 @@ namespace ATL.AudioData.IO
         {
             w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Utils.Latin1Encoding));
         }
+        // a specified version to introduce encoder
         public static void writeFixedTextValue(string value, int length, BinaryWriter w, Encoding e, byte paddingByte = 0)
         {
             w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, e));

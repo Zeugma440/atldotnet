@@ -121,6 +121,8 @@ namespace ATL.AudioData.IO
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
             // w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_IXML));
+
+            // I just modified this line to fit my project
             w.Write(Utils.UtfEncoding.GetBytes(CHUNK_IXML));
 
             long sizePos = w.BaseStream.Position;

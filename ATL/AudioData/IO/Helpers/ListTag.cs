@@ -331,6 +331,8 @@ namespace ATL.AudioData.IO
             }
             else writtenFields.Add(keyFull, value);
         }
+        
+        // a specified version to introduce encoder
         private static void writeSizeAndNullTerminatedString(string key, string value, BinaryWriter w, Encoding e, IDictionary<string, string> writtenFields)
         {
             if (key.Length > 4)
