@@ -1,0 +1,6 @@
+<Project>
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<Configuration>Debug</Configuration>
+	</PropertyGroup>
+</Project>

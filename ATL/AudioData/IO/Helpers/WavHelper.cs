@@ -4,6 +4,7 @@ using System.IO;
 using ATL.Logging;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -106,6 +107,10 @@ namespace ATL.AudioData.IO
         public static void writeFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
         {
             w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Utils.Latin1Encoding));
+        }
+        public static void writeFixedTextValue(string value, int length, BinaryWriter w, Encoding e, byte paddingByte = 0)
+        {
+            w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, e));
         }
 
         /// <summary>

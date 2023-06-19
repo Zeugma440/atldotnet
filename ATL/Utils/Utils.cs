@@ -13,6 +13,7 @@ namespace Commons
     internal static class Utils
     {
         private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+        private static Encoding utfEncoding = Encoding.UTF8;
         private static IDictionary<string, Encoding> encodingCache = new Dictionary<string, Encoding>();
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace Commons
         /// ISO-8859-1 encoding
         /// </summary>
         public static Encoding Latin1Encoding { get { return latin1Encoding; } }
+        public static Encoding UtfEncoding { get { return utfEncoding; } }
 
 
         /// <summary>

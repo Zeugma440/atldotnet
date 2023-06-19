@@ -120,7 +120,8 @@ namespace ATL.AudioData.IO
         public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
-            w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_IXML));
+            // w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_IXML));
+            w.Write(Utils.UtfEncoding.GetBytes(CHUNK_IXML));
 
             long sizePos = w.BaseStream.Position;
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method

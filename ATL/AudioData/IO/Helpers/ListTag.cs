@@ -5,6 +5,7 @@ using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 using System;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -175,7 +176,7 @@ namespace ATL.AudioData.IO
             // Title
             string value = Utils.ProtectValue(meta.Title);
             if (0 == value.Length && additionalFields.Keys.Contains("info.INAM")) value = additionalFields["info.INAM"];
-            if (value.Length > 0) writeSizeAndNullTerminatedString("INAM", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("INAM", value, w, Utils.UtfEncoding, writtenFields);
             // Artist
             value = Utils.ProtectValue(meta.Artist);
             if (0 == value.Length && additionalFields.Keys.Contains("info.IART")) value = additionalFields["info.IART"];
@@ -183,7 +184,7 @@ namespace ATL.AudioData.IO
             // Comment
             value = Utils.ProtectValue(meta.Comment);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICMT")) value = additionalFields["info.ICMT"];
-            if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, Utils.UtfEncoding, writtenFields);
             // Copyright
             value = Utils.ProtectValue(meta.Copyright);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
@@ -316,6 +317,35 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes(key));
 
             byte[] buffer = Utils.Latin1Encoding.GetBytes(value);
+            // Needs one byte of padding if data size is odd
+            int paddingByte = (buffer.Length + 1) % 2;
+            w.Write(buffer.Length + 1 + paddingByte);
+            w.Write(buffer);
+            w.Write((byte)0); // String is null-terminated
+            if (paddingByte > 0) // Add padding byte if needed
+                w.Write((byte)0);
+
+            string keyFull = "info." + key;
+            if (writtenFields.ContainsKey(keyFull)) {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : already written");
+            }
+            else writtenFields.Add(keyFull, value);
+        }
+        private static void writeSizeAndNullTerminatedString(string key, string value, BinaryWriter w, Encoding e, IDictionary<string, string> writtenFields)
+        {
+            if (key.Length > 4)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; cropping");
+                key = Utils.BuildStrictLengthString(key, 4, ' ');
+            }
+            else if (key.Length < 4)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; completing with whitespaces");
+                key = Utils.BuildStrictLengthString(key, 4, ' ');
+            }
+            w.Write(Utils.Latin1Encoding.GetBytes(key));
+
+            byte[] buffer = e.GetBytes(value);
             // Needs one byte of padding if data size is odd
             int paddingByte = (buffer.Length + 1) % 2;
             w.Write(buffer.Length + 1 + paddingByte);
