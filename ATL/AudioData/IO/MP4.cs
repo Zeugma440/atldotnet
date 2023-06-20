@@ -1255,7 +1255,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
             atomSize = navigateToAtom(source, "Xtra");
-            if (atomSize > 0)
+            if (atomSize > 7)
             {
                 if (readTagParams.PrepareForWriting)
                 {
