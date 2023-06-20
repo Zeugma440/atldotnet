@@ -1547,7 +1547,7 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            return (atomKey.Equals(atomHeader)) ? atomSize : 0;
+            return atomKey.Equals(atomHeader) ? atomSize : 0;
         }
 
 
