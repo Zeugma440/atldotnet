@@ -1983,7 +1983,7 @@ namespace ATL.AudioData.IO
         {
             if (null == iGenre || 0 == iGenre.Length) return "";
 
-            IList<string> genres = new List<string>();
+            ISet<string> genres = new HashSet<string>();
             int genreIndex;
 
             // Handle ID3v2.4 separators and ID3v2.2-3 parenthesis
