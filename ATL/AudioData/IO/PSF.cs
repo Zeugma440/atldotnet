@@ -502,7 +502,7 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode))
+                if (!fieldCode.StartsWith('_') && !playbackFrames.Contains(fieldCode))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;

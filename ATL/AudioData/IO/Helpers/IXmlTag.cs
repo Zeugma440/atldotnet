@@ -167,14 +167,14 @@ namespace ATL.AudioData.IO
                         if (!previousPathNodes.Contains(nodePath))
                         {
                             subkey = pathNodes[nodePath];
-                            if (subkey.Equals(singleNodes.Last())) continue; // Last node is a leaf, not a node
+                            if (subkey.Equals(singleNodes[singleNodes.Count - 1])) continue; // Last node is a leaf, not a node
 
                             if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
                             writer.WriteStartElement(subkey.ToUpper());
                         }
                     }
                     // Write the last node (=leaf) as a proper value
-                    writer.WriteElementString(singleNodes.Last(), additionalFields[key]);
+                    writer.WriteElementString(singleNodes[singleNodes.Count - 1], additionalFields[key]);
                     previousPathNodes = pathNodes.Keys.ToList();
                 }
 
