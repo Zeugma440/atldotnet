@@ -5,6 +5,7 @@ using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 using System;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -59,7 +60,7 @@ namespace ATL.AudioData.IO
                     source.Read(data, 0, size);
                     // Manage parasite zeroes at the end of data
                     if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
-                    value = Utils.Latin1Encoding.GetString(data, 0, size);
+                    value = Encoding.UTF8.GetString(data, 0, size);
                     meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
 
                     WavHelper.skipEndPadding(source, maxPos);
@@ -101,7 +102,7 @@ namespace ATL.AudioData.IO
             WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
-            string value = Utils.Latin1Encoding.GetString(data, 0, size - 4);
+            string value = Encoding.UTF8.GetString(data, 0, size - 4);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
             meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
@@ -119,7 +120,7 @@ namespace ATL.AudioData.IO
             WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 20);
-            string value = Utils.Latin1Encoding.GetString(data, 0, size - 20);
+            string value = Encoding.UTF8.GetString(data, 0, size - 20);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
             meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
@@ -259,7 +260,7 @@ namespace ATL.AudioData.IO
             WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
 
             string text = additionalFields[key + ".Text"];
-            byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
+            byte[] buffer = Encoding.UTF8.GetBytes(text);
 
             // Needs one byte of padding if data size is odd
             int paddingByte = (buffer.Length + 1) % 2;
@@ -286,7 +287,7 @@ namespace ATL.AudioData.IO
             WavHelper.writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
 
             string text = additionalFields[key + ".Text"];
-            byte[] buffer = Utils.Latin1Encoding.GetBytes(text);
+            byte[] buffer = Encoding.UTF8.GetBytes(text);
 
             // Needs one byte of padding if data size is odd
             int paddingByte = (buffer.Length + 1) % 2;
@@ -315,7 +316,7 @@ namespace ATL.AudioData.IO
             }
             w.Write(Utils.Latin1Encoding.GetBytes(key));
 
-            byte[] buffer = Utils.Latin1Encoding.GetBytes(value);
+            byte[] buffer = Encoding.UTF8.GetBytes(value);
             // Needs one byte of padding if data size is odd
             int paddingByte = (buffer.Length + 1) % 2;
             w.Write(buffer.Length + 1 + paddingByte);

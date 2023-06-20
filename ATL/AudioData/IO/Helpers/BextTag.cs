@@ -33,27 +33,27 @@ namespace ATL.AudioData.IO
 
             // Description
             source.Read(data, 0, 256);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
+            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
 
             // Originator
             source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
+            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 32).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
 
             // OriginatorReference
             source.Read(data, 0, 32);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 32).Trim());
+            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 32).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originatorReference", str, readTagParams.ReadAllMetaFrames);
 
             // OriginationDate
             source.Read(data, 0, 10);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 10).Trim());
+            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 10).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originationDate", str, readTagParams.ReadAllMetaFrames);
 
             // OriginationTime
             source.Read(data, 0, 8);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 8).Trim());
+            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 8).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originationTime", str, readTagParams.ReadAllMetaFrames);
 
             // TimeReference

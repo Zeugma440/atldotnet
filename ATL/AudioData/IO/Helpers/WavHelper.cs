@@ -4,6 +4,7 @@ using System.IO;
 using ATL.Logging;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace ATL.AudioData.IO
 {
@@ -105,7 +106,7 @@ namespace ATL.AudioData.IO
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
         public static void writeFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
         {
-            w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Utils.Latin1Encoding));
+            w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Encoding.UTF8));
         }
 
         /// <summary>
