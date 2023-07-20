@@ -58,6 +58,7 @@ namespace ATL.test.IO.MetaData
 
             testData.Artist = "info.IART";
             testData.Title = "info.INAM";
+            testData.Album = "info.IPRD";
             testData.Copyright = "info.ICOP";
             testData.Genre = "info.IGNR";
             testData.Comment = "info.ICMT";
@@ -71,7 +72,6 @@ namespace ATL.test.IO.MetaData
             tags.Add(new KeyValuePair<string, string>("info.IENG", "info.IENG"));
             tags.Add(new KeyValuePair<string, string>("info.IKEY", "info.IKEY"));
             tags.Add(new KeyValuePair<string, string>("info.IMED", "info.IMED"));
-            tags.Add(new KeyValuePair<string, string>("info.IPRD", "info.IPRD"));
             tags.Add(new KeyValuePair<string, string>("info.ISBJ", "info.ISBJ"));
             tags.Add(new KeyValuePair<string, string>("info.ISFT", "info.ISFT"));
             tags.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));

@@ -129,6 +129,7 @@ namespace ATL.AudioData.IO
         public static bool IsDataEligible(MetaDataIO meta)
         {
             if (meta.Title.Length > 0) return true;
+            if (meta.Album.Length > 0) return true;
             if (meta.Artist.Length > 0) return true;
             if (meta.Comment.Length > 0) return true;
             if (meta.Genre.Length > 0) return true;
@@ -181,6 +182,10 @@ namespace ATL.AudioData.IO
             value = Utils.ProtectValue(meta.Artist);
             if (0 == value.Length && additionalFields.Keys.Contains("info.IART")) value = additionalFields["info.IART"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("IART", value, w, writtenFields);
+            // Album
+            value = Utils.ProtectValue(meta.Album);
+            if (0 == value.Length && additionalFields.Keys.Contains("info.IPRD")) value = additionalFields["info.IPRD"];
+            if (value.Length > 0) writeSizeAndNullTerminatedString("IPRD", value, w, writtenFields);
             // Comment
             value = Utils.ProtectValue(meta.Comment);
             if (0 == value.Length && additionalFields.Keys.Contains("info.ICMT")) value = additionalFields["info.ICMT"];
