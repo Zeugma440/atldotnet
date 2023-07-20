@@ -305,7 +305,9 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_LIST_INFO_Existing()
         {
             initListInfoTestData();
-            test_RW_Existing(notEmptyFile, 0, true, true, false); // CRC check impossible because of field order
+            // Size check impossible because of fields mapped to multiple sub-chunks
+            // CRC check impossible because of field order
+            test_RW_Existing(notEmptyFile, 0, true, false, false); 
         }
 
         [TestMethod]

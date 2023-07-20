@@ -214,7 +214,11 @@ namespace ATL.AudioData.IO
             {
                 value = meta.TrackNumber.ToString();
                 if (0 == value.Length && additionalFields.Keys.Contains("info.TRCK")) value = additionalFields["info.TRCK"];
+                if (0 == value.Length && additionalFields.Keys.Contains("info.IPRT")) value = additionalFields["info.IPRT"];
+                if (0 == value.Length && additionalFields.Keys.Contains("info.ITRK")) value = additionalFields["info.ITRK"];
                 if (value.Length > 0) writeSizeAndNullTerminatedString("TRCK", value, w, writtenFields);
+                if (value.Length > 0) writeSizeAndNullTerminatedString("IPRT", value, w, writtenFields);
+                if (value.Length > 0) writeSizeAndNullTerminatedString("ITRK", value, w, writtenFields);
             }
 
             string shortKey;
