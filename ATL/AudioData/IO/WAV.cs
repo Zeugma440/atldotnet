@@ -80,12 +80,15 @@ namespace ATL.AudioData.IO
             { "info.INAM", Field.TITLE },
             { "info.TITL", Field.TITLE },
             { "info.IART", Field.ARTIST },
+            { "info.IPRD", Field.ALBUM },
             { "info.ICMT", Field.COMMENT },
             { "info.ICOP", Field.COPYRIGHT },
             { "info.ICRD", Field.RECORDING_DATE },
             { "info.IGNR", Field.GENRE },
             { "info.IRTD", Field.RATING },
-            { "info.TRCK", Field.TRACK_NUMBER }
+            { "info.TRCK", Field.TRACK_NUMBER },
+            { "info.IPRT", Field.TRACK_NUMBER },
+            { "info.ITRK", Field.TRACK_NUMBER }
         };
 
 
