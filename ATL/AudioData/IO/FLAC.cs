@@ -365,7 +365,7 @@ namespace ATL.AudioData.IO
         {
             WriteResult result;
 
-            if (zone.Name.StartsWith(META_VORBIS_COMMENT + ".")) result = writeVorbisCommentBlock(w, tag);
+            if (zone.Name.StartsWith(META_VORBIS_COMMENT + ".")) result = writeVorbisCommentBlock(w.BaseStream, tag, vorbisTag);
             else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(w, tag.DataSizeDelta);
             else if (zone.Name.StartsWith(META_PICTURE + ".")) result = processPictureBlock(w, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
             else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
@@ -412,21 +412,21 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private WriteResult writeVorbisCommentBlock(BinaryWriter w, TagData tag)
+        public static WriteResult writeVorbisCommentBlock(Stream w, TagData tag, VorbisTag vorbisTag)
         {
             long sizePos, dataPos, finalPos;
 
-            w.Write(META_VORBIS_COMMENT);
-            sizePos = w.BaseStream.Position;
-            w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
+            w.Write(new byte[] { META_VORBIS_COMMENT }, 0, 1);
+            sizePos = w.Position;
+            w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
-            dataPos = w.BaseStream.Position;
-            int writtenFields = vorbisTag.Write(w.BaseStream, tag);
+            dataPos = w.Position;
+            int writtenFields = vorbisTag.Write(w, tag);
 
-            finalPos = w.BaseStream.Position;
-            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-            w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
-            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+            finalPos = w.Position;
+            w.Seek(sizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)), 0, 3);
+            w.Seek(finalPos, SeekOrigin.Begin);
 
             return new WriteResult(WriteMode.REPLACE, writtenFields);
         }

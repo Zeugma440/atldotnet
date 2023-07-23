@@ -349,7 +349,8 @@ namespace ATL.AudioData.IO
 
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE; // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
+            // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
         }
 
         /// <inheritdoc/>
@@ -520,6 +521,7 @@ namespace ATL.AudioData.IO
                     {
                         // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
                         if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
+                        source.Position += OGG_PAGE_ID.Length;
                         if (StreamUtils.FindSequence(source, VORBIS_SETUP_ID))
                         {
                             info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
@@ -550,6 +552,11 @@ namespace ATL.AudioData.IO
                                 info.CommentHeaderSpanPages = 1;
                                 info.SetupHeaderSpanPages = 1;
                             }
+                        }
+                        // Case of embedded FLAC as setup header doesn't exist => end is the end of the page
+                        if (0 == info.CommentHeaderEnd && StreamUtils.FindSequence(source, OGG_PAGE_ID))
+                        {
+                            info.CommentHeaderEnd = source.Position - OGG_PAGE_ID.Length;
                         }
                     }
                     else if (CONTENTS_OPUS == contents)
@@ -707,9 +714,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <summary>
+        /// Calculate average bitrate
+        /// </summary>
+        /// <returns>Average bitrate</returns>
         private double getBitRate()
         {
-            // Calculate average bit rate
             double result = 0;
 
             if (getDuration() > 0) result = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / getDuration();
@@ -717,10 +727,13 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        /// <summary>
+        /// Check for file correctness
+        /// </summary>
+        /// <returns>True if file data is coherent; false if not</returns>
         private bool isValid()
         {
-            // Check for file correctness
-            return ((channelsArrangement.NbChannels > 0) && (sampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0));
+            return (channelsArrangement.NbChannels > 0) && (sampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0);
         }
 
         private static ChannelsArrangement getArrangementFromCode(int vorbisCode)
@@ -805,17 +818,25 @@ namespace ATL.AudioData.IO
             readTagParams.PrepareForWriting = true;
             Read(s, readTagParams);
 
-            if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
-
             // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
+                {
                     memStream.Write(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
+                    vorbisTag.switchOggBehaviour();
+                    vorbisTag.Write(memStream, tag);
+                }
                 else if (CONTENTS_OPUS == contents)
+                {
+                    vorbisTag.switchOggBehaviour();
                     memStream.Write(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
-
-                vorbisTag.Write(memStream, tag);
+                }
+                else if (CONTENTS_FLAC == contents)
+                {
+                    vorbisTag.switchFlacBehaviour();
+                    FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag);
+                }
 
                 long newTagSize = memStream.Position;
 
@@ -835,7 +856,7 @@ namespace ATL.AudioData.IO
                     else
                     {
                         // TODO - handle case where initial setup header spans across two pages
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ATL does not yet handle the case where Vorbis setup header spans across two OGG pages");
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "The case where Vorbis setup header spans across two OGG pages is not supported yet");
                         return false;
                     }
                     setupHeader_nbSegments = (int)Math.Ceiling(1.0 * setupHeaderSize / 255);
@@ -917,7 +938,7 @@ namespace ATL.AudioData.IO
                     else
                     {
                         // TODO - handle case where initial setup header spans across two pages
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ATL does not yet handle the case where Vorbis setup header spans across two OGG pages");
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "The case where Vorbis setup header spans across two OGG pages is not supported yet");
                         return false;
                     }
                     setupHeader_nbSegments = (int)Math.Ceiling(1.0 * setupHeaderSize / 255);
@@ -1062,7 +1083,8 @@ namespace ATL.AudioData.IO
                 if (data.Length < kv.Value) data = new byte[kv.Value]; // Enlarge only if needed; max size is 0xffff
                 s.Read(data, 0, kv.Value);
                 crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
-                s.Seek(kv.Key + 22, SeekOrigin.Begin); // Position of CRC within OGG header
+                // Write CRC value at the dedicated location within the OGG header
+                s.Seek(kv.Key + 22, SeekOrigin.Begin);
                 StreamUtils.WriteUInt32(s, crc);
             }
         }

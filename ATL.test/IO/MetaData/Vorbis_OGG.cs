@@ -160,24 +160,34 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_FlacOGG()
         {
             ArrayLogger log = new ArrayLogger();
-            AudioDataManager theFile;
-            string location = TestUtils.GetResourceLocationRoot() + "OGG/embedded-flac.ogg";
-            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
-            theFile.ReadFromFile();
+            string fileName = "OGG/embedded-flac.ogg";
+            string location = TestUtils.GetResourceLocationRoot() + fileName;
+            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
-            TagHolder theTag = new TagHolder();
-            theTag.Title = "Test !!";
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
-
-            // Confirm an exception has been raised
-            IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
-            Assert.IsTrue(logItems.Count > 0);
-            bool found = false;
-            foreach (LogItem l in logItems)
+            try
             {
-                if (l.Message.Contains("not supported")) found = true;
+                theFile.ReadFromFile();
+
+                TagHolder theTag = new TagHolder();
+                theTag.Title = "Test !!";
+                theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+
+                // Confirm an exception has been raised
+                IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
+                Assert.IsTrue(logItems.Count > 0);
+                bool found = false;
+                foreach (LogItem l in logItems)
+                {
+                    if (l.Message.Contains("not supported")) found = true;
+                }
+                Assert.IsTrue(found);
             }
-            Assert.IsTrue(found);
+            finally
+            {
+                // Get rid of the working copy
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
         }
 
         [TestMethod]

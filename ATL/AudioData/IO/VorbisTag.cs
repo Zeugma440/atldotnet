@@ -69,13 +69,13 @@ namespace ATL.AudioData.IO
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
-        private readonly bool writePicturesWithMetadata;
+        private bool writePicturesWithMetadata;
         // Tweak to prevent/allow framing bit to be written at the end of the metadata block (OGG vs. FLAC behaviour)
-        private readonly bool writeMetadataFramingBit;
+        private bool writeMetadataFramingBit;
         // Tweak to enable/disable core signature (OGG vs. FLAC behaviour)
-        private readonly bool hasCoreSignature;
+        private bool hasCoreSignature;
         // Tweak to enable/disable padding management at VorbisComment level (OGG vs. FLAC behaviour)
-        private readonly bool managePadding;
+        private bool managePadding;
 
         // Initial offset of the entire Vorbis tag
         private long initialTagOffset;
@@ -126,6 +126,24 @@ namespace ATL.AudioData.IO
 
 
         // ---------- SPECIFIC MEMBERS
+
+        private void switchBehaviour(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature, bool managePadding)
+        {
+            this.writePicturesWithMetadata = writePicturesWithMetadata;
+            this.writeMetadataFramingBit = writeMetadataFramingBit;
+            this.hasCoreSignature = hasCoreSignature;
+            this.managePadding = managePadding;
+        }
+
+        public void switchFlacBehaviour()
+        {
+            switchBehaviour(false, false, false, false);
+        }
+
+        public void switchOggBehaviour()
+        {
+            switchBehaviour(true, true, true, true);
+        }
 
         public static VorbisMetaDataBlockPicture ReadMetadataBlockPicture(Stream s)
         {
