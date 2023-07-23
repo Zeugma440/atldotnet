@@ -159,9 +159,28 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_FlacOGG()
         {
+            new ConsoleLogger();
+            string location = "OGG/embedded-flac.ogg";
+
+            string comment = testData.Comment;
+            IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
+            try
+            {
+                // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
+                testData.GeneralDescription = comment;
+                testData.Comment = null;
+                testData.EmbeddedPictures = new List<PictureInfo>();
+                tagIO_RW_VorbisOGG_Existing(location, 0);
+            }
+            finally
+            {
+                testData.GeneralDescription = null;
+                testData.Comment = comment;
+                testData.EmbeddedPictures = pictureInfos;
+            }
+            /*
             ArrayLogger log = new ArrayLogger();
             string fileName = "OGG/embedded-flac.ogg";
-            string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
@@ -169,25 +188,14 @@ namespace ATL.test.IO.MetaData
             {
                 theFile.ReadFromFile();
 
-                TagHolder theTag = new TagHolder();
-                theTag.Title = "Test !!";
-                theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
-
-                // Confirm an exception has been raised
-                IList<LogItem> logItems = log.GetAllItems(Log.LV_ERROR);
-                Assert.IsTrue(logItems.Count > 0);
-                bool found = false;
-                foreach (LogItem l in logItems)
-                {
-                    if (l.Message.Contains("not supported")) found = true;
-                }
-                Assert.IsTrue(found);
+                                
             }
             finally
             {
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
+            */
         }
 
         [TestMethod]
@@ -401,7 +409,7 @@ namespace ATL.test.IO.MetaData
                     break;
                 }
             }
-            Assert.AreEqual(1, nbFound);
+            Assert.AreEqual(initialNbPictures > 0 ? 1 : 0, nbFound);
 
             // Remove the additional supported field
             theTag = new TagHolder();

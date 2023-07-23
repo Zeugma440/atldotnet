@@ -412,11 +412,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public static WriteResult writeVorbisCommentBlock(Stream w, TagData tag, VorbisTag vorbisTag)
+        public static WriteResult writeVorbisCommentBlock(Stream w, TagData tag, VorbisTag vorbisTag, bool isLastMetaBlock = false)
         {
             long sizePos, dataPos, finalPos;
 
-            w.Write(new byte[] { META_VORBIS_COMMENT }, 0, 1);
+            byte toWrite = META_VORBIS_COMMENT;
+            if (isLastMetaBlock) toWrite |= 0x80;
+            w.Write(new byte[] { toWrite }, 0, 1);
             sizePos = w.Position;
             w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
@@ -431,12 +433,14 @@ namespace ATL.AudioData.IO
             return new WriteResult(WriteMode.REPLACE, writtenFields);
         }
 
-        private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta)
+        private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta, bool isLastMetaBlock = false)
         {
             long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -cumulativeDelta);
             if (paddingSizeToWrite > 0)
             {
-                w.Write(META_PADDING);
+                byte toWrite = META_PADDING;
+                if (isLastMetaBlock) toWrite |= 0x80;
+                w.Write(toWrite);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
                 return new WriteResult(WriteMode.REPLACE, 1);
@@ -491,11 +495,13 @@ namespace ATL.AudioData.IO
             else return new WriteResult(WriteMode.REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
-        private int writePictureBlock(BinaryWriter w, PictureInfo picture)
+        private int writePictureBlock(BinaryWriter w, PictureInfo picture, bool isLastMetaBlock = false)
         {
             long sizePos, dataPos, finalPos;
 
-            w.Write(META_PICTURE);
+            byte toWrite = META_PICTURE;
+            if (isLastMetaBlock) toWrite |= 0x80;
+            w.Write(toWrite);
 
             sizePos = w.BaseStream.Position;
             w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method

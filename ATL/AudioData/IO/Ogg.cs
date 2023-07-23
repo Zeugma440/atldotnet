@@ -21,8 +21,7 @@ namespace ATL.AudioData.IO
     /// 
     ///   1. CRC's : Current implementation does not test OGG page header CRC's
     ///   2. Page numbers : Current implementation does not test page numbers consistency
-    ///   3. Writing metadata is not supported yet on embedded FLAC files
-    ///   4. When the file has multiple bitstreams, only those whose headers 
+    ///   3. When the file has multiple bitstreams, only those whose headers 
     ///   are positioned at the beginning of the file are detected
     /// 
     /// </summary>
@@ -829,13 +828,14 @@ namespace ATL.AudioData.IO
                 }
                 else if (CONTENTS_OPUS == contents)
                 {
-                    vorbisTag.switchOggBehaviour();
                     memStream.Write(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
+                    vorbisTag.switchOggBehaviour();
+                    vorbisTag.Write(memStream, tag);
                 }
                 else if (CONTENTS_FLAC == contents)
                 {
                     vorbisTag.switchFlacBehaviour();
-                    FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag);
+                    FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag, true);
                 }
 
                 long newTagSize = memStream.Position;
@@ -908,17 +908,26 @@ namespace ATL.AudioData.IO
             readTagParams.PrepareForWriting = true;
             Read(s, readTagParams);
 
-            if (CONTENTS_FLAC == contents) throw new NotImplementedException("Writing is not supported yet for embedded FLAC");
-
             // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
             using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
+                {
                     await memStream.WriteAsync(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
+                    vorbisTag.switchOggBehaviour();
+                    vorbisTag.Write(memStream, tag);
+                }
                 else if (CONTENTS_OPUS == contents)
+                {
                     await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
-
-                vorbisTag.Write(memStream, tag);
+                    vorbisTag.switchOggBehaviour();
+                    vorbisTag.Write(memStream, tag);
+                }
+                else if (CONTENTS_FLAC == contents)
+                {
+                    vorbisTag.switchFlacBehaviour();
+                    FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag, true);
+                }
 
                 long newTagSize = memStream.Position;
 
