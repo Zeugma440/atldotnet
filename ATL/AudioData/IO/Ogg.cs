@@ -475,24 +475,17 @@ namespace ATL.AudioData.IO
                         if (isSupported[pageHeader.StreamId] && 2 == pageCount[pageHeader.StreamId]) // Comment packet
                         {
                             // Load all Comment packet sub-pages into a MemoryStream to read them later in one go
-                            // NB : Detection does not work when the 1st subpage of many uses less than 255 segments
-                            // or when there is only one subpage that actually takes up 255 segments
-                            if (pageHeader.Segments == 255 || multiPagecommentPacket[pageHeader.StreamId])
+                            // NB : Detecting when to read Comment packet page directly is too difficult
+                            // as some files have their 1st subpage of many using less than 255 segments
+                            multiPagecommentPacket[pageHeader.StreamId] = true;
+                            MemoryStream stream;
+                            if (bitstreams.ContainsKey(pageHeader.StreamId)) stream = bitstreams[pageHeader.StreamId];
+                            else
                             {
-                                multiPagecommentPacket[pageHeader.StreamId] = true;
-                                MemoryStream stream;
-                                if (bitstreams.ContainsKey(pageHeader.StreamId)) stream = bitstreams[pageHeader.StreamId];
-                                else
-                                {
-                                    stream = new MemoryStream();
-                                    bitstreams[pageHeader.StreamId] = stream;
-                                }
-                                stream.Write(source.ReadBytes(pageSize), 0, pageSize);
+                                stream = new MemoryStream();
+                                bitstreams[pageHeader.StreamId] = stream;
                             }
-                            else // Read Comment packet page directly
-                            {
-                                readCommentPacket(source, contents, vorbisTag, readTagParams);
-                            }
+                            stream.Write(source.ReadBytes(pageSize), 0, pageSize);
                         }
                     }
                     else // 1st page of a new stream
