@@ -180,7 +180,7 @@ namespace ATL
         /// <returns></returns>
         public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, TagType tagType = TagType.ANY, object nativePicCode = null, int position = 1)
         {
-            if (null == data || data.Length < 3) throw new ArgumentException("Data should not be null and be at least 3 bytes long");
+            if (null == data) throw new ArgumentException("Data should not be null");
             if (null == nativePicCode) nativePicCode = 0; // Can't default with 0 in params declaration
 
             return new PictureInfo(picType, tagType, nativePicCode, position, data);
@@ -198,7 +198,7 @@ namespace ATL
         /// <returns></returns>
         public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, TagType tagType, object nativePicCode, int position = 1)
         {
-            if (null == stream || length < 3) throw new ArgumentException("Stream should not be null and be at least 3 bytes long");
+            if (null == stream) throw new ArgumentException("Stream should not be null");
 
             byte[] data = new byte[length];
             stream.Read(data, 0, length);
@@ -270,7 +270,8 @@ namespace ATL
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
             PictureData = binaryData;
-            NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(PictureData);
+            if (PictureData.Length > 2)
+                NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(PictureData);
         }
 
         /// <summary>

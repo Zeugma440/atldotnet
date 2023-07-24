@@ -176,7 +176,7 @@ namespace Commons
         {
             ImageProperties props = new ImageProperties();
 
-            if (ImageFormat.Undefined.Equals(format)) format = GetImageFormatFromPictureHeader(imageData);
+            if (ImageFormat.Undefined.Equals(format) && imageData.Length > 2) format = GetImageFormatFromPictureHeader(imageData);
 
             if (format.Equals(ImageFormat.Unsupported)) return props;
 
