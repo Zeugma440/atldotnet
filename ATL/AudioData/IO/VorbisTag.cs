@@ -209,7 +209,7 @@ namespace ATL.AudioData.IO
         }
 
         // Reads large data chunks by streaming
-        private void SetPictureItem(Stream Source, string tagId, int size, ReadTagParams readTagParams)
+        private void SetPictureItem(Stream source, string tagId, int size, ReadTagParams readTagParams)
         {
             if (tagId.Equals(PICTURE_METADATA_ID_NEW))
             {
@@ -219,7 +219,7 @@ namespace ATL.AudioData.IO
 
                 // Read the whole base64-encoded picture header _and_ binary data
                 byte[] encodedData = new byte[size];
-                Source.Read(encodedData, 0, size);
+                source.Read(encodedData, 0, size);
 
                 // Gets rid of unwanted zeroes
                 // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
@@ -243,7 +243,7 @@ namespace ATL.AudioData.IO
                     size = size - (size % 4);
 
                     byte[] encodedData = new byte[size];
-                    Source.Read(encodedData, 0, size);
+                    source.Read(encodedData, 0, size);
 
                     PictureInfo picInfo = PictureInfo.fromBinaryData(Utils.DecodeFrom64(encodedData), picType, getImplementedTagType(), 0, picturePosition);
                     tagData.Pictures.Add(picInfo);
