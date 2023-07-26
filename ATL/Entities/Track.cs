@@ -657,10 +657,6 @@ namespace ATL
         {
             return (value.HasValue && (Settings.NullAbsentValues || value != 0));
         }
-        private bool canUseValue(uint? value)
-        {
-            return (value.HasValue && (Settings.NullAbsentValues || value != 0));
-        }
 
         private bool canUseValue(float value)
         {
@@ -674,12 +670,6 @@ namespace ATL
         }
 
         private string toTagValue(int? value)
-        {
-            if (canUseValue(value)) return value.Value.ToString();
-            else return Settings.NullAbsentValues ? "" : "0";
-        }
-
-        private string toTagValue(uint? value)
         {
             if (canUseValue(value)) return value.Value.ToString();
             else return Settings.NullAbsentValues ? "" : "0";
