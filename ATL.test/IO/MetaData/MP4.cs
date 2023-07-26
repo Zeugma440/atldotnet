@@ -116,11 +116,13 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(theFile, 1);
 
             string pid = testData.ProductId;
+            int? bpm = testData.BPM;
             // Test reading complete recording date
             try
             {
                 testData.Date = DateTime.Parse("1997-06-20T00:00:00"); // No timestamp in MP4 date format
                 testData.ProductId = null;
+                testData.BPM = 0;
 
                 location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
                 theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -130,6 +132,7 @@ namespace ATL.test.IO.MetaData
             {
                 testData.Date = DateTime.MinValue;
                 testData.ProductId = pid;
+                testData.BPM = bpm;
             }
         }
 

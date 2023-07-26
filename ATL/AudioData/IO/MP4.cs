@@ -84,10 +84,12 @@ namespace ATL.AudioData.IO
             { "©grp", Field.GROUP },
             { "©mvi", Field.SERIES_PART},
             { "©mvn", Field.SERIES_TITLE },
-            { "ldes", Field.LONG_DESCRIPTION }
+            { "ldes", Field.LONG_DESCRIPTION },
+            { "tmpo", Field.BPM }
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
+        // 0 = special / 21 = int8-16-24-32 / 22 = uint8-16-24-32
         private static ConcurrentDictionary<string, byte> frameClasses_mp4 = new ConcurrentDictionary<string, byte>()
         {
             ["gnre"] = 0,

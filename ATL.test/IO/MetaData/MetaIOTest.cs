@@ -79,6 +79,7 @@ namespace ATL.test.IO.MetaData
             testData.DiscTotal = 4;
             testData.Copyright = "";
             testData.GeneralDescription = "";
+            testData.BPM = 440;
 
 
             var testAddFields = new Dictionary<string, string>();
@@ -329,7 +330,7 @@ namespace ATL.test.IO.MetaData
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
-            
+
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.AreEqual("", meta.Title);
@@ -430,7 +431,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Conductor != "") theTag.Conductor = "John Johnson Jr.";
             if (testData.Publisher != "") theTag.Publisher = "Z Corp.";
             if (testData.GeneralDescription != "") theTag.GeneralDescription = "Description";
-            if (testData.ProductId != "") theTag.ProductId= "ProductId";
+            if (testData.ProductId != "") theTag.ProductId = "ProductId";
             if (testData.SortAlbum != "") theTag.SortAlbum = "SortAlbum";
             if (testData.SortAlbumArtist != "") theTag.SortAlbumArtist = "SortAlbumArtist";
             if (testData.SortArtist != "") theTag.SortArtist = "SortArtist";
@@ -439,6 +440,7 @@ namespace ATL.test.IO.MetaData
             if (testData.SeriesTitle != "") theTag.SeriesTitle = "SeriesTitle";
             if (testData.SeriesPart != "") theTag.SeriesPart = "2";
             if (testData.LongDescription != "") theTag.LongDescription = "LongDescription";
+            if (testData.BPM != 0) theTag.BPM = 550;
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -510,6 +512,7 @@ namespace ATL.test.IO.MetaData
             if (testData.SeriesTitle != "") Assert.AreEqual("SeriesTitle", meta.SeriesTitle);
             if (testData.SeriesPart != "") Assert.AreEqual("2", meta.SeriesPart);
             if (testData.LongDescription != "") Assert.AreEqual("LongDescription", meta.LongDescription);
+            if (testData.BPM != 0) Assert.AreEqual(550, meta.BPM);
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -786,8 +789,9 @@ namespace ATL.test.IO.MetaData
             if (testData.Copyright != "") Assert.AreEqual(testData.Copyright, meta.Copyright);
             if (testData.GeneralDescription != "") Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
             if (testData.ProductId != "") Assert.AreEqual(testData.ProductId, meta.ProductId);
+            if (testData.BPM != 0) Assert.AreEqual(testData.BPM, meta.BPM);
 
-            // Unsupported field
+            // Additional fields
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
                 foreach (KeyValuePair<string, string> field in testData.AdditionalFields)

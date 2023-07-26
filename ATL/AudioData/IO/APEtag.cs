@@ -66,7 +66,8 @@ namespace ATL.AudioData.IO
             { "ALBUMARTIST", Field.ALBUM_ARTIST },
             { "ALBUM ARTIST", Field.ALBUM_ARTIST },
             { "CONDUCTOR", Field.CONDUCTOR },
-            { "Lyrics", Field.LYRICS_UNSYNCH }
+            { "Lyrics", Field.LYRICS_UNSYNCH },
+            { "BPM", Field.BPM }
         };
 
 

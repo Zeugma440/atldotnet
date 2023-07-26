@@ -89,7 +89,16 @@ namespace ATL.test.IO.MetaData
             string location = TestUtils.GetResourceLocationRoot() + "FLAC/flac_dirtyTrackDiscNumbering.flac";
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            readExistingTagsOnFile(theFile, 2);
+            int? bpm = testData.BPM;
+            try
+            {
+                testData.BPM = 0;
+                readExistingTagsOnFile(theFile, 2);
+            }
+            finally
+            {
+                testData.BPM = bpm;
+            }
         }
 
         [TestMethod]
@@ -176,6 +185,7 @@ namespace ATL.test.IO.MetaData
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
+            theTag.BPM = 550;
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
@@ -198,6 +208,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
+            Assert.AreEqual(550, theFile.NativeTag.BPM);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -233,7 +244,7 @@ namespace ATL.test.IO.MetaData
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 4063; // Default padding of the sample FLAC file
+            ATL.Settings.PaddingSize = 4052; // Default padding of the sample FLAC file
 
             try
             {

@@ -11,6 +11,7 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "AIF/aiff_empty.aif";
             notEmptyFile = "AIF/aifc_tagged.aif";
+            testData.BPM = 0;
             tagType = MetaDataIOFactory.TagType.ID3V2;
         }
 

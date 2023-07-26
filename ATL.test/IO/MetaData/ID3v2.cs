@@ -34,6 +34,7 @@ namespace ATL.test.IO.MetaData
             testData.SeriesTitle = "SeriesTitle";
             testData.SeriesPart = "2";
             testData.LongDescription = "LongDescription";
+            testData.BPM = 0;
 
             tagType = MetaDataIOFactory.TagType.ID3V2;
             var pics = testData.EmbeddedPictures;
@@ -182,12 +183,14 @@ namespace ATL.test.IO.MetaData
             {
                 testData.Date = DateTime.Parse("1997-06-20T04:04:00"); // No seconds in ID3v2.3
                 testData.PublishingDate = DateTime.MinValue; // No publishing date in ID3v2.3
+                testData.BPM = 440;
                 readExistingTagsOnFile(theFile);
             }
             finally
             {
                 testData.Date = DateTime.Parse("1997-06-20T04:04:04");
                 testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
+                testData.BPM = 0;
             }
         }
 
@@ -499,7 +502,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.ID3v2);
             Assert.IsTrue(theFile.ID3v2.Exists);
 
-            Assert.AreEqual(4, theFile.ID3v2.AdditionalFields.Count);
+            Assert.AreEqual(3, theFile.ID3v2.AdditionalFields.Count);
 
             int found = 0;
             foreach (KeyValuePair<string, string> field in theFile.ID3v2.AdditionalFields)
@@ -562,7 +565,6 @@ namespace ATL.test.IO.MetaData
 
             int found = 0;
             string rvaValue = "";
-            string tbpValue = "";
             foreach (KeyValuePair<string, string> field in theFile.ID3v2.AdditionalFields)
             {
                 if (field.Key.Equals("RVA"))
@@ -570,13 +572,8 @@ namespace ATL.test.IO.MetaData
                     rvaValue = field.Value;
                     found++;
                 }
-                else if (field.Key.Equals("TBP"))
-                {
-                    tbpValue = field.Value;
-                    found++;
-                }
             }
-            Assert.AreEqual(2, found);
+            Assert.AreEqual(1, found);
 
             // Check if they are persisted with proper ID3v2.4 field codes when editing the tag
             TagData theTag = new TagData();
@@ -593,13 +590,8 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(rvaValue, field.Value);
                     found++;
                 }
-                else if (field.Key.Equals("TBPM"))
-                {
-                    Assert.AreEqual(tbpValue, field.Value);
-                    found++;
-                }
             }
-            Assert.AreEqual(2, found);
+            Assert.AreEqual(1, found);
 
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
 

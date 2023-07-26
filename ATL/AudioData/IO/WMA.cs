@@ -108,7 +108,8 @@ namespace ATL.AudioData.IO
             { "WM/AlbumSortOrder", Field.SORT_ALBUM },
             { "WM/ArtistSortOrder", Field.SORT_ARTIST },
             { "WM/TitleSortOrder", Field.SORT_TITLE },
-            { "WM/ContentGroupDescription", Field.GROUP }
+            { "WM/ContentGroupDescription", Field.GROUP },
+            { "WM/BeatsPerMinute", Field.BPM }
         };
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>

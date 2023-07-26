@@ -169,11 +169,15 @@ namespace ATL
             /// <summary>
             /// Long description
             /// </summary>
-            LONG_DESCRIPTION = 36
+            LONG_DESCRIPTION = 36,
+            /// <summary>
+            /// Beats per minute
+            /// </summary>
+            BPM = 37
         }
 
         private static readonly ICollection<Field> numericFields = new HashSet<Field>() {
-            Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE
+            Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE, Field.BPM
         };
 
         /// <summary>

@@ -314,6 +314,21 @@ namespace ATL
             get => Utils.ProtectValue(tagData[Field.LONG_DESCRIPTION]);
             set => tagData.IntegrateValue(Field.LONG_DESCRIPTION, value);
         }
+        /// <inheritdoc/>
+        public int? BPM
+        {
+            get
+            {
+                int result;
+                if (!int.TryParse(tagData[Field.BPM], out result))
+                {
+                    if (Settings.NullAbsentValues) return null;
+                    else return 0;
+                }
+                return result;
+            }
+            set => tagData.IntegrateValue(Field.BPM, (null == value) ? null : value.ToString());
+        }
 
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")

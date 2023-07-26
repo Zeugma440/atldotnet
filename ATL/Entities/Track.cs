@@ -155,6 +155,10 @@ namespace ATL
         /// Long description (may also be called "Podcast description")
         /// </summary>
         public string LongDescription { get; set; }
+        /// <summary>
+        /// Beats per minute
+        /// </summary>
+        public int? BPM { get; set; }
 
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
@@ -409,6 +413,7 @@ namespace ATL
             DiscNumber = update(metadata.DiscNumber);
             DiscTotal = update(metadata.DiscTotal);
             Popularity = metadata.Popularity;
+            BPM = metadata.BPM;
 
             Chapters = metadata.Chapters;
             ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
@@ -467,6 +472,7 @@ namespace ATL
             result.IntegrateValue(Field.SERIES_TITLE, SeriesTitle);
             result.IntegrateValue(Field.SERIES_PART, SeriesPart);
             result.IntegrateValue(Field.LONG_DESCRIPTION, LongDescription);
+            result.IntegrateValue(Field.BPM, toTagValue(BPM));
             if (isYearExplicit)
             {
                 result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
@@ -651,6 +657,10 @@ namespace ATL
         {
             return (value.HasValue && (Settings.NullAbsentValues || value != 0));
         }
+        private bool canUseValue(uint? value)
+        {
+            return (value.HasValue && (Settings.NullAbsentValues || value != 0));
+        }
 
         private bool canUseValue(float value)
         {
@@ -664,6 +674,12 @@ namespace ATL
         }
 
         private string toTagValue(int? value)
+        {
+            if (canUseValue(value)) return value.Value.ToString();
+            else return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private string toTagValue(uint? value)
         {
             if (canUseValue(value)) return value.Value.ToString();
             else return Settings.NullAbsentValues ? "" : "0";

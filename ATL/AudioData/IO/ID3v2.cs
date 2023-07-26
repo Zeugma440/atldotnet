@@ -151,7 +151,8 @@ namespace ATL.AudioData.IO
                 { "POP", Field.RATING },
                 { "TCO", Field.GENRE },
                 { "TCR", Field.COPYRIGHT },
-                { "TPB", Field.PUBLISHER }
+                { "TPB", Field.PUBLISHER },
+                { "TBP", Field.BPM }
             };
 
         // Mapping between standard fields and ID3v2.3 identifiers
@@ -184,7 +185,8 @@ namespace ATL.AudioData.IO
                 { "TIT1", Field.GROUP },
                 { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.3 standard
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.3 standard
-                { "TDES", Field.LONG_DESCRIPTION } // Not part of ID3v2.3 standard
+                { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.3 standard
+                { "TBPM", Field.BPM }
             };
 
         // Mapping between standard fields and ID3v2.4 identifiers
@@ -215,7 +217,8 @@ namespace ATL.AudioData.IO
                 { "TIT1", Field.GROUP },
                 { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.4 standard
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.4 standard
-                { "TDES", Field.LONG_DESCRIPTION } // Not part of ID3v2.4 standard
+                { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.4 standard
+                { "TBPM", Field.BPM }
             };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions

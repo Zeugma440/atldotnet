@@ -113,12 +113,14 @@ namespace ATL.test.IO.MetaData
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
+            int bpm = testData.BPM.Value;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
                 // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
+                testData.BPM = 0;
                 testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
@@ -127,6 +129,7 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.BPM = bpm;
             }
         }
 
@@ -139,12 +142,14 @@ namespace ATL.test.IO.MetaData
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
+            int bpm = testData.BPM.Value;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
                 // Theora-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
+                testData.BPM = 0;
                 testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
@@ -153,6 +158,7 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.BPM = bpm;
             }
         }
 
@@ -163,6 +169,7 @@ namespace ATL.test.IO.MetaData
             string location = "OGG/embedded-flac.ogg";
 
             string comment = testData.Comment;
+            int bpm = testData.BPM.Value;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
@@ -170,6 +177,7 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
                 testData.EmbeddedPictures = new List<PictureInfo>();
+                testData.BPM = 0;
                 tagIO_RW_VorbisOGG_Existing(location, 0);
             }
             finally
@@ -177,25 +185,8 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.BPM = bpm;
             }
-            /*
-            ArrayLogger log = new ArrayLogger();
-            string fileName = "OGG/embedded-flac.ogg";
-            string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            try
-            {
-                theFile.ReadFromFile();
-
-                                
-            }
-            finally
-            {
-                // Get rid of the working copy
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            }
-            */
         }
 
         [TestMethod]
@@ -206,7 +197,16 @@ namespace ATL.test.IO.MetaData
             string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_dirtyTrackDiscNumbering.ogg";
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            readExistingTagsOnFile(theFile, 2);
+            int bpm = testData.BPM.Value;
+            try
+            {
+                testData.BPM = 0;
+                readExistingTagsOnFile(theFile, 2);
+            }
+            finally
+            {
+                testData.BPM = bpm;
+            }
         }
 
         [TestMethod]
@@ -333,7 +333,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2042; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 2031; // Padding size in OGG test files
 
             try
             {
@@ -351,7 +351,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2042; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 2031; // Padding size in OGG test files
 
             try
             {

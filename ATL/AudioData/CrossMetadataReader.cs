@@ -65,11 +65,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Title
+        public string Title
         {
             get
             {
-                String title = "";
+                string title = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     title = reader.Title;
@@ -79,11 +79,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Artist
+        public string Artist
         {
             get
             {
-                String artist = "";
+                string artist = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     artist = reader.Artist;
@@ -93,11 +93,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Composer
+        public string Composer
         {
             get
             {
-                String composer = "";
+                string composer = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     composer = reader.Composer;
@@ -107,11 +107,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Comment
+        public string Comment
         {
             get
             {
-                String comment = "";
+                string comment = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     comment = reader.Comment;
@@ -121,11 +121,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Genre
+        public string Genre
         {
             get
             {
-                String genre = "";
+                string genre = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     genre = reader.Genre;
@@ -233,11 +233,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-		public String Copyright
+		public string Copyright
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Copyright;
@@ -247,11 +247,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-		public String AlbumArtist
+		public string AlbumArtist
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.AlbumArtist;
@@ -261,11 +261,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Conductor
+        public string Conductor
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Conductor;
@@ -275,11 +275,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String Publisher
+        public string Publisher
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Publisher;
@@ -303,11 +303,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String GeneralDescription
+        public string GeneralDescription
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.GeneralDescription;
@@ -317,11 +317,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String OriginalArtist
+        public string OriginalArtist
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.OriginalArtist;
@@ -331,11 +331,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String OriginalAlbum
+        public string OriginalAlbum
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.OriginalAlbum;
@@ -345,11 +345,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public String ProductId
+        public string ProductId
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.ProductId;
@@ -362,7 +362,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SortAlbum;
@@ -376,7 +376,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SortAlbumArtist;
@@ -390,7 +390,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SortArtist;
@@ -404,7 +404,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SortTitle;
@@ -418,7 +418,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Group;
@@ -432,7 +432,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SeriesTitle;
@@ -446,7 +446,7 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.SeriesPart;
@@ -460,11 +460,26 @@ namespace ATL.AudioData
         {
             get
             {
-                String result = "";
+                string result = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.LongDescription;
                     if (result != "") break;
+                }
+                return result;
+            }
+        }
+
+        public int? BPM
+        {
+            get
+            {
+                int? result = null;
+                if (!Settings.NullAbsentValues) result = 0;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.BPM;
+                    if (result.HasValue && (Settings.NullAbsentValues || result.Value > 0)) break;
                 }
                 return result;
             }
