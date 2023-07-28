@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
 	<TestProjectType>UnitTest</TestProjectType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>

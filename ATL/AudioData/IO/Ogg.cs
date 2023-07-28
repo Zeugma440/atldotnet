@@ -809,7 +809,7 @@ namespace ATL.AudioData.IO
             return await doWriteAsync(s, tag);
         }
 
-        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        
         private async Task<bool> doWriteAsync(Stream s, TagData tag)
         {
             bool result = true;
