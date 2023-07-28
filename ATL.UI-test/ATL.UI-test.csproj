@@ -3,10 +3,14 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
-    <RootNamespace>ATL.UI_benchmark</RootNamespace>
+    <RootNamespace>ATL.UI_test</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ATL\ATL.csproj" />
+  </ItemGroup>
 
 </Project>
