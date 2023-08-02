@@ -49,7 +49,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info
+        files: ${{steps.coverlet.outputs.coverageFile}} 
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
     - name: Upload to SonarScanner
