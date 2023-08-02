@@ -129,7 +129,7 @@ namespace ATL.test.IO.Playlist
                                 else if (source.Name.Equals("creator", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Artist);
                                 else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Album);
                                 else if (source.Name.Equals("annotation", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Comment);
-                                else if (source.Name.Equals("trackNum", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].TrackNumber);
+                                else if (source.Name.Equals("trackNum", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].TrackNumber.ToString());
                                 else if (source.Name.Equals("duration", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), ((long)Math.Round(tracksToWrite[index].DurationMs)).ToString());
                             }
                         }
