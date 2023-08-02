@@ -34,7 +34,7 @@ jobs:
     - name: Build ATL
       run: dotnet build ATL --no-restore
     - name: Build ATL.unit-test
-      run: dotnet build ATL.unit-test --no-restore
+      run: dotnet build ATL.unit-test --no-restore -p:DebugType=pdbonly;DeterministicSourcePaths=false
     - name: Test
       run: dotnet test ATL.unit-test --no-build --verbosity normal
     - name: Coverlet coverage test
