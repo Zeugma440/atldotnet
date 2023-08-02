@@ -1,6 +1,7 @@
 ﻿using ATL.CatalogDataReaders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Text;
 
 namespace ATL.test
 {
@@ -78,6 +79,8 @@ namespace ATL.test
         public void Cue_ReadTracksNonUtf8()
         {
             string testFileLocation = TestUtils.GetResourceLocationRoot() + "_Cuesheet/CDImage.cue";
+
+            System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             ICatalogDataReader theReader = CatalogDataReaderFactory.GetInstance().GetCatalogDataReader(testFileLocation);
 

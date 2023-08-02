@@ -80,6 +80,7 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             Encoding initialEncoding = ATL.Settings.DefaultTextEncoding;
+            System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             ATL.Settings.DefaultTextEncoding = Encoding.GetEncoding("GB18030");
             try
             {
