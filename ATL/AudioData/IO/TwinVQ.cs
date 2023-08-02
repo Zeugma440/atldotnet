@@ -13,7 +13,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for TwinVQ files manipulation (extension : .VQF)
     /// </summary>
-	class TwinVQ : MetaDataIO, IAudioDataIO
+	partial class TwinVQ : MetaDataIO, IAudioDataIO
     {
         // Twin VQ header ID
         private static readonly byte[] TWIN_ID = Utils.Latin1Encoding.GetBytes("TWIN");
@@ -382,13 +382,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(Stream s)
-        {
-            TagData tag = prepareRemove();
-            return Write(s, tag);
-        }
-
-        // Specific implementation for conservation of fields that are required for playback
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();

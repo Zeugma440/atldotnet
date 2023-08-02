@@ -13,7 +13,7 @@ namespace ATL.AudioData.IO
     /// Class for SPC700 files manipulation (extensions : .SPC)
     /// According to file format v0.30; inspired by the SNESamp source (ID666.cpp)
     /// </summary>
-    class SPC : MetaDataIO, IAudioDataIO
+    partial class SPC : MetaDataIO, IAudioDataIO
     {
         private const string ZONE_EXTENDED = "extended";
         private const string ZONE_HEADER = "header";
@@ -635,13 +635,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(Stream s)
-        {
-            TagData tag = prepareRemove();
-            return Write(s, tag);
-        }
-
-        // Specific implementation for conservation of fields that are required for playback
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
-using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -798,19 +797,8 @@ namespace ATL.AudioData.IO
         // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
-
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
-        {
-            return doWrite(s, tag);
-        }
-
-        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
-        {
-            return await doWriteAsync(s, tag);
-        }
-
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        private async Task<bool> doWriteAsync(Stream s, TagData tag)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
@@ -1058,12 +1046,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        public bool Remove(Stream s)
-        {
-            TagData tag = vorbisTag.GetDeletionTagData();
-            return Write(s, tag);
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();

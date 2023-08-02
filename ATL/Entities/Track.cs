@@ -16,7 +16,7 @@ namespace ATL
     /// Track is the "user-friendly" go-to class you should use for basic operations. Advanced operations should use lower level classes.
     /// Fields are mapped at the lowest level of the library (AudioData.IO). From there on, information "bubbles up" to Track.
     /// </summary>
-    public class Track
+    public partial class Track
     {
         private const string InMemoryPath = "In-memory";
 
@@ -572,7 +572,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save(Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData(), writeProgress);
+            bool result = fileIO.Save(toTagData(), new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -588,7 +588,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveAsync(IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData(), writeProgress);
+            bool result = await fileIO.SaveAsync(toTagData(), new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -606,7 +606,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool Remove(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY, Action<float> writeProgress = null)
         {
-            bool result = fileIO.Remove(tagType, writeProgress);
+            bool result = fileIO.Remove(tagType, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -624,7 +624,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> RemoveAsync(MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY, IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.RemoveAsync(tagType, writeProgress);
+            bool result = await fileIO.RemoveAsync(tagType, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;

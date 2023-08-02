@@ -12,7 +12,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Superclass that "consolidates" all metadata I/O algorithms to ease development of new classes and minimize their code
     /// </summary>
-    public abstract class MetaDataIO : MetaDataHolder, IMetaDataIO
+    public abstract partial class MetaDataIO : MetaDataHolder, IMetaDataIO
     {
         // ------ CONSTS -----------------------------------------------------
 
@@ -460,25 +460,8 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
-        {
-            TagData dataToWrite = prepareWrite(s, tag);
-
-            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            bool result = surgeon.RewriteZones(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
-
-            // Update tag information without calling Read
-            /* TODO - this implementation is too risky : 
-             *   - if one of the writing operations fails, data is updated as if everything went right
-             *   - any picture slot with a markForDeletion flag is recorded as-is in the tag
-             */
-            tagData = dataToWrite;
-
-            return result;
-        }
-
-        /// <inheritdoc/>
-        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             TagData dataToWrite = prepareWrite(s, tag);
 
@@ -552,59 +535,27 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public virtual bool Remove(Stream s)
-        {
-            handleEmbedder();
-
-            bool result = true;
-            long cumulativeDelta = 0;
-            foreach (Zone zone in Zones)
-            {
-                if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
-                {
-                    if (zone.IsDeletable)
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
-
-                        if (zone.Size > zone.CoreSignature.Length) StreamUtils.ShortenStream(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-
-                        if (zone.CoreSignature.Length > 0)
-                        {
-                            s.Position = zone.Offset - cumulativeDelta;
-                            StreamUtils.WriteBytes(s, zone.CoreSignature);
-                        }
-                    }
-
-                    result = result && rewriteHeaders(s, zone);
-
-                    if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
-                }
-            }
-
-            return result;
-        }
-
-        /// <inheritdoc/>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public virtual async Task<bool> RemoveAsync(Stream s)
         {
             handleEmbedder();
 
             bool result = true;
             long cumulativeDelta = 0;
-            foreach (Zone zone in Zones)
+            foreach (var zone in Zones)
             {
-                if (zone.Offset > -1 && !zone.Name.Equals(PADDING_ZONE_NAME))
+                if (zone.Offset > -1 && !zone.Name.Equals(FileStructureHelper.PADDING_ZONE_NAME))
                 {
                     if (zone.IsDeletable)
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
 
-                        if (zone.Size > zone.CoreSignature.Length) await StreamUtilsAsync.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        if (zone.Size > zone.CoreSignature.Length) await StreamUtils.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
 
                         if (zone.CoreSignature.Length > 0)
                         {
                             s.Position = zone.Offset - cumulativeDelta;
-                            await StreamUtilsAsync.WriteBytesAsync(s, zone.CoreSignature);
+                            await StreamUtils.WriteBytesAsync(s, zone.CoreSignature);
                         }
                     }
 

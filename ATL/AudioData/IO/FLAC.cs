@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Free Lossless Audio Codec files manipulation (extension : .FLAC)
     /// </summary>
-	class FLAC : VorbisTagHolder, IMetaDataIO, IAudioDataIO
+	partial class FLAC : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         private const byte META_STREAMINFO = 0;
@@ -304,24 +304,13 @@ namespace ATL.AudioData.IO
         }
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             Tuple<bool, TagData> results = prepareWrite(s, tag);
 
-            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
-            surgeon.RewriteZones(s, new WriteDelegate(write), zones, results.Item2, results.Item1);
-
-            postWrite(s);
-
-            return true;
-        }
-
-        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
-        {
-            Tuple<bool, TagData> results = prepareWrite(s, tag);
-
-            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, TO_BUILTIN, writeProgress);
-            await surgeon.RewriteZonesAsync(s, new WriteDelegate(write), zones, results.Item2, results.Item1);
+            FileSurgeon surgeon = new FileSurgeon(null, null, MetaDataIOFactory.TagType.NATIVE, MetaDataIO.TO_BUILTIN, writeProgress);
+            await surgeon.RewriteZonesAsync(s, new FileSurgeon.WriteDelegate(write), zones, results.Item2, results.Item1);
 
             postWrite(s);
 
@@ -517,41 +506,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        public bool Remove(Stream s)
-        {
-            bool result = true;
-            long cumulativeDelta = 0;
-
-            // Handling of the 'isLast' bit
-            latestBlockOffset = -1;
-            latestBlockType = 0;
-
-            foreach (Zone zone in zones)
-            {
-                if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
-                {
-                    if (zone.Flag == META_PADDING || zone.Flag == META_PICTURE || zone.Flag == META_VORBIS_COMMENT)
-                    {
-                        StreamUtils.ShortenStream(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-                        vorbisTag.Clear();
-
-                        cumulativeDelta += zone.Size - zone.CoreSignature.Length;
-                    }
-                    else
-                    {
-                        latestBlockOffset = zone.Offset - cumulativeDelta;
-                        latestBlockType = zone.Flag;
-
-                        s.Seek(latestBlockOffset, SeekOrigin.Begin);
-                        s.WriteByte(latestBlockType);
-                    }
-                }
-            }
-            setIsLast(s);
-
-            return result;
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RemoveAsync(Stream s)
         {
             bool result = true;
@@ -561,13 +516,13 @@ namespace ATL.AudioData.IO
             latestBlockOffset = -1;
             latestBlockType = 0;
 
-            foreach (Zone zone in zones)
+            foreach (var zone in zones)
             {
                 if (zone.Offset > -1 && zone.Size > zone.CoreSignature.Length)
                 {
                     if (zone.Flag == META_PADDING || zone.Flag == META_PICTURE || zone.Flag == META_VORBIS_COMMENT)
                     {
-                        await StreamUtilsAsync.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+                        await StreamUtils.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
                         vorbisTag.Clear();
 
                         cumulativeDelta += zone.Size - zone.CoreSignature.Length;

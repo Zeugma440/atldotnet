@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
     /// </summary>
-    class PSF : MetaDataIO, IAudioDataIO
+    partial class PSF : MetaDataIO, IAudioDataIO
     {
         // Format Type Names
         public const string PSF_FORMAT_UNKNOWN = "Unknown";
@@ -470,16 +470,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of fields that are required for playback
-        public override bool Remove(Stream s)
-        {
-            TagData tag = prepareRemove();
-
-            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-
-            return Write(s, tag);
-        }
-
-        // Specific implementation for conservation of fields that are required for playback
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = prepareRemove();

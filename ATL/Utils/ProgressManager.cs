@@ -53,6 +53,16 @@ namespace ATL
             }
         }
 
+        internal ProgressManager(ProgressToken<float> progress, string name = "", int maxSections = 0)
+        {
+            isAsync = progress.IsAsync;
+            asyncProgress = isAsync ? progress.AsyncProgress : null;
+            syncProgress = isAsync ? null : progress.SyncProgress;
+            currentSection = 0;
+            this.name = name;
+            MaxSections = maxSections;
+        }
+
         internal ProgressManager(IProgress<float> progress, string name = "", int maxSections = 0)
         {
             isAsync = true;
@@ -78,35 +88,18 @@ namespace ATL
         }
 
         /// <summary>
-        /// Create an Action to report sync progress for current section
-        /// </summary>
-        /// <returns>Action to report sync progress for current section</returns>
-        public Action<float> CreateAction()
-        {
-            float minBoundC = minProgressBound;
-            float resolutionC = resolution;
-            return new Action<float>(progress => this.syncProgress(minBoundC + resolutionC * progress));
-        }
-
-        /// <summary>
-        /// Create an IProgress to report async progress for current section
-        /// </summary>
-        /// <returns>IProgress to report async progress for current section</returns>
-        public IProgress<float> CreateIProgress()
-        {
-            float minBoundC = minProgressBound;
-            float resolutionC = resolution;
-            return new Progress<float>(progress => this.asyncProgress.Report(minBoundC + resolutionC * progress));
-        }
-
-        /// <summary>
         /// Create a ProgressToken to report progress for current section
         /// </summary>
         /// <returns>ProgressToken to report progress for current section</returns>
         public ProgressToken<float> CreateProgressToken()
         {
-            if (isAsync) return new ProgressToken<float>(CreateIProgress());
-            else return new ProgressToken<float>(CreateAction());
+            float minBoundC = minProgressBound;
+            float resolutionC = resolution;
+            if (isAsync && asyncProgress != null)
+                return new ProgressToken<float>(progress => asyncProgress.Report(minBoundC + resolutionC * progress));
+            else if (!isAsync && syncProgress != null) 
+                return new ProgressToken<float>(progress => syncProgress(minBoundC + resolutionC * progress));
+            else return null;
         }
     }
 }

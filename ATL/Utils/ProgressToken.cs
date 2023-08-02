@@ -12,6 +12,11 @@ namespace ATL
         private readonly IProgress<T> asyncProgress = null;
         private readonly Action<T> syncProgress = null;
 
+        public bool IsAsync => isAsync;
+        public IProgress<T> AsyncProgress => asyncProgress;
+        public Action<T> SyncProgress => syncProgress;
+
+
         public ProgressToken(IProgress<T> progress)
         {
             isAsync = true;
@@ -26,8 +31,8 @@ namespace ATL
 
         public void Report(T value)
         {
-            if (isAsync) asyncProgress.Report(value);
-            else syncProgress(value);
+            if (isAsync && asyncProgress != null) asyncProgress.Report(value);
+            else if (!isAsync && syncProgress != null) syncProgress(value);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace ATL.AudioData
 	/// It calls AudioReaderFactory and queries AudioDataReader/MetaDataReader to provide physical 
 	/// _and_ meta information about the given file.
 	/// </summary>
-	internal class AudioFileIO : IAudioDataIO
+	internal partial class AudioFileIO : IAudioDataIO
     {
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
         private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
@@ -146,7 +146,8 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Save(TagData data, Action<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<bool> SaveAsync(TagData data, ProgressToken<float> writeProgress = null)
         {
             IList<TagType> availableMetas = detectAvailableMetas();
 
@@ -157,26 +158,7 @@ namespace ATL.AudioData
                 progressManager = new ProgressManager(writeProgress, "AudioFileIO");
                 progressManager.MaxSections = availableMetas.Count;
             }
-            foreach (TagType meta in availableMetas)
-            {
-                result &= audioManager.UpdateTagInFile(data, meta, progressManager);
-                if (progressManager != null) progressManager.CurrentSection++;
-            }
-            return result;
-        }
-
-        public async Task<bool> SaveAsync(TagData data, IProgress<float> writeProgress = null)
-        {
-            IList<TagType> availableMetas = detectAvailableMetas();
-
-            bool result = true;
-            ProgressManager progressManager = null;
-            if (writeProgress != null)
-            {
-                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
-                progressManager.MaxSections = availableMetas.Count;
-            }
-            foreach (TagType meta in availableMetas)
+            foreach (var meta in availableMetas)
             {
                 result &= await audioManager.UpdateTagInFileAsync(data, meta, progressManager);
                 if (progressManager != null) progressManager.CurrentSection++;
@@ -184,7 +166,8 @@ namespace ATL.AudioData
             return result;
         }
 
-        public bool Remove(TagType tagType = TagType.ANY, Action<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
             IList<TagType> metasToRemove = getMetasToRemove(tagType);
@@ -195,26 +178,7 @@ namespace ATL.AudioData
                 progressManager = new ProgressManager(writeProgress, "AudioFileIO");
                 progressManager.MaxSections = metasToRemove.Count;
             }
-            foreach (TagType meta in metasToRemove)
-            {
-                result &= audioManager.RemoveTagFromFile(meta, progressManager);
-                if (progressManager != null) progressManager.CurrentSection++;
-            }
-            return result;
-        }
-
-        public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY, IProgress<float> writeProgress = null)
-        {
-            bool result = true;
-            IList<TagType> metasToRemove = getMetasToRemove(tagType);
-
-            ProgressManager progressManager = null;
-            if (writeProgress != null)
-            {
-                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
-                progressManager.MaxSections = metasToRemove.Count;
-            }
-            foreach (TagType meta in metasToRemove)
+            foreach (var meta in metasToRemove)
             {
                 result &= await audioManager.RemoveTagFromFileAsync(meta, progressManager);
                 if (progressManager != null) progressManager.CurrentSection++;

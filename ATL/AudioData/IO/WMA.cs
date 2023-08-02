@@ -15,7 +15,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Windows Media Audio 7,8 and 9 files manipulation (extension : .WMA)
     /// </summary>
-	class WMA : MetaDataIO, IAudioDataIO
+	partial class WMA : MetaDataIO, IAudioDataIO
     {
         private const string ZONE_CONTENT_DESCRIPTION = "contentDescription";
         private const string ZONE_EXTENDED_CONTENT_DESCRIPTION = "extContentDescription";
@@ -1030,20 +1030,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for conservation of non-WM/xxx fields
-        public override bool Remove(Stream s)
-        {
-            if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
-            {
-                TagData tag = prepareRemove();
-                return Write(s, tag);
-            }
-            else
-            {
-                return base.Remove(s);
-            }
-        }
-
-        // Specific implementation for conservation of non-WM/xxx fields
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task<bool> RemoveAsync(Stream s)
         {
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
