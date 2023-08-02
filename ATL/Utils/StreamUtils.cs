@@ -116,66 +116,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Copy data between the two given offsets within the given stream
-        /// </summary>
-        /// <param name="s">Stream to process</param>
-        /// <param name="offsetFrom">Starting offset to copy data from</param>
-        /// <param name="offsetTo">Starting offset to copy data to</param>
-        /// <param name="length">Length of the data to copy</param>
-        /// <param name="progress">Progress feedback to report with</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, long length, Action<float> progress = null)
-        {
-            CopySameStream(s, offsetFrom, offsetTo, length, Settings.FileBufferSize, progress);
-        }
-
-        /// <summary>
-        /// Copy data between the two given offsets within the given stream, using the given buffer size
-        /// </summary>
-        /// <param name="s">Stream to process</param>
-        /// <param name="offsetFrom">Starting offset to copy data from</param>
-        /// <param name="offsetTo">Starting offset to copy data to</param>
-        /// <param name="length">Length of the data to copy</param>
-        /// <param name="bufferSize">Buffer size to use during the operation</param>
-        /// <param name="progress">Progress feedback to report with</param>
-        public static void CopySameStream(Stream s, long offsetFrom, long offsetTo, long length, int bufferSize, Action<float> progress = null)
-        {
-            if (offsetFrom == offsetTo) return;
-
-            byte[] data = new byte[bufferSize];
-            int bufSize;
-            long written = 0;
-            bool forward = offsetTo > offsetFrom;
-            long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
-            long resolution = (long)Math.Ceiling(nbIterations / 10f);
-            float iteration = 0;
-
-            while (written < length)
-            {
-                bufSize = Math.Min(bufferSize, toInt(length - written));
-                if (forward)
-                {
-                    s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
-                    s.Read(data, 0, bufSize);
-                    s.Seek(offsetTo + length - written - bufSize, SeekOrigin.Begin);
-                }
-                else
-                {
-                    s.Seek(offsetFrom + written, SeekOrigin.Begin);
-                    s.Read(data, 0, bufSize);
-                    s.Seek(offsetTo + written, SeekOrigin.Begin);
-                }
-                s.Write(data, 0, bufSize);
-                written += bufSize;
-
-                if (progress != null)
-                {
-                    iteration++;
-                    if (0 == iteration % resolution) progress(iteration / nbIterations);
-                }
-            }
-        }
-
-        /// <summary>
         /// Convenient converter for the use of CopySameStream only, where this goes into Min immediately
         /// </summary>
         /// <param name="value">Value to convert</param>
@@ -183,19 +123,6 @@ namespace ATL
         private static int toInt(long value)
         {
             if (value > int.MaxValue) return int.MaxValue; else return Convert.ToInt32(value);
-        }
-
-        /// <summary>
-        /// Remove a portion of bytes within the given stream
-        /// </summary>
-        /// <param name="s">Stream to process; must be accessible for reading and writing</param>
-        /// <param name="endOffset">End offset of the portion of bytes to remove</param>
-        /// <param name="delta">Number of bytes to remove (starting from endOffset, towards the beginning of the file)</param>
-        /// <param name="progress">Progress feedback to report with</param>
-        public static void ShortenStream(Stream s, long endOffset, uint delta, Action<float> progress = null)
-        {
-            CopySameStream(s, endOffset, endOffset - delta, s.Length - endOffset, progress);
-            s.SetLength(s.Length - delta);
         }
 
         /// <summary>
@@ -1092,7 +1019,8 @@ namespace ATL
         /// <param name="offsetTo">Starting offset to copy data to</param>
         /// <param name="length">Length of the data to copy</param>
         /// <param name="progress">Progress feedback to report with</param>
-        public static async Task CopySameStreamAsync(Stream s, long offsetFrom, long offsetTo, long length, IProgress<float> progress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task CopySameStreamAsync(Stream s, long offsetFrom, long offsetTo, long length, ProgressToken<float> progress = null)
         {
             await CopySameStreamAsync(s, offsetFrom, offsetTo, length, Settings.FileBufferSize, progress);
         }
@@ -1106,7 +1034,8 @@ namespace ATL
         /// <param name="length">Length of the data to copy</param>
         /// <param name="bufferSize">Buffer size to use during the operation</param>
         /// <param name="progress">Progress feedback to report with</param>
-        public static async Task CopySameStreamAsync(Stream s, long offsetFrom, long offsetTo, long length, int bufferSize, IProgress<float> progress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task CopySameStreamAsync(Stream s, long offsetFrom, long offsetTo, long length, int bufferSize, ProgressToken<float> progress = null)
         {
             if (offsetFrom == offsetTo) return;
 
@@ -1151,7 +1080,8 @@ namespace ATL
         /// <param name="endOffset">End offset of the portion of bytes to remove</param>
         /// <param name="delta">Number of bytes to remove</param>
         /// <param name="progress">Progress feedback to report with</param>
-        public static async Task ShortenStreamAsync(Stream s, long endOffset, uint delta, IProgress<float> progress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task ShortenStreamAsync(Stream s, long endOffset, uint delta, ProgressToken<float> progress = null)
         {
             await CopySameStreamAsync(s, endOffset, endOffset - delta, s.Length - endOffset, progress);
 
@@ -1164,10 +1094,10 @@ namespace ATL
         /// <param name="s">Stream to process; must be accessible for reading and writing</param>
         /// <param name="oldIndex">Offset where to add new bytes</param>
         /// <param name="delta">Number of bytes to add</param>
-        /// <param name="progress">Progress feedback to report with</param>
         /// <param name="fillZeroes">If true, new bytes will all be zeroes (optional; default = false)</param>
+        /// <param name="progress">Progress feedback to report with</param>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task LengthenStreamAsync(Stream s, long oldIndex, uint delta, IProgress<float> progress = null, bool fillZeroes = false)
+        public static async Task LengthenStreamAsync(Stream s, long oldIndex, uint delta, bool fillZeroes = false, ProgressToken<float> progress = null)
         {
             await CopySameStreamAsync(s, oldIndex, oldIndex + delta, s.Length - oldIndex, progress);
 

@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
             displayRegions(zoneRegions);
 
             int regionIndex = 0;
-            IProgress<float> progress = initIProgress(zoneRegions);
+            ProgressToken<float> progress = initProgress(zoneRegions);
             foreach (ZoneRegion region in zoneRegions)
             {
                 long regionCumulativeDelta = 0;
@@ -311,7 +311,7 @@ namespace ATL.AudioData.IO
                                     if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
-                                    await StreamUtils.LengthenStreamAsync(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
+                                    await StreamUtils.LengthenStreamAsync(writer, tagEndOffset, deltaBytes, false, (null == buffer) ? progress : null);
                                 }
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
@@ -363,7 +363,7 @@ namespace ATL.AudioData.IO
                         if (buffer.Length > initialBufferSize)
                         {
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
-                            await StreamUtils.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), progress);
+                            await StreamUtils.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
                         }
                         else if (buffer.Length < initialBufferSize) // Need to reduce file size
                         {
@@ -422,49 +422,23 @@ namespace ATL.AudioData.IO
             writeProgress.MaxSections = maxCount;
         }
 
-        private IProgress<float> initIProgress(IList<ZoneRegion> zoneRegions)
+        private ProgressToken<float> initProgress(IList<ZoneRegion> zoneRegions)
         {
             if (writeProgress != null)
             {
                 initProgressManager(zoneRegions);
-                return writeProgress.CreateIProgress();
+                return writeProgress.CreateProgressToken();
             }
             return null;
         }
 
-        private Action<float> initActionProgress(IList<ZoneRegion> zoneRegions)
-        {
-            if (writeProgress != null)
-            {
-                initProgressManager(zoneRegions);
-                return writeProgress.CreateAction();
-            }
-            return null;
-        }
-
-        private void incrementProgress()
-        {
-            // Nothing; here to prevent an error in generated sync code
-        }
-
-        private void incrementProgress(ref IProgress<float> progress)
+        private void incrementProgress(ref ProgressToken<float> progress)
         {
             // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
             progress.Report(1);
             // Increment progress section   
             writeProgress.CurrentSection++;
-            progress = writeProgress.CreateIProgress();
-        }
-
-#pragma warning disable S1144 // Unused private types or members should be removed
-        private Action<float> incrementProgress(Action<float> progress)
-#pragma warning restore S1144 // Unused private types or members should be removed
-        {
-            // Make sure final progress of buffered zone is reported, especially when no resizing has been involved
-            progress(1);
-            // Increment progress section   
-            writeProgress.CurrentSection++;
-            return writeProgress.CreateAction();
+            progress = writeProgress.CreateProgressToken();
         }
 
         private Tuple<long, long> calcTagBoundaries(Zone zone, Stream writer, bool isBuffered, bool tagExists, long globalCumulativeDelta, long regionCumulativeDelta, long globalOffsetCorrection)
