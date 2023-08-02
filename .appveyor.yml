@@ -16,7 +16,7 @@ test_script:
 # - dotnet test /p:AltCover=true
 #  - dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
 # - dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-  - ps: coverlet .\ATL.test\bin\Debug\net48\ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover"
+  - ps: coverlet .\ATL.test\bin\Debug\net6.0\ATL.test.dll --target "dotnet" --targetargs "test --no-build" --format "opencover"
 after_test:
 # - appveyor PushArtifact "testResults.txt"
 # c:\Program Files (x86)\Microsoft SDKs\NuGetPackages\microsoft.codecoverage\16.11.0\build\netstandard1.0\CodeCoverage

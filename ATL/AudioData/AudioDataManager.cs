@@ -13,7 +13,7 @@ namespace ATL.AudioData
     /// <summary>
     /// Handles high-level basic operations on the given audio file, calling Metadata readers when needed
     /// </summary>
-    public class AudioDataManager
+    public partial class AudioDataManager
     {
         // Settings to use when opening any FileStream
         // NB : These settings are optimal according to performance tests on the dev environment
@@ -364,56 +364,7 @@ namespace ATL.AudioData
         /// <param name="tagType">TagType to save the given metadata with</param>
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool UpdateTagInFile(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
-        {
-            bool result = true;
-            IMetaDataIO theMetaIO;
-            LogDelegator.GetLocateDelegate()(fileName);
-            theTag.DurationMs = audioDataIO.Duration;
-
-            if (audioDataIO.IsMetaSupported(tagType))
-            {
-                try
-                {
-                    theMetaIO = getMeta(tagType);
-
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
-                    try
-                    {
-                        // If current file can embed metadata, do a 1st pass to detect embedded metadata position
-                        handleEmbedder(s, theMetaIO);
-
-                        Action<float> progress = (writeProgress != null) ? writeProgress.CreateAction() : null;
-                        result = theMetaIO.Write(s, theTag, progress);
-                        if (result) setMeta(theMetaIO);
-                    }
-                    finally
-                    {
-                        if (null == stream) s.Close();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Utils.TraceException(e);
-                    result = false;
-                }
-            }
-            else
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Tag type " + tagType + " not supported");
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Update metadata of current file and save it to disk
-        /// Pre-requisite : ReadFromFile must have been called before
-        /// </summary>
-        /// <param name="theTag">Metadata to save</param>
-        /// <param name="tagType">TagType to save the given metadata with</param>
-        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
-        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
         {
             bool result = true;
@@ -427,13 +378,13 @@ namespace ATL.AudioData
                 {
                     theMetaIO = getMeta(tagType);
 
-                    Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
+                    var s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         handleEmbedder(s, theMetaIO);
 
-                        IProgress<float> progress = (writeProgress != null) ? writeProgress.CreateIProgress() : null;
+                        ProgressToken<float> progress = (writeProgress != null) ? writeProgress.CreateProgressToken() : null;
                         result = await theMetaIO.WriteAsync(s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
@@ -442,7 +393,7 @@ namespace ATL.AudioData
                         if (null == stream) s.Close();
                     }
                 }
-                catch (Exception e)
+                catch (System.Exception e)
                 {
                     Utils.TraceException(e);
                     result = false;
@@ -474,41 +425,7 @@ namespace ATL.AudioData
         /// <param name="tagType">Type of the tagging to be removed</param>
         /// <param name="progressManager">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool RemoveTagFromFile(TagType tagType, ProgressManager progressManager = null)
-        {
-            bool result = false;
-            LogDelegator.GetLocateDelegate()(fileName);
-
-            try
-            {
-                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions) : stream;
-                try
-                {
-                    result = read(s, false, false, true);
-
-                    IMetaDataIO metaIO = getMeta(tagType);
-                    if (metaIO.Exists) metaIO.Remove(s);
-                }
-                finally
-                {
-                    if (null == stream) s.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Utils.TraceException(e);
-                result = false;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Remove the tagging from the given type (i.e. the whole technical structure, not only values) from the current file
-        /// </summary>
-        /// <param name="tagType">Type of the tagging to be removed</param>
-        /// <param name="progressManager">ProgressManager to report with (optional)</param>
-        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RemoveTagFromFileAsync(TagType tagType, ProgressManager progressManager = null)
         {
             bool result = false;
@@ -516,7 +433,7 @@ namespace ATL.AudioData
 
             try
             {
-                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
+                var s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
                 try
                 {
                     result = read(s, false, false, true);
@@ -529,7 +446,7 @@ namespace ATL.AudioData
                     if (null == stream) s.Close();
                 }
             }
-            catch (Exception e)
+            catch (System.Exception e)
             {
                 Utils.TraceException(e);
                 result = false;

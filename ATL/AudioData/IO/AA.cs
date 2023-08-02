@@ -21,7 +21,7 @@ namespace ATL.AudioData.IO
     ///   due to the lack of empty test files
     ///   
     /// </summary>
-	class AA : MetaDataIO, IAudioDataIO
+	partial class AA : MetaDataIO, IAudioDataIO
     {
 
         public const int AA_MAGIC_NUMBER = 1469084982;
@@ -459,18 +459,7 @@ namespace ATL.AudioData.IO
         }
 
         // Specific implementation for rewriting of the TOC after zone removal
-        public override bool Remove(Stream s)
-        {
-            bool result = base.Remove(s);
-            if (result)
-            {
-                int newTocSize = writeCoreToc(s);
-                finalizeFile(s, newTocSize);
-            }
-            return result;
-        }
-
-        // Specific implementation for rewriting of the TOC after zone removal
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task<bool> RemoveAsync(Stream s)
         {
             bool result = await base.RemoveAsync(s);
@@ -507,14 +496,10 @@ namespace ATL.AudioData.IO
         }
 
         // Remove unused data
-        private void finalizeFile(Stream s, long newTocSize)
-        {
-            StreamUtils.ShortenStream(s, tocOffset + tocSize, (uint)(tocSize - newTocSize));
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task finalizeFileAsync(Stream s, long newTocSize)
         {
-            await StreamUtilsAsync.ShortenStreamAsync(s, tocOffset + tocSize, (uint)(tocSize - newTocSize));
+            await StreamUtils.ShortenStreamAsync(s, tocOffset + tocSize, (uint)(tocSize - newTocSize));
         }
     }
 }

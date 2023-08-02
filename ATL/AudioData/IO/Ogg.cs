@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.ChannelsArrangements;
-using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -25,7 +24,7 @@ namespace ATL.AudioData.IO
     ///   are positioned at the beginning of the file are detected
     /// 
     /// </summary>
-	class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
+	partial class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
         // Contents of the file
         private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
@@ -798,111 +797,20 @@ namespace ATL.AudioData.IO
         // Simplified implementation of MetaDataIO tweaked for OGG-Vorbis specifics, i.e.
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
-
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages = 0;
             long nextPageOffset = 0;
 
             // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(true, true);
+            var readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
             Read(s, readTagParams);
 
             // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
-            using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
-            {
-                if (CONTENTS_VORBIS == contents)
-                {
-                    memStream.Write(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
-                    vorbisTag.switchOggBehaviour();
-                    vorbisTag.Write(memStream, tag);
-                }
-                else if (CONTENTS_OPUS == contents)
-                {
-                    memStream.Write(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
-                    vorbisTag.switchOggBehaviour();
-                    vorbisTag.Write(memStream, tag);
-                }
-                else if (CONTENTS_FLAC == contents)
-                {
-                    vorbisTag.switchFlacBehaviour();
-                    FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag, true);
-                }
-
-                long newTagSize = memStream.Position;
-
-                int setupHeaderSize = 0;
-                int setupHeader_nbSegments = 0;
-                byte setupHeader_remainingBytesInLastSegment = 0;
-
-                // VORBIS: Append the setup header in the "unpaged" in-memory stream
-                if (CONTENTS_VORBIS == contents)
-                {
-                    s.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
-                    if (1 == info.SetupHeaderSpanPages)
-                    {
-                        setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        StreamUtils.CopyStream(s, memStream, setupHeaderSize);
-                    }
-                    else
-                    {
-                        // TODO - handle case where initial setup header spans across two pages
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "The case where Vorbis setup header spans across two OGG pages is not supported yet");
-                        return false;
-                    }
-                    setupHeader_nbSegments = (int)Math.Ceiling(1.0 * setupHeaderSize / 255);
-                    setupHeader_remainingBytesInLastSegment = (byte)(setupHeaderSize % 255);
-                }
-
-                writtenPages = constructSegmentsTable(memStream, newTagSize, setupHeaderSize, setupHeader_nbSegments, setupHeader_remainingBytesInLastSegment);
-
-                // Insert the in-memory paged stream into the actual file
-                long oldHeadersSize = info.SetupHeaderEnd - info.CommentHeaderStart;
-                long newHeadersSize = memStream.Length;
-
-                if (newHeadersSize > oldHeadersSize) // Need to build a larger file
-                {
-                    StreamUtils.LengthenStream(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
-                }
-                else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
-                {
-                    StreamUtils.ShortenStream(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
-                }
-
-                // Rewrite Comment and Setup headers
-                s.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
-                memStream.Seek(0, SeekOrigin.Begin);
-
-                StreamUtils.CopyStream(memStream, s);
-
-                nextPageOffset = info.CommentHeaderStart + memStream.Length;
-            }
-
-            // If the number of written pages is different than the number of previous existing pages,
-            // all the next pages of the file need to be renumbered, and their CRC accordingly recalculated
-            if (writtenPages != info.CommentHeaderSpanPages + info.SetupHeaderSpanPages - 1)
-            {
-                result &= renumberRemainingPages(s, nextPageOffset, writtenPages);
-            }
-
-            return result;
-        }
-
-        public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
-        {
-            bool result = true;
-            int writtenPages = 0;
-            long nextPageOffset = 0;
-
-            // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(true, true);
-            readTagParams.PrepareForWriting = true;
-            Read(s, readTagParams);
-
-            // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
-            using (MemoryStream memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
+            using (var memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
                 if (CONTENTS_VORBIS == contents)
                 {
@@ -935,7 +843,7 @@ namespace ATL.AudioData.IO
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        await StreamUtilsAsync.CopyStreamAsync(s, memStream, setupHeaderSize);
+                        await StreamUtils.CopyStreamAsync(s, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -955,18 +863,18 @@ namespace ATL.AudioData.IO
 
                 if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
-                    await StreamUtilsAsync.LengthenStreamAsync(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
+                    await StreamUtils.LengthenStreamAsync(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
                 else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
                 {
-                    await StreamUtilsAsync.ShortenStreamAsync(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
+                    await StreamUtils.ShortenStreamAsync(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
 
                 // Rewrite Comment and Setup headers
                 s.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
-                await StreamUtilsAsync.CopyStreamAsync(memStream, s);
+                await StreamUtils.CopyStreamAsync(memStream, s);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             } // using MemoryStream memStream
@@ -1138,12 +1046,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        public bool Remove(Stream s)
-        {
-            TagData tag = vorbisTag.GetDeletionTagData();
-            return Write(s, tag);
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RemoveAsync(Stream s)
         {
             TagData tag = vorbisTag.GetDeletionTagData();

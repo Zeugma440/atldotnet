@@ -8,7 +8,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Dummy metadata provider
     /// </summary>
-    public class DummyTag : MetaDataHolder, IMetaDataIO
+    public partial class DummyTag : MetaDataHolder, IMetaDataIO
     {
         /// <summary>
         /// Constructor
@@ -47,12 +47,8 @@ namespace ATL.AudioData.IO
             get { return 0; }
         }
         /// <inheritdoc/>
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
-        {
-            return true;
-        }
-        /// <inheritdoc/>
-        public Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             return Task.FromResult(true);
         }

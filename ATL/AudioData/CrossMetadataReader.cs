@@ -13,7 +13,7 @@ namespace ATL.AudioData
     /// Rule : The first non-empty field of the most prioritized tag becomes the "cross-detected" field
     /// There is no "field blending" across collections (pictures, additional fields) : the first non-empty collection is kept
     /// </summary>
-    internal class CrossMetadataReader : IMetaDataIO
+    internal partial class CrossMetadataReader : IMetaDataIO
     {
         // Contains all IMetaDataIO objects to be read, in priority order (index [0] is the most important)
         private readonly IList<IMetaDataIO> metaReaders = null;
@@ -599,9 +599,8 @@ namespace ATL.AudioData
         public bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
-        public bool Write(Stream s, TagData tag, Action<float> writeProgress = null) { throw new NotImplementedException(); }
-
-        public Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             throw new NotImplementedException();
         }

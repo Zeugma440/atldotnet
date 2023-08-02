@@ -7,7 +7,7 @@ namespace ATL.UI_test
 {
     public partial class Form1 : Form
     {
-        private const string filePath = @"D:\temp\m4a-mp4\98\03 The Front.m4a";
+        private const string filePath = @"D:\temp\m4a-mp4\160\LongBook-Orig.mp4";
 
         public Form1()
         {
@@ -102,7 +102,7 @@ namespace ATL.UI_test
                 theFile.Chapters[1].Picture.ComputePicHash();
                 */
                 theFile.Title += "aaa";
-                theFile.EmbeddedPictures.Add(PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg")));
+                theFile.EmbeddedPictures.Add(PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.unit-test\Resources\_Images\pic1.jpeg")));
 
                 ProgressLbl.Text = "Saving...";
                 Application.DoEvents();
