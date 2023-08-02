@@ -19,7 +19,7 @@ namespace ATL.test
 
                 locationRoot = locationRoot.Substring(0, locationRoot.LastIndexOf(REPO_NAME) + REPO_NAME.Length);
 
-                locationRoot += Path.DirectorySeparatorChar + "ATL.test" + Path.DirectorySeparatorChar + "Resources";
+                locationRoot += Path.DirectorySeparatorChar + "ATL.unit-test" + Path.DirectorySeparatorChar + "Resources";
             }
 
             if (includeFinalSeparator) return locationRoot + Path.DirectorySeparatorChar; else return locationRoot;
