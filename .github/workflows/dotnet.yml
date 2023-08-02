@@ -30,17 +30,17 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Run SonarScanner
-      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="ATL.test/lcov.info"
+      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="ATL.unit-test/lcov.info"
     - name: Build ATL
       run: dotnet build ATL --no-restore
-    - name: Build ATL.test
-      run: dotnet build ATL.test --no-restore
+    - name: Build ATL.unit-test
+      run: dotnet build ATL.unit-test --no-restore
     - name: Test
-      run: dotnet test ATL.test --no-build --verbosity normal
+      run: dotnet test ATL.unit-test --no-build --verbosity normal
     - name: Coverlet coverage test
       uses: b3b00/coverlet-action@1.2.5
       with:
-        testProject: 'ATL.test/ATL.test.csproj'
+        testProject: 'ATL.unit-test/ATL.unit-test.csproj'
         output: 'lcov.info'
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
