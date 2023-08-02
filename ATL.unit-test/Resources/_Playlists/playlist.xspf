@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Liste de lecture</title>
+	<trackList>
+		<track>
+			<location>file:///$PATH/_Playlists/local.MID</location>
+			<duration>103950</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///$PATH/MP4/mp4.m4a</location>
+			<title>aa父bb</title>
+			<creator>FATHER</creator>
+			<album>Papa rules</album>
+			<trackNum>1</trackNum>
+			<annotation>父父!</annotation>
+			<image>file:///$PATH/pic1.jpg</image>
+			<duration>14052</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///$PATH/MP3/01%20-%20Title%20Screen_pic.mp3</location>
+			<title>Title Screen</title>
+			<creator>Nintendo Sound Team</creator>
+			<album>Duck Hunt</album>
+			<trackNum>1</trackNum>
+			<annotation>comment</annotation>
+			<image>file:///$PATH/pic2.jpg</image>
+			<duration>3874</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///$PATH/OGG/empty.ogg</location>
+			<duration>7000</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://uk3.internet-radio.com:8405/live</location>
+			<duration>8000</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:item tid="0"/>
+			<vlc:item tid="1"/>
+			<vlc:item tid="2"/>
+			<vlc:item tid="3"/>
+			<vlc:item tid="4"/>
+	</extension>
+</playlist>

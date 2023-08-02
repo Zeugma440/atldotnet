@@ -22,12 +22,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wiki-images", "wiki-images"
 		wiki-images\yuml.txt = wiki-images\yuml.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.benchmark", "ATL.benchmark\ATL.benchmark.csproj", "{2025C03B-1CC8-4131-9CE6-5A1624FF9F2E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ATL.benchmark", "ATL.benchmark\ATL.benchmark.csproj", "{2025C03B-1CC8-4131-9CE6-5A1624FF9F2E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.UI-test", "ATL.UI-test\ATL.UI-test.csproj", "{8980DA8D-81D4-44A1-9A92-F85344D3942B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ATL.UI-test", "ATL.UI-test\ATL.UI-test.csproj", "{8980DA8D-81D4-44A1-9A92-F85344D3942B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATL.unit-test", "ATL.unit-test\ATL.unit-test.csproj", "{24C69389-A151-48A7-A082-1706B1FFCE43}"
 	ProjectSection(ProjectDependencies) = postProject
 		{27C03311-C017-4E99-8B35-0005102B2DAC} = {27C03311-C017-4E99-8B35-0005102B2DAC}
 	EndProjectSection
@@ -72,6 +77,14 @@ Global
 		{8980DA8D-81D4-44A1-9A92-F85344D3942B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8980DA8D-81D4-44A1-9A92-F85344D3942B}.Release|x86.ActiveCfg = Release|Any CPU
 		{8980DA8D-81D4-44A1-9A92-F85344D3942B}.Release|x86.Build.0 = Release|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Debug|x86.Build.0 = Debug|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Release|x86.ActiveCfg = Release|Any CPU
+		{24C69389-A151-48A7-A082-1706B1FFCE43}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

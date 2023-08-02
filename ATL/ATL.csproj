@@ -30,13 +30,11 @@
     <RepositoryUrl></RepositoryUrl>
     <RepositoryType></RepositoryType>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>ATL.test</_Parameter1>
-    </AssemblyAttribute>
+    <InternalsVisibleTo Include="ATL.unit-test" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />
