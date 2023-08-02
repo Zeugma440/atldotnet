@@ -51,6 +51,6 @@
   <ItemGroup>
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.1" />
+    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.5" />
   </ItemGroup>
 </Project>

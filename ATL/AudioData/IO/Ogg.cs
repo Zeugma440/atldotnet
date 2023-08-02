@@ -801,7 +801,7 @@ namespace ATL.AudioData.IO
 
         public bool Write(Stream s, TagData tag, Action<float> writeProgress = null)
         {
-            return false;
+            return doWrite(s, tag);
         }
 
         public async Task<bool> WriteAsync(Stream s, TagData tag, IProgress<float> writeProgress = null)
@@ -809,7 +809,7 @@ namespace ATL.AudioData.IO
             return await doWriteAsync(s, tag);
         }
 
-        
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task<bool> doWriteAsync(Stream s, TagData tag)
         {
             bool result = true;
@@ -855,7 +855,7 @@ namespace ATL.AudioData.IO
                     if (1 == info.SetupHeaderSpanPages)
                     {
                         setupHeaderSize = (int)(info.SetupHeaderEnd - info.SetupHeaderStart);
-                        await StreamUtilsAsync.CopyStreamAsync(s, memStream, setupHeaderSize);
+                        await StreamUtils.CopyStreamAsync(s, memStream, setupHeaderSize);
                     }
                     else
                     {
@@ -875,18 +875,18 @@ namespace ATL.AudioData.IO
 
                 if (newHeadersSize > oldHeadersSize) // Need to build a larger file
                 {
-                    await StreamUtilsAsync.LengthenStreamAsync(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
+                    await StreamUtils.LengthenStreamAsync(s, info.CommentHeaderEnd, (uint)(newHeadersSize - oldHeadersSize));
                 }
                 else if (newHeadersSize < oldHeadersSize) // Need to reduce file size
                 {
-                    await StreamUtilsAsync.ShortenStreamAsync(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
+                    await StreamUtils.ShortenStreamAsync(s, info.CommentHeaderEnd, (uint)(oldHeadersSize - newHeadersSize));
                 }
 
                 // Rewrite Comment and Setup headers
                 s.Seek(info.CommentHeaderStart, SeekOrigin.Begin);
                 memStream.Seek(0, SeekOrigin.Begin);
 
-                await StreamUtilsAsync.CopyStreamAsync(memStream, s);
+                await StreamUtils.CopyStreamAsync(memStream, s);
 
                 nextPageOffset = info.CommentHeaderStart + memStream.Length;
             } // using MemoryStream memStream
