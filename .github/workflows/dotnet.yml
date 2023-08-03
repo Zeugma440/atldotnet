@@ -11,11 +11,7 @@ on:
 
 jobs:
   build:
-
     runs-on: windows-2022
-    defaults:
-      run:
-        working-directory: ATL.unit-test
         
     steps:
     - uses: actions/checkout@v3
@@ -38,6 +34,11 @@ jobs:
       run: dotnet build ATL --no-restore
     - name: Build ATL.unit-test
       run: dotnet build ATL.unit-test --no-restore
+      
+  test:
+    runs-on: windows-2022
+        
+    steps:
     - name: Test
       run: dotnet test ATL.unit-test --no-build --verbosity normal
     - name: Coverlet coverage test
