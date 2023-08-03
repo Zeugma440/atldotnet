@@ -36,6 +36,7 @@ jobs:
       run: dotnet build ATL.unit-test --no-restore
       
   test:
+    needs: build
     runs-on: windows-2022
         
     steps:
