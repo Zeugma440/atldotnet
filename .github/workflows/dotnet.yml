@@ -13,7 +13,10 @@ jobs:
   build:
 
     runs-on: windows-2022
-
+    defaults:
+      run:
+        working-directory: ATL.unit-test
+        
     steps:
     - uses: actions/checkout@v3
     - name: Java 11
@@ -41,7 +44,7 @@ jobs:
       uses: b3b00/coverlet-action@1.2.5
       with:
         testProject: 'ATL.unit-test/ATL.unit-test.csproj'
-        output: 'ATL.unit-test/lcov.info'
+        output: 'lcov.info'
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
