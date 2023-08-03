@@ -34,14 +34,14 @@ jobs:
     - name: Build ATL
       run: dotnet build ATL --no-restore
     - name: Build ATL.unit-test
-      run: dotnet build ATL.unit-test --no-restore -p:DebugType=pdbonly -p:DeterministicSourcePaths=false
+      run: dotnet build ATL.unit-test --no-restore
     - name: Test
       run: dotnet test ATL.unit-test --no-build --verbosity normal
     - name: Coverlet coverage test
       uses: b3b00/coverlet-action@1.2.5
       with:
         testProject: 'ATL.unit-test/ATL.unit-test.csproj'
-        output: 'lcov.info'
+        output: 'ATL.unit-test/lcov.info'
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
