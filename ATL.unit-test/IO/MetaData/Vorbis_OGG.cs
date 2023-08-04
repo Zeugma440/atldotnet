@@ -1,15 +1,8 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using System.Drawing;
-using System.Collections.Generic;
 using Commons;
 using static ATL.PictureInfo;
-using static ATL.Logging.Log;
-using ATL.Logging;
 using ATL.AudioData.IO;
-using ATL.unit_test;
 
 namespace ATL.test.IO.MetaData
 {
