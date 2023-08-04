@@ -1,9 +1,5 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using System.Drawing;
-using System.Collections.Generic;
 using Commons;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
@@ -208,10 +204,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_ID3v2_Multiple_Genres()
         {
             // Expected values
-            IList<string> expectedGenres = new List<string>();
-            expectedGenres.Add("Rock");
-            expectedGenres.Add("Pop");
-            expectedGenres.Add("Country");
+            IList<string> expectedGenres = new List<string>
+            {
+                "Rock",
+                "Pop",
+                "Country"
+            };
 
             R_ID3v2_Multiple_Genres(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_multipleGenres.mp3", expectedGenres);
             R_ID3v2_Multiple_Genres(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_UTF16_multipleGenres.mp3", expectedGenres);
@@ -266,7 +264,7 @@ namespace ATL.test.IO.MetaData
             MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "MOOD", "a" + ATL.Settings.DisplayValueSeparator + "b" + ATL.Settings.DisplayValueSeparator + "c");
             theTag.AdditionalFields.Add(info);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -307,7 +305,7 @@ namespace ATL.test.IO.MetaData
             MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "WXXX", "http://justtheurl.com");
             theTag.AdditionalFields.Add(info);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -444,7 +442,7 @@ namespace ATL.test.IO.MetaData
             MetaFieldInfo info = new MetaFieldInfo(MetaDataIOFactory.TagType.ID3V2, "BLAHBLAH", "heyheyhey");
             theTag.AdditionalFields.Add(info);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -523,7 +521,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if they are persisted as comment fields when editing the tag
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             // For this we need to open the file in binary mode and check that the two fields belong to a comment field
             byte[] readBytes = new byte[4];
@@ -577,7 +575,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if they are persisted with proper ID3v2.4 field codes when editing the tag
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -997,7 +995,7 @@ namespace ATL.test.IO.MetaData
 
             // Check if URLs are persisted properly, i.e. without encoding byte
             TagData theTag = new TagData();
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -1088,7 +1086,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics.Description = "anthem";
             theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.LanguageCode, theFile.ID3v2.Lyrics.LanguageCode);
@@ -1128,7 +1126,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "世の"));
             theTag.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(18000, "中を"));
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.ContentType, theFile.ID3v2.Lyrics.ContentType);
@@ -1184,7 +1182,7 @@ namespace ATL.test.IO.MetaData
                 KeyValuePair<string, string> urlLinkAdd = new KeyValuePair<string, string>("WOAR", "http://moar.minera.ls");
                 TagData theTag = new TagData();
                 theTag.AdditionalFields.Add(urlLinkMeta);
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -1318,7 +1316,7 @@ namespace ATL.test.IO.MetaData
             pic.Description = picDescription;
             theTag.Pictures.Add(pic);
 
-            theFile.UpdateTagInFile(theTag, tagType);
+            theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, false));
 
@@ -1333,7 +1331,7 @@ namespace ATL.test.IO.MetaData
 
             // 2- Update
             theTag.Pictures[0].Description = picDescription + "!!";
-            theFile.UpdateTagInFile(theTag, tagType);
+            theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, false));
 

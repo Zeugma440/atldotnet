@@ -194,7 +194,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "TEST2", "This is another test"));
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+            theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -217,7 +217,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(fieldInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 

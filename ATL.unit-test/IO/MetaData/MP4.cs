@@ -1,10 +1,5 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using System.Drawing;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
 using static ATL.Logging.Log;
@@ -300,7 +295,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+            theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -356,7 +351,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -412,7 +407,7 @@ namespace ATL.test.IO.MetaData
             MetaFieldInfo infoKO = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "BLEHBLEH", "heyheyhey");
             theTag.AdditionalFields.Add(infoKO);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             IList<LogItem> logItems = log.GetAllItems(LV_ERROR);
             Assert.IsTrue(logItems.Count > 0);
@@ -452,7 +447,7 @@ namespace ATL.test.IO.MetaData
             theTag.AdditionalFields.Add(infoOK);
             theTag.AdditionalFields.Add(infoOK2);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
@@ -484,7 +479,7 @@ namespace ATL.test.IO.MetaData
             MetaFieldInfo infoOK = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "WM/ParentalRating", "M for Mature");
             theTag.AdditionalFields.Add(infoOK);
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
@@ -583,7 +578,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -657,7 +652,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -787,7 +782,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -831,7 +826,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(  theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -878,7 +873,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -954,7 +949,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -1031,7 +1026,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -1108,7 +1103,7 @@ namespace ATL.test.IO.MetaData
             expectedChaps.Add(ch.StartTime, ch);
 
             // Check if proper warnings have been issued
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
             Assert.IsTrue(logItems.Count > 0);
@@ -1149,7 +1144,7 @@ namespace ATL.test.IO.MetaData
 
                 // Check if Nero chapters are correctly capped to 255 when the option is on
                 TagData tagData = new TagData();
-                Assert.IsTrue(theFile.UpdateTagInFile(tagData, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -1161,7 +1156,7 @@ namespace ATL.test.IO.MetaData
 
                 ATL.Settings.MP4_capNeroChapters = false;
                 ATL.Settings.MP4_readChaptersExclusive = 0; // Read them all again for the update to work properly
-                Assert.IsTrue(theFile.UpdateTagInFile(tagData, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -1201,7 +1196,7 @@ namespace ATL.test.IO.MetaData
             theTag.Lyrics = new LyricsInfo();
             theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
@@ -1642,17 +1637,17 @@ namespace ATL.test.IO.MetaData
             double dLength = TestUtils.GetFileSize(testFileLocation); Console.WriteLine("Pre File Length: " + dLength);
 
             //1. Remove Tag first
-            track.Remove(MetaDataIOFactory.TagType.NATIVE);
+            track.RemoveAsync(MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult();
             track = new Track(testFileLocation);
-            double dPostLenght = TestUtils.GetFileSize(testFileLocation);
+            double dPostLength = TestUtils.GetFileSize(testFileLocation);
             System.Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("Clear File Length: " + dPostLenght);
+            System.Console.WriteLine("Clear File Length: " + dPostLength);
 
             Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
-            Assert.IsTrue(dLength > dPostLenght, "File should be smaller.");
+            Assert.IsTrue(dLength > dPostLength, "File should be smaller.");
             // 8 extra bytes because the empty padding atom (`free` atom) isn't removed by design when using Track.Remove
             // as padding areas aren't considered as metadata per se, and are kept to facilitate file expansion
-            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLenght, $"File should be {twoTracksQTchapsEmptySize + 8} once tags are removed.");
+            Assert.AreEqual(twoTracksQTchapsEmptySize + 8, dPostLength, $"File should be {twoTracksQTchapsEmptySize + 8} once tags are removed.");
 
             bool WithErrors = false;
             //2. Add Meta again and Image to chap 2 only
@@ -1682,9 +1677,9 @@ namespace ATL.test.IO.MetaData
             WithErrors = (WithErrors || log.GetAllItems(LV_ERROR).Count > 0);
 
             track = new Track(testFileLocation); //Reload
-            dPostLenght = TestUtils.GetFileSize(testFileLocation);
+            dPostLength = TestUtils.GetFileSize(testFileLocation);
             System.Console.WriteLine("POST Add Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("POST Add File Length: " + dPostLenght);
+            System.Console.WriteLine("POST Add File Length: " + dPostLength);
             Assert.AreEqual($"New Description", track.Description, "Description should be the same.");
             Assert.AreEqual($"New Title", track.Title, "Title should be the same.");
             Assert.AreEqual($"New Album", track.Album, "Album should be the same.");
@@ -1698,7 +1693,7 @@ namespace ATL.test.IO.MetaData
             track = new Track(testFileLocation);
             double dPostLenghtEnd = TestUtils.GetFileSize(testFileLocation);
             System.Console.WriteLine("Clear Duration: " + track.DurationMs.ToString());
-            System.Console.WriteLine("Clear File Length: " + dPostLenght);
+            System.Console.WriteLine("Clear File Length: " + dPostLength);
             Assert.AreEqual(tDuration, track.DurationMs, "Duration should be the same.");
             Assert.IsTrue(dLength > dPostLenghtEnd, "File should be smaller.");
             // Should be the same size as the empty file obtained at step 1

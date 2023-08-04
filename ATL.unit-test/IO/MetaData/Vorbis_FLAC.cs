@@ -405,7 +405,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
 
-            theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE);
+            theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -461,7 +461,7 @@ namespace ATL.test.IO.MetaData
             theTag.Pictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 

@@ -100,7 +100,7 @@ namespace ATL.test.IO.MetaData
                 TagHolder theTag = new TagHolder();
                 theTag.Artist = "小虎队队队";
 
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
 
