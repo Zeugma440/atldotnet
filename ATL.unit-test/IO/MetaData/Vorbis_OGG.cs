@@ -9,6 +9,7 @@ using static ATL.PictureInfo;
 using static ATL.Logging.Log;
 using ATL.Logging;
 using ATL.AudioData.IO;
+using ATL.unit_test;
 
 namespace ATL.test.IO.MetaData
 {
@@ -215,7 +216,7 @@ namespace ATL.test.IO.MetaData
             TagIO_RW_VorbisOGG_Empty(null);
         }
 
-        public async void TagIO_RW_VorbisOGG_Empty(Stream stream)
+        public void TagIO_RW_VorbisOGG_Empty(Stream stream)
         {
             new ConsoleLogger();
 
@@ -266,8 +267,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            var task = Task.Run(async () => await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
-            Assert.IsTrue(task.Result);
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -365,7 +365,7 @@ namespace ATL.test.IO.MetaData
             }
         }
 
-        private async void tagIO_RW_VorbisOGG_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
+        private void tagIO_RW_VorbisOGG_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             new ConsoleLogger();
 
@@ -387,7 +387,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -423,7 +423,7 @@ namespace ATL.test.IO.MetaData
             theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
