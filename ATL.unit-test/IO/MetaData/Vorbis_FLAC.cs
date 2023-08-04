@@ -124,7 +124,7 @@ namespace ATL.test.IO.MetaData
             // Write same data and keep initial format
             TagHolder theTag = new TagHolder();
             theTag.Artist = "Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki";
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);
@@ -137,7 +137,7 @@ namespace ATL.test.IO.MetaData
             // Write and modify
             theTag = new TagHolder();
             theTag.Artist = "aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc";
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             // Read again
             Assert.IsTrue(theFile.ReadFromFile(true, true));
@@ -188,7 +188,7 @@ namespace ATL.test.IO.MetaData
             theTag.BPM = 550;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -268,7 +268,7 @@ namespace ATL.test.IO.MetaData
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -305,7 +305,7 @@ namespace ATL.test.IO.MetaData
                 theTag.EmbeddedPictures = testPics;
 
                 // Add the new tag and check that it has been indeed added with all the correct information
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 readExistingTagsOnFile(theFile, initialNbPictures);
 

@@ -359,7 +359,7 @@ namespace ATL.test.IO.MetaData
                 AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
                 TagHolder theTag = new TagHolder();
                 theTag.Comment = "something";
-                Assert.IsTrue(theFile2.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+                Assert.IsTrue(theFile2.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
                 Assert.IsTrue(theFile2.ReadFromFile(true, true));
 
                 Assert.AreEqual(theFile.ID3v2.AdditionalFields.Count, theFile2.ID3v2.AdditionalFields.Count);
@@ -391,7 +391,7 @@ namespace ATL.test.IO.MetaData
 
             TagHolder theTag = new TagHolder();
             theTag.Comment = "somethin";
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             // Chunk must have an even size (actual size, not declared size)
             using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))

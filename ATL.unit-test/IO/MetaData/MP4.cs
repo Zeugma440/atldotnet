@@ -172,7 +172,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters = testChaps;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
 
             try
@@ -234,7 +234,7 @@ namespace ATL.test.IO.MetaData
             theTag.EmbeddedPictures.Add(picInfo);
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile);
 
@@ -711,7 +711,7 @@ namespace ATL.test.IO.MetaData
             theTag.Title = "test_meta_atom";
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
             Assert.IsNotNull(theFile.NativeTag);
@@ -1263,7 +1263,7 @@ namespace ATL.test.IO.MetaData
             TagHolder theTag = new TagHolder();
             theTag.Popularity = 3.0f / 5;
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
@@ -1296,7 +1296,7 @@ namespace ATL.test.IO.MetaData
             data["©mvc"] = "a";
             theTag.AdditionalFields = data;
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             IList<LogItem> logItems = log.GetAllItems(Log.LV_WARNING);
             Assert.IsTrue(logItems.Count > 0);
@@ -1313,7 +1313,7 @@ namespace ATL.test.IO.MetaData
             data["tvsn"] = "-2";
             theTag.AdditionalFields = data;
 
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             logItems = log.GetAllItems(Log.LV_WARNING);
             Assert.IsTrue(logItems.Count > 0);

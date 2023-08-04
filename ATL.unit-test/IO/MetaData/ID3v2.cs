@@ -380,7 +380,7 @@ namespace ATL.test.IO.MetaData
 
 
                 // Add the new tag and check that it has been indeed added with all the correct information
-                Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -690,7 +690,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters = testChapters;
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -753,7 +753,7 @@ namespace ATL.test.IO.MetaData
             theTag.ChaptersTableDescription = "aaa";
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -780,7 +780,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters = new List<ChapterInfo> { ch };
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -933,7 +933,7 @@ namespace ATL.test.IO.MetaData
             theTag.Chapters = testChapters;
 
             // Check if they are persisted properly
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.ID3v2);
@@ -1222,7 +1222,7 @@ namespace ATL.test.IO.MetaData
             TagHolder newTag = new TagHolder();
             newTag.Genre = writtenGenre;
 
-            theFile.UpdateTagInFile(newTag, tagType);
+            theFile.UpdateTagInFileAsync(newTag.tagData, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -1289,7 +1289,7 @@ namespace ATL.test.IO.MetaData
             TagHolder newTag = new TagHolder();
             newTag.Composer = writtenValues;
 
-            theFile.UpdateTagInFile(newTag, tagType);
+            theFile.UpdateTagInFileAsync(newTag.tagData, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -1364,7 +1364,7 @@ namespace ATL.test.IO.MetaData
             {
                 { "TEST", MetaDataHolder.DATETIME_PREFIX + now.ToFileTime() }
             };
-            theFile.UpdateTagInFile(theTag, tagType);
+            theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 

@@ -347,19 +347,6 @@ namespace ATL.AudioData
         /// Update metadata of current file and save it to disk
         /// Pre-requisite : ReadFromFile must have been called before
         /// </summary>
-        /// <param name="holder">MetaDataHolder to save</param>
-        /// <param name="tagType">TagType to save the given metadata with</param>
-        /// <param name="writeProgress">ProgressManager to report with (optional)</param>
-        /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
-        public bool UpdateTagInFile(MetaDataHolder holder, TagType tagType, ProgressManager writeProgress = null)
-        {
-            return UpdateTagInFile(holder.tagData, tagType, writeProgress);
-        }
-
-        /// <summary>
-        /// Update metadata of current file and save it to disk
-        /// Pre-requisite : ReadFromFile must have been called before
-        /// </summary>
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>

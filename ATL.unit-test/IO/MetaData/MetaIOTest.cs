@@ -133,8 +133,8 @@ namespace ATL.test.IO.MetaData
             theTag2.Album = "Album2";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag1.tagData, tagType1));
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag2.tagData, tagType2));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag1.tagData, tagType1).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag2.tagData, tagType2).GetAwaiter().GetResult());
 
             // This also tests if physical data can still be read (e.g. native tag has not been scrambled by the apparition of a non-native tag)
             Assert.IsTrue(theFile.ReadFromFile());
@@ -154,7 +154,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Test2", meta2.Title);
             Assert.AreEqual("Album2", meta2.Album);
 
-            Assert.IsTrue(theFile.RemoveTagFromFile(tagType1));
+            Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType1).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile());
 
             meta1 = theFile.getMeta(tagType1);
@@ -169,7 +169,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Test2", meta2.Title);
             Assert.AreEqual("Album2", meta2.Album);
 
-            Assert.IsTrue(theFile.RemoveTagFromFile(tagType2));
+            Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType2).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile());
 
             meta1 = theFile.getMeta(tagType1);
@@ -184,7 +184,7 @@ namespace ATL.test.IO.MetaData
             // Restore initial padding
             TagData theTagFinal = new TagData();
             theTagFinal.PaddingSize = initialPaddingSize1;
-            Assert.IsTrue(theFile.UpdateTagInFile(theTagFinal, tagType1));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTagFinal, tagType1).GetAwaiter().GetResult());
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
             FileInfo originalFileInfo = new FileInfo(location);
@@ -240,7 +240,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
             Assert.IsNotNull(theFile.getMeta(tagType));
@@ -288,7 +288,7 @@ namespace ATL.test.IO.MetaData
             theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
@@ -329,7 +329,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
-            Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
+            Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             IMetaDataIO meta = theFile.getMeta(tagType);
@@ -360,7 +360,7 @@ namespace ATL.test.IO.MetaData
                 theTrack.TrackNumber = 6;
                 theTrack.TrackTotal = 6;
 
-                theTrack.Save();
+                theTrack.SaveAsync().GetAwaiter().GetResult();
 
                 // Check if values are as expected
                 theTrack = new Track(testFileLocation);
@@ -453,7 +453,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag.tagData, tagType));
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -524,13 +524,13 @@ namespace ATL.test.IO.MetaData
             }
 
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
+            Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType).GetAwaiter().GetResult());
 
             if (initialPaddingSize > 0)
             {
                 TagData paddingRestore = new TagData();
                 paddingRestore.PaddingSize = initialPaddingSize;
-                Assert.IsTrue(theFile.UpdateTagInFile(paddingRestore, tagType));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(paddingRestore, tagType).GetAwaiter().GetResult());
             }
 
             Assert.IsTrue(theFile.ReadFromFile());
@@ -618,7 +618,7 @@ namespace ATL.test.IO.MetaData
                 theTag.Pictures = pics;
             }
 
-            theFile.UpdateTagInFile(theTag, tagType);
+            theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult();
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
@@ -696,7 +696,7 @@ namespace ATL.test.IO.MetaData
                 }
 
                 // Add the new tag and check that it has been indeed added with all the correct information
-                Assert.IsTrue(theFile.UpdateTagInFile(newTag, tagType));
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(newTag, tagType).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
 
