@@ -176,46 +176,46 @@ namespace ATL.AudioData.IO
             IDictionary<string, string> writtenFields = new Dictionary<string, string>();
             // Title
             string value = Utils.ProtectValue(meta.Title);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.INAM")) value = additionalFields["info.INAM"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.INAM")) value = additionalFields["info.INAM"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("INAM", value, w, writtenFields);
             // Artist
             value = Utils.ProtectValue(meta.Artist);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.IART")) value = additionalFields["info.IART"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.IART")) value = additionalFields["info.IART"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("IART", value, w, writtenFields);
             // Album
             value = Utils.ProtectValue(meta.Album);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.IPRD")) value = additionalFields["info.IPRD"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.IPRD")) value = additionalFields["info.IPRD"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("IPRD", value, w, writtenFields);
             // Comment
             value = Utils.ProtectValue(meta.Comment);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.ICMT")) value = additionalFields["info.ICMT"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.ICMT")) value = additionalFields["info.ICMT"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
             // Copyright
             value = Utils.ProtectValue(meta.Copyright);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.ICOP")) value = additionalFields["info.ICOP"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.ICOP")) value = additionalFields["info.ICOP"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
             // Recording date
             value = meta.EncodeDate(meta.Date);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.ICRD")) value = additionalFields["info.ICRD"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.ICRD")) value = additionalFields["info.ICRD"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICRD", value, w, writtenFields);
             // Genre
             value = Utils.ProtectValue(meta.Genre);
-            if (0 == value.Length && additionalFields.Keys.Contains("info.IGNR")) value = additionalFields["info.IGNR"];
+            if (0 == value.Length && additionalFields.ContainsKey("info.IGNR")) value = additionalFields["info.IGNR"];
             if (value.Length > 0) writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
             // Rating
             if (meta.Popularity > 0)
             {
                 value = (5 * meta.Popularity).ToString();
-                if (0 == value.Length && additionalFields.Keys.Contains("info.IRTD")) value = additionalFields["info.IRTD"];
+                if (0 == value.Length && additionalFields.ContainsKey("info.IRTD")) value = additionalFields["info.IRTD"];
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
             if (meta.TrackNumber > 0)
             {
                 value = meta.TrackNumber.ToString();
-                if (0 == value.Length && additionalFields.Keys.Contains("info.TRCK")) value = additionalFields["info.TRCK"];
-                if (0 == value.Length && additionalFields.Keys.Contains("info.IPRT")) value = additionalFields["info.IPRT"];
-                if (0 == value.Length && additionalFields.Keys.Contains("info.ITRK")) value = additionalFields["info.ITRK"];
+                if (0 == value.Length && additionalFields.ContainsKey("info.TRCK")) value = additionalFields["info.TRCK"];
+                if (0 == value.Length && additionalFields.ContainsKey("info.IPRT")) value = additionalFields["info.IPRT"];
+                if (0 == value.Length && additionalFields.ContainsKey("info.ITRK")) value = additionalFields["info.ITRK"];
                 if (value.Length > 0) writeSizeAndNullTerminatedString("TRCK", value, w, writtenFields);
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IPRT", value, w, writtenFields);
                 if (value.Length > 0) writeSizeAndNullTerminatedString("ITRK", value, w, writtenFields);

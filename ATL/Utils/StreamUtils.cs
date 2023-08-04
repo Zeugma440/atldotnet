@@ -1085,7 +1085,7 @@ namespace ATL
         /// <returns>Generic Task for async compliance</returns>
         public static async Task WriteBytesAsync(Stream s, byte[] data)
         {
-            await s.WriteAsync(data, 0, data.Length);
+            await s.WriteAsync(data.AsMemory(0, data.Length));
         }
     }
 }
