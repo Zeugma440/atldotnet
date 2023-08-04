@@ -21,7 +21,7 @@ jobs:
         distribution: 'temurin'
         java-version: '11'
     - name: Install SonarScanner
-      run: choco install "sonarscanner-msbuild-net46" -y
+      run: choco install "sonarscanner-msbuild-net50" -y
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -41,7 +41,6 @@ jobs:
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
-        debug: true
     - name: CodeCov
       uses: codecov/codecov-action@v3
       with:
