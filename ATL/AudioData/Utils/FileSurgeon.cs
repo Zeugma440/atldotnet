@@ -134,34 +134,6 @@ namespace ATL.AudioData.IO
             if (writeProgress != null) this.writeProgress = new ProgressManager(writeProgress, "FileSurgeon");
         }
 
-        public FileSurgeon(
-            FileStructureHelper structureHelper,
-            IMetaDataEmbedder embedder,
-            MetaDataIOFactory.TagType implementedTagType,
-            long defaultTagOffset,
-            IProgress<float> writeProgress)
-        {
-            this.structureHelper = structureHelper;
-            this.embedder = embedder;
-            this.implementedTagType = implementedTagType;
-            this.defaultTagOffset = defaultTagOffset;
-            if (writeProgress != null) this.writeProgress = new ProgressManager(writeProgress, "FileSurgeon");
-        }
-
-        public FileSurgeon(
-            FileStructureHelper structureHelper,
-            IMetaDataEmbedder embedder,
-            MetaDataIOFactory.TagType implementedTagType,
-            long defaultTagOffset,
-            Action<float> writeProgress)
-        {
-            this.structureHelper = structureHelper;
-            this.embedder = embedder;
-            this.implementedTagType = implementedTagType;
-            this.defaultTagOffset = defaultTagOffset;
-            if (writeProgress != null) this.writeProgress = new ProgressManager(writeProgress, "FileSurgeon");
-        }
-
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RewriteZonesAsync(
             Stream w,

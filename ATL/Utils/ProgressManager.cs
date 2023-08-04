@@ -63,24 +63,6 @@ namespace ATL
             MaxSections = maxSections;
         }
 
-        internal ProgressManager(IProgress<float> progress, string name = "", int maxSections = 0)
-        {
-            isAsync = true;
-            asyncProgress = progress;
-            currentSection = 0;
-            this.name = name;
-            MaxSections = maxSections;
-        }
-
-        internal ProgressManager(Action<float> progress, string name = "", int maxSections = 0)
-        {
-            isAsync = false;
-            syncProgress = progress;
-            currentSection = 0;
-            this.name = name;
-            MaxSections = maxSections;
-        }
-
         private void ComputeBounds()
         {
             resolution = 1f / maxSections;
