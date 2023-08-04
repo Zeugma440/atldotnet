@@ -29,7 +29,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ATL.unit-test
     - name: Run SonarScanner
-      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="ATL.unit-test/lcov.info"
+      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="${GITHUB_WORKSPACE}/ATL.unit-test/lcov.info"
   
     - name: Test
       run: dotnet test ATL.unit-test --verbosity normal --results-directory "TestResults"
@@ -41,6 +41,7 @@ jobs:
         outputFormat: 'opencover'
         excludes: '[program]*,[test]test.*'
         threshold: 80
+        debug: true
     - name: CodeCov
       uses: codecov/codecov-action@v3
       with:
