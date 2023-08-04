@@ -250,7 +250,7 @@ namespace ATL.AudioData.IO
                         globalOffsetCorrection = 0;
                     }
 
-                    foreach (var zone in region.Zones)
+                    foreach (Zone zone in region.Zones)
                     {
                         bool isNothing;
                         oldTagSize = zone.Size;

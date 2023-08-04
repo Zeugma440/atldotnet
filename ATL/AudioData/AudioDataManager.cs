@@ -380,7 +380,7 @@ namespace ATL.AudioData
                         if (null == stream) s.Close();
                     }
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Utils.TraceException(e);
                     result = false;
