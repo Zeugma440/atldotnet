@@ -27,7 +27,7 @@ namespace ATL.test
                 stream1.Seek(1, SeekOrigin.Begin);
                 stream2.Seek(5, SeekOrigin.Begin);
 
-                StreamUtils.CopyStream(stream1, stream2, 5);
+                StreamUtils.CopyStreamAsync(stream1, stream2, 5).Wait();
 
                 // Build expected result
                 for (int i = 5; i < 10; i++) list2[i] = Convert.ToByte(i - 4);
@@ -56,7 +56,7 @@ namespace ATL.test
                 stream1.Seek(1, SeekOrigin.Begin);
                 stream2.Seek(5, SeekOrigin.Begin);
 
-                StreamUtils.CopyStream(stream1, stream2);
+                StreamUtils.CopyStreamAsync(stream1, stream2).Wait();
 
                 // Build expected result
                 for (int i = 5; i < 20; i++) list2[i] = Convert.ToByte(i - 4);
@@ -76,7 +76,7 @@ namespace ATL.test
             using (MemoryStream stream = new MemoryStream(12))
             {
                 foreach (byte i in list) stream.WriteByte(i);
-                StreamUtils.ShortenStream(stream, 6, 2);
+                StreamUtils.ShortenStreamAsync(stream, 6, 2).Wait();
                 list.RemoveAt(4);
                 list.RemoveAt(4);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -93,7 +93,7 @@ namespace ATL.test
             using (MemoryStream stream = new MemoryStream(12))
             {
                 foreach (byte i in list) stream.WriteByte(i);
-                StreamUtils.LengthenStream(stream, 6, 2, true);
+                StreamUtils.LengthenStreamAsync(stream, 6, 2, true).Wait();
                 list.Insert(6, 0);
                 list.Insert(6, 0);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -171,13 +171,13 @@ namespace ATL.test
 
             using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
             {
-                StreamUtils.CopySameStream(stream, 2, 4, 6, 3);
+                StreamUtils.CopySameStreamAsync(stream, 2, 4, 6, 3).Wait();
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListForward, stream.ToArray()));
             }
 
             using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
             {
-                StreamUtils.CopySameStream(stream, 4, 2, 6, 3);
+                StreamUtils.CopySameStreamAsync(stream, 4, 2, 6, 3).Wait();
                 Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListBackward, stream.ToArray()));
             }
         }

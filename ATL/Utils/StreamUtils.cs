@@ -82,40 +82,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Copies a given number of bytes from a given stream to another, starting at current stream positions
-        /// i.e. first byte will be read at from.Position and written at to.Position
-        /// NB : This method cannot be used to move data within one single stream; use CopySameStream instead
-        /// </summary>
-        /// <param name="from">Stream to start copy from</param>
-        /// <param name="to">Stream to copy to</param>
-        /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the 'from' stream)</param>
-        public static void CopyStream(Stream from, Stream to, long length = 0)
-        {
-            byte[] data = new byte[Settings.FileBufferSize];
-            int bytesToRead;
-            int totalBytesRead = 0;
-
-            while (true)
-            {
-                if (length > 0)
-                {
-                    if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = toInt(length - totalBytesRead);
-                }
-                else // Read everything we can
-                {
-                    bytesToRead = Settings.FileBufferSize;
-                }
-                int bytesRead = from.Read(data, 0, bytesToRead);
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-                to.Write(data, 0, bytesRead);
-                totalBytesRead += bytesRead;
-            }
-        }
-
-        /// <summary>
         /// Convenient converter for the use of CopySameStream only, where this goes into Min immediately
         /// </summary>
         /// <param name="value">Value to convert</param>
@@ -985,6 +951,7 @@ namespace ATL
         /// <param name="from">Stream to start copy from</param>
         /// <param name="to">Stream to copy to</param>
         /// <param name="length">Number of bytes to copy (optional; default = 0 = all bytes until the end of the 'from' stream)</param>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task CopyStreamAsync(Stream from, Stream to, long length = 0)
         {
             byte[] data = new byte[Settings.FileBufferSize];
