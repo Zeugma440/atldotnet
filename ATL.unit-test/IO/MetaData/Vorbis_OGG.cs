@@ -215,7 +215,7 @@ namespace ATL.test.IO.MetaData
             TagIO_RW_VorbisOGG_Empty(null);
         }
 
-        public void TagIO_RW_VorbisOGG_Empty(Stream stream)
+        public async void TagIO_RW_VorbisOGG_Empty(Stream stream)
         {
             new ConsoleLogger();
 
@@ -266,7 +266,7 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             Assert.IsTrue(theFile.ReadFromFile());
 
@@ -364,7 +364,7 @@ namespace ATL.test.IO.MetaData
             }
         }
 
-        private void tagIO_RW_VorbisOGG_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
+        private async void tagIO_RW_VorbisOGG_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             new ConsoleLogger();
 
@@ -386,7 +386,7 @@ namespace ATL.test.IO.MetaData
 
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures + 1);
 
@@ -422,7 +422,7 @@ namespace ATL.test.IO.MetaData
             theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFile(theTag, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 
