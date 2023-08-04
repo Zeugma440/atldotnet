@@ -266,7 +266,8 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Johnson Jr.";
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            var task = Task.Run(async () => await theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(task.Result);
 
             Assert.IsTrue(theFile.ReadFromFile());
 
