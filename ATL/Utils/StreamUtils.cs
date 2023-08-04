@@ -27,7 +27,7 @@ namespace ATL
         /// <param name="a">String to be tested</param>
         /// <param name="b">Char array to be tested</param>
         /// <returns>True if both contain the same character sequence; false if not</returns>
-        public static bool StringEqualsArr(String a, char[] b)
+        public static bool StringEqualsArr(string a, char[] b)
         {
             return ArrEqualsArr(a.ToCharArray(), b);
         }
@@ -99,7 +99,7 @@ namespace ATL
         public static sbyte DecodeSignedByte(byte[] data)
         {
             if (data.Length < 1) throw new InvalidDataException("Data should be at least 1 bytes long; found " + data.Length + " bytes");
-            return (sbyte)(data[0]);
+            return (sbyte)data[0];
         }
 
         /// <summary>
