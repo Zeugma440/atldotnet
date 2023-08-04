@@ -21,7 +21,8 @@ jobs:
         distribution: 'temurin'
         java-version: '11'
     - name: Install SonarScanner
-      run: choco install "sonarscanner-msbuild-net50" -y
+      #run: choco install "sonarscanner-msbuild-net50" -y
+      run: dotnet tool install --global dotnet-sonarscanner
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -29,7 +30,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ATL.unit-test
     - name: Run SonarScanner
-      run: SonarScanner.MSBuild.exe begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="${GITHUB_WORKSPACE}/ATL.unit-test/lcov.info"
+      run: dotnet sonarscanner begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="${GITHUB_WORKSPACE}/ATL.unit-test/lcov.info"
   
     - name: Test
       run: dotnet test ATL.unit-test --verbosity normal --results-directory "TestResults"
@@ -49,4 +50,4 @@ jobs:
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
     - name: Upload to SonarScanner
-      run : SonarScanner.MSBuild.exe end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
+      run : dotnet sonarscanner end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
