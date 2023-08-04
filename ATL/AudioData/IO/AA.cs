@@ -277,7 +277,7 @@ namespace ATL.AudioData.IO
         }
 
         // The table of contents describes the layout of the file as triples of integers (<section>, <offset>, <length>)
-        private IDictionary<int, TocEntry> readToc(BufferedBinaryReader s)
+        private static IDictionary<int, TocEntry> readToc(BufferedBinaryReader s)
         {
             IDictionary<int, TocEntry> result = new Dictionary<int, TocEntry>();
             int nbTocEntries = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
@@ -440,7 +440,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTagField(Stream s, string key, string value)
+        private static void writeTagField(Stream s, string key, string value)
         {
             s.WriteByte(0); // Unknown byte; always zero
             byte[] keyB = Encoding.UTF8.GetBytes(key);
@@ -451,7 +451,7 @@ namespace ATL.AudioData.IO
             StreamUtils.WriteBytes(s, valueB);
         }
 
-        private void writePictureFrame(Stream s, byte[] pictureData)
+        private static void writePictureFrame(Stream s, byte[] pictureData)
         {
             StreamUtils.WriteBEInt32(s, pictureData.Length); // Pic size
             StreamUtils.WriteInt32(s, 0); // Pic data absolute offset; to be rewritten later

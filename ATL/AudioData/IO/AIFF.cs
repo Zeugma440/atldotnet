@@ -49,7 +49,7 @@ namespace ATL.AudioData.IO
 
 
         // AIFx timestamp are defined as "the number of seconds since January 1, 1904"
-        private static DateTime timestampBase = new DateTime(1904, 1, 1);
+        private static DateTime timestampBase = new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public class CommentData
         {
@@ -645,7 +645,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeCommentChunk(BinaryWriter w, MetaFieldInfo info, string comment = "")
+        private static void writeCommentChunk(BinaryWriter w, MetaFieldInfo info, string comment = "")
         {
             byte[] commentData = null;
 

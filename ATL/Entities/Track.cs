@@ -185,7 +185,7 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1);
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
                 isYearExplicit = true;

@@ -375,7 +375,7 @@ namespace ATL.AudioData
         public IAudioDataIO GetFromMimeType(string mimeType, string path, int alternate = 0)
         {
             IList<Format> formats;
-            if (mimeType.StartsWith(".")) formats = getFormatsFromPath(mimeType);
+            if (mimeType.StartsWith('.')) formats = getFormatsFromPath(mimeType);
             else formats = getFormatsFromMimeType(mimeType);
 
             Format theFormat;
@@ -434,7 +434,7 @@ namespace ATL.AudioData
             }
         }
 
-        private IAudioDataIO getFromFormat(string path, Format theFormat)
+        private static IAudioDataIO getFromFormat(string path, Format theFormat)
         {
             switch (theFormat.ID)
             {
