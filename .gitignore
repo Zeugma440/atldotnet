@@ -210,3 +210,4 @@ $RECYCLE.BIN/
 /MigrationBackup
 /ATL/BUILD TODO.txt.bak
 /ATL/ATL.csproj.bak
+/ATL.unit-test/Resources/tmp
