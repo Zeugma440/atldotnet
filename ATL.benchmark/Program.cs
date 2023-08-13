@@ -135,7 +135,7 @@ namespace ATL.benchmark
 
             Track t = new Track(filePath);
 
-            Console.WriteLine(t.Path + "......." + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
+            Console.WriteLine(t.Path + "......." + t.AudioFormat.Name + " | " + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
             Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
 
             Console.WriteLine("images : " + t.EmbeddedPictures.Count);
