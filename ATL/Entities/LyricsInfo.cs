@@ -167,5 +167,13 @@ namespace ATL
             ContentType = LyricsType.LYRICS;
             SynchronizedLyrics.Clear();
         }
+
+        /// <summary>
+        /// Indicate if the structure contains any data
+        /// </summary>
+        public bool Exists()
+        {
+            return Description.Length > 0 || UnsynchronizedLyrics.Length > 0 || SynchronizedLyrics.Count > 0;
+        }
     }
 }

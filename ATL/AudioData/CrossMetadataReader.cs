@@ -565,7 +565,7 @@ namespace ATL.AudioData
         {
             get
             {
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null);
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null && r.Lyrics.Exists());
                 if (reader != null) return new LyricsInfo(reader.Lyrics);
                 return new LyricsInfo();
             }
