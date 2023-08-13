@@ -85,13 +85,22 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_MP3()
         {
-            testGenericAudio("MP3/01 - Title Screen.mp3", 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 2048, 62342); // VBR
-            testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 184, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3340); // Malpositioned header
-            testGenericAudio("MP3/truncated_frame.mp3", 520, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908); // Malpositioned header 2
-            testGenericAudio("MP3/mp1Layer1.mp1", 520, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer I)", 0, 25080); // MPEG1 Layer 1
-            testGenericAudio("MP3/mp1Layer2.mp1", 752, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 36362); // MPEG1 Layer 2
-            testGenericAudio("MP3/mp2Layer1.mp2", 1408, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer I)", 0, 22572); // MPEG2 Layer 1
-            testGenericAudio("MP3/mp2Layer2.mp2", 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 25920); // MPEG2 Layer 2
+            // VBR
+            testGenericAudio("MP3/01 - Title Screen.mp3", 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 2048, 62342);
+            // Malpositioned header
+            testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 184, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3340);
+            // Malpositioned header 2
+            testGenericAudio("MP3/truncated_frame.mp3", 520, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
+            // MPEG1 Layer 1
+            testGenericAudio("MP3/mp1Layer1.mp1", 520, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer I)", 0, 25080);
+            // MPEG1 Layer 2
+            testGenericAudio("MP3/mp1Layer2.mp1", 752, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 36362);
+            // MPEG2 Layer 1
+            testGenericAudio("MP3/mp2Layer1.mp2", 1408, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer I)", 0, 22572);
+            // MPEG2 Layer 2
+            testGenericAudio("MP3/mp2Layer2.mp2", 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 25920);
+            // Contradictory frames
+            testGenericAudio("MP3/different_bitrates_modes.mp3", 6432, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
         }
 
         [TestMethod]
