@@ -223,15 +223,15 @@ namespace ATL
             // Metadata
             foreach (var meta in Metadata)
             {
-                sb.Append("[").Append(meta.Key).Append(":").Append(meta.Value).Append("]\n");
+                sb.Append('[').Append(meta.Key).Append(':').Append(meta.Value).Append("]\n");
             }
 
-            sb.Append("\n");
+            sb.Append('\n');
 
             // Lyrics
             foreach (var line in SynchronizedLyrics)
             {
-                sb.Append("[").Append(Utils.EncodeTimecode_ms(line.TimestampMs)).Append("]").Append(line.Text).Append("\n");
+                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampMs)).Append(']').Append(line.Text).Append('\n');
             }
 
             return sb.ToString();
