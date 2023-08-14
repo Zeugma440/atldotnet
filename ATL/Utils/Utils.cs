@@ -151,11 +151,11 @@ namespace Commons
                 int seconds = 0;
                 int milliseconds = 0;
 
-                if (timeCode.Contains(":"))
+                if (timeCode.Contains(':'))
                 {
                     valid = true;
                     string[] parts = timeCode.Split(':');
-                    if (parts[parts.Length - 1].Contains("."))
+                    if (parts[parts.Length - 1].Contains('.'))
                     {
                         string[] subPart = parts[parts.Length - 1].Split('.');
                         parts[parts.Length - 1] = subPart[0];

@@ -913,7 +913,7 @@ namespace ATL.AudioData.IO
 
                     if (inLyrics)
                     {
-                        if (strData.Length > 0) tagData.Lyrics.UnsynchronizedLyrics = strData;
+                        if (strData.Length > 0) setMetaField(Field.LYRICS_UNSYNCH, strData);
                     }
                     else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {

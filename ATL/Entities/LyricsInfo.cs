@@ -1,5 +1,7 @@
 ﻿using Commons;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace ATL
 {
@@ -107,9 +109,13 @@ namespace ATL
         /// </summary>
         public string UnsynchronizedLyrics { get; set; }
         /// <summary>
-        /// Data of unsynhronized (i.e. with associated timestamps) lyrics
+        /// Data of synchronized (i.e. with associated timestamps) lyrics
         /// </summary>
         public IList<LyricsPhrase> SynchronizedLyrics { get; set; }
+        /// <summary>
+        /// Metadata of synchronized lyrics (e.g. LRC metadata)
+        /// </summary>
+        public IDictionary<string, string> Metadata { get; set; }
         /// <summary>
         /// Indicate if this object is marked for removal
         /// </summary>
@@ -140,6 +146,7 @@ namespace ATL
             UnsynchronizedLyrics = "";
             ContentType = LyricsType.LYRICS;
             SynchronizedLyrics = new List<LyricsPhrase>();
+            Metadata = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -153,6 +160,8 @@ namespace ATL
             UnsynchronizedLyrics = info.UnsynchronizedLyrics;
             ContentType = info.ContentType;
             SynchronizedLyrics = new List<LyricsPhrase>(info.SynchronizedLyrics);
+            Metadata = new Dictionary<string, string>();
+            foreach (string key in info.Metadata.Keys) Metadata.Add(key, info.Metadata[key]);
         }
 
         /// <summary>
@@ -166,6 +175,7 @@ namespace ATL
             isRemoval = false;
             ContentType = LyricsType.LYRICS;
             SynchronizedLyrics.Clear();
+            Metadata.Clear();
         }
 
         /// <summary>
@@ -173,7 +183,58 @@ namespace ATL
         /// </summary>
         public bool Exists()
         {
-            return Description.Length > 0 || UnsynchronizedLyrics.Length > 0 || SynchronizedLyrics.Count > 0;
+            return Description.Length > 0 || UnsynchronizedLyrics.Length > 0 || SynchronizedLyrics.Count > 0 || Metadata.Count > 0;
+        }
+
+        /// <summary>
+        /// Parse the given unsynchronized LRC string into synchronized lyrics
+        /// </summary>
+        public void ParseLRC(string data)
+        {
+            List<string> lines = data.Split('\n').Select(l => l.Trim()).ToList();
+            foreach (string line in lines)
+            {
+                int endIndex = line.IndexOf(']');
+                if (endIndex < 0) continue;
+                if (endIndex == line.Length - 1)
+                {
+                    int metaIndex = line.IndexOf(':');
+                    if (endIndex < 0) continue;
+                    string key = line.Substring(1, metaIndex - 1);
+                    string value = line.Substring(metaIndex + 1, endIndex - metaIndex - 1);
+                    Metadata.Add(key.Trim(), value.Trim());
+                }
+                else
+                {
+                    string timestamp = line.Substring(1, endIndex - 1);
+                    string lyrics = line.Substring(endIndex + 1);
+                    SynchronizedLyrics.Add(new LyricsPhrase(timestamp, lyrics.Trim()));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Format Metadata and Synchronized lyrics to LRC block of text
+        /// </summary>
+        public string FormatSynchToLRC()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            // Metadata
+            foreach (var meta in Metadata)
+            {
+                sb.Append("[").Append(meta.Key).Append(":").Append(meta.Value).Append("]\n");
+            }
+
+            sb.Append("\n");
+
+            // Lyrics
+            foreach (var line in SynchronizedLyrics)
+            {
+                sb.Append("[").Append(Utils.EncodeTimecode_ms(line.TimestampMs)).Append("]").Append(line.Text).Append("\n");
+            }
+
+            return sb.ToString();
         }
     }
 }

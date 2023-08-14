@@ -443,7 +443,7 @@ namespace ATL.AudioData.IO
             {
                 // Picture has either to be supported, or to come from the right tag standard
                 doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
                 // It also has not to be marked for deletion
                 doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
 

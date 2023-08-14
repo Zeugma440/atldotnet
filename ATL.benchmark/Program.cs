@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
 using Commons;
 using System;
+using System.Diagnostics.Metrics;
 using System.IO;
 
 namespace ATL.benchmark
@@ -88,7 +89,7 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
 
-        static private void writeOnTmpResource(String fileName)
+        static private void writeOnTmpResource(string fileName)
         {
             Writing w = new Writing();
             w.Setup(fileName);
@@ -98,7 +99,7 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
 
-        static private void writeAt(String filePath)
+        static private void writeAt(string filePath)
         {
             string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
             try
@@ -123,12 +124,12 @@ namespace ATL.benchmark
             }
         }
 
-        static private void reduce(String filePath)
+        static private void reduce(string filePath)
         {
             new Reduce().reduce(filePath);
         }
 
-        static private void info(String filePath)
+        static private void info(string filePath)
         {
             new ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);

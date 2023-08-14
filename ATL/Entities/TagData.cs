@@ -278,7 +278,8 @@ namespace ATL
             else if (key == Field.LYRICS_UNSYNCH)
             {
                 if (null == Lyrics) Lyrics = new LyricsInfo();
-                Lyrics.UnsynchronizedLyrics = value;
+                if (value.Contains("[0")) Lyrics.ParseLRC(value);
+                else Lyrics.UnsynchronizedLyrics = value;
             }
             else if (key == Field.RECORDING_DATE_OR_YEAR)
             {
@@ -489,7 +490,11 @@ namespace ATL
             }
 
 
-            if (Lyrics != null && Lyrics.UnsynchronizedLyrics != null) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
+            if (Lyrics != null)
+            {
+                if (Lyrics.UnsynchronizedLyrics != null && Lyrics.UnsynchronizedLyrics.Length > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
+                else if (Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
+            }
 
             return result;
         }

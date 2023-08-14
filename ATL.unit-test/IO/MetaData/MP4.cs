@@ -826,7 +826,7 @@ namespace ATL.test.IO.MetaData
                 expectedChaps.Add(ch.StartTime, ch);
 
                 // Check if they are persisted properly
-                Assert.IsTrue(  theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
                 Assert.IsTrue(theFile.ReadFromFile(false, true));
                 Assert.IsNotNull(theFile.NativeTag);
@@ -1181,7 +1181,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/lyrics.m4a");
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/lyrics.m4a");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
@@ -1200,6 +1200,54 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private void checkUnsynchLyrics(AudioDataManager theFile)
+        {
+            Assert.IsTrue(0 == theFile.NativeTag.Lyrics.UnsynchronizedLyrics.Length);
+
+            Assert.AreEqual(5, theFile.NativeTag.Lyrics.Metadata.Count);
+            Assert.AreEqual("Chubby Checker oppure  Beatles, The", theFile.NativeTag.Lyrics.Metadata["ar"]);
+            Assert.AreEqual("Hits Of The 60's - Vol. 2 – Oldies", theFile.NativeTag.Lyrics.Metadata["al"]);
+            Assert.AreEqual("Let's Twist Again", theFile.NativeTag.Lyrics.Metadata["ti"]);
+            Assert.AreEqual("Written by Kal Mann / Dave Appell, 1961", theFile.NativeTag.Lyrics.Metadata["au"]);
+            Assert.AreEqual("2:23", theFile.NativeTag.Lyrics.Metadata["length"]);
+
+            Assert.AreEqual(3, theFile.NativeTag.Lyrics.SynchronizedLyrics.Count);
+            Assert.AreEqual("Naku Penda Piya-Naku Taka Piya-Mpenziwe", theFile.NativeTag.Lyrics.SynchronizedLyrics[0].Text);
+            Assert.AreEqual(12000, theFile.NativeTag.Lyrics.SynchronizedLyrics[0].TimestampMs);
+            Assert.AreEqual("Some more lyrics", theFile.NativeTag.Lyrics.SynchronizedLyrics[1].Text);
+            Assert.AreEqual(15030, theFile.NativeTag.Lyrics.SynchronizedLyrics[1].TimestampMs);
+            Assert.AreEqual("Even more lyrics", theFile.NativeTag.Lyrics.SynchronizedLyrics[2].Text);
+            Assert.AreEqual(83045, theFile.NativeTag.Lyrics.SynchronizedLyrics[2].TimestampMs);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Lyrics_LRC()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/lyrics_LRC.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            checkUnsynchLyrics(theFile);
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            theTag.Title = "blah";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            checkUnsynchLyrics(theFile);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
