@@ -223,9 +223,9 @@ namespace ATL.AudioData
         /// List the available tag types of the current file
         /// </summary>
         /// <returns>List of tag types available in the current file</returns>
-        public IList<TagType> getAvailableMetas()
+        public ISet<TagType> getAvailableMetas()
         {
-            IList<TagType> result = new List<TagType>();
+            ISet<TagType> result = new HashSet<TagType>();
             foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
                                     where hasMeta(tagType)
                                     select tagType)

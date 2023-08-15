@@ -124,11 +124,11 @@ namespace ATL.AudioData
 
         private IList<TagType> detectAvailableMetas()
         {
-            IList<TagType> result = audioManager.getAvailableMetas();
+            ISet<TagType> result = audioManager.getAvailableMetas();
             IList<TagType> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = 0 == result.Count;
-            if (Settings.EnrichID3v1 && 1 == result.Count && result[0] == TagType.ID3V1) hasNothing = true;
+            if (Settings.EnrichID3v1 && 1 == result.Count && result.First() == TagType.ID3V1) hasNothing = true;
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
@@ -143,7 +143,7 @@ namespace ATL.AudioData
                 // => Use the first supported meta available
                 if (0 == result.Count && supportedMetas.Count > 0) result.Add(supportedMetas[0]);
             }
-            return result;
+            return result.ToList();
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -170,7 +170,7 @@ namespace ATL.AudioData
         public async Task<bool> RemoveAsync(TagType tagType = TagType.ANY, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
-            IList<TagType> metasToRemove = getMetasToRemove(tagType);
+            ISet<TagType> metasToRemove = getMetasToRemove(tagType);
 
             ProgressManager progressManager = null;
             if (writeProgress != null)
@@ -186,10 +186,10 @@ namespace ATL.AudioData
             return result;
         }
 
-        private IList<TagType> getMetasToRemove(TagType tagType)
+        private ISet<TagType> getMetasToRemove(TagType tagType)
         {
             if (TagType.ANY == tagType) return audioManager.getAvailableMetas();
-            else return new List<TagType>() { tagType };
+            else return new HashSet<TagType>() { tagType };
         }
 
         // ============ FIELD ACCESSORS
