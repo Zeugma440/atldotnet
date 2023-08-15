@@ -1,4 +1,4 @@
-# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20Core-3.1-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![Net Framework](https://img.shields.io/badge/.NET%20Framework-4.8-lightgrey.svg)
+# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20Core-3.1-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![.NET](https://img.shields.io/badge/.NET-6.0-lightgrey.svg)
 
 __Latest stable version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/)
 
@@ -140,7 +140,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 ### DETECTED FIELDS
 
 * __Audio properties (from audio data)__ : Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, Channels count and arrangement
-* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Publishing Date, Copyright, Original album, Original artist, Album sort order, Album artist sort order, Artist sort order, Title sort order, Content group description, Series title / Movement name, Series part / Movement index, Long description (also known as "Podcast description"), Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics
+* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Description, Comment, Genre, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Album, Rating, Publisher, Publishing Date, Copyright, Original album, Original artist, Album sort order, Album artist sort order, Artist sort order, Title sort order, Content group description, Series title / Movement name, Series part / Movement index, Long description (also known as "Podcast description"), Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
 * __Custom Metadata__ : any other field that might be in the tag is readable __and__ editable by ATL
 
 NB : Most metadata will be read "as is", with minimal alteration. If your file has invalid tags (e.g. chapter start timecode located after file duration), ATL will give you back that information without trying to auto-correct it.
