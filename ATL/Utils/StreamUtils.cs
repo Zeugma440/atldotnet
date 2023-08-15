@@ -687,6 +687,22 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Extracts a little-endian integer from the given byte array, using the given bits position and length
+        /// Credits go to https://stackoverflow.com/questions/63788666/c-sharp-fastest-method-get-integer-from-part-of-bits
+        /// </summary>
+        public static int ReadBits(byte[] source, int offset, int length)
+        {
+            if (source.Length > 4) throw new NotSupportedException("Only supports 32-bit input or less");
+            if (offset + length > source.Length * 8) throw new NotSupportedException("Incompatible parameters");
+
+            byte[] intBytes = new byte[4];
+            source.CopyTo(intBytes, 0);
+            int full = DecodeInt32(intBytes);
+            int mask = (1 << length) - 1;
+            return (full >> offset) & mask;
+        }
+
         public static void WriteBytes(Stream s, byte[] data)
         {
             s.Write(data, 0, data.Length);

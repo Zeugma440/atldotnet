@@ -270,7 +270,7 @@ namespace ATL
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
             }
             PictureData = binaryData;
-            if (PictureData.Length > 2)
+            if (PictureData.Length > 11)
                 NativeFormat = ImageUtils.GetImageFormatFromPictureHeader(PictureData);
         }
 

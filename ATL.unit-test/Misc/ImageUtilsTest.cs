@@ -15,6 +15,7 @@ namespace ATL.test
             Assert.IsTrue(ImageFormat.Png == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Png)));
             Assert.IsTrue(ImageFormat.Gif == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Gif)));
             Assert.IsTrue(ImageFormat.Jpeg == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Jpeg)));
+            Assert.IsTrue(ImageFormat.Webp == ImageUtils.GetImageFormatFromMimeType(ImageUtils.GetMimeTypeFromImageFormat(ImageFormat.Webp)));
         }
 
         [TestMethod]
@@ -35,7 +36,7 @@ namespace ATL.test
         public void ImgUtils_LoadJpeg()
         {
             // THis one has multiple image data segments; never figured out why
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(900, props.Width);
@@ -44,7 +45,7 @@ namespace ATL.test
             Assert.AreEqual(24, props.ColorDepth);
 
             // This one is plain and simple
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg");
             props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(900, props.Width);
@@ -56,7 +57,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadPng()
         {
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(175, props.Width);
@@ -68,7 +69,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadBmp()
         {
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.bmp");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.bmp");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(175, props.Width);
@@ -80,7 +81,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadGif()
         {
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.gif");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(175, props.Width);
@@ -92,7 +93,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadTiff()
         {
-            byte[] data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bilevel.tif");
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bilevel.tif");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(1728, props.Width);
@@ -100,7 +101,7 @@ namespace ATL.test
             Assert.AreEqual(0, props.NumColorsInPalette);
             Assert.AreEqual(1, props.ColorDepth);
 
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/rgb.tif");
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/rgb.tif");
             props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(124, props.Width);
@@ -108,7 +109,7 @@ namespace ATL.test
             Assert.AreEqual(0, props.NumColorsInPalette);
             Assert.AreEqual(24, props.ColorDepth);
 
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/palette.tif");
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/palette.tif");
             props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(2147, props.Width);
@@ -116,13 +117,43 @@ namespace ATL.test
             Assert.AreEqual(8, props.NumColorsInPalette);
             Assert.AreEqual(8, props.ColorDepth);
 
-            data = System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bigEndian.tif");
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/bigEndian.tif");
             props = ImageUtils.GetImageProperties(data);
 
             Assert.AreEqual(2464, props.Width);
             Assert.AreEqual(3248, props.Height);
             Assert.AreEqual(0, props.NumColorsInPalette);
             Assert.AreEqual(1, props.ColorDepth);
+        }
+
+        [TestMethod]
+        public void ImgUtils_LoadWebp()
+        {
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/lossy.webp");
+            ImageProperties props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(550, props.Width);
+            Assert.AreEqual(368, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(32, props.ColorDepth);
+
+
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/lossless.webp");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(386, props.Width);
+            Assert.AreEqual(395, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(32, props.ColorDepth);
+
+
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/extended.webp");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(386, props.Width);
+            Assert.AreEqual(395, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(32, props.ColorDepth);
         }
     }
 }

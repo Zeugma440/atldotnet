@@ -1,6 +1,7 @@
 ﻿using ATL;
 using ATL.Logging;
 using System;
+using System.Collections;
 using System.IO;
 
 namespace Commons
@@ -37,7 +38,11 @@ namespace Commons
         /// <summary>
         /// TIFF
         /// </summary>
-        Tiff = 5
+        Tiff = 5,
+        /// <summary>
+        /// WEBP
+        /// </summary>
+        Webp = 6
     };
 
     /// <summary>
@@ -81,7 +86,7 @@ namespace Commons
     {
         /// <summary>
         /// Return the mime-type of the given .NET image format
-        /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP, TIFF, WEBP
         /// </summary>
         /// <param name="imageFormat">Image format whose mime-type to obtain</param>
         /// <returns>mime-type of the given image format</returns>
@@ -109,6 +114,10 @@ namespace Commons
             {
                 result += "tiff";
             }
+            else if (imageFormat.Equals(ImageFormat.Webp))
+            {
+                result += "webp";
+            }
             else
             {
                 result += "*";
@@ -119,7 +128,7 @@ namespace Commons
 
         /// <summary>
         /// Returns the .NET image format of the given mime-type
-        /// NB1 : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP
+        /// NB1 : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP, TIFF, WEBP
         /// NB2 : This function does not verify the syntax of the mime-type (e.g. "image/XXX"), and only focuses on the presence of specific substrings (e.g. "gif")
         /// </summary>
         /// <param name="mimeType">Mime-type whose ImageFormat to obtain</param>
@@ -144,6 +153,10 @@ namespace Commons
             {
                 result = ImageFormat.Tiff;
             }
+            else if (mimeType.Contains("webp"))
+            {
+                result = ImageFormat.Webp;
+            }
 
             return result;
         }
@@ -151,11 +164,11 @@ namespace Commons
         /// <summary>
         /// Detects image format from the given signature
         /// </summary>
-        /// <param name="header">Binary signature; must be at least 3-bytes long</param>
+        /// <param name="header">Binary signature; must be at least 12-bytes long</param>
         /// <returns>Detected image format corresponding to the given signature; null if no match is found</returns>
         public static ImageFormat GetImageFormatFromPictureHeader(byte[] header)
         {
-            if (header.Length < 3) throw new FormatException("Header length must be at least 3");
+            if (header.Length < 12) throw new FormatException("Header length must be at least 12");
 
             if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
             else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
@@ -163,6 +176,7 @@ namespace Commons
             else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
             else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
             else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
+            else if (0x52 == header[0] && 0x49 == header[1] && 0x46 == header[2] && 0x46 == header[3] && 0x57 == header[8] && 0x45 == header[9] && 0x42 == header[10] && 0x50 == header[11]) return ImageFormat.Webp;
             else return ImageFormat.Unsupported;
         }
 
@@ -176,7 +190,7 @@ namespace Commons
         {
             ImageProperties props = new ImageProperties();
 
-            if (ImageFormat.Undefined.Equals(format) && imageData.Length > 2) format = GetImageFormatFromPictureHeader(imageData);
+            if (ImageFormat.Undefined.Equals(format) && imageData.Length > 11) format = GetImageFormatFromPictureHeader(imageData);
 
             if (format.Equals(ImageFormat.Unsupported)) return props;
 
@@ -190,8 +204,8 @@ namespace Commons
 
                 switch (format)
                 {
-                    case (ImageFormat.Tiff):
-                        bool isBigEndian = (0x4D == r.ReadByte());
+                    case ImageFormat.Tiff:
+                        bool isBigEndian = 0x4D == r.ReadByte();
                         s.Seek(3, SeekOrigin.Current); // Skip the rest of the signature
                         long IFDOffset = readInt32(r, isBigEndian);
 
@@ -218,27 +232,27 @@ namespace Commons
                             switch (IFDtag)
                             {
                                 // Common properties
-                                case (0x0100):
+                                case 0x0100:
                                     props.Width = IFDValue32;
                                     // Specs say "SHORT or LONG" but the implementation actually takes up 4 bytes anyway -> we'll assume it's a SHORT if the last two bytes are null
                                     if (0 == IFDValueBinary[2] + IFDValueBinary[3]) props.Width = IFDValue16;
                                     break;
-                                case (0x0101):
+                                case 0x0101:
                                     props.Height = IFDValue32;
                                     if (0 == IFDValueBinary[2] + IFDValueBinary[3]) props.Height = IFDValue16;
                                     break;
 
                                 // Specific properties
-                                case (0x0106):                  // PhotometricInterpretation
+                                case 0x0106:                  // PhotometricInterpretation
                                     photometricInterpretation = IFDValue32;
                                     if (IFDValue32 < 2) props.ColorDepth = 1;         // Bilevel or greyscale image
                                     else if (2 == IFDValue32) props.ColorDepth = 24;  // RGB full color image
                                     // NB : A value of 3 would indicate a palette-color image, but has no effect here
                                     break;
-                                case (0x0102):                  // BitsPerSample
+                                case 0x0102:                  // BitsPerSample
                                     bitsPerSample = IFDValue16;
                                     break;
-                                case (0x0115):                  // SamplesPerPixel
+                                case 0x0115:                  // SamplesPerPixel
                                     samplesPerPixel = IFDValue16;
                                     break;
                             }
@@ -260,7 +274,7 @@ namespace Commons
 
 
                         break;
-                    case (ImageFormat.Gif):
+                    case ImageFormat.Gif:
                         byte[] GraphicControlExtensionBlockSignature = new byte[2] { 0x21, 0xf9 };
 
                         props.ColorDepth = 24; // 1 byte for each component
@@ -323,7 +337,7 @@ namespace Commons
 
                         break;
 
-                    case (ImageFormat.Bmp):
+                    case ImageFormat.Bmp:
 
                         // Skip useless information
                         s.Seek(18, SeekOrigin.Begin);
@@ -337,7 +351,7 @@ namespace Commons
 
                         break;
 
-                    case (ImageFormat.Png):
+                    case ImageFormat.Png:
                         byte[] intData = new byte[4];
                         byte[] IHDRChunkSignature = Utils.Latin1Encoding.GetBytes("IHDR");
                         byte[] PaletteChunkSignature = Utils.Latin1Encoding.GetBytes("PLTE");
@@ -379,7 +393,7 @@ namespace Commons
                         }
 
                         break;
-                    case (ImageFormat.Jpeg):
+                    case ImageFormat.Jpeg:
                         byte[] shortData = new byte[2];
                         byte[] SOF0FrameSignature = new byte[2] { 0xFF, 0xC0 };
 
@@ -413,6 +427,43 @@ namespace Commons
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
                         }
+
+                        break;
+                    case ImageFormat.Webp:
+                        // Lossless WEBP = 24-bits colour + 8-bits alpha (ARGB)
+                        // Lossy WEBP = 8-bits pixels (YUV420) + 8-bits alpha
+                        props.ColorDepth = 32;
+
+                        byte[] WebpBaseChunkSignature = Utils.Latin1Encoding.GetBytes("VP8");
+                        if (StreamUtils.FindSequence(s, WebpBaseChunkSignature, limit))
+                        {
+                            char c = (char)s.ReadByte();
+                            if (c == 'L') // Lossless
+                            {
+                                s.Seek(5, SeekOrigin.Current);
+                                byte[] data = r.ReadBytes(4);
+                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
+                                props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
+                            }
+                            else if (c == 'X') // Extended
+                            {
+                                s.Seek(8, SeekOrigin.Current);
+                                byte[] data = r.ReadBytes(4);
+                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                s.Seek(-1, SeekOrigin.Current);
+                                data = r.ReadBytes(4);
+                                props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                            }
+                            else if (c == ' ') // Lossy
+                            {
+                                s.Seek(10, SeekOrigin.Current);
+                                byte[] data = r.ReadBytes(2);
+                                props.Width = StreamUtils.ReadBits(data, 0, 14);
+                                data = r.ReadBytes(2);
+                                props.Height = StreamUtils.ReadBits(data, 0, 14);
+                            }
+                        }
+
 
                         break;
                 }
