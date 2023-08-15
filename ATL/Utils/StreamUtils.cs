@@ -681,7 +681,7 @@ namespace ATL
             // Read a number of bits from file at the given position
             source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
             source.Read(buffer, 0, buffer.Length);
-            uint result = (uint)((buffer[0] << 24) + (buffer[1] << 16) + (buffer[2] << 8) + buffer[3]);
+            uint result = DecodeBEUInt32(buffer);
             result = (result << (bitPosition % 8)) >> (32 - bitCount);
 
             return result;
