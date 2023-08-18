@@ -202,7 +202,7 @@ namespace ATL
                     if (endIndex < 0) continue;
                     string key = line.Substring(1, metaIndex - 1);
                     string value = line.Substring(metaIndex + 1, endIndex - metaIndex - 1);
-                    Metadata.Add(key.Trim(), value.Trim());
+                    Metadata[key.Trim()] = value.Trim();
                 }
                 else
                 {
