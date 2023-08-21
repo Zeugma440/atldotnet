@@ -315,7 +315,7 @@ namespace ATL.AudioData.IO
                                 memStream.Seek(0, SeekOrigin.Begin);
 
                                 if (writeResult.WrittenFields > 0) await StreamUtils.CopyStreamAsync(memStream, writer);
-                                else if (zone.CoreSignature.Length > 0) await memStream.WriteAsync(zone.CoreSignature, 0, zone.CoreSignature.Length);
+                                else if (zone.CoreSignature.Length > 0) await writer.WriteAsync(zone.CoreSignature, 0, zone.CoreSignature.Length);
                             }
 
                             regionCumulativeDelta += delta;
