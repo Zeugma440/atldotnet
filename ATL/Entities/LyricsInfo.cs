@@ -1,4 +1,5 @@
 ﻿using Commons;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,7 +58,7 @@ namespace ATL
         /// <summary>
         /// Phrase ("line") inside lyrics
         /// </summary>
-        public class LyricsPhrase
+        public class LyricsPhrase : IComparable<LyricsPhrase>, IEquatable<LyricsPhrase>
         {
             /// <summary>
             /// Timestamp of the phrase, in milliseconds
@@ -90,6 +91,82 @@ namespace ATL
                 TimestampMs = Utils.DecodeTimecodeToMs(timestamp);
                 Text = text;
             }
+            
+            /// <summary>
+            /// Compares this with other
+            /// </summary>
+            /// <param name="other">The LyricsPhrase object to compare to</param>
+            /// <returns>-1 if this is less than other. 0 if this is equal to other. 1 if this is greater than other</returns>
+            /// <exception cref="NullReferenceException">Thrown if other is null</exception>
+            public int CompareTo(LyricsPhrase other)
+            {
+                if (other == null)
+                {
+                    throw new NullReferenceException();
+                }
+                if (this < other)
+                {
+                    return -1;
+                }
+                if (this == other)
+                {
+                    return 0;
+                }
+                return 1;
+            }
+            
+            /// <summary>
+            /// Gets whether or not an object is equal to this LyricsPhrase
+            /// </summary>
+            /// <param name="obj">The object to compare</param>
+            /// <returns>True if equals, else false</returns>
+            public override bool Equals(object obj)
+            {
+                if (obj is LyricsPhrase toCompare)
+                {
+                    return Equals(toCompare);
+                }
+                return false;
+            }
+
+            /// <summary>
+            /// Gets whether or not an object is equal to this LyricsPhrase
+            /// </summary>
+            /// <param name="toCompare">The LyricsPhrase object to compare</param>
+            /// <returns>True if equals, else false</returns>
+            public bool Equals(LyricsPhrase toCompare) => toCompare != null && TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
+            
+            /// <summary>
+            /// Compares two LyricsPhrase objects by ==
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a == b, else false</returns>
+            public static bool operator ==(LyricsPhrase a, LyricsPhrase b) => a.Equals(b);
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by !=
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a != b, else false</returns>
+            public static bool operator !=(LyricsPhrase a, LyricsPhrase b) => !a.Equals(b);
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by >
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a is greater than b, else false</returns>
+            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) == -1;
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by <
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a is less than b, else false</returns>
+            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) == 11;
         }
 
         /// <summary>
