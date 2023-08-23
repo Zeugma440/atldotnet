@@ -63,11 +63,11 @@ namespace ATL
             /// <summary>
             /// Timestamp of the phrase, in milliseconds
             /// </summary>
-            public int TimestampMs { get; set; }
+            public int TimestampMs { get; }
             /// <summary>
             /// Text
             /// </summary>
-            public string Text { get; set; }
+            public string Text { get; }
 
             /// <summary>
             /// Construct a lyrics phrase from its parts
@@ -145,7 +145,13 @@ namespace ATL
             /// <param name="toCompare">The LyricsPhrase object to compare</param>
             /// <returns>True if equals, else false</returns>
             public bool Equals(LyricsPhrase toCompare) => toCompare != null && TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
-            
+
+            /// <summary>
+            /// Gets a hash code for the object
+            /// </summary>
+            /// <returns>The object's hash code</returns>
+            public override int GetHashCode() => TimestampMs ^ Text.GetHashCode();
+
             /// <summary>
             /// Compares two LyricsPhrase objects by ==
             /// </summary>
@@ -176,7 +182,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) == 11;
+            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) == 1;
         }
 
         /// <summary>
