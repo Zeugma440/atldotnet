@@ -93,6 +93,16 @@ namespace ATL
             }
             
             /// <summary>
+            /// Construct a lyrics phrase by copying data from the given LyricsPhrase object
+            /// </summary>
+            /// <param name="phrase">Object to copy data from</param>
+            public LyricsPhrase(LyricsPhrase phrase)
+            {
+                TimestampMs = phrase.TimestampMs;
+                Text = phrase.Text;
+            }
+            
+            /// <summary>
             /// Compares this with other
             /// </summary>
             /// <param name="other">The LyricsPhrase object to compare to</param>
@@ -114,7 +124,7 @@ namespace ATL
                 }
                 return 1;
             }
-            
+
             /// <summary>
             /// Gets whether or not an object is equal to this LyricsPhrase
             /// </summary>
@@ -236,9 +246,8 @@ namespace ATL
             LanguageCode = info.LanguageCode;
             UnsynchronizedLyrics = info.UnsynchronizedLyrics;
             ContentType = info.ContentType;
-            SynchronizedLyrics = new List<LyricsPhrase>(info.SynchronizedLyrics);
-            Metadata = new Dictionary<string, string>();
-            foreach (string key in info.Metadata.Keys) Metadata.Add(key, info.Metadata[key]);
+            SynchronizedLyrics = info.SynchronizedLyrics.Select(x => new LyricsPhrase(x)).ToList();
+            Metadata = info.Metadata.ToDictionary(x => x.Key, x => x.Value);
         }
 
         /// <summary>
