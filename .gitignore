@@ -211,3 +211,7 @@ $RECYCLE.BIN/
 /ATL/BUILD TODO.txt.bak
 /ATL/ATL.csproj.bak
 /ATL.unit-test/Resources/tmp
+
+# JetBrains Rider
+.idea/
+*.sln.iml
