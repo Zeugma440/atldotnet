@@ -153,7 +153,7 @@ namespace ATL
             public override int GetHashCode() => TimestampMs ^ Text.GetHashCode();
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by ==
+            /// Compares two LyricsPhrase objects by equals
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
@@ -161,7 +161,7 @@ namespace ATL
             public static bool operator ==(LyricsPhrase a, LyricsPhrase b) => a.Equals(b);
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by !=
+            /// Compares two LyricsPhrase objects by not-equals
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
@@ -169,7 +169,7 @@ namespace ATL
             public static bool operator !=(LyricsPhrase a, LyricsPhrase b) => !a.Equals(b);
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by <
+            /// Compares two LyricsPhrase objects by inferior
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
@@ -177,7 +177,7 @@ namespace ATL
             public static bool operator <(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) < 0;
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by >
+            /// Compares two LyricsPhrase objects by superior
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
@@ -185,7 +185,7 @@ namespace ATL
             public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) > 0;
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by <=
+            /// Compares two LyricsPhrase objects by inferior-or-equals
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
@@ -193,7 +193,7 @@ namespace ATL
             public static bool operator <=(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs <= b.TimestampMs && a.Text.CompareTo(b.Text) <= 0;
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by >=
+            /// Compares two LyricsPhrase objects by superior-or-equals
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
