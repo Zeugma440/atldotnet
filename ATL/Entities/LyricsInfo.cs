@@ -144,14 +144,7 @@ namespace ATL
             /// </summary>
             /// <param name="toCompare">The LyricsPhrase object to compare</param>
             /// <returns>True if equals, else false</returns>
-            public bool Equals(LyricsPhrase toCompare)
-            {
-                if (toCompare != null)
-                {
-                    return TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
-                }
-                return false;
-            }
+            public bool Equals(LyricsPhrase toCompare) => !ReferenceEquals(toCompare, null) && TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
 
             /// <summary>
             /// Gets a hash code for the object
