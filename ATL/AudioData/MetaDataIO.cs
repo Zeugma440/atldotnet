@@ -116,10 +116,8 @@ namespace ATL.AudioData.IO
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
-        public bool Exists
-        {
-            get { return this.tagExists; }
-        }
+        public bool Exists => this.tagExists;
+
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
         {
@@ -139,10 +137,8 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Tag version
         /// </summary>
-        public int Version
-        {
-            get { return this.tagVersion; }
-        }
+        public int Version => this.tagVersion;
+
         /// <inheritdoc/>
         public long Size
         {
@@ -158,29 +154,19 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Zones of the file
         /// </summary>
-        public ICollection<Zone> Zones
-        {
-            get
-            {
-                return structureHelper.Zones;
-            }
-        }
+        public ICollection<Zone> Zones => structureHelper.Zones;
 
 
         // ------ TAGDATA FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
-        public long PaddingSize
-        {
-            get { return tagData.PaddingSize; }
-        }
+        public long PaddingSize => tagData.PaddingSize;
+
         /// <summary>
         /// Rating convention to use to format Popularity for the current tagging format
         /// </summary>
-        protected virtual byte ratingConvention
-        {
-            get { return MetaDataIO.RC_ID3v2; }
-        }
+        protected virtual byte ratingConvention => MetaDataIO.RC_ID3v2;
+
         /// <summary>
         /// Encode the given DateTime for the current tagging format
         /// </summary>
@@ -195,19 +181,13 @@ namespace ATL.AudioData.IO
         /// Indicate whether the metadata field code must have a fixed length or not
         /// Default : 0 (no fixed length)
         /// </summary>
-        public virtual byte FieldCodeFixedLength
-        {
-            get { return 0; }
-        }
+        public virtual byte FieldCodeFixedLength => 0;
 
         /// <summary>
         /// Indicate whether metadata should be read with little endian convention
         /// true : little endian; false : big endian
         /// </summary>
-        protected virtual bool isLittleEndian
-        {
-            get { return true; }
-        }
+        protected virtual bool isLittleEndian => true;
 
         // ------ PICTURE HELPER METHODS -----------------------------------------------------
 
@@ -260,7 +240,7 @@ namespace ATL.AudioData.IO
         /// <param name="source">Source to read metadata from</param>
         /// <param name="readTagParams">Read parameters</param>
         /// <returns>True if read has been successful, false if it failed</returns>
-        abstract protected bool read(Stream source, ReadTagParams readTagParams);
+        protected abstract bool read(Stream source, ReadTagParams readTagParams);
 
         /// <summary>
         /// Write the given zone's metadata using the given writer
@@ -269,13 +249,13 @@ namespace ATL.AudioData.IO
         /// <param name="s">Writer to use</param>
         /// <param name="zone">Code of the zone to write</param>
         /// <returns>Number of written fields; 0 if no field has been added not edited</returns>
-        abstract protected int write(TagData tag, Stream s, string zone);
+        protected abstract int write(TagData tag, Stream s, string zone);
 
         /// <summary>
         /// Return the default offset of the metadata block
         /// </summary>
         /// <returns></returns>
-        abstract protected int getDefaultTagOffset();
+        protected abstract int getDefaultTagOffset();
 
         /// <summary>
         /// Get the frame code (per <see cref="TagData"/> standards for the given field ID in the given zone and the given tag version
@@ -284,7 +264,7 @@ namespace ATL.AudioData.IO
         /// <param name="ID">ID of the field to get the mapping for</param>
         /// <param name="tagVersion">Version the tagging system (e.g. 3 for ID3v2.3)</param>
         /// <returns></returns>
-        abstract protected Field getFrameMapping(string zone, string ID, byte tagVersion);
+        protected abstract Field getFrameMapping(string zone, string ID, byte tagVersion);
 
 
         // ------ COMMON METHODS -----------------------------------------------------
