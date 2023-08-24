@@ -58,7 +58,7 @@ namespace ATL
         /// <summary>
         /// Phrase ("line") inside lyrics
         /// </summary>
-        public class LyricsPhrase : IComparable<LyricsPhrase>, IEquatable<LyricsPhrase>
+        public sealed class LyricsPhrase : IComparable<LyricsPhrase>, IEquatable<LyricsPhrase>
         {
             /// <summary>
             /// Timestamp of the phrase, in milliseconds
@@ -169,20 +169,36 @@ namespace ATL
             public static bool operator !=(LyricsPhrase a, LyricsPhrase b) => !a.Equals(b);
 
             /// <summary>
-            /// Compares two LyricsPhrase objects by >
-            /// </summary>
-            /// <param name="a">The first LyricsPhrase object</param>
-            /// <param name="b">The second LyricsPhrase object</param>
-            /// <returns>True if a is greater than b, else false</returns>
-            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) == -1;
-
-            /// <summary>
             /// Compares two LyricsPhrase objects by <
             /// </summary>
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a is greater than b, else false</returns>
+            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) < 0;
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by >
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) == 1;
+            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) > 0;
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by <=
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a is greater than b, else false</returns>
+            public static bool operator <=(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs <= b.TimestampMs && a.Text.CompareTo(b.Text) <= 0;
+
+            /// <summary>
+            /// Compares two LyricsPhrase objects by >=
+            /// </summary>
+            /// <param name="a">The first LyricsPhrase object</param>
+            /// <param name="b">The second LyricsPhrase object</param>
+            /// <returns>True if a is less than b, else false</returns>
+            public static bool operator >=(LyricsPhrase a, LyricsPhrase b) => a.TimestampMs >= b.TimestampMs && a.Text.CompareTo(b.Text) >= 0;
         }
 
         /// <summary>
@@ -198,7 +214,7 @@ namespace ATL
         /// </summary>
         public string LanguageCode { get; set; } // TODO - handle lyrics in multiple languages
         /// <summary>
-        /// Data of unsynhronized (i.e. without associated timestamp) lyrics
+        /// Data of unsynchronized (i.e. without associated timestamp) lyrics
         /// </summary>
         public string UnsynchronizedLyrics { get; set; }
         /// <summary>
@@ -212,8 +228,7 @@ namespace ATL
         /// <summary>
         /// Indicate if this object is marked for removal
         /// </summary>
-        public bool IsMarkedForRemoval => isRemoval;
-        private bool isRemoval = false;
+        public bool IsMarkedForRemoval { get; private set; } = false;
 
 
         // ---------------- CONSTRUCTORS
@@ -224,8 +239,10 @@ namespace ATL
         /// <returns>New object marked for removal</returns>
         public static LyricsInfo ForRemoval()
         {
-            LyricsInfo result = new LyricsInfo();
-            result.isRemoval = true;
+            LyricsInfo result = new LyricsInfo
+            {
+                IsMarkedForRemoval = true
+            };
             return result;
         }
 
@@ -264,7 +281,7 @@ namespace ATL
             Description = "";
             LanguageCode = "";
             UnsynchronizedLyrics = "";
-            isRemoval = false;
+            IsMarkedForRemoval = false;
             ContentType = LyricsType.LYRICS;
             SynchronizedLyrics.Clear();
             Metadata.Clear();
