@@ -67,12 +67,12 @@ namespace ATL.AudioData.IO
 
 
         // Technical 'shortcut' data
-        private static readonly byte[] BOM_UTF16_LE = new byte[] { 0xFF, 0xFE };
-        private static readonly byte[] BOM_UTF16_BE = new byte[] { 0xFE, 0xFF };
-        private static readonly byte[] BOM_NONE = new byte[] { };
+        private static readonly byte[] BOM_UTF16_LE = { 0xFF, 0xFE };
+        private static readonly byte[] BOM_UTF16_BE = { 0xFE, 0xFF };
+        private static readonly byte[] BOM_NONE = { };
 
-        private static readonly byte[] NULLTERMINATOR = new byte[] { 0x00 };
-        private static readonly byte[] NULLTERMINATOR_2 = new byte[] { 0x00, 0x00 };
+        private static readonly byte[] NULLTERMINATOR = { 0x00 };
+        private static readonly byte[] NULLTERMINATOR_2 = { 0x00, 0x00 };
 
         // Tag flags
         private const byte FLAG_TAG_UNSYNCHRONIZED = 0b10000000;
@@ -95,22 +95,22 @@ namespace ATL.AudioData.IO
 #pragma warning disable S125 // Sections of code should not be commented out
         //private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
 #pragma warning restore S125 // Sections of code should not be commented out
-        private static readonly ICollection<string> standardFrames_v23 = new List<string>() { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
-        private static readonly ICollection<string> standardFrames_v24 = new List<string>() { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC",
+        private static readonly ICollection<string> standardFrames_v23 = new List<string> { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+        private static readonly ICollection<string> standardFrames_v24 = new List<string> { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC",
           "RGAD", "TCMP", "TSO2", "TSOC", "XRVA"  // Unoffical fields used by modern apps like itunes & Musicbrainz - see "Unofficial Frames Seen in the Wild" on ID3.org
         };
 
         // Field codes that need to be persisted in a COMMENT field
-        private static readonly ICollection<string> commentsFields = new List<string>() { "iTunNORM", "iTunSMPB", "iTunPGAP" };
+        private static readonly ICollection<string> commentsFields = new List<string> { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
         // Fields where text encoding descriptor byte is not required
-        private static readonly ICollection<string> noTextEncodingFields = new List<string>() { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
+        private static readonly ICollection<string> noTextEncodingFields = new List<string> { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
         // Fields which ID3v2.4 size descriptor is known to be misencoded by some implementation
-        private static readonly ICollection<string> misencodedSizev4Fields = new List<string>() { "CTOC" };
+        private static readonly ICollection<string> misencodedSizev4Fields = new List<string> { "CTOC" };
 
         // Fields allowed to have multiple values according to ID3v2.2-3 specs
-        private static readonly ICollection<string> multipleValuev23Fields = new List<string>() { "TP1", "TCM", "TXT", "TLA", "TOA", "TOL", "TCOM", "TEXT", "TOLY", "TOPE", "TPE1" };
+        private static readonly ICollection<string> multipleValuev23Fields = new List<string> { "TP1", "TCM", "TXT", "TLA", "TOA", "TOL", "TCOM", "TEXT", "TOLY", "TOPE", "TPE1" };
 
         // Note on date field identifiers
         //
@@ -313,18 +313,12 @@ namespace ATL.AudioData.IO
 
 
             // **** BASE HEADER PROPERTIES ****
-            public bool UsesUnsynchronisation
-            {
-                get { return (Flags & FLAG_TAG_UNSYNCHRONIZED) > 0; }
-            }
-            public bool HasExtendedHeader // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
-            {
-                get { return ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); }
-            }
-            public bool HasFooter // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
-            {
-                get { return (Flags & FLAG_TAG_HAS_FOOTER) > 0; }
-            }
+            public bool UsesUnsynchronisation => (Flags & FLAG_TAG_UNSYNCHRONIZED) > 0;
+
+            public bool HasExtendedHeader => ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
+
+            public bool HasFooter => (Flags & FLAG_TAG_HAS_FOOTER) > 0; // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+
             public int GetSize(bool includeFooter = true)
             {
                 // Get total tag size
@@ -372,10 +366,8 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            public bool HasTextEncodingRestriction
-            {
-                get { return (((TagRestrictions & 0x20) >> 5) > 0); }
-            }
+            public bool HasTextEncodingRestriction => (TagRestrictions & 0x20) >> 5 > 0;
+
             public int TextFieldSizeRestriction
             {
                 get
@@ -390,10 +382,8 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-            public bool HasPictureEncodingRestriction
-            {
-                get { return ((TagRestrictions & 0x04) >> 2) > 0; }
-            }
+            public bool HasPictureEncodingRestriction => (TagRestrictions & 0x04) >> 2 > 0;
+
             public int PictureSizeRestriction
             {
                 get
@@ -461,10 +451,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public override byte FieldCodeFixedLength
-        {
-            get { return 0; } // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
-        }
+        public override byte FieldCodeFixedLength => 0; // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
 
 
         // ********************* Auxiliary functions & voids ********************
@@ -645,7 +632,7 @@ namespace ATL.AudioData.IO
 
 
             // Read frame header and check frame ID
-            Frame.ID = (TAG_VERSION_2_2 == tagVersion) ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            Frame.ID = TAG_VERSION_2_2 == tagVersion ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
             if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
             {
@@ -665,35 +652,43 @@ namespace ATL.AudioData.IO
 
             if (tag.ActualEnd > -1) return false;
 
-            // Frame size measures number of bytes between end of flag and end of payload
-            /* Frame size encoding conventions
-                ID3v2.2 : 3 bytes
-                ID3v2.3 : 4 bytes (plain integer)
-                ID3v2.4 : synch-safe Int32
+            /*
+            Frame size measures number of bytes between end of flag and end of payload 
+
+            Frame size encoding conventions
+            ID3v2.2 : 3 bytes
+            ID3v2.3 : 4 bytes (plain integer)
+            ID3v2.4 : synch-safe Int32
             */
-            if (TAG_VERSION_2_2 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
-            else if (TAG_VERSION_2_3 == tagVersion) Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            else if (TAG_VERSION_2_4 == tagVersion)
+            switch (tagVersion)
             {
-                long sizePosition = source.Position;
-                byte[] sizeDescriptor = source.ReadBytes(4);
-                Frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
-                // Important: Certain implementation of ID3v2.4 still use the ID3v2.3 size descriptor (e.g.FFMpeg 4.3.1 for the CTOC frame).
-                // => We have to test reading the frame to "guess" which convention its size descriptor uses
-                // when its size is described on more than 1 byte
-                //
-                // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
-                if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
-                    && misencodedSizev4Fields.Contains(Frame.ID)
-                    && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
-                {
-                    // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
-                    // If not, try again by reading frame size as a plain integer
-                    source.Seek(sizePosition + 6 + Frame.Size, SeekOrigin.Begin);
-                    string frameId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                    if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) Frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
-                    source.Seek(sizePosition + 4, SeekOrigin.Begin);
-                }
+                case TAG_VERSION_2_2:
+                    Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
+                    break;
+                case TAG_VERSION_2_3:
+                    Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                    break;
+                case TAG_VERSION_2_4:
+                    long sizePosition = source.Position;
+                    byte[] sizeDescriptor = source.ReadBytes(4);
+                    Frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
+                    // Important: Certain implementation of ID3v2.4 still use the ID3v2.3 size descriptor (e.g.FFMpeg 4.3.1 for the CTOC frame).
+                    // => We have to test reading the frame to "guess" which convention its size descriptor uses
+                    // when its size is described on more than 1 byte
+                    //
+                    // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
+                    if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
+                        && misencodedSizev4Fields.Contains(Frame.ID)
+                        && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
+                    {
+                        // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
+                        // If not, try again by reading frame size as a plain integer
+                        source.Seek(sizePosition + 6 + Frame.Size, SeekOrigin.Begin);
+                        string frameId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+                        if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) Frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
+                        source.Seek(sizePosition + 4, SeekOrigin.Begin);
+                    }
+                    break;
             }
 
             if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
@@ -896,7 +891,7 @@ namespace ATL.AudioData.IO
 
                         // Parse GENRE frame
                         if (Frame.ID.StartsWith("TCO")) strData = extractGenreFromID3v2Code(strData);
-                        else if (Frame.ID.StartsWith("T")) // Handle multiple values on text information frames
+                        else if (Frame.ID.StartsWith('T')) // Handle multiple values on text information frames
                         {
                             string[] parts = null;
                             if (TAG_VERSION_2_4 == tagVersion) // All text information frames may contain multiple values on ID3v2.4
@@ -1021,9 +1016,13 @@ namespace ATL.AudioData.IO
                         }
                     }
                 } // Picture frame
-            } // Data size > 0
-
-            source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+            }
+            else // Data size <= 0 or larger than file
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Frame " + Frame.ID + " has an invalid size : " + dataSize);
+                return false;
+            }
 
             return true;
         }
@@ -1031,7 +1030,6 @@ namespace ATL.AudioData.IO
         // Get information from frames (universal)
         private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
-            long streamPos;
             long streamLength = source.Length;
             int tagSize = tag.GetSize(false);
 
@@ -1041,9 +1039,9 @@ namespace ATL.AudioData.IO
             IList<MetaFieldInfo> comments = new List<MetaFieldInfo>();
 
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
-            streamPos = source.Position;
+            long streamPos = source.Position;
 
-            while ((streamPos - offset < tagSize) && (streamPos < streamLength))
+            while (streamPos - offset < tagSize && streamPos < streamLength)
             {
                 if (!readFrame(source, tag, readTagParams, ref comments)) break;
 
@@ -1123,14 +1121,14 @@ namespace ATL.AudioData.IO
                 tagVersion = tagHeader.Version;
 
                 // Get information from frames if version supported
-                if ((TAG_VERSION_2_2 <= tagVersion) && (tagVersion <= TAG_VERSION_2_4) && (tagHeader.GetSize() > 0))
+                if (TAG_VERSION_2_2 <= tagVersion && tagVersion <= TAG_VERSION_2_4 && tagHeader.GetSize() > 0)
                 {
                     readFrames(reader, tagHeader, offset, readTagParams);
                     structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
                 }
                 else
                 {
-                    if ((tagVersion < TAG_VERSION_2_2) || (tagVersion > TAG_VERSION_2_4)) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + tagVersion + "; parsing interrupted");
+                    if (tagVersion < TAG_VERSION_2_2 || tagVersion > TAG_VERSION_2_4) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + tagVersion + "; parsing interrupted");
                     if (0 == Size) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 size is zero; parsing interrupted");
                 }
             }
