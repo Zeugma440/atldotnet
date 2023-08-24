@@ -1867,7 +1867,8 @@ namespace ATL.AudioData.IO
             long frameDataPos;
             long finalFramePos;
             long finalFramePosRaw;
-            bool useDataSize = 4 == Settings.ID3v2_tagSubVersion; // Alsways write data length indicator for ID3v2.4
+            // Data length indicator (specific to ID3v2.4)
+            bool useDataSize = 4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_writePictureDataLengthIndicator;
             Encoding usedTagEncoding = Settings.ID3v2_forceAPICEncodingToLatin1 ? Utils.Latin1Encoding : tagEncoding;
 
             // Unsynchronization management

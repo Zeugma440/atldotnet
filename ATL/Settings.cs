@@ -170,6 +170,13 @@ namespace ATL
         public static bool ID3v2_forceUnsynchronization = false;
 
         /// <summary>
+        /// ID3v2 : Set to false not to write the data length indicator (flag p, as per ID3v2.4 specs) on picture frames
+        /// Disabling this might help showing covers on certain softwares (e.g. Spotify)
+        /// Default : true
+        /// </summary>
+        public static bool ID3v2_writePictureDataLengthIndicator = true;
+
+        /// <summary>
         /// MP4 : Set to true to always create chapters in Nero format (chpl)
         /// Default : true
         /// </summary>
