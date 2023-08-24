@@ -3,6 +3,8 @@ using BenchmarkDotNet.Attributes;
 using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Running;
+using System.Collections;
 
 namespace ATL.benchmark
 {
@@ -57,19 +59,17 @@ namespace ATL.benchmark
             new ConsoleLogger();
             Track theFile = new Track(filePath);
 
-            double tDuration = theFile.DurationMs;
-            long lDataOffset = theFile.TechnicalInformation.AudioDataOffset;
-            long lDataAudioSize = theFile.TechnicalInformation.AudioDataSize;
-            theFile.Chapters[0].Title += 'x';
-            theFile.Chapters[0].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic1.jpeg"));
-            //theFile.Chapters[0].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes("M:\\Temp\\Audio\\avatarOfSorts.png"));
-            theFile.Chapters[0].Picture.ComputePicHash();
-            theFile.Chapters[1].Title += 'x';
-            theFile.Chapters[1].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(@"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.test\Resources\_Images\pic2.jpeg"));
-            //theFile.Chapters[1].Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes("M:\\Temp\\Audio\\themeOfTheTrack.jpg"));
-            theFile.Chapters[1].Picture.ComputePicHash();
+            //theFile.Album = "test";
+
+            /*
+            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+            theFile.EmbeddedPictures.Add(pic);
+            */
 
             theFile.Save();
+
+            System.Console.WriteLine("=====WRITE2 OK");
+
             theFile = new Track(filePath);
             /*
             theFile.Chapters[0].Picture.ComputePicHash();
@@ -83,7 +83,7 @@ namespace ATL.benchmark
             *
             */
             System.Console.WriteLine(theFile.Album);
-                }
+        }
 
     }
 }
