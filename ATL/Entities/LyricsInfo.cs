@@ -146,7 +146,7 @@ namespace ATL
             /// <returns>True if equals, else false</returns>
             public bool Equals(LyricsPhrase toCompare)
             {
-                if (toCompare is not null)
+                if (toCompare != null)
                 {
                     return TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
                 }
@@ -165,14 +165,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a == b, else false</returns>
-            public static bool operator ==(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null)
-                {
-                    return a.Equals(b);
-                }
-                return false;
-            }
+            public static bool operator ==(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && a.Equals(b);
 
             /// <summary>
             /// Compares two LyricsPhrase objects by not-equals
@@ -180,14 +173,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a != b, else false</returns>
-            public static bool operator !=(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null)
-                {
-                    return !a.Equals(b);
-                }
-                return false;
-            }
+            public static bool operator !=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !a.Equals(b);
 
             /// <summary>
             /// Compares two LyricsPhrase objects by inferior
@@ -195,14 +181,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is greater than b, else false</returns>
-            public static bool operator <(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null && b is not null)
-                {
-                    return a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) < 0;
-                }
-                return false;
-            }
+            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) < 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by superior
@@ -210,14 +189,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null && b is not null)
-                {
-                    return a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) > 0;
-                }
-                return false;
-            }
+            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) > 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by inferior-or-equals
@@ -225,14 +197,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is greater than b, else false</returns>
-            public static bool operator <=(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null && b is not null)
-                {
-                    return a.TimestampMs <= b.TimestampMs && a.Text.CompareTo(b.Text) <= 0;
-                }
-                return false;
-            }
+            public static bool operator <=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs <= b.TimestampMs && a.Text.CompareTo(b.Text) <= 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by superior-or-equals
@@ -240,14 +205,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >=(LyricsPhrase a, LyricsPhrase b)
-            {
-                if (a is not null && b is not null)
-                {
-                    return a.TimestampMs >= b.TimestampMs && a.Text.CompareTo(b.Text) >= 0;
-                }
-                return false;
-            }
+            public static bool operator >=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs >= b.TimestampMs && a.Text.CompareTo(b.Text) >= 0;
         }
 
         /// <summary>
