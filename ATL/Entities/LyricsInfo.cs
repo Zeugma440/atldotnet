@@ -308,7 +308,7 @@ namespace ATL
                 if (endIndex == line.Length - 1)
                 {
                     int metaIndex = line.IndexOf(':');
-                    if (endIndex < 0) continue;
+                    if (metaIndex < 0) continue;
                     string key = line.Substring(1, metaIndex - 1);
                     string value = line.Substring(metaIndex + 1, endIndex - metaIndex - 1);
                     Metadata[key.Trim()] = value.Trim();
