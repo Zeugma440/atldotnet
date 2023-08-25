@@ -27,9 +27,9 @@ namespace ATL.test.IO.MetaData
             // Initialize specific test data (Picture native codes are strings)
             IList<PictureInfo> testPictureInfos = new List<PictureInfo>();
             PictureInfo pic = PictureInfo.fromBinaryData(
-                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), 
-                PIC_TYPE.Unsupported, 
-                MetaDataIOFactory.TagType.ANY, 
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"),
+                PIC_TYPE.Unsupported,
+                MetaDataIOFactory.TagType.ANY,
                 "COVER ART (FRONT)");
             pic.ComputePicHash();
             testPictureInfos.Add(pic);
@@ -50,7 +50,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_APE() // My deepest apologies for this dubious method name
         {
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             readExistingTagsOnFile(theFile);
         }
@@ -112,7 +112,8 @@ namespace ATL.test.IO.MetaData
 
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            } finally
+            }
+            finally
             {
                 ATL.Settings.DefaultTextEncoding = initialEncoding;
             }
@@ -120,33 +121,30 @@ namespace ATL.test.IO.MetaData
 
         private void checkTrackDiscZeroes(FileStream fs)
         {
-            using (BinaryReader r = new BinaryReader(fs))
-            {
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER")));
-                fs.Seek(1, SeekOrigin.Current);
-                String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("03/04", s.Substring(0, s.Length-1));
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER")));
+            fs.Seek(1, SeekOrigin.Current);
+            string s = StreamUtils.ReadNullTerminatedString(fs, Encoding.ASCII);
+            Assert.AreEqual("03/04", s.Substring(0, s.Length - 1));
 
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACK")));
-                fs.Seek(1, SeekOrigin.Current);
-                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("06/06", s.Substring(0, s.Length - 1));
-            }
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACK")));
+            fs.Seek(1, SeekOrigin.Current);
+            s = StreamUtils.ReadNullTerminatedString(fs, Encoding.ASCII);
+            Assert.AreEqual("06/06", s.Substring(0, s.Length - 1));
         }
 
         [TestMethod]
         public void TagIO_RW_APE_UpdateKeepTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
         }
 
         [TestMethod]
         public void TagIO_RW_APE_UpdateFormatTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes(notEmptyFile, true, true, dlg);
         }
 

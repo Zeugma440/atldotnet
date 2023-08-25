@@ -30,7 +30,7 @@ namespace ATL
          *                    bufferOffset     cursorPosition          streamPosition
          *                    (absolute)       (relative to buffer)    (absolute)
          */
-        private byte[] buffer;
+        private byte[] mbuffer;
         private long bufferOffset;
         private int cursorPosition; // NB : cursorPosition can be > bufferSize in certain cases when BufferedBinaryReader has to read a chunk of data larger than bufferSize
         private long streamPosition;
@@ -63,7 +63,7 @@ namespace ATL
         {
             this.stream = stream;
             bufferDefaultSize = Settings.FileBufferSize;
-            buffer = new byte[bufferDefaultSize];
+            mbuffer = new byte[bufferDefaultSize];
             streamSize = stream.Length;
             streamPosition = stream.Position;
             bufferOffset = streamPosition;
@@ -78,7 +78,7 @@ namespace ATL
         {
             this.stream = stream;
             bufferDefaultSize = bufferSize;
-            buffer = new byte[bufferSize];
+            mbuffer = new byte[bufferSize];
             streamSize = stream.Length;
             streamPosition = stream.Position;
             bufferOffset = streamPosition;
@@ -87,7 +87,7 @@ namespace ATL
         // NB : cannot handle when previousBytesToKeep > bufferSize
         private bool fillBuffer(int previousBytesToKeep = 0)
         {
-            if (previousBytesToKeep > 0) Array.Copy(buffer, cursorPosition, buffer, 0, previousBytesToKeep);
+            if (previousBytesToKeep > 0) Array.Copy(mbuffer, cursorPosition, mbuffer, 0, previousBytesToKeep);
             int bytesToRead = (int)Math.Max(0, Math.Min(bufferDefaultSize - previousBytesToKeep, streamSize - streamPosition - previousBytesToKeep));
 
             bufferOffset = streamPosition - previousBytesToKeep;
@@ -95,7 +95,7 @@ namespace ATL
 
             if (bytesToRead > 0)
             {
-                stream.Read(buffer, previousBytesToKeep, bytesToRead);
+                stream.Read(mbuffer, previousBytesToKeep, bytesToRead);
                 streamPosition += bytesToRead;
                 bufferSize = bytesToRead + previousBytesToKeep;
                 return true;
@@ -164,13 +164,13 @@ namespace ATL
         }
 
         /// Mandatory override to Stream.Read
-        public override int Read([In, Out] byte[] destBuffer, int offset, int count)
+        public override int Read([In, Out] byte[] buffer, int offset, int count)
         {
             // Bytes to read are all already buffered
             if (count <= bufferSize - cursorPosition)
             {
                 prepareBuffer(count);
-                Array.Copy(this.buffer, cursorPosition, destBuffer, offset, count);
+                Array.Copy(this.mbuffer, cursorPosition, buffer, offset, count);
                 cursorPosition += count;
                 return count;
             }
@@ -180,7 +180,7 @@ namespace ATL
                 int availableBytes = bufferSize - cursorPosition;
                 if (availableBytes > 0)
                 {
-                    Array.Copy(this.buffer, cursorPosition, destBuffer, offset, availableBytes);
+                    Array.Copy(this.mbuffer, cursorPosition, buffer, offset, availableBytes);
                 }
                 else
                 {
@@ -188,7 +188,7 @@ namespace ATL
                 }
 
                 // ...then retrieve the rest by reading the stream
-                int readBytes = stream.Read(destBuffer, offset + availableBytes, count - availableBytes);
+                int readBytes = stream.Read(buffer, offset + availableBytes, count - availableBytes);
 
                 streamPosition += readBytes;
                 stream.Position = streamPosition;
@@ -235,7 +235,7 @@ namespace ATL
         public new byte ReadByte()
         {
             prepareBuffer(1);
-            byte val = buffer[cursorPosition];
+            byte val = mbuffer[cursorPosition];
             cursorPosition++;
             return val;
         }
@@ -247,7 +247,7 @@ namespace ATL
         public sbyte ReadSByte()
         {
             prepareBuffer(1);
-            sbyte val = (sbyte)buffer[cursorPosition];
+            sbyte val = (sbyte)mbuffer[cursorPosition];
             cursorPosition++;
             return val;
         }
@@ -259,7 +259,7 @@ namespace ATL
         public ushort ReadUInt16()
         {
             prepareBuffer(2);
-            ushort val = (ushort)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8);
+            ushort val = (ushort)(mbuffer[cursorPosition] | mbuffer[cursorPosition + 1] << 8);
             cursorPosition += 2;
             return val;
         }
@@ -271,7 +271,7 @@ namespace ATL
         public short ReadInt16()
         {
             prepareBuffer(2);
-            short val = (short)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8);
+            short val = (short)(mbuffer[cursorPosition] | mbuffer[cursorPosition + 1] << 8);
             cursorPosition += 2;
             return val;
         }
@@ -283,7 +283,7 @@ namespace ATL
         public uint ReadUInt32()
         {
             prepareBuffer(4);
-            uint val = (uint)(buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24);
+            uint val = (uint)(mbuffer[cursorPosition] | mbuffer[cursorPosition + 1] << 8 | mbuffer[cursorPosition + 2] << 16 | mbuffer[cursorPosition + 3] << 24);
             cursorPosition += 4;
             return val;
         }
@@ -295,7 +295,7 @@ namespace ATL
         public int ReadInt32()
         {
             prepareBuffer(4);
-            int val = buffer[cursorPosition] | buffer[cursorPosition + 1] << 8 | buffer[cursorPosition + 2] << 16 | buffer[cursorPosition + 3] << 24;
+            int val = mbuffer[cursorPosition] | mbuffer[cursorPosition + 1] << 8 | mbuffer[cursorPosition + 2] << 16 | mbuffer[cursorPosition + 3] << 24;
             cursorPosition += 4;
             return val;
         }
@@ -307,7 +307,7 @@ namespace ATL
         public ulong ReadUInt64()
         {
             prepareBuffer(8);
-            ulong val = buffer[cursorPosition] | (ulong)buffer[cursorPosition + 1] << 8 | (ulong)buffer[cursorPosition + 2] << 16 | (ulong)buffer[cursorPosition + 3] << 24 | (ulong)buffer[cursorPosition + 4] << 32 | (ulong)buffer[cursorPosition + 5] << 40 | (ulong)buffer[cursorPosition + 6] << 48 | (ulong)buffer[cursorPosition + 7] << 56;
+            ulong val = mbuffer[cursorPosition] | (ulong)mbuffer[cursorPosition + 1] << 8 | (ulong)mbuffer[cursorPosition + 2] << 16 | (ulong)mbuffer[cursorPosition + 3] << 24 | (ulong)mbuffer[cursorPosition + 4] << 32 | (ulong)mbuffer[cursorPosition + 5] << 40 | (ulong)mbuffer[cursorPosition + 6] << 48 | (ulong)mbuffer[cursorPosition + 7] << 56;
             cursorPosition += 8;
             return val;
         }
@@ -319,7 +319,7 @@ namespace ATL
         public long ReadInt64()
         {
             prepareBuffer(8);
-            long val = buffer[cursorPosition] | (long)buffer[cursorPosition + 1] << 8 | (long)buffer[cursorPosition + 2] << 16 | (long)buffer[cursorPosition + 3] << 24 | (long)buffer[cursorPosition + 4] << 32 | (long)buffer[cursorPosition + 5] << 40 | (long)buffer[cursorPosition + 6] << 48 | (long)buffer[cursorPosition + 7] << 56;
+            long val = mbuffer[cursorPosition] | (long)mbuffer[cursorPosition + 1] << 8 | (long)mbuffer[cursorPosition + 2] << 16 | (long)mbuffer[cursorPosition + 3] << 24 | (long)mbuffer[cursorPosition + 4] << 32 | (long)mbuffer[cursorPosition + 5] << 40 | (long)mbuffer[cursorPosition + 6] << 48 | (long)mbuffer[cursorPosition + 7] << 56;
             cursorPosition += 8;
             return val;
         }
@@ -334,7 +334,7 @@ namespace ATL
         /// Mandatory override to Stream.Flush
         public override void Flush()
         {
-            buffer = null;
+            mbuffer = null;
         }
 
         /// Mandatory override to Stream.SetLength

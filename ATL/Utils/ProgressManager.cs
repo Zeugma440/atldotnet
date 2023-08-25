@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace ATL
 {
@@ -10,26 +9,23 @@ namespace ATL
     public sealed class ProgressManager
     {
         private readonly bool isAsync;
-        private readonly IProgress<float> asyncProgress = null;
-        private readonly Action<float> syncProgress = null;
+        private readonly IProgress<float> asyncProgress;
+        private readonly Action<float> syncProgress;
 #pragma warning disable S4487 // Unread "private" fields should be removed (field is used for debugging / logging purposes)
         private readonly string name;
 #pragma warning restore S4487
-        private float minProgressBound = 0f;
+        private float minProgressBound;
         private float resolution;
 
-        private int maxSections = 0;
-        private int currentSection = 0;
+        private int maxSections;
+        private int currentSection;
 
         /// <summary>
         /// Maximum number of managed sections
         /// </summary>
         public int MaxSections
         {
-            get
-            {
-                return maxSections;
-            }
+            get => maxSections;
             set
             {
                 maxSections = value;
@@ -42,10 +38,7 @@ namespace ATL
         /// </summary>
         public int CurrentSection
         {
-            get
-            {
-                return currentSection;
-            }
+            get => currentSection;
             set
             {
                 if (value < maxSections) currentSection = value;

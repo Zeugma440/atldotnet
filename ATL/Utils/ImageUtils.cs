@@ -1,7 +1,6 @@
 ﻿using ATL;
 using ATL.Logging;
 using System;
-using System.Collections;
 using System.IO;
 
 namespace Commons
@@ -58,19 +57,19 @@ namespace Commons
         /// <summary>
         /// Width, in pixels
         /// </summary>
-        public int Width = 0;
+        public int Width;
         /// <summary>
         /// Height, in pixels
         /// </summary>
-        public int Height = 0;
+        public int Height;
         /// <summary>
         /// Color depth, in bits
         /// </summary>
-        public int ColorDepth = 0;
+        public int ColorDepth;
         /// <summary>
         /// Number of colors supported by the palette
         /// </summary>
-        public int NumColorsInPalette = 0;
+        public int NumColorsInPalette;
     }
 #pragma warning restore S1104 // Fields should not have public accessibility
 
@@ -275,7 +274,7 @@ namespace Commons
 
                         break;
                     case ImageFormat.Gif:
-                        byte[] GraphicControlExtensionBlockSignature = new byte[2] { 0x21, 0xf9 };
+                        byte[] GraphicControlExtensionBlockSignature = new byte[] { 0x21, 0xf9 };
 
                         props.ColorDepth = 24; // 1 byte for each component
 
@@ -310,7 +309,7 @@ namespace Commons
                                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid v89a GIF file; no graphic control extension block found");
                                 // GIF is malformed; trying to find the image block directly
                                 s.Seek(initialPos, SeekOrigin.Begin);
-                                if (StreamUtils.FindSequence(s, new byte[1] { 0x2c }))
+                                if (StreamUtils.FindSequence(s, new byte[] { 0x2c }))
                                 {
                                     s.Seek(-1, SeekOrigin.Current);
                                 }
@@ -395,7 +394,7 @@ namespace Commons
                         break;
                     case ImageFormat.Jpeg:
                         byte[] shortData = new byte[2];
-                        byte[] SOF0FrameSignature = new byte[2] { 0xFF, 0xC0 };
+                        byte[] SOF0FrameSignature = new byte[] { 0xFF, 0xC0 };
 
                         /*
                          * We just need to reach the SOF0 frame descripting the actual picture
@@ -476,7 +475,7 @@ namespace Commons
         {
             byte[] intData = new byte[4];
             uint chunkSize;
-            bool foundChunk = false;
+            bool foundChunk;
 
             while (s.Position < limit)
             {
@@ -484,14 +483,9 @@ namespace Commons
                 chunkSize = StreamUtils.DecodeBEUInt32(intData);
                 s.Read(intData, 0, 4); // Chunk ID
                 foundChunk = StreamUtils.ArrEqualsArr(intData, chunkID);
-                if (foundChunk)
-                {
-                    return chunkSize;
-                }
-                else
-                {
-                    s.Seek(chunkSize + 4, SeekOrigin.Current);
-                }
+                if (foundChunk) return chunkSize;
+
+                s.Seek(chunkSize + 4, SeekOrigin.Current);
             }
 
             return 0;

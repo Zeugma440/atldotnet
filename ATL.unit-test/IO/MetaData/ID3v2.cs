@@ -456,33 +456,30 @@ namespace ATL.test.IO.MetaData
 
         private void checkTrackDiscZeroes(FileStream fs)
         {
-            using (BinaryReader r = new BinaryReader(fs))
-            {
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TPOS")));
-                fs.Seek(7, SeekOrigin.Current);
-                String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("03/04", s);
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TPOS")));
+            fs.Seek(7, SeekOrigin.Current);
+            string s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("03/04", s);
 
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRCK")));
-                fs.Seek(7, SeekOrigin.Current);
-                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("06/06", s);
-            }
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRCK")));
+            fs.Seek(7, SeekOrigin.Current);
+            s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("06/06", s);
         }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_UpdateKeepTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes("MP3/id3v2.4_UTF8.mp3", false, false, dlg);
         }
 
         [TestMethod]
         public void TagIO_RW_ID3v2_UpdateFormatTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes("MP3/id3v2.4_UTF8_singleDigitTrackTags.mp3", true, true, dlg);
         }
 

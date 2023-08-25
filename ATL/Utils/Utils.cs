@@ -12,14 +12,13 @@ namespace Commons
     /// </summary>
     internal static class Utils
     {
-        private static Encoding latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
-        private static IDictionary<string, Encoding> encodingCache = new Dictionary<string, Encoding>();
+        private static readonly IDictionary<string, Encoding> encodingCache = new Dictionary<string, Encoding>();
 
         /// <summary>
         /// 'ZERO WIDTH NO-BREAK SPACE' invisible character, sometimes used by certain tagging softwares
         /// Looks like a BOM unfortunately converted into an unicode character :/
         /// </summary>
-        public readonly static string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
+        public static readonly string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
 
 
         /// <summary>
@@ -30,7 +29,7 @@ namespace Commons
         /// <summary>
         /// ISO-8859-1 encoding
         /// </summary>
-        public static Encoding Latin1Encoding { get { return latin1Encoding; } }
+        public static Encoding Latin1Encoding { get; } = Encoding.GetEncoding("ISO-8859-1");
 
 
         /// <summary>
@@ -40,7 +39,7 @@ namespace Commons
         /// <returns>Given string if non-null; else empty string</returns>
         public static string ProtectValue(string value)
         {
-            return (null == value) ? "" : value;
+            return value ?? "";
         }
 
         /// <summary>
@@ -50,7 +49,7 @@ namespace Commons
         /// <returns>Year from the given DateTime, or "" if not set</returns>
         public static string ProtectYear(DateTime value)
         {
-            return (DateTime.MinValue == value) ? "" : value.Year.ToString();
+            return DateTime.MinValue == value ? "" : value.Year.ToString();
         }
 
         /// <summary>
@@ -89,15 +88,15 @@ namespace Commons
         {
             int h;
             long m;
-            String hStr, mStr, sStr;
+            string hStr, mStr, sStr;
             long s;
             int d;
 
             h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
             m = Convert.ToInt64(Math.Floor((seconds - 3600.00 * h) / 60));
-            s = seconds - (60 * m) - (3600 * h);
+            s = seconds - 60 * m - 3600 * h;
             d = Convert.ToInt32(Math.Floor(h / 24.00));
-            if (d > 0) h = h - (24 * d);
+            if (d > 0) h = h - 24 * d;
 
             hStr = h.ToString();
             if (1 == hStr.Length) hStr = "0" + hStr;
@@ -106,21 +105,9 @@ namespace Commons
             sStr = s.ToString();
             if (1 == sStr.Length) sStr = "0" + sStr;
 
-            if (d > 0)
-            {
-                return d + "d " + hStr + ":" + mStr + ":" + sStr;
-            }
-            else
-            {
-                if (h > 0)
-                {
-                    return hStr + ":" + mStr + ":" + sStr;
-                }
-                else
-                {
-                    return mStr + ":" + sStr;
-                }
-            }
+            if (d > 0) return d + "d " + hStr + ":" + mStr + ":" + sStr;
+            if (h > 0) return hStr + ":" + mStr + ":" + sStr;
+            return mStr + ":" + sStr;
         }
 
         /// <summary>
@@ -129,7 +116,7 @@ namespace Commons
         /// </summary>
         /// <param name="timeCode">Timecode to convert</param>
         /// <returns>Duration of the given timecode expressed in milliseconds if succeeded; -1 if failed</returns>
-        static public int DecodeTimecodeToMs(string timeCode)
+        public static int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
             DateTime dateTime;
@@ -155,17 +142,17 @@ namespace Commons
                 {
                     valid = true;
                     string[] parts = timeCode.Split(':');
-                    if (parts[parts.Length - 1].Contains('.'))
+                    if (parts[^1].Contains('.'))
                     {
-                        string[] subPart = parts[parts.Length - 1].Split('.');
-                        parts[parts.Length - 1] = subPart[0];
+                        string[] subPart = parts[^1].Split('.');
+                        parts[^1] = subPart[0];
                         milliseconds = int.Parse(subPart[1]);
                     }
-                    seconds = int.Parse(parts[parts.Length - 1]);
-                    minutes = int.Parse(parts[parts.Length - 2]);
+                    seconds = int.Parse(parts[^1]);
+                    minutes = int.Parse(parts[^2]);
                     if (parts.Length >= 3)
                     {
-                        string[] subPart = parts[parts.Length - 3].Split('d');
+                        string[] subPart = parts[^3].Split('d');
                         if (subPart.Length > 1)
                         {
                             days = int.Parse(subPart[0].Trim());
@@ -232,7 +219,7 @@ namespace Commons
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
         {
-            string result = (null == value) ? "" : value;
+            string result = value ?? "";
 
             if (result.Length > length) result = result.Substring(0, length);
             else if (result.Length < length)
@@ -310,12 +297,12 @@ namespace Commons
                     float f;
                     if (float.TryParse(value, out f))
                     {
-                        return (f != 0);
+                        return f != 0;
                     }
                     else
                     {
                         value = value.ToLower();
-                        return ("true".Equals(value));
+                        return "true".Equals(value);
                     }
                 }
             }
@@ -336,7 +323,7 @@ namespace Commons
             char[] encodedDataChar = new char[encodedData.Length];
             Latin1Encoding.GetChars(encodedData, 0, encodedData.Length, encodedDataChar, 0); // Optimized for large data
 
-            return System.Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
+            return Convert.FromBase64CharArray(encodedDataChar, 0, encodedDataChar.Length);
         }
 
         /// <summary>
@@ -359,7 +346,7 @@ namespace Commons
 
             char[] dataChar = new char[arrayLength];
 
-            System.Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
+            Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
             return Utils.Latin1Encoding.GetBytes(dataChar);
         }
@@ -377,11 +364,11 @@ namespace Commons
         /// <returns>True if the string is a digital value; false if not</returns>
         public static bool IsNumeric(string s, bool allowsOnlyIntegers = false, bool allowsSigned = true)
         {
-            if ((null == s) || (0 == s.Length)) return false;
+            if (string.IsNullOrEmpty(s)) return false;
 
             for (int i = 0; i < s.Length; i++)
             {
-                if ((s[i] == '.') || (s[i] == ','))
+                if (s[i] == '.' || s[i] == ',')
                 {
                     if (allowsOnlyIntegers) return false;
                 }
@@ -401,7 +388,7 @@ namespace Commons
         /// <returns>True if char is between 0..9; false instead</returns>
         public static bool IsDigit(char c)
         {
-            return (c >= '0' && c <= '9');
+            return c >= '0' && c <= '9';
         }
 
         /// <summary>

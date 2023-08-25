@@ -91,7 +91,7 @@ namespace ATL
         /// 
         /// Default : ID3v2 then Native tagging
         /// </summary>
-        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] {
+        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = {
             MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE
         };
 

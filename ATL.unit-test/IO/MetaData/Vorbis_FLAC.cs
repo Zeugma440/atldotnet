@@ -340,41 +340,38 @@ namespace ATL.test.IO.MetaData
 
         private void checkTrackDiscZeroes(FileStream fs)
         {
-            using (BinaryReader r = new BinaryReader(fs))
-            {
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKNUMBER=")));
-                String s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("06", s.Substring(0, s.Length - 1));
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKNUMBER=")));
+            string s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("06", s[..^1]);
 
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKTOTAL=")));
-                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("06", s.Substring(0, s.Length - 1));
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("TRACKTOTAL=")));
+            s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("06", s[..^1]);
 
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER=")));
-                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("03", s.Substring(0, s.Length - 1));
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCNUMBER=")));
+            s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("03", s[..^1]);
 
-                fs.Seek(0, SeekOrigin.Begin);
-                Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCTOTAL=")));
-                s = StreamUtils.ReadNullTerminatedString(r, System.Text.Encoding.ASCII);
-                Assert.AreEqual("04", s.Substring(0, s.Length - 1));
-            }
+            fs.Seek(0, SeekOrigin.Begin);
+            Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("DISCTOTAL=")));
+            s = StreamUtils.ReadNullTerminatedString(fs, System.Text.Encoding.ASCII);
+            Assert.AreEqual("04", s[..^1]);
         }
 
         [TestMethod]
         public void TagIO_RW_VorbisFLAC_UpdateKeepTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes(notEmptyFile, false, false, dlg);
         }
 
         [TestMethod]
         public void TagIO_RW_VorbisFLAC_UpdateFormatTrackDiscZeroes()
         {
-            StreamDelegate dlg = new StreamDelegate(checkTrackDiscZeroes);
+            StreamDelegate dlg = checkTrackDiscZeroes;
             test_RW_UpdateTrackDiscZeroes(notEmptyFile, true, true, dlg);
         }
 
@@ -383,7 +380,7 @@ namespace ATL.test.IO.MetaData
         {
             // Source : tag-free file
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed tag-free

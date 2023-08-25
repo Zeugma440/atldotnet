@@ -9,8 +9,8 @@ namespace ATL
     public sealed class ProgressToken<T>
     {
         private readonly bool isAsync;
-        private readonly IProgress<T> asyncProgress = null;
-        private readonly Action<T> syncProgress = null;
+        private readonly IProgress<T> asyncProgress;
+        private readonly Action<T> syncProgress;
 
         internal bool IsAsync => isAsync;
         internal IProgress<T> AsyncProgress => asyncProgress;

@@ -80,13 +80,9 @@ namespace ATL
             else
                 extension = path;
 
-            if (formatListByExt.ContainsKey(extension))
+            if (formatListByExt.TryGetValue(extension, out var formats) && formats != null && formats.Count > 0)
             {
-                IList<Format> formats = formatListByExt[extension];
-                if (formats != null && formats.Count > 0)
-                {
-                    result = formats;
-                }
+                result = formats;
             }
 
             return result;
@@ -103,13 +99,9 @@ namespace ATL
             IList<Format> result = null;
             string mime = mimeType.ToLower();
 
-            if (formatListByMime.ContainsKey(mime))
+            if (formatListByMime.TryGetValue(mime, out var formats) && formats != null && formats.Count > 0)
             {
-                IList<Format> formats = formatListByMime[mime];
-                if (formats != null && formats.Count > 0)
-                {
-                    result = formats;
-                }
+                result = formats;
             }
 
             return result;
@@ -127,7 +119,7 @@ namespace ATL
                 foreach (Format f in formats)
                 {
                     // Filter duplicates "caused by" indexing formats by extension
-                    if (!result.ContainsKey(f.ID)) result.Add(f.ID, f);
+                    result.TryAdd(f.ID, f);
                 }
             }
             return result.Values;

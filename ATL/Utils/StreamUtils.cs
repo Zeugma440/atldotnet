@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,16 +9,10 @@ namespace ATL
     /// <summary>
     /// Misc. utilities used by binary readers
     /// 
-    /// TODO : Benchmark against System.Buffers.Binary.BinaryPrimitives when the library's minimum .NET version becomes 5
+    /// TODO : Benchmark against System.Buffers.Binary.BinaryPrimitives
     /// </summary>
     internal static partial class StreamUtils
     {
-        /// <summary>
-        /// Handler signature to be used when needing to process a MemoryStream
-        /// </summary>
-        public delegate void StreamHandlerDelegate(ref MemoryStream stream);
-
-
         /// <summary>
         /// Determines if the contents of a string (character by character) is the same
         /// as the contents of a char array
@@ -120,7 +113,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeUInt16(ushort value)
         {
-            return new byte[2] { (byte)(value & 0x00FF), (byte)((value & 0xFF00) >> 8) };
+            return new[] { (byte)(value & 0x00FF), (byte)((value & 0xFF00) >> 8) };
         }
 
         /// <summary>
@@ -142,7 +135,7 @@ namespace ATL
         public static byte[] EncodeBEUInt16(ushort value)
         {
             // Output has to be big-endian
-            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+            return new[] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
         }
 
         /// <summary>
@@ -164,7 +157,7 @@ namespace ATL
         public static short DecodeInt16(byte[] data)
         {
             if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
-            return (short)((data[0]) | (data[1] << 8));
+            return (short)(data[0] | (data[1] << 8));
         }
 
         /// <summary>
@@ -175,7 +168,7 @@ namespace ATL
         public static byte[] EncodeBEInt16(short value)
         {
             // Output has to be big-endian
-            return new byte[2] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
+            return new[] { (byte)((value & 0xFF00) >> 8), (byte)(value & 0x00FF) };
         }
 
         /// <summary>
@@ -222,7 +215,7 @@ namespace ATL
             if (value > 0x00FFFFFF) throw new InvalidDataException("Value should not be higher than " + 0x00FFFFFF + "; actual value=" + value);
 
             // Output has to be big-endian
-            return new byte[3] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+            return new[] { (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -255,7 +248,7 @@ namespace ATL
         public static byte[] EncodeBEUInt32(uint value)
         {
             // Output has to be big-endian
-            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+            return new[] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -277,7 +270,7 @@ namespace ATL
         public static byte[] EncodeBEInt32(int value)
         {
             // Output has to be big-endian
-            return new byte[4] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
+            return new[] { (byte)((value & 0xFF000000) >> 24), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0x0000FF00) >> 8), (byte)(value & 0x000000FF) };
         }
 
         /// <summary>
@@ -287,7 +280,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeInt32(int value)
         {
-            return new byte[4] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
+            return new[] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
         }
 
         /// <summary>
@@ -297,7 +290,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeUInt32(uint value)
         {
-            return new byte[4] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
+            return new[] { (byte)(value & 0x000000FF), (byte)((value & 0x0000FF00) >> 8), (byte)((value & 0x00FF0000) >> 16), (byte)((value & 0xFF000000) >> 24) };
         }
 
         /// <summary>
@@ -351,7 +344,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeUInt64(ulong value)
         {
-            return new byte[8] { (byte)(value & 0x00000000000000FF), (byte)((value & 0x000000000000FF00) >> 8), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0xFF00000000000000) >> 56) };
+            return new[] { (byte)(value & 0x00000000000000FF), (byte)((value & 0x000000000000FF00) >> 8), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0xFF00000000000000) >> 56) };
         }
 
         /// <summary>
@@ -362,7 +355,7 @@ namespace ATL
         public static byte[] EncodeBEUInt64(ulong value)
         {
             // Output has to be big-endian
-            return new byte[8] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
+            return new[] { (byte)((value & 0xFF00000000000000) >> 56), (byte)((value & 0x00FF000000000000) >> 48), (byte)((value & 0x0000FF0000000000) >> 40), (byte)((value & 0x000000FF00000000) >> 32), (byte)((value & 0x00000000FF000000) >> 24), (byte)((value & 0x0000000000FF0000) >> 16), (byte)((value & 0x000000000000FF00) >> 8), (byte)(value & 0x00000000000000FF) };
         }
 
         /// <summary>
@@ -377,26 +370,6 @@ namespace ATL
                 Array.Reverse(data);
 
             return BitConverter.ToDouble(data, 0);
-        }
-
-        /// <summary>
-        /// Switch the format of a signed Int32 between big endian and little endian
-        /// </summary>
-        /// <param name="n">value to convert</param>
-        /// <returns>converted value</returns>
-        public static int ReverseInt32(int n)
-        {
-            byte b0;
-            byte b1;
-            byte b2;
-            byte b3;
-
-            b0 = (byte)((n & 0x000000FF) >> 0);
-            b1 = (byte)((n & 0x0000FF00) >> 8);
-            b2 = (byte)((n & 0x00FF0000) >> 16);
-            b3 = (byte)((n & 0xFF000000) >> 24);
-
-            return (b0 << 24) | (b1 << 16) | (b2 << 8) | (b3 << 0);
         }
 
         /// <summary>
@@ -440,17 +413,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Read a null-terminated String from the given BinaryReader, according to the given Encoding
-        /// Returns with the BinaryReader positioned after the last null-character(s)
-        /// </summary>
-        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
-        /// <param name="encoding">Encoding to use for reading the stream</param>
-        /// <returns>Read value</returns>
-        public static string ReadNullTerminatedString(BinaryReader r, Encoding encoding)
-        {
-            return readNullTerminatedString(r.BaseStream, encoding, 0, false);
-        }
-        /// <summary>
         /// Read a null-terminated String from the given Stream, according to the given Encoding
         /// Returns with the BinaryReader positioned after the last null-character(s)
         /// </summary>
@@ -460,19 +422,6 @@ namespace ATL
         public static string ReadNullTerminatedString(Stream s, Encoding encoding)
         {
             return readNullTerminatedString(s, encoding, 0, false);
-        }
-
-        /// <summary>
-        /// Read a null-terminated String from the given BinaryReader, according to the given Encoding, within a given limit of bytes
-        /// Returns with the BinaryReader positioned at (start+limit)
-        /// </summary>
-        /// <param name="r">BinaryReader positioned at the beginning of the String to be read</param>
-        /// <param name="encoding">Encoding to use for reading the stream</param>
-        /// <param name="limit">Maximum number of bytes to read</param>
-        /// <returns>Read value</returns>
-        public static string ReadNullTerminatedStringFixed(BinaryReader r, Encoding encoding, int limit)
-        {
-            return readNullTerminatedString(r.BaseStream, encoding, limit, true);
         }
 
         /// <summary>
@@ -521,7 +470,7 @@ namespace ATL
                 }
                 else // All clear; store the read char in the byte array
                 {
-                    if (readBytes.Length < nbRead + nbChars) Array.Resize<byte>(ref readBytes, readBytes.Length + 100);
+                    if (readBytes.Length < nbRead + nbChars) Array.Resize(ref readBytes, readBytes.Length + 100);
 
                     readBytes[nbRead] = buffer[0];
                     if (2 == nbChars) readBytes[nbRead + 1] = buffer[1];
@@ -582,13 +531,13 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
         {
-            if ((nbBytes < 1) || (nbBytes > 5)) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
+            if (nbBytes < 1 || nbBytes > 5) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
             byte[] result = new byte[nbBytes];
             int range;
 
             for (int i = 0; i < nbBytes; i++)
             {
-                range = (7 * (nbBytes - 1 - i));
+                range = 7 * (nbBytes - 1 - i);
                 result[i] = (byte)((value & (0x7F << range)) >> range);
             }
 
@@ -629,12 +578,12 @@ namespace ATL
             int BUFFER_SIZE = 512;
             byte[] readBuffer = new byte[BUFFER_SIZE];
 
-            int remainingBytes, bytesToRead;
+            int bytesToRead;
             int iSequence = 0;
             int readBytes = 0;
             long initialPos = stream.Position;
 
-            remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
+            int remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
 
             while (remainingBytes > 0)
             {
@@ -896,10 +845,10 @@ namespace ATL
         {
             byte[] data = new byte[Settings.FileBufferSize];
             long initialPos = source.Position;
-            int read, readTotal = 0;
+            int readTotal = 0;
             int lastValue = -1;
 
-            read = source.Read(data, 0, Settings.FileBufferSize);
+            int read = source.Read(data, 0, Settings.FileBufferSize);
             while (read > 0)
             {
                 for (int i = 0; i < read; i++)
