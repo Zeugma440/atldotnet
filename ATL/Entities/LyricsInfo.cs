@@ -110,10 +110,6 @@ namespace ATL
             /// <exception cref="NullReferenceException">Thrown if other is null</exception>
             public int CompareTo(LyricsPhrase other)
             {
-                if (other == null)
-                {
-                    throw new NullReferenceException();
-                }
                 if (this < other)
                 {
                     return -1;
