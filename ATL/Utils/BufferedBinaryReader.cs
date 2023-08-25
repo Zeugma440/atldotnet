@@ -39,33 +39,21 @@ namespace ATL
         /// Mandatory override to Stream.Position
         public override long Position
         {
-            get { return bufferOffset + cursorPosition; }
-            set { Seek(value, SeekOrigin.Begin); }
+            get => bufferOffset + cursorPosition;
+            set => Seek(value, SeekOrigin.Begin);
         }
 
         /// Mandatory override to Stream.Length
-        public override long Length
-        {
-            get { return streamSize; }
-        }
+        public override long Length => streamSize;
 
         /// Mandatory override to Stream.CanRead
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead => true;
 
         /// Mandatory override to Stream.CanSeek
-        public override bool CanSeek
-        {
-            get { return true; }
-        }
+        public override bool CanSeek => true;
 
         /// Mandatory override to Stream.CanWrite
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite => false;
 
         /// <summary>
         /// Construct a new instance of BufferedBinaryReader using the given Stream
@@ -176,13 +164,13 @@ namespace ATL
         }
 
         /// Mandatory override to Stream.Read
-        public override int Read([In, Out] byte[] buffer, int offset, int count)
+        public override int Read([In, Out] byte[] destBuffer, int offset, int count)
         {
             // Bytes to read are all already buffered
             if (count <= bufferSize - cursorPosition)
             {
                 prepareBuffer(count);
-                Array.Copy(this.buffer, cursorPosition, buffer, offset, count);
+                Array.Copy(this.buffer, cursorPosition, destBuffer, offset, count);
                 cursorPosition += count;
                 return count;
             }
@@ -192,7 +180,7 @@ namespace ATL
                 int availableBytes = bufferSize - cursorPosition;
                 if (availableBytes > 0)
                 {
-                    Array.Copy(this.buffer, cursorPosition, buffer, offset, availableBytes);
+                    Array.Copy(this.buffer, cursorPosition, destBuffer, offset, availableBytes);
                 }
                 else
                 {
@@ -200,7 +188,7 @@ namespace ATL
                 }
 
                 // ...then retrieve the rest by reading the stream
-                int readBytes = stream.Read(buffer, offset + availableBytes, count - availableBytes);
+                int readBytes = stream.Read(destBuffer, offset + availableBytes, count - availableBytes);
 
                 streamPosition += readBytes;
                 stream.Position = streamPosition;
