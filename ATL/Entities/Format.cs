@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -121,10 +120,7 @@ namespace ATL
         /// <summary>
         /// MIME types associated with the format
         /// </summary>
-        public ICollection<string> MimeList
-        {
-            get { return mimeList.Keys; }
-        }
+        public ICollection<string> MimeList => mimeList.Keys;
 
         /// <summary>
         /// True if the format is readable by ATL

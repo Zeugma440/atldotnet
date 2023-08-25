@@ -1,5 +1,4 @@
-﻿using ATL.AudioData;
-using ATL.Logging;
+﻿using ATL.Logging;
 using Commons;
 using HashDepot;
 using System;
@@ -251,19 +250,18 @@ namespace ATL
             MarkedForDeletion = false;
             Description = "";
 
-            string picCodeStr = nativePicCode as string;
-            if (picCodeStr != null)
+            if (nativePicCode is string picCodeStr)
             {
                 NativePicCodeStr = picCodeStr;
                 NativePicCode = -1;
             }
-            else if (nativePicCode is byte)
+            else if (nativePicCode is byte code)
             {
-                NativePicCode = (byte)nativePicCode;
+                NativePicCode = code;
             }
-            else if (nativePicCode is int)
+            else if (nativePicCode is int picCode)
             {
-                NativePicCode = (int)nativePicCode;
+                NativePicCode = picCode;
             }
             else
             {
@@ -303,19 +301,18 @@ namespace ATL
             MarkedForDeletion = false;
             Description = "";
 
-            string picCodeStr = nativePicCode as string;
-            if (picCodeStr != null)
+            if (nativePicCode is string picCodeStr)
             {
                 NativePicCodeStr = picCodeStr;
                 NativePicCode = -1;
             }
-            else if (nativePicCode is byte)
+            else if (nativePicCode is byte code)
             {
-                NativePicCode = (byte)nativePicCode;
+                NativePicCode = code;
             }
-            else if (nativePicCode is int)
+            else if (nativePicCode is int picCode)
             {
-                NativePicCode = (int)nativePicCode;
+                NativePicCode = picCode;
             }
             else
             {
@@ -345,7 +342,7 @@ namespace ATL
         {
             if (0 == TagType || TagType != picInfo.TagType) return false;
             if (NativePicCode > 0 && NativePicCode == picInfo.NativePicCode) return true;
-            if (NativePicCodeStr != null && NativePicCodeStr.Length > 0 && NativePicCodeStr == picInfo.NativePicCodeStr) return true;
+            if (!string.IsNullOrEmpty(NativePicCodeStr) && NativePicCodeStr == picInfo.NativePicCodeStr) return true;
             return false;
         }
 
@@ -368,9 +365,9 @@ namespace ATL
         private string valueToString()
         {
             if (NativePicCode > 0 && TagType > 0)
-                return ((10000000 * ((int)TagType)) + "N" + NativePicCode).ToString();
-            else if (NativePicCodeStr != null && NativePicCodeStr.Length > 0 && TagType > 0)
-                return (10000000 * ((int)TagType)).ToString() + "N" + NativePicCodeStr;
+                return (10000000 * (int)TagType + "N" + NativePicCode);
+            else if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType > 0)
+                return 10000000 * (int)TagType + "N" + NativePicCodeStr;
             else if (PicType != PIC_TYPE.Unsupported)
                 return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes
             else

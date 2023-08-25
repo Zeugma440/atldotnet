@@ -1,7 +1,4 @@
-﻿using Commons;
-using System.Collections.Generic;
-
-namespace ATL
+﻿namespace ATL
 {
     /// <summary>
     /// Information describing low-level / technical informations about the audio file

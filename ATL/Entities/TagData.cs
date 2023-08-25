@@ -176,7 +176,8 @@ namespace ATL
             BPM = 37
         }
 
-        private static readonly ICollection<Field> numericFields = new HashSet<Field>() {
+        private static readonly ICollection<Field> numericFields = new HashSet<Field>
+        {
             Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE, Field.BPM
         };
 
@@ -184,12 +185,12 @@ namespace ATL
         /// Chapters 
         /// NB : The whole chapter list is processed as a whole
         /// </summary>
-        public IList<ChapterInfo> Chapters { get; set; } = null;
+        public IList<ChapterInfo> Chapters { get; set; }
 
         /// <summary>
         /// Lyrics
         /// </summary>
-        public LyricsInfo Lyrics { get; set; } = null;
+        public LyricsInfo Lyrics { get; set; }
 
 
         /// <summary>
@@ -212,11 +213,11 @@ namespace ATL
         /// <summary>
         /// > 0 if Track field is formatted with leading zeroes over X digits
         /// </summary>
-        public int TrackDigitsForLeadingZeroes { get; set; } = 0;
+        public int TrackDigitsForLeadingZeroes { get; set; }
         /// <summary>
         /// > 0 if Disc field is formatted with leading zeroes over X digits
         /// </summary>
-        public int DiscDigitsForLeadingZeroes { get; set; } = 0;
+        public int DiscDigitsForLeadingZeroes { get; set; }
 
         /// <summary>
         /// Current difference between written data size vs. initial data size
@@ -233,7 +234,7 @@ namespace ATL
         /// <summary>
         /// Duration of audio track, in milliseconds
         /// </summary>
-        public double DurationMs { get; set; } = 0;
+        public double DurationMs { get; set; }
 
 #pragma warning restore S1104 // Fields should not have public accessibility
 
@@ -460,10 +461,7 @@ namespace ATL
         /// </summary>
         /// <param name="index">ATL field code to search for</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        public string this[Field index]
-        {
-            get => Fields.ContainsKey(index) ? Fields[index] : null;
-        }
+        public string this[Field index] => Fields.ContainsKey(index) ? Fields[index] : null;
 
         /// <summary>
         /// Convert non-null 'classic' fields values into a properties Map
@@ -492,7 +490,7 @@ namespace ATL
 
             if (Lyrics != null)
             {
-                if (Lyrics.UnsynchronizedLyrics != null && Lyrics.UnsynchronizedLyrics.Length > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
+                if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
                 else if (Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
             }
 

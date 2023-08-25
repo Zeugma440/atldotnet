@@ -180,8 +180,8 @@ namespace ATL
             get
             {
                 if (canUseValue(Date)) return Date.Value.Year;
-                else if (Settings.NullAbsentValues) return null;
-                else return 0;
+                if (Settings.NullAbsentValues) return null;
+                return 0;
             }
             set
             {
@@ -233,11 +233,11 @@ namespace ATL
         public IDictionary<string, string> AdditionalFields { get; set; }
         private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
 
-        private IList<PictureInfo> currentEmbeddedPictures { get; set; } = null;
+        private IList<PictureInfo> currentEmbeddedPictures { get; set; }
         private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
 
-        private DateTime? date = null;
-        private bool isYearExplicit = false;
+        private DateTime? date;
+        private bool isYearExplicit;
 
         /// <summary>
         /// Format of the tagging systems
@@ -279,10 +279,8 @@ namespace ATL
         /// <summary>
         /// Duration (seconds)
         /// </summary>
-        public int Duration
-        {
-            get => (int)Math.Round(DurationMs / 1000.0);
-        }
+        public int Duration => (int)Math.Round(DurationMs / 1000.0);
+
         /// <summary>
 		/// Duration (milliseconds)
 		/// </summary>
@@ -302,10 +300,7 @@ namespace ATL
         /// NB1 : PictureInfo.PictureData (raw binary picture data) is valued
         /// NB2 : Also allows to value embedded pictures inside chapters
         /// </summary>
-        public IList<PictureInfo> EmbeddedPictures
-        {
-            get => getEmbeddedPictures();
-        }
+        public IList<PictureInfo> EmbeddedPictures => getEmbeddedPictures();
 
         /// <summary>
         /// Stream used to access in-memory Track contents (alternative to path, which is used to access on-disk Track contents)
@@ -373,7 +368,7 @@ namespace ATL
             }
 
             Title = processString(metadata.Title);
-            if (Settings.UseFileNameWhenNoTitle && (null == Title || "" == Title) && Path != InMemoryPath)
+            if (Settings.UseFileNameWhenNoTitle && string.IsNullOrEmpty(Title) && Path != InMemoryPath)
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
@@ -488,7 +483,7 @@ namespace ATL
             result.IntegrateValue(Field.TRACK_TOTAL, toTagValue(TrackTotal));
             result.IntegrateValue(Field.DISC_NUMBER, toTagValue(DiscNumber));
             result.IntegrateValue(Field.DISC_TOTAL, toTagValue(DiscTotal));
-            result.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, ChaptersTableDescription.ToString());
+            result.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, ChaptersTableDescription);
 
             result.Chapters = new List<ChapterInfo>();
             foreach (ChapterInfo chapter in Chapters)

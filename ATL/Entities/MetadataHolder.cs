@@ -27,7 +27,7 @@ namespace ATL
         /// Implemented tag type
         /// </summary>
         /// <returns></returns>
-        abstract protected MetaDataIOFactory.TagType getImplementedTagType();
+        protected abstract MetaDataIOFactory.TagType getImplementedTagType();
 
         /// <inheritdoc/>
         public string Title

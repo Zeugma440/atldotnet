@@ -41,7 +41,7 @@ namespace ATL
             Custom = 5
         };
 
-        private static string[] reservedNativePrefix = new string[7] {
+        private static readonly string[] reservedNativePrefix = {
             "info", "adtl", "ixml", "disp", "cue", "bext", "sample"
         };
 
@@ -136,7 +136,7 @@ namespace ATL
         /// <returns>String representation of the object</returns>
         public override string ToString()
         {
-            return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
+            return (100 + TagType) + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
         }
 
         /// <summary>
@@ -175,8 +175,8 @@ namespace ATL
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
 
-            bool result = (MetaDataIOFactory.TagType.ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode));
-            if (obj.StreamNumber > 0) result = result && (obj.StreamNumber == this.StreamNumber);
+            bool result = MetaDataIOFactory.TagType.ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode);
+            if (obj.StreamNumber > 0) result = result && obj.StreamNumber == this.StreamNumber;
             if (obj.Language.Length > 0) result = result && obj.Language.Equals(this.Language);
 
             return result;
