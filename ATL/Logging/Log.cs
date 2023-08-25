@@ -161,7 +161,7 @@ namespace ATL.Logging
 
             lock (locations)
             {
-                theItem.Location = locations.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var location) ? location : "";
+                theItem.Location = locations.TryGetValue(Environment.CurrentManagedThreadId, out var location) ? location : "";
             }
 
             lock (masterLog)
