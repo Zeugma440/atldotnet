@@ -6,7 +6,6 @@ using System.Text;
 using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
-using System.Collections;
 using ATL.Logging;
 
 namespace ATL.AudioData.IO
@@ -15,7 +14,7 @@ namespace ATL.AudioData.IO
     {
         public const string CHUNK_IXML = "iXML";
 
-        private static string getPosition(IList<string> position)
+        private static string getPosition(IEnumerable<string> position)
         {
             StringBuilder result = new StringBuilder();
             bool first = true;
@@ -40,9 +39,9 @@ namespace ATL.AudioData.IO
         {
             IList<string> position = new List<string> { "ixml" };
             long initialOffset = source.Position;
-            int nbSkipBegin = StreamUtils.SkipValues(source, new int[4] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
+            int nbSkipBegin = StreamUtils.SkipValues(source, new[] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
             source.Seek(initialOffset + chunkSize, SeekOrigin.Begin);
-            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new int[4] { 10, 13, 32, 0 }); // Ignore ending CR, LF, whitespace, null
+            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new[] { 10, 13, 32, 0 }); // Ignore ending CR, LF, whitespace, null
             source.Seek(initialOffset + nbSkipBegin, SeekOrigin.Begin);
 
             using (MemoryStream mem = new MemoryStream((int)chunkSize - nbSkipBegin - nbSkipEnd))
@@ -65,7 +64,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private static void readXml(MemoryStream mem, Encoding encoding, IList<string> position, MetaDataIO meta, ReadTagParams readTagParams)
+        private static void readXml(Stream mem, Encoding encoding, IList<string> position, MetaDataIO meta, ReadTagParams readTagParams)
         {
             bool inList = false;
             int listDepth = 0;
@@ -94,7 +93,7 @@ namespace ATL.AudioData.IO
                             break;
 
                         case XmlNodeType.Text:
-                            if (reader.Value != null && reader.Value.Length > 0)
+                            if (!string.IsNullOrEmpty(reader.Value))
                             {
                                 meta.SetMetaField(getPosition(position), reader.Value, readTagParams.ReadAllMetaFrames);
                             }
@@ -167,14 +166,14 @@ namespace ATL.AudioData.IO
                         if (!previousPathNodes.Contains(nodePath))
                         {
                             subkey = pathNodes[nodePath];
-                            if (subkey.Equals(singleNodes[singleNodes.Count - 1])) continue; // Last node is a leaf, not a node
+                            if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
 
                             if (subkey.Contains("[")) subkey = subkey.Substring(0, subkey.IndexOf("[")); // Remove [x]'s
                             writer.WriteStartElement(subkey.ToUpper());
                         }
                     }
                     // Write the last node (=leaf) as a proper value
-                    writer.WriteElementString(singleNodes[singleNodes.Count - 1], additionalFields[key]);
+                    writer.WriteElementString(singleNodes[^1], additionalFields[key]);
                     previousPathNodes = pathNodes.Keys.ToList();
                 }
 

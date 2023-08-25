@@ -1,5 +1,4 @@
 ﻿using ATL.AudioData.IO;
-using Commons;
 using System;
 using System.IO;
 using static ATL.ChannelsArrangements;
@@ -89,22 +88,22 @@ namespace ATL.AudioData
             /// <summary>
             /// Returns true if the metadata block exists; false if it doesn't
             /// </summary>
-            public bool MetadataExists { get => 0 == (MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK); }
+            public bool MetadataExists => 0 == (MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK);
 
             /// <summary>
             /// Sample rate
             /// </summary>
-            public int SampleRate { get => Info[10] << 12 | Info[11] << 4 | Info[12] >> 4; }
+            public int SampleRate => Info[10] << 12 | Info[11] << 4 | Info[12] >> 4;
 
             /// <summary>
             /// Bits per sample
             /// </summary>
-            public byte BitsPerSample { get => (byte)(((Info[12] & 1) << 4) | (Info[13] >> 4) + 1); }
+            public byte BitsPerSample => (byte)(((Info[12] & 1) << 4) | (Info[13] >> 4) + 1);
 
             /// <summary>
             /// Number of samples
             /// </summary>
-            public long NbSamples { get => Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17]; }
+            public long NbSamples => Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17];
         }
 
         public static bool IsValidHeader(byte[] data)

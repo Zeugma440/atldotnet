@@ -49,7 +49,7 @@ namespace ATL.Playlist.IO
                 writer.WriteAttributeString("Playstring", encodeLocation(t.Path));
 
                 string label = "";
-                if (t.Title != null && t.Title.Length > 0) label = t.Title;
+                if (!string.IsNullOrEmpty(t.Title)) label = t.Title;
                 if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
 
                 writer.WriteStartElement("Name");

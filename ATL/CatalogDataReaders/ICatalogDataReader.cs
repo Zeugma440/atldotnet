@@ -43,7 +43,7 @@ namespace ATL.CatalogDataReaders
         /// <summary>
         /// List of the tracks described in the container
         /// </summary>
-		IList<ATL.Track> Tracks
+		IList<Track> Tracks
         {
             get;
         }

@@ -72,7 +72,7 @@ namespace ATL.AudioData
             if (str.Length < 1) return 0;
             if (!str.Contains("/")) return 0;
 
-            int delimiterOffset = str.IndexOf("/");
+            int delimiterOffset = str.IndexOf('/');
             if (delimiterOffset == str.Length - 1) return 0;
 
             // Try extracting the total manually when "/" is followed by a number
@@ -230,38 +230,38 @@ namespace ATL.AudioData
                 case MetaDataIO.RC_ASF:
 
                     if (rating < 1) return 0;
-                    else if (rating < 2) return 1;
-                    else if (rating < 3) return 25;
-                    else if (rating < 4) return 50;
-                    else if (rating < 5) return 75;
-                    else return 99;
+                    if (rating < 2) return 1;
+                    if (rating < 3) return 25;
+                    if (rating < 4) return 50;
+                    if (rating < 5) return 75;
+                    return 99;
 
                 case MetaDataIO.RC_APE:
 
                     if (rating < 0.5) return 0;           // Stored as scale of 0..100
-                    else if (rating < 1) return 10;
-                    else if (rating < 1.5) return 20;
-                    else if (rating < 2) return 30;
-                    else if (rating < 2.5) return 40;
-                    else if (rating < 3) return 50;
-                    else if (rating < 3.5) return 60;
-                    else if (rating < 4) return 70;
-                    else if (rating < 4.5) return 80;
-                    else if (rating < 5) return 90;
-                    else return 100;
+                    if (rating < 1) return 10;
+                    if (rating < 1.5) return 20;
+                    if (rating < 2) return 30;
+                    if (rating < 2.5) return 40;
+                    if (rating < 3) return 50;
+                    if (rating < 3.5) return 60;
+                    if (rating < 4) return 70;
+                    if (rating < 4.5) return 80;
+                    if (rating < 5) return 90;
+                    return 100;
 
                 default:                // ID3v2 convention
                     if (rating < 0.5) return 0;
-                    else if (rating < 1) return 13;
-                    else if (rating < 1.5) return 1;
-                    else if (rating < 2) return 54;
-                    else if (rating < 2.5) return 64;
-                    else if (rating < 3) return 118;
-                    else if (rating < 3.5) return 128;
-                    else if (rating < 4) return 186;
-                    else if (rating < 4.5) return 196;
-                    else if (rating < 5) return 242;
-                    else return 255;
+                    if (rating < 1) return 13;
+                    if (rating < 1.5) return 1;
+                    if (rating < 2) return 54;
+                    if (rating < 2.5) return 64;
+                    if (rating < 3) return 118;
+                    if (rating < 3.5) return 128;
+                    if (rating < 4) return 186;
+                    if (rating < 4.5) return 196;
+                    if (rating < 5) return 242;
+                    return 255;
             }
         }
 
@@ -273,7 +273,7 @@ namespace ATL.AudioData
    		public static int ExtractIntYear(string str)
         {
             string resStr = ExtractStrYear(str);
-            if (0 == resStr.Length) return 0; else return Int32.Parse(resStr);
+            return 0 == resStr.Length ? 0 : int.Parse(resStr);
         }
 
         /// <summary>
@@ -296,10 +296,10 @@ namespace ATL.AudioData
                 // Begins with 4 numeric chars
                 if (char.IsNumber(str[0]) && char.IsNumber(str[1]) && char.IsNumber(str[2]) && char.IsNumber(str[3]))
                 {
-                    return str.Substring(0, 4);
+                    return str[..4];
                 }
                 // Ends with 4 numeric chars
-                if (char.IsNumber(str[str.Length - 1]) && char.IsNumber(str[str.Length - 2]) && char.IsNumber(str[str.Length - 3]) && char.IsNumber(str[str.Length - 4]))
+                if (char.IsNumber(str[^1]) && char.IsNumber(str[^2]) && char.IsNumber(str[^3]) && char.IsNumber(str[^4]))
                 {
                     return str.Substring(str.Length - 4, 4);
                 }

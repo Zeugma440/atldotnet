@@ -35,7 +35,7 @@ namespace ATL.AudioData.IO
             IList<string> result = new List<string>();
             foreach (var s in keys.Where(s => s.StartsWith(prefix + "[")))
             {
-                string key = s.Substring(0, s.IndexOf("]") + 1);
+                string key = s[..(s.IndexOf(']') + 1)];
                 if (!result.Contains(key)) result.Add(key);
             }
 
@@ -123,12 +123,28 @@ namespace ATL.AudioData.IO
             {
                 if (Utils.IsNumeric(additionalFields[field], true))
                 {
-                    if (defaultValue is short) w.Write(short.Parse(additionalFields[field]));
-                    else if (defaultValue is ulong) w.Write(ulong.Parse(additionalFields[field]));
-                    else if (defaultValue is ushort) w.Write(ushort.Parse(additionalFields[field]));
-                    else if (defaultValue is int) w.Write(int.Parse(additionalFields[field]));
-                    else if (defaultValue is byte) w.Write(byte.Parse(additionalFields[field]));
-                    else if (defaultValue is sbyte) w.Write(sbyte.Parse(additionalFields[field]));
+                    switch (defaultValue)
+                    {
+                        case short _:
+                            w.Write(short.Parse(additionalFields[field]));
+                            break;
+                        case ulong _:
+                            w.Write(ulong.Parse(additionalFields[field]));
+                            break;
+                        case ushort _:
+                            w.Write(ushort.Parse(additionalFields[field]));
+                            break;
+                        case int _:
+                            w.Write(int.Parse(additionalFields[field]));
+                            break;
+                        case byte _:
+                            w.Write(byte.Parse(additionalFields[field]));
+                            break;
+                        case sbyte _:
+                            w.Write(sbyte.Parse(additionalFields[field]));
+                            break;
+                    }
+
                     return;
                 }
                 else
@@ -137,12 +153,27 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (defaultValue is short) w.Write((short)defaultValue);
-            else if (defaultValue is ulong) w.Write((ulong)defaultValue);
-            else if (defaultValue is ushort) w.Write((ushort)defaultValue);
-            else if (defaultValue is int) w.Write((int)defaultValue);
-            else if (defaultValue is byte) w.Write((byte)defaultValue);
-            else if (defaultValue is sbyte) w.Write((sbyte)defaultValue);
+            switch (defaultValue)
+            {
+                case short value:
+                    w.Write(value);
+                    break;
+                case ulong value:
+                    w.Write(value);
+                    break;
+                case ushort value:
+                    w.Write(value);
+                    break;
+                case int value:
+                    w.Write(value);
+                    break;
+                case byte value:
+                    w.Write(value);
+                    break;
+                case sbyte value:
+                    w.Write(value);
+                    break;
+            }
         }
 
         /// <summary>

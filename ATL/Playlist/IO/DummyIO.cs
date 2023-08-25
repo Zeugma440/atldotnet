@@ -10,10 +10,7 @@ namespace ATL.Playlist.IO
         /// <inheritdoc/>
         public string Path
         {
-            get
-            {
-                return "";
-            }
+            get => "";
             set
             {
                 // Nothing here, it's a dummy method

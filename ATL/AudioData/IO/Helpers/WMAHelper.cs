@@ -71,15 +71,14 @@ namespace ATL.AudioData
         /// <param name="isNumeric">True if the field is numeric; false if not (will be formatted as string)</param>
         public static void WriteField(BinaryWriter w, string fieldName, string fieldValue, bool isNumeric)
         {
-            long frameSizePos, midSizePos, finalFramePos;
-            frameSizePos = w.BaseStream.Position;
+            long frameSizePos = w.BaseStream.Position;
 
             w.Write(0); // To be rewritten at the end of the method
             w.Write(StreamUtils.EncodeBEInt32(fieldName.Length));
             w.Write(Utils.Latin1Encoding.GetBytes(fieldName));
             w.Write((ushort)0); // Frame class ?
             w.Write(StreamUtils.EncodeBEInt16(1)); // ? (always 1)
-            midSizePos = w.BaseStream.Position;
+            long midSizePos = w.BaseStream.Position;
             w.Write(0); // To be rewritten at the end of the method
 
             if (isNumeric)
@@ -93,7 +92,7 @@ namespace ATL.AudioData
                 w.Write(Encoding.Unicode.GetBytes(fieldValue + '\0')); // String is null-terminated
             }
 
-            finalFramePos = w.BaseStream.Position;
+            var finalFramePos = w.BaseStream.Position;
             // Go back to frame size locations to write their actual size 
             w.BaseStream.Seek(midSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - midSizePos)));
@@ -110,9 +109,8 @@ namespace ATL.AudioData
         /// <returns>Matching ATL field code if found (See TagData.Field.XX properties); 255 if not</returns>
         public static Field getAtlCodeForFrame(string frame)
         {
-            if (WMA.frameMapping.ContainsKey(frame))
-                return WMA.frameMapping[frame];
-            else return Field.NO_FIELD;
+            if (WMA.frameMapping.TryGetValue(frame, out var forFrame)) return forFrame;
+            return Field.NO_FIELD;
 
         }
 
@@ -129,7 +127,7 @@ namespace ATL.AudioData
             if (atlCode != Field.NO_FIELD)
             {
                 IDictionary<Field, string> dataMap = tagData.ToMap();
-                if (dataMap.ContainsKey(atlCode)) return dataMap[atlCode];
+                if (dataMap.TryGetValue(atlCode, out var data)) return data;
             }
             return "";
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ATL.CatalogDataReaders.BinaryLogic
 {
@@ -12,27 +11,15 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         public string Path { get; set; } = "";
 
         /// <inheritdoc/>
-        public string Title
-        {
-            get { return ""; }
-        }
+        public string Title => "";
 
         /// <inheritdoc/>
-        public string Artist
-        {
-            get { return ""; }
-        }
+        public string Artist => "";
 
         /// <inheritdoc/>
-        public string Comments
-        {
-            get { return ""; }
-        }
+        public string Comments => "";
 
         /// <inheritdoc/>
-        public IList<Track> Tracks
-        {
-            get { return new List<Track>(); }
-        }
+        public IList<Track> Tracks => new List<Track>();
     }
 }

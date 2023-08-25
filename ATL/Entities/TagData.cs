@@ -535,9 +535,9 @@ namespace ATL
                 else if (Utils.IsNumeric(trackNumber))
                 {
                     trackNumberTotal = trackNumber;
-                    if (Fields.ContainsKey(Field.TRACK_TOTAL))
+                    if (Fields.TryGetValue(Field.TRACK_TOTAL, out var field))
                     {
-                        trackTotal = Fields[Field.TRACK_TOTAL];
+                        trackTotal = field;
                         if (Utils.IsNumeric(trackTotal)) trackNumberTotal += "/" + trackTotal;
                     }
                 }
@@ -565,9 +565,9 @@ namespace ATL
                 else if (Utils.IsNumeric(discNumber))
                 {
                     discNumberTotal = discNumber;
-                    if (Fields.ContainsKey(Field.DISC_TOTAL))
+                    if (Fields.TryGetValue(Field.DISC_TOTAL, out var field))
                     {
-                        discTotal = Fields[Field.DISC_TOTAL];
+                        discTotal = field;
                         if (Utils.IsNumeric(discTotal)) discNumberTotal += "/" + discTotal;
                     }
                 }

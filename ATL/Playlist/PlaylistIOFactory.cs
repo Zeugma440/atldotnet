@@ -43,7 +43,7 @@ namespace ATL.Playlist
         public const int PL_DPL = 7;
 
         // The instance of this factory
-        private static PlaylistIOFactory theFactory = null;
+        private static PlaylistIOFactory theFactory;
 
         private static readonly object _lockable = new object();
 
@@ -125,7 +125,7 @@ namespace ATL.Playlist
             int alternate = 0)
         {
             IList<Format> formats = (List<Format>)getFormatsFromPath(path);
-            Format format = null;
+            Format format;
             IPlaylistIO result;
 
             if (formats != null && formats.Count > alternate)
@@ -141,8 +141,8 @@ namespace ATL.Playlist
             // Default settings inherited from format
             if (!format.Equals(UNKNOWN_FORMAT))
             {
-                result.LocationFormatting = (locationFormatting == PlaylistFormat.LocationFormatting.Undefined) ? ((PlaylistFormat)format).LocationFormat : locationFormatting;
-                result.Encoding = (fileEncoding == PlaylistFormat.FileEncoding.Undefined) ? ((PlaylistFormat)format).Encoding : fileEncoding;
+                result.LocationFormatting = locationFormatting == PlaylistFormat.LocationFormatting.Undefined ? ((PlaylistFormat)format).LocationFormat : locationFormatting;
+                result.Encoding = fileEncoding == PlaylistFormat.FileEncoding.Undefined ? ((PlaylistFormat)format).Encoding : fileEncoding;
             }
 
             return result;

@@ -1,11 +1,8 @@
-﻿using Commons;
-using System.Collections.Generic;
-using System.IO;
-using System;
+﻿using System.Collections.Generic;
 
 namespace ATL.AudioData.IO
 {
-    internal abstract class VorbisTagHolder : MetaDataHolder, IMetaData
+    internal abstract class VorbisTagHolder : MetaDataHolder
     {
         protected VorbisTag vorbisTag;
 
@@ -21,19 +18,10 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected virtual byte ratingConvention
-        {
-            get { return MetaDataIO.RC_APE; }
-        }
+        protected virtual byte ratingConvention => MetaDataIO.RC_APE;
 
-        /// <inheritdoc/>
-        public bool Exists
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Exists;
-            }
-        }
+        public bool Exists => ((IMetaDataIO)vorbisTag).Exists;
+
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
         {
@@ -44,21 +32,8 @@ namespace ATL.AudioData.IO
                 return new List<Format>(new Format[1] { nativeFormat });
             }
         }
-        /// <inheritdoc/>
-        public long PaddingSize
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).PaddingSize;
-            }
-        }
-        /// <inheritdoc/>
-        public long Size
-        {
-            get
-            {
-                return ((IMetaDataIO)vorbisTag).Size;
-            }
-        }
+
+        public long PaddingSize => ((IMetaDataIO)vorbisTag).PaddingSize;
+        public long Size => ((IMetaDataIO)vorbisTag).Size;
     }
 }

@@ -176,46 +176,46 @@ namespace ATL.AudioData.IO
             IDictionary<string, string> writtenFields = new Dictionary<string, string>();
             // Title
             string value = Utils.ProtectValue(meta.Title);
-            if (0 == value.Length && additionalFields.ContainsKey("info.INAM")) value = additionalFields["info.INAM"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.INAM", out var field)) value = field;
             if (value.Length > 0) writeSizeAndNullTerminatedString("INAM", value, w, writtenFields);
             // Artist
             value = Utils.ProtectValue(meta.Artist);
-            if (0 == value.Length && additionalFields.ContainsKey("info.IART")) value = additionalFields["info.IART"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.IART", out var additionalField)) value = additionalField;
             if (value.Length > 0) writeSizeAndNullTerminatedString("IART", value, w, writtenFields);
             // Album
             value = Utils.ProtectValue(meta.Album);
-            if (0 == value.Length && additionalFields.ContainsKey("info.IPRD")) value = additionalFields["info.IPRD"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.IPRD", out var field1)) value = field1;
             if (value.Length > 0) writeSizeAndNullTerminatedString("IPRD", value, w, writtenFields);
             // Comment
             value = Utils.ProtectValue(meta.Comment);
-            if (0 == value.Length && additionalFields.ContainsKey("info.ICMT")) value = additionalFields["info.ICMT"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.ICMT", out var additionalField1)) value = additionalField1;
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICMT", value, w, writtenFields);
             // Copyright
             value = Utils.ProtectValue(meta.Copyright);
-            if (0 == value.Length && additionalFields.ContainsKey("info.ICOP")) value = additionalFields["info.ICOP"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.ICOP", out var field2)) value = field2;
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICOP", value, w, writtenFields);
             // Recording date
             value = meta.EncodeDate(meta.Date);
-            if (0 == value.Length && additionalFields.ContainsKey("info.ICRD")) value = additionalFields["info.ICRD"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.ICRD", out var additionalField2)) value = additionalField2;
             if (value.Length > 0) writeSizeAndNullTerminatedString("ICRD", value, w, writtenFields);
             // Genre
             value = Utils.ProtectValue(meta.Genre);
-            if (0 == value.Length && additionalFields.ContainsKey("info.IGNR")) value = additionalFields["info.IGNR"];
+            if (0 == value.Length && additionalFields.TryGetValue("info.IGNR", out var field3)) value = field3;
             if (value.Length > 0) writeSizeAndNullTerminatedString("IGNR", value, w, writtenFields);
             // Rating
             if (meta.Popularity > 0)
             {
                 value = (5 * meta.Popularity).ToString();
-                if (0 == value.Length && additionalFields.ContainsKey("info.IRTD")) value = additionalFields["info.IRTD"];
+                if (0 == value.Length && additionalFields.TryGetValue("info.IRTD", out var additionalField3)) value = additionalField3;
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
             if (meta.TrackNumber > 0)
             {
                 value = meta.TrackNumber.ToString();
-                if (0 == value.Length && additionalFields.ContainsKey("info.TRCK")) value = additionalFields["info.TRCK"];
-                if (0 == value.Length && additionalFields.ContainsKey("info.IPRT")) value = additionalFields["info.IPRT"];
-                if (0 == value.Length && additionalFields.ContainsKey("info.ITRK")) value = additionalFields["info.ITRK"];
+                if (0 == value.Length && additionalFields.TryGetValue("info.TRCK", out var additionalField3)) value = additionalField3;
+                if (0 == value.Length && additionalFields.TryGetValue("info.IPRT", out var field4)) value = field4;
+                if (0 == value.Length && additionalFields.TryGetValue("info.ITRK", out var additionalField4)) value = additionalField4;
                 if (value.Length > 0) writeSizeAndNullTerminatedString("TRCK", value, w, writtenFields);
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IPRT", value, w, writtenFields);
                 if (value.Length > 0) writeSizeAndNullTerminatedString("ITRK", value, w, writtenFields);
@@ -236,7 +236,7 @@ namespace ATL.AudioData.IO
             IList<string> keys = new List<string>();
             foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("adtl.Labels")))
             {
-                string key = s.Substring(0, s.IndexOf("]") + 1);
+                string key = s[..(s.IndexOf(']') + 1)];
                 if (!keys.Contains(key)) keys.Add(key);
             }
 
@@ -335,7 +335,8 @@ namespace ATL.AudioData.IO
                 w.Write((byte)0);
 
             string keyFull = "info." + key;
-            if (writtenFields.ContainsKey(keyFull)) {
+            if (writtenFields.ContainsKey(keyFull))
+            {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : already written");
             }
             else writtenFields.Add(keyFull, value);

@@ -49,14 +49,14 @@ namespace ATL.Playlist.IO
                 writer.WriteAttributeString("HREF", encodeLocation(t.Path));
                 writer.WriteEndElement();
 
-                if (t.Title != null && t.Title.Length > 0)
+                if (!string.IsNullOrEmpty(t.Title))
                 {
                     writer.WriteStartElement("TITLE");
                     writer.WriteString(t.Title);
                     writer.WriteEndElement();
                 }
 
-                if (t.Artist != null && t.Artist.Length > 0)
+                if (!string.IsNullOrEmpty(t.Artist))
                 {
                     writer.WriteStartElement("AUTHOR");
                     writer.WriteString(t.Artist);

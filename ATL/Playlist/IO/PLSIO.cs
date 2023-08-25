@@ -23,7 +23,7 @@ namespace ATL.Playlist.IO
                     // If the read line isn't a metadata, it's a file path
                     if (s.Length > 3 && s.Substring(0, 4).Equals("FILE", System.StringComparison.OrdinalIgnoreCase))
                     {
-                        equalIndex = s.IndexOf("=") + 1;
+                        equalIndex = s.IndexOf('=') + 1;
                         s = s.Substring(equalIndex, s.Length - equalIndex);
                         result.Add(decodeLocation(s));
                     }
@@ -45,7 +45,7 @@ namespace ATL.Playlist.IO
                 foreach (Track t in result)
                 {
                     string label = "";
-                    if (t.Title != null && t.Title.Length > 0) label = t.Title;
+                    if (!string.IsNullOrEmpty(t.Title)) label = t.Title;
                     if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
 
                     w.WriteLine("");

@@ -73,18 +73,15 @@ namespace ATL.AudioData.IO
             /// <summary>
             /// Zones belonging to the region
             /// </summary>
-            public IList<Zone> Zones = new List<Zone>();
+            public readonly IList<Zone> Zones = new List<Zone>();
 
-            public long StartOffset => FileSurgeon.getLowestOffset(Zones);
+            public long StartOffset => getLowestOffset(Zones);
 
-            public long EndOffset => FileSurgeon.getHighestOffset(Zones);
+            private long EndOffset => getHighestOffset(Zones);
 
             public long Size => EndOffset - StartOffset;
 
-            public bool IsReadonly
-            {
-                get => Zones.All(x => x.IsReadonly);
-            }
+            public bool IsReadonly => Zones.All(x => x.IsReadonly);
 
             public override string ToString()
             {
@@ -177,7 +174,7 @@ namespace ATL.AudioData.IO
             long globalOffsetCorrection;
             long globalCumulativeDelta = 0;
             bool result = true;
-            bool isBuffered = false;
+            bool isBuffered;
 
             IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, fullScopeWriter.Length);
             Stream writer;
@@ -372,11 +369,7 @@ namespace ATL.AudioData.IO
                 }
                 finally // Make sure buffers are properly disallocated
                 {
-                    if (buffer != null)
-                    {
-                        buffer.Close();
-                        buffer = null;
-                    }
+                    buffer?.Close();
                 }
 
                 Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "");

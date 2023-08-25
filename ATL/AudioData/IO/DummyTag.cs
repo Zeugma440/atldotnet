@@ -28,24 +28,18 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
         {
-            get { return new List<Format>(new Format[1] { Factory.UNKNOWN_FORMAT }); }
+            get { return new List<Format>(new[] { Factory.UNKNOWN_FORMAT }); }
         }
 
         /// <inheritdoc/>
-        public bool Exists
-        {
-            get { return true; }
-        }
+        public bool Exists => true;
+
         /// <inheritdoc/>
-        public long Size
-        {
-            get { return 0; }
-        }
+        public long Size => 0;
+
         /// <inheritdoc/>
-        public long PaddingSize
-        {
-            get { return 0; }
-        }
+        public long PaddingSize => 0;
+
         /// <inheritdoc/>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)

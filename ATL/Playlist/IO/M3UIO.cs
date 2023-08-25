@@ -35,7 +35,7 @@ namespace ATL.Playlist.IO
                 while (s != null)
                 {
                     // If the read line isn't a metadata, it's a file path
-                    if ((s.Length > 0) && (s[0] != '#'))
+                    if (s.Length > 0 && s[0] != '#')
                     {
                         result.Add(decodeLocation(s));
                     }
@@ -61,8 +61,8 @@ namespace ATL.Playlist.IO
                         if (t.Duration > 0) w.Write(t.Duration); else w.Write(-1);
                         w.Write(",");
                         string label = "";
-                        if (t.Artist != null && t.Artist.Length > 0) label = t.Artist + " - ";
-                        if (t.Title != null && t.Title.Length > 0) label += t.Title;
+                        if (!string.IsNullOrEmpty(t.Artist)) label = t.Artist + " - ";
+                        if (!string.IsNullOrEmpty(t.Title)) label += t.Title;
                         if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
                         w.WriteLine(label);
                         w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not

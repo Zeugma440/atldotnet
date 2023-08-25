@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -17,7 +18,7 @@ namespace ATL.Playlist
         /// <summary>
         /// Byte Order Mark of UTF-8 files
         /// </summary>
-        public static readonly byte[] BOM_UTF8 = new byte[] { 0xEF, 0xBB, 0xBF };
+        public static readonly byte[] BOM_UTF8 = { 0xEF, 0xBB, 0xBF };
 
         /// <summary>
         /// .NET Encoding for UTF-8 with no Byte Order Mark
@@ -132,13 +133,7 @@ namespace ATL.Playlist
         /// <param name="fileList">List of file paths to write in the playlist, replacing current ones</param>
         public void setFiles(IList<string> fileList)
         {
-            IList<Track> trackList = new List<Track>();
-
-            foreach (string file in fileList)
-            {
-                Track t = new Track(file, false); // Empty container
-                trackList.Add(t);
-            }
+            IList<Track> trackList = fileList.Select(file => new Track(file, false)).ToList();
 
             setTracks(trackList);
         }
@@ -174,7 +169,7 @@ namespace ATL.Playlist
             settings.CloseOutput = true;
             switch (Encoding)
             {
-                case (PlaylistFormat.FileEncoding.ANSI):
+                case PlaylistFormat.FileEncoding.ANSI:
                     settings.Encoding = ANSI;
                     break;
                 default:

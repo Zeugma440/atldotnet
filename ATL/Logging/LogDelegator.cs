@@ -1,5 +1,3 @@
-using System;
-
 namespace ATL.Logging
 {
     /// <summary>
@@ -15,11 +13,11 @@ namespace ATL.Logging
         /// Logging delegate object
         /// Initialized with a dummy method to avoid returning null
         /// when no call to SetLog has been made
-        private static LogWriteDelegate theLogWriteDelegate = new LogWriteDelegate(writeDummyMethod);
+        private static LogWriteDelegate theLogWriteDelegate = writeDummyMethod;
         /// Logging delegate object
         /// Initialized with a dummy method to avoid returning null
         /// when no call to SetLog has been made
-        private static LogLocateDelegate theLogLocateDelegate = new LogLocateDelegate(locateDummyMethod);
+        private static LogLocateDelegate theLogLocateDelegate = locateDummyMethod;
 
         private static void writeDummyMethod(int a, string b) { /* Nothing here, it's a dummy method */ }
         private static void locateDummyMethod(string a) { /* Nothing here, it's a dummy method */ }
@@ -31,8 +29,8 @@ namespace ATL.Logging
         /// <param name="theLog">Log to be used</param> 
         public static void SetLog(ref Log theLog)
         {
-            theLogWriteDelegate = new LogWriteDelegate(theLog.Write);
-            theLogLocateDelegate = new LogLocateDelegate(theLog.SetLocation);
+            theLogWriteDelegate = theLog.Write;
+            theLogLocateDelegate = theLog.SetLocation;
         }
 
 

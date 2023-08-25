@@ -153,10 +153,7 @@ namespace ATL.AudioData
             /// <summary>
             /// True if the zone can't be edited in any way
             /// </summary>
-            public bool IsReadonly
-            {
-                get => (0 == Size) && !IsResizable && !IsDeletable;
-            }
+            public bool IsReadonly => 0 == Size && !IsResizable && !IsDeletable;
 
             /// <summary>
             /// Construct a new Zone using the given field values
@@ -172,14 +169,14 @@ namespace ATL.AudioData
             /// </summary>
             public void Clear()
             {
-                if (Headers != null) Headers.Clear();
+                Headers?.Clear();
             }
         }
 
         private sealed class ZoneInfo
         {
-            public string Name { get; set; }
-            public int RegionId { get; set; }
+            public string Name { get; }
+            public int RegionId { get; }
 
             public ZoneInfo(string name, int regionId)
             {
@@ -200,8 +197,8 @@ namespace ATL.AudioData
                 // Actually check the type, should not throw exception from Equals override
                 if (obj.GetType() != this.GetType()) return false;
 
-                return (RegionId == ((ZoneInfo)obj).RegionId)
-                    && (Name == ((ZoneInfo)obj).Name);
+                return RegionId == ((ZoneInfo)obj).RegionId
+                    && Name == ((ZoneInfo)obj).Name;
             }
 
             public override int GetHashCode()
@@ -224,16 +221,13 @@ namespace ATL.AudioData
         private readonly bool isLittleEndian;
 
         // Auto-incremented index for internal naming of post-processing zones
-        private int postProcessingIndex = 0;
+        private int postProcessingIndex;
 
 
         /// <summary>
         /// Names of recorded zones
         /// </summary>
-        public ICollection<string> ZoneNames
-        {
-            get { return zones.Keys; }
-        }
+        public ICollection<string> ZoneNames => zones.Keys;
 
         /// <summary>
         /// Recorded zones, sorted by offset
@@ -286,7 +280,7 @@ namespace ATL.AudioData
         /// <returns>The zone corresponding to the given name; null if not found</returns>
         public Zone GetZone(string name)
         {
-            if (zones.ContainsKey(name)) return zones[name]; else return null;
+            return zones.TryGetValue(name, out var zone) ? zone : null;
         }
 
         /// <summary>
@@ -308,7 +302,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddZone(long offset, long size, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
-            AddZone(offset, size, new byte[0], name, isDeletable, resizable);
+            AddZone(offset, size, Array.Empty<byte>(), name, isDeletable, resizable);
         }
 
         /// <summary>
@@ -399,10 +393,10 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new header using the given fields and attach it to the zone of given name
         /// </summary>
-        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool isLittleEndian, string parentZone = "", string valueZone = "")
+        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool iisLittleEndian, string parentZone = "", string valueZone = "")
         {
             if (!zones.ContainsKey(zone)) DeclareZone(zone);
-            zones[zone].Headers.Add(new FrameHeader(type, position, value, isLittleEndian, parentZone, valueZone));
+            zones[zone].Headers.Add(new FrameHeader(type, position, value, iisLittleEndian, parentZone, valueZone));
         }
 
         /// <summary>
@@ -436,65 +430,54 @@ namespace ATL.AudioData
         /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value</returns>
         private static byte[] addToValue(object value, long delta, out object updatedValue)
         {
-            if (value is byte)
+            switch (value)
             {
-                updatedValue = (byte)((byte)value + delta);
-                return new byte[1] { (byte)updatedValue };
-            }
-            else if (value is short)
-            {
-                updatedValue = (short)((short)value + delta);
-                return BitConverter.GetBytes((short)updatedValue);
-            }
-            else if (value is ushort)
-            {
-                updatedValue = (ushort)((ushort)value + delta);
-                return BitConverter.GetBytes((ushort)updatedValue);
-            }
-            else if (value is int)
-            {
-                updatedValue = (int)((int)value + delta);
-                return BitConverter.GetBytes((int)updatedValue);
-            }
-            else if (value is uint)
-            {
-                updatedValue = (uint)((uint)value + delta);
-                return BitConverter.GetBytes((uint)updatedValue);
-            }
-            else if (value is long)
-            {
-                updatedValue = (long)value + delta;
-                return BitConverter.GetBytes((long)updatedValue);
-            }
-            else if (value is ulong) // Need to tweak because ulong + int is illegal according to the compiler
-            {
-                if (delta > 0)
+                case byte b:
+                    updatedValue = (byte)(b + delta);
+                    return new[] { (byte)updatedValue };
+                case short s:
+                    updatedValue = (short)(s + delta);
+                    return BitConverter.GetBytes((short)updatedValue);
+                case ushort value1:
+                    updatedValue = (ushort)(value1 + delta);
+                    return BitConverter.GetBytes((ushort)updatedValue);
+                case int i:
+                    updatedValue = (int)(i + delta);
+                    return BitConverter.GetBytes((int)updatedValue);
+                case uint u:
+                    updatedValue = (uint)(u + delta);
+                    return BitConverter.GetBytes((uint)updatedValue);
+                case long l:
+                    updatedValue = l + delta;
+                    return BitConverter.GetBytes((long)updatedValue);
+                // Need to tweak because ulong + int is illegal according to the compiler
+                case ulong value1:
                 {
-                    updatedValue = (ulong)value + (ulong)delta;
+                    if (delta > 0)
+                    {
+                        updatedValue = value1 + (ulong)delta;
+                    }
+                    else
+                    {
+                        updatedValue = value1 - (ulong)(-delta);
+                    }
+                    return BitConverter.GetBytes((ulong)updatedValue);
                 }
-                else
-                {
-                    updatedValue = (ulong)value - (ulong)(-delta);
-                }
-                return BitConverter.GetBytes((ulong)updatedValue);
-            }
-            else
-            {
-                updatedValue = value;
-                return null;
+                default:
+                    updatedValue = value;
+                    return null;
             }
         }
 
         private static bool isValueGT(object value, long addition, long comparison)
         {
-            if (value is int)
-                return (int)value + addition >= comparison;
-            else if (value is uint)
-                return (uint)value + addition >= comparison;
-            else if (value is long)
-                return (long)value + addition >= comparison;
-            else
-                throw new NotSupportedException("Value type not supported in comparison");
+            return value switch
+            {
+                int i => i + addition >= comparison,
+                uint u => u + addition >= comparison,
+                long l => l + addition >= comparison,
+                _ => throw new NotSupportedException("Value type not supported in comparison")
+            };
         }
 
         /// <summary>
@@ -576,11 +559,10 @@ namespace ATL.AudioData
 
 
             // Get the dynamic correction map from the proper region
-            IDictionary<ZoneInfo, KeyValuePair<long, long>> localDynamicOffsetCorrection;
             if (!dynamicOffsetCorrection.ContainsKey(regionId))
                 dynamicOffsetCorrection.Add(regionId, new Dictionary<ZoneInfo, KeyValuePair<long, long>>());
 
-            localDynamicOffsetCorrection = dynamicOffsetCorrection[regionId];
+            var localDynamicOffsetCorrection = dynamicOffsetCorrection[regionId];
 
             // Don't reprocess the position of a post-processing zone
             bool isPostReprocessing = zoneName.StartsWith(POST_PROCESSING_ZONE_NAME);
@@ -665,35 +647,28 @@ namespace ATL.AudioData
 
                     if (action != ACTION.Delete)
                     {
-                        if (header.Value is long)
+                        value = header.Value switch
                         {
-                            value = BitConverter.GetBytes((long)header.Value + offsetValueCorrection - headerOffsetCorrection);
-                        }
-                        else if (header.Value is int)
-                        {
-                            value = BitConverter.GetBytes((int)((int)header.Value + offsetValueCorrection - headerOffsetCorrection));
-                        }
-                        else if (header.Value is uint)
-                        {
-                            value = BitConverter.GetBytes((uint)((uint)header.Value + offsetValueCorrection - headerOffsetCorrection));
-                        }
+                            long headerValue => BitConverter.GetBytes(headerValue + offsetValueCorrection -
+                                                                      headerOffsetCorrection),
+                            int headerValue => BitConverter.GetBytes((int)(headerValue + offsetValueCorrection -
+                                                                           headerOffsetCorrection)),
+                            uint headerValue => BitConverter.GetBytes((uint)(headerValue + offsetValueCorrection -
+                                                                             headerOffsetCorrection)),
+                            _ => value
+                        };
 
                         if (!header.IsLittleEndian) Array.Reverse(value);
                     }
                     else
                     {
-                        if (header.Value is long)
+                        value = header.Value switch
                         {
-                            value = BitConverter.GetBytes((long)0);
-                        }
-                        else if (header.Value is int)
-                        {
-                            value = BitConverter.GetBytes(0);
-                        }
-                        else if (header.Value is uint)
-                        {
-                            value = BitConverter.GetBytes((uint)0);
-                        }
+                            long _ => BitConverter.GetBytes((long)0),
+                            int _ => BitConverter.GetBytes(0),
+                            uint _ => BitConverter.GetBytes((uint)0),
+                            _ => value
+                        };
                     }
 
                     if (null == value) throw new NotSupportedException("Value type not supported for index in " + zoneName + "@" + header.Position + " : " + header.Value.GetType());

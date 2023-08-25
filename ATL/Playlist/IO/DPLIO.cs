@@ -55,7 +55,7 @@ namespace ATL.Playlist.IO
                     w.Write("*file*");
                     w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
 
-                    if (t.Title != null && t.Title.Length > 0)
+                    if (!string.IsNullOrEmpty(t.Title))
                     {
                         w.Write(counter);
                         w.Write("*title*");

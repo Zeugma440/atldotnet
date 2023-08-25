@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace ATL.CatalogDataReaders
@@ -15,7 +14,7 @@ namespace ATL.CatalogDataReaders
         public const int CR_CUE = 0;
 
         // The instance of this factory
-        private static CatalogDataReaderFactory theFactory = null;
+        private static CatalogDataReaderFactory theFactory;
 
         private static readonly object _lockable = new object();
 

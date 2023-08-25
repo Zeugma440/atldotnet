@@ -22,28 +22,16 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         public string Path { get; set; }
 
         /// <inheritdoc/>
-        public string Artist
-        {
-            get { return artist; }
-        }
+        public string Artist => artist;
 
         /// <inheritdoc/>
-        public string Comments
-        {
-            get { return comments.ToString(); }
-        }
+        public string Comments => comments.ToString();
 
         /// <inheritdoc/>
-        public string Title
-        {
-            get { return title; }
-        }
+        public string Title => title;
 
         /// <inheritdoc/>
-        public IList<Track> Tracks
-        {
-            get { return tracks; }
-        }
+        public IList<Track> Tracks => tracks;
 
 
         /// <summary>
@@ -62,12 +50,12 @@ namespace ATL.CatalogDataReaders.BinaryLogic
         private string stripBeginEndQuotes(string s)
         {
             if (s.Length < 2) return s;
-            if ((s[0] != '"') || (s[s.Length - 1] != '"')) return s;
+            if (s[0] != '"' || (s[^1] != '"')) return s;
 
             return s.Substring(1, s.Length - 2);
         }
 
-        static private double decodeTimecodeToMs(string timeCode)
+        private static double decodeTimecodeToMs(string timeCode)
         {
             double result = -1;
 
@@ -78,9 +66,9 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             if (timeCode.Contains(":"))
             {
                 string[] parts = timeCode.Split(':');
-                if (parts.Length >= 1) frames = int.Parse(parts[parts.Length - 1]);
-                if (parts.Length >= 2) seconds = int.Parse(parts[parts.Length - 2]);
-                if (parts.Length >= 3) minutes = int.Parse(parts[parts.Length - 3]);
+                if (parts.Length >= 1) frames = int.Parse(parts[^1]);
+                if (parts.Length >= 2) seconds = int.Parse(parts[^2]);
+                if (parts.Length >= 3) minutes = int.Parse(parts[^3]);
 
                 result = frames / 75.0; // 75 frames per seconds (CD sectors)
                 result += seconds;
@@ -103,7 +91,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                 {
                     string s = source.ReadLine();
                     Track physicalTrack = null;
-                    string audioFilePath = "";
+                    string audioFilePath;
 
                     Track currentTrack = null;
                     Track previousTrack = null;

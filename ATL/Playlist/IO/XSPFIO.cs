@@ -57,28 +57,28 @@ namespace ATL.Playlist.IO
                 writer.WriteString(encodeLocation(t.Path));
                 writer.WriteEndElement();
 
-                if (t.Title != null && t.Title.Length > 0)
+                if (!string.IsNullOrEmpty(t.Title))
                 {
                     writer.WriteStartElement("title");
                     writer.WriteString(t.Title);
                     writer.WriteEndElement();
                 }
 
-                if (t.Artist != null && t.Artist.Length > 0)
+                if (!string.IsNullOrEmpty(t.Artist))
                 {
                     writer.WriteStartElement("creator");
                     writer.WriteString(t.Artist);
                     writer.WriteEndElement();
                 }
 
-                if (t.Album != null && t.Album.Length > 0)
+                if (!string.IsNullOrEmpty(t.Album))
                 {
                     writer.WriteStartElement("album");
                     writer.WriteString(t.Album);
                     writer.WriteEndElement();
                 }
 
-                if (t.Comment != null && t.Comment.Length > 0)
+                if (!string.IsNullOrEmpty(t.Comment))
                 {
                     writer.WriteStartElement("annotation");
                     writer.WriteString(t.Comment);

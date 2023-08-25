@@ -13,7 +13,7 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class FPLIO : PlaylistIO
     {
-        private static byte[] FILE_IDENTIFIER = Utils.Latin1Encoding.GetBytes("file://");
+        private static readonly byte[] FILE_IDENTIFIER = Utils.Latin1Encoding.GetBytes("file://");
 
         /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)

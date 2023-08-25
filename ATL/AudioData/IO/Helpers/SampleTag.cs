@@ -1,7 +1,6 @@
 ﻿using Commons;
 using System.Collections.Generic;
 using System.IO;
-using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 
@@ -108,7 +107,7 @@ namespace ATL.AudioData.IO
             IList<string> keys = new List<string>();
             foreach (var s in additionalFields.Keys.Where(s => s.StartsWith("sample.SampleLoop")))
             {
-                string key = s.Substring(0, s.IndexOf("]") + 1);
+                string key = s[..(s.IndexOf(']') + 1)];
                 if (!keys.Contains(key)) keys.Add(key);
             }
 

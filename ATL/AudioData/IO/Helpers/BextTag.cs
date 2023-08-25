@@ -195,16 +195,16 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < 180; i++) w.Write((byte)0);
 
             // CodingHistory
-            byte[] textData = new byte[0];
+            byte[] textData = Array.Empty<byte>();
             if (additionalFields.Keys.Contains("bext.codingHistory"))
             {
                 textData = Utils.Latin1Encoding.GetBytes(additionalFields["bext.codingHistory"]);
                 w.Write(textData);
             }
-            w.Write(new byte[2] { 13, 10 } /* CR LF */);
+            w.Write(new byte[] { 13, 10 } /* CR LF */);
 
             // Emulation of the BWFMetaEdit padding behaviour (256 characters)
-            for (int i = 0; i < 256 - ((textData.Length + 2) % 256); i++) w.Write((byte)0);
+            for (int i = 0; i < 256 - (textData.Length + 2) % 256; i++) w.Write((byte)0);
 
             // Add the extra padding byte if needed
             long finalPos = w.BaseStream.Position;

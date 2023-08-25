@@ -65,7 +65,7 @@ namespace ATL.Logging
         // ASYNCHRONOUS LOGGING
 
         // Indicates if logging is immediate or asynchronous (default : immediate)
-        private bool asynchronous = false;
+        private bool asynchronous;
 
         // Queued LogItems waiting to be logged when asynchronous mode is on
         private readonly IList<LogItem> asyncQueue = new List<LogItem>();
@@ -144,7 +144,7 @@ namespace ATL.Logging
         /// </summary>
         /// <param name="level">Logging level of the new message</param>
         /// <param name="msg">Contents of the new message</param>
-        public void Write(int level, String msg)
+        public void Write(int level, string msg)
         {
             write(level, msg, false);
         }
@@ -152,12 +152,17 @@ namespace ATL.Logging
         private void write(int level, string msg, bool forceDisplay)
         {
             // Creation and filling of the new LogItem
-            LogItem theItem = new LogItem();
+            LogItem theItem = new LogItem
+            {
+                When = DateTime.Now,
+                Level = level,
+                Message = msg
+            };
 
-            theItem.When = DateTime.Now;
-            theItem.Level = level;
-            theItem.Message = msg;
-            if (locations.ContainsKey(Thread.CurrentThread.ManagedThreadId)) theItem.Location = locations[Thread.CurrentThread.ManagedThreadId]; else theItem.Location = "";
+            lock (locations)
+            {
+                theItem.Location = locations.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var location) ? location : "";
+            }
 
             lock (masterLog)
             {
