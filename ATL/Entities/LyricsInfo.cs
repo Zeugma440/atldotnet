@@ -224,7 +224,7 @@ namespace ATL
         /// <summary>
         /// Indicate if this object is marked for removal
         /// </summary>
-        public bool IsMarkedForRemoval { get; private set; } = false;
+        public bool IsMarkedForRemoval { get; private set; }
 
 
         // ---------------- CONSTRUCTORS
