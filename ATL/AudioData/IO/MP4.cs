@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Resources;
 using static ATL.TagData;
 
 namespace ATL.AudioData.IO
@@ -2048,9 +2049,10 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
-            foreach (var chapter in chapters.Where(chapter => chapter.Picture != null))
+            foreach (var chapter in chapters)
             {
-                w.Write(chapter.Picture.PictureData);
+                if (chapter.Picture != null) w.Write(chapter.Picture.PictureData);
+                else w.Write(Properties.Resources._1px_black);
             }
 
             return 1;
@@ -2061,7 +2063,7 @@ namespace ATL.AudioData.IO
             long trackTimescale = trackTimescales[trackNum];
 
             if (null == chapters || 0 == chapters.Count) return 0;
-            IList<ChapterInfo> workingChapters = isText ? chapters : chapters.Where(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0).ToList();
+            IList<ChapterInfo> workingChapters = chapters;
             if (0 == workingChapters.Count) return 0;
 
             // Find largest dimensions
@@ -2072,7 +2074,10 @@ namespace ATL.AudioData.IO
             {
                 foreach (ChapterInfo chapter in workingChapters)
                 {
-                    ImageProperties props = ImageUtils.GetImageProperties(chapter.Picture.PictureData);
+                    byte[] pictureData = chapter.Picture != null
+                        ? chapter.Picture.PictureData
+                        : Properties.Resources._1px_black;
+                    ImageProperties props = ImageUtils.GetImageProperties(pictureData);
                     maxWidth = (short)Math.Min(Math.Max(props.Width, maxWidth), short.MaxValue);
                     maxHeight = (short)Math.Min(Math.Max(props.Height, maxHeight), short.MaxValue);
                     maxDepth = Math.Max(props.ColorDepth, maxDepth);
@@ -2347,7 +2352,12 @@ namespace ATL.AudioData.IO
             if (!isText)
             {
                 foreach (ChapterInfo chapter in workingChapters)
-                    w.Write(StreamUtils.EncodeBEUInt32((uint)chapter.Picture.PictureData.Length));
+                {
+                    byte[] pictureData = chapter.Picture != null
+                        ? chapter.Picture.PictureData
+                        : Properties.Resources._1px_black;
+                    w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
+                }
             }
             finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(stszPos, SeekOrigin.Begin);

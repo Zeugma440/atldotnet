@@ -1441,8 +1441,8 @@ namespace ATL.test.IO.MetaData
             System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
 
             //Switch these Assertions for expected editing.
-            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should exist in Chap 1 due to MP4 format limitation.");
-            Assert.IsTrue(track.Chapters[1].Picture == null, "Picture is no longer in Chap 2 due to MP4 format limitation.");
+            Assert.IsTrue(track.Chapters[0].Picture != null);
+            Assert.IsTrue(track.Chapters[1].Picture != null);
 
             System.Console.WriteLine("# Remove Tags #");
             new ConsoleLogger();
@@ -1733,8 +1733,8 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual($"New Album", track.Album, "Album should be the same.");
             Assert.AreEqual($"New Chap0", track.Chapters[0].Title, "Chapter0 Title should be the same.");
             Assert.AreEqual($"New Chap1", track.Chapters[1].Title, "Chapter1 should be the same.");
-            Assert.IsTrue(track.Chapters[0].Picture != null, "Picture should exist in Chap 1 due to MP4 format limitation.");
-            Assert.IsTrue(track.Chapters[1].Picture == null, "Picture is no longer in Chap 2 due to MP4 format limitation.");
+            Assert.IsTrue(track.Chapters[0].Picture != null);
+            Assert.IsTrue(track.Chapters[1].Picture != null);
 
             //3. Remove Tag first
             track.Remove(MetaDataIOFactory.TagType.NATIVE);
