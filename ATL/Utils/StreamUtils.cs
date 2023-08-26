@@ -14,51 +14,6 @@ namespace ATL
     internal static partial class StreamUtils
     {
         /// <summary>
-        /// Determines if the contents of a string (character by character) is the same
-        /// as the contents of a char array
-        /// </summary>
-        /// <param name="a">String to be tested</param>
-        /// <param name="b">Char array to be tested</param>
-        /// <returns>True if both contain the same character sequence; false if not</returns>
-        public static bool StringEqualsArr(string a, char[] b)
-        {
-            return ArrEqualsArr(a.ToCharArray(), b);
-        }
-
-
-        /// <summary>
-        /// Determines if two char arrays have the same contents
-        /// </summary>
-        /// <param name="a">First array to be tested</param>
-        /// <param name="b">Second array to be tested</param>
-        /// <returns>True if both arrays have the same contents; false if not</returns>
-        private static bool ArrEqualsArr(char[] a, char[] b)
-        {
-            if (b.Length != a.Length) return false;
-            for (int i = 0; i < b.Length; i++)
-            {
-                if (a[i] != b[i]) return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Determines if two byte arrays have the same contents
-        /// </summary>
-        /// <param name="a">First array to be tested</param>
-        /// <param name="b">Second array to be tested</param>
-        /// <returns>True if both arrays have the same contents; false if not</returns>
-        public static bool ArrEqualsArr(byte[] a, byte[] b)
-        {
-            if (b.Length != a.Length) return false;
-            for (int i = 0; i < b.Length; i++)
-            {
-                if (a[i] != b[i]) return false;
-            }
-            return true;
-        }
-
-        /// <summary>
         /// Determines if the given byte array begins with the other
         /// </summary>
         /// <param name="data">First array to be tested</param>

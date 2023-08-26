@@ -166,19 +166,19 @@ namespace ATL.test
         [TestMethod]
         public void StreamUtils_CopySameStream()
         {
-            byte[] finalListForward = new byte[10] { 0, 1, 2, 3, 2, 3, 4, 5, 6, 7 };
-            byte[] finalListBackward = new byte[10] { 0, 1, 4, 5, 6, 7, 8, 9, 8, 9 };
+            byte[] finalListForward = { 0, 1, 2, 3, 2, 3, 4, 5, 6, 7 };
+            byte[] finalListBackward = { 0, 1, 4, 5, 6, 7, 8, 9, 8, 9 };
 
-            using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
+            using (MemoryStream stream = new MemoryStream(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
             {
                 StreamUtils.CopySameStreamAsync(stream, 2, 4, 6, 3).Wait();
-                Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListForward, stream.ToArray()));
+                Assert.IsTrue(finalListForward.SequenceEqual(stream.ToArray()));
             }
 
-            using (MemoryStream stream = new MemoryStream(new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
+            using (MemoryStream stream = new MemoryStream(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }))
             {
                 StreamUtils.CopySameStreamAsync(stream, 4, 2, 6, 3).Wait();
-                Assert.IsTrue(StreamUtils.ArrEqualsArr(finalListBackward, stream.ToArray()));
+                Assert.IsTrue(finalListBackward.SequenceEqual(stream.ToArray()));
             }
         }
 
@@ -187,7 +187,7 @@ namespace ATL.test
         {
             uint intValue = 0x00873529;
 
-            Assert.AreEqual((uint)0x00FFFFFF, StreamUtils.DecodeBEUInt24(new byte[3] { 0xFF, 0xFF, 0xFF }));
+            Assert.AreEqual((uint)0x00FFFFFF, StreamUtils.DecodeBEUInt24(new byte[] { 0xFF, 0xFF, 0xFF }));
 
             byte[] byteValue = StreamUtils.EncodeBEUInt24(intValue);
             Assert.AreEqual(intValue, StreamUtils.DecodeBEUInt24(byteValue));
@@ -219,9 +219,6 @@ namespace ATL.test
         [TestMethod]
         public void StreamUtils_Exceptions()
         {
-            Assert.IsFalse(StreamUtils.ArrEqualsArr(new byte[1], new byte[2]));
-            Assert.IsFalse(StreamUtils.StringEqualsArr(".", new char[2]));
-
             try
             {
                 StreamUtils.DecodeBEUInt16(new byte[1]);

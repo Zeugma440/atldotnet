@@ -8,6 +8,7 @@ using System.IO.Compression;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Globalization;
+using System.Linq;
 
 namespace ATL.AudioData.IO
 {
@@ -45,39 +46,24 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => sampleRate; // Sample rate (hz)
+
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+
+        public string FileName => filePath;
+
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return ChannelsArrangements.STEREO; }
-        }
+        public double Duration => duration;
+
+        public ChannelsArrangement ChannelsArrangement => STEREO;
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.NATIVE;
@@ -198,7 +184,7 @@ namespace ATL.AudioData.IO
                     nbLoops *= source.ReadByte();          // Loop modifier
                 }
 
-                duration = (nbSamples * 1000.0 / sampleRate) + (nbLoops * (loopNbSamples * 1000.0 / sampleRate));
+                duration = nbSamples * 1000.0 / sampleRate + nbLoops * (loopNbSamples * 1000.0 / sampleRate);
                 if (Settings.GYM_VGM_playbackRate > 0)
                 {
                     duration *= (Settings.GYM_VGM_playbackRate / (double)recordingRate);
@@ -221,7 +207,7 @@ namespace ATL.AudioData.IO
             source.Seek(offset, SeekOrigin.Begin);
             string str;
 
-            if (StreamUtils.ArrEqualsArr(GD3_SIGNATURE, source.ReadBytes(GD3_SIGNATURE.Length)))
+            if (GD3_SIGNATURE.SequenceEqual(source.ReadBytes(GD3_SIGNATURE.Length)))
             {
                 source.Seek(4, SeekOrigin.Current); // Version number
                 source.Seek(4, SeekOrigin.Current); // Length
@@ -263,9 +249,9 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }
@@ -279,7 +265,7 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             reader.Seek(0, SeekOrigin.Begin);
 
-            MemoryStream memStream = null;
+            MemoryStream memStream;
             BufferedBinaryReader usedSource = reader;
 
             byte[] headerSignature = reader.ReadBytes(2);

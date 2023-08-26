@@ -529,13 +529,13 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunNORM")));
                 fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
-                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+                Assert.IsTrue(expected.SequenceEqual(readBytes));
 
                 fs.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("iTunPGAP")));
                 fs.Seek(-22, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
-                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+                Assert.IsTrue(expected.SequenceEqual(readBytes));
             }
 
             // Get rid of the working copy
@@ -600,7 +600,7 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("RVA2")));
                 fs.Seek(-15, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
-                Assert.IsFalse(StreamUtils.ArrEqualsArr(expected, readBytes));
+                Assert.IsFalse(expected.SequenceEqual(readBytes));
 
                 fs.Seek(0, SeekOrigin.Begin);
 
@@ -610,7 +610,7 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(StreamUtils.FindSequence(fs, Utils.Latin1Encoding.GetBytes("1997")));
                 fs.Seek(-15, SeekOrigin.Current);
                 fs.Read(readBytes, 0, 4);
-                Assert.IsTrue(StreamUtils.ArrEqualsArr(expected, readBytes));
+                Assert.IsTrue(expected.SequenceEqual(readBytes));
             }
 
             // Get rid of the working copy

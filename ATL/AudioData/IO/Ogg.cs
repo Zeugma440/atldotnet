@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static ATL.AudioData.FlacHelper;
 using static ATL.AudioData.IO.MetaDataIO;
@@ -38,17 +39,17 @@ namespace ATL.AudioData.IO
         private static readonly byte[] OGG_PAGE_ID = Utils.Latin1Encoding.GetBytes("OggS");
 
         // Vorbis identification packet (frame) ID
-        private static readonly byte[] VORBIS_HEADER_ID = new byte[] { 1, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 1 + "vorbis"
+        private static readonly byte[] VORBIS_HEADER_ID = { 1, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 1 + "vorbis"
 
         // Vorbis comment (tags) packet (frame) ID
-        private static readonly byte[] VORBIS_COMMENT_ID = new byte[] { 3, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 3 + "vorbis"
+        private static readonly byte[] VORBIS_COMMENT_ID = { 3, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 3 + "vorbis"
 
         // Vorbis setup packet (frame) ID
-        private static readonly byte[] VORBIS_SETUP_ID = new byte[] { 5, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 5 + "vorbis"
+        private static readonly byte[] VORBIS_SETUP_ID = { 5, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73 }; // 5 + "vorbis"
 
 
         // Theora identification packet (frame) ID
-        private static readonly byte[] THEORA_HEADER_ID = new byte[] { 0x80, 0x74, 0x68, 0x65, 0x6F, 0x72, 0x61 }; // 0x80 + "theora"
+        private static readonly byte[] THEORA_HEADER_ID = { 0x80, 0x74, 0x68, 0x65, 0x6F, 0x72, 0x61 }; // 0x80 + "theora"
 
 
         // Opus parameter frame ID
@@ -59,7 +60,7 @@ namespace ATL.AudioData.IO
 
 
         // FLAC identification packet (frame) ID
-        private static readonly byte[] FLAC_HEADER_ID = new byte[] { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
+        private static readonly byte[] FLAC_HEADER_ID = { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
 
@@ -192,7 +193,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return (ID != null) && StreamUtils.ArrEqualsArr(ID, OGG_PAGE_ID);
+                return ID != null && ID.SequenceEqual(OGG_PAGE_ID);
             }
 
             public bool IsFirstPage()
@@ -405,7 +406,7 @@ namespace ATL.AudioData.IO
                 }
 
                 source.Seek(nextPageOffset, SeekOrigin.Current);
-                if (StreamUtils.ArrEqualsArr(source.ReadBytes(4), OGG_PAGE_ID))
+                if (source.ReadBytes(4).SequenceEqual(OGG_PAGE_ID))
                 {
                     source.Seek(1, SeekOrigin.Current);
                     typeFlag = source.ReadByte();

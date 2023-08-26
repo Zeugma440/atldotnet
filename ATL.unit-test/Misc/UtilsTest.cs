@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Commons;
+﻿using Commons;
 using System.Text;
 
 namespace ATL.test
@@ -58,19 +57,19 @@ namespace ATL.test
 
             testData = new byte[] { 32, 32, 0, 0 };
             data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
-            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+            Assert.IsTrue(testData.SequenceEqual(data));
 
             testData = new byte[] { 0, 0, 32, 32 };
             data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8, false);
-            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+            Assert.IsTrue(testData.SequenceEqual(data));
 
             testData = new byte[] { 231, 136, 182, 0 };
             data = Utils.BuildStrictLengthStringBytes("父父", 4, 0, Encoding.UTF8);
-            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+            Assert.IsTrue(testData.SequenceEqual(data));
 
             testData = new byte[] { 0, 231, 136, 182 };
             data = Utils.BuildStrictLengthStringBytes("父父", 4, 0, Encoding.UTF8, false);
-            Assert.IsTrue(StreamUtils.ArrEqualsArr(testData, data));
+            Assert.IsTrue(testData.SequenceEqual(data));
         }
 
         [TestMethod]

@@ -67,7 +67,7 @@ namespace ATL.test.IO.Playlist
                     // Test if the default UTF-8 BOM has been written at the beginning of the file
                     byte[] bom = new byte[3];
                     fs.Read(bom, 0, 3);
-                    Assert.IsTrue(StreamUtils.ArrEqualsArr(bom, PlaylistIO.BOM_UTF8));
+                    Assert.IsTrue(bom.SequenceEqual(PlaylistIO.BOM_UTF8));
                     fs.Seek(0, SeekOrigin.Begin);
 
                     using (XmlReader source = XmlReader.Create(fs))

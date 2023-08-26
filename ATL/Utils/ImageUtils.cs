@@ -2,6 +2,7 @@
 using ATL.Logging;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Commons
 {
@@ -482,7 +483,7 @@ namespace Commons
                 s.Read(intData, 0, 4); // Chunk Size
                 chunkSize = StreamUtils.DecodeBEUInt32(intData);
                 s.Read(intData, 0, 4); // Chunk ID
-                foundChunk = StreamUtils.ArrEqualsArr(intData, chunkID);
+                foundChunk = intData.SequenceEqual(chunkID);
                 if (foundChunk) return chunkSize;
 
                 s.Seek(chunkSize + 4, SeekOrigin.Current);

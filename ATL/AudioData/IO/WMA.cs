@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using ATL.Logging;
 using System.Collections.Generic;
 using System.Text;
 using Commons;
@@ -249,7 +248,7 @@ namespace ATL.AudioData.IO
                     objectSize = r.ReadUInt64();
 
                     // Language index (optional; one only -- useful to map language codes to extended header tag information)
-                    if (StreamUtils.ArrEqualsArr(WMA_LANGUAGE_LIST_OBJECT_ID, bytes))
+                    if (WMA_LANGUAGE_LIST_OBJECT_ID.SequenceEqual(bytes))
                     {
                         ushort nbLanguages = r.ReadUInt16();
                         byte strLen;
@@ -358,14 +357,14 @@ namespace ATL.AudioData.IO
                 headerExtensionObjectSize = source.ReadUInt64();
 
                 // Additional metadata (Optional frames)
-                if (StreamUtils.ArrEqualsArr(WMA_METADATA_OBJECT_ID, headerExtensionObjectId) || StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId))
+                if (WMA_METADATA_OBJECT_ID.SequenceEqual(headerExtensionObjectId) || WMA_METADATA_LIBRARY_OBJECT_ID.SequenceEqual(headerExtensionObjectId))
                 {
                     ushort nameSize;            // Length (in bytes) of Name field
                     ushort fieldDataType;       // Type of data stored in current field
                     int fieldDataSize;          // Size of data stored in current field
                     string fieldName;           // Name of current field
                     ushort nbObjects = source.ReadUInt16();
-                    bool isLibraryObject = StreamUtils.ArrEqualsArr(WMA_METADATA_LIBRARY_OBJECT_ID, headerExtensionObjectId);
+                    bool isLibraryObject = WMA_METADATA_LIBRARY_OBJECT_ID.SequenceEqual(headerExtensionObjectId);
 
                     string zoneCode = isLibraryObject ? ZONE_EXTENDED_HEADER_METADATA_LIBRARY : ZONE_EXTENDED_HEADER_METADATA;
 
@@ -563,7 +562,7 @@ namespace ATL.AudioData.IO
                     objectSize = reader.ReadUInt64();
 
                     // File properties (mandatory; one only)
-                    if (StreamUtils.ArrEqualsArr(WMA_FILE_PROPERTIES_ID, ID))
+                    if (WMA_FILE_PROPERTIES_ID.SequenceEqual(ID))
                     {
                         reader.Seek(40, SeekOrigin.Current);
                         duration = reader.ReadUInt64() / 10000.0;       // Play duration (100-nanoseconds)
@@ -571,7 +570,7 @@ namespace ATL.AudioData.IO
                         duration -= reader.ReadUInt64();                // Preroll duration (ms)
                     }
                     // Stream properties (mandatory; one per stream)
-                    else if (StreamUtils.ArrEqualsArr(WMA_STREAM_PROPERTIES_ID, ID))
+                    else if (WMA_STREAM_PROPERTIES_ID.SequenceEqual(ID))
                     {
                         reader.Seek(54, SeekOrigin.Current);
                         fileData.FormatTag = reader.ReadUInt16();
@@ -580,7 +579,7 @@ namespace ATL.AudioData.IO
                     }
                     // Content description (optional; one only)
                     // -> standard, pre-defined metadata
-                    else if (StreamUtils.ArrEqualsArr(WMA_CONTENT_DESCRIPTION_ID, ID) && readTagParams.ReadTag)
+                    else if (WMA_CONTENT_DESCRIPTION_ID.SequenceEqual(ID) && readTagParams.ReadTag)
                     {
                         tagExists = true;
                         structureHelper.AddZone(position, (int)objectSize, ZONE_CONTENT_DESCRIPTION);
@@ -594,7 +593,7 @@ namespace ATL.AudioData.IO
                     }
                     // Extended content description (optional; one only)
                     // -> extended, dynamic metadata
-                    else if (StreamUtils.ArrEqualsArr(WMA_EXTENDED_CONTENT_DESCRIPTION_ID, ID) && readTagParams.ReadTag)
+                    else if (WMA_EXTENDED_CONTENT_DESCRIPTION_ID.SequenceEqual(ID) && readTagParams.ReadTag)
                     {
                         tagExists = true;
                         structureHelper.AddZone(position, (int)objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
@@ -608,7 +607,7 @@ namespace ATL.AudioData.IO
                     }
                     // Header extension (mandatory; one only)
                     // -> extended, dynamic additional metadata such as additional embedded pictures (any picture after the 1st one stored in extended content)
-                    else if (StreamUtils.ArrEqualsArr(WMA_HEADER_EXTENSION_ID, ID) && readTagParams.ReadTag)
+                    else if (WMA_HEADER_EXTENSION_ID.SequenceEqual(ID) && readTagParams.ReadTag)
                     {
                         readHeaderExtended(reader, sizePosition1, headerSize, sizePosition2, objectSize, readTagParams);
                     }

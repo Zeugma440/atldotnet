@@ -3,6 +3,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Collections.Generic;
+using System.Linq;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Text;
@@ -223,13 +224,13 @@ namespace ATL.AudioData.IO
             // Read header
             source.Read(data, 0, 4);
 
-            if (StreamUtils.ArrEqualsArr(data, HEADER_RF64)) isRf64 = true;
+            if (data.SequenceEqual(HEADER_RF64)) isRf64 = true;
 
-            if (StreamUtils.ArrEqualsArr(data, HEADER_RIFF) || isRf64)
+            if (data.SequenceEqual(HEADER_RIFF) || isRf64)
             {
                 _isLittleEndian = true;
             }
-            else if (StreamUtils.ArrEqualsArr(data, HEADER_RIFX))
+            else if (data.SequenceEqual(HEADER_RIFX))
             {
                 _isLittleEndian = false;
             }

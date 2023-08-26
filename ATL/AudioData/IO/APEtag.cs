@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using static ATL.TagData;
 
@@ -170,7 +171,7 @@ namespace ATL.AudioData.IO
             source.Seek(Tag.FileSize - Tag.DataShift - APE_TAG_FOOTER_SIZE, SeekOrigin.Begin);
 
             Tag.ID = Utils.Latin1Encoding.GetChars(source.ReadBytes(8));
-            if (StreamUtils.StringEqualsArr(APE_ID, Tag.ID))
+            if (APE_ID.SequenceEqual(Tag.ID))
             {
                 Tag.Version = source.ReadInt32();
                 Tag.Size = source.ReadInt32();
