@@ -38,8 +38,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Codified music genres, ordered by numeric code
         /// </summary>
-        public static readonly string[] MusicGenre = new string[MAX_MUSIC_GENRES]
-        {	// Standard genres
+        public static readonly string[] MusicGenre = {	// Standard genres
 			"Blues",
             "Classic Rock",
             "Country",
@@ -247,7 +246,7 @@ namespace ATL.AudioData.IO
                 Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v1")[0]);
                 format.Name = format.Name + "." + (tagVersion - 1);
                 format.ID += tagVersion - 1;
-                return new List<Format>(new Format[1] { format });
+                return new List<Format>(new[] { format });
             }
         }
 
@@ -277,58 +276,51 @@ namespace ATL.AudioData.IO
 
         private bool ReadTag(BufferedBinaryReader source)
         {
-            bool result = false;
+            if (source.Length < ID3V1_TAG_SIZE) return false;
+            // Read tag
+            source.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
 
-            if (source.Length >= ID3V1_TAG_SIZE)
+            // ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
+            byte[] data = new byte[ID3V1_TAG_SIZE];
+            source.Read(data, 0, ID3V1_TAG_SIZE);
+
+            string header = Utils.Latin1Encoding.GetString(data, 0, 3);
+            if (!header.Equals(ID3V1_ID)) return false;
+
+            byte[] endComment = new byte[2];
+            structureHelper.AddZone(source.Position - ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
+
+            setMetaField(Field.TITLE, Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", ""));
+            setMetaField(Field.ARTIST, Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", ""));
+            setMetaField(Field.ALBUM, Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", ""));
+            setMetaField(Field.RECORDING_YEAR, Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", ""));
+            string comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
+
+            Array.Copy(data, 125, endComment, 0, 2);
+            tagVersion = GetTagVersion(endComment);
+
+            // Fill properties using tag data
+            if (TAG_VERSION_1_0 == tagVersion)
             {
-                // Read tag
-                source.Seek(-ID3V1_TAG_SIZE, SeekOrigin.End);
-
-                // ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
-                byte[] data = new byte[ID3V1_TAG_SIZE];
-                source.Read(data, 0, ID3V1_TAG_SIZE);
-
-                string header = Utils.Latin1Encoding.GetString(data, 0, 3);
-                if (header.Equals(ID3V1_ID))
-                {
-                    byte[] endComment = new byte[2];
-                    structureHelper.AddZone(source.Position - ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
-
-                    setMetaField(Field.TITLE, Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", ""));
-                    setMetaField(Field.ARTIST, Utils.Latin1Encoding.GetString(data, 33, 30).Replace("\0", ""));
-                    setMetaField(Field.ALBUM, Utils.Latin1Encoding.GetString(data, 63, 30).Replace("\0", ""));
-                    setMetaField(Field.RECORDING_YEAR, Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", ""));
-                    string comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
-
-                    Array.Copy(data, 125, endComment, 0, 2);
-                    tagVersion = GetTagVersion(endComment);
-
-                    // Fill properties using tag data
-                    if (TAG_VERSION_1_0 == tagVersion)
-                    {
-                        comment += Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
-                    }
-                    else
-                    {
-                        setMetaField(Field.TRACK_NUMBER, endComment[1].ToString());
-                    }
-
-                    setMetaField(Field.COMMENT, comment);
-                    setMetaField(Field.GENRE, (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "");
-
-                    result = true;
-                }
+                comment += Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+            }
+            else
+            {
+                setMetaField(Field.TRACK_NUMBER, endComment[1].ToString());
             }
 
-            return result;
+            setMetaField(Field.COMMENT, comment);
+            setMetaField(Field.GENRE, (data[127] < MAX_MUSIC_GENRES) ? MusicGenre[data[127]] : "");
+
+            return true;
         }
 
         private static byte GetTagVersion(byte[] endComment)
         {
             byte result = TAG_VERSION_1_0;
             // Terms for ID3v1.1
-            if (((0 == endComment[0]) && (0 != endComment[1])) ||
-                ((32 == endComment[0]) && (32 != endComment[1])))
+            if ((0 == endComment[0] && 0 != endComment[1]) ||
+                (32 == endComment[0] && 32 != endComment[1]))
                 result = TAG_VERSION_1_1;
 
             return result;
