@@ -33,18 +33,11 @@ namespace ATL.AudioData.IO
             WavHelper.readInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE offsets
-            source.Read(data, 0, 1);
-            sbyte sByteData = StreamUtils.DecodeSignedByte(data);
-            meta.SetMetaField("sample.SMPTEOffset.Hours", sByteData.ToString(), readTagParams.ReadAllMetaFrames);
-            source.Read(data, 0, 1);
-            byte byteData = StreamUtils.DecodeUByte(data);
-            meta.SetMetaField("sample.SMPTEOffset.Minutes", byteData.ToString(), readTagParams.ReadAllMetaFrames);
-            source.Read(data, 0, 1);
-            byteData = StreamUtils.DecodeUByte(data);
-            meta.SetMetaField("sample.SMPTEOffset.Seconds", byteData.ToString(), readTagParams.ReadAllMetaFrames);
-            source.Read(data, 0, 1);
-            byteData = StreamUtils.DecodeUByte(data);
-            meta.SetMetaField("sample.SMPTEOffset.Frames", byteData.ToString(), readTagParams.ReadAllMetaFrames);
+            source.Read(data, 0, 4);
+            meta.SetMetaField("sample.SMPTEOffset.Hours", ((sbyte)data[0]).ToString(), readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("sample.SMPTEOffset.Minutes", data[1].ToString(), readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("sample.SMPTEOffset.Seconds", data[2].ToString(), readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField("sample.SMPTEOffset.Frames", data[3].ToString(), readTagParams.ReadAllMetaFrames);
 
             // Num sample loops
             int numSampleLoops = WavHelper.readInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);

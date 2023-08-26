@@ -40,28 +40,6 @@ namespace ATL
         }
 
         /// <summary>
-        /// Decode an signed byte from the given array of bytes
-        /// </summary>
-        /// <param name="data">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static sbyte DecodeSignedByte(byte[] data)
-        {
-            if (data.Length < 1) throw new InvalidDataException("Data should be at least 1 bytes long; found " + data.Length + " bytes");
-            return (sbyte)data[0];
-        }
-
-        /// <summary>
-        /// Decode an unsigned byte from the given array of bytes
-        /// </summary>
-        /// <param name="data">Array of bytes to read value from</param>
-        /// <returns>Decoded value</returns>
-        public static byte DecodeUByte(byte[] data)
-        {
-            if (data.Length < 1) throw new InvalidDataException("Data should be at least 1 bytes long; found " + data.Length + " bytes");
-            return data[0];
-        }
-
-        /// <summary>
         /// Encode the given value into an array of bytes as an unsigned Little-Endian 16-bits integer
         /// </summary>
         /// <param name="value">Value to be encoded</param>
