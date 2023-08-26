@@ -8,7 +8,6 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
-using System.Resources;
 using static ATL.TagData;
 
 namespace ATL.AudioData.IO
@@ -2024,7 +2023,7 @@ namespace ATL.AudioData.IO
 
             int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
             if (qtChapterPictureTrackNum > 0 && nbActualChapterImages > 0)
-                w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum));
+                w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum)); // As many pictures as there are chapters
 
             long finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(chapPos, SeekOrigin.Begin);
@@ -2066,7 +2065,7 @@ namespace ATL.AudioData.IO
             IList<ChapterInfo> workingChapters = chapters;
             if (0 == workingChapters.Count) return 0;
 
-            // Find largest dimensions
+            // Find largest dimensions and color depth among all chapter pictures
             short maxWidth = 0;
             short maxHeight = 0;
             int maxDepth = 0;
@@ -2267,6 +2266,7 @@ namespace ATL.AudioData.IO
             else
             {
                 // General structure
+                // TODO PNG support
                 w.Write(Utils.Latin1Encoding.GetBytes("jpeg")); // Subtype
                 w.Write(0); // Reserved
                 w.Write((short)0); // Reserved
