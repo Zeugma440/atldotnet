@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -36,17 +37,8 @@ namespace ATL
         /// <returns>Same value as int, or int.MaxValue if out of bounds</returns>
         private static int toInt(long value)
         {
-            if (value > int.MaxValue) return int.MaxValue; else return Convert.ToInt32(value);
-        }
-
-        /// <summary>
-        /// Encode the given value into an array of bytes as an unsigned Little-Endian 16-bits integer
-        /// </summary>
-        /// <param name="value">Value to be encoded</param>
-        /// <returns>Encoded array of bytes</returns>
-        public static byte[] EncodeUInt16(ushort value)
-        {
-            return new[] { (byte)(value & 0x00FF), (byte)((value & 0xFF00) >> 8) };
+            if (value > int.MaxValue) return int.MaxValue;
+            return Convert.ToInt32(value);
         }
 
         /// <summary>
@@ -590,34 +582,40 @@ namespace ATL
             s.Write(data, 0, data.Length);
         }
 
-        public static void WriteUInt16(Stream s, ushort data)
+        public static void WriteUInt16(Stream s, ushort data, Span<byte> buffer)
         {
-            s.Write(EncodeUInt16(data), 0, 2);
+            BinaryPrimitives.WriteUInt16LittleEndian(buffer, data);
+            s.Write(buffer[..2]);
         }
 
-        public static void WriteInt32(Stream s, int data)
+        public static void WriteInt32(Stream s, int data, Span<byte> buffer)
         {
-            s.Write(EncodeInt32(data), 0, 4);
+            BinaryPrimitives.WriteInt32LittleEndian(buffer, data);
+            s.Write(buffer[..4]);
         }
 
-        public static void WriteUInt32(Stream s, uint data)
+        public static void WriteUInt32(Stream s, uint data, Span<byte> buffer)
         {
-            s.Write(EncodeUInt32(data), 0, 4);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer, data);
+            s.Write(buffer[..4]);
         }
 
-        public static void WriteBEInt32(Stream s, int data)
+        public static void WriteBEInt32(Stream s, int data, Span<byte> buffer)
         {
-            s.Write(EncodeBEInt32(data), 0, 4);
+            BinaryPrimitives.WriteInt32BigEndian(buffer, data);
+            s.Write(buffer[..4]);
         }
 
-        public static void WriteBEUInt32(Stream s, uint data)
+        public static void WriteBEUInt32(Stream s, uint data, Span<byte> buffer)
         {
-            s.Write(EncodeBEUInt32(data), 0, 4);
+            BinaryPrimitives.WriteUInt32BigEndian(buffer, data);
+            s.Write(buffer[..4]);
         }
 
-        public static void WriteUInt64(Stream s, ulong data)
+        public static void WriteUInt64(Stream s, ulong data, Span<byte> buffer)
         {
-            s.Write(EncodeUInt64(data), 0, 8);
+            BinaryPrimitives.WriteUInt64LittleEndian(buffer, data);
+            s.Write(buffer[..8]);
         }
 
 
@@ -813,7 +811,7 @@ namespace ATL
                 nbBytes++;
             }
             while (dataToSkip.Contains(b));
-            source.Position = source.Position - 1;
+            source.Position -= 1;
             return nbBytes;
         }
 
@@ -837,7 +835,7 @@ namespace ATL
                 isFirst = false;
             }
             while (dataToSkip.Contains(b));
-            source.Position = source.Position + 1;
+            source.Position += 1;
             return nbBytes;
         }
 

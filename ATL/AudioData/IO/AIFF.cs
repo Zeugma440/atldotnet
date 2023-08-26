@@ -647,7 +647,7 @@ namespace ATL.AudioData.IO
 
         private static void writeCommentChunk(BinaryWriter w, MetaFieldInfo info, string comment = "")
         {
-            byte[] commentData = null;
+            byte[] commentData;
 
             if (null == info) // Plain string
             {
@@ -675,7 +675,7 @@ namespace ATL.AudioData.IO
         public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
         {
             StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNKTYPE_ID3TAG));
-            StreamUtils.WriteBEInt32(s, (int)tagSize);
+            s.Write(StreamUtils.EncodeBEInt32((int)tagSize));
         }
 
         public void WriteID3v2EmbeddingFooter(Stream s, long tagSize)

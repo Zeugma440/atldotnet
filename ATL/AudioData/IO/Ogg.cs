@@ -165,13 +165,14 @@ namespace ATL.AudioData.IO
 
             public void WriteToStream(Stream w)
             {
+                var buffer = new Span<byte>(new byte[8]);
                 StreamUtils.WriteBytes(w, ID);
                 w.WriteByte(StreamVersion);
                 w.WriteByte(TypeFlag);
-                StreamUtils.WriteUInt64(w, AbsolutePosition);
-                StreamUtils.WriteInt32(w, StreamId);
-                StreamUtils.WriteInt32(w, PageNumber);
-                StreamUtils.WriteUInt32(w, Checksum);
+                StreamUtils.WriteUInt64(w, AbsolutePosition, buffer);
+                StreamUtils.WriteInt32(w, StreamId, buffer);
+                StreamUtils.WriteInt32(w, PageNumber, buffer);
+                StreamUtils.WriteUInt32(w, Checksum, buffer);
                 w.WriteByte(Segments);
                 StreamUtils.WriteBytes(w, LacingValues);
             }
@@ -986,26 +987,23 @@ namespace ATL.AudioData.IO
         // Generate CRC32 of created pages
         private void generatePageCrc32(Stream s, IList<KeyValuePair<long, int>> pageHeaderOffsets)
         {
-            uint crc;
-            byte[] data = new byte[0];
+            byte[] data = Array.Empty<byte>();
             foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
             {
                 s.Seek(kv.Key, SeekOrigin.Begin);
                 if (data.Length < kv.Value) data = new byte[kv.Value]; // Enlarge only if needed; max size is 0xffff
                 s.Read(data, 0, kv.Value);
-                crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
+                uint crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
                 // Write CRC value at the dedicated location within the OGG header
                 s.Seek(kv.Key + 22, SeekOrigin.Begin);
-                StreamUtils.WriteUInt32(s, crc);
+                s.Write(StreamUtils.EncodeUInt32(crc));
             }
         }
 
         private bool renumberRemainingPages(Stream s, long nextPageOffset, int writtenPages)
         {
             OggPageHeader header = new OggPageHeader();
-            byte[] data = new byte[0];
-            uint crc;
-
+            byte[] data = Array.Empty<byte>();
             do
             {
                 s.Seek(nextPageOffset, SeekOrigin.Begin);
@@ -1016,7 +1014,7 @@ namespace ATL.AudioData.IO
                     // Rewrite page number
                     writtenPages++;
                     s.Seek(nextPageOffset + 18, SeekOrigin.Begin);
-                    StreamUtils.WriteInt32(s, writtenPages);
+                    s.Write(StreamUtils.EncodeInt32(writtenPages));
 
                     // Rewrite CRC
                     s.Seek(nextPageOffset, SeekOrigin.Begin);
@@ -1030,9 +1028,9 @@ namespace ATL.AudioData.IO
                     data[24] = 0;
                     data[25] = 0;
 
-                    crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
+                    uint crc = OggCRC32.CalculateCRC(0, data, (uint)dataSize);
                     s.Seek(nextPageOffset + 22, SeekOrigin.Begin); // Position of CRC within OGG header
-                    StreamUtils.WriteUInt32(s, crc);
+                    s.Write(StreamUtils.EncodeUInt32(crc));
 
                     // To the next header
                     nextPageOffset += dataSize;

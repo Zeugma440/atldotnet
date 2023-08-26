@@ -8,7 +8,6 @@ using static ATL.TagData;
 using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
-using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -41,7 +40,7 @@ namespace ATL.AudioData.IO
 
 
         // Mapping between MP4 frame codes and ATL frame codes
-        private static Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+        private static readonly Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
             { "title", Field.TITLE },
             { "parent_title", Field.ALBUM},
             { "narrator", Field.ARTIST },
@@ -58,7 +57,6 @@ namespace ATL.AudioData.IO
         private long tocOffset;
         private long tocSize;
 
-        private readonly string fileName;
         private readonly Format audioFormat;
 
         private IDictionary<int, TocEntry> toc;
@@ -88,10 +86,8 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get
@@ -100,14 +96,12 @@ namespace ATL.AudioData.IO
                 if (codec.Length > 0)
                     f.Name = f.Name + " (" + codec + ")";
                 else
-                    f.Name = f.Name + " (Unknown)";
+                    f.Name += " (Unknown)";
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+
         public double BitRate
         {
             get
@@ -125,42 +119,31 @@ namespace ATL.AudioData.IO
                 }
             }
         }
-        public double Duration
-        {
-            get { return getDuration(); }
-        }
+        public double Duration => getDuration();
+
         public int SampleRate
         {
             get
             {
-                switch (codec)
+                return codec switch
                 {
-                    case CODEC_MP332:
-                        return 22050;
-                    case CODEC_ACELP16:
-                        return 16000;
-                    case CODEC_ACELP85:
-                        return 8500;
-                    default:
-                        return 1;
-                }
+                    CODEC_MP332 => 22050,
+                    CODEC_ACELP16 => 16000,
+                    CODEC_ACELP85 => 8500,
+                    _ => 1
+                };
             }
         }
 
         public int BitDepth => -1; // Irrelevant for lossy formats
 
-        public string FileName
-        {
-            get { return fileName; }
-        }
+        public string FileName { get; }
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.NATIVE;
         }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return MONO; }
-        }
+        public ChannelsArrangement ChannelsArrangement => MONO;
 
         // MetaDataIO
         protected override int getDefaultTagOffset()
@@ -177,14 +160,12 @@ namespace ATL.AudioData.IO
         {
             Field supportedMetaId = Field.NO_FIELD;
 
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
-        protected override bool isLittleEndian
-        {
-            get { return false; }
-        }
+        protected override bool isLittleEndian => false;
+
         public override string EncodeDate(DateTime date)
         {
             return date.ToString("dd-MMM-yyyy", CultureInfo.InvariantCulture).ToUpper();
@@ -202,14 +183,14 @@ namespace ATL.AudioData.IO
             codec = "";
             tocOffset = 0;
             tocSize = 0;
-            if (toc != null) toc.Clear();
+            toc?.Clear();
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
 
         public AA(string fileName, Format format)
         {
-            this.fileName = fileName;
+            this.FileName = fileName;
             audioFormat = format;
             resetData();
         }
@@ -228,10 +209,8 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (0 == BitRate)
-                return 0;
-            else
-                return AudioDataSize / (BitRate * 1000);
+            if (0 == BitRate) return 0;
+            return AudioDataSize / (BitRate * 1000);
         }
 
         // Read header data
@@ -254,18 +233,16 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(entry.Value.Offset, (int)entry.Value.Size, entry.Key.ToString(), isSectionDeletable(entry.Key));
                 structureHelper.AddIndex(entry.Value.TocOffset + 4, entry.Value.Offset, false, entry.Key.ToString());
                 structureHelper.AddSize(entry.Value.TocOffset + 8, entry.Value.Size, entry.Key.ToString());
-                if (TOC_AUDIO == entry.Key)
+                switch (entry.Key)
                 {
-                    AudioDataOffset = entry.Value.Offset;
-                    AudioDataSize = entry.Value.Size;
-                }
-                if (TOC_CONTENT_TAGS == entry.Key)
-                {
-                    structureHelper.AddSize(0, fileSize, entry.Key.ToString());
-                }
-                if (TOC_COVER_ART == entry.Key)
-                {
-                    structureHelper.AddSize(0, fileSize, entry.Key.ToString());
+                    case TOC_AUDIO:
+                        AudioDataOffset = entry.Value.Offset;
+                        AudioDataSize = entry.Value.Size;
+                        break;
+                    case TOC_CONTENT_TAGS:
+                    case TOC_COVER_ART:
+                        structureHelper.AddSize(0, fileSize, entry.Key.ToString());
+                        break;
                 }
             }
 
@@ -339,9 +316,11 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx, false); // AA chapters are embedded into the audio chunk; they are _not_ deletable
                 structureHelper.AddIndex(source.Position - 4, chapterOffset, false, "chp" + idx);
 
-                ChapterInfo chapter = new ChapterInfo();
-                chapter.Title = "Chapter " + idx++; // Chapters have no title metatada in the AA format
-                chapter.StartTime = (uint)Math.Round(cumulatedDuration);
+                ChapterInfo chapter = new ChapterInfo
+                {
+                    Title = "Chapter " + idx++, // Chapters have no title metatada in the AA format
+                    StartTime = (uint)Math.Round(cumulatedDuration)
+                };
                 cumulatedDuration += chapterSize / (BitRate * 1000);
                 chapter.EndTime = (uint)Math.Round(cumulatedDuration);
                 tagData.Chapters.Add(chapter);
@@ -445,16 +424,16 @@ namespace ATL.AudioData.IO
             s.WriteByte(0); // Unknown byte; always zero
             byte[] keyB = Encoding.UTF8.GetBytes(key);
             byte[] valueB = Encoding.UTF8.GetBytes(value);
-            StreamUtils.WriteBEInt32(s, keyB.Length); // Key length
-            StreamUtils.WriteBEInt32(s, valueB.Length); // Value length
+            s.Write(StreamUtils.EncodeBEInt32(keyB.Length));
+            s.Write(StreamUtils.EncodeBEInt32(valueB.Length));
             StreamUtils.WriteBytes(s, keyB);
             StreamUtils.WriteBytes(s, valueB);
         }
 
         private static void writePictureFrame(Stream s, byte[] pictureData)
         {
-            StreamUtils.WriteBEInt32(s, pictureData.Length); // Pic size
-            StreamUtils.WriteInt32(s, 0); // Pic data absolute offset; to be rewritten later
+            s.Write(StreamUtils.EncodeBEInt32(pictureData.Length));
+            s.Write(StreamUtils.EncodeInt32(0)); // Pic data absolute offset; to be rewritten later
             StreamUtils.WriteBytes(s, pictureData);
         }
 
@@ -474,20 +453,21 @@ namespace ATL.AudioData.IO
         private int writeCoreToc(Stream s)
         {
             s.Seek(tocOffset, SeekOrigin.Begin);
+            var span = new Span<byte>(new byte[4]);
             BufferedBinaryReader br = new BufferedBinaryReader(s);
 
             IDictionary<int, TocEntry> newToc = readToc(br);
             List<TocEntry> finalToc = newToc.Values.Where(e => !isSectionDeletable(e.Section)).ToList();
             int deltaBytes = (newToc.Count - finalToc.Count) * 12;
             s.Seek(tocOffset, SeekOrigin.Begin);
-            StreamUtils.WriteBEInt32(s, finalToc.Count);
+            StreamUtils.WriteBEInt32(s, finalToc.Count, span);
             s.Seek(4, SeekOrigin.Current); // Skip unfathomable byte
                                            // Rewrite table of contents (<section>, <offset>, <length>)
             foreach (TocEntry entry in finalToc)
             {
-                StreamUtils.WriteBEInt32(s, entry.Section);
-                StreamUtils.WriteBEUInt32(s, entry.Offset);
-                StreamUtils.WriteBEUInt32(s, entry.Size);
+                StreamUtils.WriteBEInt32(s, entry.Section, span);
+                StreamUtils.WriteBEUInt32(s, entry.Offset, span);
+                StreamUtils.WriteBEUInt32(s, entry.Size, span);
             }
             int newTocSize = (int)(s.Position - tocOffset);
             // Process TOC resizing

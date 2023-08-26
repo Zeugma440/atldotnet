@@ -7,6 +7,7 @@ using System.Linq;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -575,15 +576,13 @@ namespace ATL.AudioData.IO
 
         public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
         {
-            StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(CHUNK_ID3));
-            if (isLittleEndian)
-            {
-                StreamUtils.WriteInt32(s, (int)tagSize);
-            }
-            else
-            {
-                StreamUtils.WriteBytes(s, StreamUtils.EncodeBEInt32((int)tagSize));
-            }
+            var span = new Span<byte>(new byte[4]);
+
+            Utils.Latin1Encoding.GetBytes(CHUNK_ID3.AsSpan(), span);
+            s.Write(span);
+            if (isLittleEndian) BinaryPrimitives.WriteInt32LittleEndian(span, (int)tagSize);
+            else BinaryPrimitives.WriteInt32BigEndian(span, (int)tagSize);
+            s.Write(span);
         }
 
         public void WriteID3v2EmbeddingFooter(Stream s, long tagSize)

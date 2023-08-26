@@ -22,11 +22,6 @@ namespace Commons
 
 
         /// <summary>
-        /// Define a delegate that does not carry any argument (useful for "pinging")
-        /// </summary>
-        public delegate void voidDelegate();
-
-        /// <summary>
         /// ISO-8859-1 encoding
         /// </summary>
         public static Encoding Latin1Encoding { get; } = Encoding.GetEncoding("ISO-8859-1");
