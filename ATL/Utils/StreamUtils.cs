@@ -9,8 +9,6 @@ namespace ATL
 {
     /// <summary>
     /// Misc. utilities used by binary readers
-    /// 
-    /// TODO : Benchmark against System.Buffers.Binary.BinaryPrimitives
     /// </summary>
     internal static partial class StreamUtils
     {
@@ -372,7 +370,7 @@ namespace ATL
         /// <returns>The string read, without the zeroes at its end</returns>
         private static string readNullTerminatedString(Stream r, Encoding encoding, int limit, bool moveStreamToLimit)
         {
-            int nbChars = (encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode)) ? 2 : 1;
+            int nbChars = encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode) ? 2 : 1;
             byte[] readBytes = new byte[limit > 0 ? limit : 100];
             byte[] buffer = new byte[2];
             int nbRead = 0;
@@ -380,16 +378,16 @@ namespace ATL
             long initialPos = r.Position;
             long streamPos = initialPos;
 
-            while (streamPos < streamLength && ((0 == limit) || (nbRead < limit)))
+            while (streamPos < streamLength && (0 == limit || nbRead < limit))
             {
                 // Read the size of a character
                 r.Read(buffer, 0, nbChars);
 
-                if ((1 == nbChars) && (0 == buffer[0])) // Null character read for single-char encodings
+                if (1 == nbChars && 0 == buffer[0]) // Null character read for single-char encodings
                 {
                     break;
                 }
-                else if ((2 == nbChars) && (0 == buffer[0]) && (0 == buffer[1])) // Null character read for two-char encodings
+                else if (2 == nbChars && 0 == buffer[0] && 0 == buffer[1]) // Null character read for two-char encodings
                 {
                     break;
                 }
@@ -424,7 +422,7 @@ namespace ATL
 
             for (int i = 0; i < bytes.Length; i++)
             {
-                result += bytes[i] * (int)Math.Floor(Math.Pow(2, (7 * (bytes.Length - 1 - i))));
+                result += bytes[i] * (int)Math.Floor(Math.Pow(2, 7 * (bytes.Length - 1 - i)));
             }
             return result;
         }
@@ -458,11 +456,10 @@ namespace ATL
         {
             if (nbBytes < 1 || nbBytes > 5) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
             byte[] result = new byte[nbBytes];
-            int range;
 
             for (int i = 0; i < nbBytes; i++)
             {
-                range = 7 * (nbBytes - 1 - i);
+                int range = 7 * (nbBytes - 1 - i);
                 result[i] = (byte)((value & (0x7F << range)) >> range);
             }
 
@@ -637,7 +634,7 @@ namespace ATL
             // IEEE754/numerical_comp_guide/ncg_math.doc.html
             int s = extended[9] >> 7;
 
-            int e = (((extended[9] & 0x7f) << 8) | (extended[8]));
+            int e = ((extended[9] & 0x7f) << 8) | extended[8];
 
             int j = extended[7] >> 7;
             long f = extended[7] & 0x7f;
@@ -668,8 +665,7 @@ namespace ATL
                     e += 1023 - 16383;
 
                     // Out of range - too large
-                    if (e > 2047)
-                        return Double.NaN;
+                    if (e > 2047) return Double.NaN;
 
                     // Out of range - too small
                     if (e < 0)
@@ -903,7 +899,6 @@ namespace ATL
             if (offsetFrom == offsetTo) return;
 
             byte[] data = new byte[bufferSize];
-            int bufSize;
             long written = 0;
             bool forward = offsetTo > offsetFrom;
             long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
@@ -912,7 +907,7 @@ namespace ATL
 
             while (written < length)
             {
-                bufSize = Math.Min(bufferSize, toInt(length - written));
+                int bufSize = Math.Min(bufferSize, toInt(length - written));
                 if (forward)
                 {
                     s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);

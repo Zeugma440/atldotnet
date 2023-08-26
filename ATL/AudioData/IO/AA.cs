@@ -356,13 +356,11 @@ namespace ATL.AudioData.IO
         protected override int write(TagData tag, Stream s, string zone)
         {
             int result = -1; // Default : leave as is
-            byte[] intBuffer;
 
             if (zone.Equals(ZONE_TAGS))
             {
                 long nbTagsOffset = s.Position;
-                intBuffer = StreamUtils.EncodeInt32(0);
-                s.Write(intBuffer, 0, 4); // Number of tags; will be rewritten at the end of the method
+                s.Write(StreamUtils.EncodeInt32(0)); // Number of tags; will be rewritten at the end of the method
 
                 // Mapped textual fields
                 IDictionary<Field, string> map = tag.ToMap();
@@ -394,8 +392,7 @@ namespace ATL.AudioData.IO
                 }
 
                 s.Seek(nbTagsOffset, SeekOrigin.Begin);
-                intBuffer = StreamUtils.EncodeBEInt32(result);
-                s.Write(intBuffer, 0, 4); // Number of tags
+                s.Write(StreamUtils.EncodeBEInt32(result)); // Number of tags
             }
             if (zone.Equals(ZONE_IMAGE))
             {
