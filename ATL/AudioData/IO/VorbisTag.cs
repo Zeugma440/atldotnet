@@ -370,7 +370,7 @@ namespace ATL.AudioData.IO
                     equalsIndex += KEY_BUFFER * nbBuffered;
                     reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
 
-                    string tagId = tagIdBuilder.ToString();
+                    string tagId = tagIdBuilder.ToString().ToUpper();
 
                     if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
                     {
