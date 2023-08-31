@@ -1,14 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using System.Drawing;
 using ATL.test.IO.MetaData;
-using System.Collections.Generic;
 using static ATL.Logging.Log;
-using System;
 using ATL.Logging;
 using Commons;
-using System.ComponentModel;
 
 namespace ATL.test.IO
 {
@@ -1201,6 +1196,32 @@ namespace ATL.test.IO
 
             t = new Track(testFileLocation);
             Assert.IsTrue(0 == t.Lyrics.UnsynchronizedLyrics.Length);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        /**
+         * Synch lyrics override unsynch lyrics when both exist and the target tagging format
+         * doesn't support synch lyrics
+         */
+        [TestMethod]
+        public void TagIO_RW_Lyrics_SynchOverUnsynch()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("OGG/empty.ogg");
+            Track t = new Track(testFileLocation);
+
+            t.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(1000, "aaa"));
+            t.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(2000, "bbb"));
+            t.Lyrics.UnsynchronizedLyrics = "some stuff";
+
+            t.Save();
+
+            t = new Track(testFileLocation);
+            Assert.IsTrue(0 == t.Lyrics.UnsynchronizedLyrics.Length);
+            Assert.IsTrue(2 == t.Lyrics.SynchronizedLyrics.Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

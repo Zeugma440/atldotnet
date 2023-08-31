@@ -317,7 +317,7 @@ namespace ATL.AudioData.IO
 
             public bool HasExtendedHeader => ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
 
-            public bool HasFooter => (Flags & FLAG_TAG_HAS_FOOTER) > 0; // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
+            private bool HasFooter => (Flags & FLAG_TAG_HAS_FOOTER) > 0; // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
 
             public int GetSize(bool includeFooter = true)
             {
@@ -490,9 +490,15 @@ namespace ATL.AudioData.IO
             // Finds the ATL field identifier according to the ID3v2 version
             switch (tagVersion)
             {
-                case TAG_VERSION_2_2: if (frameMapping_v22.ContainsKey(ID)) supportedMetaId = frameMapping_v22[ID]; break;
-                case TAG_VERSION_2_3: if (frameMapping_v23.ContainsKey(ID)) supportedMetaId = frameMapping_v23[ID]; break;
-                case TAG_VERSION_2_4: if (frameMapping_v24.ContainsKey(ID)) supportedMetaId = frameMapping_v24[ID]; break;
+                case TAG_VERSION_2_2: 
+                    if (frameMapping_v22.TryGetValue(ID, out var value)) supportedMetaId = value; 
+                    break;
+                case TAG_VERSION_2_3: 
+                    if (frameMapping_v23.TryGetValue(ID, out var value1)) supportedMetaId = value1; 
+                    break;
+                case TAG_VERSION_2_4: 
+                    if (frameMapping_v24.TryGetValue(ID, out var value2)) supportedMetaId = value2; 
+                    break;
             }
 
             return supportedMetaId;
@@ -512,8 +518,6 @@ namespace ATL.AudioData.IO
 
         private bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
         {
-            bool result = true;
-
             // Reads mandatory (base) header
             SourceFile.Seek(offset, SeekOrigin.Begin);
             Tag.ID = SourceFile.ReadBytes(3);
@@ -553,7 +557,7 @@ namespace ATL.AudioData.IO
             // File size
             Tag.FileSize = SourceFile.Length;
 
-            return result;
+            return true;
         }
 
         private static RichStructure readCommentStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
@@ -1267,10 +1271,9 @@ namespace ATL.AudioData.IO
         private int writeFrames(TagData tag, BinaryWriter w, Encoding tagEncoding)
         {
             int nbFrames = 0;
-            bool doWritePicture;
 
             // === ID3v2 FRAMES ===
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap(true);
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
@@ -1398,10 +1401,10 @@ namespace ATL.AudioData.IO
             foreach (PictureInfo picInfo in tag.Pictures)
             {
                 // Picture has either to be supported, or to come from the right tag standard
-                doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                 if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                 // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
 
                 if (doWritePicture)
                 {
@@ -1779,7 +1782,7 @@ namespace ATL.AudioData.IO
                 // Case 3 : User-defined value without separator
                 if (1 == parts.Length)
                 {
-                    desc = new byte[0];
+                    desc = Array.Empty<byte>();
                     url = Utils.Latin1Encoding.GetBytes(parts[0]);
                 }
                 else
@@ -1819,7 +1822,7 @@ namespace ATL.AudioData.IO
                     // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
                     value = value.Replace(Settings.DisplayValueSeparator, '\0');
                 }
-                else if (frameCode.StartsWith("T")) // Text information frame
+                else if (frameCode.StartsWith('T')) // Text information frame
                 {
                     if (4 == Settings.ID3v2_tagSubVersion) // All text information frames may contain multiple values on ID3v2.4
                     {

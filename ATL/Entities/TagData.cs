@@ -469,7 +469,7 @@ namespace ATL
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<Field, string> ToMap()
+        public IDictionary<Field, string> ToMap(bool supportsSyncLyrics = false)
         {
             IDictionary<Field, string> result = new Dictionary<Field, string>();
 
@@ -483,15 +483,17 @@ namespace ATL
             }
             else
             {
-                if (result.ContainsKey(Field.RECORDING_DATE)) result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_DATE];
-                else if (result.ContainsKey(Field.RECORDING_YEAR)) result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_YEAR];
+                if (result.ContainsKey(Field.RECORDING_DATE))
+                    result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_DATE];
+                else if (result.ContainsKey(Field.RECORDING_YEAR))
+                    result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_YEAR];
             }
-
 
             if (Lyrics != null)
             {
-                if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
-                else if (Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
+                // Synch lyrics override unsynch lyrics when the target format cannot support both of them
+                if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
+                else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
             }
 
             return result;
