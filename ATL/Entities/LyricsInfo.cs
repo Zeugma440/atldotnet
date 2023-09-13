@@ -171,7 +171,7 @@ namespace ATL
             /// <returns>True if a != b, else false</returns>
             public static bool operator !=(LyricsPhrase a, LyricsPhrase b)
             {
-                if (ReferenceEquals(a, null) && ReferenceEquals(b, null))
+                if ((!ReferenceEquals(a, null) && ReferenceEquals(b, null)) || (ReferenceEquals(a, null) && !ReferenceEquals(b, null)))
                 {
                     return true;
                 }
