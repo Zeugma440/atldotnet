@@ -1,8 +1,6 @@
 using Commons;
 using System;
 using System.IO;
-using System.Net;
-using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 
@@ -14,6 +12,7 @@ namespace ATL.AudioData.IO
 	class APE : IAudioDataIO
     {
         // Compression level codes
+        // ReSharper disable UnusedMember.Global
         public const int MONKEY_COMPRESSION_FAST = 1000;  // Fast (poor)
         public const int MONKEY_COMPRESSION_NORMAL = 2000;  // Normal (good)
         public const int MONKEY_COMPRESSION_HIGH = 3000;  // High (very good)	
@@ -22,7 +21,7 @@ namespace ATL.AudioData.IO
         public const int MONKEY_COMPRESSION_BRAINDEAD = 6000;  // BrainDead
 
         // Compression level names
-        public static readonly string[] MONKEY_COMPRESSION = new string[7] { "Unknown", "Fast", "Normal", "High", "Extra High", "Insane", "BrainDead" };
+        public static readonly string[] MONKEY_COMPRESSION = { "Unknown", "Fast", "Normal", "High", "Extra High", "Insane", "BrainDead" };
 
         // Format flags, only for Monkey's Audio <= 3.97
         public const byte MONKEY_FLAG_8_BIT = 1;  // Audio 8-bit
@@ -33,36 +32,19 @@ namespace ATL.AudioData.IO
         public const byte MONKEY_FLAG_WAV_NOT_STORED = 32; // WAV header not stored
 
         // Channel mode names
-        public static readonly string[] MONKEY_MODE = new string[3] { "Unknown", "Mono", "Stereo" };
+        public static readonly string[] MONKEY_MODE = { "Unknown", "Mono", "Stereo" };
 
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("MAC ");
+        // ReSharper restore UnusedMember.Global
 
 
         readonly ApeHeader header = new ApeHeader();             // common header
 
         // Stuff loaded from the header:
-        private int version;
-        private ChannelsArrangement channelsArrangement;
-        private int sampleRate;
-        private int bits;
-        private uint peakLevel;
-        private double peakLevelRatio;
-        private long totalSamples;
-        private int compressionMode;
-        private string compressionModeStr;
 
         // FormatFlags, only used with Monkey's <= 3.97
-        private int formatFlags;
-        private bool hasPeakLevel;
-        private bool hasSeekElements;
-        private bool wavNotStored;
-
-        private double bitrate;
-        private double duration;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
-
 
 
         // Real structure of Monkey's Audio header
@@ -115,88 +97,51 @@ namespace ATL.AudioData.IO
 #pragma warning restore S4487 // Unread "private" fields should be removed
 
 
-        public int Version
-        {
-            get { return version; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public uint PeakLevel
-        {
-            get { return peakLevel; }
-        }
-        public double PeakLevelRatio
-        {
-            get { return peakLevelRatio; }
-        }
-        public long TotalSamples
-        {
-            get { return totalSamples; }
-        }
-        public int CompressionMode
-        {
-            get { return compressionMode; }
-        }
-        public string CompressionModeStr
-        {
-            get { return compressionModeStr; }
-        }
+        public int Version { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        public uint PeakLevel { get; private set; }
+
+        public double PeakLevelRatio { get; private set; }
+
+        public long TotalSamples { get; private set; }
+
+        public int CompressionMode { get; private set; }
+
+        public string CompressionModeStr { get; private set; }
 
         // FormatFlags, only used with Monkey's <= 3.97
-        public int FormatFlags
-        {
-            get { return formatFlags; }
-        }
-        public bool HasPeakLevel
-        {
-            get { return hasPeakLevel; }
-        }
-        public bool HasSeekElements
-        {
-            get { return hasSeekElements; }
-        }
-        public bool WavNotStored
-        {
-            get { return wavNotStored; }
-        }
+        public int FormatFlags { get; private set; }
+
+        public bool HasPeakLevel { get; private set; }
+
+        public bool HasSeekElements { get; private set; }
+
+        public bool WavNotStored { get; private set; }
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
-        public int SampleRate
-        {
-            get { return sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate { get; private set; }
+
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
-        public double Duration
-        {
-            get { return duration; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
 
-        public int BitDepth => bits;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
+        public double Duration { get; private set; }
+
+        public int BitDepth { get; private set; }
 
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
+            return metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2;
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -207,27 +152,27 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Reset data
-            version = 0;
-            sampleRate = 0;
-            bits = 0;
-            peakLevel = 0;
-            peakLevelRatio = 0.0;
-            totalSamples = 0;
-            compressionMode = 0;
-            compressionModeStr = "";
-            formatFlags = 0;
-            hasPeakLevel = false;
-            hasSeekElements = false;
-            wavNotStored = false;
-            bitrate = 0;
-            duration = 0;
+            Version = 0;
+            SampleRate = 0;
+            BitDepth = 0;
+            PeakLevel = 0;
+            PeakLevelRatio = 0.0;
+            TotalSamples = 0;
+            CompressionMode = 0;
+            CompressionModeStr = "";
+            FormatFlags = 0;
+            HasPeakLevel = false;
+            HasSeekElements = false;
+            WavNotStored = false;
+            BitRate = 0;
+            Duration = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
 
         public APE(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -267,7 +212,7 @@ namespace ATL.AudioData.IO
 
             if (IsValidHeader(header.cID))
             {
-                version = header.nVersion;
+                Version = header.nVersion;
                 AudioDataOffset = reader.Position - 6;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
@@ -318,15 +263,15 @@ namespace ATL.AudioData.IO
                     APE_NEW.nSampleRate = reader.ReadUInt32();
 
                     // based on MAC SDK 3.98a1 (APEinfo.h)
-                    sampleRate = (int)APE_NEW.nSampleRate;
-                    channelsArrangement = GuessFromChannelNumber(APE_NEW.nChannels);
-                    formatFlags = APE_NEW.nFormatFlags;
-                    bits = APE_NEW.nBitsPerSample;
-                    compressionMode = APE_NEW.nCompressionLevel;
+                    SampleRate = (int)APE_NEW.nSampleRate;
+                    ChannelsArrangement = GuessFromChannelNumber(APE_NEW.nChannels);
+                    FormatFlags = APE_NEW.nFormatFlags;
+                    BitDepth = APE_NEW.nBitsPerSample;
+                    CompressionMode = APE_NEW.nCompressionLevel;
                     // calculate total uncompressed samples
                     if (APE_NEW.nTotalFrames > 0)
                     {
-                        totalSamples = (long)(APE_NEW.nBlocksPerFrame) *
+                        TotalSamples = (long)(APE_NEW.nBlocksPerFrame) *
                             (long)(APE_NEW.nTotalFrames - 1) +
                             (long)(APE_NEW.nFinalFrameBlocks);
                     }
@@ -356,55 +301,55 @@ namespace ATL.AudioData.IO
                     APE_OLD.nFinalFrameBlocks = reader.ReadUInt32();
                     APE_OLD.nInt = reader.ReadInt32();
 
-                    compressionMode = APE_OLD.nCompressionLevel;
-                    sampleRate = (int)APE_OLD.nSampleRate;
-                    channelsArrangement = ChannelsArrangements.GuessFromChannelNumber(APE_OLD.nChannels);
-                    formatFlags = APE_OLD.nFormatFlags;
-                    bits = 16;
-                    if ((APE_OLD.nFormatFlags & MONKEY_FLAG_8_BIT) != 0) bits = 8;
-                    if ((APE_OLD.nFormatFlags & MONKEY_FLAG_24_BIT) != 0) bits = 24;
+                    CompressionMode = APE_OLD.nCompressionLevel;
+                    SampleRate = (int)APE_OLD.nSampleRate;
+                    ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(APE_OLD.nChannels);
+                    FormatFlags = APE_OLD.nFormatFlags;
+                    BitDepth = 16;
+                    if ((APE_OLD.nFormatFlags & MONKEY_FLAG_8_BIT) != 0) BitDepth = 8;
+                    if ((APE_OLD.nFormatFlags & MONKEY_FLAG_24_BIT) != 0) BitDepth = 24;
 
-                    hasSeekElements = ((APE_OLD.nFormatFlags & MONKEY_FLAG_PEAK_LEVEL) != 0);
-                    wavNotStored = ((APE_OLD.nFormatFlags & MONKEY_FLAG_SEEK_ELEMENTS) != 0);
-                    hasPeakLevel = ((APE_OLD.nFormatFlags & MONKEY_FLAG_WAV_NOT_STORED) != 0);
+                    HasSeekElements = (APE_OLD.nFormatFlags & MONKEY_FLAG_PEAK_LEVEL) != 0;
+                    WavNotStored = (APE_OLD.nFormatFlags & MONKEY_FLAG_SEEK_ELEMENTS) != 0;
+                    HasPeakLevel = (APE_OLD.nFormatFlags & MONKEY_FLAG_WAV_NOT_STORED) != 0;
 
-                    if (hasPeakLevel)
+                    if (HasPeakLevel)
                     {
-                        peakLevel = (uint)APE_OLD.nInt;
-                        peakLevelRatio = (peakLevel / (1 << bits) / 2.0) * 100.0;
+                        PeakLevel = (uint)APE_OLD.nInt;
+                        PeakLevelRatio = PeakLevel / (1 << BitDepth) / 2.0 * 100.0;
                     }
 
                     // based on MAC_SDK_397 (APEinfo.cpp)
-                    if (version >= 3950)
+                    if (Version >= 3950)
                         BlocksPerFrame = 73728 * 4;
-                    else if ((version >= 3900) || ((version >= 3800) && (MONKEY_COMPRESSION_EXTRA_HIGH == APE_OLD.nCompressionLevel)))
+                    else if (Version >= 3900 || (Version >= 3800 && MONKEY_COMPRESSION_EXTRA_HIGH == APE_OLD.nCompressionLevel))
                         BlocksPerFrame = 73728;
                     else
                         BlocksPerFrame = 9216;
 
                     // calculate total uncompressed samples
                     if (APE_OLD.nTotalFrames > 0)
-                        totalSamples = (APE_OLD.nTotalFrames - 1) * BlocksPerFrame + APE_OLD.nFinalFrameBlocks;
+                        TotalSamples = (APE_OLD.nTotalFrames - 1) * BlocksPerFrame + APE_OLD.nFinalFrameBlocks;
 
                     LoadSuccess = true;
                 }
                 if (LoadSuccess)
                 {
                     // compression profile name
-                    if ((0 == (compressionMode % 1000)) && (compressionMode <= 6000))
+                    if (0 == CompressionMode % 1000 && CompressionMode <= 6000)
                     {
-                        compressionModeStr = MONKEY_COMPRESSION[compressionMode / 1000]; // int division
+                        CompressionModeStr = MONKEY_COMPRESSION[CompressionMode / 1000]; // int division
                     }
                     else
                     {
-                        compressionModeStr = compressionMode.ToString();
+                        CompressionModeStr = CompressionMode.ToString();
                     }
                     // length
-                    if (sampleRate > 0) duration = totalSamples * 1000.0 / sampleRate;
+                    if (SampleRate > 0) Duration = TotalSamples * 1000.0 / SampleRate;
                     // average bitrate
-                    if (duration > 0) bitrate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / (duration);
+                    if (Duration > 0) BitRate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / Duration;
                     // some extra sanity checks
-                    result = (bits > 0) && (sampleRate > 0) && (totalSamples > 0) && (channelsArrangement.NbChannels > 0);
+                    result = BitDepth > 0 && SampleRate > 0 && TotalSamples > 0 && ChannelsArrangement.NbChannels > 0;
                 }
             }
 
