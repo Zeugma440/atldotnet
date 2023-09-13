@@ -154,7 +154,14 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a == b, else false</returns>
-            public static bool operator ==(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && a.Equals(b);
+            public static bool operator ==(LyricsPhrase a, LyricsPhrase b)
+            {
+                if (ReferenceEquals(a, null) && ReferenceEquals(b, null))
+                {
+                    return true;
+                }
+                return !ReferenceEquals(a, null) && a.Equals(b);
+            }
 
             /// <summary>
             /// Compares two LyricsPhrase objects by not-equals
@@ -162,7 +169,14 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a != b, else false</returns>
-            public static bool operator !=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !a.Equals(b);
+            public static bool operator !=(LyricsPhrase a, LyricsPhrase b)
+            {
+                if ((!ReferenceEquals(a, null) && ReferenceEquals(b, null)) || (ReferenceEquals(a, null) && !ReferenceEquals(b, null)))
+                {
+                    return true;
+                }
+                return !ReferenceEquals(a, null) && !a.Equals(b);
+            }
 
             /// <summary>
             /// Compares two LyricsPhrase objects by inferior
