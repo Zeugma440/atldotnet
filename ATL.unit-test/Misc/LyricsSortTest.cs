@@ -9,13 +9,15 @@ namespace ATL.test
         private LyricsInfo.LyricsPhrase lyrics1 = new(1000, "AAA");
         private LyricsInfo.LyricsPhrase lyrics1b = new(1000, "AAA");
         private LyricsInfo.LyricsPhrase lyrics2 = new(2000, "ZZZ");
-
+        private LyricsInfo.LyricsPhrase lyrics3 = null;
 
         [TestMethod]
         public void LyricsSort_Equality()
         {
             Assert.IsTrue(lyrics1 != lyrics2);
+            Assert.IsTrue(lyrics1 != null);
             Assert.IsTrue(lyrics1 == lyrics1b);
+            Assert.IsTrue(lyrics3 == null);
             Assert.IsTrue(lyrics1 >= lyrics1b);
             Assert.IsTrue(lyrics1 <= lyrics1b);
             Assert.IsTrue(lyrics1 == new LyricsInfo.LyricsPhrase(lyrics1));
