@@ -1503,8 +1503,8 @@ namespace ATL.test.IO.MetaData
                 track.Description = "New Description" + n.ToString();
                 track.Title = "New Title" + n.ToString();
                 track.Album = "New Album" + n.ToString();
-                Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
-                if (!track.Save(progress))
+                Action<float> progress = x => System.Console.WriteLine(x.ToString());
+                if (!track.Save(null, progress))
                     Assert.Fail("Failed to save.");
                 System.Console.WriteLine($"ErrorLOG: {n} ");
                 foreach (Logging.Log.LogItem l in log.GetAllItems(Logging.Log.LV_ERROR))
@@ -1572,9 +1572,9 @@ namespace ATL.test.IO.MetaData
             ch.Title = "New Chap1";
             ch.Picture = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
             track.Chapters.Add(ch);
-            Action<float> progress = new Action<float>(x => Console.WriteLine(x.ToString()));
+            Action<float> progress = x => Console.WriteLine(x.ToString());
             new ConsoleLogger();
-            if (!track.Save(progress))
+            if (!track.Save(null, progress))
                 Assert.Fail("Failed to save.");
             Console.WriteLine("ErrorLOG: ");
             foreach (LogItem l in log.GetAllItems(LV_ERROR))
@@ -1599,8 +1599,8 @@ namespace ATL.test.IO.MetaData
                 track.Chapters[0].Picture = (n % 2 > 0) ? picture1 : picture2;
                 track.Chapters[1].Title = "New Chap1-" + n.ToString();
                 track.Chapters[1].Picture = (n % 2 > 0) ? picture1 : picture2;
-                progress = new Action<float>(x => Console.WriteLine(x.ToString()));
-                if (!track.Save(progress))
+                progress = x => Console.WriteLine(x.ToString());
+                if (!track.Save(null, progress))
                     Assert.Fail("Failed to save.");
                 Console.WriteLine($"ErrorLOG: {n} ");
                 foreach (LogItem l in log.GetAllItems(LV_ERROR))
@@ -1648,8 +1648,8 @@ namespace ATL.test.IO.MetaData
                 track.Album = "New Album" + n.ToString();
                 track.Chapters[0].Title = "New Chap0-" + n.ToString();
                 track.Chapters[1].Title = "New Chap1-" + n.ToString();
-                Action<float> progress = new Action<float>(x => Console.WriteLine(x.ToString()));
-                if (!track.Save(progress))
+                Action<float> progress = x => Console.WriteLine(x.ToString());
+                if (!track.Save(null, progress))
                     Assert.Fail("Failed to save.");
                 Console.WriteLine($"ErrorLOG: {n} ");
                 foreach (LogItem l in log.GetAllItems(LV_ERROR))
@@ -1716,8 +1716,8 @@ namespace ATL.test.IO.MetaData
             ch.Title = "New Chap1";
             ch.Picture = PictureInfo.fromBinaryData(System.IO.File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpg"));
             track.Chapters.Add(ch);
-            Action<float> progress = new Action<float>(x => System.Console.WriteLine(x.ToString()));
-            if (track.Save(progress) == false)
+            Action<float> progress = x => System.Console.WriteLine(x.ToString());
+            if (track.Save(null, progress) == false)
                 Assert.Fail("Failed to save.");
             System.Console.WriteLine("ErrorLOG: ");
             foreach (Logging.Log.LogItem l in log.GetAllItems(LV_ERROR))

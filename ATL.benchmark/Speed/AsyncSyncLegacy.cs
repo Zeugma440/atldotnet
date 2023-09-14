@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using System.Collections;
+using ATL.AudioData;
 
 namespace ATL.benchmark
 {
@@ -96,7 +97,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            theFile.Save(withProgress ? progress : null);
+            theFile.Save(null, withProgress ? progress : null);
         }
 
         public async Task performWriteAsync(String filePath, bool withProgress)
@@ -116,7 +117,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            await theFile.SaveAsync(withProgress ? progress : null);
+            await theFile.SaveAsync(null, withProgress ? progress : null);
         }
     }
 }

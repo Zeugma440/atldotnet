@@ -222,7 +222,7 @@ namespace ATL.test.IO
             // Tricky fields that aren't managed with a 1-to-1 mapping
             theTrack.Year = 1944;
             theTrack.TrackNumber = 10;
-            Assert.IsTrue(theTrack.SaveAsync(progress).Result); // Hack to include async methods in test coverage
+            Assert.IsTrue(theTrack.SaveAsync(null, progress).Result); // Hack to include async methods in test coverage
 
             theTrack = new Track(testFileLocation);
 
@@ -1361,6 +1361,88 @@ namespace ATL.test.IO
             byte[] buffer = new byte[4];
             s.Read(buffer, 0, 4);
             return StreamUtils.DecodeBEInt32(buffer);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WriteSpecificTagType()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
+            const string newValue = "La-Li-Lu-Le-Lo";
+
+            // == 1- No type specified => update existing tag types (legacy behaviour)
+            Track theTrack = new Track(testFileLocation);
+            theTrack.Artist = newValue;
+            Assert.IsTrue(theTrack.Save());
+
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            theFile.ReadFromFile();
+            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
+            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
+            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsFalse(theFile.HasNativeMeta());
+
+            Assert.AreEqual(newValue, theFile.APEtag.Artist);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 2- Type specified => create given tag type
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
+            theTrack = new Track(testFileLocation);
+            theTrack.Artist = newValue;
+            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2 }));
+
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            theFile.ReadFromFile();
+            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
+            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
+            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsFalse(theFile.HasNativeMeta());
+
+            Assert.AreEqual(newValue, theFile.ID3v2.Artist);
+            Assert.AreNotEqual(newValue, theFile.APEtag.Artist);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 3- Type specified + ANY => create given tag type + update existing tag types
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
+            theTrack = new Track(testFileLocation);
+            theTrack.Artist = newValue;
+            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ANY }));
+
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            theFile.ReadFromFile();
+            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
+            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
+            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsFalse(theFile.HasNativeMeta());
+
+            Assert.AreEqual(newValue, theFile.ID3v2.Artist);
+            Assert.AreEqual(newValue, theFile.APEtag.Artist);
+
+
+            // == 4- Log warning when trying to write an unsupported tag
+            ArrayLogger log = new ArrayLogger();
+            testFileLocation = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
+            theTrack = new Track(testFileLocation);
+            theTrack.Title = newValue;
+            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ANY }));
+
+            IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
+            Assert.IsTrue(logItems.Count > 0);
+            bool found = false;
+            foreach (LogItem l in logItems)
+            {
+                if (l.Message.Contains("as it is not supported")) found = true;
+            }
+            Assert.IsTrue(found);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

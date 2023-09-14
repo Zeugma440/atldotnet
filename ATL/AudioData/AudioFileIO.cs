@@ -19,7 +19,6 @@ namespace ATL.AudioData
 	internal partial class AudioFileIO : IAudioDataIO
     {
         private readonly IAudioDataIO audioData;                     // Audio data reader used for this file
-        private readonly IMetaDataIO metaData;                       // Metadata reader used for this file
         private readonly AudioDataManager audioManager;
 
         // ------------------------------------------------------------------------------------------
@@ -48,12 +47,10 @@ namespace ATL.AudioData
             {
                 if (File.Exists(path))
                 {
-                    using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, Settings.FileBufferSize, FileOptions.RandomAccess))
-                    {
-                        audioData = AudioDataIOFactory.GetInstance().GetFromStream(fs);
-                        audioManager = new AudioDataManager(audioData, fs);
-                        audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
-                    }
+                    using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, Settings.FileBufferSize, FileOptions.RandomAccess);
+                    audioData = AudioDataIOFactory.GetInstance().GetFromStream(fs);
+                    audioManager = new AudioDataManager(audioData, fs);
+                    audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
                 }
                 else // Invalid path
                 {
@@ -61,7 +58,7 @@ namespace ATL.AudioData
                     audioManager = new AudioDataManager(audioData);
                 }
             }
-            metaData = getAndCheckMetadata();
+            Metadata = getAndCheckMetadata();
         }
 
         /// <summary>
@@ -77,12 +74,11 @@ namespace ATL.AudioData
             bool found = false;
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
-                if (mimeType.Length > 0) audioData = AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate++);
-                else audioData = AudioDataIOFactory.GetInstance().GetFromStream(stream);
+                audioData = mimeType.Length > 0 ? AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate++) : AudioDataIOFactory.GetInstance().GetFromStream(stream);
                 audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
             }
-            metaData = getAndCheckMetadata();
+            Metadata = getAndCheckMetadata();
         }
 
         private IMetaDataIO getAndCheckMetadata()
@@ -125,40 +121,54 @@ namespace ATL.AudioData
         private IList<TagType> detectAvailableMetas()
         {
             ISet<TagType> result = audioManager.getAvailableMetas();
-            IList<TagType> supportedMetas = audioManager.getSupportedMetas();
+            ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
 
             bool hasNothing = 0 == result.Count;
             if (Settings.EnrichID3v1 && 1 == result.Count && result.First() == TagType.ID3V1) hasNothing = true;
 
+            if (!hasNothing) return result.ToList();
+
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
-            if (hasNothing)
+            foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
             {
-                foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
-                {
-                    result.Add(i);
-                }
-
-                // File does not support any of the metas we want to write
-                // => Use the first supported meta available
-                if (0 == result.Count && supportedMetas.Count > 0) result.Add(supportedMetas[0]);
+                result.Add(i);
             }
+
+            // File does not support any of the metas we want to write
+            // => Use the first supported meta available
+            if (0 == result.Count && supportedMetas.Count > 0) result.Add(supportedMetas.First());
             return result.ToList();
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> SaveAsync(TagData data, ProgressToken<float> writeProgress = null)
+        public async Task<bool> SaveAsync(TagData data, HashSet<TagType> tagType, ProgressToken<float> writeProgress = null)
         {
-            IList<TagType> availableMetas = detectAvailableMetas();
+            IList<TagType> metasToWrite = new List<TagType>();
+            ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
+            Lazy<IList<TagType>> detectedMetas = new Lazy<IList<TagType>>(detectAvailableMetas);
+
+            if (null == tagType) metasToWrite = detectedMetas.Value;
+            else
+            {
+                foreach (var tt in tagType)
+                {
+                    if (tt == TagType.ANY)
+                        foreach (var att in detectedMetas.Value)
+                            metasToWrite.Add(att);
+                    else if (supportedMetas.Contains(tt)) metasToWrite.Add(tt);
+                    else LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Cannot create " + tt + " tag type inside a " + AudioFormat.ShortName + " file, as it is not supported");
+                }
+            }
 
             bool result = true;
             ProgressManager progressManager = null;
             if (writeProgress != null)
             {
                 progressManager = new ProgressManager(writeProgress, "AudioFileIO");
-                progressManager.MaxSections = availableMetas.Count;
+                progressManager.MaxSections = metasToWrite.Count;
             }
-            foreach (var meta in availableMetas)
+            foreach (var meta in metasToWrite)
             {
                 result &= await audioManager.UpdateTagInFileAsync(data, meta, progressManager);
                 if (progressManager != null) progressManager.CurrentSection++;
@@ -189,7 +199,7 @@ namespace ATL.AudioData
         private ISet<TagType> getMetasToRemove(TagType tagType)
         {
             if (TagType.ANY == tagType) return audioManager.getAvailableMetas();
-            else return new HashSet<TagType>() { tagType };
+            return new HashSet<TagType>() { tagType };
         }
 
         // ============ FIELD ACCESSORS
@@ -197,7 +207,8 @@ namespace ATL.AudioData
         /// <summary>
         /// Metadata fields container
         /// </summary>
-        public IMetaDataIO Metadata => metaData;
+        public IMetaDataIO Metadata { get; }
+
         /// <inheritdoc/>
         public string FileName => audioData.FileName;
         /// <summary>

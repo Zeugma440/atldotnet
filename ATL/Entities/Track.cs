@@ -565,9 +565,9 @@ namespace ATL
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public bool Save(Action<float> writeProgress = null)
+        public bool Save(HashSet<MetaDataIOFactory.TagType> tagType = null, Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData(), new ProgressToken<float>(writeProgress));
+            bool result = fileIO.Save(toTagData(), tagType,new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -581,9 +581,9 @@ namespace ATL
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        public async Task<bool> SaveAsync(IProgress<float> writeProgress = null)
+        public async Task<bool> SaveAsync(HashSet<MetaDataIOFactory.TagType> tagType = null, IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData(), new ProgressToken<float>(writeProgress));
+            bool result = await fileIO.SaveAsync(toTagData(), tagType,new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ATL.AudioData;
 
 namespace ATL.UI_test
 {
@@ -108,9 +109,9 @@ namespace ATL.UI_test
                 Application.DoEvents();
 
                 if (asynchronous)
-                    return await theFile.SaveAsync((null == progress) ? null : new Progress<float>(progress));
+                    return await theFile.SaveAsync(null, null == progress ? null : new Progress<float>(progress));
                 else
-                    return theFile.Save(progress);
+                    return theFile.Save(null, progress);
                 /*
                 theFile = new Track(testFileLocation);
 

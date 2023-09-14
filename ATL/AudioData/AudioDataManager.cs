@@ -64,27 +64,30 @@ namespace ATL.AudioData
             /// <summary>
             /// Size of the ID3v1 tag (bytes)
             /// </summary>
-            public long ID3v1Size { get { return TagSizes.ContainsKey(TagType.ID3V1) ? TagSizes[TagType.ID3V1] : 0; } }
+            public long ID3v1Size => TagSizes.ContainsKey(TagType.ID3V1) ? TagSizes[TagType.ID3V1] : 0;
+
             /// <summary>
             /// Size of the ID3v2 tag (bytes)
             /// </summary>
-            public long ID3v2Size { get { return TagSizes.ContainsKey(TagType.ID3V2) ? TagSizes[TagType.ID3V2] : 0; } }
+            public long ID3v2Size => TagSizes.ContainsKey(TagType.ID3V2) ? TagSizes[TagType.ID3V2] : 0;
             /// <summary>
             /// Size of the APE tag (bytes)
             /// </summary>
-            public long APESize { get { return TagSizes.ContainsKey(TagType.APE) ? TagSizes[TagType.APE] : 0; } }
+            public long APESize => TagSizes.ContainsKey(TagType.APE) ? TagSizes[TagType.APE] : 0;
+
             /// <summary>
             /// Size of the native tag (bytes)
             /// </summary>
-            public long NativeSize { get { return TagSizes.ContainsKey(TagType.NATIVE) ? TagSizes[TagType.NATIVE] : 0; } }
+            public long NativeSize => TagSizes.ContainsKey(TagType.NATIVE) ? TagSizes[TagType.NATIVE] : 0;
             /// <summary>
             /// Total size of all tags (bytes)
             /// </summary>
-            public long TotalTagSize { get { return ID3v1Size + ID3v2Size + APESize + NativeSize; } }
+            public long TotalTagSize => ID3v1Size + ID3v2Size + APESize + NativeSize;
+
             /// <summary>
             /// Size of the entire file (bytes)
             /// </summary>
-            public long FileSize { get; set; } = 0;
+            public long FileSize { get; set; }
             /// <summary>
             /// Offset of the audio data (bytes)
             /// </summary>
@@ -114,46 +117,37 @@ namespace ATL.AudioData
         private readonly SizeInfo sizeInfo = new SizeInfo();
 
 
-        private string fileName
-        {
-            get { return audioDataIO.FileName; }
-        }
+        private string fileName => audioDataIO.FileName;
+
         /// <summary>
         /// ID3v1 tag data
         /// </summary>
-        public IMetaDataIO ID3v1
-        {
-            get { return iD3v1; }
-        }
+        public IMetaDataIO ID3v1 => iD3v1;
+
         /// <summary>
         /// ID3v2 tag data
         /// </summary>
-        public IMetaDataIO ID3v2
-        {
-            get { return iD3v2; }
-        }
+        public IMetaDataIO ID3v2 => iD3v2;
+
         /// <summary>
         /// APE tag data
         /// </summary>
-        public IMetaDataIO APEtag
-        {
-            get { return aPEtag; }
-        }
+        public IMetaDataIO APEtag => aPEtag;
+
         /// <summary>
         /// Native tag data
         /// </summary>
-        public IMetaDataIO NativeTag
-        {
-            get { return nativeTag; }
-        }
+        public IMetaDataIO NativeTag => nativeTag;
+
         /// <summary>
         /// Offset of audio data (bytes)
         /// </summary>
-        public long AudioDataOffset { get => sizeInfo.AudioDataOffset; }
+        public long AudioDataOffset => sizeInfo.AudioDataOffset;
+
         /// <summary>
         /// Size of audio data (bytes)
         /// </summary>
-        public long AudioDataSize { get => sizeInfo.AudioDataSize; }
+        public long AudioDataSize => sizeInfo.AudioDataSize;
 
         /// <summary>
         /// Create a new instance using the given IAudioDataIO and the given IProgress
@@ -191,23 +185,14 @@ namespace ATL.AudioData
         /// <returns>True if the current audio file contains a tag of the given type; false if not</returns>
         public bool hasMeta(TagType type)
         {
-            if (type.Equals(TagType.ID3V1))
+            return type switch
             {
-                return (iD3v1 != null) && iD3v1.Exists;
-            }
-            else if (type.Equals(TagType.ID3V2))
-            {
-                return (iD3v2 != null) && iD3v2.Exists;
-            }
-            else if (type.Equals(TagType.APE))
-            {
-                return (aPEtag != null) && aPEtag.Exists;
-            }
-            else if (type.Equals(TagType.NATIVE))
-            {
-                return (nativeTag != null) && nativeTag.Exists;
-            }
-            else return false;
+                TagType.ID3V1 => iD3v1 is { Exists: true },
+                TagType.ID3V2 => iD3v2 is { Exists: true },
+                TagType.APE => aPEtag is { Exists: true },
+                TagType.NATIVE => nativeTag is { Exists: true },
+                _ => false
+            };
         }
 
         /// <summary>
@@ -240,9 +225,9 @@ namespace ATL.AudioData
         /// List the tag types supported by the format of the current file
         /// </summary>
         /// <returns>Tag types supported by the format of the current file</returns>
-        public IList<TagType> getSupportedMetas()
+        public ISet<TagType> getSupportedMetas()
         {
-            IList<TagType> result = new List<TagType>();
+            ISet<TagType> result = new HashSet<TagType>();
             foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
                                     where audioDataIO.IsMetaSupported(tagType)
                                     select tagType)
@@ -316,7 +301,7 @@ namespace ATL.AudioData
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         public bool ReadFromFile(bool readEmbeddedPictures = false, bool readAllMetaFrames = false)
         {
-            bool result = false;
+            bool result;
             LogDelegator.GetLocateDelegate()(fileName);
 
             resetData();
