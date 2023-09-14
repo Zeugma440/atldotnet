@@ -142,23 +142,18 @@ namespace ATL.AudioData
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> SaveAsync(TagData data, HashSet<TagType> tagType, ProgressToken<float> writeProgress = null)
+        public async Task<bool> SaveAsync(TagData data, TagType? tagType, ProgressToken<float> writeProgress = null)
         {
             IList<TagType> metasToWrite = new List<TagType>();
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
             Lazy<IList<TagType>> detectedMetas = new Lazy<IList<TagType>>(detectAvailableMetas);
 
-            if (null == tagType) metasToWrite = detectedMetas.Value;
+            if (null == tagType || TagType.ANY == tagType) metasToWrite = detectedMetas.Value;
             else
             {
-                foreach (var tt in tagType)
-                {
-                    if (tt == TagType.ANY)
-                        foreach (var att in detectedMetas.Value)
-                            metasToWrite.Add(att);
-                    else if (supportedMetas.Contains(tt)) metasToWrite.Add(tt);
-                    else LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Cannot create " + tt + " tag type inside a " + AudioFormat.ShortName + " file, as it is not supported");
-                }
+                foreach (var att in detectedMetas.Value) metasToWrite.Add(att);
+                if (supportedMetas.Contains(tagType.Value)) metasToWrite.Add(tagType.Value);
+                else LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Cannot create " + tagType + " tag type inside a " + AudioFormat.ShortName + " file, as it is not supported");
             }
 
             bool result = true;

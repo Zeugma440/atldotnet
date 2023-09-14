@@ -1388,31 +1388,11 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 
-            // == 2- Type specified => create given tag type
+            // == 2- Type specified + ANY => create given tag type + update existing tag types
             testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
             theTrack = new Track(testFileLocation);
             theTrack.Artist = newValue;
-            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2 }));
-
-            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-            theFile.ReadFromFile();
-            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
-            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
-            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
-            Assert.IsFalse(theFile.HasNativeMeta());
-
-            Assert.AreEqual(newValue, theFile.ID3v2.Artist);
-            Assert.AreNotEqual(newValue, theFile.APEtag.Artist);
-
-            // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-
-
-            // == 3- Type specified + ANY => create given tag type + update existing tag types
-            testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
-            theTrack = new Track(testFileLocation);
-            theTrack.Artist = newValue;
-            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ANY }));
+            Assert.IsTrue(theTrack.Save(MetaDataIOFactory.TagType.ID3V2));
 
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             theFile.ReadFromFile();
@@ -1425,12 +1405,12 @@ namespace ATL.test.IO
             Assert.AreEqual(newValue, theFile.APEtag.Artist);
 
 
-            // == 4- Log warning when trying to write an unsupported tag
+            // == 3- Log warning when trying to write an unsupported tag
             ArrayLogger log = new ArrayLogger();
             testFileLocation = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
             theTrack = new Track(testFileLocation);
             theTrack.Title = newValue;
-            Assert.IsTrue(theTrack.Save(new HashSet<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ANY }));
+            Assert.IsTrue(theTrack.Save(MetaDataIOFactory.TagType.ID3V2));
 
             IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
             Assert.IsTrue(logItems.Count > 0);
