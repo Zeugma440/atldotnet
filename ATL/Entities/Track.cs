@@ -562,12 +562,15 @@ namespace ATL
         /// Use Save instead of SaveAsync if you're looking for pure performance
         /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         /// </summary>
+        /// <param name="tagType">Tag type to save.
+        /// - Use null or TagType.ANY to save on existing tags
+        /// - Use any other TagType to save on existing tags and on the given TagType, if supported</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save(MetaDataIOFactory.TagType? tagType = null, Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData(), tagType,new ProgressToken<float>(writeProgress));
+            bool result = fileIO.Save(toTagData(), tagType, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -578,12 +581,15 @@ namespace ATL
         /// Use SaveAsync instead of Save if you need progress feedback
         /// (e.g. Windows Forms app with progress bar that updates one file at a time)
         /// </summary>
+        /// <param name="tagType">Tag type to save.
+        /// - Use null or TagType.ANY to save on existing tags
+        /// - Use any other TagType to save on existing tags and on the given TagType, if supported</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveAsync(MetaDataIOFactory.TagType? tagType = null, IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData(), tagType,new ProgressToken<float>(writeProgress));
+            bool result = await fileIO.SaveAsync(toTagData(), tagType, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
