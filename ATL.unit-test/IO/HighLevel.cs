@@ -167,7 +167,7 @@ namespace ATL.test.IO
             string location = TestUtils.GetResourceLocationRoot() + resource;
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
             Track theTrack = new Track(testFileLocation);
-            Assert.IsTrue(theTrack.Save());
+            Assert.IsTrue(theTrack.SaveAsync(null).Result); // Hack to include async methods in test coverage
 
             // Check that the resulting file (working copy that has been processed) remains identical to the original file (i.e. no byte lost nor added)
 
@@ -222,7 +222,7 @@ namespace ATL.test.IO
             // Tricky fields that aren't managed with a 1-to-1 mapping
             theTrack.Year = 1944;
             theTrack.TrackNumber = 10;
-            Assert.IsTrue(theTrack.SaveAsync(null, progress).Result); // Hack to include async methods in test coverage
+            Assert.IsTrue(theTrack.SaveAsync(progress).Result); // Hack to include async methods in test coverage
 
             theTrack = new Track(testFileLocation);
 

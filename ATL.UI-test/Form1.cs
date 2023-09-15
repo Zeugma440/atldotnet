@@ -109,9 +109,9 @@ namespace ATL.UI_test
                 Application.DoEvents();
 
                 if (asynchronous)
-                    return await theFile.SaveAsync(null, null == progress ? null : new Progress<float>(progress));
+                    return await theFile.SaveAsync(null == progress ? null : new Progress<float>(progress));
                 else
-                    return theFile.Save(null, progress);
+                    return theFile.Save(progress);
                 /*
                 theFile = new Track(testFileLocation);
 

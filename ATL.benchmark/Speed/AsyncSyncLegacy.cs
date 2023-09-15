@@ -97,7 +97,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            theFile.Save(null, withProgress ? progress : null);
+            theFile.Save(withProgress ? progress : null);
         }
 
         public async Task performWriteAsync(String filePath, bool withProgress)
@@ -117,7 +117,7 @@ namespace ATL.benchmark
         theFile.Chapters[1].Picture.ComputePicHash();
             */
 
-            await theFile.SaveAsync(null, withProgress ? progress : null);
+            await theFile.SaveAsync(withProgress ? progress : null);
         }
     }
 }
