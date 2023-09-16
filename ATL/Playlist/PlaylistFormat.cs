@@ -1,4 +1,6 @@
-﻿namespace ATL.Playlist
+﻿using System.Net.Http.Headers;
+
+namespace ATL.Playlist
 {
     /// <summary>
     /// Defines the format of a playlist
@@ -70,10 +72,10 @@
         /// </summary>
         /// <param name="ID">Format ID</param>
         /// <param name="iName">Format name</param>
-
-        public PlaylistFormat(int ID, string iName)
+        /// <param name="writable">Indicate if ATL implements writing for this Format</param>
+        public PlaylistFormat(int ID, string iName, bool writable = true)
         {
-            init(ID, iName);
+            init(ID, iName, writable);
         }
 
         /// <summary>
@@ -97,9 +99,10 @@
         /// </summary>
         /// <param name="id">Format ID</param>
         /// <param name="name">Format name</param>
-        protected void init(int id, string name)
+        /// <param name="writable">Indicate if ATL implements writing for this Format</param>
+        protected void init(int id, string name, bool writable = true)
         {
-            base.init(id, name);
+            base.init(id, name, "", writable);
             LocationFormat = LocationFormatting.FilePath;
             Encoding = FileEncoding.UTF8_BOM;
         }

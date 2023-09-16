@@ -69,7 +69,7 @@ namespace ATL.Playlist
                     tempFmt.AddExtension(".pls");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)");
+                    tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)", false);
                     tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
                     tempFmt.AddExtension(".fpl");
                     theFactory.addFormat(tempFmt);

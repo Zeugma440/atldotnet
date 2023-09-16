@@ -40,9 +40,10 @@ namespace ATL
         /// <param name="id">Unique ID</param>
         /// <param name="name">Name</param>
         /// <param name="shortName">Short name</param>
-        public Format(int id, string name, string shortName = "")
+        /// <param name="writable">Indicate if ATL implements writing for this Format</param>
+        public Format(int id, string name, string shortName = "", bool writable = true)
         {
-            init(id, name, (0 == shortName.Length) ? name : shortName);
+            init(id, name, (0 == shortName.Length) ? name : shortName, writable);
         }
 
         /// <summary>
@@ -71,6 +72,7 @@ namespace ATL
             mimeList = new Dictionary<string, int>(f.mimeList);
             extList = new Dictionary<string, int>(f.extList);
             Readable = f.Readable;
+            Writable = f.Writable;
             CheckHeader = f.CheckHeader;
             SearchHeader = f.SearchHeader;
         }
@@ -81,12 +83,14 @@ namespace ATL
         /// <param name="id">Unique ID</param>
         /// <param name="name">Name</param>
         /// <param name="shortName">Short name</param>
-        protected void init(int id, string name, string shortName = "")
+        /// <param name="writable">Indicate if ATL implements writing for this Format</param>
+        protected void init(int id, string name, string shortName = "", bool writable = true)
         {
             ID = id;
             Name = name;
-            ShortName = (0 == shortName.Length) ? name : shortName;
+            ShortName = 0 == shortName.Length ? name : shortName;
             Readable = true;
+            Writable = writable;
             extList = new Dictionary<string, int>();
             mimeList = new Dictionary<string, int>();
         }
@@ -126,6 +130,11 @@ namespace ATL
         /// True if the format is readable by ATL
         /// </summary>
         public bool Readable { get; set; }
+
+        /// <summary>
+        /// True if the format is writable by ATL
+        /// </summary>
+        public bool Writable { get; set; }
 
 
         #region Code for IEnumerable implementation
