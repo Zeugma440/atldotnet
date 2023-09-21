@@ -623,9 +623,6 @@ namespace ATL.AudioData.IO
         {
             FrameHeader Frame = new FrameHeader();
             byte encodingCode;
-            Encoding frameEncoding;
-            int dataSize;
-            long dataPosition;
 
             long initialTagPos = source.Position;
 
@@ -698,7 +695,7 @@ namespace ATL.AudioData.IO
             if (TAG_VERSION_2_2 == tagVersion) Frame.Flags = 0;
             else Frame.Flags = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
-            dataSize = Frame.Size;
+            var dataSize = Frame.Size;
 
             // Skips data size indicator if signaled by the flag
             if ((Frame.Flags & 1) > 0)
@@ -716,7 +713,7 @@ namespace ATL.AudioData.IO
             {
                 encodingCode = 0; // Latin-1; default according to spec
             }
-            frameEncoding = decodeID3v2CharEncoding(encodingCode);
+            var frameEncoding = decodeID3v2CharEncoding(encodingCode);
 
             // COMM and USLT/ULT fields contain :
             //   a 3-byte langage ID
@@ -791,10 +788,9 @@ namespace ATL.AudioData.IO
 
 
             // == READ ACTUAL FRAME DATA
+            var dataPosition = source.Position;
 
-            dataPosition = source.Position;
-
-            if (dataSize > 0 && dataSize < source.Length)
+            if (dataSize >= 0 && dataSize < source.Length)
             {
                 if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
                 {
@@ -2050,8 +2046,8 @@ namespace ATL.AudioData.IO
 
                 // All UTF-16 BOMs either start or end with 0xFE or 0xFF
                 // => Having them both read means that the entirety of the UTF-16 BOM has been read
-                foundFE = foundFE || (0xFE == b[0]);
-                foundFF = foundFF || (0xFF == b[0]);
+                foundFE = foundFE || 0xFE == b[0];
+                foundFF = foundFF || 0xFF == b[0];
                 if (foundFE && foundFF)
                 {
                     result.Found = true;
