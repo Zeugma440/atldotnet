@@ -13,15 +13,13 @@ namespace ATL.Playlist.IO
         /// <inheritdoc/>
         protected override void getFiles(FileStream fs, IList<string> result)
         {
-            using (XmlReader source = XmlReader.Create(fs))
+            using XmlReader source = XmlReader.Create(fs);
+            while (source.ReadToFollowing("entry"))
             {
-                while (source.ReadToFollowing("entry"))
+                decodeLocation(source, "Playstring", result);
+                while (source.Read())
                 {
-                    decodeLocation(source, "Playstring", result);
-                    while (source.Read())
-                    {
-                        if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;
-                    }
+                    if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;
                 }
             }
         }
