@@ -1,5 +1,6 @@
 ﻿using ATL.Playlist.IO;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ATL.Playlist
 {
@@ -55,56 +56,67 @@ namespace ATL.Playlist
         {
             lock (_lockable)
             {
-                if (null == theFactory)
+                if (null != theFactory) return theFactory;
+
+                theFactory = new PlaylistIOFactory
                 {
-                    theFactory = new PlaylistIOFactory();
-                    theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
+                    formatListByExt = new Dictionary<string, IList<Format>>()
+                };
 
-                    PlaylistFormat tempFmt = new PlaylistFormat(PL_M3U, "M3U");
-                    tempFmt.AddExtension(".m3u");
-                    tempFmt.AddExtension(".m3u8");
-                    theFactory.addFormat(tempFmt);
+                PlaylistFormat tempFmt = new PlaylistFormat(PL_M3U, "M3U");
+                tempFmt.AddExtension(".m3u");
+                tempFmt.AddExtension(".m3u8");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_PLS, "PLS");
-                    tempFmt.AddExtension(".pls");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_PLS, "PLS");
+                tempFmt.AddExtension(".pls");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)", false);
-                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.MS_URI;
-                    tempFmt.AddExtension(".fpl");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_FPL, "FPL (experimental)", false)
+                {
+                    LocationFormat = PlaylistFormat.LocationFormatting.MS_URI
+                };
+                tempFmt.AddExtension(".fpl");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
-                    tempFmt.AddExtension(".xspf");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_XSPF, "XSPF (spiff)");
+                tempFmt.AddExtension(".xspf");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_SMIL, "SMIL");
-                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
-                    tempFmt.AddExtension(".smil");
-                    tempFmt.AddExtension(".smi");
-                    tempFmt.AddExtension(".zpl");
-                    tempFmt.AddExtension(".wpl");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_SMIL, "SMIL")
+                {
+                    LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI
+                };
+                tempFmt.AddExtension(".smil");
+                tempFmt.AddExtension(".smi");
+                tempFmt.AddExtension(".zpl");
+                tempFmt.AddExtension(".wpl");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_ASX, "ASX");
-                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
-                    tempFmt.AddExtension(".asx");
-                    tempFmt.AddExtension(".wax");
-                    tempFmt.AddExtension(".wvx");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_ASX, "ASX")
+                {
+                    LocationFormat = PlaylistFormat.LocationFormatting.FilePath
+                };
+                tempFmt.AddExtension(".asx");
+                tempFmt.AddExtension(".wax");
+                tempFmt.AddExtension(".wvx");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_B4S, "B4S");
-                    tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM;
-                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI;
-                    tempFmt.AddExtension(".b4s");
-                    theFactory.addFormat(tempFmt);
+                tempFmt = new PlaylistFormat(PL_B4S, "B4S")
+                {
+                    Encoding = PlaylistFormat.FileEncoding.UTF8_NO_BOM,
+                    LocationFormat = PlaylistFormat.LocationFormatting.RFC_URI
+                };
+                tempFmt.AddExtension(".b4s");
+                theFactory.addFormat(tempFmt);
 
-                    tempFmt = new PlaylistFormat(PL_DPL, "DPL");
-                    tempFmt.Encoding = PlaylistFormat.FileEncoding.UTF8_BOM;
-                    tempFmt.LocationFormat = PlaylistFormat.LocationFormatting.FilePath;
-                    tempFmt.AddExtension(".dpl");
-                    theFactory.addFormat(tempFmt);
-                }
+                tempFmt = new PlaylistFormat(PL_DPL, "DPL")
+                {
+                    Encoding = PlaylistFormat.FileEncoding.UTF8_BOM,
+                    LocationFormat = PlaylistFormat.LocationFormatting.FilePath
+                };
+                tempFmt.AddExtension(".dpl");
+                theFactory.addFormat(tempFmt);
             }
 
             return theFactory;
@@ -118,6 +130,7 @@ namespace ATL.Playlist
         /// <param name="fileEncoding">Encoding of the file</param>
         /// <param name="alternate">Internal use; should be zero when called from outside</param>
         /// <returns></returns>
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public IPlaylistIO GetPlaylistIO(
             string path,
             PlaylistFormat.LocationFormatting locationFormatting = PlaylistFormat.LocationFormatting.Undefined,
@@ -126,7 +139,6 @@ namespace ATL.Playlist
         {
             IList<Format> formats = (List<Format>)getFormatsFromPath(path);
             Format format;
-            IPlaylistIO result;
 
             if (formats != null && formats.Count > alternate)
             {
@@ -136,7 +148,7 @@ namespace ATL.Playlist
             {
                 format = UNKNOWN_FORMAT;
             }
-            result = GetPlaylistIO(format.ID);
+            var result = GetPlaylistIO(format.ID);
             result.Path = path;
             // Default settings inherited from format
             if (!format.Equals(UNKNOWN_FORMAT))
@@ -190,9 +202,7 @@ namespace ATL.Playlist
                 theReader = new DPLIO();
             }
 
-            if (null == theReader) theReader = new DummyIO();
-
-            return theReader;
+            return theReader ?? new DummyIO();
         }
     }
 }

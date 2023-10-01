@@ -1,4 +1,5 @@
 ﻿using ATL.Playlist;
+using System;
 
 namespace ATL.test.IO.Playlist
 {
@@ -39,22 +40,24 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_PLS()
         {
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add("aaa.mp3");
-            pathsToWrite.Add("bbb.mp3");
+            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
+            pathsToWrite.Add(testTrackLocation1);
+            pathsToWrite.Add(testTrackLocation2);
             pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3", "empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD", "mod.mod")));
-            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
+            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.pls");
+            bool defaultPathSetting = ATL.Settings.PlaylistUseAbsolutePath;
             try
             {
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                // Test Path writing
+                // Test Path writing + absolute formatting
+                ATL.Settings.PlaylistUseAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -69,19 +72,18 @@ namespace ATL.test.IO.Playlist
                     {
                         Assert.AreEqual("[playlist]", sr.ReadLine());
                         sr.ReadLine();
-                        Assert.AreEqual("File1=aaa.mp3", sr.ReadLine());
-                        Assert.AreEqual("Title1=aaa", sr.ReadLine());
-                        Assert.AreEqual("Length1=-1", sr.ReadLine());
-                        sr.ReadLine();
-                        Assert.AreEqual("File2=bbb.mp3", sr.ReadLine());
-                        Assert.AreEqual("Title2=bbb", sr.ReadLine());
-                        Assert.AreEqual("Length2=-1", sr.ReadLine());
-                        sr.ReadLine();
-                        Assert.AreEqual("File3=http://this-is-a-stre.am:8405/live", sr.ReadLine());
-                        Assert.AreEqual("Title3=live", sr.ReadLine());
-                        Assert.AreEqual("Length3=-1", sr.ReadLine());
-                        sr.ReadLine();
-                        Assert.AreEqual("NumberOfEntries="+pathsToWrite.Count, sr.ReadLine());
+
+                        int counter = 1;
+                        foreach (string s in pathsToWrite)
+                        {
+                            Assert.AreEqual("File" + counter + "="+ s, sr.ReadLine());
+                            Assert.AreEqual("Title" + counter + "=" + System.IO.Path.GetFileNameWithoutExtension(s), sr.ReadLine());
+                            Assert.AreEqual("Length" + counter + "=-1", sr.ReadLine());
+                            sr.ReadLine();
+                            counter++;
+                        }
+
+                        Assert.AreEqual("NumberOfEntries=" + pathsToWrite.Count, sr.ReadLine());
                         Assert.AreEqual("Version=2", sr.ReadLine());
                         Assert.IsTrue(sr.EndOfStream);
                     }
@@ -91,7 +93,8 @@ namespace ATL.test.IO.Playlist
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
-                // Test Track writing
+                // Test Track writing + relative formatting
+                ATL.Settings.PlaylistUseAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -102,13 +105,13 @@ namespace ATL.test.IO.Playlist
                     foreach (Track t in tracksToWrite)
                     {
                         sr.ReadLine();
-                        Assert.AreEqual("File" + counter + "=" + t.Path, sr.ReadLine());
+                        Assert.AreEqual("File" + counter + "=" + TestUtils.MakePathRelative(testFileLocation, t.Path), sr.ReadLine());
                         Assert.AreEqual("Title" + counter + "=" + t.Title, sr.ReadLine());
-                        Assert.AreEqual("Length" + counter + "=" + ((t.Duration > 0) ? t.Duration : -1), sr.ReadLine());
+                        Assert.AreEqual("Length" + counter + "=" + (t.Duration > 0 ? t.Duration : -1), sr.ReadLine());
                         counter++;
                     }
                     sr.ReadLine();
-                    Assert.AreEqual("NumberOfEntries="+tracksToWrite.Count, sr.ReadLine());
+                    Assert.AreEqual("NumberOfEntries=" + tracksToWrite.Count, sr.ReadLine());
                     Assert.AreEqual("Version=2", sr.ReadLine());
                     Assert.IsTrue(sr.EndOfStream);
                 }
@@ -116,10 +119,18 @@ namespace ATL.test.IO.Playlist
                 IList<Track> tracks = pls.Tracks;
                 Assert.AreEqual(tracksToWrite.Count, tracks.Count);
                 for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
+                Assert.IsTrue(tracks[0].Duration > 0);
+                Assert.IsTrue(tracks[1].Duration > 0);
             }
             finally
             {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.PlaylistUseAbsolutePath = defaultPathSetting;
+                if (Settings.DeleteAfterSuccess)
+                {
+                    File.Delete(testTrackLocation1);
+                    File.Delete(testTrackLocation2);
+                    File.Delete(testFileLocation);
+                }
             }
         }
     }

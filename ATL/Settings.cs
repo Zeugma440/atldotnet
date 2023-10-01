@@ -108,6 +108,13 @@ namespace ATL
         /// </summary>
         public static bool AutoFormatAdditionalDates = true;
 
+        /// <summary>
+        /// If true, use absolute file paths when writing playlists
+        /// If false, use relative file paths when track files are under the same folder as the playlist file
+        /// Default : false
+        /// </summary>
+        public static bool PlaylistUseAbsolutePath = false;
+
 
         //
         // Behaviour related to leading zeroes when formatting Disc and Track fields (ID3v2, Vorbis, APE)

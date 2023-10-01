@@ -1,4 +1,5 @@
 ﻿using ATL.Playlist;
+using System;
 
 namespace ATL.test.IO.Playlist
 {
@@ -101,24 +102,26 @@ namespace ATL.test.IO.Playlist
             bool defaultSetting = ATL.Settings.M3U_useExtendedFormat;
 
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add("aaa.mp3");
-            pathsToWrite.Add("bbb.mp3");
+            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
+            pathsToWrite.Add(testTrackLocation1);
+            pathsToWrite.Add(testTrackLocation2);
             pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3", "empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD", "mod.mod")));
-            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
+            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
+            bool defaultPathSetting = ATL.Settings.PlaylistUseAbsolutePath;
             try
             {
                 ATL.Settings.M3U_useExtendedFormat = true;
 
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                // Test Path writing
+                // Test Path writing + absolute formatting
+                ATL.Settings.PlaylistUseAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -138,7 +141,8 @@ namespace ATL.test.IO.Playlist
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
-                // Test Track writing
+                // Test Track writing + relative formatting
+                ATL.Settings.PlaylistUseAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -147,11 +151,11 @@ namespace ATL.test.IO.Playlist
                     Assert.AreEqual("#EXTM3U", sr.ReadLine());
                     foreach (Track t in tracksToWrite)
                     {
-                        string line = "#EXTINF:" + ((t.Duration > 0) ? t.Duration : -1) + ",";
-                        if (t.Artist != null && t.Artist.Length > 0) line += t.Artist + " - ";
+                        string line = "#EXTINF:" + (t.Duration > 0 ? t.Duration : -1) + ",";
+                        if (!string.IsNullOrEmpty(t.Artist)) line += t.Artist + " - ";
                         line += t.Title;
                         Assert.AreEqual(line, sr.ReadLine());
-                        Assert.AreEqual(t.Path, sr.ReadLine());
+                        Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, t.Path), sr.ReadLine());
                     }
                     Assert.IsTrue(sr.EndOfStream);
                 }
@@ -159,10 +163,18 @@ namespace ATL.test.IO.Playlist
                 IList<Track> tracks = pls.Tracks;
                 Assert.AreEqual(tracksToWrite.Count, tracks.Count);
                 for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
+                Assert.IsTrue(tracks[0].Duration > 0);
+                Assert.IsTrue(tracks[1].Duration > 0);
             }
             finally
             {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.PlaylistUseAbsolutePath = defaultPathSetting;
+                if (Settings.DeleteAfterSuccess)
+                {
+                    File.Delete(testTrackLocation1);
+                    File.Delete(testTrackLocation2);
+                    File.Delete(testFileLocation);
+                }
                 ATL.Settings.M3U_useExtendedFormat = defaultSetting;
             }
         }

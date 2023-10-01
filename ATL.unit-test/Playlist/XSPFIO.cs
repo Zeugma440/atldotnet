@@ -40,22 +40,24 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_XSPF()
         {
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "aaa.mp3");
-            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "bbb.mp3");
+            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
+            pathsToWrite.Add(testTrackLocation1);
+            pathsToWrite.Add(testTrackLocation2);
             pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3", "empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD", "mod.mod")));
-            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
+            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.xspf");
+            bool defaultPathSetting = ATL.Settings.PlaylistUseAbsolutePath;
             try
             {
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                // Test Path writing
+                // Test Path writing + absolute formatting
+                ATL.Settings.PlaylistUseAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
                 IList<string> parents = new List<string>();
                 int index = -1;
@@ -102,7 +104,8 @@ namespace ATL.test.IO.Playlist
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
-                // Test Track writing
+                // Test Track writing + relative formatting
+                ATL.Settings.PlaylistUseAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
                 index = -1;
                 parents.Clear();
@@ -123,7 +126,7 @@ namespace ATL.test.IO.Playlist
                             }
                             else if (parents.Contains("track"))
                             {
-                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Path);
+                                if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), TestUtils.MakePathRelative(testFileLocation, tracksToWrite[index].Path));
                                 else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Title);
                                 else if (source.Name.Equals("creator", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Artist);
                                 else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(getXmlValue(source), tracksToWrite[index].Album);
@@ -139,10 +142,18 @@ namespace ATL.test.IO.Playlist
                 IList<Track> tracks = pls.Tracks;
                 Assert.AreEqual(tracksToWrite.Count, tracks.Count);
                 for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
+                Assert.IsTrue(tracks[0].Duration > 0);
+                Assert.IsTrue(tracks[1].Duration > 0);
             }
             finally
             {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.PlaylistUseAbsolutePath = defaultPathSetting;
+                if (Settings.DeleteAfterSuccess)
+                {
+                    File.Delete(testTrackLocation1);
+                    File.Delete(testTrackLocation2);
+                    File.Delete(testFileLocation);
+                }
             }
         }
 

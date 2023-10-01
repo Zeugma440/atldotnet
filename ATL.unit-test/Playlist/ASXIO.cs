@@ -14,7 +14,7 @@ namespace ATL.test.IO.Playlist
         public void PLIO_R_ASX()
         {
             var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.asx", "$PATH", TestUtils.GetResourceLocationRoot(false).Replace("\\", "/"));
-            
+
             try
             {
                 var theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
@@ -45,22 +45,24 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_ASX()
         {
             IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "aaa.mp3");
-            pathsToWrite.Add(TestUtils.GetResourceLocationRoot() + "bbb.mp3");
+            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
+            pathsToWrite.Add(testTrackLocation1);
+            pathsToWrite.Add(testTrackLocation2);
             pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
             IList<Track> tracksToWrite = new List<Track>();
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MP3","empty.mp3")));
-            tracksToWrite.Add(new Track(Path.Combine(TestUtils.GetResourceLocationRoot() + "MOD","mod.mod")));
-            tracksToWrite.Add(new Track("http://this-is-a-stre.am:8405/live"));
+            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.asx");
+            bool defaultPathSetting = ATL.Settings.PlaylistUseAbsolutePath;
             try
             {
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                // Test Path writing
+                // Test Path writing + absolute formatting
+                ATL.Settings.PlaylistUseAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
                 IList<string> parents = new List<string>();
                 int index = -1;
@@ -73,22 +75,19 @@ namespace ATL.test.IO.Playlist
                     Assert.IsTrue(bom.SequenceEqual(PlaylistIO.BOM_UTF8));
                     fs.Seek(0, SeekOrigin.Begin);
 
-                    using (XmlReader source = XmlReader.Create(fs))
+                    using XmlReader source = XmlReader.Create(fs);
+                    // Read file content
+                    while (source.Read())
                     {
-                        // Read file content
-                        while (source.Read())
+                        if (source.NodeType != XmlNodeType.Element) continue;
+
+                        if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name.ToLower());
+                        else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && parents.Contains("asx"))
                         {
-                            if (source.NodeType == XmlNodeType.Element)
-                            {
-                                if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name.ToLower());
-                                else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && parents.Contains("asx"))
-                                {
-                                    index++;
-                                    parents.Add(source.Name.ToLower());
-                                }
-                                else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual(pathsToWrite[index], source.GetAttribute("HREF"));
-                            }
+                            index++;
+                            parents.Add(source.Name.ToLower());
                         }
+                        else if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase) && parents.Contains("entry")) Assert.AreEqual(pathsToWrite[index], source.GetAttribute("HREF"));
                     }
                 }
 
@@ -99,7 +98,8 @@ namespace ATL.test.IO.Playlist
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
 
-                // Test Track writing
+                // Test Track writing + relative formatting
+                ATL.Settings.PlaylistUseAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
                 index = -1;
                 parents.Clear();
@@ -109,20 +109,19 @@ namespace ATL.test.IO.Playlist
                 {
                     while (source.Read())
                     {
-                        if (source.NodeType == XmlNodeType.Element)
+                        if (source.NodeType != XmlNodeType.Element) continue;
+
+                        if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name.ToLower());
+                        else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && parents.Contains("asx"))
                         {
-                            if (source.Name.Equals("asx", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name.ToLower());
-                            else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && parents.Contains("asx"))
-                            {
-                                index++;
-                                parents.Add(source.Name.ToLower());
-                            }
-                            else if (parents.Contains("entry"))
-                            {
-                                if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Path, source.GetAttribute("HREF"));
-                                else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Title, getXmlValue(source));
-                                else if (source.Name.Equals("author", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Artist, getXmlValue(source));
-                            }
+                            index++;
+                            parents.Add(source.Name.ToLower());
+                        }
+                        else if (parents.Contains("entry"))
+                        {
+                            if (source.Name.Equals("ref", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, tracksToWrite[index].Path), source.GetAttribute("HREF"));
+                            else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Title, getXmlValue(source));
+                            else if (source.Name.Equals("author", StringComparison.OrdinalIgnoreCase)) Assert.AreEqual(tracksToWrite[index].Artist, getXmlValue(source));
                         }
                     }
                 }
@@ -131,21 +130,25 @@ namespace ATL.test.IO.Playlist
                 IList<Track> tracks = pls.Tracks;
                 Assert.AreEqual(tracksToWrite.Count, tracks.Count);
                 for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
+                Assert.IsTrue(tracks[0].Duration > 0);
+                Assert.IsTrue(tracks[1].Duration > 0);
             }
             finally
             {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+                ATL.Settings.PlaylistUseAbsolutePath = defaultPathSetting;
+                if (Settings.DeleteAfterSuccess)
+                {
+                    File.Delete(testTrackLocation1);
+                    File.Delete(testTrackLocation2);
+                    File.Delete(testFileLocation);
+                }
             }
         }
 
         private static string getXmlValue(XmlReader source)
         {
             source.Read();
-            if (source.NodeType == XmlNodeType.Text)
-            {
-                return source.Value;
-            }
-            return "";
+            return source.NodeType == XmlNodeType.Text ? source.Value : "";
         }
     }
 }

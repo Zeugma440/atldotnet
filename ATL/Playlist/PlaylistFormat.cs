@@ -17,11 +17,11 @@ namespace ATL.Playlist
             /// </summary>
             Undefined = -1,
             /// <summary>
-            /// File path (e.g. C:\the folder\theFile.mp3)
+            /// File path (e.g. C:\the folder\theFile.mp3, theFile.mp3)
             /// </summary>
             FilePath = 0,
             /// <summary>
-            /// Winamp convention (e.g. file:C:\the folder\theFile.mp3)
+            /// Winamp convention (e.g. file:C:\the folder\theFile.mp3, file:theFile.mp3)
             /// </summary>
             Winamp_URI = 1,
             /// <summary>
@@ -29,7 +29,7 @@ namespace ATL.Playlist
             /// </summary>
             MS_URI = 2,
             /// <summary>
-            /// RFC URI (e.g. file:///C:/the%20folder/theFile.mp3)
+            /// RFC-3986 URI (e.g. file:///C:/the%20folder/theFile.mp3, theFile.mp3)
             /// </summary>
             RFC_URI = 3
         };

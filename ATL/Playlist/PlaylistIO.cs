@@ -90,10 +90,8 @@ namespace ATL.Playlist
 
             try
             {
-                using (FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read))
-                {
-                    getFiles(fs, result);
-                }
+                using FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
+                getFiles(fs, result);
             }
             catch (Exception e)
             {
@@ -147,11 +145,9 @@ namespace ATL.Playlist
             LogDelegator.GetLocateDelegate()(Path);
             try
             {
-                using (FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
-                {
-                    if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
-                    setTracks(fs, trackList);
-                }
+                using FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+                if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
+                setTracks(fs, trackList);
             }
             catch (Exception e)
             {
@@ -165,22 +161,20 @@ namespace ATL.Playlist
         /// <returns>New instance of XmlWriterSettings</returns>
         protected XmlWriterSettings generateWriterSettings()
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CloseOutput = true;
-            switch (Encoding)
+            XmlWriterSettings settings = new XmlWriterSettings
             {
-                case PlaylistFormat.FileEncoding.ANSI:
-                    settings.Encoding = ANSI;
-                    break;
-                default:
-                    settings.Encoding = UTF8_NO_BOM;
-                    break;
-            }
+                CloseOutput = true,
+                Encoding = Encoding switch
+                {
+                    PlaylistFormat.FileEncoding.ANSI => ANSI,
+                    _ => UTF8_NO_BOM
+                },
+                OmitXmlDeclaration = true,
+                ConformanceLevel = ConformanceLevel.Fragment,
+                Indent = true,
+                DoNotEscapeUriAttributes = false
+            };
 
-            settings.OmitXmlDeclaration = true;
-            settings.ConformanceLevel = ConformanceLevel.Fragment;
-            settings.Indent = true;
-            settings.DoNotEscapeUriAttributes = false;
             return settings;
         }
 
@@ -191,6 +185,20 @@ namespace ATL.Playlist
         /// <returns></returns>
         protected string encodeLocation(string location)
         {
+            if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ Settings.PlaylistUseAbsolutePath))
+            {
+                if (Settings.PlaylistUseAbsolutePath)
+                {
+                    location = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", location);
+                }
+                else
+                {
+                    location = location.Replace(System.IO.Path.GetDirectoryName(Path) ?? "", "");
+                    if (location.StartsWith(System.IO.Path.DirectorySeparatorChar)) location = location[1..];
+                    if (location.StartsWith(System.IO.Path.AltDirectorySeparatorChar)) location = location[1..];
+                }
+            }
+
             switch (LocationFormatting)
             {
                 case PlaylistFormat.LocationFormatting.RFC_URI:
@@ -201,6 +209,7 @@ namespace ATL.Playlist
                 case PlaylistFormat.LocationFormatting.Winamp_URI:
                     return "file:" + location;
                 case PlaylistFormat.LocationFormatting.FilePath:
+                case PlaylistFormat.LocationFormatting.Undefined:
                 default:
                     return location;
             }
@@ -237,7 +246,7 @@ namespace ATL.Playlist
                     {
                         if (!System.IO.Path.IsPathRooted(uri.LocalPath))
                         {
-                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), uri.LocalPath);
+                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", uri.LocalPath);
                         }
 
                         // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
@@ -258,7 +267,7 @@ namespace ATL.Playlist
                 href = href.Replace("file:///", "").Replace("file://", "").Replace("file:", "").Replace('\\', System.IO.Path.DirectorySeparatorChar);
                 if (!System.IO.Path.IsPathRooted(href))
                 {
-                    href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), href);
+                    href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", href);
                 }
             }
             return href;

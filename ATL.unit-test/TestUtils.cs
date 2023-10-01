@@ -109,6 +109,13 @@ namespace ATL.test
             return fi.Length;
         }
 
+        public static string MakePathRelative(string reference, string path)
+        {
+            string result = path.Replace(System.IO.Path.GetDirectoryName(reference) ?? "", "");
+            if (result.StartsWith(System.IO.Path.DirectorySeparatorChar)) result = result[1..];
+            if (result.StartsWith(System.IO.Path.AltDirectorySeparatorChar)) result = result[1..];
+            return result;
+        }
     }
 
 }
