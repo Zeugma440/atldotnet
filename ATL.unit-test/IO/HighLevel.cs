@@ -1404,6 +1404,9 @@ namespace ATL.test.IO
             Assert.AreEqual(newValue, theFile.ID3v2.Artist);
             Assert.AreEqual(newValue, theFile.APEtag.Artist);
 
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
 
             // == 3- Log warning when trying to write an unsupported tag
             ArrayLogger log = new ArrayLogger();
