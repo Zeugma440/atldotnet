@@ -27,6 +27,7 @@ namespace ATL.test.IO.Playlist
             replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
             var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
+            bool foundHttp = false;
             try
             {
                 pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
@@ -36,7 +37,9 @@ namespace ATL.test.IO.Playlist
                 foreach (string s in pls.FilePaths)
                 {
                     if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
+                    else foundHttp = true;
                 }
+                Assert.IsTrue(foundHttp);
                 foreach (Track t in pls.Tracks)
                 {
                     // Ensure the track has been parsed when it points to a file

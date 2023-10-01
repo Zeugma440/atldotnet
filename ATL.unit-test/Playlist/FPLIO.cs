@@ -1,6 +1,4 @@
 ﻿using ATL.Playlist;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
 
 namespace ATL.test.IO.Playlist
 {

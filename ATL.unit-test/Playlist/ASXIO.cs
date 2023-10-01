@@ -19,13 +19,16 @@ namespace ATL.test.IO.Playlist
             {
                 var theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
                 var filePaths = theReader.FilePaths;
-                
+                bool foundHttp = false;
+
                 Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
                 Assert.AreEqual(5, filePaths.Count);
                 foreach (string s in theReader.FilePaths)
                 {
                     if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(System.IO.File.Exists(s));
+                    else foundHttp = true;
                 }
+                Assert.IsTrue(foundHttp);
                 foreach (Track t in theReader.Tracks)
                 {
                     // Ensure the track has been parsed when it points to a file
