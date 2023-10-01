@@ -185,9 +185,9 @@ namespace ATL.Playlist
         /// <returns></returns>
         protected string encodeLocation(string location)
         {
-            if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ Settings.PlaylistUseAbsolutePath))
+            if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ Settings.PlaylistWriteAbsolutePath))
             {
-                if (Settings.PlaylistUseAbsolutePath)
+                if (Settings.PlaylistWriteAbsolutePath)
                 {
                     location = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", location);
                 }

@@ -48,13 +48,13 @@ namespace ATL.test.IO.Playlist
 
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.dpl");
-            bool defaultPathSetting = ATL.Settings.PlaylistUseAbsolutePath;
+            bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
             try
             {
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
                 // Test Path writing + absolute formatting
-                ATL.Settings.PlaylistUseAbsolutePath = true;
+                ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -81,7 +81,7 @@ namespace ATL.test.IO.Playlist
 
 
                 // Test Track writing + relative formatting
-                ATL.Settings.PlaylistUseAbsolutePath = false;
+                ATL.Settings.PlaylistWriteAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
@@ -112,7 +112,7 @@ namespace ATL.test.IO.Playlist
             }
             finally
             {
-                ATL.Settings.PlaylistUseAbsolutePath = defaultPathSetting;
+                ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
                 if (Settings.DeleteAfterSuccess)
                 {
                     File.Delete(testTrackLocation1);

@@ -109,11 +109,12 @@ namespace ATL
         public static bool AutoFormatAdditionalDates = true;
 
         /// <summary>
-        /// If true, use absolute file paths when writing playlists
+        /// Determines the way ATL writes file paths in playlists
+        /// If true, use absolute file paths
         /// If false, use relative file paths when track files are under the same folder as the playlist file
         /// Default : false
         /// </summary>
-        public static bool PlaylistUseAbsolutePath = false;
+        public static bool PlaylistWriteAbsolutePath = false;
 
 
         //
