@@ -17,7 +17,10 @@ namespace ATL.Playlist.IO
         private static readonly byte[] HTTP_IDENTIFIER = Utils.Latin1Encoding.GetBytes("http://");
         private static readonly byte[] HTTPS_IDENTIFIER = Utils.Latin1Encoding.GetBytes("https://");
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public FPLIO(string filePath) : base(filePath)
         {
         }

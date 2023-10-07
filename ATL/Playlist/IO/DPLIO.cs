@@ -11,6 +11,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class DPLIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public DPLIO(string filePath) : base(filePath)
         {
         }

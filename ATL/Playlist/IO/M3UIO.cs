@@ -9,6 +9,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class M3UIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public M3UIO(string filePath) : base(filePath)
         {
         }

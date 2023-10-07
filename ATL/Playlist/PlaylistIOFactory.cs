@@ -166,7 +166,7 @@ namespace ATL.Playlist
         /// <param name="formatId">Playlist format code of the object to create</param>
         /// <param name="path">Path of the playlist file to use</param>
         /// <returns>New playlist management object correspondingf to the given code</returns>
-        public IPlaylistIO GetPlaylistIO(int formatId, string path)
+        public static IPlaylistIO GetPlaylistIO(int formatId, string path)
         {
             IPlaylistIO theReader = formatId switch
             {

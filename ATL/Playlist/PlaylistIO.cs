@@ -32,15 +32,30 @@ namespace ATL.Playlist
         /// </summary>
         protected static readonly Encoding ANSI = Utils.Latin1Encoding;
 
+        /// <summary>
+        /// Represent the location of a file
+        /// </summary>
         protected sealed class FileLocation
         {
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="path">Path of the file</param>
+            /// <param name="isAbsolute">Indicate if the given path is absolute or relative</param>
             public FileLocation(string path, bool isAbsolute)
             {
                 Path = path;
                 IsAbsolute = isAbsolute;
             }
 
+            /// <summary>
+            /// Path of the file
+            /// </summary>
             public string Path { get; set; }
+
+            /// <summary>
+            /// Indicate if Path is absolute or relative
+            /// </summary>
             public bool IsAbsolute { get; set; }
         }
 
@@ -76,7 +91,7 @@ namespace ATL.Playlist
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="filePath">Path of the playlist file</param>
+        /// <param name="filePath">Path of the playlist file to load</param>
         protected PlaylistIO(string filePath, bool supportsRelativePaths = true)
         {
             Path = filePath;

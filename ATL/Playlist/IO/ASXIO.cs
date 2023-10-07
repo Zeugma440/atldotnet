@@ -12,6 +12,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class ASXIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public ASXIO(string filePath) : base(filePath)
         {
         }

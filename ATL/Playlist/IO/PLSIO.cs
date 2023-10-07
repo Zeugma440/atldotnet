@@ -9,6 +9,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class PLSIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public PLSIO(string filePath) : base(filePath)
         {
         }

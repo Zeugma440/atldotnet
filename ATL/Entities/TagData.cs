@@ -11,7 +11,7 @@ namespace ATL
     /// 
     /// TagData aims at staying a basic, universal container, without any Property accessor layer nor any field interpretation logic
     /// </summary>
-    public class TagData : IEquatable<TagData>
+    public sealed class TagData : IEquatable<TagData>
     {
         /// <summary>
         /// Standardized metadata fields

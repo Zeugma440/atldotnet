@@ -10,6 +10,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class B4SIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public B4SIO(string filePath) : base(filePath, false)
         {
         }

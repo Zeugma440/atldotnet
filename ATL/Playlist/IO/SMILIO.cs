@@ -14,6 +14,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class SMILIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public SMILIO(string filePath) : base(filePath)
         {
         }

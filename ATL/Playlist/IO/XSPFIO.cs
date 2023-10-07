@@ -12,6 +12,10 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class XSPFIO : PlaylistIO
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of playlist file to load</param>
         public XSPFIO(string filePath) : base(filePath)
         {
         }
