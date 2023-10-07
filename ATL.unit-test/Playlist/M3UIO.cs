@@ -1,74 +1,49 @@
 ﻿using ATL.Playlist;
-using System;
+using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class M3UIO
+    public class M3UIO : PlaylistIOTest
     {
         [TestMethod]
-        public void PLIO_R_M3U()
+        public void PLIO_R_M3U_simple()
         {
-            var pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_simple.m3u");
+            PLIO_R("playlist_simple.m3u", TestUtils.GetResourceLocationRoot(), 2);
+        }
 
-            Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
-            Assert.AreEqual(1, pls.FilePaths.Count);
-            foreach (var s in pls.FilePaths) Assert.IsTrue(System.IO.File.Exists(s));
-            foreach (var t in pls.Tracks) Assert.IsTrue(t.Duration > 0); // Ensures the track has been parsed
-
+        [TestMethod]
+        public void PLIO_R_M3U_extended()
+        {
             var replacements = new List<KeyValuePair<string, string>>();
             var resourceRoot = TestUtils.GetResourceLocationRoot(false);
-            replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
 
             // No disk path => on Windows this skips drive name, e.g. "C:" (not required on *nix)
             var noDiskPath = Path.DirectorySeparatorChar != '\\'
                 ? resourceRoot
                 : resourceRoot.Substring(2, resourceRoot.Length - 2);
 
+            replacements.Add(new KeyValuePair<string, string>("$PATH", resourceRoot));
             replacements.Add(new KeyValuePair<string, string>("$NODISK_PATH", noDiskPath));
 
-            var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist_fullPath.m3u", replacements);
-            bool foundHttp = false;
-            try
-            {
-                pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.IsNotInstanceOfType(pls, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(4, pls.FilePaths.Count);
-                foreach (string s in pls.FilePaths)
-                {
-                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
-                    else foundHttp = true;
-                }
-                Assert.IsTrue(foundHttp);
-                foreach (Track t in pls.Tracks)
-                {
-                    // Ensure the track has been parsed when it points to a file
-                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
-                }
-            }
-            finally
-            {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            }
+            PLIO_R("playlist_fullPath.m3u", replacements, 4);
         }
 
         [TestMethod]
         public void PLIO_W_M3U_Simple()
         {
-            IList<string> pathsToWrite = new List<string>();
-            pathsToWrite.Add("aaa.mp3");
-            pathsToWrite.Add("bbb.mp3");
-            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
-
-            bool defaultSetting = ATL.Settings.M3U_useExtendedFormat;
+            bool defaultFormatSetting = ATL.Settings.M3U_useExtendedFormat;
+            bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
             try
             {
                 ATL.Settings.M3U_useExtendedFormat = false;
+                ATL.Settings.PlaylistWriteAbsolutePath = true;
+
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
                 pls.FilePaths = pathsToWrite;
+                pls.Save();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 {
@@ -92,7 +67,8 @@ namespace ATL.test.IO.Playlist
             finally
             {
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-                ATL.Settings.M3U_useExtendedFormat = defaultSetting;
+                ATL.Settings.M3U_useExtendedFormat = defaultFormatSetting;
+                ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
             }
         }
 
@@ -100,17 +76,6 @@ namespace ATL.test.IO.Playlist
         public void PLIO_W_M3U_Extended()
         {
             bool defaultSetting = ATL.Settings.M3U_useExtendedFormat;
-
-            IList<string> pathsToWrite = new List<string>();
-            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
-            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
-            pathsToWrite.Add(testTrackLocation1);
-            pathsToWrite.Add(testTrackLocation2);
-            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
-
-            IList<Track> tracksToWrite = new List<Track>();
-            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
-
 
             string testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
             bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
@@ -123,6 +88,7 @@ namespace ATL.test.IO.Playlist
                 // Test Path writing + absolute formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
+                pls.Save();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (StreamReader sr = new StreamReader(fs))
@@ -144,6 +110,7 @@ namespace ATL.test.IO.Playlist
                 // Test Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
+                pls.Save();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (StreamReader sr = new StreamReader(fs))
@@ -169,13 +136,54 @@ namespace ATL.test.IO.Playlist
             finally
             {
                 ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
-                if (Settings.DeleteAfterSuccess)
-                {
-                    File.Delete(testTrackLocation1);
-                    File.Delete(testTrackLocation2);
-                    File.Delete(testFileLocation);
-                }
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
                 ATL.Settings.M3U_useExtendedFormat = defaultSetting;
+            }
+        }
+
+        [TestMethod]
+        public void PLIO_PLIO_RW_Absolute_Relative_Path_M3U()
+        {
+            var testFileLocation = PLIO_RW_Absolute_Relative_Path("m3u");
+            try
+            {
+                int nbEntries = 1;
+
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    Assert.AreEqual("#EXTM3U", sr.ReadLine());
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var title = sr.ReadLine();
+                        if (2 == nbEntries) Assert.IsTrue(title.EndsWith(NEW_TITLE));
+
+                        string path;
+                        switch (nbEntries)
+                        {
+                            case 1:
+                                path = remoteFilePath;
+                                break;
+                            case 2:
+                                path = localFilePath1;
+                                break;
+                            case 3:
+                                path = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                break;
+                            default:
+                                path = "";
+                                break;
+                        }
+                        Assert.AreEqual(path, sr.ReadLine());
+                        nbEntries++;
+                    }
+                }
+                Assert.AreEqual(4, nbEntries);
+            }
+            finally
+            {
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
     }

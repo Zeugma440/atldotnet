@@ -69,16 +69,13 @@ namespace ATL.test
         public static string CopyFileAndReplace(string location, IList<KeyValuePair<string, string>> replacements)
         {
             string testFileLocation = location.Substring(0, location.LastIndexOf('.')) + "_test" + location.Substring(location.LastIndexOf('.'), location.Length - location.LastIndexOf('.'));
-            string replacedLine;
 
-            using (StreamWriter s = File.CreateText(testFileLocation))
+            using StreamWriter s = File.CreateText(testFileLocation);
+            foreach (string line in File.ReadLines(location))
             {
-                foreach (string line in File.ReadLines(location))
-                {
-                    replacedLine = line;
-                    foreach (KeyValuePair<string, string> kvp in replacements) replacedLine = replacedLine.Replace(kvp.Key, kvp.Value);
-                    s.WriteLine(replacedLine.Replace("file:////", "file:///"));
-                }
+                var replacedLine = line;
+                foreach (KeyValuePair<string, string> kvp in replacements) replacedLine = replacedLine.Replace(kvp.Key, kvp.Value);
+                s.WriteLine(replacedLine.Replace("file:////", "file:///"));
             }
 
             return testFileLocation;

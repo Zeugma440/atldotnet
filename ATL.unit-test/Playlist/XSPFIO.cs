@@ -1,55 +1,21 @@
 ﻿using ATL.Playlist;
+using System;
 using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class XSPFIO
+    public class XSPFIO : PlaylistIOTest
     {
         [TestMethod]
         public void PLIO_R_XSPF()
         {
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.xspf", "$PATH", TestUtils.GetResourceLocationRoot(false).Replace('\\', '/'));
-
-            try
-            {
-                IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-                bool foundHttp = false;
-
-                Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(5, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths)
-                {
-                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(File.Exists(s));
-                    else foundHttp = true;
-                }
-                Assert.IsTrue(foundHttp);
-                foreach (Track t in theReader.Tracks)
-                {
-                    // Ensure the track has been parsed when it points to a file
-                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
-                }
-            }
-            finally
-            {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            }
+            PLIO_R("playlist.xspf", TestUtils.GetResourceLocationRoot(false).Replace("\\", "/"), 5);
         }
 
         [TestMethod]
         public void PLIO_W_XSPF()
         {
-            IList<string> pathsToWrite = new List<string>();
-            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
-            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
-            pathsToWrite.Add(testTrackLocation1);
-            pathsToWrite.Add(testTrackLocation2);
-            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
-
-            IList<Track> tracksToWrite = new List<Track>();
-            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
-
-
             string testFileLocation = TestUtils.CreateTempTestFile("test.xspf");
             bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
             try
@@ -59,6 +25,8 @@ namespace ATL.test.IO.Playlist
                 // Test Path writing + absolute formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
+                pls.Save();
+
                 IList<string> parents = new List<string>();
                 int index = -1;
 
@@ -107,6 +75,8 @@ namespace ATL.test.IO.Playlist
                 // Test Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
+                pls.Save();
+
                 index = -1;
                 parents.Clear();
 
@@ -148,12 +118,65 @@ namespace ATL.test.IO.Playlist
             finally
             {
                 ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
-                if (Settings.DeleteAfterSuccess)
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+        }
+
+        [TestMethod]
+        public void PLIO_PLIO_RW_Absolute_Relative_Path_XSPF()
+        {
+            var testFileLocation = PLIO_RW_Absolute_Relative_Path("xspf");
+            try
+            {
+                IList<string> parents = new List<string>();
+                int nbEntries = -1;
+
+                using FileStream fs = new FileStream(testFileLocation, FileMode.Open);
+                using XmlReader source = XmlReader.Create(fs);
+                while (source.Read())
                 {
-                    File.Delete(testTrackLocation1);
-                    File.Delete(testTrackLocation2);
-                    File.Delete(testFileLocation);
+                    if (source.NodeType == XmlNodeType.Element)
+                    {
+                        if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase))
+                            parents.Add(source.Name);
+                        else if (source.Name.Equals("trackList", StringComparison.OrdinalIgnoreCase) &&
+                                 parents.Contains("playlist")) parents.Add(source.Name);
+                        else if (source.Name.Equals("track", StringComparison.OrdinalIgnoreCase) &&
+                                 parents.Contains("trackList"))
+                        {
+                            parents.Add(source.Name);
+                            nbEntries++;
+                        }
+                        else if (parents.Contains("track"))
+                        {
+                            string expected = "";
+                            switch (nbEntries)
+                            {
+                                case 0:
+                                    expected = remoteFilePath;
+                                    break;
+                                case 1:
+                                    expected = localFilePath1;
+                                    break;
+                                case 2:
+                                    expected = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                    break;
+                            }
+
+                            if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase))
+                                Assert.AreEqual(getXmlValue(source), expected);
+                            else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase) && 1 == nbEntries)
+                            {
+                                Assert.AreEqual(getXmlValue(source), NEW_TITLE);
+                            }
+                        }
+                    }
                 }
+                Assert.AreEqual(3, nbEntries + 1);
+            }
+            finally
+            {
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 

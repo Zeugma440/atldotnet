@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using ATL.AudioData;
+using ATL.AudioData.IO;
 
 namespace ATL.Playlist
 {
@@ -30,46 +32,94 @@ namespace ATL.Playlist
         /// </summary>
         protected static readonly Encoding ANSI = Utils.Latin1Encoding;
 
-        /// <summary>
-        /// File Path of the playlist file
-        /// </summary>
-        public string Path { get; set; }
+        protected sealed class FileLocation
+        {
+            public FileLocation(string path, bool isAbsolute)
+            {
+                Path = path;
+                IsAbsolute = isAbsolute;
+            }
 
-        /// <summary>
-        /// Formatting of the track locations (file paths) within the playlist
-        /// </summary>
+            public string Path { get; set; }
+            public bool IsAbsolute { get; set; }
+        }
+
+
+
+        /// <inheritdoc/>
+        public string Path { get; }
+
+        /// <inheritdoc/>
         public PlaylistFormat.LocationFormatting LocationFormatting { get; set; }
 
-        /// <summary>
-        /// String encoding used within the playlist file
-        /// </summary>
+        /// <inheritdoc/>
         public PlaylistFormat.FileEncoding Encoding { get; set; }
 
+        /// <inheritdoc/>
+        public IList<string> FilePaths { get; set; }
+
         /// <summary>
-        /// Paths of the track files described by the playlist
+        /// Initial fields, used to identify removed/changed ones
         /// </summary>
-        public IList<string> FilePaths
+        private readonly ICollection<FileLocation> initialFilePaths = new List<FileLocation>();
+
+        /// <inheritdoc/>
+        public IList<Track> Tracks { get; set; }
+
+        /// <summary>
+        /// Initial metadata, used to identify removed/changed ones
+        /// </summary>
+        private readonly ICollection<IMetaData> initialMetadata = new List<IMetaData>();
+
+        private readonly bool supportsRelativePaths;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="filePath">Path of the playlist file</param>
+        protected PlaylistIO(string filePath, bool supportsRelativePaths = true)
         {
-            get => getFiles();
-            set => setFiles(value);
+            Path = filePath;
+            this.supportsRelativePaths = supportsRelativePaths;
+            LogDelegator.GetLocateDelegate()(filePath);
+            load();
+        }
+
+        /// <inheritdoc/>
+        public bool Save()
+        {
+            bool havePathsChanged = initialFilePaths.Select(ifp => ifp.Path).SequenceEqual(FilePaths);
+            bool haveMetaChanged = !initialMetadata.SequenceEqual(Tracks.Select(t => new TagHolder(t.toTagData())));
+
+            LogDelegator.GetLocateDelegate()(Path);
+            try
+            {
+                using FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+                if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
+                if (haveMetaChanged) setTracks(fs, Tracks);
+                else
+                {
+                    IList<Track> trackList = FilePaths.Select(file => new Track(file, false)).ToList();
+                    setTracks(fs, trackList);
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Utils.TraceException(e);
+                return false;
+            }
+
         }
 
         /// <summary>
-        /// Track files described by the playlist
-        /// </summary>
-        public IList<Track> Tracks
-        {
-            get => getTracks();
-            set => setTracks(value);
-        }
-
-        /// <summary>
-        /// Read the paths of the track files described by the playlist using the given Stream
+        /// Read the Locations of the track files described by the playlist using the given Stream
         /// and put them into the given list
         /// </summary>
         /// <param name="fs">FileStream to use to read the values</param>
         /// <param name="result">List that will receive the values</param>
-        protected abstract void getFiles(FileStream fs, IList<string> result);
+        protected abstract void getFiles(FileStream fs, IList<FileLocation> result);
 
         /// <summary>
         /// Read the tracks described by the playlist using the given Stream
@@ -77,81 +127,35 @@ namespace ATL.Playlist
         /// </summary>
         /// <param name="fs">FileStream to use to read the tracks</param>
         /// <param name="result">List that will receive the tracks</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
         protected abstract void setTracks(FileStream fs, IList<Track> result);
 
-        /// <summary>
-        /// Read the paths of the track files described by the playlist
-        /// </summary>
-        /// <returns>List of the paths</returns>
-        public IList<string> getFiles()
+        private void load()
         {
-            IList<string> result = new List<string>();
-            LogDelegator.GetLocateDelegate()(Path);
-
+            var locations = new List<FileLocation>();
+            Tracks = new List<Track>();
+            FilePaths = new List<string>();
             try
             {
                 using FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
-                getFiles(fs, result);
+                getFiles(fs, locations);
             }
             catch (Exception e)
             {
                 Utils.TraceException(e);
             }
 
-            return result;
-        }
-
-        /// <summary>
-        /// Read the tracks described by the playlist
-        /// </summary>
-        /// <returns>List of the tracks</returns>
-        public IList<Track> getTracks()
-        {
-            IList<Track> result = new List<Track>();
-
-            try
+            initialFilePaths.Clear();
+            initialMetadata.Clear();
+            foreach (var location in locations)
             {
-                IList<string> files = getFiles();
-                foreach (string s in files)
-                {
-                    result.Add(new Track(s));
-                }
-            }
-            catch (Exception e)
-            {
-                Utils.TraceException(e);
-            }
+                FilePaths.Add(location.Path);
+                initialFilePaths.Add(location);
 
-            return result;
-        }
-
-        /// <summary>
-        /// Modify playlist by replacing all file paths by the given file paths
-        /// </summary>
-        /// <param name="fileList">List of file paths to write in the playlist, replacing current ones</param>
-        public void setFiles(IList<string> fileList)
-        {
-            IList<Track> trackList = fileList.Select(file => new Track(file, false)).ToList();
-
-            setTracks(trackList);
-        }
-
-        /// <summary>
-        /// Modify playlist by replacing all tracks by the given tracks
-        /// </summary>
-        /// <param name="trackList">List of tracks to write in the playlist, replacing current ones</param>
-        public void setTracks(IList<Track> trackList)
-        {
-            LogDelegator.GetLocateDelegate()(Path);
-            try
-            {
-                using FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-                if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
-                setTracks(fs, trackList);
-            }
-            catch (Exception e)
-            {
-                Utils.TraceException(e);
+                var t = new Track(location.Path);
+                Tracks.Add(t);
+                initialMetadata.Add(new TagHolder(t.toTagData()));
             }
         }
 
@@ -185,9 +189,11 @@ namespace ATL.Playlist
         /// <returns></returns>
         protected string encodeLocation(string location)
         {
-            if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ Settings.PlaylistWriteAbsolutePath))
+            var initialLocation = initialFilePaths.FirstOrDefault(fl => fl.Path.Equals(location));
+            bool isAbsolute = Settings.PlaylistWriteAbsolutePath || (initialLocation != null && initialLocation.IsAbsolute);
+            if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ isAbsolute))
             {
-                if (Settings.PlaylistWriteAbsolutePath)
+                if (isAbsolute || !supportsRelativePaths)
                 {
                     location = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", location);
                 }
@@ -221,9 +227,9 @@ namespace ATL.Playlist
         /// <param name="source">Xml source to get the location from</param>
         /// <param name="attributeName">Attribute name in current Xml source to get the location from</param>
         /// <param name="result">List of locations to add the found location to</param>
-        protected void decodeLocation(XmlReader source, string attributeName, IList<string> result)
+        protected void decodeLocation(XmlReader source, string attributeName, IList<FileLocation> result)
         {
-            string location = decodeLocation(source.GetAttribute(attributeName));
+            FileLocation location = decodeLocation(source.GetAttribute(attributeName));
             if (location != null) result.Add(location);
         }
 
@@ -232,8 +238,10 @@ namespace ATL.Playlist
         /// </summary>
         /// <param name="href">Location to decode (can be an URI of any form or a relative filepath)</param>
         /// <returns>Absolute filepath corresponding to the given location</returns>
-        protected string decodeLocation(string href)
+        protected FileLocation decodeLocation(string href)
         {
+            bool isAbsolute = true;
+
             // Is it an URI ?
             // Try and replace all \'s by /'s to detect URIs even if the location has been badly formatted
             var hrefUri = href.Replace('\\', '/');
@@ -246,13 +254,13 @@ namespace ATL.Playlist
                     {
                         if (!System.IO.Path.IsPathRooted(uri.LocalPath))
                         {
-                            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", uri.LocalPath);
+                            return new FileLocation(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", uri.LocalPath), false);
                         }
 
                         // Hack to avoid paths being rooted by a double '\', thus making them unreadable by System.IO.Path
-                        return uri.LocalPath.Replace(
+                        return new FileLocation(uri.LocalPath.Replace(
                             "" + System.IO.Path.DirectorySeparatorChar + System.IO.Path.DirectorySeparatorChar,
-                            "" + System.IO.Path.DirectorySeparatorChar);
+                            "" + System.IO.Path.DirectorySeparatorChar), true);
                     }
                 }
                 catch (UriFormatException)
@@ -268,9 +276,10 @@ namespace ATL.Playlist
                 if (!System.IO.Path.IsPathRooted(href))
                 {
                     href = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? "", href);
+                    isAbsolute = false;
                 }
             }
-            return href;
+            return new FileLocation(href, isAbsolute);
         }
     }
 }

@@ -1,56 +1,21 @@
 ﻿using ATL.Playlist;
+using System;
 using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class B4SIO
+    public class B4SIO : PlaylistIOTest
     {
         [TestMethod]
         public void PLIO_R_B4S()
         {
-            var testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.b4s", "$PATH", TestUtils.GetResourceLocationRoot(false));
-
-            try
-            {
-                var theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-                var filePaths = theReader.FilePaths;
-                bool foundHttp = false;
-
-                Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(4, filePaths.Count);
-                foreach (string s in theReader.FilePaths)
-                {
-                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(System.IO.File.Exists(s));
-                    else foundHttp = true;
-                }
-                Assert.IsTrue(foundHttp);
-                foreach (Track t in theReader.Tracks)
-                {
-                    // Ensure the track has been parsed when it points to a file
-                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
-                }
-            }
-            finally
-            {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            }
+            PLIO_R("playlist.b4s", TestUtils.GetResourceLocationRoot(false), 4);
         }
 
         [TestMethod]
         public void PLIO_W_B4S()
         {
-            IList<string> pathsToWrite = new List<string>();
-            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
-            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
-            pathsToWrite.Add(testTrackLocation1);
-            pathsToWrite.Add(testTrackLocation2);
-            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
-            
-            IList<Track> tracksToWrite = new List<Track>();
-            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
-
-
             string testFileLocation = TestUtils.CreateTempTestFile("test.b4s");
             bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
             try
@@ -60,6 +25,8 @@ namespace ATL.test.IO.Playlist
                 // Test Path writing + absolute formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
+                pls.Save();
+
                 IList<string> parents = new List<string>();
                 int index = -1;
 
@@ -102,6 +69,8 @@ namespace ATL.test.IO.Playlist
                 // Test Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
+                pls.Save();
+
                 index = -1;
                 parents.Clear();
 
@@ -139,12 +108,60 @@ namespace ATL.test.IO.Playlist
             finally
             {
                 ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
-                if (Settings.DeleteAfterSuccess)
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+        }
+
+
+        [TestMethod]
+        public void PLIO_PLIO_RW_Absolute_Relative_Path_B4S()
+        {
+            var testFileLocation = PLIO_RW_Absolute_Relative_Path("b4s");
+            try
+            {
+                IList<string> parents = new List<string>();
+                int nbEntries = -1;
+
+                using FileStream fs = new FileStream(testFileLocation, FileMode.Open);
+                using XmlReader source = XmlReader.Create(fs);
+                while (source.Read())
                 {
-                    File.Delete(testTrackLocation1);
-                    File.Delete(testTrackLocation2);
-                    File.Delete(testFileLocation);
+                    if (source.NodeType != XmlNodeType.Element) continue;
+
+                    if (source.Name.Equals("WinampXML", StringComparison.OrdinalIgnoreCase)) parents.Add(source.Name);
+                    else if (source.Name.Equals("playlist", StringComparison.OrdinalIgnoreCase) && parents.Contains("WinampXML")) parents.Add(source.Name);
+                    else if (source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && parents.Contains("playlist"))
+                    {
+                        parents.Add(source.Name);
+                        nbEntries++;
+                        var writtenPath = source.GetAttribute("Playstring");
+                        switch (nbEntries)
+                        {
+                            case 0:
+                                Assert.AreEqual("file:///" + remoteFilePath.Replace('\\', '/'), writtenPath);
+                                break;
+                            case 1:
+                                Assert.AreEqual(writtenPath, "file:///" + localFilePath1.Replace('\\', '/'), writtenPath);
+                                break;
+                            case 2:
+                                // B4S doesn't support relative paths
+                                Assert.AreEqual("file:///" + localFilePath2.Replace('\\', '/'), writtenPath);
+                                break;
+                        }
+                    }
+                    else if (parents.Contains("entry"))
+                    {
+                        if (source.Name.Equals("Name", StringComparison.OrdinalIgnoreCase) && 1 == nbEntries)
+                        {
+                            Assert.AreEqual(NEW_TITLE, getXmlValue(source));
+                        }
+                    }
                 }
+                Assert.AreEqual(3, nbEntries + 1);
+            }
+            finally
+            {
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 

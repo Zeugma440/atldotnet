@@ -11,25 +11,26 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class DPLIO : PlaylistIO
     {
+        public DPLIO(string filePath) : base(filePath)
+        {
+        }
+
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
         {
             Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
 
-            using (TextReader source = new StreamReader(fs, encoding))
+            using TextReader source = new StreamReader(fs, encoding);
+            string s = source.ReadLine();
+            while (s != null)
             {
-                string s = source.ReadLine();
-                int fileIndex;
-                while (s != null)
+                var fileIndex = s.IndexOf("*file*", StringComparison.Ordinal);
+                if (fileIndex > -1)
                 {
-                    fileIndex = s.IndexOf("*file*");
-                    if (fileIndex > -1)
-                    {
-                        s = s.Substring(fileIndex + 6, s.Length - fileIndex - 6);
-                        result.Add(decodeLocation(s));
-                    }
-                    s = source.ReadLine();
+                    s = s.Substring(fileIndex + 6, s.Length - fileIndex - 6);
+                    result.Add(decodeLocation(s));
                 }
+                s = source.ReadLine();
             }
         }
 
@@ -40,39 +41,37 @@ namespace ATL.Playlist.IO
 
             long totalDuration = (long)Math.Floor(result.Sum(s => s.DurationMs));
 
-            using (TextWriter w = new StreamWriter(fs, encoding))
-            {
-                w.WriteLine("DAUMPLAYLIST");
-                w.WriteLine("topindex=0");
-                w.WriteLine("saveplaypos=0");
-                w.WriteLine("playtime=" + totalDuration);
-                // playname not supported
+            using TextWriter w = new StreamWriter(fs, encoding);
+            w.WriteLine("DAUMPLAYLIST");
+            w.WriteLine("topindex=0");
+            w.WriteLine("saveplaypos=0");
+            w.WriteLine("playtime=" + totalDuration);
+            // playname not supported
 
-                int counter = 1;
-                foreach (Track t in result)
+            int counter = 1;
+            foreach (Track t in result)
+            {
+                w.Write(counter);
+                w.Write("*file*");
+                w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
+
+                if (!string.IsNullOrEmpty(t.Title))
                 {
                     w.Write(counter);
-                    w.Write("*file*");
-                    w.WriteLine(encodeLocation(t.Path)); // Can be rooted or not
-
-                    if (!string.IsNullOrEmpty(t.Title))
-                    {
-                        w.Write(counter);
-                        w.Write("*title*");
-                        w.WriteLine(t.Title);
-                    }
-
-                    if (t.DurationMs > 0)
-                    {
-                        w.Write(counter);
-                        w.Write("*duration2*");
-                        w.WriteLine((long)t.DurationMs);
-                    }
-
-                    // *start* and *played* are not supported
-
-                    counter++;
+                    w.Write("*title*");
+                    w.WriteLine(t.Title);
                 }
+
+                if (t.DurationMs > 0)
+                {
+                    w.Write(counter);
+                    w.Write("*duration2*");
+                    w.WriteLine((long)t.DurationMs);
+                }
+
+                // *start* and *played* are not supported
+
+                counter++;
             }
         }
     }

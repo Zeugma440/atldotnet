@@ -1,52 +1,20 @@
 ﻿using ATL.Playlist;
-using System;
+using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
     [TestClass]
-    public class DPLIO
+    public class DPLIO : PlaylistIOTest
     {
         [TestMethod]
         public void PLIO_R_DPL()
         {
-            string testFileLocation = TestUtils.CopyFileAndReplace(TestUtils.GetResourceLocationRoot() + "_Playlists/playlist.dpl", "$PATH", TestUtils.GetResourceLocationRoot(false));
-
-            try
-            {
-                IPlaylistIO theReader = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
-
-                Assert.IsNotInstanceOfType(theReader, typeof(ATL.Playlist.IO.DummyIO));
-                Assert.AreEqual(5, theReader.FilePaths.Count);
-                foreach (string s in theReader.FilePaths)
-                {
-                    if (!s.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(System.IO.File.Exists(s));
-                }
-                foreach (Track t in theReader.Tracks)
-                {
-                    // Ensure the track has been parsed when it points to a file
-                    if (!t.Path.StartsWith("http", StringComparison.InvariantCultureIgnoreCase)) Assert.IsTrue(t.Duration > 0);
-                }
-            }
-            finally
-            {
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-            }
+            PLIO_R("playlist.dpl", TestUtils.GetResourceLocationRoot(false), 5);
         }
 
         [TestMethod]
         public void PLIO_W_DPL()
         {
-            IList<string> pathsToWrite = new List<string>();
-            string testTrackLocation1 = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
-            string testTrackLocation2 = TestUtils.CopyAsTempTestFile("MOD/mod.mod");
-            pathsToWrite.Add(testTrackLocation1);
-            pathsToWrite.Add(testTrackLocation2);
-            pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
-
-            IList<Track> tracksToWrite = new List<Track>();
-            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
-
-
             string testFileLocation = TestUtils.CreateTempTestFile("test.dpl");
             bool defaultPathSetting = ATL.Settings.PlaylistWriteAbsolutePath;
             try
@@ -56,6 +24,7 @@ namespace ATL.test.IO.Playlist
                 // Test Path writing + absolute formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
+                pls.Save();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 {
@@ -83,6 +52,7 @@ namespace ATL.test.IO.Playlist
                 // Test Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
                 pls.Tracks = tracksToWrite;
+                pls.Save();
 
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 using (StreamReader sr = new StreamReader(fs))
@@ -113,12 +83,57 @@ namespace ATL.test.IO.Playlist
             finally
             {
                 ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
-                if (Settings.DeleteAfterSuccess)
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+        }
+
+        [TestMethod]
+        public void PLIO_PLIO_RW_Absolute_Relative_Path_ASX()
+        {
+            var testFileLocation = PLIO_RW_Absolute_Relative_Path("dpl");
+            try
+            {
+                int nbEntries = 1;
+                using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    File.Delete(testTrackLocation1);
-                    File.Delete(testTrackLocation2);
-                    File.Delete(testFileLocation);
+                    // Skip file header
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        string path;
+                        switch (nbEntries)
+                        {
+                            case 1:
+                                path = remoteFilePath;
+                                break;
+                            case 2:
+                                path = localFilePath1;
+                                break;
+                            case 3:
+                                path = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                break;
+                            default:
+                                path = "";
+                                break;
+                        }
+                        Assert.AreEqual(nbEntries + "*file*" + path, sr.ReadLine());
+                        var title = sr.ReadLine();
+                        if (2 == nbEntries) Assert.AreEqual(nbEntries + "*title*" + NEW_TITLE, title);
+                        sr.ReadLine(); // Duration
+                        nbEntries++;
+                    }
+                    sr.ReadLine();
+                    Assert.IsTrue(sr.EndOfStream);
                 }
+                Assert.AreEqual(4, nbEntries);
+            }
+            finally
+            {
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
     }

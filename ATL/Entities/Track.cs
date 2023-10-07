@@ -438,7 +438,7 @@ namespace ATL
             TechnicalInformation = new TechnicalInfo(fileIO.AudioDataOffset, fileIO.AudioDataSize);
         }
 
-        private TagData toTagData()
+        internal TagData toTagData()
         {
             TagData result = new TagData();
 

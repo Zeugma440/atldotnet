@@ -14,37 +14,38 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class SMILIO : PlaylistIO
     {
-        /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        public SMILIO(string filePath) : base(filePath)
         {
-            using (XmlReader source = XmlReader.Create(fs))
+        }
+
+        /// <inheritdoc/>
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        {
+            using XmlReader source = XmlReader.Create(fs);
+            while (source.Read())
             {
-                while (source.Read())
+                switch (source.NodeType)
                 {
-                    switch (source.NodeType)
-                    {
-                        case XmlNodeType.Element: // Element start
-                            if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase)
-                                || source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
-                            {
-                                string resourceLocation = getResourceLocation(source);
-                                if (null != resourceLocation) result.Add(resourceLocation);
-                            }
-                            break;
+                    case XmlNodeType.Element: // Element start
+                        if (source.Name.Equals("audio", StringComparison.OrdinalIgnoreCase)
+                            || source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
+                        {
+                            FileLocation resourceLocation = getResourceLocation(source);
+                            if (null != resourceLocation) result.Add(resourceLocation);
+                        }
+                        break;
 
-                            //                    case XmlNodeType.Text:
-                            //                        break;
+                        //                    case XmlNodeType.Text:
+                        //                        break;
 
-                            //                    case XmlNodeType.EndElement: // Element end
-                            //                        break;
-                    }
+                        //                    case XmlNodeType.EndElement: // Element end
+                        //                        break;
                 }
-
             }
         }
 
         // Most SMIL sample playlists store resource location with a relative path
-        private string getResourceLocation(XmlReader source)
+        private FileLocation getResourceLocation(XmlReader source)
         {
             while (source.MoveToNextAttribute()) // Read the attributes.
             {

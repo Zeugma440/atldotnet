@@ -12,25 +12,26 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class XSPFIO : PlaylistIO
     {
-        /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        public XSPFIO(string filePath) : base(filePath)
         {
-            using (XmlReader source = XmlReader.Create(fs))
-            {
-                while (source.ReadToFollowing("track"))
-                {
-                    while (source.Read())
-                    {
-                        // TODO handle image element = fetch track picture from playlists info 
-                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) parseLocation(source, result);
-                        else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("track", StringComparison.OrdinalIgnoreCase)) break;
-                    }
-                }
-            }
-
         }
 
-        private void parseLocation(XmlReader source, IList<string> result)
+        /// <inheritdoc/>
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        {
+            using XmlReader source = XmlReader.Create(fs);
+            while (source.ReadToFollowing("track"))
+            {
+                while (source.Read())
+                {
+                    // TODO handle image element = fetch track picture from playlists info 
+                    if (source.NodeType == XmlNodeType.Element && source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) parseLocation(source, result);
+                    else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("track", StringComparison.OrdinalIgnoreCase)) break;
+                }
+            }
+        }
+
+        private void parseLocation(XmlReader source, ICollection<FileLocation> result)
         {
             source.Read();
             if (source.NodeType == XmlNodeType.Text) result.Add(decodeLocation(source.Value));

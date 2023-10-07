@@ -1,10 +1,6 @@
 ﻿using ATL.AudioData;
 using ATL.AudioData.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
@@ -44,7 +40,7 @@ namespace ATL.test.IO.MetaData
      *   - Individual picture removal (from index > 1)
      *   - Exact picture binary data conservation after tag editing
     */
-    public class MetaIOTest
+    public abstract class MetaIOTest
     {
         protected string emptyFile;
         protected string notEmptyFile;
@@ -56,7 +52,7 @@ namespace ATL.test.IO.MetaData
 
         public delegate void StreamDelegate(FileStream fs);
 
-        public MetaIOTest()
+        protected MetaIOTest()
         {
             // Initialize default test data
             testData = new TagHolder();

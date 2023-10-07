@@ -13,7 +13,6 @@ namespace ATL.Playlist
         string Path
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -54,5 +53,12 @@ namespace ATL.Playlist
             get;
             set;
         }
+
+        /// <summary>
+        /// Save playlist to disk
+        /// </summary>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        bool Save();
     }
 }

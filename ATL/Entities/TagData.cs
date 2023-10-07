@@ -11,7 +11,7 @@ namespace ATL
     /// 
     /// TagData aims at staying a basic, universal container, without any Property accessor layer nor any field interpretation logic
     /// </summary>
-    public class TagData
+    public class TagData : IEquatable<TagData>
     {
         /// <summary>
         /// Standardized metadata fields
@@ -276,26 +276,31 @@ namespace ATL
             {
                 Fields.Remove(key);
             }
-            else if (key == Field.LYRICS_UNSYNCH)
-            {
-                if (null == Lyrics) Lyrics = new LyricsInfo();
-                if (value.Contains("[0")) Lyrics.ParseLRC(value);
-                else Lyrics.UnsynchronizedLyrics = value;
-            }
-            else if (key == Field.RECORDING_DATE_OR_YEAR)
-            {
-                if (0 == value.Length)
+            else switch (key)
                 {
-                    Fields[Field.RECORDING_YEAR] = "";
-                    Fields[Field.RECORDING_DATE] = "";
+                    case Field.LYRICS_UNSYNCH:
+                        {
+                            if (null == Lyrics) Lyrics = new LyricsInfo();
+                            if (value.Contains("[0")) Lyrics.ParseLRC(value);
+                            else Lyrics.UnsynchronizedLyrics = value;
+                            break;
+                        }
+                    case Field.RECORDING_DATE_OR_YEAR when 0 == value.Length:
+                        Fields[Field.RECORDING_YEAR] = "";
+                        Fields[Field.RECORDING_DATE] = "";
+                        break;
+                    case Field.RECORDING_DATE_OR_YEAR when value.Length < 5:
+                        Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
+                        break;
+                    case Field.RECORDING_DATE_OR_YEAR:
+                        {
+                            if (!Fields.ContainsKey(Field.RECORDING_DATE)) Fields[Field.RECORDING_DATE] = emptyIfZero(value);
+                            break;
+                        }
+                    default:
+                        Fields[key] = isNumeric(key) ? emptyIfZero(value) : value;
+                        break;
                 }
-                else if (value.Length < 5) Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
-                else if (!Fields.ContainsKey(Field.RECORDING_DATE)) Fields[Field.RECORDING_DATE] = emptyIfZero(value);
-            }
-            else
-            {
-                Fields[key] = isNumeric(key) ? emptyIfZero(value) : value;
-            }
         }
 
         /// <summary>
@@ -327,40 +332,37 @@ namespace ATL
                     {
                         picInfo.ComputePicHash();
                         // New PictureInfo picture type already exists in current TagData
-                        if (picInfo.EqualsProper(newPicInfo))
+                        if (!picInfo.EqualsProper(newPicInfo)) continue;
+
+                        // New PictureInfo is a demand for deletion
+                        if (newPicInfo.MarkedForDeletion)
                         {
-                            // New PictureInfo is a demand for deletion
-                            if (newPicInfo.MarkedForDeletion)
+                            picInfo.MarkedForDeletion = true;
+                            added = true;
+                            resultPictures.Add(picInfo);
+                        }
+                        else
+                        {
+                            candidatePosition = Math.Max(candidatePosition, picInfo.Position);
+                            // New picture is an existing picture -> keep the existing one
+                            if (picInfo.PictureHash <= 0 || picInfo.PictureHash != newPicInfo.PictureHash) continue;
+
+                            added = true;
+                            PictureInfo targetPicture = picInfo;
+                            if (newPicInfo.Description != picInfo.Description)
                             {
-                                picInfo.MarkedForDeletion = true;
-                                added = true;
-                                resultPictures.Add(picInfo);
+                                targetPicture = new PictureInfo(picInfo, false);
+                                targetPicture.Description = newPicInfo.Description;
                             }
-                            else
-                            {
-                                candidatePosition = Math.Max(candidatePosition, picInfo.Position);
-                                // New picture is an existing picture -> keep the existing one
-                                if (picInfo.PictureHash > 0 && picInfo.PictureHash == newPicInfo.PictureHash)
-                                {
-                                    added = true;
-                                    PictureInfo targetPicture = picInfo;
-                                    if (newPicInfo.Description != picInfo.Description)
-                                    {
-                                        targetPicture = new PictureInfo(picInfo, false);
-                                        targetPicture.Description = newPicInfo.Description;
-                                    }
-                                    resultPictures.Add(targetPicture);
-                                    break;
-                                }
-                            }
+                            resultPictures.Add(targetPicture);
+                            break;
                         }
                     }
                     // New PictureInfo is a X-th picture of the same type
-                    if (!added)
-                    {
-                        newPicInfo.Position = candidatePosition + 1;
-                        resultPictures.Add(newPicInfo);
-                    }
+                    if (added) continue;
+
+                    newPicInfo.Position = candidatePosition + 1;
+                    resultPictures.Add(newPicInfo);
                 }
 
                 // Eventually add all existing pictures that are completely absent from target pictures
@@ -370,11 +372,10 @@ namespace ATL
                     bool found = false;
                     foreach (PictureInfo picInfo in targetData.Pictures)
                     {
-                        if (picInfo.EqualsProper(Pictures[i]))
-                        {
-                            found = true;
-                            break;
-                        }
+                        if (!picInfo.EqualsProper(Pictures[i])) continue;
+
+                        found = true;
+                        break;
                     }
                     if (!found) resultPictures.Insert(0, Pictures[i]);
                 }
@@ -478,8 +479,8 @@ namespace ATL
             if (result.ContainsKey(Field.RECORDING_DATE_OR_YEAR))
             {
                 string recYearOrDate = result[Field.RECORDING_DATE_OR_YEAR];
-                if (null == result[Field.RECORDING_YEAR]) result[Field.RECORDING_YEAR] = recYearOrDate;
-                if (null == result[Field.RECORDING_DATE]) result[Field.RECORDING_DATE] = recYearOrDate;
+                result[Field.RECORDING_YEAR] ??= recYearOrDate;
+                result[Field.RECORDING_DATE] ??= recYearOrDate;
             }
             else
             {
@@ -489,12 +490,11 @@ namespace ATL
                     result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_YEAR];
             }
 
-            if (Lyrics != null)
-            {
-                // Synch lyrics override unsynch lyrics when the target format cannot support both of them
-                if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
-                else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
-            }
+            if (Lyrics == null) return result;
+
+            // Synch lyrics override unsynch lyrics when the target format cannot support both of them
+            if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
+            else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
 
             return result;
         }
@@ -507,8 +507,8 @@ namespace ATL
             Pictures.Clear();
             Fields.Clear();
             AdditionalFields.Clear();
-            if (Chapters != null) Chapters.Clear();
-            if (Lyrics != null) Lyrics.Clear();
+            Chapters?.Clear();
+            Lyrics?.Clear();
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;
@@ -615,9 +615,39 @@ namespace ATL
         {
             string result = s;
 
-            if (!Settings.NullAbsentValues && s != null && s.Equals("0")) result = "";
+            if (!Settings.NullAbsentValues && s is "0") result = "";
 
             return result;
+        }
+
+        /// <inheritdoc />
+        public bool Equals(TagData other)
+        {
+            // TODO do better than that and compare all fields
+            if (null == other) return false;
+            var map = ToMap();
+            var otherMap = other.ToMap();
+            if (map.Count != otherMap.Count) return false;
+            foreach (var entry in map)
+            {
+                if (!otherMap.ContainsKey(entry.Key)) return false;
+                if (otherMap[entry.Key] != entry.Value) return false;
+            }
+            return true;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null) || obj.GetType() != this.GetType()) return false;
+            return ((TagData)obj).Equals(this);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            // TODO do better than that and compare all fields
+            return ToMap().GetHashCode();
         }
     }
 }

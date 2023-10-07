@@ -12,21 +12,22 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class ASXIO : PlaylistIO
     {
-        /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        public ASXIO(string filePath) : base(filePath)
         {
-            using (XmlReader source = XmlReader.Create(fs))
+        }
+
+        /// <inheritdoc/>
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        {
+            using XmlReader source = XmlReader.Create(fs);
+            while (source.ReadToFollowing("ENTRY"))
             {
-                while (source.ReadToFollowing("ENTRY"))
+                while (source.Read())
                 {
-                    while (source.Read())
-                    {
-                        if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) decodeLocation(source, "HREF", result);
-                        else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("ENTRY", StringComparison.OrdinalIgnoreCase)) break;
-                    }
+                    if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) decodeLocation(source, "HREF", result);
+                    else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("ENTRY", StringComparison.OrdinalIgnoreCase)) break;
                 }
             }
-
         }
 
         /// <inheritdoc/>

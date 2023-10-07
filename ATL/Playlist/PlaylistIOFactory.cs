@@ -148,8 +148,8 @@ namespace ATL.Playlist
             {
                 format = UNKNOWN_FORMAT;
             }
-            var result = GetPlaylistIO(format.ID);
-            result.Path = path;
+            var result = GetPlaylistIO(format.ID, path);
+
             // Default settings inherited from format
             if (!format.Equals(UNKNOWN_FORMAT))
             {
@@ -164,43 +164,22 @@ namespace ATL.Playlist
         /// Create a new playlist management object from the given playlist format code (see public constants in PlaylistIOFactory)
         /// </summary>
         /// <param name="formatId">Playlist format code of the object to create</param>
+        /// <param name="path">Path of the playlist file to use</param>
         /// <returns>New playlist management object correspondingf to the given code</returns>
-        public IPlaylistIO GetPlaylistIO(int formatId)
+        public IPlaylistIO GetPlaylistIO(int formatId, string path)
         {
-            IPlaylistIO theReader = null;
-
-            if (PL_M3U == formatId)
+            IPlaylistIO theReader = formatId switch
             {
-                theReader = new M3UIO();
-            }
-            else if (PL_PLS == formatId)
-            {
-                theReader = new PLSIO();
-            }
-            else if (PL_FPL == formatId)
-            {
-                theReader = new FPLIO();
-            }
-            else if (PL_XSPF == formatId)
-            {
-                theReader = new XSPFIO();
-            }
-            else if (PL_SMIL == formatId)
-            {
-                theReader = new SMILIO();
-            }
-            else if (PL_ASX == formatId)
-            {
-                theReader = new ASXIO();
-            }
-            else if (PL_B4S == formatId)
-            {
-                theReader = new B4SIO();
-            }
-            else if (PL_DPL == formatId)
-            {
-                theReader = new DPLIO();
-            }
+                PL_M3U => new M3UIO(path),
+                PL_PLS => new PLSIO(path),
+                PL_FPL => new FPLIO(path),
+                PL_XSPF => new XSPFIO(path),
+                PL_SMIL => new SMILIO(path),
+                PL_ASX => new ASXIO(path),
+                PL_B4S => new B4SIO(path),
+                PL_DPL => new DPLIO(path),
+                _ => null
+            };
 
             return theReader ?? new DummyIO();
         }

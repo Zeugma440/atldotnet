@@ -24,7 +24,7 @@ namespace ATL.AudioData.IO
         private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
 
         // "Xiph.Org libVorbis I 20150105" vendor with zero fields
-        private static readonly byte[] CORE_SIGNATURE = new byte[43] { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
+        private static readonly byte[] CORE_SIGNATURE = { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
 
 
         // Reference : https://xiph.org/flac/format.html#metadata_block_picture
@@ -44,7 +44,8 @@ namespace ATL.AudioData.IO
         }
 
         // Mapping between Vorbis field IDs and ATL fields
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
+        {
                 { "DESCRIPTION", Field.GENERAL_DESCRIPTION },
                 { "ARTIST", Field.ARTIST },
                 { "TITLE", Field.TITLE },
@@ -109,10 +110,7 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
 
-        protected override byte ratingConvention
-        {
-            get { return RC_APE; }
-        }
+        protected override byte ratingConvention => RC_APE;
 
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -120,7 +118,7 @@ namespace ATL.AudioData.IO
             ID = ID.ToUpper();
 
             // Finds the ATL field identifier according to the ID3v2 version
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
@@ -149,12 +147,11 @@ namespace ATL.AudioData.IO
         public static VorbisMetaDataBlockPicture ReadMetadataBlockPicture(Stream s)
         {
             VorbisMetaDataBlockPicture result = new VorbisMetaDataBlockPicture();
-            int stringLen;
 
             BinaryReader r = new BinaryReader(s);
             result.nativePicCode = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.picType = ID3v2.DecodeID3v2PictureType(result.nativePicCode);
-            stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            var stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.mimeType = Utils.Latin1Encoding.GetString(r.ReadBytes(stringLen));
             stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
             result.description = Encoding.UTF8.GetString(r.ReadBytes(stringLen));
@@ -422,23 +419,21 @@ namespace ATL.AudioData.IO
         // TODO DOC
         public int Write(Stream s, TagData tag)
         {
-            int result;
             TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag, writePicturesWithMetadata); // Write existing information + new tag information
             dataToWrite.Cleanup();
 
             // Write new tag to a MemoryStream
-            using (BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8, true))
-            {
-                result = write(dataToWrite, msw);
-                if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
-                return result;
-            }
+            using BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8, true);
+            var result = write(dataToWrite, msw);
+            if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
+            return result;
         }
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s)) return write(tag, w);
+            using BinaryWriter w = new BinaryWriter(s);
+            return write(tag, w);
         }
 
         private int write(TagData tag, BinaryWriter w)

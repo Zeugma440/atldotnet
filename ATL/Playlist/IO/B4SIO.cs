@@ -10,8 +10,12 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class B4SIO : PlaylistIO
     {
+        public B4SIO(string filePath) : base(filePath, false)
+        {
+        }
+
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
         {
             using XmlReader source = XmlReader.Create(fs);
             while (source.ReadToFollowing("entry"))

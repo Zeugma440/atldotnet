@@ -14,12 +14,35 @@ namespace ATL.Playlist.IO
     public class FPLIO : PlaylistIO
     {
         private static readonly byte[] FILE_IDENTIFIER = Utils.Latin1Encoding.GetBytes("file://");
+        private static readonly byte[] HTTP_IDENTIFIER = Utils.Latin1Encoding.GetBytes("http://");
+        private static readonly byte[] HTTPS_IDENTIFIER = Utils.Latin1Encoding.GetBytes("https://");
+
+        /// <inheritdoc />
+        public FPLIO(string filePath) : base(filePath)
+        {
+        }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<string> result)
+        protected override void getFiles(FileStream fs, IList<FileLocation> result)
         {
             while (StreamUtils.FindSequence(fs, FILE_IDENTIFIER))
             {
+                string filePath = StreamUtils.ReadNullTerminatedString(fs, UTF8_NO_BOM);
+                result.Add(decodeLocation(filePath));
+            }
+
+            fs.Seek(0, SeekOrigin.Begin);
+            while (StreamUtils.FindSequence(fs, HTTP_IDENTIFIER))
+            {
+                fs.Seek(-HTTP_IDENTIFIER.Length, SeekOrigin.Current);
+                string filePath = StreamUtils.ReadNullTerminatedString(fs, UTF8_NO_BOM);
+                result.Add(decodeLocation(filePath));
+            }
+
+            fs.Seek(0, SeekOrigin.Begin);
+            while (StreamUtils.FindSequence(fs, HTTPS_IDENTIFIER))
+            {
+                fs.Seek(-HTTPS_IDENTIFIER.Length, SeekOrigin.Current);
                 string filePath = StreamUtils.ReadNullTerminatedString(fs, UTF8_NO_BOM);
                 result.Add(decodeLocation(filePath));
             }

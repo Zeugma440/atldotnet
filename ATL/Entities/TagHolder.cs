@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace ATL.AudioData.IO
 {
     /// <summary>

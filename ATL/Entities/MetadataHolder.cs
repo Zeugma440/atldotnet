@@ -11,7 +11,7 @@ namespace ATL
     /// <summary>
     /// Represents a set of metadata (abstract; use TagHolder if you're looking for the instanciable class)
     /// </summary>
-    public abstract class MetaDataHolder : IMetaData
+    public abstract class MetaDataHolder : IMetaData, IEquatable<MetaDataHolder>
     {
         /// <summary>
         /// Prefix to add to AdditionalFields value to mark it as a date
@@ -21,7 +21,7 @@ namespace ATL
         /// <summary>
         /// Reference metadata (for internal use only)
         /// </summary>
-        internal TagData tagData { get; set; }
+        internal TagData tagData; // TODO make readonly after refactoring VorbisTag (see comments there)
 
         /// <summary>
         /// Implemented tag type
@@ -68,10 +68,7 @@ namespace ATL
                     return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER_TOTAL]);
                 else return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
             }
-            set
-            {
-                tagData.IntegrateValue(Field.TRACK_NUMBER, value.ToString());
-            }
+            set => tagData.IntegrateValue(Field.TRACK_NUMBER, value.ToString());
         }
         /// <inheritdoc/>
         public ushort TrackTotal
@@ -84,10 +81,7 @@ namespace ATL
                     return ushort.Parse(tagData[Field.TRACK_TOTAL]);
                 else return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER]);
             }
-            set
-            {
-                tagData.IntegrateValue(Field.TRACK_TOTAL, value.ToString());
-            }
+            set => tagData.IntegrateValue(Field.TRACK_TOTAL, value.ToString());
         }
         /// <inheritdoc/>
         public ushort DiscNumber
@@ -192,10 +186,7 @@ namespace ATL
                     result = DateTime.MinValue;
                 return result;
             }
-            set
-            {
-                tagData.IntegrateValue(Field.PUBLISHING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
-            }
+            set => tagData.IntegrateValue(Field.PUBLISHING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
         }
         /// <inheritdoc/>
         public string Album
@@ -208,11 +199,10 @@ namespace ATL
         {
             get
             {
-                float result;
-                if (!float.TryParse(tagData[Field.RATING], out result))
+                if (!float.TryParse(tagData[Field.RATING], out var result))
                 {
                     if (Settings.NullAbsentValues) return null;
-                    else return 0f;
+                    return 0f;
                 }
                 return result;
             }
@@ -319,11 +309,10 @@ namespace ATL
         {
             get
             {
-                int result;
-                if (!int.TryParse(tagData[Field.BPM], out result))
+                if (!int.TryParse(tagData[Field.BPM], out var result))
                 {
                     if (Settings.NullAbsentValues) return null;
-                    else return 0;
+                    return 0;
                 }
                 return result;
             }
@@ -358,6 +347,7 @@ namespace ATL
                 }
             }
         }
+
         /// <summary>
         /// Get additional fields for the given stream number and language
         /// </summary>
@@ -372,8 +362,8 @@ namespace ATL
             {
                 if (
                     getImplementedTagType().Equals(fieldInfo.TagType)
-                    && (-1 == streamNumber) || (streamNumber == fieldInfo.StreamNumber)
-                    && ((0 == language.Length) || language.Equals(fieldInfo.Language))
+                    && -1 == streamNumber || streamNumber == fieldInfo.StreamNumber
+                    && (0 == language.Length || language.Equals(fieldInfo.Language))
                     )
                 {
                     result.Add(fieldInfo);
@@ -382,6 +372,7 @@ namespace ATL
 
             return result;
         }
+
         /// <inheritdoc/>
         public IList<PictureInfo> EmbeddedPictures
         {
@@ -405,48 +396,50 @@ namespace ATL
                 }
             }
         }
+
         /// <inheritdoc/>
         public IList<ChapterInfo> Chapters
         {
-            get
-            {
-                if (tagData.Chapters != null)
-                {
-                    return new List<ChapterInfo>(tagData.Chapters);
-                }
-                else
-                {
-                    return new List<ChapterInfo>();
-                }
-            }
+            get => tagData.Chapters != null ? new List<ChapterInfo>(tagData.Chapters) : new List<ChapterInfo>();
             set => tagData.Chapters = value;
         }
+
         /// <inheritdoc/>
         public string ChaptersTableDescription
         {
             get => Utils.ProtectValue(tagData[Field.CHAPTERS_TOC_DESCRIPTION]);
             set => tagData.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, value);
         }
+
         /// <inheritdoc/>
         public LyricsInfo Lyrics
         {
-            get
-            {
-                if (tagData.Lyrics != null)
-                {
-                    return new LyricsInfo(tagData.Lyrics);
-                }
-                else
-                {
-                    return new LyricsInfo();
-                }
-            }
-            set
-            {
-                tagData.Lyrics = value;
-            }
+            get => tagData.Lyrics != null ? new LyricsInfo(tagData.Lyrics) : new LyricsInfo();
+            set => tagData.Lyrics = value;
         }
+
         /// <inheritdoc/>
         public virtual IList<Format> MetadataFormats => throw new NotImplementedException();
+
+        
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return !ReferenceEquals(obj, null) && obj.GetType() == this.GetType() &&
+                   ((MetaDataHolder)obj).Equals(this);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(MetaDataHolder other)
+        {
+            if (null == other) return false;
+            return tagData.Equals(other.tagData);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return tagData.GetHashCode();
+        }
     }
 }
