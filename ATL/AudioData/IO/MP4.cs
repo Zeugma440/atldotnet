@@ -1371,14 +1371,15 @@ namespace ATL.AudioData.IO
                         {
                             var picturePosition = takePicturePosition(picType);
 
+                            int dataSize = (int)Math.Min(0, pictureSize - 16);
                             if (readTagParams.ReadPictures)
                             {
-                                PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, (int)(pictureSize - 16), picType, getImplementedTagType(), dataClass, picturePosition);
+                                PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, dataSize, picType, getImplementedTagType(), dataClass, picturePosition);
                                 tagData.Pictures.Add(picInfo);
                             }
                             else
                             {
-                                source.BaseStream.Seek(pictureSize - 16, SeekOrigin.Current);
+                                source.BaseStream.Seek(dataSize, SeekOrigin.Current);
                             }
 
                             // Look for other pictures within 'covr'
