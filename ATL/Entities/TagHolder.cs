@@ -1,7 +1,4 @@
-﻿
-using System;
-
-namespace ATL.AudioData.IO
+﻿namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Represents a set of metadata
