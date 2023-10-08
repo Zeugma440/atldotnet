@@ -87,7 +87,7 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
-        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature, bool managePadding)
+        public VorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature, bool managePadding, TagData tagData) : base(tagData)
         {
             this.writePicturesWithMetadata = writePicturesWithMetadata;
             this.writeMetadataFramingBit = writeMetadataFramingBit;
@@ -310,9 +310,6 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            int size;
-            string strData;
-            long position;
             int nbFields = 0;
             int index = 0;
             bool result = true;
@@ -332,9 +329,10 @@ namespace ATL.AudioData.IO
             initialTagOffset = reader.Position;
             do
             {
-                size = reader.ReadInt32();
-                position = reader.Position;
+                var size = reader.ReadInt32();
+                var position = reader.Position;
 
+                string strData;
                 if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
                     strData = Encoding.UTF8.GetString(reader.ReadBytes(size)).Trim();
@@ -426,7 +424,7 @@ namespace ATL.AudioData.IO
             // Write new tag to a MemoryStream
             using BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8, true);
             var result = write(dataToWrite, msw);
-            if (result > -1) tagData = dataToWrite; // TODO - Isn't that a bit too soon ?
+            if (result > -1) tagData.IntegrateValues(dataToWrite); // TODO - Isn't that a bit too soon ?
             return result;
         }
 

@@ -48,39 +48,23 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate => sampleRate;
+
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_SEQ_WAV; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
+
+        public string FileName => filePath;
+
+        public double BitRate => bitrate;
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return STEREO; }
-        }
+        public double Duration => duration;
+
+        public ChannelsArrangement ChannelsArrangement => STEREO;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
@@ -148,17 +132,17 @@ namespace ATL.AudioData.IO
                 tagExists = true;
 
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.Field.TITLE, str);
+                tagData.IntegrateValue(Field.TITLE, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.Field.ALBUM, str);
+                tagData.IntegrateValue(Field.ALBUM, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
-                tagData.IntegrateValue(TagData.Field.COPYRIGHT, str);
+                tagData.IntegrateValue(Field.COPYRIGHT, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "EMULATOR", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "DUMPER", str));
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(256))).Trim();
-                tagData.IntegrateValue(TagData.Field.COMMENT, str);
+                tagData.IntegrateValue(Field.COMMENT, str);
 
                 loopStart = source.ReadUInt32();
                 uint packedSize = source.ReadUInt32();
@@ -183,7 +167,6 @@ namespace ATL.AudioData.IO
         private uint calculateDuration(BufferedBinaryReader source, uint loopStart, uint nbLoops)
         {
             long streamSize = source.Length;
-            byte frameType;
             uint frameIndex = 0;
             uint nbTicks_all = 0;
             uint nbTicks_loop = 0;
@@ -194,16 +177,16 @@ namespace ATL.AudioData.IO
                 frameIndex++;
                 if (frameIndex == loopStart) loopReached = true;
 
-                frameType = source.ReadByte();
+                var frameType = source.ReadByte();
                 switch (frameType)
                 {
-                    case (0x00):
+                    case 0x00:
                         nbTicks_all++;
                         if (loopReached) nbTicks_loop++;
                         break;
-                    case (0x01):
-                    case (0x02): source.Seek(2, SeekOrigin.Current); break;
-                    case (0x03): source.Seek(1, SeekOrigin.Current); break;
+                    case 0x01:
+                    case 0x02: source.Seek(2, SeekOrigin.Current); break;
+                    case 0x03: source.Seek(1, SeekOrigin.Current); break;
                 }
             }
 

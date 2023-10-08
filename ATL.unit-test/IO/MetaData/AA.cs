@@ -39,6 +39,7 @@ namespace ATL.test.IO.MetaData
             testData.EmbeddedPictures.Add(pic);
 
             supportsInternationalChars = true;
+            supportsExtraEmbeddedPictures = false;
         }
 
         [TestMethod]

@@ -1371,7 +1371,7 @@ namespace ATL.AudioData.IO
                         {
                             var picturePosition = takePicturePosition(picType);
 
-                            int dataSize = (int)Math.Min(0, pictureSize - 16);
+                            int dataSize = (int)Math.Max(0, pictureSize - 16);
                             if (readTagParams.ReadPictures)
                             {
                                 PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, dataSize, picType, getImplementedTagType(), dataClass, picturePosition);

@@ -22,6 +22,7 @@ namespace ATL.test.IO.MetaData
             testData.Copyright = "Copyright 1991, Prosonus";
 
             supportsInternationalChars = false;
+            supportsExtraEmbeddedPictures = false;
         }
 
         [TestMethod]

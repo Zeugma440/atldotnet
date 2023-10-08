@@ -15,6 +15,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.ID3V1;
 
             supportsInternationalChars = false;
+            supportsExtraEmbeddedPictures = false;
 
             // Initialize specific test data
             testData = new TagHolder();

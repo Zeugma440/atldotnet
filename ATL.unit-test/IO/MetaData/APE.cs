@@ -1,10 +1,6 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using Commons;
 using static ATL.PictureInfo;
-using System.Collections.Generic;
 using System.Text;
 using ATL.AudioData.IO;
 
@@ -43,6 +39,7 @@ namespace ATL.test.IO.MetaData
             testPictureInfos.Add(pic);
 
             testData.EmbeddedPictures = testPictureInfos;
+            supportsExtraEmbeddedPictures = false;
         }
 
 

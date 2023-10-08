@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.Collections.Generic;
+﻿using ATL.AudioData;
 using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
@@ -15,6 +13,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
 
             canMetaNotExist = false;
+            supportsExtraEmbeddedPictures = false;
 
             // Initialize specific test data
             testData = new TagHolder();

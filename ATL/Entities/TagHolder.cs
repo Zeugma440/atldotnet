@@ -15,17 +15,13 @@ namespace ATL.AudioData.IO
         /// </summary>
         public TagHolder()
         {
-            tagData = new TagData();
         }
 
         /// <summary>
         /// Instanciate a new TagHolder populated with the given TagData
         /// </summary>
         /// <param name="tagData">Data to use to populate the new instance</param>
-        public TagHolder(TagData tagData)
-        {
-            this.tagData = new TagData(tagData);
-        }
+        public TagHolder(TagData tagData) : base(tagData) { }
 
         /// <inheritdoc/>
         protected override MetaDataIOFactory.TagType getImplementedTagType()

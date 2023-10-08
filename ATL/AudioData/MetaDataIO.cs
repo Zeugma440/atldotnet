@@ -44,6 +44,17 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const int RC_APE = 2;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        protected MetaDataIO() {}
+
+        /// <summary>
+        /// Instanciate a new TagHolder populated with the given TagData
+        /// </summary>
+        /// <param name="tagData">Data to use to populate the new instance</param>
+        protected MetaDataIO(TagData tagData) : base(tagData) { }
+
 
         // ------ INNER CLASSES -----------------------------------------------------
 
@@ -131,7 +142,7 @@ namespace ATL.AudioData.IO
                     nativeFormat.Name = nativeFormat.Name + " / " + iO.AudioFormat.ShortName;
                     nativeFormat.ID += iO.AudioFormat.ID;
                 }
-                return new List<Format>(new Format[1] { nativeFormat });
+                return new List<Format>(new[] { nativeFormat });
             }
         }
         /// <summary>
@@ -286,7 +297,7 @@ namespace ATL.AudioData.IO
             tagExists = false;
             tagVersion = 0;
 
-            if (null == tagData) tagData = new TagData(); else tagData.Clear();
+            tagData.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
             if (null == structureHelper) structureHelper = new FileStructureHelper(isLittleEndian); else structureHelper.Clear();
         }
@@ -446,14 +457,10 @@ namespace ATL.AudioData.IO
             TagData dataToWrite = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            bool result = await surgeon.RewriteZonesAsync(s, new FileSurgeon.WriteDelegate(writeAdapter), Zones, dataToWrite, tagExists);
+            bool result = await surgeon.RewriteZonesAsync(s, writeAdapter, Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
-            /* TODO - this implementation is too risky : 
-             *   - if one of the writing operations fails, data is updated as if everything went right
-             *   - any picture slot with a markForDeletion flag is recorded as-is in the tag
-             */
-            tagData = dataToWrite;
+            if (result) tagData.IntegrateValues(dataToWrite);
 
             return result;
         }

@@ -16,7 +16,6 @@ namespace ATL.AudioData.IO
         public DummyTag()
         {
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Instancing a Dummy Meta Data Reader");
-            tagData = new TagData();
         }
 
         /// <inheritdoc/>

@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
@@ -17,7 +15,7 @@ namespace ATL.test.IO.MetaData
             new ConsoleLogger();
 
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location) );
+            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
@@ -126,7 +124,7 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
-        
+
 
         private void readExistingTagsOnFile(AudioDataManager theFile, int nbPictures = 2)
         {

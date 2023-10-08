@@ -94,7 +94,7 @@ namespace ATL.test.IO.MetaData
 
             PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.ANY, 13);
             pic.ComputePicHash();
-            testData.EmbeddedPictures = new List<PictureInfo>() { pic };
+            testData.EmbeddedPictures = new List<PictureInfo> { pic };
 
             supportsDateOrYear = true;
         }
@@ -159,8 +159,8 @@ namespace ATL.test.IO.MetaData
             theTag.Conductor = "John Jackman";
 
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
-            PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.ANY, 14);
-            theTag.EmbeddedPictures = new List<PictureInfo>() { picInfo };
+            PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.ANY, 13);
+            theTag.EmbeddedPictures = new List<PictureInfo> { picInfo };
 
             var testChaps = theFile.NativeTag.Chapters;
             testChaps.Add(new ChapterInfo(3000, "Chapter 2"));
@@ -196,7 +196,7 @@ namespace ATL.test.IO.MetaData
             }
 
 
-            // Read the rest supported fields
+            // Read the rest of supported fields
             readExistingTagsOnFile(theFile, 2);
 
             // Additional supported field

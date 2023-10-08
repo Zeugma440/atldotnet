@@ -63,8 +63,6 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FLAC_HEADER_ID = { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
-
-
         private readonly string filePath;
         private readonly Format audioFormat;
 
@@ -318,7 +316,7 @@ namespace ATL.AudioData.IO
             info.Reset();
         }
 
-        public Ogg(string filePath, Format format)
+        public Ogg(string filePath, Format format) : base(true, true, true, true)
         {
             this.filePath = filePath;
             audioFormat = format;
@@ -760,8 +758,6 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
-
-            if (readTagParams.ReadTag && null == vorbisTag) createVorbisTag(true, true, true, true);
             info.Reset();
 
             if (getInfo(reader, info, readTagParams))

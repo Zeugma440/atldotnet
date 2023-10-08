@@ -4,14 +4,15 @@ namespace ATL.AudioData.IO
 {
     internal abstract class VorbisTagHolder : MetaDataHolder
     {
-        protected VorbisTag vorbisTag;
+        protected readonly VorbisTag vorbisTag;
 
-
-        protected void createVorbisTag(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature, bool managePadding)
+        protected VorbisTagHolder(bool writePicturesWithMetadata, bool writeMetadataFramingBit, bool hasCoreSignature,
+            bool managePadding)
         {
-            vorbisTag = new VorbisTag(writePicturesWithMetadata, writeMetadataFramingBit, hasCoreSignature, managePadding);
-            tagData = vorbisTag.tagData;
+            vorbisTag = new VorbisTag(writePicturesWithMetadata, writeMetadataFramingBit, hasCoreSignature,
+                managePadding, tagData);
         }
+
 
         protected override MetaDataIOFactory.TagType getImplementedTagType()
         {

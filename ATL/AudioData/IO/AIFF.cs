@@ -82,7 +82,7 @@ namespace ATL.AudioData.IO
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
         // Mapping between AIFx frame codes and ATL frame codes
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
             { CHUNKTYPE_NAME, Field.TITLE },
             { CHUNKTYPE_AUTHOR, Field.ARTIST },
@@ -90,58 +90,38 @@ namespace ATL.AudioData.IO
         };
 
 
-        public byte VersionID // Version code
-        {
-            get { return this.versionID; }
-        }
-        public double CompressionRatio
-        {
-            get { return getCompressionRatio(); }
-        }
+        // Version code
+        public byte VersionID => this.versionID;
 
+        public double CompressionRatio => getCompressionRatio();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return (compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE)) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public int SampleRate
-        {
-            get { return sampleRate; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => (compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE)) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
+
+        public string FileName => filePath;
+
+        public int SampleRate => sampleRate;
+
+        public double BitRate => bitrate;
 
         public int BitDepth => (bits > 0) ? bits : -1;
 
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
+        public double Duration => duration;
+
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TagType.NATIVE) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
+            return metaDataType == MetaDataIOFactory.TagType.NATIVE || metaDataType == MetaDataIOFactory.TagType.ID3V2;
         }
 
         public long AudioDataOffset { get; set; }
@@ -157,14 +137,10 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        public override byte FieldCodeFixedLength
-        {
-            get { return 4; }
-        }
-        protected override bool isLittleEndian
-        {
-            get { return false; }
-        }
+        public override byte FieldCodeFixedLength => 4;
+
+        protected override bool isLittleEndian => false;
+
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;
@@ -177,18 +153,11 @@ namespace ATL.AudioData.IO
 
 
         // IMetaDataEmbedder
-        public long HasEmbeddedID3v2
-        {
-            get { return id3v2Offset; }
-        }
-        public uint ID3v2EmbeddingHeaderSize
-        {
-            get { return 8; }
-        }
-        public FileStructureHelper.Zone Id3v2Zone
-        {
-            get { return id3v2StructureHelper.GetZone(CHUNKTYPE_ID3TAG); }
-        }
+        public long HasEmbeddedID3v2 => id3v2Offset;
+
+        public uint ID3v2EmbeddingHeaderSize => 8;
+
+        public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(CHUNKTYPE_ID3TAG);
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -299,7 +268,6 @@ namespace ATL.AudioData.IO
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = false;
-            long position;
 
             resetData();
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
@@ -341,7 +309,7 @@ namespace ATL.AudioData.IO
                         ChunkHeader header = seekNextChunkHeader(reader, limit, chunkId);
                         chunkId = header.ID;
 
-                        position = reader.Position;
+                        var position = reader.Position;
 
                         if (header.ID.Equals(CHUNKTYPE_COMMON))
                         {
@@ -508,7 +476,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w, zone);
         }
 
         private int write(TagData tag, BinaryWriter w, string zone)

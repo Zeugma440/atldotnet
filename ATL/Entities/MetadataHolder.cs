@@ -21,13 +21,31 @@ namespace ATL
         /// <summary>
         /// Reference metadata (for internal use only)
         /// </summary>
-        internal TagData tagData; // TODO make readonly after refactoring VorbisTag (see comments there)
+        internal readonly TagData tagData;
 
         /// <summary>
         /// Implemented tag type
         /// </summary>
         /// <returns></returns>
         protected abstract MetaDataIOFactory.TagType getImplementedTagType();
+
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        protected MetaDataHolder()
+        {
+            tagData = new TagData();
+        }
+
+        /// <summary>
+        /// Instanciate a new MetaDataHolder populated with the given TagData
+        /// </summary>
+        /// <param name="tagData">Data to use to populate the new instance</param>
+        protected MetaDataHolder(TagData tagData)
+        {
+            this.tagData = tagData;
+        }
 
         /// <inheritdoc/>
         public string Title
@@ -421,7 +439,7 @@ namespace ATL
         /// <inheritdoc/>
         public virtual IList<Format> MetadataFormats => throw new NotImplementedException();
 
-        
+
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {

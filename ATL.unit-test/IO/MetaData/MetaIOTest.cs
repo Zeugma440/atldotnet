@@ -47,6 +47,7 @@ namespace ATL.test.IO.MetaData
         protected MetaDataIOFactory.TagType tagType = MetaDataIOFactory.TagType.ANY;
         protected TagHolder testData;
         protected bool supportsDateOrYear = false;
+        protected bool supportsExtraEmbeddedPictures = true;
         protected bool supportsInternationalChars = true;
         protected bool canMetaNotExist = true;
 
@@ -230,6 +231,7 @@ namespace ATL.test.IO.MetaData
             testData = new TagHolder(theTag.tagData);
 
             PictureInfo picInfo = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
+            picInfo.NativePicCode = 6;
             var testPics = theTag.EmbeddedPictures;
             testPics.Add(picInfo);
             theTag.EmbeddedPictures = testPics;
@@ -238,12 +240,12 @@ namespace ATL.test.IO.MetaData
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
 
-            readExistingTagsOnFile(theFile, initialNbPictures + 1);
+            readExistingTagsOnFile(theFile, initialNbPictures + (supportsExtraEmbeddedPictures ? 1 : 0));
             Assert.IsNotNull(theFile.getMeta(tagType));
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.IsTrue(meta.Exists);
 
-            if (testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
+            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
             {
                 int nbFound = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
@@ -798,7 +800,7 @@ namespace ATL.test.IO.MetaData
             }
 
             // Pictures
-            if (testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
+            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
             {
                 Assert.AreEqual(nbPictures, meta.EmbeddedPictures.Count);
 
