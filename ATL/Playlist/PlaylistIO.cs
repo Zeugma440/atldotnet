@@ -117,6 +117,7 @@ namespace ATL.Playlist
                     IList<Track> trackList = FilePaths.Select(file => new Track(file, false)).ToList();
                     setTracks(fs, trackList);
                 }
+                load();
 
                 return true;
             }
