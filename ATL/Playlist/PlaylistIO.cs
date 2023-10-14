@@ -100,6 +100,26 @@ namespace ATL.Playlist
             load();
         }
 
+
+        /// <summary>
+        /// Read the Locations of the track files described by the playlist using the given Stream
+        /// and put them into the given list
+        /// </summary>
+        /// <param name="fs">FileStream to use to read the values</param>
+        /// <param name="result">List that will receive the values</param>
+        protected abstract void getFiles(FileStream fs, IList<FileLocation> result);
+
+        /// <summary>
+        /// Read the tracks described by the playlist using the given Stream
+        /// and put them into the given list
+        /// </summary>
+        /// <param name="fs">FileStream to use to read the tracks</param>
+        /// <param name="result">List that will receive the tracks</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        protected abstract void setTracks(FileStream fs, IList<Track> result);
+
+
         /// <inheritdoc/>
         public bool Save()
         {
@@ -128,24 +148,6 @@ namespace ATL.Playlist
             }
 
         }
-
-        /// <summary>
-        /// Read the Locations of the track files described by the playlist using the given Stream
-        /// and put them into the given list
-        /// </summary>
-        /// <param name="fs">FileStream to use to read the values</param>
-        /// <param name="result">List that will receive the values</param>
-        protected abstract void getFiles(FileStream fs, IList<FileLocation> result);
-
-        /// <summary>
-        /// Read the tracks described by the playlist using the given Stream
-        /// and put them into the given list
-        /// </summary>
-        /// <param name="fs">FileStream to use to read the tracks</param>
-        /// <param name="result">List that will receive the tracks</param>
-        /// <returns>True if save succeeds; false if it fails
-        /// NB : Failure reason is saved to the ATL log</returns>
-        protected abstract void setTracks(FileStream fs, IList<Track> result);
 
         private void load()
         {

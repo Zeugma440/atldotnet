@@ -49,9 +49,9 @@ namespace ATL.test.IO.Playlist
                     if (!path.StartsWith("http")) File.Delete(path);
                 }
 
-                File.Delete(localFilePath1);
-                File.Delete(localFilePath2);
-                Directory.Delete(testSubfolder);
+                if (localFilePath1 != null) File.Delete(localFilePath1);
+                if (localFilePath2 != null) File.Delete(localFilePath2);
+                if (testSubfolder != null) Directory.Delete(testSubfolder);
             }
         }
 
@@ -112,12 +112,12 @@ namespace ATL.test.IO.Playlist
 
                 // Add the other local file using relative path
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
-                playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
+                //playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
                 playlistIO.FilePaths.Add(localFilePath2);
                 playlistIO.Save();
 
                 // Change the title of track 2
-                playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
+                //playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
                 playlistIO.Tracks[1].Title = NEW_TITLE;
                 playlistIO.Save();
 

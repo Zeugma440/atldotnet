@@ -76,9 +76,14 @@ namespace ATL.test.IO.Playlist
                 Assert.AreEqual(pathsToWrite.Count, filePaths.Count);
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
 
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
 
                 // Test Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
+
+                testFileLocation = TestUtils.CreateTempTestFile("test.smil");
+                pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
                 pls.Tracks = tracksToWrite;
                 pls.Save();
 
@@ -116,11 +121,12 @@ namespace ATL.test.IO.Playlist
                 Assert.AreEqual(tracksToWrite.Count, tracks.Count);
                 Assert.IsTrue(tracks[0].Duration > 0);
                 Assert.IsTrue(tracks[1].Duration > 0);
+
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
             finally
             {
                 ATL.Settings.PlaylistWriteAbsolutePath = defaultPathSetting;
-                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }
         }
 
