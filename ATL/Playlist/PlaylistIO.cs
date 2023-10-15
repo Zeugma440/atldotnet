@@ -171,6 +171,9 @@ namespace ATL.Playlist
 
         private void load()
         {
+            Tracks.Clear();
+            FilePaths.Clear();
+
             var locations = new List<FileLocation>();
             try
             {
@@ -321,10 +324,26 @@ namespace ATL.Playlist
         /// </summary>
         /// <param name="source">XmlReader to read from</param>
         /// <returns>Value, if the given XmlReader is positioned on a Text node; null instead</returns>
-        protected string? parseString(XmlReader source)
+        protected static string? parseString(XmlReader source)
         {
             source.Read();
             return source.NodeType == XmlNodeType.Text ? source.Value : null;
         }
+
+        /// <summary>
+        /// Add the given elements to the given Location list and Track list
+        /// </summary>
+        /// <param name="location">File location to add</param>
+        /// <param name="title">Track title to add</param>
+        /// <param name="locations">Location list to populate</param>
+        /// <param name="tracks">Track list to populate</param>
+        protected static void addTrack(FileLocation location, string title, IList<FileLocation> locations, IList<Track> tracks)
+        {
+            var track = new Track(location.Path);
+            if (title.Length > 0 && title != System.IO.Path.GetFileNameWithoutExtension(location.Path)) track.Title = title;
+            tracks.Add(track);
+            locations.Add(location);
+        }
+
     }
 }

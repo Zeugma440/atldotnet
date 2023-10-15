@@ -60,14 +60,6 @@ namespace ATL.Playlist.IO
             if (location != null) addTrack(location, title, locations, tracks);
         }
 
-        private void addTrack(FileLocation location, string title, IList<FileLocation> locations, IList<Track> tracks)
-        {
-            var track = new Track(location.Path);
-            if (title.Length > 0 && title != System.IO.Path.GetFileNameWithoutExtension(location.Path)) track.Title = title;
-            tracks.Add(track);
-            locations.Add(location);
-        }
-
         /// <inheritdoc/>
         protected override void save(FileStream fs, IList<Track> tracks)
         {
