@@ -35,51 +35,9 @@ namespace ATL.benchmark
 
             //info(@"D:\temp\wav\185\Largo.WAV");
 
-            test();
-
             //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
             //displayVersionInfo();
-        }
-
-        static private void test()
-        {
-
-            var path1 = @"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.unit-test\Resources\tmp\chron.mid--13.12.37.357.mid";
-            var path2 = @"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.unit-test\Resources\tmp\empty.mp3--13.12.37.312.mp3";
-            var path3 = @"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.unit-test\Resources\tmp\mod.mod--15.31.12.041.mod";
-
-            var playlistPath = @"C:\Users\zeugm\source\repos\Zeugma440\atldotnet\ATL.unit-test\Resources\tmp\playlist.m3u--15.31.35.063.m3u";
-
-            var playlist = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath, PlaylistFormat.LocationFormatting.FilePath, PlaylistFormat.FileEncoding.UTF8_NO_BOM);
-            playlist.FilePaths.Clear();
-            playlist.Save();
-
-            // Add absolute path
-            ATL.Settings.PlaylistWriteAbsolutePath = true;
-            playlist.FilePaths.Add(path1);
-            playlist.Save();
-
-            Console.WriteLine("Step 1:");
-            Console.WriteLine(File.ReadAllText(playlistPath));
-
-            // Add relative path
-            playlist = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath, PlaylistFormat.LocationFormatting.FilePath, PlaylistFormat.FileEncoding.UTF8_NO_BOM);
-            ATL.Settings.PlaylistWriteAbsolutePath = false;
-            playlist.FilePaths.Add(path2);
-            playlist.Save();
-
-            Console.WriteLine("\nStep 2:");
-            Console.WriteLine(File.ReadAllText(playlistPath));
-
-            // Add absolute path
-            playlist = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath, PlaylistFormat.LocationFormatting.FilePath, PlaylistFormat.FileEncoding.UTF8_NO_BOM);
-            ATL.Settings.PlaylistWriteAbsolutePath = true;
-            playlist.FilePaths.Add(path3);
-            playlist.Save();
-
-            Console.WriteLine("\nStep 3:");
-            Console.WriteLine(File.ReadAllText(playlistPath));
         }
 
         static private void readAt(string filePath, bool useTagLib = false)
