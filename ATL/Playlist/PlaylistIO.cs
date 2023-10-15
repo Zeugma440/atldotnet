@@ -99,6 +99,8 @@ namespace ATL.Playlist
             Path = filePath;
             this.supportsRelativePaths = supportsRelativePaths;
             LogDelegator.GetLocateDelegate()(filePath);
+            FilePaths = new List<string>();
+            Tracks = new List<Track>();
             load();
         }
 
@@ -111,6 +113,8 @@ namespace ATL.Playlist
         /// will override the track's metadata
         /// </summary>
         /// <param name="fs">FileStream to use to read the values</param>
+        /// <param name="locations">List of Locations that will receive read values</param>
+        /// <param name="tracks">List of Tracks that will receive read values</param>
         protected abstract void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks);
 
         /// <summary>
@@ -168,8 +172,6 @@ namespace ATL.Playlist
         private void load()
         {
             var locations = new List<FileLocation>();
-            Tracks = new List<Track>();
-            FilePaths = new List<string>();
             try
             {
                 using FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
@@ -314,6 +316,11 @@ namespace ATL.Playlist
             return new FileLocation(href, isAbsolute);
         }
 
+        /// <summary>
+        /// Parse a string from the given XmlReader if positioned on a Text node
+        /// </summary>
+        /// <param name="source">XmlReader to read from</param>
+        /// <returns>Value, if the given XmlReader is positioned on a Text node; null instead</returns>
         protected string? parseString(XmlReader source)
         {
             source.Read();
