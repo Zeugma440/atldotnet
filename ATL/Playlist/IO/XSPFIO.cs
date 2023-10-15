@@ -1,7 +1,9 @@
-﻿using System.IO;
+﻿#nullable enable
+using System.IO;
 using System.Collections.Generic;
 using System;
 using System.Xml;
+using Commons;
 
 namespace ATL.Playlist.IO
 {
@@ -21,28 +23,53 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             using XmlReader source = XmlReader.Create(fs);
             while (source.ReadToFollowing("track"))
             {
+                FileLocation? location = null;
+                string? title = null;
+                string? artist = null;
+                string? album = null;
+                string? comment = null;
+                string? tracknumber = null;
+
                 while (source.Read())
                 {
                     // TODO handle image element = fetch track picture from playlists info 
-                    if (source.NodeType == XmlNodeType.Element && source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) parseLocation(source, result);
+                    if (source.NodeType == XmlNodeType.Element)
+                    {
+                        if (source.Name.Equals("location", StringComparison.OrdinalIgnoreCase)) location = parseLocation(source);
+                        else if (source.Name.Equals("title", StringComparison.OrdinalIgnoreCase)) title = parseString(source);
+                        else if (source.Name.Equals("creator", StringComparison.OrdinalIgnoreCase)) artist = parseString(source);
+                        else if (source.Name.Equals("album", StringComparison.OrdinalIgnoreCase)) album = parseString(source);
+                        else if (source.Name.Equals("annotation", StringComparison.OrdinalIgnoreCase)) comment = parseString(source);
+                        else if (source.Name.Equals("trackNum", StringComparison.OrdinalIgnoreCase)) tracknumber = parseString(source);
+                    }
                     else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("track", StringComparison.OrdinalIgnoreCase)) break;
                 }
+
+                if (null == location) continue;
+                var track = new Track(location.Path);
+                if (title != null) track.Title = title;
+                if (artist != null) track.Artist = artist;
+                if (album != null) track.Album = album;
+                if (comment != null) track.Comment = comment;
+                if (tracknumber != null && Utils.IsNumeric(tracknumber)) track.TrackNumber = int.Parse(tracknumber);
+                tracks.Add(track);
+                locations.Add(location);
             }
         }
 
-        private void parseLocation(XmlReader source, ICollection<FileLocation> result)
+        private FileLocation? parseLocation(XmlReader source)
         {
-            source.Read();
-            if (source.NodeType == XmlNodeType.Text) result.Add(decodeLocation(source.Value));
+            var str = parseString(source);
+            return str != null ? decodeLocation(str) : null;
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());
             writer.WriteStartElement("playlist", "http://xspf.org/ns/0/");
@@ -54,7 +81,7 @@ namespace ATL.Playlist.IO
 
             // Open tracklist
             writer.WriteStartElement("trackList");
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 writer.WriteStartElement("track");
 

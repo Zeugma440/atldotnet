@@ -1,4 +1,5 @@
-﻿using ATL.Logging;
+﻿#nullable enable
+using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
@@ -92,6 +93,7 @@ namespace ATL.Playlist
         /// Constructor
         /// </summary>
         /// <param name="filePath">Path of the playlist file to load</param>
+        /// <param name="supportsRelativePaths">Set to false to indicate the format doesn't support relative paths</param>
         protected PlaylistIO(string filePath, bool supportsRelativePaths = true)
         {
             Path = filePath;
@@ -102,28 +104,29 @@ namespace ATL.Playlist
 
 
         /// <summary>
-        /// Read the Locations of the track files described by the playlist using the given Stream
-        /// and put them into the given list
+        /// Read the file locations and Tracks described by the playlist using the given Stream
+        /// and put them into the given list.
+        /// 
+        /// Any metyadata (title, artist, description...) written in the playlist
+        /// will override the track's metadata
         /// </summary>
         /// <param name="fs">FileStream to use to read the values</param>
-        /// <param name="result">List that will receive the values</param>
-        protected abstract void getFiles(FileStream fs, IList<FileLocation> result);
+        protected abstract void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks);
 
         /// <summary>
-        /// Read the tracks described by the playlist using the given Stream
-        /// and put them into the given list
+        /// Write the given Tracks using the given Stream
         /// </summary>
         /// <param name="fs">FileStream to use to read the tracks</param>
-        /// <param name="result">List that will receive the tracks</param>
+        /// <param name="tracks">Track to write to the playlist file</param>
         /// <returns>True if save succeeds; false if it fails
         /// NB : Failure reason is saved to the ATL log</returns>
-        protected abstract void setTracks(FileStream fs, IList<Track> result);
+        protected abstract void save(FileStream fs, IList<Track> tracks);
 
 
         /// <inheritdoc/>
         public bool Save()
         {
-            bool havePathsChanged = initialFilePaths.Select(ifp => ifp.Path).SequenceEqual(FilePaths);
+            bool havePathsChanged = !initialFilePaths.Select(ifp => ifp.Path).SequenceEqual(FilePaths);
             bool haveMetaChanged = !initialMetadata.SequenceEqual(Tracks.Select(t => new TagHolder(t.toTagData())));
 
             LogDelegator.GetLocateDelegate()(Path);
@@ -131,22 +134,35 @@ namespace ATL.Playlist
             {
                 using FileStream fs = new FileStream(Path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
                 if (Encoding.Equals(PlaylistFormat.FileEncoding.UTF8_BOM)) fs.Write(BOM_UTF8, 0, 3);
-                if (haveMetaChanged) setTracks(fs, Tracks);
-                else
+                if (haveMetaChanged) save(fs, Tracks);
+                else // Use file paths
                 {
-                    IList<Track> trackList = FilePaths.Select(file => new Track(file, false)).ToList();
-                    setTracks(fs, trackList);
+                    IList<Track> trackList = new List<Track>();
+                    // Compute tracks to save, using :
+                    // - Initial tracks, for file paths found in initial file paths
+                    // - Freshly loaded Tracks, for new file paths
+                    foreach (var path in FilePaths)
+                    {
+                        if (initialFilePaths.Any(location => location.Path.Equals(path)))
+                        {
+                            var existingTrack = Tracks.FirstOrDefault(t => t.Path.Equals(path));
+                            if (existingTrack != null) trackList.Add(existingTrack);
+                        }
+                        else
+                        {
+                            trackList.Add(new Track(path, false));
+                        }
+                    }
+                    save(fs, trackList);
                 }
-                load();
-
-                return true;
             }
             catch (Exception e)
             {
                 Utils.TraceException(e);
                 return false;
             }
-
+            load();
+            return true;
         }
 
         private void load()
@@ -157,7 +173,7 @@ namespace ATL.Playlist
             try
             {
                 using FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
-                getFiles(fs, locations);
+                load(fs, locations, Tracks);
             }
             catch (Exception e)
             {
@@ -170,11 +186,9 @@ namespace ATL.Playlist
             {
                 FilePaths.Add(location.Path);
                 initialFilePaths.Add(location);
-
-                var t = new Track(location.Path);
-                Tracks.Add(t);
-                initialMetadata.Add(new TagHolder(t.toTagData()));
             }
+
+            foreach (var t in Tracks) initialMetadata.Add(new TagHolder(t.toTagData()));
         }
 
         /// <summary>
@@ -208,7 +222,8 @@ namespace ATL.Playlist
         protected string encodeLocation(string location)
         {
             var initialLocation = initialFilePaths.FirstOrDefault(fl => fl.Path.Equals(location));
-            bool isAbsolute = Settings.PlaylistWriteAbsolutePath || (initialLocation != null && initialLocation.IsAbsolute);
+            // Don't change path format if we're rewriting an existing path; use current settings if we're writing a new path
+            bool isAbsolute = (initialLocation != null && initialLocation.IsAbsolute) || (null == initialLocation && Settings.PlaylistWriteAbsolutePath);
             if (!location.StartsWith("http") && (System.IO.Path.IsPathRooted(location) ^ isAbsolute))
             {
                 if (isAbsolute || !supportsRelativePaths)
@@ -240,15 +255,14 @@ namespace ATL.Playlist
         }
 
         /// <summary>
-        /// Decodes the given location to an absolute filepath and adds it to the given list
+        /// Return the given location decoded to an absolute filepath
         /// </summary>
         /// <param name="source">Xml source to get the location from</param>
         /// <param name="attributeName">Attribute name in current Xml source to get the location from</param>
-        /// <param name="result">List of locations to add the found location to</param>
-        protected void decodeLocation(XmlReader source, string attributeName, IList<FileLocation> result)
+        protected FileLocation? decodeLocation(XmlReader source, string attributeName)
         {
-            FileLocation location = decodeLocation(source.GetAttribute(attributeName));
-            if (location != null) result.Add(location);
+            var val = source.GetAttribute(attributeName);
+            return val != null ? decodeLocation(val) : null;
         }
 
         /// <summary>
@@ -298,6 +312,12 @@ namespace ATL.Playlist
                 }
             }
             return new FileLocation(href, isAbsolute);
+        }
+
+        protected string? parseString(XmlReader source)
+        {
+            source.Read();
+            return source.NodeType == XmlNodeType.Text ? source.Value : null;
         }
     }
 }

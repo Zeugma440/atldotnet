@@ -140,7 +140,7 @@ namespace ATL.test.IO.Playlist
                             switch (nbEntries)
                             {
                                 case 0:
-                                    Assert.AreEqual(remoteFilePath, writtenPath);
+                                    Assert.AreEqual(remoteFilePath1, writtenPath);
                                     break;
                                 case 1:
                                     Assert.AreEqual(localFilePath1, writtenPath);
@@ -148,6 +148,9 @@ namespace ATL.test.IO.Playlist
                                 case 2:
                                     Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, localFilePath2),
                                         writtenPath);
+                                    break;
+                                case 3:
+                                    Assert.AreEqual(remoteFilePath2, writtenPath);
                                     break;
                             }
                         }
@@ -157,7 +160,7 @@ namespace ATL.test.IO.Playlist
                         }
                     }
                 }
-                Assert.AreEqual(3, nbEntries + 1);
+                Assert.AreEqual(4, nbEntries + 1);
             }
             finally
             {

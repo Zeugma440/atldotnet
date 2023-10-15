@@ -160,7 +160,7 @@ namespace ATL.test.IO.Playlist
                 {
                     Assert.AreEqual("#EXTM3U", sr.ReadLine());
 
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 4; i++)
                     {
                         var title = sr.ReadLine();
                         if (2 == nbEntries) Assert.IsTrue(title.EndsWith(NEW_TITLE));
@@ -169,13 +169,16 @@ namespace ATL.test.IO.Playlist
                         switch (nbEntries)
                         {
                             case 1:
-                                path = remoteFilePath;
+                                path = remoteFilePath1;
                                 break;
                             case 2:
                                 path = localFilePath1;
                                 break;
                             case 3:
                                 path = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                break;
+                            case 4:
+                                path = remoteFilePath2;
                                 break;
                             default:
                                 path = "";
@@ -185,7 +188,7 @@ namespace ATL.test.IO.Playlist
                         nbEntries++;
                     }
                 }
-                Assert.AreEqual(4, nbEntries);
+                Assert.AreEqual(5, nbEntries);
             }
             finally
             {

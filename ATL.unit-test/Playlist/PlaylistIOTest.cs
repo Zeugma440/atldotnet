@@ -9,7 +9,8 @@ namespace ATL.test.IO.Playlist
         protected static readonly IList<Track> tracksToWrite = new List<Track>();
         protected static readonly string NEW_TITLE = "This is a new title";
         
-        protected static string? remoteFilePath;
+        protected static string? remoteFilePath1;
+        protected static string? remoteFilePath2;
         protected static string? localFilePath1;
         protected static string? testSubfolder;
         protected static string? localFilePath2;
@@ -28,7 +29,8 @@ namespace ATL.test.IO.Playlist
 
             // == PLIO_RW_Absolute_Relative_Path
             // Select a remote file to link
-            remoteFilePath = TestUtils.GetResourceLocationRoot() + "MID" + Path.DirectorySeparatorChar + "yoru-uta.mid";
+            remoteFilePath1 = TestUtils.GetResourceLocationRoot() + "MID" + Path.DirectorySeparatorChar + "yoru-uta.mid";
+            remoteFilePath2 = TestUtils.GetResourceLocationRoot() + "MID" + Path.DirectorySeparatorChar + "memory.mid";
             // Move one files on temp folder (-> local file 1)
             localFilePath1 = TestUtils.CopyAsTempTestFile("MID/chron.mid");
             // Move one files on temp folder subfolder (-> local file 2)
@@ -106,19 +108,25 @@ namespace ATL.test.IO.Playlist
                 // Add 1 local files and 1 remote files to playlist using absolute paths
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 var playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
-                playlistIO.FilePaths.Add(remoteFilePath);
+                playlistIO.FilePaths.Add(remoteFilePath1);
                 playlistIO.FilePaths.Add(localFilePath1);
                 playlistIO.Save();
 
                 // Add the other local file using relative path
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
-                //playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
+                playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
                 playlistIO.FilePaths.Add(localFilePath2);
                 playlistIO.Save();
 
                 // Change the title of track 2
-                //playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
+                playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
                 playlistIO.Tracks[1].Title = NEW_TITLE;
+                playlistIO.Save();
+
+                // Add the final file using absolute path
+                ATL.Settings.PlaylistWriteAbsolutePath = true;
+                playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);
+                playlistIO.FilePaths.Add(remoteFilePath2);
                 playlistIO.Save();
 
                 playlistIO = PlaylistIOFactory.GetInstance().GetPlaylistIO(playlistPath);

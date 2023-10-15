@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
@@ -33,32 +34,65 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             Encoding encoding = getEncoding(fs);
 
             using TextReader source = new StreamReader(fs, encoding);
+            string title = "";
+            string artist = "";
             string s = source.ReadLine();
             while (s != null)
             {
+                if (0 == s.Length) continue;
                 // If the read line isn't a metadata, it's a file path
-                if (s.Length > 0 && s[0] != '#')
+                if (s[0] == '#')
                 {
-                    result.Add(decodeLocation(s));
+                    if (s.StartsWith("#extinf", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        title = "";
+                        artist = "";
+
+                        var parts = s.Split(':'); // #EXTINF:duration,artistTitle
+                        if (1 == parts.Length) continue;
+
+                        var parts2 = parts[1].Split(','); // duration,artistTitle
+                        if (1 == parts2.Length) continue;
+
+                        var artistTitle = parts2[1].Trim();
+                        if (0 == artistTitle.Length) continue;
+
+                        var index = artistTitle.IndexOf(" - ", StringComparison.Ordinal);
+                        if (index != -1)
+                        {
+                            artist = artistTitle[..index];
+                            title = artistTitle[(index + 1)..];
+                        }
+                        else title = artistTitle;
+                    }
+                }
+                else
+                {
+                    FileLocation location = decodeLocation(s);
+                    var track = new Track(location.Path);
+                    if (artist.Length > 0) track.Artist = artist;
+                    if (title.Length > 0 && title != System.IO.Path.GetFileNameWithoutExtension(location.Path)) track.Title = title;
+                    tracks.Add(track);
+                    locations.Add(location);
                 }
                 s = source.ReadLine();
             }
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             Encoding encoding = getEncoding(fs);
 
             using TextWriter w = new StreamWriter(fs, encoding);
             if (Settings.M3U_useExtendedFormat) w.WriteLine("#EXTM3U");
 
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 if (Settings.M3U_useExtendedFormat)
                 {

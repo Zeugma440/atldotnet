@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Commons;
 
 namespace ATL.Playlist.IO
 {
@@ -20,30 +21,62 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
 
+            int currentIndex = -1;
+            string title = "";
+            FileLocation location = null;
+
             using TextReader source = new StreamReader(fs, encoding);
             string s = source.ReadLine();
-            while (s != null)
+            while (!string.IsNullOrEmpty(s))
             {
-                var fileIndex = s.IndexOf("*file*", StringComparison.Ordinal);
-                if (fileIndex > -1)
+                var parts = s.Split('*');
+                if (parts.Length > 2 && Utils.IsNumeric(parts[0]))
                 {
-                    s = s.Substring(fileIndex + 6, s.Length - fileIndex - 6);
-                    result.Add(decodeLocation(s));
+                    var index = int.Parse(parts[0]);
+                    if (-1 == currentIndex) currentIndex = index;
+
+                    if (index != currentIndex) // Record previous track
+                    {
+                        if (location != null) addTrack(location, title, locations, tracks);
+                        title = "";
+                        location = null;
+                        currentIndex = index;
+                    }
+
+                    switch (parts[1])
+                    {
+                        case "file":
+                            location = decodeLocation(parts[2]);
+                            break;
+                        case "title":
+                            title = parts[2];
+                            break;
+                    }
                 }
+
                 s = source.ReadLine();
             }
+            addTrack(location, title, locations, tracks);
+        }
+
+        private void addTrack(FileLocation location, string title, IList<FileLocation> locations, IList<Track> tracks)
+        {
+            var track = new Track(location.Path);
+            if (title.Length > 0 && title != System.IO.Path.GetFileNameWithoutExtension(location.Path)) track.Title = title;
+            tracks.Add(track);
+            locations.Add(location);
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             Encoding encoding = System.Text.Encoding.UTF8;
 
-            long totalDuration = (long)Math.Floor(result.Sum(s => s.DurationMs));
+            long totalDuration = (long)Math.Floor(tracks.Sum(s => s.DurationMs));
 
             using TextWriter w = new StreamWriter(fs, encoding);
             w.WriteLine("DAUMPLAYLIST");
@@ -53,7 +86,7 @@ namespace ATL.Playlist.IO
             // playname not supported
 
             int counter = 1;
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 w.Write(counter);
                 w.Write("*file*");

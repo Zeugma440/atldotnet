@@ -144,7 +144,7 @@ namespace ATL.test.IO.Playlist
                         switch (nbEntries)
                         {
                             case 0:
-                                Assert.AreEqual("file:///" + remoteFilePath.Replace('\\', '/'), writtenPath);
+                                Assert.AreEqual("file:///" + remoteFilePath1.Replace('\\', '/'), writtenPath);
                                 break;
                             case 1:
                                 Assert.AreEqual(writtenPath, "file:///" + localFilePath1.Replace('\\', '/'), writtenPath);
@@ -152,6 +152,9 @@ namespace ATL.test.IO.Playlist
                             case 2:
                                 // B4S doesn't support relative paths
                                 Assert.AreEqual("file:///" + localFilePath2.Replace('\\', '/'), writtenPath);
+                                break;
+                            case 3:
+                                Assert.AreEqual("file:///" + remoteFilePath2.Replace('\\', '/'), writtenPath);
                                 break;
                         }
                     }
@@ -163,7 +166,7 @@ namespace ATL.test.IO.Playlist
                         }
                     }
                 }
-                Assert.AreEqual(3, nbEntries + 1);
+                Assert.AreEqual(4, nbEntries + 1);
             }
             finally
             {

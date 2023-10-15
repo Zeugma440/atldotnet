@@ -118,13 +118,16 @@ namespace ATL.test.IO.Playlist
                         switch (nbEntries)
                         {
                             case 1:
-                                path = remoteFilePath;
+                                path = remoteFilePath1;
                                 break;
                             case 2:
                                 path = localFilePath1;
                                 break;
                             case 3:
                                 path = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                break;
+                            case 4:
+                                path = remoteFilePath2;
                                 break;
                             default:
                                 path = "";

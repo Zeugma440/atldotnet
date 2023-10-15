@@ -23,7 +23,7 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             using XmlReader source = XmlReader.Create(fs);
             while (source.Read())
@@ -35,7 +35,11 @@ namespace ATL.Playlist.IO
                             || source.Name.Equals("media", StringComparison.OrdinalIgnoreCase))
                         {
                             FileLocation resourceLocation = getResourceLocation(source);
-                            if (null != resourceLocation) result.Add(resourceLocation);
+                            if (null != resourceLocation)
+                            {
+                                tracks.Add(new Track(resourceLocation.Path));
+                                locations.Add(resourceLocation);
+                            }
                         }
                         break;
 
@@ -62,7 +66,7 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());
             writer.WriteStartElement("smil");
@@ -74,7 +78,7 @@ namespace ATL.Playlist.IO
             writer.WriteStartElement("seq");
             writer.WriteAttributeString("repeatCount", "indefinite");
 
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 writer.WriteStartElement("media");
                 writer.WriteAttributeString("src", encodeLocation(t.Path));

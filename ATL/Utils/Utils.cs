@@ -361,15 +361,15 @@ namespace Commons
         {
             if (string.IsNullOrEmpty(s)) return false;
 
-            for (int i = 0; i < s.Length; i++)
+            foreach (var t in s)
             {
-                if (s[i] == '.' || s[i] == ',')
+                if (t == '.' || t == ',')
                 {
                     if (allowsOnlyIntegers) return false;
                 }
                 else
                 {
-                    if (!(char.IsDigit(s[i]) || (allowsSigned && s[i] == '-'))) return false;
+                    if (!(char.IsDigit(t) || (allowsSigned && t == '-'))) return false;
                 }
             }
 
@@ -387,21 +387,47 @@ namespace Commons
         }
 
         /// <summary>
+        /// Returns the first successive series of digits converted to integer
+        /// NB : Doesn't detect negative integers ('-' char is ignored)
+        /// </summary>
+        /// <param name="s">String to extract the integer from</param>
+        /// <returns>First successive series of digits of the given string converted to integer; -1 if nothing found</returns>
+        public static int ParseFirstIntegerPart(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return -1;
+
+            bool insideInt = false;
+            StringBuilder sb = new StringBuilder();
+            foreach (var t in s)
+            {
+                if (IsDigit(t))
+                {
+                    if (!insideInt) insideInt = true;
+                    sb.Append(t);
+                }
+                else
+                {
+                    if (insideInt) break;
+                }
+            }
+
+            return sb.Length > 0 ? int.Parse(sb.ToString()) : -1;
+        }
+
+        /// <summary>
         /// Indicate if the given string is hexadecimal notation
         /// </summary>
         /// <param name="s">String to analyze</param>
         /// <returns>True if the string is a hexadecimal notation; false if not</returns>
         public static bool IsHex(string s)
         {
-            if ((null == s) || (0 == s.Length)) return false;
+            if (string.IsNullOrEmpty(s)) return false;
 
             if (s.Length % 2 > 0) return false; // Hex notation always uses two characters for every byte
 
-            char c;
-
-            for (int i = 0; i < s.Length; i++)
+            foreach (var t in s)
             {
-                c = char.ToUpper(s[i]);
+                var c = char.ToUpper(t);
                 if (!char.IsDigit(c) && c != 'A' && c != 'B' && c != 'C' && c != 'D' && c != 'E' && c != 'F') return false;
             }
 

@@ -155,7 +155,7 @@ namespace ATL.test.IO.Playlist
                             switch (nbEntries)
                             {
                                 case 0:
-                                    expected = "file:///" + remoteFilePath.Replace('\\', '/');
+                                    expected = "file:///" + remoteFilePath1.Replace('\\', '/');
                                     break;
                                 case 1:
                                     expected = "file:///" + localFilePath1.Replace('\\', '/');
@@ -163,13 +163,16 @@ namespace ATL.test.IO.Playlist
                                 case 2:
                                     expected = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
                                     break;
+                                case 3:
+                                    expected = "file:///" + remoteFilePath2.Replace('\\', '/');
+                                    break;
                             }
                             var actual = source.GetAttribute("src");
                             Assert.AreEqual(expected, actual);
                         }
                     }
                 }
-                Assert.AreEqual(3, nbEntries + 1);
+                Assert.AreEqual(4, nbEntries + 1);
             }
             finally
             {

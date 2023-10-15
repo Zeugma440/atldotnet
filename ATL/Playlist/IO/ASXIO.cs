@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#nullable enable
+using System.IO;
 using System.Collections.Generic;
 using System;
 using System.Xml;
@@ -21,21 +22,42 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             using XmlReader source = XmlReader.Create(fs);
             while (source.ReadToFollowing("ENTRY"))
             {
+                FileLocation? location = null;
+                string? title = null;
+                string? artist = null;
+
                 while (source.Read())
                 {
-                    if (source.NodeType == XmlNodeType.Element && source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase)) decodeLocation(source, "HREF", result);
+                    if (source.NodeType == XmlNodeType.Element)
+                    {
+                        if (source.Name.Equals("REF", StringComparison.OrdinalIgnoreCase))
+                            location = decodeLocation(source, "HREF");
+                        if (source.Name.Equals("TITLE", StringComparison.OrdinalIgnoreCase))
+                            title = parseString(source);
+                        if (source.Name.Equals("AUTHOR", StringComparison.OrdinalIgnoreCase))
+                            artist = parseString(source);
+                    }
                     else if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("ENTRY", StringComparison.OrdinalIgnoreCase)) break;
+                }
+
+                if (location != null)
+                {
+                    var track = new Track(location.Path);
+                    if (!string.IsNullOrEmpty(title)) track.Title = title;
+                    if (!string.IsNullOrEmpty(artist)) track.Artist = artist;
+                    tracks.Add(track);
+                    locations.Add(location);
                 }
             }
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             XmlWriter writer = XmlWriter.Create(fs, generateWriterSettings());
             writer.WriteStartElement("ASX", "http://xspf.org/ns/0/");
@@ -46,7 +68,7 @@ namespace ATL.Playlist.IO
             writer.WriteEndElement();
 
             // Open tracklist
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 writer.WriteStartElement("ENTRY");
 

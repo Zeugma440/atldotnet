@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#nullable enable
+using System.IO;
 using System.Collections.Generic;
 using System;
 using System.Xml;
@@ -19,21 +20,34 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             using XmlReader source = XmlReader.Create(fs);
             while (source.ReadToFollowing("entry"))
             {
-                decodeLocation(source, "Playstring", result);
+                string? title = null;
+
+                var location = decodeLocation(source, "Playstring");
                 while (source.Read())
                 {
-                    if (source.NodeType == XmlNodeType.EndElement && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;
+                    if (source.NodeType == XmlNodeType.Element && source.Name.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                        title = parseString(source);
+
+                    if (source.NodeType == XmlNodeType.EndElement
+                        && source.Name.Equals("entry", StringComparison.OrdinalIgnoreCase)) break;
                 }
+
+                if (null == location) continue;
+
+                var track = new Track(location.Path);
+                if (title != null) track.Title = title;
+                tracks.Add(track);
+                locations.Add(location);
             }
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             XmlWriterSettings settings = generateWriterSettings();
             settings.OmitXmlDeclaration = false;
@@ -44,11 +58,11 @@ namespace ATL.Playlist.IO
             writer.WriteStartElement("WinampXML");
 
             writer.WriteStartElement("playlist");
-            writer.WriteAttributeString("num_entries", result.Count.ToString());
+            writer.WriteAttributeString("num_entries", tracks.Count.ToString());
             writer.WriteAttributeString("label", "Playlist");
 
             // Open tracklist
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 writer.WriteStartElement("entry");
                 // Although the unofficial standard is "file:" followed by the filepath, URI seems to work best with Winamp and VLC

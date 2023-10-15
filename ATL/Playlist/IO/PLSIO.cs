@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using Commons;
 
 namespace ATL.Playlist.IO
 {
@@ -18,27 +19,57 @@ namespace ATL.Playlist.IO
         }
 
         /// <inheritdoc/>
-        protected override void getFiles(FileStream fs, IList<FileLocation> result)
+        protected override void load(FileStream fs, IList<FileLocation> locations, IList<Track> tracks)
         {
             Encoding encoding = StreamUtils.GetEncodingFromFileBOM(fs);
+
+            int currentIndex = -1;
+            string title = "";
+            FileLocation location = null;
 
             using TextReader source = new StreamReader(fs, encoding);
             string s = source.ReadLine();
             while (s != null)
             {
-                // If the read line isn't a metadata, it's a file path
-                if (s.Length > 3 && s[..4].Equals("FILE", System.StringComparison.OrdinalIgnoreCase))
+                var parts = s.Split('=');
+                if (parts.Length > 1)
                 {
-                    var equalIndex = s.IndexOf('=') + 1;
-                    s = s.Substring(equalIndex, s.Length - equalIndex);
-                    result.Add(decodeLocation(s));
+                    var index = Utils.ParseFirstIntegerPart(parts[0]);
+                    if (-1 == currentIndex) currentIndex = index;
+
+                    if (index != currentIndex) // Record previous track
+                    {
+                        if (location != null) addTrack(location, title, locations, tracks);
+                        title = "";
+                        location = null;
+                        currentIndex = index;
+                    }
+
+                    if (parts[0].ToLower().StartsWith("file"))
+                    {
+                        location = decodeLocation(parts[1]);
+                    }
+                    else if (parts[0].ToLower().StartsWith("title"))
+                    {
+                        title = parts[1];
+                    }
                 }
+
                 s = source.ReadLine();
             }
+            if (location != null) addTrack(location, title, locations, tracks);
+        }
+
+        private void addTrack(FileLocation location, string title, IList<FileLocation> locations, IList<Track> tracks)
+        {
+            var track = new Track(location.Path);
+            if (title.Length > 0 && title != System.IO.Path.GetFileNameWithoutExtension(location.Path)) track.Title = title;
+            tracks.Add(track);
+            locations.Add(location);
         }
 
         /// <inheritdoc/>
-        protected override void setTracks(FileStream fs, IList<Track> result)
+        protected override void save(FileStream fs, IList<Track> tracks)
         {
             Encoding encoding = UTF8_NO_BOM;
 
@@ -46,7 +77,7 @@ namespace ATL.Playlist.IO
             w.WriteLine("[playlist]");
 
             int counter = 1;
-            foreach (Track t in result)
+            foreach (Track t in tracks)
             {
                 string label = "";
                 if (!string.IsNullOrEmpty(t.Title)) label = t.Title;
@@ -75,7 +106,7 @@ namespace ATL.Playlist.IO
             w.WriteLine("");
 
             w.Write("NumberOfEntries=");
-            w.WriteLine(result.Count);
+            w.WriteLine(tracks.Count);
 
             w.Write("Version=2");
         }

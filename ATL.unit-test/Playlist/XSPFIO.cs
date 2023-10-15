@@ -159,13 +159,16 @@ namespace ATL.test.IO.Playlist
                             switch (nbEntries)
                             {
                                 case 0:
-                                    expected = remoteFilePath;
+                                    expected = remoteFilePath1;
                                     break;
                                 case 1:
                                     expected = localFilePath1;
                                     break;
                                 case 2:
                                     expected = TestUtils.MakePathRelative(testFileLocation, localFilePath2);
+                                    break;
+                                case 3:
+                                    expected = remoteFilePath2;
                                     break;
                             }
 
@@ -178,7 +181,7 @@ namespace ATL.test.IO.Playlist
                         }
                     }
                 }
-                Assert.AreEqual(3, nbEntries + 1);
+                Assert.AreEqual(4, nbEntries + 1);
             }
             finally
             {
