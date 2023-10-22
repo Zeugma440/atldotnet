@@ -113,8 +113,8 @@ namespace ATL.AudioData.IO
             get
             {
                 Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0]);
-                format.Name = format.Name + " v" + tagVersion / 1000f;
-                format.ID += tagVersion / 10; // e.g. 1250 -> 125
+                format.Name = format.Name + " v" + m_tagVersion / 1000f;
+                format.ID += m_tagVersion / 10; // e.g. 1250 -> 125
                 return new List<Format>(new[] { format });
             }
         }
@@ -320,12 +320,12 @@ namespace ATL.AudioData.IO
 
             tagExists = true;
             // Fill properties with footer data
-            tagVersion = Tag.Version;
+            m_tagVersion = Tag.Version;
 
             var tagSize = Tag.Size;
-            if (tagVersion > APE_VERSION_1_0) tagSize += 32; // Even though APE standard prevents from counting header in its size descriptor, ATL needs it
+            if (m_tagVersion > APE_VERSION_1_0) tagSize += 32; // Even though APE standard prevents from counting header in its size descriptor, ATL needs it
             var tagOffset = Tag.FileSize - Tag.DataShift - Tag.Size;
-            if (tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
+            if (m_tagVersion > APE_VERSION_1_0) tagOffset -= 32; // Tag size does not include header size in APEv2
 
             structureHelper.AddZone(tagOffset, tagSize);
 

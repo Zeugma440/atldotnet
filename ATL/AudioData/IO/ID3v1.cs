@@ -244,8 +244,8 @@ namespace ATL.AudioData.IO
             get
             {
                 Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v1")[0]);
-                format.Name = format.Name + "." + (tagVersion - 1);
-                format.ID += tagVersion - 1;
+                format.Name = format.Name + "." + (m_tagVersion - 1);
+                format.ID += m_tagVersion - 1;
                 return new List<Format>(new[] { format });
             }
         }
@@ -297,10 +297,10 @@ namespace ATL.AudioData.IO
             string comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
 
             Array.Copy(data, 125, endComment, 0, 2);
-            tagVersion = GetTagVersion(endComment);
+            m_tagVersion = GetTagVersion(endComment);
 
             // Fill properties using tag data
-            if (TAG_VERSION_1_0 == tagVersion)
+            if (TAG_VERSION_1_0 == m_tagVersion)
             {
                 comment += Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
             }
@@ -346,19 +346,13 @@ namespace ATL.AudioData.IO
 
             // Reset and load tag data from file to variable
             ResetData();
-            tagVersion = TAG_VERSION_1_0;
+            m_tagVersion = TAG_VERSION_1_0;
 
             bool result = ReadTag(reader);
 
             // Process data if loaded successfuly
-            if (result)
-            {
-                tagExists = true;
-            }
-            else
-            {
-                ResetData();
-            }
+            if (result) tagExists = true;
+            else ResetData();
 
             return result;
         }

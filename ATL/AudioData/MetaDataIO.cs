@@ -113,11 +113,11 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Version of the tag
         /// </summary>
-        protected int tagVersion;
+        protected int m_tagVersion;
         /// <summary>
         /// Tag embedder (3rd party tagging system within the tag)
         /// </summary>
-        protected IMetaDataEmbedder embedder;
+        protected IMetaDataEmbedder m_embedder;
 
         private IList<KeyValuePair<string, int>> picturePositions;
 
@@ -148,7 +148,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Tag version
         /// </summary>
-        public int Version => this.tagVersion;
+        public int Version => m_tagVersion;
 
         /// <inheritdoc/>
         public long Size
@@ -286,7 +286,7 @@ namespace ATL.AudioData.IO
         /// <param name="embedder">Embedder to set</param>
         public void SetEmbedder(IMetaDataEmbedder embedder)
         {
-            this.embedder = embedder;
+            m_embedder = embedder;
         }
 
         /// <summary>
@@ -295,7 +295,7 @@ namespace ATL.AudioData.IO
         protected void ResetData()
         {
             tagExists = false;
-            tagVersion = 0;
+            m_tagVersion = 0;
 
             tagData.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
@@ -398,10 +398,10 @@ namespace ATL.AudioData.IO
                 case Field.RECORDING_DATE:
                 case Field.PUBLISHING_DATE:
                     if (DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
-                    else return value;
+                    return value;
                 case Field.RECORDING_DATE_OR_YEAR:
                     if (value.Length > 4 && DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
-                    else return value;
+                    return value;
                 case Field.TRACK_NUMBER:
                     map.TryGetValue(Field.TRACK_TOTAL, out total);
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.TrackDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
@@ -422,9 +422,9 @@ namespace ATL.AudioData.IO
 
         internal string FormatBeforeWriting(string value)
         {
-            if (Settings.AutoFormatAdditionalDates && value.StartsWith(MetaDataHolder.DATETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
+            if (Settings.AutoFormatAdditionalDates && value.StartsWith(DATETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
             {
-                return EncodeDate(DateTime.FromFileTime(long.Parse(value.Substring(MetaDataHolder.DATETIME_PREFIX.Length))));
+                return EncodeDate(DateTime.FromFileTime(long.Parse(value[DATETIME_PREFIX.Length..])));
             }
             return value;
         }
@@ -446,7 +446,7 @@ namespace ATL.AudioData.IO
         private FileSurgeon.WriteResult writeAdapter(Stream w, TagData tag, Zone zone)
         {
             int result = write(tag, w, zone.Name);
-            FileSurgeon.WriteMode writeMode = (result > -1) ? FileSurgeon.WriteMode.REPLACE : FileSurgeon.WriteMode.OVERWRITE;
+            FileSurgeon.WriteMode writeMode = result > -1 ? FileSurgeon.WriteMode.REPLACE : FileSurgeon.WriteMode.OVERWRITE;
             return new FileSurgeon.WriteResult(writeMode, result);
         }
 
@@ -456,7 +456,7 @@ namespace ATL.AudioData.IO
         {
             TagData dataToWrite = prepareWrite(s, tag);
 
-            FileSurgeon surgeon = new FileSurgeon(structureHelper, embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
+            FileSurgeon surgeon = new FileSurgeon(structureHelper, m_embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
             bool result = await surgeon.RewriteZonesAsync(s, writeAdapter, Zones, dataToWrite, tagExists);
 
             // Update tag information without calling Read
@@ -490,20 +490,22 @@ namespace ATL.AudioData.IO
             }
 
             // Read all the fields in the existing tag (including unsupported fields)
-            ReadTagParams readTagParams = new ReadTagParams(true, true);
-            readTagParams.PrepareForWriting = true;
-
-            if (embedder != null && embedder.HasEmbeddedID3v2 > 0)
+            ReadTagParams readTagParams = new ReadTagParams(true, true)
             {
-                readTagParams.Offset = embedder.HasEmbeddedID3v2;
+                PrepareForWriting = true
+            };
+
+            if (m_embedder != null && m_embedder.HasEmbeddedID3v2 > 0)
+            {
+                readTagParams.Offset = m_embedder.HasEmbeddedID3v2;
             }
 
             read(r, readTagParams);
 
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
+            if (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
                 structureHelper.Clear();
-                structureHelper.AddZone(embedder.Id3v2Zone);
+                structureHelper.AddZone(m_embedder.Id3v2Zone);
             }
 
             // Give engine something to work with if the tag is really empty
@@ -512,8 +514,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(0, 0);
             }
 
-            TagData dataToWrite;
-            dataToWrite = tagData;
+            var dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
             dataToWrite.Cleanup();
 
@@ -557,16 +558,16 @@ namespace ATL.AudioData.IO
 
         private void handleEmbedder()
         {
-            if (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
+            if (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
                 structureHelper.Clear();
-                structureHelper.AddZone(embedder.Id3v2Zone);
+                structureHelper.AddZone(m_embedder.Id3v2Zone);
             }
         }
 
         private bool rewriteHeaders(Stream s, Zone zone)
         {
-            if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
+            if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
             {
                 if (zone.IsDeletable)
                     return structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
