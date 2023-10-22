@@ -50,4 +50,4 @@ jobs:
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
     - name: Upload to SonarScanner
-      run : dotnet sonarscanner end /d:"sonar.login=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
+      run : dotnet sonarscanner end /d:"sonar.token=bec4b9622d9d1f065adeadfb0b02c4f272bf2e7a"
