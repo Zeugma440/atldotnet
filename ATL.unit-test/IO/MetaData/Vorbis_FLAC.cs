@@ -1,12 +1,8 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.IO;
+﻿using ATL.AudioData;
 using System.Drawing;
 using Commons;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
-using System.Collections.Generic;
 
 namespace ATL.test.IO.MetaData
 {
@@ -68,6 +64,7 @@ namespace ATL.test.IO.MetaData
 
             testData.Conductor = null;
             testData.Date = DateTime.Parse("1997-06-20");
+            testData.PublishingDate = DateTime.Parse("1998-07-21");
         }
 
         [TestMethod]
@@ -90,14 +87,17 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             int? bpm = testData.BPM;
+            DateTime publishingDate = testData.PublishingDate;
             try
             {
                 testData.BPM = 0;
+                testData.PublishingDate = DateTime.MinValue;
                 readExistingTagsOnFile(theFile, 2);
             }
             finally
             {
                 testData.BPM = bpm;
+                testData.PublishingDate = publishingDate;
             }
         }
 
@@ -244,7 +244,7 @@ namespace ATL.test.IO.MetaData
         private void tagIO_RW_VorbisFLAC_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true)
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 4052; // Default padding of the sample FLAC file
+            ATL.Settings.PaddingSize = 4025; // Default padding of the sample FLAC file
 
             try
             {
@@ -261,7 +261,7 @@ namespace ATL.test.IO.MetaData
                 TagHolder theTag = new TagHolder();
                 theTag.Conductor = "John Jackman";
 
-                PictureInfo picInfo = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
+                PictureInfo picInfo = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PIC_TYPE.CD);
                 var testPics = theTag.EmbeddedPictures;
                 testPics.Add(picInfo);
                 theTag.EmbeddedPictures = testPics;
@@ -275,10 +275,11 @@ namespace ATL.test.IO.MetaData
                 // Additional supported field
                 Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
+#pragma warning disable CA1416
                 int nbFound = 0;
                 foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
                 {
-                    if (pic.PicType.Equals(PictureInfo.PIC_TYPE.CD))
+                    if (pic.PicType.Equals(PIC_TYPE.CD))
                     {
                         Assert.AreEqual(0x06, pic.NativePicCode);
                         using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
@@ -291,6 +292,7 @@ namespace ATL.test.IO.MetaData
                         break;
                     }
                 }
+#pragma warning restore CA1416
 
                 Assert.AreEqual(1, nbFound);
 
@@ -299,7 +301,7 @@ namespace ATL.test.IO.MetaData
                 theTag.Conductor = "";
 
                 // Remove additional picture
-                picInfo = new PictureInfo(PictureInfo.PIC_TYPE.CD);
+                picInfo = new PictureInfo(PIC_TYPE.CD);
                 picInfo.MarkedForDeletion = true;
                 testPics.Add(picInfo);
                 theTag.EmbeddedPictures = testPics;
@@ -418,8 +420,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
 
             Assert.AreEqual(2, theFile.NativeTag.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAA))
@@ -443,8 +446,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(2, found);
+#pragma warning restore CA1416
 
             // Remove the additional unsupported field
             theTag = new TagData();
@@ -473,8 +476,8 @@ namespace ATL.test.IO.MetaData
             // Pictures
             Assert.AreEqual(1, theFile.NativeTag.EmbeddedPictures.Count);
 
+#pragma warning disable CA1416
             found = 0;
-
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAB))
@@ -488,9 +491,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(1, found);
-
+#pragma warning restore CA1416
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

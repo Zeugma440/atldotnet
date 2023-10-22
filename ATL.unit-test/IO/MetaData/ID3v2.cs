@@ -65,8 +65,9 @@ namespace ATL.test.IO.MetaData
 
             // Pictures
             Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
@@ -81,8 +82,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(1, found);
+#pragma warning restore CA1416
         }
 
         [TestMethod]
@@ -113,8 +114,9 @@ namespace ATL.test.IO.MetaData
 
             // Pictures
             Assert.AreEqual(1, theFile.ID3v2.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
@@ -129,8 +131,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(1, found);
+#pragma warning restore CA1416
         }
 
         [TestMethod]
@@ -148,8 +150,9 @@ namespace ATL.test.IO.MetaData
 
             // Pictures
             Assert.AreEqual(3, theFile.ID3v2.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
                 Image picture;
@@ -164,8 +167,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(3, found);
+#pragma warning restore CA1416
         }
 
         [TestMethod]

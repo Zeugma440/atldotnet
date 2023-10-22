@@ -260,12 +260,14 @@ namespace ATL.test.IO.MetaData
                         {
                             Assert.AreEqual(0x06, pic.NativePicCode);
                         }
+#pragma warning disable CA1416
                         using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
                         {
                             Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
                             Assert.AreEqual(600, picture.Height);
                             Assert.AreEqual(900, picture.Width);
                         }
+#pragma warning restore CA1416
                         nbFound++;
                         break;
                     }
@@ -638,8 +640,9 @@ namespace ATL.test.IO.MetaData
             if (handleUnsupportedPictures)
             {
                 Assert.AreEqual(2, meta.EmbeddedPictures.Count);
-                found = 0;
 
+#pragma warning disable CA1416
+                found = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
                     if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
@@ -667,8 +670,8 @@ namespace ATL.test.IO.MetaData
                         found++;
                     }
                 }
-
                 Assert.AreEqual(2, found);
+#pragma warning restore CA1416
             }
 
             // Remove the additional unsupported field
@@ -715,8 +718,8 @@ namespace ATL.test.IO.MetaData
                 {
                     Assert.AreEqual(1, meta.EmbeddedPictures.Count);
 
+#pragma warning disable CA1416
                     found = 0;
-
                     foreach (PictureInfo pic in meta.EmbeddedPictures)
                     {
                         if (pic.PicType.Equals(PIC_TYPE.Unsupported) && (pic.NativePicCode.Equals(pictureCode2)
@@ -732,8 +735,8 @@ namespace ATL.test.IO.MetaData
                             found++;
                         }
                     }
-
                     Assert.AreEqual(1, found);
+#pragma warning restore CA1416
                 }
             }
 

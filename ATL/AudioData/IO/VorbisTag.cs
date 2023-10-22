@@ -65,6 +65,7 @@ namespace ATL.AudioData.IO
                 { "RATING", Field.RATING },
                 { "COPYRIGHT", Field.COPYRIGHT },
                 { "PUBLISHER", Field.PUBLISHER },
+                { "ORIGINALDATE", Field.PUBLISHING_DATE },
                 { "PRODUCTNUMBER", Field.PRODUCT_ID },
                 { "LYRICS", Field.LYRICS_UNSYNCH },
                 { "BPM", Field.BPM }

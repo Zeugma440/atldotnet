@@ -61,6 +61,7 @@ namespace ATL.test.IO.MetaData
 
             testData.Conductor = null;
             testData.Date = DateTime.Parse("1997-06-20");
+            testData.PublishingDate = DateTime.Parse("1998-07-21");
         }
 
         [TestMethod]
@@ -102,12 +103,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_FlacOGG()
         {
             new ConsoleLogger();
-            AudioDataManager theFile;
             string location = TestUtils.GetResourceLocationRoot() + "OGG/embedded-flac.ogg";
-            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+            var theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
             int bpm = testData.BPM.Value;
+            DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
@@ -115,6 +116,7 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
                 testData.BPM = 0;
+                testData.PublishingDate = DateTime.MinValue;
                 testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
@@ -122,8 +124,9 @@ namespace ATL.test.IO.MetaData
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
-                testData.EmbeddedPictures = pictureInfos;
                 testData.BPM = bpm;
+                testData.PublishingDate = publishingDate;
+                testData.EmbeddedPictures = pictureInfos;
             }
         }
 
@@ -131,12 +134,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_R_FlacTheora()
         {
             new ConsoleLogger();
-            AudioDataManager theFile;
             string location = TestUtils.GetResourceLocationRoot() + "OGG/theora-flac.ogg";
-            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+            var theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
             int bpm = testData.BPM.Value;
+            DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
@@ -144,6 +147,7 @@ namespace ATL.test.IO.MetaData
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
                 testData.BPM = 0;
+                testData.PublishingDate = DateTime.MinValue;
                 testData.EmbeddedPictures = new List<PictureInfo>();
                 readExistingTagsOnFile(theFile, 0);
             }
@@ -151,8 +155,9 @@ namespace ATL.test.IO.MetaData
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
-                testData.EmbeddedPictures = pictureInfos;
                 testData.BPM = bpm;
+                testData.PublishingDate = publishingDate;
+                testData.EmbeddedPictures = pictureInfos;
             }
         }
 
@@ -164,22 +169,25 @@ namespace ATL.test.IO.MetaData
 
             string comment = testData.Comment;
             int bpm = testData.BPM.Value;
+            DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             try
             {
                 // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
                 testData.GeneralDescription = comment;
                 testData.Comment = null;
-                testData.EmbeddedPictures = new List<PictureInfo>();
                 testData.BPM = 0;
+                testData.PublishingDate = DateTime.MinValue;
+                testData.EmbeddedPictures = new List<PictureInfo>();
                 tagIO_RW_VorbisOGG_Existing(location, 0);
             }
             finally
             {
                 testData.GeneralDescription = null;
                 testData.Comment = comment;
-                testData.EmbeddedPictures = pictureInfos;
                 testData.BPM = bpm;
+                testData.PublishingDate = publishingDate;
+                testData.EmbeddedPictures = pictureInfos;
             }
         }
 
@@ -192,14 +200,17 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             int bpm = testData.BPM.Value;
+            DateTime publishingDate = testData.PublishingDate;
             try
             {
                 testData.BPM = 0;
+                testData.PublishingDate = DateTime.MinValue;
                 readExistingTagsOnFile(theFile, 2);
             }
             finally
             {
                 testData.BPM = bpm;
+                testData.PublishingDate = publishingDate;
             }
         }
 
@@ -327,7 +338,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2031; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 2004; // Padding size in OGG test files
 
             try
             {
@@ -345,7 +356,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2031; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 2004; // Padding size in OGG test files
 
             try
             {
@@ -387,6 +398,7 @@ namespace ATL.test.IO.MetaData
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
+#pragma warning disable CA1416
             int nbFound = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
@@ -404,6 +416,7 @@ namespace ATL.test.IO.MetaData
                 }
             }
             Assert.AreEqual(initialNbPictures > 0 ? 1 : 0, nbFound);
+#pragma warning restore CA1416
 
             // Remove the additional supported field
             theTag = new TagHolder();
@@ -529,8 +542,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
 
             Assert.AreEqual(2, theFile.NativeTag.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAA))
@@ -554,8 +568,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(2, found);
+#pragma warning restore CA1416
 
             // Remove the additional unsupported field
             theTag = new TagData();
@@ -584,8 +598,8 @@ namespace ATL.test.IO.MetaData
             // Pictures
             Assert.AreEqual(1, theFile.NativeTag.EmbeddedPictures.Count);
 
+#pragma warning disable CA1416
             found = 0;
-
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PIC_TYPE.Unsupported) && pic.NativePicCode.Equals(0xAB))
@@ -599,9 +613,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(1, found);
-
+#pragma warning restore CA1416
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

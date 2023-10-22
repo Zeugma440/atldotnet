@@ -1,8 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
+﻿using ATL.AudioData;
 using ATL.CatalogDataReaders;
 using ATL.Logging;
-using System.Collections.Generic;
 using ATL.Playlist;
 using Commons;
 
@@ -84,6 +82,7 @@ namespace ATL.test.CodeSnippets
         }
 
         [TestMethod, TestCategory("snippets")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
         public void CS_ReadingAudioFilePictures()
         {
             // Load audio file information into memory

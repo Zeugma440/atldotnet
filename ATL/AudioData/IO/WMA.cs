@@ -14,7 +14,7 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Windows Media Audio 7,8 and 9 files manipulation (extension : .WMA)
     /// </summary>
-	partial class WMA : MetaDataIO, IAudioDataIO
+    internal partial class WMA : MetaDataIO, IAudioDataIO
     {
         private const string ZONE_CONTENT_DESCRIPTION = "contentDescription";
         private const string ZONE_EXTENDED_CONTENT_DESCRIPTION = "extContentDescription";
@@ -80,7 +80,6 @@ namespace ATL.AudioData.IO
 
         private FileData fileData;
 
-        private ChannelsArrangement channelsArrangement;
         private bool isLossless;
 
         // Mapping between WMA frame codes and ATL frame codes
@@ -108,8 +107,12 @@ namespace ATL.AudioData.IO
             { "WM/ArtistSortOrder", Field.SORT_ARTIST },
             { "WM/TitleSortOrder", Field.SORT_TITLE },
             { "WM/ContentGroupDescription", Field.GROUP },
-            { "WM/BeatsPerMinute", Field.BPM }
+            { "WM/BeatsPerMinute", Field.BPM },
+            { "WM/OriginalReleaseTime", Field.PUBLISHING_DATE } // De facto standard as specs don't define any dedicated field to store a full date
         };
+
+        public static readonly IDictionary<string, Field> frameMappingLower = new Dictionary<string, Field>();
+
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>
         {
@@ -165,7 +168,7 @@ namespace ATL.AudioData.IO
         public double Duration { get; private set; }
 
         /// <inheritdoc/>
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         /// <inheritdoc/>
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
@@ -178,8 +181,8 @@ namespace ATL.AudioData.IO
         {
             Field supportedMetaId = Field.NO_FIELD;
 
-            // Finds the ATL field identifier according to the ID3v2 version
-            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
+            // Finds the ATL field identifier
+            if (frameMappingLower.TryGetValue(ID.ToLower(), out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
@@ -225,14 +228,23 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
+        private void generateLowerMappings()
+        {
+            foreach (var mapping in frameMapping)
+            {
+                frameMappingLower[mapping.Key.ToLower()] = mapping.Value;
+            }
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>
         public WMA(string filePath, Format format)
         {
-            this.FileName = filePath;
+            FileName = filePath;
             AudioFormat = format;
             resetData();
+            generateLowerMappings();
         }
 
 
@@ -442,35 +454,35 @@ namespace ATL.AudioData.IO
                     break;
                 // Byte array
                 case 1 when fieldName.ToUpper().Equals("WM/PICTURE"):
-                {
-                    byte picCode = source.ReadByte();
-                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
-                    PictureInfo.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
-
-                    int picturePosition;
-                    if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                     {
-                        picturePosition = takePicturePosition(MetaDataIOFactory.TagType.NATIVE, picCode);
-                    }
-                    else
-                    {
-                        picturePosition = takePicturePosition(picType);
-                    }
+                        byte picCode = source.ReadByte();
+                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                        PictureInfo.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
 
-                    if (readTagParams.ReadPictures)
-                    {
-                        int picSize = source.ReadInt32();
-                        StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // MIME type
-                        string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
+                        int picturePosition;
+                        if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
+                        {
+                            picturePosition = takePicturePosition(MetaDataIOFactory.TagType.NATIVE, picCode);
+                        }
+                        else
+                        {
+                            picturePosition = takePicturePosition(picType);
+                        }
 
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(source, picSize, picType, getImplementedTagType(), picCode, picturePosition);
-                        picInfo.Description = description;
+                        if (readTagParams.ReadPictures)
+                        {
+                            int picSize = source.ReadInt32();
+                            StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // MIME type
+                            string description = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
 
-                        tagData.Pictures.Add(picInfo);
+                            PictureInfo picInfo = PictureInfo.fromBinaryData(source, picSize, picType, getImplementedTagType(), picCode, picturePosition);
+                            picInfo.Description = description;
+
+                            tagData.Pictures.Add(picInfo);
+                        }
+                        setMeta = false;
+                        break;
                     }
-                    setMeta = false;
-                    break;
-                }
                 case 1:
                     fieldValue = Utils.Latin1Encoding.GetString(Utils.EncodeTo64(source.ReadBytes(fieldDataSize)));
                     break;
@@ -480,12 +492,12 @@ namespace ATL.AudioData.IO
                     break;
                 // 32-bit unsigned integer
                 case 3:
-                {
-                    uint intValue = source.ReadUInt32();
-                    if (fieldName.Equals("WM/GENRE", StringComparison.OrdinalIgnoreCase)) intValue++;
-                    fieldValue = intValue.ToString();
-                    break;
-                }
+                    {
+                        uint intValue = source.ReadUInt32();
+                        if (fieldName.Equals("WM/GENRE", StringComparison.OrdinalIgnoreCase)) intValue++;
+                        fieldValue = intValue.ToString();
+                        break;
+                    }
                 // 64-bit unsigned integer
                 case 4:
                     fieldValue = source.ReadUInt64().ToString();
@@ -648,7 +660,7 @@ namespace ATL.AudioData.IO
             // Process data if loaded and valid
             if (result && isValid(fileData))
             {
-                channelsArrangement = GuessFromChannelNumber(fileData.Channels);
+                ChannelsArrangement = GuessFromChannelNumber(fileData.Channels);
                 SampleRate = fileData.SampleRate;
                 BitRate = (m_sizeInfo.FileSize - m_sizeInfo.TotalTagSize - fileData.HeaderSize) * 8.0 / Duration;
                 IsVBR = WMA_GSM_VBR_ID == fileData.FormatTag;

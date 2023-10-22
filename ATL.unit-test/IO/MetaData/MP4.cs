@@ -202,6 +202,7 @@ namespace ATL.test.IO.MetaData
             // Additional supported field
             Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
 
+#pragma warning disable CA1416
             byte nbFound = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
@@ -216,8 +217,8 @@ namespace ATL.test.IO.MetaData
                 }
                 nbFound++;
             }
-
             Assert.AreEqual(2, nbFound);
+#pragma warning restore CA1416
 
             // Remove the additional supported field
             theTag = new TagHolder();
@@ -311,8 +312,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TES2"]);
 
             Assert.AreEqual(2, theFile.NativeTag.EmbeddedPictures.Count);
-            byte found = 0;
 
+#pragma warning disable CA1416
+            byte found = 0;
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
@@ -336,8 +338,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(2, found);
+#pragma warning restore CA1416
 
             // Remove the additional unsupported field
             theTag = new TagData();
@@ -366,8 +368,8 @@ namespace ATL.test.IO.MetaData
             // Pictures
             Assert.AreEqual(1, theFile.NativeTag.EmbeddedPictures.Count);
 
+#pragma warning disable CA1416
             found = 0;
-
             foreach (PictureInfo pic in theFile.NativeTag.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found))
@@ -381,9 +383,8 @@ namespace ATL.test.IO.MetaData
                     found++;
                 }
             }
-
             Assert.AreEqual(1, found);
-
+#pragma warning restore CA1416
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

@@ -742,9 +742,9 @@ namespace ATL.test.IO
 
             Assert.AreEqual(2, theTrack.EmbeddedPictures.Count); // Front Cover, Icon
 
+#pragma warning disable CA1416
             bool foundFront = false;
             bool foundIcon = false;
-
             foreach (PictureInfo pic in theTrack.EmbeddedPictures)
             {
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Front))
@@ -761,9 +761,9 @@ namespace ATL.test.IO
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Icon)) foundIcon = true;
                 // TODO test reading an unsupported pic code ?
             }
-
             Assert.IsTrue(foundFront);
             Assert.IsTrue(foundIcon);
+#pragma warning restore CA1416
 
             // 2- Update Front picture field description
             theTrack.EmbeddedPictures[0].Description = "aaa";
@@ -1348,7 +1348,17 @@ namespace ATL.test.IO
 
         private int getVorbisDateFieldLength(Stream s)
         {
+            // Prevent recording date search from catching release date
+            long origDateOffset = -1;
+            if (StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("ORIGINALDATE=")))
+            {
+                origDateOffset = s.Position;
+            }
+
+            s.Seek(0, SeekOrigin.Begin);
             Assert.AreEqual(true, StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("DATE=")));
+            if (s.Position == origDateOffset) Assert.AreEqual(true, StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("DATE=")));
+
             s.Seek(-9, SeekOrigin.Current);
             byte[] buffer = new byte[4];
             s.Read(buffer, 0, 4);
