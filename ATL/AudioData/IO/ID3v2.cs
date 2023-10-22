@@ -69,7 +69,7 @@ namespace ATL.AudioData.IO
         // Technical 'shortcut' data
         private static readonly byte[] BOM_UTF16_LE = { 0xFF, 0xFE };
         private static readonly byte[] BOM_UTF16_BE = { 0xFE, 0xFF };
-        private static readonly byte[] BOM_NONE = { };
+        private static readonly byte[] BOM_NONE = Array.Empty<byte>();
 
         private static readonly byte[] NULLTERMINATOR = { 0x00 };
         private static readonly byte[] NULLTERMINATOR_2 = { 0x00, 0x00 };
@@ -315,7 +315,7 @@ namespace ATL.AudioData.IO
             // **** BASE HEADER PROPERTIES ****
             public bool UsesUnsynchronisation => (Flags & FLAG_TAG_UNSYNCHRONIZED) > 0;
 
-            public bool HasExtendedHeader => ((Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0) && (Version > TAG_VERSION_2_2); // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
+            public bool HasExtendedHeader => (Flags & FLAG_TAG_HAS_EXTENDED_HEADER) > 0 && Version > TAG_VERSION_2_2; // Determinated from flags; indicates if tag has an extended header (ID3v2.3+)
 
             private bool HasFooter => (Flags & FLAG_TAG_HAS_FOOTER) > 0; // Determinated from flags; indicates if tag has a footer (ID3v2.4+)
 
@@ -366,7 +366,8 @@ namespace ATL.AudioData.IO
                     };
                 }
             }
-            public bool HasTextEncodingRestriction => (TagRestrictions & 0x20) >> 5 > 0;
+
+            // public bool HasTextEncodingRestriction => (TagRestrictions & 0x20) >> 5 > 0;
 
             public int TextFieldSizeRestriction
             {
@@ -510,19 +511,19 @@ namespace ATL.AudioData.IO
             return true; // Will be transformed to a TXXX field
         }
 
-        public static bool isValidHeader(byte[] data)
+        internal static bool IsValidHeader(byte[] data)
         {
             if (data.Length < 3) return false;
             return Utils.Latin1Encoding.GetString(data).StartsWith(ID3V2_ID);
         }
 
-        private bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
+        private static bool readHeader(BufferedBinaryReader SourceFile, TagInfo Tag, long offset)
         {
             // Reads mandatory (base) header
             SourceFile.Seek(offset, SeekOrigin.Begin);
             Tag.ID = SourceFile.ReadBytes(3);
 
-            if (!isValidHeader(Tag.ID)) return false;
+            if (!IsValidHeader(Tag.ID)) return false;
 
             Tag.Version = SourceFile.ReadByte();
             Tag.Revision = SourceFile.ReadByte();
@@ -1114,7 +1115,7 @@ namespace ATL.AudioData.IO
             tagData.PaddingSize = tagHeader.GetPaddingSize();
 
             // Process data if loaded and header valid
-            if (result && isValidHeader(tagHeader.ID))
+            if (result && IsValidHeader(tagHeader.ID))
             {
                 tagExists = true;
                 // Fill properties with header data
@@ -1411,7 +1412,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeFrameHeader(BinaryWriter w, string frameCode, bool useUnsynchronization, bool useDataSize = false)
+        private static void writeFrameHeader(BinaryWriter w, string frameCode, bool useUnsynchronization, bool useDataSize = false)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             w.Write(0);

@@ -228,7 +228,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        private void generateLowerMappings()
+        private static void generateLowerMappings()
         {
             foreach (var mapping in frameMapping)
             {

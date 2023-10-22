@@ -404,7 +404,7 @@ namespace ATL.AudioData
             long offset = 0;
             s.Read(data, 0, 32);
             // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
-            if (ID3v2.isValidHeader(data))
+            if (ID3v2.IsValidHeader(data))
             {
                 byte[] data2 = new byte[4];
                 Array.Copy(data, 6, data2, 0, 4); // bytes 6-9 only
