@@ -127,7 +127,7 @@ namespace ATL
         /// <returns>String representation of the object that doesn't take its zone into account</returns>
         public string ToStringWithoutZone()
         {
-            return (100 + TagType).ToString() + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language;
+            return 100 + TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language;
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace ATL
         /// <returns>String representation of the object</returns>
         public override string ToString()
         {
-            return (100 + TagType) + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
+            return 100 + TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
         }
 
         /// <summary>

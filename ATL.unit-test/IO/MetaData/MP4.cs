@@ -134,13 +134,13 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MP4_Empty()
         {
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]
         public void TagIO_RW_MP4_Empty_no_udta()
         {
-            test_RW_Empty("MP4/no_udta.m4a", true, false, false); // ATL leaves an empty udta/meta structure, which is more "standard" than wiping the entire udta branch
+            test_RW_Empty("MP4/no_udta.m4a", true, true, false, false); // ATL leaves an empty udta/meta structure, which is more "standard" than wiping the entire udta branch
         }
 
         [TestMethod]

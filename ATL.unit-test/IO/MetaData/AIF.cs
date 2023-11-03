@@ -45,7 +45,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_AIF_Empty()
         {
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
     }
 }

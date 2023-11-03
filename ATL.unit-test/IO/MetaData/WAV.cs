@@ -264,35 +264,35 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_BEXT_Empty()
         {
             initBextTestData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]
         public void TagIO_RW_WAV_INFO_Empty()
         {
             initListInfoTestData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]
         public void TagIO_RW_WAV_IXML_Empty()
         {
             initIXmlTestData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]
         public void TagIO_RW_WAV_Sample_Empty()
         {
             initSampleTestData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, false, true, true, true);
         }
 
         [TestMethod]
         public void TagIO_RW_WAV_Cue_Empty()
         {
             initCueTestRWData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, false,true, true, true);
         }
 
         [TestMethod]
@@ -315,7 +315,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_DISP_Existing()
         {
             initDispTestData();
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, false, true, true, true);
         }
 
         [TestMethod]

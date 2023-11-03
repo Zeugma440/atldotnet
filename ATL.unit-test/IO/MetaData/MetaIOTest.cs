@@ -390,7 +390,12 @@ namespace ATL.test.IO.MetaData
             }
         }
 
-        public void test_RW_Empty(string fileName, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
+        public void test_RW_Empty(
+            string fileName, 
+            bool canRemoveAdditionalFields = true,
+            bool deleteTempFile = true, 
+            bool sameSizeAfterEdit = false, 
+            bool sameBitsAfterEdit = false)
         {
             new ConsoleLogger();
 
@@ -457,8 +462,8 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
-            Assert.IsNotNull(theFile.getMeta(tagType));
             IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
             Assert.IsTrue(meta.Exists);
 
             if (testData.Title != "") Assert.AreEqual("Test !!", meta.Title);
@@ -522,6 +527,23 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(info.Value, meta.AdditionalFields[info.Key], info.Key);
                 }
             }
+
+            // Remove one additional field and check that it has been indeed removed
+            if (canRemoveAdditionalFields && testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
+            {
+                theTag.tagData.AdditionalFields[0].MarkedForDeletion = true;
+
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+                meta = theFile.getMeta(tagType);
+                Assert.IsNotNull(meta);
+                Assert.IsTrue(meta.Exists);
+
+                Assert.AreEqual(testData.AdditionalFields.Count - 1, meta.AdditionalFields.Count);
+            }
+
 
             // Remove the tag and check that it has been indeed removed
             Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType).GetAwaiter().GetResult());

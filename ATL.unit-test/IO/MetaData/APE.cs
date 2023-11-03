@@ -55,7 +55,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_APE_Empty()
         {
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true,true, true, true);
         }
 
         [TestMethod]

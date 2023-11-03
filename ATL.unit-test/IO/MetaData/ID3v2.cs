@@ -417,7 +417,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_ID3v2_Empty()
         {
-            test_RW_Empty(emptyFile, true, true, true);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]

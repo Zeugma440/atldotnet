@@ -351,7 +351,7 @@ namespace ATL
                 IList<MetaFieldInfo> additionalFields = GetAdditionalFields(0);
                 foreach (MetaFieldInfo fieldInfo in additionalFields)
                 {
-                    if (!result.ContainsKey(fieldInfo.NativeFieldCode)) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
+                    if (!result.ContainsKey(fieldInfo.NativeFieldCode) && !fieldInfo.MarkedForDeletion) result.Add(fieldInfo.NativeFieldCode, fieldInfo.Value);
                 }
 
                 return result;

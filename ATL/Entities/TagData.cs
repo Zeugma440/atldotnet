@@ -394,13 +394,10 @@ namespace ATL
                         // or new MetaFieldInfo mimics an existing field (added or edited through simplified interface)
                         if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo))
                         {
+                            found = true;
                             if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
-                            else
-                            {
-                                found = true;
-                                metaInfo.Value = newMetaInfo.Value;
-                                break;
-                            }
+                            else metaInfo.Value = newMetaInfo.Value;
+                            break;
                         }
                     }
 
