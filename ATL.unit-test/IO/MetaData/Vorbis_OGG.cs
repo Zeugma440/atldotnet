@@ -802,7 +802,43 @@ namespace ATL.test.IO.MetaData
             assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.ogg", 1, MetaDataIOFactory.TagType.NATIVE);
         }
 
-
         // No cohabitation here since other tags are not supported in OGG files
+
+        [TestMethod]
+        public void TagIO_RW_VorbisOGG_VorbisVendor()
+        {
+            // Source : tag-free OGG with a vendor ID
+            String testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Check that it is indeed tag-free
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsFalse(theFile.NativeTag.Exists);
+
+            // Check if VORBIS_VENDOR is set
+            IMetaDataIO theTag = theFile.getMeta(MetaDataIOFactory.TagType.NATIVE);
+            Assert.IsTrue(theTag.AdditionalFields.ContainsKey(VorbisTag.VENDOR_METADATA_ID));
+            Assert.AreEqual("Xiph.Org libVorbis I 20150105 (??]", theTag.AdditionalFields[VorbisTag.VENDOR_METADATA_ID]);
+
+            // Remove VORBIS_VENDOR
+            TagData newTag = new TagData();
+            var metaInfo = new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, VorbisTag.VENDOR_METADATA_ID, "");
+            metaInfo.MarkedForDeletion = true;
+            newTag.AdditionalFields.Add(metaInfo);
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(newTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+
+            // Check that VORBIS_VENDOR is unset
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsFalse(theFile.NativeTag.Exists);
+
+            theTag = theFile.getMeta(MetaDataIOFactory.TagType.NATIVE);
+            Assert.IsFalse(theTag.AdditionalFields.ContainsKey(VorbisTag.VENDOR_METADATA_ID));
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
     }
 }

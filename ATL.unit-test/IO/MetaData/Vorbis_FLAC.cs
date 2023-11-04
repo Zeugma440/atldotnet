@@ -411,7 +411,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            Assert.AreEqual(3, theFile.NativeTag.AdditionalFields.Count); // 3 instead of 2 because of the VENDOR field... (specific to VorbisTag)
+            Assert.AreEqual(2, theFile.NativeTag.AdditionalFields.Count);
 
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST"));
             Assert.AreEqual("This is a test 父", theFile.NativeTag.AdditionalFields["TEST"]);
@@ -469,7 +469,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             // Additional removed field
-            Assert.AreEqual(2, theFile.NativeTag.AdditionalFields.Count); // 2 instead of 1 because of the VENDOR field...
+            Assert.AreEqual(1, theFile.NativeTag.AdditionalFields.Count);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.Keys.Contains("TEST2"));
             Assert.AreEqual("This is another test 父", theFile.NativeTag.AdditionalFields["TEST2"]);
 

@@ -21,10 +21,8 @@ namespace ATL.AudioData.IO
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
         public const string VENDOR_METADATA_ID = "VORBIS-VENDOR";
 
-        private const string VENDOR_DEFAULT_FLAC = "reference libFLAC 1.2.1 20070917";
-
-        // "Xiph.Org libVorbis I 20150105" vendor with zero fields
-        private static readonly byte[] CORE_SIGNATURE = { 34, 0, 0, 0, 88, 105, 112, 104, 46, 79, 114, 103, 32, 108, 105, 98, 86, 111, 114, 98, 105, 115, 32, 73, 32, 50, 48, 49, 53, 48, 49, 48, 53, 32, 40, 63, 63, 93, 0, 0, 0, 0, 1 };
+        // empty vendor with zero fields, plus final framing bit
+        private static readonly byte[] OGG_CORE_SIGNATURE = { 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
 
         // Reference : https://xiph.org/flac/format.html#metadata_block_picture
@@ -224,15 +222,13 @@ namespace ATL.AudioData.IO
                 // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
                 for (int i = 0; i < encodedData.Length; i++) if (0 == encodedData[i]) encodedData[i] = 0x3D;
 
-                using (MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData)))
-                {
-                    mem.Seek(0, SeekOrigin.Begin);
-                    ReadPicture(mem, readTagParams);
-                }
+                using MemoryStream mem = new MemoryStream(Utils.DecodeFrom64(encodedData));
+                mem.Seek(0, SeekOrigin.Begin);
+                ReadPicture(mem, readTagParams);
             }
             else if (tagId.Equals(PICTURE_METADATA_ID_OLD)) // Deprecated picture info
             {
-                PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
+                const PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
                 int picturePosition = takePicturePosition(picType);
 
                 if (readTagParams.ReadPictures)
@@ -337,7 +333,7 @@ namespace ATL.AudioData.IO
                 if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
                     strData = Encoding.UTF8.GetString(reader.ReadBytes(size)).Trim();
-                    SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
+                    if (strData.Length > 0) SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
                 }
                 else
                 {
@@ -395,7 +391,7 @@ namespace ATL.AudioData.IO
 
             // All fields have been read
             tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
-            structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? CORE_SIGNATURE : new byte[0]);
+            structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? OGG_CORE_SIGNATURE : Array.Empty<byte>());
 
             if (readTagParams.PrepareForWriting)
             {
@@ -412,7 +408,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return result;
+            return true;
         }
 
         // TODO DOC
@@ -438,8 +434,6 @@ namespace ATL.AudioData.IO
         private int write(TagData tag, BinaryWriter w)
         {
             long initialWriteOffset = w.BaseStream.Position;
-            long counterPos;
-            uint counter = 0;
             string vendor;
 
             if (AdditionalFields.ContainsKey(VENDOR_METADATA_ID))
@@ -450,16 +444,16 @@ namespace ATL.AudioData.IO
             {
                 // Even when no existing field, vendor field is mandatory in OGG structure
                 // => a file with no vendor is a FLAC file
-                vendor = VENDOR_DEFAULT_FLAC;
+                vendor = "";
             }
 
             w.Write((uint)vendor.Length);
             w.Write(Encoding.UTF8.GetBytes(vendor));
 
-            counterPos = w.BaseStream.Position;
+            var counterPos = w.BaseStream.Position;
             w.Write((uint)0); // Tag counter placeholder to be rewritten in a few lines
 
-            counter = writeFrames(tag, w);
+            var counter = writeFrames(tag, w);
 
             if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
 
@@ -484,7 +478,6 @@ namespace ATL.AudioData.IO
 
         private uint writeFrames(TagData tag, BinaryWriter w)
         {
-            bool doWritePicture;
             uint nbFrames = 0;
 
             IDictionary<Field, string> map = tag.ToMap();
@@ -538,7 +531,7 @@ namespace ATL.AudioData.IO
                 foreach (PictureInfo picInfo in tag.Pictures)
                 {
                     // Picture has either to be supported, or to come from the right tag standard
-                    doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                    var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
                     if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
                     // It also has not to be marked for deletion
                     doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
@@ -557,13 +550,12 @@ namespace ATL.AudioData.IO
         private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
             int chapterIndex = 0;
-            string formattedIndex;
             foreach (ChapterInfo chapterInfo in chapters)
             {
                 // Take the valued index if existing; take the current numerical index if not
                 if (chapterInfo.UniqueID.Length > 0) chapterIndex = int.Parse(chapterInfo.UniqueID);
                 // Specs says chapter index if formatted over 3 chars
-                formattedIndex = Utils.BuildStrictLengthString(chapterIndex++, 3, '0', false);
+                var formattedIndex = Utils.BuildStrictLengthString(chapterIndex++, 3, '0', false);
                 writeTextFrame(writer, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
                 if (chapterInfo.Title.Length > 0) writeTextFrame(writer, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
                 if (chapterInfo.Url != null && chapterInfo.Url.Url.Length > 0)
@@ -573,10 +565,7 @@ namespace ATL.AudioData.IO
 
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
-            long frameSizePos;
-            long finalFramePos;
-
-            frameSizePos = writer.BaseStream.Position;
+            var frameSizePos = writer.BaseStream.Position;
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
 
             // TODO : handle multi-line comments : comment[0], comment[1]...
@@ -584,7 +573,7 @@ namespace ATL.AudioData.IO
             writer.Write(Encoding.UTF8.GetBytes(text));
 
             // Go back to frame size location to write its actual size 
-            finalFramePos = writer.BaseStream.Position;
+            var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             writer.Write((uint)(finalFramePos - frameSizePos - 4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -592,10 +581,7 @@ namespace ATL.AudioData.IO
 
         private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
-            long frameSizePos;
-            long finalFramePos;
-
-            frameSizePos = writer.BaseStream.Position;
+            var frameSizePos = writer.BaseStream.Position;
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
 
             writer.Write(Utils.Latin1Encoding.GetBytes(PICTURE_METADATA_ID_NEW + "="));
@@ -608,7 +594,7 @@ namespace ATL.AudioData.IO
             }
 
             // Go back to frame size location to write its actual size 
-            finalFramePos = writer.BaseStream.Position;
+            var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             writer.Write((uint)(finalFramePos - frameSizePos - 4));
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
@@ -651,12 +637,12 @@ namespace ATL.AudioData.IO
 
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
-                {
+                //if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
+                //{
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;
                     tag.AdditionalFields.Add(emptyFieldInfo);
-                }
+                //}
             }
 
             return tag;
