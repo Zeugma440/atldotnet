@@ -309,7 +309,6 @@ namespace ATL.AudioData.IO
         {
             int nbFields = 0;
             int index = 0;
-            bool result = true;
 
             // ResetData(); <-- no; that calls resets image data when VorbisTag is managed by FLAC. ResetData has to be called manually by using Clear
             // Resets stuff anyway
@@ -637,12 +636,11 @@ namespace ATL.AudioData.IO
 
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                //if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
-                //{
-                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                    emptyFieldInfo.MarkedForDeletion = true;
-                    tag.AdditionalFields.Add(emptyFieldInfo);
-                //}
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo)
+                {
+                    MarkedForDeletion = true
+                };
+                tag.AdditionalFields.Add(emptyFieldInfo);
             }
 
             return tag;
