@@ -49,7 +49,7 @@ namespace ATL.AudioData.IO
 
 
         // AIFx timestamp are defined as "the number of seconds since January 1, 1904"
-        private static DateTime timestampBase = new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime timestampBase = new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public class CommentData
         {
@@ -67,18 +67,11 @@ namespace ATL.AudioData.IO
         private int bits;
 
         private string compression;
-        private byte versionID;
 
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
-        private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
-        private long id3v2Offset;
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
         // Mapping between AIFx frame codes and ATL frame codes
@@ -91,7 +84,7 @@ namespace ATL.AudioData.IO
 
 
         // Version code
-        public byte VersionID => this.versionID;
+        public byte VersionID { get; private set; }
 
         public double CompressionRatio => getCompressionRatio();
 
@@ -105,19 +98,19 @@ namespace ATL.AudioData.IO
         {
             get;
         }
-        public int CodecFamily => (compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE)) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
+        public int CodecFamily => compression.Equals(COMPRESSION_NONE) || compression.Equals(COMPRESSION_NONE_LE) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
 
-        public string FileName => filePath;
+        public string FileName { get; }
 
-        public int SampleRate => sampleRate;
+        public int SampleRate { get; private set; }
 
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
 
-        public int BitDepth => (bits > 0) ? bits : -1;
+        public int BitDepth => bits > 0 ? bits : -1;
 
-        public double Duration => duration;
+        public double Duration { get; private set; }
 
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
@@ -146,14 +139,14 @@ namespace ATL.AudioData.IO
             Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
 
 
         // IMetaDataEmbedder
-        public long HasEmbeddedID3v2 => id3v2Offset;
+        public long HasEmbeddedID3v2 { get; private set; }
 
         public uint ID3v2EmbeddingHeaderSize => 8;
 
@@ -164,17 +157,17 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isValid = false;
             id3v2StructureHelper.Clear();
 
             bits = 0;
-            sampleRate = 0;
+            SampleRate = 0;
 
-            versionID = 0;
+            VersionID = 0;
 
-            id3v2Offset = -1;
+            HasEmbeddedID3v2 = -1;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -183,7 +176,7 @@ namespace ATL.AudioData.IO
 
         public AIFF(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -195,13 +188,12 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio 
             if (isValid)
-                return (double)sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
-            else
-                return 0;
+                return sizeInfo.FileSize / (Duration / 1000.0 * SampleRate * (ChannelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
+            return 0;
         }
 
         /// <summary>
-        /// Reads ID and size of a local chunk and returns them in a dedicated structure _without_ reading nor skipping the data
+        /// Reads ID and size of a local chunk and returns them in a dedicated structure _without_ reading nor skipping data
         /// </summary>
         /// <param name="source">Source where to read header information</param>
         /// <param name="limit">Maximum absolute position to search to</param>
@@ -215,7 +207,7 @@ namespace ATL.AudioData.IO
 
             source.Read(aByte, 0, 1);
             // In case previous chunk has a padding byte, seek a suitable first character for an ID
-            if (!((aByte[0] == 40) || ((64 < aByte[0]) && (aByte[0] < 91))) && source.Position <= limit)
+            if (!(aByte[0] == 40 || (64 < aByte[0] && aByte[0] < 91)) && source.Position <= limit)
             {
                 previousChunkSizeCorrection++;
                 if (source.Position < limit) source.Read(aByte, 0, 1);
@@ -224,7 +216,7 @@ namespace ATL.AudioData.IO
             // Update zone size (remove and replace zone with updated size)
             if (previousChunkId.Length > 0 && previousChunkSizeCorrection > 0)
             {
-                FileStructureHelper sHelper = (previousChunkId == CHUNKTYPE_ID3TAG) ? id3v2StructureHelper : structureHelper;
+                FileStructureHelper sHelper = previousChunkId == CHUNKTYPE_ID3TAG ? id3v2StructureHelper : structureHelper;
                 FileStructureHelper.Zone previousZone = sHelper.GetZone(previousChunkId);
                 if (previousZone != null)
                 {
@@ -267,62 +259,63 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = false;
-
             resetData();
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             reader.Seek(0, SeekOrigin.Begin);
 
-            if (IsValidHeader(reader.ReadBytes(4)))
+            // Magic number check
+            if (!IsValidHeader(reader.ReadBytes(4))) return false;
+
+            // Container chunk size
+            long containerChunkPos = reader.Position;
+            int containerChunkSize = StreamUtils.DecodeBEInt32(reader.ReadBytes(4));
+
+            if (containerChunkPos + containerChunkSize + 4 != reader.Length)
             {
-                // Container chunk size
-                long containerChunkPos = reader.Position;
-                int containerChunkSize = StreamUtils.DecodeBEInt32(reader.ReadBytes(4));
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Header size is incoherent with file size");
+            }
 
-                if (containerChunkPos + containerChunkSize + 4 != reader.Length)
+            // Form type
+            string format = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
+
+            // AIFF / AIFC format check
+            if (!format.Equals(FORMTYPE_AIFF) && !format.Equals(FORMTYPE_AIFC)) return false;
+            isValid = true;
+
+            StringBuilder commentStr = new StringBuilder("");
+            long soundChunkPosition = 0;
+            long soundChunkSize = 0; // Header size included
+            bool nameFound = false;
+            bool authorFound = false;
+            bool copyrightFound = false;
+            bool commentsFound = false;
+            long limit = Math.Min(containerChunkPos + containerChunkSize + 4, reader.Length);
+
+            int annotationIndex = 0;
+            int commentIndex = 0;
+            string chunkId = "";
+
+            while (reader.Position < limit)
+            {
+                ChunkHeader header = seekNextChunkHeader(reader, limit, chunkId);
+                chunkId = header.ID;
+
+                var position = reader.Position;
+
+                switch (header.ID)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Header size is incoherent with file size");
-                }
-
-                // Form type
-                string format = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
-
-                if (format.Equals(FORMTYPE_AIFF) || format.Equals(FORMTYPE_AIFC))
-                {
-                    isValid = true;
-
-                    StringBuilder commentStr = new StringBuilder("");
-                    long soundChunkPosition = 0;
-                    long soundChunkSize = 0; // Header size included
-                    bool nameFound = false;
-                    bool authorFound = false;
-                    bool copyrightFound = false;
-                    bool commentsFound = false;
-                    long limit = Math.Min(containerChunkPos + containerChunkSize + 4, reader.Length);
-
-                    int annotationIndex = 0;
-                    int commentIndex = 0;
-                    string chunkId = "";
-
-                    while (reader.Position < limit)
-                    {
-                        ChunkHeader header = seekNextChunkHeader(reader, limit, chunkId);
-                        chunkId = header.ID;
-
-                        var position = reader.Position;
-
-                        if (header.ID.Equals(CHUNKTYPE_COMMON))
+                    case CHUNKTYPE_COMMON:
                         {
                             short channels = StreamUtils.DecodeBEInt16(reader.ReadBytes(2));
-                            switch (channels)
+                            ChannelsArrangement = channels switch
                             {
-                                case 1: channelsArrangement = MONO; break;
-                                case 2: channelsArrangement = STEREO; break;
-                                case 3: channelsArrangement = ISO_3_0_0; break;
-                                case 4: channelsArrangement = ISO_2_2_0; break; // Specs actually allow both 2/2.0 and LRCS
-                                case 6: channelsArrangement = LRLcRcCS; break;
-                                default: channelsArrangement = UNKNOWN; break;
-                            }
+                                1 => MONO,
+                                2 => STEREO,
+                                3 => ISO_3_0_0,
+                                4 => ISO_2_2_0, // // Specs actually allow both 2/2.0 and LRCS
+                                6 => LRLcRcCS,
+                                _ => UNKNOWN
+                            };
 
                             uint numSampleFrames = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4));
                             bits = StreamUtils.DecodeBEInt16(reader.ReadBytes(2)); // This sample size is for uncompressed data only
@@ -341,39 +334,61 @@ namespace ATL.AudioData.IO
 
                             if (aSampleRate > 0)
                             {
-                                sampleRate = (int)Math.Round(aSampleRate);
-                                duration = (double)numSampleFrames * 1000.0 / sampleRate;
+                                SampleRate = (int)Math.Round(aSampleRate);
+                                Duration = numSampleFrames * 1000.0 / SampleRate;
 
                                 if (!compression.Equals(COMPRESSION_NONE)) // Sample size is specific to selected compression method
                                 {
-                                    if (compression.ToLower().Equals("fl32")) bits = 32;
-                                    else if (compression.ToLower().Equals("fl64")) bits = 64;
-                                    else if (compression.ToLower().Equals("alaw")) bits = 8;
-                                    else if (compression.ToLower().Equals("ulaw")) bits = 8;
+                                    switch (compression.ToLower())
+                                    {
+                                        case "fl32":
+                                            bits = 32;
+                                            break;
+                                        case "fl64":
+                                            bits = 64;
+                                            break;
+                                        case "alaw":
+                                        case "ulaw":
+                                            bits = 8;
+                                            break;
+                                    }
                                 }
-                                if (duration > 0) bitrate = bits * numSampleFrames * channelsArrangement.NbChannels / duration;
+                                if (Duration > 0) BitRate = bits * numSampleFrames * ChannelsArrangement.NbChannels / Duration;
                             }
+
+                            break;
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_SOUND))
-                        {
-                            soundChunkPosition = reader.Position - 8;
-                            soundChunkSize = header.Size + 8;
-                            AudioDataOffset = soundChunkPosition;
-                            AudioDataSize = soundChunkSize;
-                        }
-                        else if (header.ID.Equals(CHUNKTYPE_NAME) || header.ID.Equals(CHUNKTYPE_AUTHOR) || header.ID.Equals(CHUNKTYPE_COPYRIGHT))
+                    case CHUNKTYPE_SOUND:
+                        soundChunkPosition = reader.Position - 8;
+                        soundChunkSize = header.Size + 8;
+                        AudioDataOffset = soundChunkPosition;
+                        AudioDataSize = soundChunkSize;
+                        break;
+                    case CHUNKTYPE_NAME:
+                    case CHUNKTYPE_AUTHOR:
+                    case CHUNKTYPE_COPYRIGHT:
                         {
                             structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
 
                             tagExists = true;
-                            if (header.ID.Equals(CHUNKTYPE_NAME)) nameFound = true;
-                            if (header.ID.Equals(CHUNKTYPE_AUTHOR)) authorFound = true;
-                            if (header.ID.Equals(CHUNKTYPE_COPYRIGHT)) copyrightFound = true;
+                            switch (header.ID)
+                            {
+                                case CHUNKTYPE_NAME:
+                                    nameFound = true;
+                                    break;
+                                case CHUNKTYPE_AUTHOR:
+                                    authorFound = true;
+                                    break;
+                                case CHUNKTYPE_COPYRIGHT:
+                                    copyrightFound = true;
+                                    break;
+                            }
 
                             SetMetaField(header.ID, Utils.Latin1Encoding.GetString(reader.ReadBytes(header.Size)), readTagParams.ReadAllMetaFrames);
+                            break;
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_ANNOTATION))
+                    case CHUNKTYPE_ANNOTATION:
                         {
                             annotationIndex++;
                             chunkId = header.ID + annotationIndex;
@@ -383,8 +398,9 @@ namespace ATL.AudioData.IO
                             if (commentStr.Length > 0) commentStr.Append(Settings.InternalValueSeparator);
                             commentStr.Append(Utils.Latin1Encoding.GetString(reader.ReadBytes(header.Size)));
                             tagExists = true;
+                            break;
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_COMMENTS))
+                    case CHUNKTYPE_COMMENTS:
                         {
                             commentIndex++;
                             chunkId = header.ID + commentIndex;
@@ -398,15 +414,19 @@ namespace ATL.AudioData.IO
 
                             for (int i = 0; i < numComs; i++)
                             {
-                                CommentData cmtData = new CommentData();
-                                cmtData.Timestamp = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4));
-                                cmtData.MarkerId = StreamUtils.DecodeBEInt16(reader.ReadBytes(2));
+                                CommentData cmtData = new CommentData
+                                {
+                                    Timestamp = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4)),
+                                    MarkerId = StreamUtils.DecodeBEInt16(reader.ReadBytes(2))
+                                };
 
                                 // Comments length
                                 ushort comLength = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
-                                MetaFieldInfo comment = new MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex);
-                                comment.Value = Utils.Latin1Encoding.GetString(reader.ReadBytes(comLength));
-                                comment.SpecificData = cmtData;
+                                MetaFieldInfo comment = new MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex)
+                                {
+                                    Value = Utils.Latin1Encoding.GetString(reader.ReadBytes(comLength)),
+                                    SpecificData = cmtData
+                                };
                                 tagData.AdditionalFields.Add(comment);
 
                                 // Only read general purpose comments, not those linked to a marker
@@ -416,62 +436,60 @@ namespace ATL.AudioData.IO
                                     commentStr.Append(comment.Value);
                                 }
                             }
+
+                            break;
                         }
-                        else if (header.ID.Equals(CHUNKTYPE_ID3TAG))
-                        {
-                            id3v2Offset = reader.Position;
+                    case CHUNKTYPE_ID3TAG:
+                        HasEmbeddedID3v2 = reader.Position;
 
-                            // Zone is already added by Id3v2.Read
-                            id3v2StructureHelper.AddZone(id3v2Offset - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
-                            id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
-                        }
+                        // Zone is already added by Id3v2.Read
+                        id3v2StructureHelper.AddZone(HasEmbeddedID3v2 - 8, header.Size + 8, CHUNKTYPE_ID3TAG);
+                        id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
+                        break;
+                }
 
-                        reader.Position = position + header.Size;
-                    } // Loop through file
+                reader.Position = position + header.Size;
+            } // Loop through file
 
-                    tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
+            tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
 
-                    if (-1 == id3v2Offset)
-                    {
-                        id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
+            if (-1 == HasEmbeddedID3v2)
+            {
+                HasEmbeddedID3v2 = 0; // Switch status to "tried to read, but nothing found"
 
-                        if (readTagParams.PrepareForWriting)
-                        {
-                            id3v2StructureHelper.AddZone(soundChunkPosition + soundChunkSize, 0, CHUNKTYPE_ID3TAG);
-                            id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
-                        }
-                    }
+                if (readTagParams.PrepareForWriting)
+                {
+                    id3v2StructureHelper.AddZone(soundChunkPosition + soundChunkSize, 0, CHUNKTYPE_ID3TAG);
+                    id3v2StructureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_ID3TAG);
+                }
+            }
 
-                    // Add zone placeholders for future tag writing
-                    if (readTagParams.PrepareForWriting)
-                    {
-                        if (!nameFound)
-                        {
-                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_NAME);
-                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_NAME);
-                        }
-                        if (!authorFound)
-                        {
-                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_AUTHOR);
-                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_AUTHOR);
-                        }
-                        if (!copyrightFound)
-                        {
-                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COPYRIGHT);
-                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COPYRIGHT);
-                        }
-                        if (!commentsFound)
-                        {
-                            structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COMMENTS);
-                            structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COMMENTS);
-                        }
-                    }
+            // Add zone placeholders for future tag writing
+            if (readTagParams.PrepareForWriting)
+            {
+                if (!nameFound)
+                {
+                    structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_NAME);
+                    structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_NAME);
+                }
+                if (!authorFound)
+                {
+                    structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_AUTHOR);
+                    structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_AUTHOR);
+                }
+                if (!copyrightFound)
+                {
+                    structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COPYRIGHT);
+                    structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COPYRIGHT);
+                }
+                if (!commentsFound)
+                {
+                    structureHelper.AddZone(soundChunkPosition, 0, CHUNKTYPE_COMMENTS);
+                    structureHelper.AddSize(containerChunkPos, containerChunkSize, CHUNKTYPE_COMMENTS);
+                }
+            }
 
-                    result = true;
-                } // AIFF / AIFC format check
-            } // Magic number check
-
-            return result;
+            return true;
         }
 
         protected override int write(TagData tag, Stream s, string zone)
@@ -483,131 +501,145 @@ namespace ATL.AudioData.IO
         private int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 0;
-            if (zone.Equals(CHUNKTYPE_NAME))
+            switch (zone)
             {
-                if (tag[Field.TITLE].Length > 0)
+                case CHUNKTYPE_NAME:
                 {
-                    w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                    long sizePos = w.BaseStream.Position;
-                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
-                    w.Write(strBytes);
-
-                    // Add the extra padding byte if needed
-                    long finalPos = w.BaseStream.Position;
-                    long paddingSize = (finalPos - sizePos) % 2;
-                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                    // Write actual tag size
-                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                    result++;
-                }
-            }
-            else if (zone.Equals(CHUNKTYPE_AUTHOR))
-            {
-                if (tag[Field.ARTIST].Length > 0)
-                {
-                    w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                    long sizePos = w.BaseStream.Position;
-                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
-                    w.Write(strBytes);
-
-                    // Add the extra padding byte if needed
-                    long finalPos = w.BaseStream.Position;
-                    long paddingSize = (finalPos - sizePos) % 2;
-                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                    // Write actual tag size
-                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                    result++;
-                }
-            }
-            else if (zone.Equals(CHUNKTYPE_COPYRIGHT))
-            {
-                if (tag[Field.COPYRIGHT].Length > 0)
-                {
-                    w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                    long sizePos = w.BaseStream.Position;
-                    w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                    byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
-                    w.Write(strBytes);
-
-                    // Add the extra padding byte if needed
-                    long finalPos = w.BaseStream.Position;
-                    long paddingSize = (finalPos - sizePos) % 2;
-                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                    // Write actual tag size
-                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                    result++;
-                }
-            }
-            else if (zone.StartsWith(CHUNKTYPE_ANNOTATION))
-            {
-                // Do not write anything, this field is deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead")
-            }
-            else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
-            {
-                bool applicable = tag[Field.COMMENT].Length > 0;
-                if (!applicable && tag.AdditionalFields.Count > 0)
-                {
-                    foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                    if (tag[Field.TITLE].Length > 0)
                     {
-                        applicable = fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS);
-                        if (applicable) break;
-                    }
-                }
+                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                        long sizePos = w.BaseStream.Position;
+                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
-                if (applicable)
-                {
-                    ushort numComments = 0;
-                    w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
-                    long sizePos = w.BaseStream.Position;
-                    w.Write(0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
-                    w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
+                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
+                        w.Write(strBytes);
 
-                    // First write generic comments (those linked to the Comment field)
-                    string[] comments = tag[Field.COMMENT].Split(Settings.InternalValueSeparator);
-                    foreach (string s in comments)
-                    {
-                        writeCommentChunk(w, null, s);
-                        numComments++;
+                        // Add the extra padding byte if needed
+                        long finalPos = w.BaseStream.Position;
+                        long paddingSize = (finalPos - sizePos) % 2;
+                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                        // Write actual tag size
+                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
+
+                        result++;
                     }
 
-                    // Then write comments linked to a Marker ID
-                    if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
+                    break;
+                }
+                case CHUNKTYPE_AUTHOR:
+                {
+                    if (tag[Field.ARTIST].Length > 0)
                     {
-                        foreach (var fieldInfo in tag.AdditionalFields.Where(fieldInfo => fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS)).Where(fieldInfo => ((CommentData)fieldInfo.SpecificData).MarkerId != 0))
+                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                        long sizePos = w.BaseStream.Position;
+                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
+
+                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
+                        w.Write(strBytes);
+
+                        // Add the extra padding byte if needed
+                        long finalPos = w.BaseStream.Position;
+                        long paddingSize = (finalPos - sizePos) % 2;
+                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                        // Write actual tag size
+                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
+
+                        result++;
+                    }
+
+                    break;
+                }
+                case CHUNKTYPE_COPYRIGHT:
+                {
+                    if (tag[Field.COPYRIGHT].Length > 0)
+                    {
+                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                        long sizePos = w.BaseStream.Position;
+                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
+
+                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
+                        w.Write(strBytes);
+
+                        // Add the extra padding byte if needed
+                        long finalPos = w.BaseStream.Position;
+                        long paddingSize = (finalPos - sizePos) % 2;
+                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                        // Write actual tag size
+                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
+
+                        result++;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    if (zone.StartsWith(CHUNKTYPE_ANNOTATION))
+                    {
+                        // Do not write anything, this field is deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead")
+                    }
+                    else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
+                    {
+                        bool applicable = tag[Field.COMMENT].Length > 0;
+                        if (!applicable && tag.AdditionalFields.Count > 0)
                         {
-                            writeCommentChunk(w, fieldInfo);
-                            numComments++;
+                            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                            {
+                                applicable = fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS);
+                                if (applicable) break;
+                            }
+                        }
+
+                        if (applicable)
+                        {
+                            ushort numComments = 0;
+                            w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
+                            long sizePos = w.BaseStream.Position;
+                            w.Write(0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
+                            w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
+
+                            // First write generic comments (those linked to the Comment field)
+                            string[] comments = tag[Field.COMMENT].Split(Settings.InternalValueSeparator);
+                            foreach (string s in comments)
+                            {
+                                writeCommentChunk(w, null, s);
+                                numComments++;
+                            }
+
+                            // Then write comments linked to a Marker ID
+                            if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
+                            {
+                                foreach (var fieldInfo in tag.AdditionalFields.Where(fieldInfo => fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS)).Where(fieldInfo => ((CommentData)fieldInfo.SpecificData).MarkerId != 0))
+                                {
+                                    writeCommentChunk(w, fieldInfo);
+                                    numComments++;
+                                }
+                            }
+
+
+                            long dataEndPos = w.BaseStream.Position;
+
+                            // Add the extra padding byte if needed
+                            long finalPos = w.BaseStream.Position;
+                            long paddingSize = (finalPos - sizePos) % 2;
+                            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                            // Write actual tag size
+                            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                            w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
+                            w.Write(StreamUtils.EncodeBEUInt16(numComments));
+
+                            result++;
                         }
                     }
 
-
-                    long dataEndPos = w.BaseStream.Position;
-
-                    // Add the extra padding byte if needed
-                    long finalPos = w.BaseStream.Position;
-                    long paddingSize = (finalPos - sizePos) % 2;
-                    if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                    // Write actual tag size
-                    w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                    w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
-                    w.Write(StreamUtils.EncodeBEUInt16(numComments));
-
-                    result++;
+                    break;
                 }
             }
 
