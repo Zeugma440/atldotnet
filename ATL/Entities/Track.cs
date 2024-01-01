@@ -664,6 +664,66 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Copy all metadata to the given track
+        /// NB : Physical information is not copied
+        /// </summary>
+        /// <param name="t">Track to copy metadata to</param>
+        public void CopyMetadataTo(Track t)
+        {
+            t.currentEmbeddedPictures ??= new List<PictureInfo>();
+            t.currentEmbeddedPictures.Clear();
+            if (EmbeddedPictures != null)
+                foreach (var pic in EmbeddedPictures) t.currentEmbeddedPictures.Add(new PictureInfo(pic));
+
+            t.Title = Title;
+            t.Artist = Artist;
+            t.Composer = Composer;
+            t.Comment = Comment;
+            t.Genre = Genre;
+            t.OriginalArtist = OriginalArtist;
+            t.OriginalAlbum = OriginalAlbum;
+            t.Description = Description;
+            t.Copyright = Copyright;
+            t.Publisher = Publisher;
+            t.AlbumArtist = AlbumArtist;
+            t.Conductor = Conductor;
+            t.ProductId = ProductId;
+            t.SortAlbum = SortAlbum;
+            t.SortAlbumArtist = SortAlbumArtist;
+            t.SortArtist = SortArtist;
+            t.SortTitle = SortTitle;
+            t.Group = Group;
+            t.SeriesTitle = SeriesTitle;
+            t.SeriesPart = SeriesPart;
+            t.LongDescription = LongDescription;
+            t.Album = Album;
+            t.isYearExplicit = isYearExplicit;
+            t.Year = Year;
+            t.Date = Date;
+            t.PublishingDate = PublishingDate;
+            t.TrackNumber = TrackNumber;
+            t.TrackTotal = TrackTotal;
+            t.DiscNumber = DiscNumber;
+            t.DiscTotal = DiscTotal;
+            t.Popularity = Popularity;
+            t.BPM = BPM;
+
+            t.Chapters ??= new List<ChapterInfo>();
+            t.Chapters.Clear();
+            if (Chapters != null)
+                foreach (var chap in Chapters) t.Chapters.Add(new ChapterInfo(chap));
+            t.ChaptersTableDescription = ChaptersTableDescription;
+
+            if (Lyrics != null) t.Lyrics = new LyricsInfo(Lyrics);
+            else t.Lyrics = null;
+
+            t.AdditionalFields ??= new Dictionary<string, string>();
+            t.AdditionalFields.Clear();
+            if (AdditionalFields != null)
+                foreach (var af in AdditionalFields) t.AdditionalFields.Add(new KeyValuePair<string, string>(af.Key, af.Value));
+        }
+
         /// FORMATTING UTILITIES
 
         private string processString(string value)
