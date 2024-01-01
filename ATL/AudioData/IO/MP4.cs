@@ -264,7 +264,7 @@ namespace ATL.AudioData.IO
         private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTextTrackSamples, IList<MP4Sample> chapterPictureTrackSamples)
         {
             tagExists = true;
-            if (2 == Settings.MP4_readChaptersExclusive) return;
+            if (3 == Settings.MP4_readChaptersFormat) return;
 
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
             double cumulatedDuration = 0;
@@ -1165,24 +1165,26 @@ namespace ATL.AudioData.IO
             if (atomSize > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createNeroChapters))
             {
                 tagExists = true;
-                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_CHPL);
+                structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, Array.Empty<byte>(), ZONE_MP4_CHPL);
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
                 source.BaseStream.Seek(1, SeekOrigin.Current); // Reserved byte
                 source.Read(data32, 0, 4);
-                uint chapterCount = StreamUtils.DecodeBEUInt32(data32);
+                uint neroChapterCount = StreamUtils.DecodeBEUInt32(data32);
 
-                if (chapterCount > 0 && Settings.MP4_readChaptersExclusive != 1)
+                if (neroChapterCount > 0)
                 {
-                    if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); // No Quicktime chapters previously detected
-
-                    // Overwrites detected Quicktime chapters with Nero chapters only if there are > of them
-                    if (chapterCount > tagData.Chapters.Count)
+                    int qtChapterCount = tagData.Chapters?.Count ?? 0;
+                    bool isTakeNero = 0 == Settings.MP4_readChaptersFormat && neroChapterCount > qtChapterCount;
+                    isTakeNero |= 2 == Settings.MP4_readChaptersFormat && neroChapterCount == qtChapterCount;
+                    isTakeNero |= 3 == Settings.MP4_readChaptersFormat;
+                    if (isTakeNero)
                     {
+                        tagData.Chapters ??= new List<ChapterInfo>();
                         tagData.Chapters.Clear();
                         ChapterInfo previousChapter = null;
 
-                        for (int i = 0; i < chapterCount; i++)
+                        for (int i = 0; i < neroChapterCount; i++)
                         {
                             var chapter = new ChapterInfo();
                             tagData.Chapters.Add(chapter);

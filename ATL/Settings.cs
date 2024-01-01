@@ -211,17 +211,15 @@ namespace ATL
 
         /// <summary>
         /// MP4 : Set to read chapters :
-        ///   - 0 : From any available format
-        ///   - 1 : Only from Quicktime format (chap)
-        ///   - 2 : Only from Nero format (chpl)
-        ///   
-        /// When choosing 0, if ATL detects that one of the formats features more chapter entries than the other,
-        /// it will keep all the entries of the largest list
+        ///   - 0 : From Quicktime format (chap), except if Nero chapters have more entries
+        ///   - 1 : From Quicktime format only
+        ///   - 2 : From Nero format (chpl), except if Quicktime chapters have more entries
+        ///   - 3 : From Nero format only
         /// 
-        /// Warning : Using a value > 0 while updating files may delete the tag you've not chosen to read
+        /// Warning : Using 1 or 3 while updating files may delete the tag you've not chosen to read
         /// Default : 0
         /// </summary>
-        public static int MP4_readChaptersExclusive = 0;
+        public static int MP4_readChaptersFormat = 0;
 
         /// <summary>
         /// ASF/WMA : Keep non-"WM" fields when removing the tag

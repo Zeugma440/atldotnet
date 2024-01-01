@@ -173,7 +173,7 @@ namespace ATL.test.IO.MetaData
             try
             {
                 // Read Quicktime chapters specifically
-                ATL.Settings.MP4_readChaptersExclusive = 1;
+                ATL.Settings.MP4_readChaptersFormat = 1;
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
                 Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
                 Assert.AreEqual((uint)0, theFile.NativeTag.Chapters[0].StartTime); // 1st Quicktime chapter can't start at position > 0
@@ -182,7 +182,7 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual("Chapter 2", theFile.NativeTag.Chapters[1].Title);
 
                 // Read Nero chapters specifically
-                ATL.Settings.MP4_readChaptersExclusive = 2;
+                ATL.Settings.MP4_readChaptersFormat = 3;
                 Assert.IsTrue(theFile.ReadFromFile(true, true));
                 Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
                 Assert.AreEqual((uint)55, theFile.NativeTag.Chapters[0].StartTime);
@@ -192,7 +192,7 @@ namespace ATL.test.IO.MetaData
             }
             finally
             {
-                ATL.Settings.MP4_readChaptersExclusive = 0;
+                ATL.Settings.MP4_readChaptersFormat = 0;
             }
 
 
@@ -1130,9 +1130,9 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             bool initialCap = ATL.Settings.MP4_capNeroChapters;
-            int initialChapRead = ATL.Settings.MP4_readChaptersExclusive;
+            int initialChapRead = ATL.Settings.MP4_readChaptersFormat;
             ATL.Settings.MP4_capNeroChapters = true;
-            ATL.Settings.MP4_readChaptersExclusive = 0;
+            ATL.Settings.MP4_readChaptersFormat = 0;
             try
             {
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -1147,7 +1147,7 @@ namespace ATL.test.IO.MetaData
                 TagData tagData = new TagData();
                 Assert.IsTrue(theFile.UpdateTagInFileAsync(tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
-                ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
+                ATL.Settings.MP4_readChaptersFormat = 3; // Check Nero chapters only
                 Assert.IsTrue(theFile.ReadFromFile());
                 Assert.IsNotNull(theFile.getMeta(tagType));
                 meta = theFile.getMeta(tagType);
@@ -1156,10 +1156,10 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual(255, meta.Chapters.Count);
 
                 ATL.Settings.MP4_capNeroChapters = false;
-                ATL.Settings.MP4_readChaptersExclusive = 0; // Read them all again for the update to work properly
+                ATL.Settings.MP4_readChaptersFormat = 0; // Read them all again for the update to work properly
                 Assert.IsTrue(theFile.UpdateTagInFileAsync(tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
-                ATL.Settings.MP4_readChaptersExclusive = 2; // Check Nero chapters only
+                ATL.Settings.MP4_readChaptersFormat = 3; // Check Nero chapters only
                 Assert.IsTrue(theFile.ReadFromFile());
                 Assert.IsNotNull(theFile.getMeta(tagType));
                 meta = theFile.getMeta(tagType);
@@ -1170,7 +1170,7 @@ namespace ATL.test.IO.MetaData
             finally
             {
                 ATL.Settings.MP4_capNeroChapters = initialCap;
-                ATL.Settings.MP4_readChaptersExclusive = initialChapRead;
+                ATL.Settings.MP4_readChaptersFormat = initialChapRead;
             }
 
             // Get rid of the working copy
