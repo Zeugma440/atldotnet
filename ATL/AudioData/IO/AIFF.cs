@@ -206,8 +206,9 @@ namespace ATL.AudioData.IO
             int previousChunkSizeCorrection = 0;
 
             source.Read(aByte, 0, 1);
+            
             // In case previous chunk has a padding byte, seek a suitable first character for an ID
-            if (!(aByte[0] == 40 || (64 < aByte[0] && aByte[0] < 91)) && source.Position <= limit)
+            if (aByte[0] != 40 && !char.IsLetter((char)aByte[0]) && source.Position <= limit)
             {
                 previousChunkSizeCorrection++;
                 if (source.Position < limit) source.Read(aByte, 0, 1);
