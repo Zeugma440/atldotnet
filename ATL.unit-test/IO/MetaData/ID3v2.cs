@@ -99,11 +99,11 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ID3v2.Exists);
 
             // Supported fields
-            Assert.AreEqual("﻿bébé", theFile.ID3v2.Title);
+            Assert.AreEqual("bébé", theFile.ID3v2.Title);
             Assert.AreEqual("ALBUM!", theFile.ID3v2.Album);
-            Assert.AreEqual("﻿父", theFile.ID3v2.Artist);
+            Assert.AreEqual("父", theFile.ID3v2.Artist);
             Assert.AreEqual("ALBUMARTIST", theFile.ID3v2.AlbumArtist);
-            Assert.AreEqual("﻿I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
+            Assert.AreEqual("I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
             Assert.AreEqual(1, theFile.ID3v2.TrackNumber);

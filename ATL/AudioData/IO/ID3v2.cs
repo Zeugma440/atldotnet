@@ -727,7 +727,7 @@ namespace ATL.AudioData.IO
 
                 if (Frame.ID.StartsWith("COM"))
                 {
-                    if (null == comments) comments = new List<MetaFieldInfo>();
+                    comments ??= new List<MetaFieldInfo>();
                     comment = new MetaFieldInfo(getImplementedTagType(), "")
                     {
                         Language = structure.LanguageCode,
@@ -736,7 +736,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
                 {
-                    if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
+                    tagData.Lyrics ??= new LyricsInfo();
                     tagData.Lyrics.LanguageCode = structure.LanguageCode;
                     tagData.Lyrics.Description = structure.ContentDescriptor;
                     inLyrics = true;
@@ -747,7 +747,7 @@ namespace ATL.AudioData.IO
             else if (Frame.ID.StartsWith("SYL")) // Synch'ed lyrics
             {
                 RichStructure structure = readSynchedLyricsStructure(source, m_tagVersion, encodingCode, frameEncoding);
-                if (null == tagData.Lyrics) tagData.Lyrics = new LyricsInfo();
+                tagData.Lyrics ??= new LyricsInfo();
                 tagData.Lyrics.LanguageCode = structure.LanguageCode;
                 tagData.Lyrics.Description = structure.ContentDescriptor;
                 tagData.Lyrics.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
@@ -756,11 +756,11 @@ namespace ATL.AudioData.IO
                 dataSize -= structure.Size;
             }
 
-            // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark) if version > 2.2
-            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark)
+            // NB : Even if it's not part of the spec, BOMs may appear on ID3v2.2 tags
+            if (1 == encodingCode)
             {
                 BomProperties bom = readBOM(source);
-
                 if (bom.Found)
                 {
                     frameEncoding = bom.Encoding;
@@ -842,7 +842,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (Frame.ID.StartsWith("CHA")) // Chapters
                     {
-                        if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
+                        tagData.Chapters ??= new List<ChapterInfo>();
                         chapter = new ChapterInfo();
                         tagData.Chapters.Add(chapter);
 
@@ -1013,7 +1013,7 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            tagData.Chapters[tagData.Chapters.Count - 1].Picture = picInfo;
+                            tagData.Chapters[^1].Picture = picInfo;
                         }
                     }
                 } // Picture frame
@@ -1152,7 +1152,8 @@ namespace ATL.AudioData.IO
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w);
         }
 
         private int write(TagData tag, BinaryWriter w)
