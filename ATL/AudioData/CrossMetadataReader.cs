@@ -22,21 +22,21 @@ namespace ATL.AudioData
         {
             metaReaders = new List<IMetaDataIO>();
 
-            for (int i = 0; i < tagPriority.Length; i++)
+            foreach (var t in tagPriority)
             {
-                if ((MetaDataIOFactory.TagType.NATIVE == tagPriority[i]) && (audioManager.HasNativeMeta()) && (audioManager.NativeTag != null))
+                if (MetaDataIOFactory.TagType.NATIVE == t && audioManager.HasNativeMeta() && audioManager.NativeTag != null)
                 {
                     metaReaders.Add(audioManager.NativeTag);
                 }
-                if ((MetaDataIOFactory.TagType.ID3V1 == tagPriority[i]) && (audioManager.ID3v1.Exists))
+                if (MetaDataIOFactory.TagType.ID3V1 == t && audioManager.ID3v1.Exists)
                 {
                     metaReaders.Add(audioManager.ID3v1);
                 }
-                if ((MetaDataIOFactory.TagType.ID3V2 == tagPriority[i]) && (audioManager.ID3v2.Exists))
+                if (MetaDataIOFactory.TagType.ID3V2 == t && audioManager.ID3v2.Exists)
                 {
                     metaReaders.Add(audioManager.ID3v2);
                 }
-                if ((MetaDataIOFactory.TagType.APE == tagPriority[i]) && (audioManager.APEtag.Exists))
+                if (MetaDataIOFactory.TagType.APE == t && audioManager.APEtag.Exists)
                 {
                     metaReaders.Add(audioManager.APEtag);
                 }
@@ -44,10 +44,8 @@ namespace ATL.AudioData
         }
 
         /// <inheritdoc/>
-        public bool Exists
-        {
-            get { return metaReaders.Count > 0; }
-        }
+        public bool Exists => metaReaders.Count > 0;
+
         /// <inheritdoc/>
         public IList<Format> MetadataFormats
         {

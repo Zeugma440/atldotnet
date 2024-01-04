@@ -85,19 +85,19 @@ namespace ATL.AudioData
                     theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
                     theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
 
-                    Format tempFmt = new Format(((int)TagType.ID3V1) * 1000, "ID3v1");
+                    Format tempFmt = new Format((int)TagType.ID3V1 * 1000, "ID3v1");
                     tempFmt.AddExtension("id3v1");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(((int)TagType.ID3V2) * 1000, "ID3v2");
+                    tempFmt = new Format((int)TagType.ID3V2 * 1000, "ID3v2");
                     tempFmt.AddExtension("id3v2");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(((int)TagType.APE) * 1000, "APEtag");
+                    tempFmt = new Format((int)TagType.APE * 1000, "APEtag");
                     tempFmt.AddExtension("ape");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(((int)TagType.NATIVE) * 1000, "Native");
+                    tempFmt = new Format((int)TagType.NATIVE * 1000, "Native");
                     tempFmt.AddExtension("native");
                     theFactory.addFormat(tempFmt);
                 }
@@ -114,8 +114,7 @@ namespace ATL.AudioData
         /// <param name="rank">Reading priority : range [0..TAG_TYPE_COUNT[</param>
         public void SetTagPriority(TagType type, int rank)
         {
-            if ((rank > -1) && (rank < TagPriority.Length))
-                TagPriority[rank] = type;
+            if (rank > -1 && rank < TagPriority.Length) TagPriority[rank] = type;
         }
 
         /// <summary>
@@ -134,7 +133,7 @@ namespace ATL.AudioData
             if (theDataManager.ID3v2.Exists) tagCount++;
             if (theDataManager.APEtag.Exists) tagCount++;
 
-            if (CrossReading && (tagCount > 1) && forceTagType.Equals(TagType.ANY))
+            if (CrossReading && tagCount > 1 && forceTagType.Equals(TagType.ANY))
             {
                 theMetaReader = new CrossMetadataReader(theDataManager, TagPriority);
             }
