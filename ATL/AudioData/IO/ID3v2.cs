@@ -561,7 +561,12 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        private static RichStructure readCommentStructure(BufferedBinaryReader source, int tagVersion, int encodingCode, Encoding encoding)
+        private static RichStructure readCommentStructure(
+            BufferedBinaryReader source,
+            int tagVersion,
+            int encodingCode,
+            Encoding encoding,
+            int dataSize)
         {
             RichStructure result = new RichStructure();
             long initialPos = source.Position;
@@ -578,6 +583,13 @@ namespace ATL.AudioData.IO
             }
             result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
             result.Size = (int)(source.Position - initialPos);
+
+            // Process corrupted comment
+            if (result.Size >= dataSize)
+            {
+                source.Position = initialPos + dataSize;
+                result.Size = dataSize;
+            }
 
             return result;
         }
@@ -723,7 +735,7 @@ namespace ATL.AudioData.IO
             // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
             if (Frame.ID.StartsWith("COM") || Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
             {
-                RichStructure structure = readCommentStructure(source, m_tagVersion, encodingCode, frameEncoding);
+                RichStructure structure = readCommentStructure(source, m_tagVersion, encodingCode, frameEncoding, dataSize);
 
                 if (Frame.ID.StartsWith("COM"))
                 {
