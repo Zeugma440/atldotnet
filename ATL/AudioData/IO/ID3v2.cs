@@ -584,9 +584,10 @@ namespace ATL.AudioData.IO
             result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
             result.Size = (int)(source.Position - initialPos);
 
-            // Process corrupted comment
+            // Ignore malformed comment
             if (result.Size >= dataSize)
             {
+                // Get to the physical end of the frame
                 source.Position = initialPos + dataSize;
                 result.Size = dataSize;
             }
