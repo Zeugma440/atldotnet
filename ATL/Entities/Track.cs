@@ -362,8 +362,12 @@ namespace ATL
             if (currentEmbeddedPictures != null)
             {
                 currentEmbeddedPictures.Clear();
-                initialEmbeddedPictures.Clear();
                 currentEmbeddedPictures = null;
+            }
+
+            if (initialEmbeddedPictures != null)
+            {
+                initialEmbeddedPictures.Clear();
                 initialEmbeddedPictures = null;
             }
 
