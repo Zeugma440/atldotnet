@@ -231,10 +231,12 @@ namespace ATL
         /// Use MetaDataHolder.DATETIME_PREFIX + DateTime.ToFileTime() to set dates. ATL will format them properly.
         /// </summary>
         public IDictionary<string, string> AdditionalFields { get; set; }
-        private ICollection<string> initialAdditionalFields; // Initial fields, used to identify removed ones
+        // Initial fields, used to identify removed ones
+        private readonly ICollection<string> initialAdditionalFields = new List<string>();
 
         private IList<PictureInfo> currentEmbeddedPictures { get; set; }
-        private ICollection<PictureInfo> initialEmbeddedPictures; // Initial fields, used to identify removed ones
+        // Initial fields, used to identify removed ones
+        private readonly ICollection<PictureInfo> initialEmbeddedPictures = new List<PictureInfo>();
 
         private DateTime? date;
         private bool isYearExplicit;
@@ -321,8 +323,7 @@ namespace ATL
             if (null == currentEmbeddedPictures)
             {
                 currentEmbeddedPictures = new List<PictureInfo>();
-                initialEmbeddedPictures = new List<PictureInfo>();
-
+                initialEmbeddedPictures.Clear();
                 Update(true);
             }
 
@@ -364,12 +365,7 @@ namespace ATL
                 currentEmbeddedPictures.Clear();
                 currentEmbeddedPictures = null;
             }
-
-            if (initialEmbeddedPictures != null)
-            {
-                initialEmbeddedPictures.Clear();
-                initialEmbeddedPictures = null;
-            }
+            initialEmbeddedPictures.Clear();
 
             Title = processString(metadata.Title);
             if (Settings.UseFileNameWhenNoTitle && string.IsNullOrEmpty(Title) && Path != InMemoryPath)
@@ -425,7 +421,8 @@ namespace ATL
             {
                 AdditionalFields.Add(key, processString(metadata.AdditionalFields[key]));
             }
-            initialAdditionalFields = metadata.AdditionalFields.Keys;
+            initialAdditionalFields.Clear();
+            foreach (string key in metadata.AdditionalFields.Keys) initialAdditionalFields.Add(key);
 
             // Physical information
             Bitrate = fileIO.IntBitRate;
@@ -521,7 +518,7 @@ namespace ATL
 
             result.Pictures = new List<PictureInfo>();
 
-            if (initialEmbeddedPictures != null && currentEmbeddedPictures != null)
+            if (currentEmbeddedPictures != null)
             {
                 // Process target pictures first, in their specified order
                 foreach (PictureInfo targetPic in currentEmbeddedPictures)

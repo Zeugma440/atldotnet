@@ -1,5 +1,4 @@
-﻿using ATL.AudioData;
-
+﻿
 namespace ATL.test.IO
 {
     [TestClass]
@@ -11,28 +10,53 @@ namespace ATL.test.IO
             Track track = new Track();
             track.Title = "aaa";
             track.Year = 1997;
-            var fields = new Dictionary<string, string>();
-            fields.Add("aa", "bb");
-            fields.Add("cc", "dd");
+            var fields = new Dictionary<string, string>
+            {
+                { "AA", "bb" },
+                { "CC", "dd" }
+            };
             track.AdditionalFields = fields;
+            PictureInfo referencePic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PictureInfo.PIC_TYPE.Front);
+            referencePic.ComputePicHash();
+            PictureInfo picture1 = referencePic;
+            track.EmbeddedPictures.Add(picture1);
 
+            // Test initial file is empty
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
+            Track track2 = new Track(testFileLocation);
 
-            Track track2 = new Track();
-
-            Assert.IsNull(track2.Artist);
+            Assert.AreEqual("", track2.Artist);
             Assert.AreEqual(0, track2.Year);
-            Assert.IsNull(track2.AdditionalFields);
+            Assert.AreEqual(0, track2.AdditionalFields.Count);
+            Assert.AreEqual(0, track2.EmbeddedPictures.Count);
 
+            // Test in-memory data after copy
             track.CopyMetadataTo(track2);
+            testCopiedMetadata(track2, referencePic);
 
-            Assert.AreEqual("aaa", track2.Title);
-            Assert.AreEqual(1997, track2.Year);
-            Assert.AreEqual(2, track2.AdditionalFields.Count);
-            Assert.AreEqual("dd", track2.AdditionalFields["cc"]);
+            // Test deep copy
+            track.AdditionalFields["CC"] = "ee";
+            track.EmbeddedPictures[0] = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg"), PictureInfo.PIC_TYPE.Front);
+            testCopiedMetadata(track2, referencePic);
 
-            track.AdditionalFields["cc"] = "ee";
+            // Test after saving
+            track2.Save();
+            testCopiedMetadata(track2, referencePic);
 
-            Assert.AreEqual("dd", track2.AdditionalFields["cc"]); // Test deep copy
+            // Get rid of the working file
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        private void testCopiedMetadata(Track track, PictureInfo referencePic)
+        {
+            Assert.AreEqual("aaa", track.Title);
+            Assert.AreEqual(1997, track.Year);
+            Assert.AreEqual(2, track.AdditionalFields.Count);
+            Assert.AreEqual("bb", track.AdditionalFields["AA"]);
+            Assert.AreEqual("dd", track.AdditionalFields["CC"]);
+            Assert.AreEqual(1, track.EmbeddedPictures.Count);
+            PictureInfo image = track.EmbeddedPictures[0];
+            Assert.AreEqual(referencePic.PictureHash, image.ComputePicHash());
         }
     }
 }
