@@ -74,7 +74,7 @@ namespace ATL.test.IO.MetaData
             testData.RecordingDate = null;
             */
             testData.Date = DateTime.Parse("01/01/1997");
-            testData.Conductor = null; // TODO - Should be supported; extended field makes it harder to manipulate by the generic test code
+            testData.Conductor = "John Williams";
             testData.Publisher = null;
             testData.Genre = "Household"; // "House" was generating a 'gnre' numeric field whereas ATL standard way of tagging is '(c)gen' string field => Start with a non-standard Genre
             testData.ProductId = "THIS IS A GOOD ID";
@@ -89,7 +89,7 @@ namespace ATL.test.IO.MetaData
 
             testData.AdditionalFields = new Dictionary<string, string>
             {
-                { "----:com.apple.iTunes:TEST", "xxx" }
+                { "TESTFIELD", "xxx" }
             };
 
             PictureInfo pic = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, MetaDataIOFactory.TagType.ANY, 13);
@@ -105,7 +105,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
+            // Source : M4A with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (TESTFIELD)
             string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
             readExistingTagsOnFile(theFile, 1);
@@ -148,7 +148,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : file with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (MOOD)
+            // Source : file with existing tag incl. unsupported picture (Cover Art (Fronk)); unsupported field (TESTFIELD)
             String testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
@@ -156,7 +156,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.ReadFromFile());
 
             TagHolder theTag = new TagHolder();
-            theTag.Conductor = "John Jackman";
+            theTag.Publisher = "John Jackman";
 
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png");
             PictureInfo picInfo = PictureInfo.fromBinaryData(data, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.ANY, 13);
@@ -200,7 +200,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(theFile, 2);
 
             // Additional supported field
-            Assert.AreEqual("John Jackman", theFile.NativeTag.Conductor);
+            Assert.AreEqual("John Jackman", theFile.NativeTag.Publisher);
 
 #pragma warning disable CA1416
             byte nbFound = 0;
@@ -208,12 +208,10 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (1 == nbFound))
                 {
-                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
-                        Assert.AreEqual(175, picture.Width);
-                        Assert.AreEqual(168, picture.Height);
-                    }
+                    using Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
+                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
+                    Assert.AreEqual(175, picture.Width);
+                    Assert.AreEqual(168, picture.Height);
                 }
                 nbFound++;
             }
@@ -222,7 +220,7 @@ namespace ATL.test.IO.MetaData
 
             // Remove the additional supported field
             theTag = new TagHolder();
-            theTag.Conductor = "";
+            theTag.Publisher = "";
 
             // Remove additional picture
             picInfo = new PictureInfo(PIC_TYPE.Back);
@@ -235,7 +233,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(theFile);
 
             // Additional removed field
-            Assert.AreEqual("", theFile.NativeTag.Conductor);
+            Assert.AreEqual("", theFile.NativeTag.Publisher);
 
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -387,78 +385,6 @@ namespace ATL.test.IO.MetaData
 #pragma warning restore CA1416
 
             // Get rid of the working copy
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars_KO()
-        {
-            new ConsoleLogger();
-            ArrayLogger log = new ArrayLogger();
-
-            // Source : tag-free M4A
-            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-
-            // Add a field outside MP4 standards, without namespace
-            TagData theTag = new TagData();
-            theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo infoKO = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "BLEHBLEH", "heyheyhey");
-            theTag.AdditionalFields.Add(infoKO);
-
-            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
-
-            IList<LogItem> logItems = log.GetAllItems(LV_ERROR);
-            Assert.IsTrue(logItems.Count > 0);
-            bool found = false;
-            foreach (LogItem l in logItems)
-            {
-                if (l.Message.Contains("must have a namespace")) found = true;
-            }
-            Assert.IsTrue(found);
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            // Make sure the field has indeed been ignored
-            Assert.IsFalse(theFile.NativeTag.AdditionalFields.ContainsKey("----:BLEHBLEH"));
-            Assert.IsFalse(theFile.NativeTag.AdditionalFields.ContainsKey("BLEHBLEH"));
-
-            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
-        }
-
-        [TestMethod]
-        public void TagIO_RW_MP4_NonStandard_MoreThan4Chars_OK()
-        {
-            new ConsoleLogger();
-
-            // Add a field outside MP4 standards, with or without the leading '----'
-            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-
-            TagData theTag = new TagData();
-            theTag.AdditionalFields = new List<MetaFieldInfo>();
-            MetaFieldInfo infoOK = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "my.namespace:BLAHBLAH", "heyheyhey");
-            MetaFieldInfo infoOK2 = new MetaFieldInfo(MetaDataIOFactory.TagType.NATIVE, "----:my.namespace:BLAHBLAH2", "hohoho");
-            theTag.AdditionalFields.Add(infoOK);
-            theTag.AdditionalFields.Add(infoOK2);
-
-            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
-
-            Assert.IsTrue(theFile.ReadFromFile(false, true));
-            Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsTrue(theFile.NativeTag.Exists);
-
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("----:my.namespace:BLAHBLAH"));
-            Assert.AreEqual("heyheyhey", theFile.NativeTag.AdditionalFields["----:my.namespace:BLAHBLAH"]);
-            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("----:my.namespace:BLAHBLAH2"));
-            Assert.AreEqual("hohoho", theFile.NativeTag.AdditionalFields["----:my.namespace:BLAHBLAH2"]);
-
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 

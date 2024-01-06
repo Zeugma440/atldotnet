@@ -32,6 +32,9 @@ namespace ATL.AudioData.IO
         public const byte MP4_BITRATE_TYPE_CBR = 1;                          // CBR
         public const byte MP4_BITRATE_TYPE_VBR = 2;                          // VBR
 
+        // de facto default namespace for custom fields
+        private const string DEFAULT_NAMESPACE = "com.apple.iTunes";
+
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
@@ -73,7 +76,8 @@ namespace ATL.AudioData.IO
             { "©pub", Field.PUBLISHER },
             { "rldt", Field.PUBLISHING_DATE},
             { "prID", Field.PRODUCT_ID},
-            { "----:com.apple.iTunes:CONDUCTOR", Field.CONDUCTOR },
+            { "©con", Field.CONDUCTOR },
+            { "CONDUCTOR", Field.CONDUCTOR }, // aka ----:com.apple.iTunes:CONDUCTOR
             { "soal", Field.SORT_ALBUM },
             { "soaa", Field.SORT_ALBUM_ARTIST },
             { "soar", Field.SORT_ARTIST },
@@ -187,16 +191,11 @@ namespace ATL.AudioData.IO
 
             return supportedMetaId;
         }
+
         /// <inheritdoc/>
         protected override bool canHandleNonStandardField(string code, string value)
         {
-            // Belongs to the XTRA zone + parent UDTA atom has been located => OK
-            if (code.StartsWith("WM/", StringComparison.OrdinalIgnoreCase)) return true;
-            string cleanedCode = code.Replace("----:", "");
-            if (cleanedCode.Contains(':')) return true; // Is part of the standard way of reprsenting non-standard fields
-
-            LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Non-standard fields must have a namespace (e.g. namespace:fieldName) Field '" + cleanedCode + "' will be ignored.");
-            return false;
+            return true;
         }
 
 
@@ -1272,10 +1271,7 @@ namespace ATL.AudioData.IO
                 tagExists = false;
                 return;
             }
-            else
-            {
-                tagExists = true;
-            }
+            tagExists = true;
 
             StringBuilder atomHeaderBuilder = new StringBuilder();
             // Browse all metadata
@@ -1296,7 +1292,12 @@ namespace ATL.AudioData.IO
                         return;
                     }
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                    atomHeaderBuilder.Append(":").Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
+                    string nmeSpace = Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4));
+
+                    // Only add namespace to the atom name if it's different than the default namespace
+                    if (!nmeSpace.Equals(DEFAULT_NAMESPACE, StringComparison.OrdinalIgnoreCase))
+                        atomHeaderBuilder.Append(':').Append(nmeSpace).Append(':');
+                    else atomHeaderBuilder.Clear();
 
                     metadataSize = navigateToAtom(source, "name"); // field type
                     if (0 == metadataSize)
@@ -1305,7 +1306,7 @@ namespace ATL.AudioData.IO
                         return;
                     }
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
-                    atomHeaderBuilder.Append(":").Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
+                    atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
                 }
                 string atomHeader = atomHeaderBuilder.ToString();
 
@@ -1787,16 +1788,18 @@ namespace ATL.AudioData.IO
             // == METADATA HEADER ==
             var frameSizePos1 = writer.BaseStream.Position;
             writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-            if (frameCode.Length > FieldCodeFixedLength && !frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase)) // Specific non-Microsoft custom metadata
-            {
-                string[] frameCodeComponents = frameCode.Split(':');
-                bool isComplete = frameCodeComponents.Length > 2 && frameCodeComponents[0] == "----";
-                if (isComplete || frameCodeComponents.Length > 1)
-                {
-                    writer.Write(Utils.Latin1Encoding.GetBytes("----"));
 
-                    string nmespace = isComplete ? frameCodeComponents[1] : frameCodeComponents[0];
-                    string fieldCode = isComplete ? frameCodeComponents[2] : frameCodeComponents[1];
+            if (!frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase))
+            {
+                // Non-Microsoft custom metadata
+                if (frameCode.Length > FieldCodeFixedLength)
+                {
+                    string[] frameCodeComponents = frameCode.Split(':');
+                    string nmespace = DEFAULT_NAMESPACE;
+                    if (2 == frameCodeComponents.Length && !frameCodeComponents[0].StartsWith("--")) nmespace = frameCodeComponents[0];
+                    string fieldCode = frameCodeComponents[^1];
+
+                    writer.Write(Utils.Latin1Encoding.GetBytes("----"));
 
                     writer.Write(StreamUtils.EncodeBEInt32(nmespace.Length + 4 + 4 + 4));
                     writer.Write(Utils.Latin1Encoding.GetBytes("mean"));
@@ -1808,10 +1811,10 @@ namespace ATL.AudioData.IO
                     writer.Write(frameFlags);
                     writer.Write(Utils.Latin1Encoding.GetBytes(fieldCode));
                 }
-            }
-            else if (!frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase))
-            {
-                writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+                else // Standard-looking metadata
+                {
+                    writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+                }
             }
 
             // == METADATA VALUE ==
