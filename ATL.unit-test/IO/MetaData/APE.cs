@@ -19,6 +19,7 @@ namespace ATL.test.IO.MetaData
             testData.Publisher = null;
             testData.GeneralDescription = null;
             testData.Date = DateTime.Parse("01/01/1997");
+            testData.Publisher = "abc publishing";
 
             // Initialize specific test data (Picture native codes are strings)
             IList<PictureInfo> testPictureInfos = new List<PictureInfo>();
