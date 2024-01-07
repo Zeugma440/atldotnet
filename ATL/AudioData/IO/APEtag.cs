@@ -201,36 +201,46 @@ namespace ATL.AudioData.IO
                     return false;
                 }
 
-                if ((frameDataSize > 0) && (frameDataSize <= 1000))
+                if (frameDataSize > 0)
                 {
-                    /* 
-                     * According to spec : "Items are not zero-terminated like in C / C++.
-                     * If there's a zero character, multiple items are stored under the key and the items are separated by zero characters."
-                     * 
-                     * => Values have to be splitted
-                     */
-                    var strValue = Utils.StripEndingZeroChars(Settings.DefaultTextEncoding.GetString(source.ReadBytes(frameDataSize)));
-                    strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
-                    SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
-                }
-                else if (frameDataSize > 0 && !frameName.ToLower().Contains("lyrics")) // Size > 1000 => Probably an embedded picture
-                {
-                    PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
-
-                    var picturePosition = picType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? takePicturePosition(getImplementedTagType(), frameName) : takePicturePosition(picType);
-
-                    if (readTagParams.ReadPictures)
+                    if (frameDataSize <= 1000 || frameName.ToLower().Contains("lyrics"))
                     {
-                        // Description seems to be a null-terminated ANSI string containing 
-                        //    * The frame name
-                        //    * A byte (0x2E)
-                        //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
-                        string description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(source, frameDataSize - description.Length - 1, picType, getImplementedTagType(), frameName, picturePosition);
-                        picInfo.Description = description;
-                        tagData.Pictures.Add(picInfo);
+                        /*
+                         * According to spec : "Items are not zero-terminated like in C / C++.
+                         * If there's a zero character, multiple items are stored under the key and the items are separated by zero characters."
+                         *
+                         * => Values have to be splitted
+                         */
+                        var strValue =
+                            Utils.StripEndingZeroChars(
+                                Settings.DefaultTextEncoding.GetString(source.ReadBytes(frameDataSize)));
+                        strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
+                        SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
+                    }
+                    else // Size > 1000; non-lyrics => Probably an embedded picture
+                    {
+                        PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
+
+                        var picturePosition = picType.Equals(PictureInfo.PIC_TYPE.Unsupported)
+                            ? takePicturePosition(getImplementedTagType(), frameName)
+                            : takePicturePosition(picType);
+
+                        if (readTagParams.ReadPictures)
+                        {
+                            // Description seems to be a null-terminated ANSI string containing 
+                            //    * The frame name
+                            //    * A byte (0x2E)
+                            //    * The picture type (3 characters; similar to the 2nd part of the mime-type)
+                            string description = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+                            PictureInfo picInfo = PictureInfo.fromBinaryData(source,
+                                frameDataSize - description.Length - 1, picType, getImplementedTagType(), frameName,
+                                picturePosition);
+                            picInfo.Description = description;
+                            tagData.Pictures.Add(picInfo);
+                        }
                     }
                 }
+
                 source.Seek(valuePosition + frameDataSize, SeekOrigin.Begin);
             }
 
