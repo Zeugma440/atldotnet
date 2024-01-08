@@ -699,9 +699,9 @@ namespace ATL
             t.SeriesPart = SeriesPart;
             t.LongDescription = LongDescription;
             t.Album = Album;
-            t.isYearExplicit = isYearExplicit;
-            t.Year = Year;
+            // Year is not set directly as it actually sets Date and isYearExplicit
             t.Date = Date;
+            t.isYearExplicit = isYearExplicit;
             t.PublishingDate = PublishingDate;
             t.TrackNumber = TrackNumber;
             t.TrackTotal = TrackTotal;
