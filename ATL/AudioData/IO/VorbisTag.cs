@@ -66,7 +66,8 @@ namespace ATL.AudioData.IO
                 { "ORIGINALDATE", Field.PUBLISHING_DATE },
                 { "PRODUCTNUMBER", Field.PRODUCT_ID },
                 { "LYRICS", Field.LYRICS_UNSYNCH },
-                { "BPM", Field.BPM }
+                { "BPM", Field.BPM },
+                { "ENCODED-BY", Field.ENCODED_BY }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)

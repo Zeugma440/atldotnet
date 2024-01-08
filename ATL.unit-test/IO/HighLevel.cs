@@ -653,14 +653,14 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/01 - Title Screen.mp3");
             Track theTrack = new Track(testFileLocation);
 
-            theTrack.AdditionalFields["TENC"] = "update test";
+            theTrack.AdditionalFields["TOFN"] = "update test";
             Assert.IsTrue(theTrack.Save());
 
             theTrack = new Track(testFileLocation);
 
             Assert.AreEqual(1, theTrack.AdditionalFields.Count);
-            Assert.IsTrue(theTrack.AdditionalFields.ContainsKey("TENC"));
-            Assert.AreEqual("update test", theTrack.AdditionalFields["TENC"]);
+            Assert.IsTrue(theTrack.AdditionalFields.ContainsKey("TOFN"));
+            Assert.AreEqual("update test", theTrack.AdditionalFields["TOFN"]);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

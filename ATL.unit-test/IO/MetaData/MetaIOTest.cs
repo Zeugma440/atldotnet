@@ -446,6 +446,7 @@ namespace ATL.test.IO.MetaData
             if (testData.SeriesPart != "") theTag.SeriesPart = "2";
             if (testData.LongDescription != "") theTag.LongDescription = "LongDescription";
             if (testData.BPM != 0) theTag.BPM = 550;
+            if (testData.EncodedBy != "") theTag.EncodedBy = "reaKtor";
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -518,6 +519,7 @@ namespace ATL.test.IO.MetaData
             if (testData.SeriesPart != "") Assert.AreEqual("2", meta.SeriesPart);
             if (testData.LongDescription != "") Assert.AreEqual("LongDescription", meta.LongDescription);
             if (testData.BPM != 0) Assert.AreEqual(550, meta.BPM);
+            if (testData.EncodedBy != "") Assert.AreEqual("reaKtor", meta.EncodedBy);
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -813,6 +815,7 @@ namespace ATL.test.IO.MetaData
             if (testData.GeneralDescription != "") Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
             if (testData.ProductId != "") Assert.AreEqual(testData.ProductId, meta.ProductId);
             if (testData.BPM != 0) Assert.AreEqual(testData.BPM, meta.BPM);
+            if (testData.EncodedBy != "") Assert.AreEqual(testData.EncodedBy, meta.EncodedBy);
 
             // Additional fields
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)

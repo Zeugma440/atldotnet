@@ -159,6 +159,10 @@ namespace ATL
         /// Beats per minute
         /// </summary>
         public int? BPM { get; set; }
+        /// <summary>
+        /// Person or organization that encoded the file
+        /// </summary>
+        public string EncodedBy{ get; set; }
 
         /// <summary>
 		/// Recording Date (set to DateTime.MinValue to remove)
@@ -409,6 +413,7 @@ namespace ATL
             DiscTotal = update(metadata.DiscTotal);
             Popularity = metadata.Popularity;
             BPM = metadata.BPM;
+            EncodedBy = metadata.EncodedBy;
 
             Chapters = metadata.Chapters;
             ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
@@ -469,6 +474,7 @@ namespace ATL
             result.IntegrateValue(Field.SERIES_PART, SeriesPart);
             result.IntegrateValue(Field.LONG_DESCRIPTION, LongDescription);
             result.IntegrateValue(Field.BPM, toTagValue(BPM));
+            result.IntegrateValue(Field.ENCODED_BY, EncodedBy);
             if (isYearExplicit)
             {
                 result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
@@ -709,6 +715,7 @@ namespace ATL
             t.DiscTotal = DiscTotal;
             t.Popularity = Popularity;
             t.BPM = BPM;
+            t.EncodedBy = EncodedBy;
 
             t.Chapters ??= new List<ChapterInfo>();
             t.Chapters.Clear();

@@ -484,6 +484,22 @@ namespace ATL.AudioData
         }
 
         /// <inheritdoc/>
+        public string EncodedBy
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.EncodedBy;
+                    if (result != "") break;
+                }
+
+                return result;
+            }
+        }
+
+        /// <inheritdoc/>
         public float? Popularity
         {
             get

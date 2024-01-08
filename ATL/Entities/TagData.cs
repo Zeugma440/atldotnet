@@ -173,7 +173,11 @@ namespace ATL
             /// <summary>
             /// Beats per minute
             /// </summary>
-            BPM = 37
+            BPM = 37,
+            /// <summary>
+            /// Person or organization that encoded the file
+            /// </summary>
+            ENCODED_BY = 38
         }
 
         private static readonly ICollection<Field> numericFields = new HashSet<Field>

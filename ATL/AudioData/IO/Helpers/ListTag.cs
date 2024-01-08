@@ -43,24 +43,22 @@ namespace ATL.AudioData.IO
         private static void readInfoPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize, long maxPos)
         {
             byte[] data = new byte[chunkSize];
-            string key, value;
-            int size;
 
             while (source.Position < maxPos)
             {
                 // Key
                 source.Read(data, 0, 4);
-                key = Utils.Latin1Encoding.GetString(data, 0, 4);
+                var key = Utils.Latin1Encoding.GetString(data, 0, 4);
                 // Size
                 source.Read(data, 0, 4);
-                size = StreamUtils.DecodeInt32(data);
+                var size = StreamUtils.DecodeInt32(data);
                 // Do _NOT_ use StreamUtils.ReadNullTerminatedString because non-textual fields may be found here (e.g. NITR)
                 if (size > 0)
                 {
                     source.Read(data, 0, size);
                     // Manage parasite zeroes at the end of data
                     if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
-                    value = Encoding.UTF8.GetString(data, 0, size);
+                    var value = Encoding.UTF8.GetString(data, 0, size);
                     meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
 
                     WavHelper.skipEndPadding(source, maxPos);
@@ -83,16 +81,15 @@ namespace ATL.AudioData.IO
                 // Size
                 source.Read(data, 0, 4);
                 size = StreamUtils.DecodeInt32(data);
-                if (size > 0)
-                {
-                    meta.SetMetaField("adtl.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
-                    if (id.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
-                    else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
-                    else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
+                if (size <= 0) continue;
 
-                    WavHelper.skipEndPadding(source, maxPos);
-                    position++;
-                }
+                meta.SetMetaField("adtl.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
+                if (id.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
+                else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
+                else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
+
+                WavHelper.skipEndPadding(source, maxPos);
+                position++;
             }
         }
 
@@ -137,6 +134,7 @@ namespace ATL.AudioData.IO
             if (meta.Copyright.Length > 0) return true;
             if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
+            if (meta.EncodedBy.Length > 0) return true;
 
             return WavHelper.IsDataEligible(meta, "info.") || WavHelper.IsDataEligible(meta, "adtl.");
         }
@@ -220,11 +218,14 @@ namespace ATL.AudioData.IO
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IPRT", value, w, writtenFields);
                 if (value.Length > 0) writeSizeAndNullTerminatedString("ITRK", value, w, writtenFields);
             }
+            // Encoded by
+            value = Utils.ProtectValue(meta.EncodedBy);
+            if (0 == value.Length && additionalFields.TryGetValue("info.ITCH", out var field5)) value = field5;
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ITCH", value, w, writtenFields);
 
-            string shortKey;
             foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("info.")))
             {
-                shortKey = key.Substring(5, key.Length - 5).ToUpper();
+                var shortKey = key.Substring(5, key.Length - 5).ToUpper();
                 if (!writtenFields.ContainsKey(key) && additionalFields[key].Length > 0)
                     writeSizeAndNullTerminatedString(shortKey, meta.FormatBeforeWriting(additionalFields[key]), w, writtenFields);
             }

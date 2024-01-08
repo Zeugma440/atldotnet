@@ -90,7 +90,8 @@ namespace ATL.AudioData.IO
             { "info.IRTD", Field.RATING },
             { "info.TRCK", Field.TRACK_NUMBER },
             { "info.IPRT", Field.TRACK_NUMBER },
-            { "info.ITRK", Field.TRACK_NUMBER }
+            { "info.ITRK", Field.TRACK_NUMBER },
+            { "info.ITCH", Field.ENCODED_BY },
         };
 
 
@@ -555,18 +556,18 @@ namespace ATL.AudioData.IO
                     result += CueTag.ToStream(w, isLittleEndian, this);
                     break;
                 default:
-                {
-                    if (zone.StartsWith(CHUNK_LIST) && List.IsDataEligible(this))
                     {
-                        string[] zoneParts = zone.Split('.');
-                        if (zoneParts.Length > 1) result += List.ToStream(w, isLittleEndian, zoneParts[1], this);
-                    }
-                    else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
-                    else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
-                    else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
+                        if (zone.StartsWith(CHUNK_LIST) && List.IsDataEligible(this))
+                        {
+                            string[] zoneParts = zone.Split('.');
+                            if (zoneParts.Length > 1) result += List.ToStream(w, isLittleEndian, zoneParts[1], this);
+                        }
+                        else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
+                        else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
+                        else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
 
-                    break;
-                }
+                        break;
+                    }
             }
 
             return result;

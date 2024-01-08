@@ -108,6 +108,7 @@ namespace ATL.AudioData.IO
             { "WM/TitleSortOrder", Field.SORT_TITLE },
             { "WM/ContentGroupDescription", Field.GROUP },
             { "WM/BeatsPerMinute", Field.BPM },
+            { "WM/EncodedBy", Field.ENCODED_BY },
             { "WM/OriginalReleaseTime", Field.PUBLISHING_DATE } // De facto standard as specs don't define any dedicated field to store a full date
         };
 

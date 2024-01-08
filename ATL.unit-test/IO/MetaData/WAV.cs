@@ -66,6 +66,7 @@ namespace ATL.test.IO.MetaData
             testData.Date = System.DateTime.Parse("2018-01-09T01:23:45");
             testData.TrackNumber = 5;
             testData.Popularity = 0.2f;
+            testData.EncodedBy = "info.ITCH";
 
             IDictionary<string, string> tags = new Dictionary<string, string>();
             tags.Add(new KeyValuePair<string, string>("info.IARL", "info.IARL"));
@@ -77,7 +78,6 @@ namespace ATL.test.IO.MetaData
             tags.Add(new KeyValuePair<string, string>("info.ISFT", "info.ISFT"));
             tags.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));
             tags.Add(new KeyValuePair<string, string>("info.ISRF", "info.ISRF"));
-            tags.Add(new KeyValuePair<string, string>("info.ITCH", "info.ITCH"));
             testData.AdditionalFields = tags;
         }
 

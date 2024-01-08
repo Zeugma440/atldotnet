@@ -337,6 +337,13 @@ namespace ATL
             set => tagData.IntegrateValue(Field.BPM, (null == value) ? null : value.ToString());
         }
 
+        /// <inheritdoc/>
+        public string EncodedBy
+        {
+            get => Utils.ProtectValue(tagData[Field.ENCODED_BY]);
+            set => tagData.IntegrateValue(Field.ENCODED_BY, value);
+        }
+
         /// <summary>
         /// Collection of fields that are not supported by ATL (i.e. not implemented by a getter/setter of MetaDataIO class; e.g. custom fields such as "MOOD")
         /// NB : when querying multi-stream files (e.g. MP4, ASF), this attribute will only return stream-independent properties of the whole file, in the first language available

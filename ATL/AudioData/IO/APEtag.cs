@@ -68,7 +68,8 @@ namespace ATL.AudioData.IO
             { "CONDUCTOR", Field.CONDUCTOR },
             { "LYRICS", Field.LYRICS_UNSYNCH },
             { "PUBLISHER", Field.PUBLISHER },
-            { "BPM", Field.BPM }
+            { "BPM", Field.BPM },
+            { "ENCODEDBY", Field.ENCODED_BY }
         };
 
 

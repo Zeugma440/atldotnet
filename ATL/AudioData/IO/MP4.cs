@@ -86,7 +86,8 @@ namespace ATL.AudioData.IO
             { "©mvi", Field.SERIES_PART},
             { "©mvn", Field.SERIES_TITLE },
             { "ldes", Field.LONG_DESCRIPTION },
-            { "tmpo", Field.BPM }
+            { "tmpo", Field.BPM },
+            { "©enc", Field.ENCODED_BY }
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
@@ -311,10 +312,6 @@ namespace ATL.AudioData.IO
         /// <param name="readTagParams">Reading parameters</param>
         private bool readMP4(BinaryReader source, ReadTagParams readTagParams)
         {
-            long moovPosition;
-
-            uint atomSize;
-
             byte[] data32 = new byte[4];
 
             IList<long> audioTrackOffsets = new List<long>(); // Offset of all detected audio/video tracks (tracks with a media type of 'soun' or 'vide')
@@ -329,7 +326,7 @@ namespace ATL.AudioData.IO
 
             // FTYP atom
             source.Read(data32, 0, 4);
-            atomSize = StreamUtils.DecodeBEUInt32(data32);
+            var atomSize = StreamUtils.DecodeBEUInt32(data32);
             source.BaseStream.Seek(atomSize - 4, SeekOrigin.Current);
 
             // MOOV atom
@@ -340,7 +337,7 @@ namespace ATL.AudioData.IO
                 return false;
             }
 
-            moovPosition = source.BaseStream.Position;
+            var moovPosition = source.BaseStream.Position;
             if (readTagParams.PrepareForWriting)
             {
                 structureHelper.AddSize(moovPosition - 8, moovSize, ZONE_MP4_NOUDTA);
