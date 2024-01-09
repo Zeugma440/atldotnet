@@ -67,6 +67,8 @@ namespace ATL.test.IO.MetaData
             testData.TrackNumber = 5;
             testData.Popularity = 0.2f;
             testData.EncodedBy = "info.ITCH";
+            testData.Encoder = "info.ISFT";
+            testData.Language = "info.ILNG";
 
             IDictionary<string, string> tags = new Dictionary<string, string>();
             tags.Add(new KeyValuePair<string, string>("info.IARL", "info.IARL"));
@@ -75,7 +77,6 @@ namespace ATL.test.IO.MetaData
             tags.Add(new KeyValuePair<string, string>("info.IKEY", "info.IKEY"));
             tags.Add(new KeyValuePair<string, string>("info.IMED", "info.IMED"));
             tags.Add(new KeyValuePair<string, string>("info.ISBJ", "info.ISBJ"));
-            tags.Add(new KeyValuePair<string, string>("info.ISFT", "info.ISFT"));
             tags.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));
             tags.Add(new KeyValuePair<string, string>("info.ISRF", "info.ISRF"));
             testData.AdditionalFields = tags;

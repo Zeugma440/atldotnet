@@ -114,9 +114,30 @@ namespace ATL
         /// </summary>
         public string Conductor { get; set; }
         /// <summary>
+        /// Lyricist
+        /// </summary>
+        public string Lyricist { get; set; }
+        /// <summary>
+        /// Mapping between functions (e.g. "producer") and names. Every odd field is a
+        /// function and every even is an name or a comma delimited list of names
+        /// </summary>
+        public string InvolvedPeople { get; set; }
+        /// <summary>
         /// Product ID
         /// </summary>
         public string ProductId { get; set; }
+        /// <summary>
+        /// International Standard Recording Code (ISRC)
+        /// </summary>
+        public string ISRC { get; set; }
+        /// <summary>
+        /// Catalog number
+        /// </summary>
+        public string CatalogNumber { get; set; }
+        /// <summary>
+        /// Audio source URL
+        /// </summary>
+        public string AudioSourceUrl { get; set; }
         /// <summary>
         /// Title sort order
         /// A string which should be used instead of the album for sorting purposes
@@ -156,16 +177,24 @@ namespace ATL
         /// </summary>
         public string LongDescription { get; set; }
         /// <summary>
+        /// Language
+        /// </summary>
+        public string Language { get; set; }
+        /// <summary>
         /// Beats per minute
         /// </summary>
         public int? BPM { get; set; }
         /// <summary>
         /// Person or organization that encoded the file
         /// </summary>
-        public string EncodedBy{ get; set; }
+        public string EncodedBy { get; set; }
+        /// <summary>
+        /// Software that encoded the file, with relevant settings if any
+        /// </summary>
+        public string Encoder { get; set; }
 
         /// <summary>
-		/// Recording Date (set to DateTime.MinValue to remove)
+		/// Recording date (set to DateTime.MinValue to remove)
 		/// </summary>
         public DateTime? Date
         {
@@ -177,7 +206,7 @@ namespace ATL
             }
         }
         /// <summary>
-		/// Recording Year
+		/// Recording year
 		/// </summary>
         public int? Year
         {
@@ -193,6 +222,37 @@ namespace ATL
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
                 isYearExplicit = true;
+            }
+        }
+        /// <summary>
+        /// Original release date (set to DateTime.MinValue to remove)
+        /// </summary>
+        public DateTime? OriginalReleaseDate
+        {
+            get => originalReleaseDate;
+            set
+            {
+                originalReleaseDate = value;
+                isORYearExplicit = false;
+            }
+        }
+        /// <summary>
+        /// Original release year
+        /// </summary>
+        public int? OriginalReleaseYear
+        {
+            get
+            {
+                if (canUseValue(OriginalReleaseDate)) return OriginalReleaseDate.Value.Year;
+                if (Settings.NullAbsentValues) return null;
+                return 0;
+            }
+            set
+            {
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) OriginalReleaseDate = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                else if (Settings.NullAbsentValues) OriginalReleaseDate = null;
+                else OriginalReleaseDate = DateTime.MinValue;
+                isORYearExplicit = true;
             }
         }
         /// <summary>
@@ -244,6 +304,9 @@ namespace ATL
 
         private DateTime? date;
         private bool isYearExplicit;
+
+        private DateTime? originalReleaseDate;
+        private bool isORYearExplicit;
 
         /// <summary>
         /// Format of the tagging systems
@@ -387,7 +450,12 @@ namespace ATL
             Publisher = Utils.ProtectValue(processString(metadata.Publisher));
             AlbumArtist = Utils.ProtectValue(processString(metadata.AlbumArtist));
             Conductor = Utils.ProtectValue(processString(metadata.Conductor));
+            Lyricist = Utils.ProtectValue(processString(metadata.Lyricist));
+            InvolvedPeople = Utils.ProtectValue(processString(metadata.InvolvedPeople));
             ProductId = Utils.ProtectValue(processString(metadata.ProductId));
+            ISRC = Utils.ProtectValue(processString(metadata.ISRC));
+            CatalogNumber = Utils.ProtectValue(processString(metadata.CatalogNumber));
+            AudioSourceUrl = Utils.ProtectValue(processString(metadata.AudioSourceUrl));
             SortAlbum = Utils.ProtectValue(processString(metadata.SortAlbum));
             SortAlbumArtist = Utils.ProtectValue(processString(metadata.SortAlbumArtist));
             SortArtist = Utils.ProtectValue(processString(metadata.SortArtist));
@@ -396,6 +464,7 @@ namespace ATL
             SeriesTitle = Utils.ProtectValue(processString(metadata.SeriesTitle));
             SeriesPart = Utils.ProtectValue(processString(metadata.SeriesPart));
             LongDescription = Utils.ProtectValue(processString(metadata.LongDescription));
+            Language = Utils.ProtectValue(processString(metadata.Language));
             Album = Utils.ProtectValue(processString(metadata.Album));
             isYearExplicit = metadata.IsDateYearOnly;
             if (metadata.IsDateYearOnly)
@@ -406,6 +475,15 @@ namespace ATL
             {
                 Date = update(metadata.Date);
             }
+            isORYearExplicit = metadata.IsOriginalReleaseDateYearOnly;
+            if (metadata.IsOriginalReleaseDateYearOnly)
+            {
+                OriginalReleaseYear = update(metadata.OriginalReleaseDate.Year);
+            }
+            else
+            {
+                OriginalReleaseDate = update(metadata.OriginalReleaseDate);
+            }
             PublishingDate = update(metadata.PublishingDate);
             TrackNumber = update(metadata.TrackNumber);
             TrackTotal = update(metadata.TrackTotal);
@@ -414,6 +492,7 @@ namespace ATL
             Popularity = metadata.Popularity;
             BPM = metadata.BPM;
             EncodedBy = metadata.EncodedBy;
+            Encoder = metadata.Encoder;
 
             Chapters = metadata.Chapters;
             ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
@@ -464,7 +543,12 @@ namespace ATL
             result.IntegrateValue(Field.PUBLISHING_DATE, toTagValue(PublishingDate));
             result.IntegrateValue(Field.ALBUM_ARTIST, AlbumArtist);
             result.IntegrateValue(Field.CONDUCTOR, Conductor);
+            result.IntegrateValue(Field.LYRICIST, Lyricist);
+            result.IntegrateValue(Field.INVOLVED_PEOPLE, InvolvedPeople);
             result.IntegrateValue(Field.PRODUCT_ID, ProductId);
+            result.IntegrateValue(Field.ISRC, ISRC);
+            result.IntegrateValue(Field.CATALOG_NUMBER, CatalogNumber);
+            result.IntegrateValue(Field.AUDIO_SOURCE_URL, AudioSourceUrl);
             result.IntegrateValue(Field.SORT_ALBUM, SortAlbum);
             result.IntegrateValue(Field.SORT_ALBUM_ARTIST, SortAlbumArtist);
             result.IntegrateValue(Field.SORT_ARTIST, SortArtist);
@@ -473,8 +557,10 @@ namespace ATL
             result.IntegrateValue(Field.SERIES_TITLE, SeriesTitle);
             result.IntegrateValue(Field.SERIES_PART, SeriesPart);
             result.IntegrateValue(Field.LONG_DESCRIPTION, LongDescription);
+            result.IntegrateValue(Field.LANGUAGE, Language);
             result.IntegrateValue(Field.BPM, toTagValue(BPM));
             result.IntegrateValue(Field.ENCODED_BY, EncodedBy);
+            result.IntegrateValue(Field.ENCODER, Encoder);
             if (isYearExplicit)
             {
                 result.IntegrateValue(Field.RECORDING_YEAR, toTagValue(Year));
@@ -484,6 +570,16 @@ namespace ATL
             {
                 result.IntegrateValue(Field.RECORDING_DATE, toTagValue(Date));
                 result.IntegrateValue(Field.RECORDING_YEAR, "");
+            }
+            if (isORYearExplicit)
+            {
+                result.IntegrateValue(Field.ORIG_RELEASE_YEAR, toTagValue(OriginalReleaseYear));
+                result.IntegrateValue(Field.ORIG_RELEASE_DATE, toTagValue(OriginalReleaseYear));
+            }
+            else
+            {
+                result.IntegrateValue(Field.ORIG_RELEASE_DATE, toTagValue(OriginalReleaseDate));
+                result.IntegrateValue(Field.ORIG_RELEASE_YEAR, "");
             }
             result.IntegrateValue(Field.ALBUM, Album);
             result.IntegrateValue(Field.TRACK_NUMBER, toTagValue(TrackNumber));

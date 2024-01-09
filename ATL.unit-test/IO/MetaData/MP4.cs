@@ -86,6 +86,7 @@ namespace ATL.test.IO.MetaData
             testData.SeriesTitle = "SeriesTitle";
             testData.SeriesPart = "2";
             testData.LongDescription = "LongDescription";
+            testData.Lyricist = "John D. Applebottom";
 
             testData.AdditionalFields = new Dictionary<string, string>
             {
@@ -112,12 +113,14 @@ namespace ATL.test.IO.MetaData
 
             string pid = testData.ProductId;
             int? bpm = testData.BPM;
+            string lyricist = testData.Lyricist;
             // Test reading complete recording date
             try
             {
                 testData.Date = DateTime.Parse("1997-06-20T00:00:00"); // No timestamp in MP4 date format
                 testData.ProductId = null;
                 testData.BPM = 0;
+                testData.Lyricist = "";
 
                 location = TestUtils.GetResourceLocationRoot() + "MP4/mp4_date_in_©day.m4a";
                 theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -128,6 +131,7 @@ namespace ATL.test.IO.MetaData
                 testData.Date = DateTime.MinValue;
                 testData.ProductId = pid;
                 testData.BPM = bpm;
+                testData.Lyricist = lyricist;
             }
         }
 
@@ -1223,7 +1227,7 @@ namespace ATL.test.IO.MetaData
 
             Assert.AreEqual((float)(4.0 / 5), theFile.NativeTag.Popularity);
             Assert.AreEqual("conductor", theFile.NativeTag.Conductor);
-            Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
+            Assert.AreEqual(5, theFile.NativeTag.AdditionalFields.Count);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/SharedUserRating"));
             Assert.AreEqual("80", theFile.NativeTag.AdditionalFields["WM/SharedUserRating"]); // ASF (MP4) convention
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
@@ -1236,7 +1240,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
-            Assert.AreEqual(6, theFile.NativeTag.AdditionalFields.Count);
+            Assert.AreEqual(5, theFile.NativeTag.AdditionalFields.Count);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/SharedUserRating"));
             Assert.AreEqual("60", theFile.NativeTag.AdditionalFields["WM/SharedUserRating"]);  // ASF (MP4) convention
             Assert.AreEqual((float)3.0 / 5, theFile.NativeTag.Popularity);

@@ -51,11 +51,11 @@ namespace ATL
             /// </summary>
             ALBUM = 6,
             /// <summary>
-            /// Recording year
+            /// Recording year (when target format only supports year)
             /// </summary>
             RECORDING_YEAR = 7,
             /// <summary>
-            /// Recording date
+            /// Recording date (when target format supports date)
             /// </summary>
             RECORDING_DATE = 8,
             /// <summary>
@@ -177,12 +177,49 @@ namespace ATL
             /// <summary>
             /// Person or organization that encoded the file
             /// </summary>
-            ENCODED_BY = 38
+            ENCODED_BY = 38,
+            /// <summary>
+            /// Original release year (when target format only supports year)
+            /// </summary>
+            ORIG_RELEASE_YEAR = 39,
+            /// <summary>
+            /// Original release date (when target format supports date)
+            /// </summary>
+            ORIG_RELEASE_DATE = 40,
+            /// <summary>
+            /// Software that encoded the file, with relevant settings if any
+            /// </summary>
+            ENCODER = 41,
+            /// <summary>
+            /// Language
+            /// </summary>
+            LANGUAGE = 42,
+            /// <summary>
+            /// International Standard Recording Code (ISRC)
+            /// </summary>
+            ISRC = 43,
+            /// <summary>
+            /// Catalog number
+            /// </summary>
+            CATALOG_NUMBER = 44,
+            /// <summary>
+            /// Audio source URL
+            /// </summary>
+            AUDIO_SOURCE_URL = 45,
+            /// <summary>
+            /// Lyricist
+            /// </summary>
+            LYRICIST = 46,
+            /// <summary>
+            /// Mapping between functions (e.g. "producer") and names. Every odd field is a
+            /// function and every even is an name or a comma delimited list of names
+            /// </summary>
+            INVOLVED_PEOPLE = 47
         }
 
         private static readonly ICollection<Field> numericFields = new HashSet<Field>
         {
-            Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE, Field.BPM
+            Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE, Field.BPM, Field.ORIG_RELEASE_DATE, Field.ORIG_RELEASE_YEAR
         };
 
         /// <summary>

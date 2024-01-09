@@ -87,7 +87,12 @@ namespace ATL.AudioData.IO
             { "©mvn", Field.SERIES_TITLE },
             { "ldes", Field.LONG_DESCRIPTION },
             { "tmpo", Field.BPM },
-            { "©enc", Field.ENCODED_BY }
+            { "©enc", Field.ENCODED_BY },
+            { "©too", Field.ENCODER },
+            { "LANGUAGE", Field.LANGUAGE }, // aka ----:com.apple.iTunes:LANGUAGE
+            { "©isr", Field.ISRC },
+            { "CATALOGNUMBER", Field.CATALOG_NUMBER }, // aka ----:com.apple.iTunes:CATALOGNUMBER
+            { "LYRICIST", Field.LYRICIST } // aka ----:com.apple.iTunes:LYRICIST
         };
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)

@@ -62,6 +62,7 @@ namespace ATL.test.IO.MetaData
             testData.Conductor = null;
             testData.Date = DateTime.Parse("1997-06-20");
             testData.PublishingDate = DateTime.Parse("1998-07-21");
+            testData.CatalogNumber = "44887733";
         }
 
         [TestMethod]
@@ -110,6 +111,7 @@ namespace ATL.test.IO.MetaData
             int bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
+            string catalogNumber = testData.CatalogNumber;
             try
             {
                 // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
@@ -118,6 +120,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = 0;
                 testData.PublishingDate = DateTime.MinValue;
                 testData.EmbeddedPictures = new List<PictureInfo>();
+                testData.CatalogNumber = "";
                 readExistingTagsOnFile(theFile, 0);
             }
             finally
@@ -127,6 +130,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = bpm;
                 testData.PublishingDate = publishingDate;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.CatalogNumber = catalogNumber;
             }
         }
 
@@ -141,6 +145,7 @@ namespace ATL.test.IO.MetaData
             int bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
+            string catalogNumber = testData.CatalogNumber;
             try
             {
                 // Theora-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
@@ -149,6 +154,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = 0;
                 testData.PublishingDate = DateTime.MinValue;
                 testData.EmbeddedPictures = new List<PictureInfo>();
+                testData.CatalogNumber = "";
                 readExistingTagsOnFile(theFile, 0);
             }
             finally
@@ -158,6 +164,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = bpm;
                 testData.PublishingDate = publishingDate;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.CatalogNumber = catalogNumber;
             }
         }
 
@@ -171,6 +178,7 @@ namespace ATL.test.IO.MetaData
             int bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
+            string catalogNumber = testData.CatalogNumber;
             try
             {
                 // OGG-FLAC sample has its COMMENT and DESCRIPTION metadata scrambled, and no pictures
@@ -179,6 +187,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = 0;
                 testData.PublishingDate = DateTime.MinValue;
                 testData.EmbeddedPictures = new List<PictureInfo>();
+                testData.CatalogNumber = "";
                 tagIO_RW_VorbisOGG_Existing(location, 0);
             }
             finally
@@ -188,6 +197,7 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = bpm;
                 testData.PublishingDate = publishingDate;
                 testData.EmbeddedPictures = pictureInfos;
+                testData.CatalogNumber = catalogNumber;
             }
         }
 
@@ -201,16 +211,19 @@ namespace ATL.test.IO.MetaData
 
             int bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
+            string catalogNumber = testData.CatalogNumber;
             try
             {
                 testData.BPM = 0;
                 testData.PublishingDate = DateTime.MinValue;
+                testData.CatalogNumber = "";
                 readExistingTagsOnFile(theFile, 2);
             }
             finally
             {
                 testData.BPM = bpm;
                 testData.PublishingDate = publishingDate;
+                testData.CatalogNumber = catalogNumber;
             }
         }
 
@@ -269,6 +282,7 @@ namespace ATL.test.IO.MetaData
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
+            theTag.CatalogNumber = "4984988";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
@@ -292,6 +306,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
+            Assert.AreEqual("4984988", theFile.NativeTag.CatalogNumber);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -338,7 +353,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_OnePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2004; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 1978; // Padding size in OGG test files
 
             try
             {
@@ -356,7 +371,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_VorbisOGG_Existing_MultiplePager()
         {
             ATL.Settings.AddNewPadding = true;
-            ATL.Settings.PaddingSize = 2004; // Padding size in OGG test files
+            ATL.Settings.PaddingSize = 1978; // Padding size in OGG test files
 
             try
             {

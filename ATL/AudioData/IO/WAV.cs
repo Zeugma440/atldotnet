@@ -55,18 +55,13 @@ namespace ATL.AudioData.IO
 
 
         private ushort formatId;
-        private ChannelsArrangement channelsArrangement;
         private uint sampleRate;
         private uint bytesPerSecond;
         private ushort bitsPerSample;
         private long sampleNumber;
         private long headerSize;
 
-        private double bitrate;
-        private double duration;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
         private bool _isLittleEndian;
@@ -76,7 +71,7 @@ namespace ATL.AudioData.IO
 
 
         // Mapping between WAV frame codes and ATL frame codes
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
             { "bext.description", Field.GENERAL_DESCRIPTION },
             { "info.INAM", Field.TITLE },
@@ -92,6 +87,8 @@ namespace ATL.AudioData.IO
             { "info.IPRT", Field.TRACK_NUMBER },
             { "info.ITRK", Field.TRACK_NUMBER },
             { "info.ITCH", Field.ENCODED_BY },
+            { "info.ISFT", Field.ENCODER },
+            { "info.ILNG", Field.LANGUAGE}
         };
 
 
@@ -110,11 +107,15 @@ namespace ATL.AudioData.IO
         public int SampleRate => (int)sampleRate;
         public bool IsVBR => false;
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => bitsPerSample;
-        public double Duration => duration;
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public double Duration { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
             return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.NATIVE; // Native for bext, info and iXML chunks
@@ -139,7 +140,7 @@ namespace ATL.AudioData.IO
             Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
@@ -164,8 +165,8 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
 
             formatId = 0;
             sampleRate = 0;
@@ -187,7 +188,7 @@ namespace ATL.AudioData.IO
 
         public WAV(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             audioFormat = format;
             resetData();
         }
@@ -319,8 +320,8 @@ namespace ATL.AudioData.IO
                     if (isLittleEndian) formatId = StreamUtils.DecodeUInt16(data); else formatId = StreamUtils.DecodeBEUInt16(data);
 
                     source.Read(data, 0, 2);
-                    if (isLittleEndian) channelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(data));
-                    else channelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
+                    if (isLittleEndian) ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(data));
+                    else ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
 
                     source.Read(data, 0, 4);
                     if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
@@ -514,7 +515,7 @@ namespace ATL.AudioData.IO
 
         private double getBitrate()
         {
-            return Math.Round(bitsPerSample / 1000.0 * sampleRate * channelsArrangement.NbChannels);
+            return Math.Round(bitsPerSample / 1000.0 * sampleRate * ChannelsArrangement.NbChannels);
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
@@ -531,8 +532,8 @@ namespace ATL.AudioData.IO
             if (!readWAV(source, readTagParams)) return false;
 
             // Process data if loaded and header valid
-            bitrate = getBitrate();
-            duration = getDuration();
+            BitRate = getBitrate();
+            Duration = getDuration();
 
             return true;
         }

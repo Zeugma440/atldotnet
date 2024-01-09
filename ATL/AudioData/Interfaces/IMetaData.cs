@@ -87,9 +87,23 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
-        /// True if the provided Date only has Year as a valid field
+        /// True if the provided Recording date only has Year as a valid field
         /// </summary>
         bool IsDateYearOnly
+        {
+            get;
+        }
+        /// <summary>
+        /// Original release date (DateTime.MinValue if field does not exist)
+        /// </summary>
+        DateTime OriginalReleaseDate
+        {
+            get;
+        }
+        /// <summary>
+        /// True if the provided Original Release date only has Year as a valid field
+        /// </summary>
+        bool IsOriginalReleaseDateYearOnly
         {
             get;
         }
@@ -111,6 +125,13 @@ namespace ATL.AudioData
         /// Copyright
         /// </summary>
         string Copyright
+        {
+            get;
+        }
+        /// <summary>
+        /// Language
+        /// </summary>
+        string Language
         {
             get;
         }
@@ -164,9 +185,45 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
+        /// Lyricist
+        /// </summary>
+        string Lyricist
+        {
+            get;
+        }
+        /// <summary>
+        /// Mapping between functions (e.g. "producer") and names. Every odd field is a
+        /// function and every even is an name or a comma delimited list of names
+        /// </summary>
+        string InvolvedPeople
+        {
+            get;
+        }
+        /// <summary>
         /// Product ID
         /// </summary>
         string ProductId
+        {
+            get;
+        }
+        /// <summary>
+        /// International Standard Recording Code (ISRC)
+        /// </summary>
+        string ISRC
+        {
+            get;
+        }
+        /// <summary>
+        /// Catalog Number
+        /// </summary>
+        string CatalogNumber
+        {
+            get;
+        }
+        /// <summary>
+        /// URL of the audio source
+        /// </summary>
+        string AudioSourceUrl
         {
             get;
         }
@@ -243,6 +300,13 @@ namespace ATL.AudioData
         /// Person or organization that encoded the file
         /// </summary>
         string EncodedBy
+        {
+            get;
+        }
+        /// <summary>
+        /// Software that encoded the file, with relevant settings if any
+        /// </summary>
+        string Encoder
         {
             get;
         }

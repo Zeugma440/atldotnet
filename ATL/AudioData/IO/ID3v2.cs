@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Commons;
 using ATL.Logging;
 using static ATL.TagData;
+using static ATL.AudioData.IO.MPEGaudio;
 
 namespace ATL.AudioData.IO
 {
@@ -153,7 +154,14 @@ namespace ATL.AudioData.IO
                 { "TCR", Field.COPYRIGHT },
                 { "TPB", Field.PUBLISHER },
                 { "TBP", Field.BPM },
-                { "TEN", Field.ENCODED_BY }
+                { "TEN", Field.ENCODED_BY },
+                { "TOR", Field.ORIG_RELEASE_YEAR },
+                { "TSS", Field.ENCODER },
+                { "TLA", Field.LANGUAGE },
+                { "TRC", Field.ISRC },
+                { "WAS", Field.AUDIO_SOURCE_URL },
+                { "TXT", Field.LYRICIST },
+                { "IPL", Field.INVOLVED_PEOPLE }
             };
 
         // Mapping between standard fields and ID3v2.3 identifiers
@@ -188,7 +196,15 @@ namespace ATL.AudioData.IO
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.3 standard
                 { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.3 standard
                 { "TBPM", Field.BPM },
-                { "TENC", Field.ENCODED_BY }
+                { "TENC", Field.ENCODED_BY },
+                { "TORY", Field.ORIG_RELEASE_YEAR},
+                { "TSSE", Field.ENCODER },
+                { "TLAN", Field.LANGUAGE },
+                { "TSRC", Field.ISRC },
+                { "CATALOGNUMBER", Field.CATALOG_NUMBER },
+                { "WOAS", Field.AUDIO_SOURCE_URL },
+                { "TEXT", Field.LYRICIST },
+                { "IPLS", Field.INVOLVED_PEOPLE }
             };
 
         // Mapping between standard fields and ID3v2.4 identifiers
@@ -221,7 +237,15 @@ namespace ATL.AudioData.IO
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.4 standard
                 { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.4 standard
                 { "TBPM", Field.BPM },
-                { "TENC", Field.ENCODED_BY }
+                { "TENC", Field.ENCODED_BY },
+                { "TDOR", Field.ORIG_RELEASE_DATE },
+                { "TSSE", Field.ENCODER },
+                { "TLAN", Field.LANGUAGE},
+                { "TSRC", Field.ISRC},
+                { "CATALOGNUMBER", Field.CATALOG_NUMBER },
+                { "WOAS", Field.AUDIO_SOURCE_URL},
+                { "TEXT", Field.LYRICIST },
+                { "TIPL", Field.INVOLVED_PEOPLE }
             };
 
         // Mapping between ID3v2.2/3 fields and ID3v2.4 fields not included in frameMapping_v2x, and that have changed between versions
@@ -908,7 +932,20 @@ namespace ATL.AudioData.IO
 
                         // Parse GENRE frame
                         if (Frame.ID.StartsWith("TCO")) strData = extractGenreFromID3v2Code(strData);
-                        else if (Frame.ID.StartsWith('T')) // Handle multiple values on text information frames
+                        // Parse Involved People frame for ID3v2.2-2.3 (IPL/IPLS) where value separator is a \0
+                        else if (Frame.ID.StartsWith("IPL"))
+                        {
+                            string[] parts = strData.Trim().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+                            // Individual parts of that field may have a BOM
+                            if (1 == encodingCode)
+                            {
+                                string bomAsStr = frameEncoding.GetString(getBomFromEncoding(frameEncoding));
+                                for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Replace(bomAsStr, "");
+                            }
+                            strData = string.Join(Settings.InternalValueSeparator + "", parts);
+                        }
+                        // Handle multiple values on text information frames
+                        else if (Frame.ID.StartsWith('T'))
                         {
                             string[] parts = null;
                             if (TAG_VERSION_2_4 == m_tagVersion) // All text information frames may contain multiple values on ID3v2.4
@@ -1257,22 +1294,22 @@ namespace ATL.AudioData.IO
             switch (Settings.ID3v2_tagSubVersion)
             {
                 case 4:
-                {
-                    w.Write((byte)1); // Number of flag bytes; always 1 according to spec
-                    w.Write(tagHeader.ExtendedFlags);
-                    // A new CRC should be calculated according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
-                    if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
-                    if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
-
-                    /* TODO - to be reimplemented and tested with a proper unit test
-                    if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && tagHeader.HasTextEncodingRestriction && (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8"))))
                     {
-                        // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
-                        tagEncoding = Settings.DefaultTextEncoding;
+                        w.Write((byte)1); // Number of flag bytes; always 1 according to spec
+                        w.Write(tagHeader.ExtendedFlags);
+                        // A new CRC should be calculated according to actual tag contents instead of rewriting CRC as is -- NB : CRC perimeter definition given by specs is unclear
+                        if (tagHeader.CRC > 0) w.Write(StreamUtils.EncodeSynchSafeInt(tagHeader.CRC, 5));
+                        if (tagHeader.TagRestrictions > 0) w.Write(tagHeader.TagRestrictions);
+
+                        /* TODO - to be reimplemented and tested with a proper unit test
+                        if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && tagHeader.HasTextEncodingRestriction && (!(tagEncoding.BodyName.Equals("iso-8859-1") || tagEncoding.BodyName.Equals("utf-8"))))
+                        {
+                            // Force default encoding if encoding restriction is enabled and current encoding is not among authorized types
+                            tagEncoding = Settings.DefaultTextEncoding;
+                        }
+                        */
+                        break;
                     }
-                    */
-                    break;
-                }
                 case 3:
                     w.Write(tagHeader.ExtendedFlags);
                     w.Write((byte)0); // Always 0 according to spec
@@ -1287,16 +1324,18 @@ namespace ATL.AudioData.IO
 
             // === ID3v2 FRAMES ===
             IDictionary<Field, string> map = tag.ToMap(true);
+
+            // 1st pass to gather date information
+
+            // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
+            //   ID3v2.2 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
+            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
+            //   ID3v2.4 : TDRC (timestamp)
             string recordingYear = "";
             string recordingDayMonth = "";
             string recordingTime = "";
             string recordingDate = "";
 
-            // 1st pass to gather date information
-            // "Recording date" fields are a bit tricky, since there is no 1-to-1 mapping between ID3v2.2/3 and ID3v2.4
-            //   ID3v2.2 : TYE (year), TDA (day & month - DDMM), TIM (hour & minute - HHMM)
-            //   ID3v2.3 : TYER (year), TDAT (day & month - DDMM), TIME (hour & minute - HHMM)
-            //   ID3v2.4 : TDRC (timestamp)
             foreach (Field frameType in map.Keys)
             {
                 if (map[frameType].Length <= 0) continue; // No frame with empty value
@@ -1338,6 +1377,42 @@ namespace ATL.AudioData.IO
                 }
                 map.Remove(Field.RECORDING_DATE);
             }
+
+            // "Original release date" fields are tricky too for the same reason
+            //   ID3v2.2 : TOR (year)
+            //   ID3v2.3 : TORY (year)
+            //   ID3v2.4 : TDOR (timestamp)
+            string origReleaseYear = "";
+            string origReleaseDate = "";
+
+            foreach (Field frameType in map.Keys)
+            {
+                if (map[frameType].Length <= 0) continue; // No frame with empty value
+
+                switch (frameType)
+                {
+                    case Field.ORIG_RELEASE_YEAR:
+                        origReleaseYear = map[frameType];
+                        break;
+                    case Field.ORIG_RELEASE_DATE:
+                        origReleaseDate = map[frameType];
+                        break;
+                }
+            }
+            if (4 == Settings.ID3v2_tagSubVersion && origReleaseDate.Length > 0)
+            {
+                // Make sure we don't erase an existing, same date with less detailed (year only) information
+                if (0 == origReleaseDate.Length || !origReleaseDate.StartsWith(origReleaseYear))
+                    map[Field.ORIG_RELEASE_DATE] = TrackUtils.FormatISOTimestamp(origReleaseYear, "0101", "");
+            }
+            else if (3 == Settings.ID3v2_tagSubVersion && origReleaseDate.Length > 3 && 0 == origReleaseYear.Length)
+            {
+                // Original release date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
+                map[Field.ORIG_RELEASE_YEAR] = origReleaseDate[..4];
+                map.Remove(Field.ORIG_RELEASE_DATE);
+            }
+
+
 
             IDictionary<string, Field> mapping = frameMapping_v24;
             if (3 == Settings.ID3v2_tagSubVersion) mapping = frameMapping_v23;
@@ -1823,6 +1898,17 @@ namespace ATL.AudioData.IO
                     // Separating values with \0 is actually specific to ID3v2.4 but seems to have become the de facto standard
                     // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
                     value = value.Replace(Settings.DisplayValueSeparator, '\0');
+                }
+                else if (frameCode.StartsWith("IPL")) // // Involved People frame for ID3v2.2-2.3 (IPL/IPLS)
+                {
+                    // Value separator is a \0 and every value has a BOM
+                    string[] parts = value.Split(Settings.DisplayValueSeparator, StringSplitOptions.RemoveEmptyEntries);
+                    string bomAsStr = tagEncoding.GetString(getBomFromEncoding(tagEncoding));
+                    if (bomAsStr.Length > 0)
+                    {
+                        for (int i = 0; i < parts.Length; i++) parts[i] = bomAsStr + parts[i];
+                    }
+                    value = string.Join("\0", parts);
                 }
                 else if (frameCode.StartsWith('T')) // Text information frame
                 {

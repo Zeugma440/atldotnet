@@ -31,6 +31,8 @@ namespace ATL.test.IO.MetaData
             testData.SeriesPart = "2";
             testData.LongDescription = "LongDescription";
             testData.BPM = 0;
+            testData.InvolvedPeople = "me" + ATL.Settings.InternalValueSeparator + "him" + ATL.Settings.InternalValueSeparator + "you" + ATL.Settings.InternalValueSeparator + "her";
+            testData.OriginalReleaseDate = new DateTime(2003, 03, 23);
 
             tagType = MetaDataIOFactory.TagType.ID3V2;
             var pics = testData.EmbeddedPictures;
@@ -182,6 +184,7 @@ namespace ATL.test.IO.MetaData
             {
                 testData.Date = DateTime.Parse("1997-06-20T04:04:00"); // No seconds in ID3v2.3
                 testData.PublishingDate = DateTime.MinValue; // No publishing date in ID3v2.3
+                testData.OriginalReleaseDate = new DateTime(2003, 01, 01); // Only year in ID3v2.3
                 testData.BPM = 440;
                 readExistingTagsOnFile(theFile);
             }
@@ -189,6 +192,7 @@ namespace ATL.test.IO.MetaData
             {
                 testData.Date = DateTime.Parse("1997-06-20T04:04:04");
                 testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
+                testData.OriginalReleaseDate = new DateTime(2003, 03, 23);
                 testData.BPM = 0;
             }
         }
@@ -1188,6 +1192,7 @@ namespace ATL.test.IO.MetaData
 
                 testData.Date = DateTime.Parse("1997-06-20T04:04:00"); // No seconds in ID3v2.3
                 testData.PublishingDate = DateTime.MinValue; // No publising date in ID3v2.3
+                testData.OriginalReleaseDate = new DateTime(2003, 01, 01); // Only year in ID3v2.3
                 testData.AdditionalFields.Add(urlLinkAdd);
                 readExistingTagsOnFile(theFile);
 
@@ -1199,6 +1204,7 @@ namespace ATL.test.IO.MetaData
                 ATL.Settings.ID3v2_tagSubVersion = 4;
                 testData.Date = DateTime.Parse("1997-06-20T04:04:04");
                 testData.PublishingDate = DateTime.Parse("1997-06-22T05:05:05");
+                testData.OriginalReleaseDate = new DateTime(2003, 03, 23);
             }
         }
 

@@ -391,10 +391,10 @@ namespace ATL.test.IO.MetaData
         }
 
         public void test_RW_Empty(
-            string fileName, 
+            string fileName,
             bool canRemoveAdditionalFields = true,
-            bool deleteTempFile = true, 
-            bool sameSizeAfterEdit = false, 
+            bool deleteTempFile = true,
+            bool sameSizeAfterEdit = false,
             bool sameBitsAfterEdit = false)
         {
             new ConsoleLogger();
@@ -447,6 +447,14 @@ namespace ATL.test.IO.MetaData
             if (testData.LongDescription != "") theTag.LongDescription = "LongDescription";
             if (testData.BPM != 0) theTag.BPM = 550;
             if (testData.EncodedBy != "") theTag.EncodedBy = "reaKtor";
+            if (testData.Encoder != "") theTag.Encoder = "supaTool";
+            if (testData.OriginalReleaseDate > DateTime.MinValue) theTag.OriginalReleaseDate = DateTime.Parse("2009/02/02");
+            if (testData.Language != "") theTag.Language = "Esperanto";
+            if (testData.ISRC != "") theTag.ISRC = "444-SJB-9879-YY";
+            if (testData.CatalogNumber != "") theTag.CatalogNumber = "614651";
+            if (testData.AudioSourceUrl != "") theTag.AudioSourceUrl = "https://somewhere.out.the.re";
+            if (testData.Lyricist != "") theTag.Lyricist = "Benjamin Zippy";
+            if (testData.InvolvedPeople != "") theTag.InvolvedPeople = "Producer" + ATL.Settings.DisplayValueSeparator + "Paul Black" + ATL.Settings.DisplayValueSeparator + "Recording engineer" + ATL.Settings.DisplayValueSeparator + "Zack Parrish";
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -520,6 +528,19 @@ namespace ATL.test.IO.MetaData
             if (testData.LongDescription != "") Assert.AreEqual("LongDescription", meta.LongDescription);
             if (testData.BPM != 0) Assert.AreEqual(550, meta.BPM);
             if (testData.EncodedBy != "") Assert.AreEqual("reaKtor", meta.EncodedBy);
+            if (testData.Encoder != "") Assert.AreEqual("supaTool", meta.Encoder);
+            if (!testData.OriginalReleaseDate.Equals(DateTime.MinValue))
+            {
+                DateTime date;
+                Assert.IsTrue(DateTime.TryParse("2009/02/02", out date));
+                Assert.AreEqual(date, meta.OriginalReleaseDate);
+            }
+            if (testData.Language != "") Assert.AreEqual("Esperanto", meta.Language);
+            if (testData.ISRC != "") Assert.AreEqual("444-SJB-9879-YY", meta.ISRC);
+            if (testData.CatalogNumber != "") Assert.AreEqual("614651", meta.CatalogNumber);
+            if (testData.AudioSourceUrl != "") Assert.AreEqual("https://somewhere.out.the.re", meta.AudioSourceUrl);
+            if (testData.Lyricist != "") Assert.AreEqual("Benjamin Zippy", meta.Lyricist);
+            if (testData.InvolvedPeople != "") Assert.AreEqual("Producer" + ATL.Settings.InternalValueSeparator + "Paul Black" + ATL.Settings.InternalValueSeparator + "Recording engineer" + ATL.Settings.InternalValueSeparator + "Zack Parrish", meta.InvolvedPeople);
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -816,6 +837,17 @@ namespace ATL.test.IO.MetaData
             if (testData.ProductId != "") Assert.AreEqual(testData.ProductId, meta.ProductId);
             if (testData.BPM != 0) Assert.AreEqual(testData.BPM, meta.BPM);
             if (testData.EncodedBy != "") Assert.AreEqual(testData.EncodedBy, meta.EncodedBy);
+            if (testData.Encoder != "") Assert.AreEqual(testData.Encoder, meta.Encoder);
+            if (testData.OriginalReleaseDate > DateTime.MinValue)
+            {
+                Assert.AreEqual(testData.OriginalReleaseDate, meta.OriginalReleaseDate);
+            }
+            if (testData.Language != "") Assert.AreEqual(testData.Language, meta.Language);
+            if (testData.ISRC != "") Assert.AreEqual(testData.ISRC, meta.ISRC);
+            if (testData.CatalogNumber != "") Assert.AreEqual(testData.CatalogNumber, meta.CatalogNumber);
+            if (testData.AudioSourceUrl != "") Assert.AreEqual(testData.AudioSourceUrl, meta.AudioSourceUrl);
+            if (testData.Lyricist != "") Assert.AreEqual(testData.Lyricist, meta.Lyricist);
+            if (testData.InvolvedPeople != "") Assert.AreEqual(testData.InvolvedPeople, meta.InvolvedPeople);
 
             // Additional fields
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)

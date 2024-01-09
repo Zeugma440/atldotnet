@@ -109,7 +109,14 @@ namespace ATL.AudioData.IO
             { "WM/ContentGroupDescription", Field.GROUP },
             { "WM/BeatsPerMinute", Field.BPM },
             { "WM/EncodedBy", Field.ENCODED_BY },
-            { "WM/OriginalReleaseTime", Field.PUBLISHING_DATE } // De facto standard as specs don't define any dedicated field to store a full date
+            { "WM/OriginalReleaseTime", Field.PUBLISHING_DATE }, // De facto standard as specs don't define any dedicated field to store a full date
+            { "WM/OriginalReleaseYear", Field.ORIG_RELEASE_YEAR },
+            { "WM/ToolName", Field.ENCODER },
+            { "WM/Language", Field.LANGUAGE },
+            { "WM/ISRC", Field.ISRC },
+            { "WM/CatalogNo", Field.CATALOG_NUMBER },
+            { "WM/AudioSourceURL", Field.AUDIO_SOURCE_URL },
+            { "WM/Writer", Field.LYRICIST }
         };
 
         public static readonly IDictionary<string, Field> frameMappingLower = new Dictionary<string, Field>();

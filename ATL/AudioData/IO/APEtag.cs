@@ -69,7 +69,11 @@ namespace ATL.AudioData.IO
             { "LYRICS", Field.LYRICS_UNSYNCH },
             { "PUBLISHER", Field.PUBLISHER },
             { "BPM", Field.BPM },
-            { "ENCODEDBY", Field.ENCODED_BY }
+            { "ENCODEDBY", Field.ENCODED_BY },
+            { "LANGUAGE", Field.LANGUAGE },
+            { "ISRC", Field.ISRC },
+            { "CATALOGNUMBER", Field.CATALOG_NUMBER },
+            { "LYRICIST", Field.LYRICIST }
         };
 
 

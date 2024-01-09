@@ -176,11 +176,11 @@ namespace ATL
             }
             set
             {
-                tagData.IntegrateValue(Field.RECORDING_DATE, (value > DateTime.MinValue) ? TrackUtils.FormatISOTimestamp(value) : null);
-                tagData.IntegrateValue(Field.RECORDING_YEAR, (value > DateTime.MinValue) ? value.Year.ToString() : null);
-                tagData.IntegrateValue(Field.RECORDING_DATE_OR_YEAR, (value > DateTime.MinValue) ? value.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) : null);
-                tagData.IntegrateValue(Field.RECORDING_DAYMONTH, (value > DateTime.MinValue) ? value.ToString("ddMM", CultureInfo.InvariantCulture) : null);
-                tagData.IntegrateValue(Field.RECORDING_TIME, (value > DateTime.MinValue) ? value.ToString("HHmm", CultureInfo.InvariantCulture) : null);
+                tagData.IntegrateValue(Field.RECORDING_DATE, value > DateTime.MinValue ? TrackUtils.FormatISOTimestamp(value) : null);
+                tagData.IntegrateValue(Field.RECORDING_YEAR, value > DateTime.MinValue ? value.Year.ToString() : null);
+                tagData.IntegrateValue(Field.RECORDING_DATE_OR_YEAR, value > DateTime.MinValue ? value.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) : null);
+                tagData.IntegrateValue(Field.RECORDING_DAYMONTH, value > DateTime.MinValue ? value.ToString("ddMM", CultureInfo.InvariantCulture) : null);
+                tagData.IntegrateValue(Field.RECORDING_TIME, value > DateTime.MinValue ? value.ToString("HHmm", CultureInfo.InvariantCulture) : null);
             }
         }
         /// <inheritdoc/>
@@ -193,7 +193,42 @@ namespace ATL
                 return Utils.ProtectValue(tagData[Field.RECORDING_YEAR]).Length > 0;
             }
         }
-
+        /// <inheritdoc/>
+        public DateTime OriginalReleaseDate
+        {
+            get
+            {
+                DateTime result;
+                if (!DateTime.TryParse(Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]), out result)) // First try with a proper date field
+                {
+                    bool success = false;
+                    string year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_YEAR]);
+                    if (year.Length != 4) year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]); // ...then with OriginalReleaseDate
+                    if (4 == year.Length) // We have a year !
+                    {
+                        StringBuilder dateTimeBuilder = new StringBuilder();
+                        dateTimeBuilder.Append(year).Append("-01-01");
+                        success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                    }
+                    if (!success) result = DateTime.MinValue;
+                }
+                return result;
+            }
+            set
+            {
+                tagData.IntegrateValue(Field.ORIG_RELEASE_DATE, value > DateTime.MinValue ? TrackUtils.FormatISOTimestamp(value) : null);
+                tagData.IntegrateValue(Field.ORIG_RELEASE_YEAR, value > DateTime.MinValue ? value.Year.ToString() : null);
+            }
+        }
+        /// <inheritdoc/>
+        public bool IsOriginalReleaseDateYearOnly
+        {
+            get
+            {
+                if (Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]).Length > 4) return false;
+                return Utils.ProtectValue(tagData[Field.ORIG_RELEASE_YEAR]).Length > 0;
+            }
+        }
         /// <inheritdoc/>
         public DateTime PublishingDate
         {
@@ -233,6 +268,12 @@ namespace ATL
             set => tagData.IntegrateValue(Field.COPYRIGHT, value);
         }
         /// <inheritdoc/>
+        public string Language
+        {
+            get => Utils.ProtectValue(tagData[Field.LANGUAGE]);
+            set => tagData.IntegrateValue(Field.LANGUAGE, value);
+        }
+        /// <inheritdoc/>
         public string OriginalArtist
         {
             get => Utils.ProtectValue(tagData[Field.ORIGINAL_ARTIST]);
@@ -269,11 +310,43 @@ namespace ATL
             set => tagData.IntegrateValue(Field.CONDUCTOR, value);
         }
         /// <inheritdoc/>
+        public string Lyricist
+        {
+            get => Utils.ProtectValue(tagData[Field.LYRICIST]);
+            set => tagData.IntegrateValue(Field.LYRICIST, value);
+        }
+        /// <inheritdoc/>
+        public string InvolvedPeople
+        {
+            get => Utils.ProtectValue(tagData[Field.INVOLVED_PEOPLE]);
+            set => tagData.IntegrateValue(Field.INVOLVED_PEOPLE, value);
+        }
+
+        /// <inheritdoc/>
         public string ProductId
         {
             get => Utils.ProtectValue(tagData[Field.PRODUCT_ID]);
             set => tagData.IntegrateValue(Field.PRODUCT_ID, value);
         }
+        /// <inheritdoc/>
+        public string ISRC
+        {
+            get => Utils.ProtectValue(tagData[Field.ISRC]);
+            set => tagData.IntegrateValue(Field.ISRC, value);
+        }
+        /// <inheritdoc/>
+        public string CatalogNumber
+        {
+            get => Utils.ProtectValue(tagData[Field.CATALOG_NUMBER]);
+            set => tagData.IntegrateValue(Field.CATALOG_NUMBER, value);
+        }
+        /// <inheritdoc/>
+        public string AudioSourceUrl
+        {
+            get => Utils.ProtectValue(tagData[Field.AUDIO_SOURCE_URL]);
+            set => tagData.IntegrateValue(Field.AUDIO_SOURCE_URL, value);
+        }
+
         /// <inheritdoc/>
         public string SortAlbum
         {
@@ -336,12 +409,17 @@ namespace ATL
             }
             set => tagData.IntegrateValue(Field.BPM, (null == value) ? null : value.ToString());
         }
-
         /// <inheritdoc/>
         public string EncodedBy
         {
             get => Utils.ProtectValue(tagData[Field.ENCODED_BY]);
             set => tagData.IntegrateValue(Field.ENCODED_BY, value);
+        }
+        /// <inheritdoc/>
+        public string Encoder
+        {
+            get => Utils.ProtectValue(tagData[Field.ENCODER]);
+            set => tagData.IntegrateValue(Field.ENCODER, value);
         }
 
         /// <summary>

@@ -65,6 +65,7 @@ namespace ATL.test.IO.MetaData
             testData.SortTitle = "SortTitle";
             testData.Group = "Group";
             testData.PublishingDate = DateTime.Parse("1998-07-21");
+            testData.AudioSourceUrl = "https://somewhe.re";
         }
 
         [TestMethod]
@@ -111,6 +112,7 @@ namespace ATL.test.IO.MetaData
             theTag.Popularity = 2.0f / 5;
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
+            theTag.AudioSourceUrl = "https://anywhe.re";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
@@ -133,6 +135,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
+            Assert.AreEqual("https://anywhe.re", theFile.NativeTag.AudioSourceUrl);
 
 
             // Remove the tag and check that it has been indeed removed
@@ -189,6 +192,7 @@ namespace ATL.test.IO.MetaData
             theTag.Composer = "Me";
             theTag.Copyright = "父";
             theTag.Conductor = "John Johnson Jr.";
+            theTag.AudioSourceUrl = "https://anywhe.re";
 
             // Add the new tag and check that it has been indeed added with all the correct information
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
@@ -210,6 +214,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Me", theFile.NativeTag.Composer);
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
+            Assert.AreEqual("https://anywhe.re", theFile.NativeTag.AudioSourceUrl);
 
 
             // Remove the tag and check that it has been indeed removed

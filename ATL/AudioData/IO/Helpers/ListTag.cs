@@ -135,6 +135,8 @@ namespace ATL.AudioData.IO
             if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
             if (meta.EncodedBy.Length > 0) return true;
+            if (meta.Encoder.Length > 0) return true;
+            if (meta.Language.Length > 0) return true;
 
             return WavHelper.IsDataEligible(meta, "info.") || WavHelper.IsDataEligible(meta, "adtl.");
         }
@@ -222,6 +224,14 @@ namespace ATL.AudioData.IO
             value = Utils.ProtectValue(meta.EncodedBy);
             if (0 == value.Length && additionalFields.TryGetValue("info.ITCH", out var field5)) value = field5;
             if (value.Length > 0) writeSizeAndNullTerminatedString("ITCH", value, w, writtenFields);
+            // Encoder
+            value = Utils.ProtectValue(meta.Encoder);
+            if (0 == value.Length && additionalFields.TryGetValue("info.ISFT", out var field6)) value = field6;
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ISFT", value, w, writtenFields);
+            // Language
+            value = Utils.ProtectValue(meta.Language);
+            if (0 == value.Length && additionalFields.TryGetValue("info.ILNG", out var field7)) value = field7;
+            if (value.Length > 0) writeSizeAndNullTerminatedString("ILNG", value, w, writtenFields);
 
             foreach (var key in additionalFields.Keys.Where(key => key.StartsWith("info.")))
             {

@@ -215,7 +215,32 @@ namespace ATL.AudioData
                 return false;
             }
         }
-
+        /// <inheritdoc/>
+        public DateTime OriginalReleaseDate
+        {
+            get
+            {
+                DateTime date = DateTime.MinValue;
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    date = reader.OriginalReleaseDate;
+                    if (date != DateTime.MinValue) break;
+                }
+                return date;
+            }
+        }
+        /// <inheritdoc/>
+        public bool IsOriginalReleaseDateYearOnly
+        {
+            get
+            {
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    if (reader.OriginalReleaseDate != DateTime.MinValue) return reader.IsOriginalReleaseDateYearOnly;
+                }
+                return false;
+            }
+        }
         /// <inheritdoc/>
         public string Album
         {
@@ -245,6 +270,20 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
+        public string Language
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Language;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
 		public string AlbumArtist
         {
             get
@@ -267,6 +306,34 @@ namespace ATL.AudioData
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     result = reader.Conductor;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
+        public string Lyricist
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Lyricist;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
+        public string InvolvedPeople
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.InvolvedPeople;
                     if (result != "") break;
                 }
                 return result;
@@ -356,6 +423,49 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        /// <inheritdoc/>
+        public string ISRC
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.ISRC;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
+        public string CatalogNumber
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.CatalogNumber;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
+        public string AudioSourceUrl
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.AudioSourceUrl;
+                    if (result != "") break;
+                }
+                return result;
+            }
+        }
+        /// <inheritdoc/>
         public string SortAlbum
         {
             get
@@ -369,7 +479,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string SortAlbumArtist
         {
             get
@@ -383,7 +493,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string SortArtist
         {
             get
@@ -397,7 +507,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string SortTitle
         {
             get
@@ -411,7 +521,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string Group
         {
             get
@@ -425,7 +535,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string SeriesTitle
         {
             get
@@ -439,7 +549,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string SeriesPart
         {
             get
@@ -453,7 +563,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public string LongDescription
         {
             get
@@ -467,7 +577,7 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
+        /// <inheritdoc/>
         public int? BPM
         {
             get
@@ -482,7 +592,6 @@ namespace ATL.AudioData
                 return result;
             }
         }
-
         /// <inheritdoc/>
         public string EncodedBy
         {
@@ -498,7 +607,21 @@ namespace ATL.AudioData
                 return result;
             }
         }
+        /// <inheritdoc/>
+        public string Encoder
+        {
+            get
+            {
+                string result = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    result = reader.Encoder;
+                    if (result != "") break;
+                }
 
+                return result;
+            }
+        }
         /// <inheritdoc/>
         public float? Popularity
         {
