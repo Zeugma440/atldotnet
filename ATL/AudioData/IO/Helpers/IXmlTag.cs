@@ -41,7 +41,7 @@ namespace ATL.AudioData.IO
             long initialOffset = source.Position;
             int nbSkipBegin = StreamUtils.SkipValues(source, new[] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
             source.Seek(initialOffset + chunkSize, SeekOrigin.Begin);
-            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new[] { 10, 13, 32, 0 }); // Ignore ending CR, LF, whitespace, null
+            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new[] { 10, 13, 32, 0, 0xFF }); // Ignore ending CR, LF, whitespace, null, 0xFF
             source.Seek(initialOffset + nbSkipBegin, SeekOrigin.Begin);
 
             using (MemoryStream mem = new MemoryStream((int)chunkSize - nbSkipBegin - nbSkipEnd))
@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
             int listDepth = 0;
             int listCounter = 1;
 
-            using (XmlReader reader = (null == encoding) ? XmlReader.Create(mem) : XmlReader.Create(new StreamReader(mem, encoding)))
+            using (XmlReader reader = null == encoding ? XmlReader.Create(mem) : XmlReader.Create(new StreamReader(mem, encoding)))
             {
                 while (reader.Read())
                 {
