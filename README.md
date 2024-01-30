@@ -139,9 +139,35 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 ### DETECTED FIELDS
 
-* __Audio properties (from audio data)__ : Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, Channels count and arrangement
-* __Standard Metadata (from tags)__ : Title, Artist, Album Artist, Composer, Conductor, Lyricist, Involved people, Description, Comment, Genre, Language, Track number, Total tracks, Disc number, Total discs, Recording Year and Date, Original Release Year and Date, Album, Rating, Publisher, Publishing Date, Copyright, Original album, Original artist, Album sort order, Album artist sort order, Artist sort order, Title sort order, Content group description, Series title / Movement name, Series part / Movement index, Long description (also known as "Podcast description"), Beats Per Minute (BPM), Encoded By, Encoder, ISRC, Catalog Number, Audio Source URL, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
-* __Custom Metadata__ : any other field that might be in the tag is readable __and__ editable by ATL
+#### Audio properties (from audio data)
+
+Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, Channels count and arrangement
+
+#### Standard metadata (from tags)
+
+- **Titles** : Track title, Album title, Original album title, Content group description
+
+- **People & Organizations** : Track artist, Album artist, Original artist, Composer, Conductor, Lyricist, Publisher, Involved people, Series title / Movement name
+
+- **Count & Indexes** : Track number, Total tracks, Disc number, Total discs,  Album, Rating, Album sort order, Album artist sort order, Artist sort order, Title sort order, Series part / Movement index
+
+- **Dates** : Recording Year and Date, Original Release Year and Date, Publishing Date
+
+- **Identifiers** : ISRC, Catalog Number
+
+- **Ripping & Encoding** : Encoded By, Encoder
+
+- **URLs** : Audio Source URL
+
+- **Style** : Genre, Beats Per Minute (BPM)
+
+- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
+
+
+#### Custom metadata
+
+Any other field that might be in the tag is readable __and__ editable by ATL
+
 
 NB : Most metadata will be read "as is", with minimal alteration. If your file has invalid tags (e.g. chapter start timecode located after file duration), ATL will give you back that information without trying to auto-correct it.
 
