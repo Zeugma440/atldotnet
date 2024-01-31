@@ -45,7 +45,7 @@ namespace ATL.AudioData.IO
         /// <param name="chunkSize">Size of the chunk to read</param>
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
-            if (chunkSize <= 4) return;
+            if (chunkSize < 8) return;
             byte[] data = new byte[chunkSize - 4];
 
             IList<string> keys = WavHelper.getEligibleKeys("disp.entry", meta.AdditionalFields.Keys);
@@ -58,12 +58,7 @@ namespace ATL.AudioData.IO
 
             // Data
             source.Read(data, 0, (int)chunkSize - 4);
-            string dataStr;
-            if (CF_TEXT == type) dataStr = Utils.Latin1Encoding.GetString(data);
-            else
-            {
-                dataStr = Utils.Latin1Encoding.GetString(Utils.EncodeTo64(data));
-            }
+            var dataStr = Utils.Latin1Encoding.GetString(CF_TEXT == type ? data : Utils.EncodeTo64(data));
             meta.SetMetaField("disp.entry[" + index + "].value", dataStr, readTagParams.ReadAllMetaFrames);
         }
 
@@ -129,20 +124,17 @@ namespace ATL.AudioData.IO
             // Type
             string field = key + ".type";
             int type = -1;
-            if (additionalFields.Keys.Contains(field))
+            if (additionalFields.TryGetValue(field, out var value1))
             {
-                type = getCfCode(additionalFields[field]);
+                type = getCfCode(value1);
                 w.Write(type);
             }
 
             // Value
             field = key + ".value";
-            if (additionalFields.Keys.Contains(field))
+            if (additionalFields.TryGetValue(field, out var value2))
             {
-                string valueStr = additionalFields[field];
-                byte[] value;
-                if (CF_TEXT == type) value = Utils.Latin1Encoding.GetBytes(valueStr);
-                else value = Utils.DecodeFrom64(Utils.Latin1Encoding.GetBytes(valueStr));
+                var value = CF_TEXT == type ? Utils.Latin1Encoding.GetBytes(value2) : Utils.DecodeFrom64(Utils.Latin1Encoding.GetBytes(value2));
                 w.Write(value);
             }
 
