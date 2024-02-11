@@ -11,7 +11,7 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class OptimFrog : IAudioDataIO
     {
-        static private readonly byte[] OFR_SIGNATURE = Utils.Latin1Encoding.GetBytes("OFR ");
+        private static readonly byte[] OFR_SIGNATURE = Utils.Latin1Encoding.GetBytes("OFR ");
 
 #pragma warning disable S1144 // Unused private types or members should be removed
         private static readonly string[] OFR_COMPRESSION = new string[10]
@@ -57,51 +57,44 @@ namespace ATL.AudioData.IO
 
         private readonly TOfrHeader header = new TOfrHeader();
 
-        private double bitrate;
-        private double duration;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public int SampleRate // Sample rate (Hz)
-        {
-            get { return getSampleRate(); }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        /// <inheritdoc/>
+        public int SampleRate => getSampleRate();
+
+        /// <inheritdoc/>
+        public bool IsVBR => false;
+
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSLESS; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+
+        /// <inheritdoc/>
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
+
+        /// <inheritdoc/>
+        public string FileName { get; }
+
+        /// <inheritdoc/>
+        public double BitRate { get; private set; }
+
+        /// <inheritdoc/>
         public int BitDepth => getBits();
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return GuessFromChannelNumber(header.ChannelMode + 1); }
-        }
+
+        /// <inheritdoc/>
+        public double Duration { get; private set; }
+
+        /// <inheritdoc/>
+        public ChannelsArrangement ChannelsArrangement => GuessFromChannelNumber(header.ChannelMode + 1);
+
         public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
         {
-            return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
+            return metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2;
         }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -111,8 +104,8 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -121,7 +114,7 @@ namespace ATL.AudioData.IO
 
         public OptimFrog(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -132,17 +125,15 @@ namespace ATL.AudioData.IO
         // Get number of samples
         private long getSamples()
         {
-            return (((header.Length >> header.ChannelMode) * 0x00000001) +
-                ((header.HiLength >> header.ChannelMode) * 0x00010000));
+            return (header.Length >> header.ChannelMode) * 0x00000001 +
+                   (header.HiLength >> header.ChannelMode) * 0x00010000;
         }
 
         // Get song duration
         private double getDuration()
         {
-            if (header.SampleRate > 0)
-                return (double)getSamples() * 1000.0 / header.SampleRate;
-            else
-                return 0;
+            if (header.SampleRate > 0) return getSamples() * 1000.0 / header.SampleRate;
+            return 0;
         }
 
         private int getSampleRate()
@@ -200,12 +191,11 @@ namespace ATL.AudioData.IO
                 AudioDataOffset = initialPos;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                duration = getDuration();
-                bitrate = getBitrate();
+                Duration = getDuration();
+                BitRate = getBitrate();
             }
 
             return result;
         }
-
     }
 }
