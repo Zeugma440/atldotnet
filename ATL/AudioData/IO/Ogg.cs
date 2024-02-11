@@ -460,9 +460,10 @@ namespace ATL.AudioData.IO
                     pageOffsets.Add(source.Position);
 
                     pageHeader = OggPageHeader.ReadFromStream(source);
+                    if (!pageHeader.IsValid()) return false;
                     int pageSize = pageHeader.GetPageSize();
 
-                    if (pageCount.ContainsKey(pageHeader.StreamId))
+                    if (!pageCount.TryAdd(pageHeader.StreamId, 1))
                     {
                         if (pageHeader.IsFirstPage())
                         {
@@ -478,7 +479,7 @@ namespace ATL.AudioData.IO
                             // as some files have their 1st subpage of many using less than 255 segments
                             multiPagecommentPacket[pageHeader.StreamId] = true;
                             MemoryStream stream;
-                            if (bitstreams.ContainsKey(pageHeader.StreamId)) stream = bitstreams[pageHeader.StreamId];
+                            if (bitstreams.TryGetValue(pageHeader.StreamId, out var bitstream)) stream = bitstream;
                             else
                             {
                                 stream = new MemoryStream();
@@ -489,7 +490,6 @@ namespace ATL.AudioData.IO
                     }
                     else // 1st page of a new stream
                     {
-                        pageCount[pageHeader.StreamId] = 1;
                         multiPagecommentPacket[pageHeader.StreamId] = false;
                         // The very first page of any given stream is its Identification packet
                         bool supported = readIdentificationPacket(source);
@@ -565,11 +565,9 @@ namespace ATL.AudioData.IO
                 // Read metadata from Comment pages that span over multiple segments
                 foreach (var kvp in bitstreams)
                 {
-                    using (BufferedBinaryReader reader = new BufferedBinaryReader(kvp.Value))
-                    {
-                        reader.Position = 0;
-                        readCommentPacket(reader, contents, vorbisTag, readTagParams);
-                    }
+                    using BufferedBinaryReader reader = new BufferedBinaryReader(kvp.Value);
+                    reader.Position = 0;
+                    readCommentPacket(reader, contents, vorbisTag, readTagParams);
                 }
             }
             finally
