@@ -14,10 +14,6 @@ namespace ATL.AudioData
         public enum TagType
         {
             /// <summary>
-            /// No tag type
-            /// </summary>
-            NONE = -1,
-            /// <summary>
             /// ID3v1
             /// </summary>
             ID3V1 = 0,
