@@ -245,23 +245,11 @@ namespace ATL.AudioData
         /// <returns>Metadata I/O for the given tag type</returns>
         public IMetaDataIO getMeta(TagType type)
         {
-            if (type.Equals(TagType.ID3V1))
-            {
-                return iD3v1;
-            }
-            else if (type.Equals(TagType.ID3V2))
-            {
-                return iD3v2;
-            }
-            else if (type.Equals(TagType.APE))
-            {
-                return aPEtag;
-            }
-            else if (type.Equals(TagType.NATIVE) && nativeTag != null)
-            {
-                return nativeTag;
-            }
-            else return new DummyTag();
+            if (type.Equals(TagType.ID3V1)) return iD3v1;
+            if (type.Equals(TagType.ID3V2)) return iD3v2;
+            if (type.Equals(TagType.APE)) return aPEtag;
+            if (type.Equals(TagType.NATIVE) && nativeTag != null) return nativeTag;
+            return new DummyTag();
         }
 
         /// <summary>
@@ -309,7 +297,7 @@ namespace ATL.AudioData
             try
             {
                 // Open file, read first block of data and search for a frame		  
-                Stream s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions) : stream;
+                Stream s = stream ?? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, fileOptions);
                 try
                 {
                     result = read(s, readEmbeddedPictures, readAllMetaFrames);
@@ -340,7 +328,6 @@ namespace ATL.AudioData
         public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
         {
             bool result = true;
-            IMetaDataIO theMetaIO;
             LogDelegator.GetLocateDelegate()(fileName);
             theTag.DurationMs = audioDataIO.Duration;
 
@@ -348,15 +335,15 @@ namespace ATL.AudioData
             {
                 try
                 {
-                    theMetaIO = getMeta(tagType);
+                    var theMetaIO = getMeta(tagType);
 
-                    var s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
+                    var s = stream ?? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous);
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
                         handleEmbedder(s, theMetaIO);
 
-                        ProgressToken<float> progress = (writeProgress != null) ? writeProgress.CreateProgressToken() : null;
+                        ProgressToken<float> progress = writeProgress?.CreateProgressToken();
                         result = await theMetaIO.WriteAsync(s, theTag, progress);
                         if (result) setMeta(theMetaIO);
                     }
@@ -405,7 +392,7 @@ namespace ATL.AudioData
 
             try
             {
-                var s = (null == stream) ? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous) : stream;
+                var s = stream ?? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous);
                 try
                 {
                     result = read(s, false, false, true);
