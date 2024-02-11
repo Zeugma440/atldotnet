@@ -19,7 +19,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] TWIN_ID = Utils.Latin1Encoding.GetBytes("TWIN");
 
         // Mapping between TwinVQ frame codes and ATL frame codes
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
             { "NAME", Field.TITLE },
             { "ALBM", Field.ALBUM },
@@ -36,26 +36,19 @@ namespace ATL.AudioData.IO
 
 
         // Private declarations
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
-        private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
-        public bool Corrupted // True if file corrupted
-        {
-            get { return isCorrupted(); }
-        }
+        public bool Corrupted => isCorrupted(); // True if file corrupted
+
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;
 
             // Finds the ATL field identifier according to the ID3v2 version
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
@@ -76,7 +69,7 @@ namespace ATL.AudioData.IO
             public byte[] ID = new byte[4];                           // Always "TWIN"
             public char[] Version = new char[8];                         // Version ID
             public uint Size;                                           // Header size
-            public ChunkHeader Common = new ChunkHeader();      // Common chunk header
+            public readonly ChunkHeader Common = new ChunkHeader();      // Common chunk header
             public uint ChannelMode;             // Channel mode: 0 - mono, 1 - stereo
             public uint BitRate;                                     // Total bit rate
             public uint SampleRate;                               // Sample rate (khz)
@@ -88,43 +81,31 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate // Sample rate (hz)
-        {
-            get { return this.sampleRate; }
-        }
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        public int SampleRate { get; private set; }
+
+        public bool IsVBR => false;
+
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for lossy formats
-        public double Duration
+        public double Duration { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            get { return duration; }
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V1 };
         }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return (metaDataType == MetaDataIOFactory.TagType.NATIVE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1);
-        }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -138,24 +119,19 @@ namespace ATL.AudioData.IO
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-        public override byte FieldCodeFixedLength
-        {
-            get { return 4; }
-        }
-        protected override bool isLittleEndian
-        {
-            get { return false; }
-        }
+        public override byte FieldCodeFixedLength => 4;
+
+        protected override bool isLittleEndian => false;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isValid = false;
-            sampleRate = 0;
+            SampleRate = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -164,7 +140,7 @@ namespace ATL.AudioData.IO
 
         public TwinVQ(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -174,8 +150,6 @@ namespace ATL.AudioData.IO
 
         private static bool readHeader(BufferedBinaryReader source, ref HeaderInfo Header)
         {
-            bool result = true;
-
             // Read header and get file size
             Header.ID = source.ReadBytes(4);
             Header.Version = Utils.Latin1Encoding.GetString(source.ReadBytes(8)).ToCharArray();
@@ -187,17 +161,17 @@ namespace ATL.AudioData.IO
             Header.SampleRate = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             Header.SecurityLevel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
-            return result;
+            return true;
         }
 
         private static ChannelsArrangement getChannelArrangement(HeaderInfo Header)
         {
-            switch (Header.ChannelMode)
+            return Header.ChannelMode switch
             {
-                case 0: return MONO;
-                case 1: return STEREO;
-                default: return new ChannelsArrangement((int)Header.ChannelMode);
-            }
+                0 => MONO,
+                1 => STEREO,
+                _ => new ChannelsArrangement((int)Header.ChannelMode)
+            };
         }
 
         private static uint getBitRate(HeaderInfo Header)
@@ -208,13 +182,13 @@ namespace ATL.AudioData.IO
         private int GetSampleRate(HeaderInfo Header)
         {
             int result = (int)Header.SampleRate;
-            switch (result)
+            result = result switch
             {
-                case 11: result = 11025; break;
-                case 22: result = 22050; break;
-                case 44: result = 44100; break;
-                default: result = (ushort)(result * 1000); break;
-            }
+                11 => 11025,
+                22 => 22050,
+                44 => 44100,
+                _ => (result * 1000)
+            };
             return result;
         }
 
@@ -227,17 +201,16 @@ namespace ATL.AudioData.IO
         private static bool headerEndReached(ChunkHeader Chunk)
         {
             // Check for header end
-            return ((byte)Chunk.ID[0] < 32) ||
-                ((byte)Chunk.ID[1] < 32) ||
-                ((byte)Chunk.ID[2] < 32) ||
-                ((byte)Chunk.ID[3] < 32) ||
+            return (byte)Chunk.ID[0] < 32 ||
+                (byte)Chunk.ID[1] < 32 ||
+                (byte)Chunk.ID[2] < 32 ||
+                (byte)Chunk.ID[3] < 32 ||
                 "DSIZ".Equals(Chunk.ID);
         }
 
         private void readTag(BufferedBinaryReader source, HeaderInfo Header, ReadTagParams readTagParams)
         {
             ChunkHeader chunk = new ChunkHeader();
-            string data;
             bool first = true;
             long tagStart = -1;
 
@@ -257,7 +230,7 @@ namespace ATL.AudioData.IO
                     first = false;
                 }
                 tagExists = true; // If something else than mandatory info is stored, we can consider metadata is present
-                data = Encoding.UTF8.GetString(source.ReadBytes((int)chunk.Size)).Trim();
+                var data = Encoding.UTF8.GetString(source.ReadBytes((int)chunk.Size)).Trim();
 
                 SetMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
             }
@@ -276,10 +249,10 @@ namespace ATL.AudioData.IO
         {
             // Check for file corruption
             return isValid &&
-                ((0 == channelsArrangement.NbChannels) ||
-                (bitrate < 8000) || (bitrate > 192000) ||
-                (sampleRate < 8000) || (sampleRate > 44100) ||
-                (duration < 0.1) || (duration > 10000));
+                (0 == ChannelsArrangement.NbChannels ||
+                BitRate < 8000 || BitRate > 192000 ||
+                SampleRate < 8000 || SampleRate > 44100 ||
+                Duration < 0.1 || Duration > 10000);
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
@@ -308,10 +281,10 @@ namespace ATL.AudioData.IO
             {
                 isValid = true;
                 // Fill properties with header data
-                channelsArrangement = getChannelArrangement(Header);
-                bitrate = getBitRate(Header);
-                sampleRate = GetSampleRate(Header);
-                duration = getDuration(Header);
+                ChannelsArrangement = getChannelArrangement(Header);
+                BitRate = getBitRate(Header);
+                SampleRate = GetSampleRate(Header);
+                Duration = getDuration(Header);
                 // Get tag information and fill properties
                 readTag(reader, Header, readTagParams);
 
@@ -397,10 +370,9 @@ namespace ATL.AudioData.IO
                 result.IntegrateValue(b, "");
             }
 
-            string fieldCode;
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                fieldCode = fieldInfo.NativeFieldCode.ToLower();
+                var fieldCode = fieldInfo.NativeFieldCode.ToLower();
                 if (!fieldCode.StartsWith("_") && !fieldCode.Equals("DSIZ") && !fieldCode.Equals("COMM"))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);

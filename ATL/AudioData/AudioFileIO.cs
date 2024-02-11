@@ -235,9 +235,9 @@ namespace ATL.AudioData
         /// <inheritdoc/>
         public long AudioDataSize => audioData.AudioDataSize;
         /// <inheritdoc/>
-        public bool IsMetaSupported(TagType metaDataType)
+        public List<TagType> GetSupportedMetas()
         {
-            return audioData.IsMetaSupported(metaDataType);
+            return audioData.GetSupportedMetas();
         }
         /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

@@ -37,11 +37,7 @@ namespace ATL.AudioData.IO
         private byte initialSpeed;
         private byte initialTempo;
 
-        private double bitrate;
-        private double duration;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -60,19 +56,22 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
         /// <inheritdoc/>
-        public string FileName => filePath;
+        public string FileName { get; }
+
         /// <inheritdoc/>
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
         /// <inheritdoc/>
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => STEREO;
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
         /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
@@ -98,8 +97,8 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
 
             patternTable = new List<byte>();
 
@@ -114,7 +113,7 @@ namespace ATL.AudioData.IO
 
         public IT(string filePath, Format format)
         {
-            this.filePath = filePath;
+            FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -529,7 +528,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration() * 1000.0;
+            Duration = calculateDuration() * 1000.0;
 
             string commentStr;
             if (messageLength > 0) // Get Comment from the "IT message" field
@@ -550,7 +549,7 @@ namespace ATL.AudioData.IO
             }
             tagData.IntegrateValue(TagData.Field.COMMENT, commentStr);
 
-            bitrate = (double)sizeInfo.FileSize / duration;
+            BitRate = (double)sizeInfo.FileSize / Duration;
 
             return result;
         }

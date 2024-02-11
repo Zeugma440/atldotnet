@@ -45,11 +45,7 @@ namespace ATL.AudioData.IO
         private byte nbChannels;
         private string trackerName;
 
-        private double bitrate;
-        private double duration;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -67,12 +63,20 @@ namespace ATL.AudioData.IO
             }
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         public ChannelsArrangement ChannelsArrangement => STEREO;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -105,8 +109,8 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
 
             FPatternTable = new List<byte>();
 
@@ -124,7 +128,7 @@ namespace ATL.AudioData.IO
 
         public XM(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             audioFormat = format;
             resetData();
         }
@@ -251,19 +255,16 @@ namespace ATL.AudioData.IO
 
         private void readInstruments(BufferedBinaryReader source, int nbInstruments)
         {
-            uint instrumentHeaderSize;
-            ushort nbSamples;
-
             IList<UInt32> sampleSizes = new List<uint>();
 
             for (int i = 0; i < nbInstruments; i++)
             {
                 Instrument instrument = new Instrument();
-                instrumentHeaderSize = source.ReadUInt32();
+                var instrumentHeaderSize = source.ReadUInt32();
                 instrument.DisplayName = Utils.Latin1Encoding.GetString(source.ReadBytes(22)).Trim();
                 instrument.DisplayName = instrument.DisplayName.Replace("\0", "");
                 source.Seek(1, SeekOrigin.Current); // Instrument type; useless according to documentation
-                nbSamples = source.ReadUInt16();
+                var nbSamples = source.ReadUInt16();
                 source.Seek(instrumentHeaderSize - 29, SeekOrigin.Current);
 
                 if (nbSamples > 0)
@@ -376,7 +377,7 @@ namespace ATL.AudioData.IO
             string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, System.Text.Encoding.ASCII, 20);
             if (readTagParams.PrepareForWriting)
             {
-                structureHelper.AddZone(17, 20, new byte[20] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
+                structureHelper.AddZone(17, 20, new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ZONE_TITLE);
             }
             tagData.IntegrateValue(Field.TITLE, title.Trim());
 
@@ -408,7 +409,7 @@ namespace ATL.AudioData.IO
             initialTempo = bSource.ReadUInt16();
 
             // Pattern table
-            for (int i = 0; i < (headerSize - 20); i++) // 20 being the number of bytes read since the header size marker
+            for (int i = 0; i < headerSize - 20; i++) // 20 being the number of bytes read since the header size marker
             {
                 if (i < songLength) FPatternTable.Add(bSource.ReadByte()); else bSource.Seek(1, SeekOrigin.Current);
             }
@@ -419,7 +420,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration() * 1000.0;
+            Duration = calculateDuration() * 1000.0;
             foreach (var i in FInstruments.Where(i => i.DisplayName.Length > 0))
             {
                 comment.Append(i.DisplayName).Append(Settings.InternalValueSeparator);
@@ -428,7 +429,7 @@ namespace ATL.AudioData.IO
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
             tagData.IntegrateValue(Field.COMMENT, comment.ToString());
-            bitrate = sizeInfo.FileSize / duration;
+            BitRate = sizeInfo.FileSize / Duration;
 
             return result;
         }

@@ -201,7 +201,12 @@ namespace ATL.AudioData
         /// <returns>True if the current file supports native tagging; false if it doesn't</returns>
         public bool HasNativeMeta()
         {
-            return audioDataIO.IsMetaSupported(TagType.NATIVE);
+            return isMetaSupported(TagType.NATIVE);
+        }
+
+        private bool isMetaSupported(TagType meta)
+        {
+            return audioDataIO.GetSupportedMetas().Contains(meta);
         }
 
         /// <summary>
@@ -229,7 +234,7 @@ namespace ATL.AudioData
         {
             ISet<TagType> result = new HashSet<TagType>();
             foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
-                                    where audioDataIO.IsMetaSupported(tagType)
+                                    where isMetaSupported(tagType)
                                     select tagType)
             {
                 result.Add(tagType);
@@ -331,7 +336,7 @@ namespace ATL.AudioData
             LogDelegator.GetLocateDelegate()(fileName);
             theTag.DurationMs = audioDataIO.Duration;
 
-            if (audioDataIO.IsMetaSupported(tagType))
+            if (isMetaSupported(tagType))
             {
                 try
                 {
@@ -427,22 +432,22 @@ namespace ATL.AudioData
 
         private bool read(Stream source, MetaDataIO.ReadTagParams readTagParams)
         {
-            if (audioDataIO.IsMetaSupported(TagType.ID3V1) && iD3v1.Read(source, readTagParams))
+            if (isMetaSupported(TagType.ID3V1) && iD3v1.Read(source, readTagParams))
             {
                 sizeInfo.SetSize(TagType.ID3V1, iD3v1.Size);
             }
             // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
-            if (audioDataIO.IsMetaSupported(TagType.ID3V2) && !(audioDataIO is IMetaDataEmbedder) && iD3v2.Read(source, readTagParams))
+            if (isMetaSupported(TagType.ID3V2) && !(audioDataIO is IMetaDataEmbedder) && iD3v2.Read(source, readTagParams))
             {
                 sizeInfo.SetSize(TagType.ID3V2, iD3v2.Size);
             }
-            if (audioDataIO.IsMetaSupported(TagType.APE) && aPEtag.Read(source, readTagParams))
+            if (isMetaSupported(TagType.APE) && aPEtag.Read(source, readTagParams))
             {
                 sizeInfo.SetSize(TagType.APE, aPEtag.Size);
             }
 
             bool result;
-            if (audioDataIO.IsMetaSupported(TagType.NATIVE) && audioDataIO is IMetaDataIO)
+            if (isMetaSupported(TagType.NATIVE) && audioDataIO is IMetaDataIO)
             {
                 nativeTag = (IMetaDataIO)audioDataIO;
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);

@@ -36,7 +36,7 @@ namespace ATL.AudioData.IO
         public const string CHUNK_PADDING = "free";
 
         // Mapping between CAF channels layout codes and ATL ChannelsArrangement
-        private static Dictionary<uint, ChannelsArrangement> channelsMapping = new Dictionary<uint, ChannelsArrangement>() {
+        private static readonly Dictionary<uint, ChannelsArrangement> channelsMapping = new Dictionary<uint, ChannelsArrangement>() {
             { (100 << 16) | 1, MONO },
             { (101 << 16) | 2, STEREO },
             { (102 << 16) | 2, STEREO }, // Stereo / headphone playback
@@ -87,7 +87,7 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between CAF format ID and format names
-        private static Dictionary<string, KeyValuePair<int, string>> formatsMapping = new Dictionary<string, KeyValuePair<int, string>>()
+        private static readonly Dictionary<string, KeyValuePair<int, string>> formatsMapping = new Dictionary<string, KeyValuePair<int, string>>()
         {
             { "none", new KeyValuePair<int, string>(0,"") },
             { "lpcm", new KeyValuePair<int, string>(1,"Linear PCM") },
@@ -104,7 +104,7 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between CAF information keys and ATL frame codes
-        private static Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+        private static readonly Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
             { "artist", Field.ARTIST },
             { "album", Field.ALBUM },
             { "track number", Field.TRACK_NUMBER },
@@ -124,24 +124,16 @@ namespace ATL.AudioData.IO
 
         private uint sampleRate;
         private bool isVbr;
-        private int codecFamily;
 
-        private double bitrate;
-        private double duration;
         private uint channelsPerFrame;
         private uint bitsPerChannel;
         double secondsPerByte;
-        private ChannelsArrangement channelsArrangement;
-
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public bool IsVBR
-        {
-            get { return isVbr; }
-        }
+        public bool IsVBR => isVbr;
+
         public Format AudioFormat
         {
             get
@@ -152,42 +144,24 @@ namespace ATL.AudioData.IO
                 return containerAudioFormat;
             }
         }
-        public int CodecFamily
-        {
-            get { return codecFamily; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
+        public int CodecFamily { get; private set; }
+
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
 
         public int BitDepth => (int)(bitsPerChannel * channelsPerFrame);
 
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public int SampleRate
-        {
-            get { return (int)sampleRate; }
-        }
-        public ChannelsArrangement ChannelsArrangement
-        {
-            get { return channelsArrangement; }
-        }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
-        }
-        public long HasEmbeddedID3v2
-        {
-            get { return -2; }
-        }
+        public double Duration { get; private set; }
 
+        public int SampleRate => (int)sampleRate;
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        }
 
         protected override int getDefaultTagOffset()
         {
@@ -203,7 +177,7 @@ namespace ATL.AudioData.IO
         {
             Field supportedMetaId = Field.NO_FIELD;
 
-            if (frameMapping.ContainsKey(ID)) supportedMetaId = frameMapping[ID];
+            if (frameMapping.TryGetValue(ID, out var value)) supportedMetaId = value;
 
             return supportedMetaId;
         }
@@ -217,13 +191,13 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             sampleRate = 0;
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isVbr = false;
-            codecFamily = 0;
+            CodecFamily = 0;
             bitsPerChannel = 0;
             channelsPerFrame = 0;
-            channelsArrangement = null;
+            ChannelsArrangement = null;
             secondsPerByte = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -234,7 +208,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public CAF(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             containerAudioFormat = format;
             resetData();
         }
@@ -284,12 +258,12 @@ namespace ATL.AudioData.IO
             }
 
             // Determine audio properties according to the format ID
-            codecFamily = AudioDataIOFactory.CF_LOSSY;
+            CodecFamily = AudioDataIOFactory.CF_LOSSY;
             switch (formatId)
             {
                 case ("lpcm"):
                 case ("alac"):
-                    codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+                    CodecFamily = AudioDataIOFactory.CF_LOSSLESS;
                     break;
             }
 
@@ -305,7 +279,7 @@ namespace ATL.AudioData.IO
             uint channelLayout = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             // we don't need anything else
 
-            if (channelsMapping.ContainsKey(channelLayout)) channelsArrangement = channelsMapping[channelLayout];
+            if (channelsMapping.ContainsKey(channelLayout)) ChannelsArrangement = channelsMapping[channelLayout];
         }
 
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
@@ -355,11 +329,11 @@ namespace ATL.AudioData.IO
             source.Seek(8, SeekOrigin.Current); // nbPackets
             long nbFrames = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
 
-            duration = nbFrames * 1000d / sampleRate;
+            Duration = nbFrames * 1000d / sampleRate;
         }
 
         /// <inheritdoc/>
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
@@ -405,7 +379,7 @@ namespace ATL.AudioData.IO
                         AudioDataOffset = cursorPos;
                         audioChunkSize = chunkSize;
                         AudioDataSize = chunkSize + 12;
-                        if (secondsPerByte > 0) duration = chunkSize * secondsPerByte * 1000;
+                        if (secondsPerByte > 0) Duration = chunkSize * secondsPerByte * 1000;
                         break;
                     case CHUNK_PACKET_TABLE:
                         if (0 == secondsPerByte) readPaktChunk(reader);
@@ -414,12 +388,12 @@ namespace ATL.AudioData.IO
                 reader.Seek(cursorPos + chunkSize + 12, SeekOrigin.Begin);
                 cursorPos = reader.Position;
             }
-            bitrate = audioChunkSize * 8d / duration;
-            if (null == channelsArrangement)
+            BitRate = audioChunkSize * 8d / Duration;
+            if (null == ChannelsArrangement)
             {
-                if (1 == channelsPerFrame) channelsArrangement = MONO;
-                else if (2 == channelsPerFrame) channelsArrangement = STEREO;
-                else channelsArrangement = new ChannelsArrangement((int)channelsPerFrame, "Custom layout (" + channelsPerFrame + " channels)");
+                if (1 == channelsPerFrame) ChannelsArrangement = MONO;
+                else if (2 == channelsPerFrame) ChannelsArrangement = STEREO;
+                else ChannelsArrangement = new ChannelsArrangement((int)channelsPerFrame, "Custom layout (" + channelsPerFrame + " channels)");
             }
 
             return result;
@@ -429,7 +403,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override int write(TagData tag, Stream s, string zone)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

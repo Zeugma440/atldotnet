@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -12,7 +13,7 @@ namespace ATL.AudioData.IO
 	class MPEGplus : IAudioDataIO
     {
         // Sample frequencies
-        private static readonly int[] MPP_SAMPLERATES = new int[4] { 44100, 48000, 37800, 32000 };
+        private static readonly int[] MPP_SAMPLERATES = new int[] { 44100, 48000, 37800, 32000 };
 
         // ID code for stream version > 6
         private const long STREAM_VERSION_7_ID = 0x4D502B07;  // 'MP+' + #7
@@ -21,22 +22,15 @@ namespace ATL.AudioData.IO
 
 
         private int frameCount;
-        private int sampleRate;
-
-        private double bitrate;
-        private double duration;
-        private ChannelsArrangement channelsArrangement;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // File header data - for internal use
         private sealed class HeaderRecord
         {
-            public byte[] ByteArray = new byte[32];               // Data as byte array
-            public int[] IntegerArray = new int[8];            // Data as integer array
-            private int version = 0;
+            public readonly byte[] ByteArray = new byte[32];               // Data as byte array
+            public readonly int[] IntegerArray = new int[8];            // Data as integer array
 
             public static int GetVersion(byte[] data)
             {
@@ -61,10 +55,10 @@ namespace ATL.AudioData.IO
 
             public void computeVersion()
             {
-                version = GetVersion(ByteArray);
+                Version = GetVersion(ByteArray);
             }
 
-            public int Version => version;
+            public int Version { get; private set; } = 0;
         }
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -75,16 +69,26 @@ namespace ATL.AudioData.IO
             get;
         }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for lossy formats
-        public double Duration => duration;
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
-        public int SampleRate => sampleRate;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public double Duration { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        public int SampleRate { get; private set; }
+
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE);
+            return new List<MetaDataIOFactory.TagType>
+            {
+                MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1
+            };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -95,14 +99,14 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             frameCount = 0;
-            sampleRate = 0;
+            SampleRate = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
 
         public MPEGplus(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -160,17 +164,17 @@ namespace ATL.AudioData.IO
                         readVariableSizeInteger(source); // Skip beginning silence
 
                         source.Read(buffer, 0, 1);// Sample frequency (3) + Max used bands (5)
-                        sampleRate = MPP_SAMPLERATES[(buffer[0] & 0b11100000) >> 5]; // First 3 bits
+                        SampleRate = MPP_SAMPLERATES[(buffer[0] & 0b11100000) >> 5]; // First 3 bits
 
                         source.Read(buffer, 0, 1); // Channel count (4) + Mid/Side Stereo used (1) + Audio block frames (3)
                         int channelCount = (buffer[0] & 0b11110000) >> 4; // First 4 bits
                         bool isMidSideStereo = (buffer[0] & 0b00001000) > 0; // First 4 bits
-                        if (isMidSideStereo) channelsArrangement = JOINT_STEREO_MID_SIDE;
-                        else channelsArrangement = GuessFromChannelNumber(channelCount);
+                        if (isMidSideStereo) ChannelsArrangement = JOINT_STEREO_MID_SIDE;
+                        else ChannelsArrangement = GuessFromChannelNumber(channelCount);
 
                         // MPC has variable bitrate; only MPC versions < 7 display fixed bitrate
-                        duration = sampleCount * 1000.0 / sampleRate;
-                        bitrate = calculateAverageBitrate(duration);
+                        Duration = sampleCount * 1000.0 / SampleRate;
+                        BitRate = calculateAverageBitrate(Duration);
 
                         headerFound = true;
                     }
@@ -252,7 +256,7 @@ namespace ATL.AudioData.IO
         private double getSV7Duration()
         {
             // Calculate duration time
-            if (sampleRate > 0) return (frameCount * 1152.0 * 1000.0 / sampleRate);
+            if (SampleRate > 0) return (frameCount * 1152.0 * 1000.0 / SampleRate);
             else return 0;
         }
 
@@ -273,11 +277,11 @@ namespace ATL.AudioData.IO
                 if (header.Version < 80)
                 {
                     // Fill properties with SV7 header data
-                    sampleRate = getSV7SampleRate(header);
-                    channelsArrangement = getSV7ChannelsArrangement(header);
+                    SampleRate = getSV7SampleRate(header);
+                    ChannelsArrangement = getSV7ChannelsArrangement(header);
                     frameCount = getSV7FrameCount(header);
-                    bitrate = getSV7BitRate();
-                    duration = getSV7Duration();
+                    BitRate = getSV7BitRate();
+                    Duration = getSV7Duration();
                 }
                 else
                 {

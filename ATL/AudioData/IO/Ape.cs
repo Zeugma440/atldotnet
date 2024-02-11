@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -139,10 +140,11 @@ namespace ATL.AudioData.IO
 
         public int BitDepth { get; private set; }
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1 };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 

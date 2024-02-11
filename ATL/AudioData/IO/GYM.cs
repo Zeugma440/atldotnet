@@ -6,6 +6,7 @@ using Commons;
 using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
+using System.Collections.Generic;
 
 namespace ATL.AudioData.IO
 {
@@ -28,27 +29,23 @@ namespace ATL.AudioData.IO
 
         private const int GYM_HEADER_SIZE = 428;
 
-        private static uint LOOP_COUNT_DEFAULT = 1;         // Default loop count
-        private static uint FADEOUT_DURATION_DEFAULT = 0;   // Default fadeout duration, in seconds
-        private static uint PLAYBACK_RATE_DEFAULT = 60;     // Default playback rate if no preference set (Hz)
+        private static readonly uint LOOP_COUNT_DEFAULT = 1;         // Default loop count
+        private static readonly uint FADEOUT_DURATION_DEFAULT = 0;   // Default fadeout duration, in seconds
+        private static readonly uint PLAYBACK_RATE_DEFAULT = 60;     // Default playback rate if no preference set (Hz)
 
-        private static byte[] CORE_SIGNATURE = new byte[416];
+        private static readonly byte[] CORE_SIGNATURE = new byte[416];
 
         // Standard fields
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
 
-        uint loopStart;
+        uint m_loopStart;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate => sampleRate;
+        public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
 
@@ -58,18 +55,20 @@ namespace ATL.AudioData.IO
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
 
-        public string FileName => filePath;
+        public string FileName { get; }
 
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
 
         public ChannelsArrangement ChannelsArrangement => STEREO;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
 
         // IMetaDataIO
@@ -92,11 +91,11 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             // Reset variables
-            sampleRate = 44100; // Seems to be default value according to foobar2000
-            bitrate = 0;
-            duration = 0;
+            SampleRate = 44100; // Seems to be default value according to foobar2000
+            BitRate = 0;
+            Duration = 0;
 
-            loopStart = 0;
+            m_loopStart = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -105,7 +104,7 @@ namespace ATL.AudioData.IO
 
         public GYM(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -144,7 +143,7 @@ namespace ATL.AudioData.IO
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(256))).Trim();
                 tagData.IntegrateValue(Field.COMMENT, str);
 
-                loopStart = source.ReadUInt32();
+                m_loopStart = source.ReadUInt32();
                 uint packedSize = source.ReadUInt32();
                 AudioDataOffset = source.Position;
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -190,7 +189,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            uint result = (nbTicks_all - nbTicks_loop) + (nbLoops * nbTicks_loop);
+            uint result = nbTicks_all - nbTicks_loop + nbLoops * nbTicks_loop;
             if (Settings.GYM_VGM_playbackRate > 0)
             {
                 result = (uint)Math.Round(result * (1.0 / Settings.GYM_VGM_playbackRate));
@@ -216,20 +215,18 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = true;
             BufferedBinaryReader bufferedSource = new BufferedBinaryReader(source); // Optimize parsing speed
 
             resetData();
 
             source.Seek(0, SeekOrigin.Begin);
 
-            if (readHeader(bufferedSource, readTagParams))
-            {
-                duration = calculateDuration(bufferedSource, loopStart, LOOP_COUNT_DEFAULT) * 1000.0;
-                bitrate = (sizeInfo.FileSize - GYM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
-            }
+            if (!readHeader(bufferedSource, readTagParams)) return false;
 
-            return result;
+            Duration = calculateDuration(bufferedSource, m_loopStart, LOOP_COUNT_DEFAULT) * 1000.0;
+            BitRate = (sizeInfo.FileSize - GYM_HEADER_SIZE) * 8 / Duration; // TODO - use unpacked size if applicable, and not raw file size
+
+            return true;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

@@ -116,10 +116,13 @@ namespace ATL.AudioData.IO
 
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.NATIVE; // Native for bext, info and iXML chunks
+            // Native for bext, info and iXML chunks
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1 };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -245,9 +248,7 @@ namespace ATL.AudioData.IO
 
 
             string subChunkId = "";
-            long chunkSize = 0;
             uint paddingSize = 0;
-            long chunkDataPos;
             bool foundSample = false;
             bool foundCue = false;
             bool foundList = false;
@@ -288,11 +289,11 @@ namespace ATL.AudioData.IO
 
                 // Chunk size
                 source.Read(data, 0, 4);
-                chunkSize = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
+                long chunkSize = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
                 // Word-align declared chunk size, as per specs
                 paddingSize = (uint)(chunkSize % 2);
 
-                chunkDataPos = source.Position;
+                var chunkDataPos = source.Position;
 
                 if (subChunkId.Equals(CHUNK_FORMAT64, StringComparison.OrdinalIgnoreCase)) // DS64 always appears before FMT
                 {

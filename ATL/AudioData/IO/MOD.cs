@@ -92,11 +92,7 @@ namespace ATL.AudioData.IO
         private string formatTag;
         private byte nbChannels;
 
-        private double bitrate;
-        private double duration;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
 
@@ -113,8 +109,8 @@ namespace ATL.AudioData.IO
             get
             {
                 Format f = new Format(audioFormat);
-                if (modFormats.ContainsKey(formatTag))
-                    f.Name = f.Name + " (" + modFormats[formatTag].Name + ")";
+                if (modFormats.TryGetValue(formatTag, out var format))
+                    f.Name = f.Name + " (" + format.Name + ")";
                 else
                     f.Name = f.Name + " (Unknown)";
                 return f;
@@ -123,17 +119,23 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
         /// <inheritdoc/>
-        public string FileName => filePath;
+        public string FileName { get; }
+
         /// <inheritdoc/>
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
         /// <inheritdoc/>
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => STEREO;
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        }
 
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -193,8 +195,8 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
 
             FSamples = new List<Sample>();
             FPatterns = new List<IList<IList<int>>>();
@@ -210,7 +212,7 @@ namespace ATL.AudioData.IO
 
         public MOD(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             this.audioFormat = format;
             resetData();
         }
@@ -466,7 +468,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration();
+            Duration = calculateDuration();
             foreach (var aSample in FSamples.Where(aSample => aSample.Name.Length > 0))
             {
                 comment.Append(aSample.Name).Append(Settings.InternalValueSeparator);
@@ -476,7 +478,7 @@ namespace ATL.AudioData.IO
 
             tagData.IntegrateValue(Field.COMMENT, comment.ToString());
 
-            bitrate = sizeInfo.FileSize / duration;
+            BitRate = sizeInfo.FileSize / Duration;
 
             return result;
         }

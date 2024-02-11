@@ -179,9 +179,9 @@ namespace ATL.AudioData.IO
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2 || metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
 
         /// <inheritdoc/>

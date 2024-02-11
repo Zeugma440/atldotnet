@@ -4,6 +4,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Collections.Generic;
 
 namespace ATL.AudioData.IO
 {
@@ -22,12 +23,9 @@ namespace ATL.AudioData.IO
         private uint bits;
         private uint sampleRate;
 
-        private double bitrate;
-        private double duration;
         private bool isValid;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
         private long id3v2Offset;
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
@@ -46,12 +44,18 @@ namespace ATL.AudioData.IO
             get;
         }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => (int)bits;
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         public ChannelsArrangement ChannelsArrangement => channelsArrangement;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.ID3V2;
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2 };
+        }
 
         // IMetaDataEmbedder
         public long HasEmbeddedID3v2 => id3v2Offset;
@@ -67,8 +71,8 @@ namespace ATL.AudioData.IO
         {
             bits = 0;
             sampleRate = 0;
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isValid = false;
             id3v2Offset = -1;
             id3v2StructureHelper.Clear();
@@ -81,7 +85,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public DSF(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -92,10 +96,8 @@ namespace ATL.AudioData.IO
         // Get compression ratio 
         private double getCompressionRatio()
         {
-            if (isValid)
-                return sizeInfo.FileSize / ((duration / 1000.0 * sampleRate) * (channelsArrangement.NbChannels * bits / 8) + 44) * 100;
-            else
-                return 0;
+            if (isValid) return sizeInfo.FileSize / (Duration / 1000.0 * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
+            return 0;
         }
 
         public static bool IsValidHeader(byte[] data)
@@ -140,17 +142,17 @@ namespace ATL.AudioData.IO
 
                     source.Read(buffer, 0, 4);
                     uint channels = StreamUtils.DecodeUInt32(buffer);
-                    switch (channels)
+                    channelsArrangement = channels switch
                     {
-                        case 1: channelsArrangement = MONO; break;
-                        case 2: channelsArrangement = STEREO; break;
-                        case 3: channelsArrangement = ISO_3_0_0; break;
-                        case 4: channelsArrangement = QUAD; break;
-                        case 5: channelsArrangement = LRCLFE; break;
-                        case 6: channelsArrangement = ISO_3_2_0; break;
-                        case 7: channelsArrangement = ISO_3_2_1; break;
-                        default: channelsArrangement = UNKNOWN; break;
-                    }
+                        1 => MONO,
+                        2 => STEREO,
+                        3 => ISO_3_0_0,
+                        4 => QUAD,
+                        5 => LRCLFE,
+                        6 => ISO_3_2_0,
+                        7 => ISO_3_2_1,
+                        _ => UNKNOWN
+                    };
 
                     source.Read(buffer, 0, 4);
                     sampleRate = StreamUtils.DecodeUInt32(buffer);
@@ -160,8 +162,8 @@ namespace ATL.AudioData.IO
                     source.Read(buffer, 0, 8);
                     ulong sampleCount = StreamUtils.DecodeUInt64(buffer);
 
-                    duration = sampleCount * 1000.0 / sampleRate;
-                    bitrate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / duration); //time to calculate average bitrate
+                    Duration = sampleCount * 1000.0 / sampleRate;
+                    BitRate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
 
                     AudioDataOffset = source.Position + 8;
                     if (id3v2Offset > 0)

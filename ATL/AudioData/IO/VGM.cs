@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.AudioDataManager;
@@ -28,25 +29,21 @@ namespace ATL.AudioData.IO
 
         private const int VGM_HEADER_SIZE = 256;
 
-        private static int LOOP_COUNT_DEFAULT = 1;              // Default loop count
-        private static int FADEOUT_DURATION_DEFAULT = 10000;    // Default fadeout duration, in milliseconds (10s)
-        private static int RECORDING_RATE_DEFAULT = 60;         // Default playback rate for v1.00 files
+        private static readonly int LOOP_COUNT_DEFAULT = 1;              // Default loop count
+        private static readonly int FADEOUT_DURATION_DEFAULT = 10000;    // Default fadeout duration, in milliseconds (10s)
+        private static readonly int RECORDING_RATE_DEFAULT = 60;         // Default playback rate for v1.00 files
 
         // Standard fields
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
 
         private int gd3TagOffset;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate => sampleRate; // Sample rate (hz)
+        public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
 
@@ -56,18 +53,21 @@ namespace ATL.AudioData.IO
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
 
-        public string FileName => filePath;
+        public string FileName { get; }
 
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
 
         public ChannelsArrangement ChannelsArrangement => STEREO;
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -100,9 +100,9 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             // Reset variables
-            sampleRate = 44100; // Default value for all VGM files, according to v1.70 spec 
-            bitrate = 0;
-            duration = 0;
+            SampleRate = 44100; // Default value for all VGM files, according to v1.70 spec 
+            BitRate = 0;
+            Duration = 0;
 
             gd3TagOffset = 0;
             AudioDataOffset = -1;
@@ -113,7 +113,7 @@ namespace ATL.AudioData.IO
 
         public VGM(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -184,14 +184,14 @@ namespace ATL.AudioData.IO
                     nbLoops *= source.ReadByte();          // Loop modifier
                 }
 
-                duration = nbSamples * 1000.0 / sampleRate + nbLoops * (loopNbSamples * 1000.0 / sampleRate);
+                Duration = nbSamples * 1000.0 / SampleRate + nbLoops * (loopNbSamples * 1000.0 / SampleRate);
                 if (Settings.GYM_VGM_playbackRate > 0)
                 {
-                    duration *= (Settings.GYM_VGM_playbackRate / (double)recordingRate);
+                    Duration *= Settings.GYM_VGM_playbackRate / (double)recordingRate;
                 }
-                if (nbLoops > 0) duration += FADEOUT_DURATION_DEFAULT;
+                if (nbLoops > 0) Duration += FADEOUT_DURATION_DEFAULT;
 
-                bitrate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / duration; // TODO - use unpacked size if applicable, and not raw file size
+                BitRate = (sizeInfo.FileSize - VGM_HEADER_SIZE) * 8 / Duration; // TODO - use unpacked size if applicable, and not raw file size
 
                 return true;
             }
@@ -205,14 +205,13 @@ namespace ATL.AudioData.IO
         private void readGd3Tag(BufferedBinaryReader source, int offset)
         {
             source.Seek(offset, SeekOrigin.Begin);
-            string str;
 
             if (GD3_SIGNATURE.SequenceEqual(source.ReadBytes(GD3_SIGNATURE.Length)))
             {
                 source.Seek(4, SeekOrigin.Current); // Version number
                 source.Seek(4, SeekOrigin.Current); // Length
 
-                str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (english)
+                var str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode);
                 tagData.IntegrateValue(Field.TITLE, str);
                 str = StreamUtils.ReadNullTerminatedString(source, Encoding.Unicode); // Title (japanese)
                 tagData.AdditionalFields.Add(new MetaFieldInfo(getImplementedTagType(), "TITLE_J", str));
@@ -258,14 +257,11 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = true;
-
             resetData();
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             reader.Seek(0, SeekOrigin.Begin);
 
-            MemoryStream memStream;
             BufferedBinaryReader usedSource = reader;
 
             byte[] headerSignature = reader.ReadBytes(2);
@@ -278,13 +274,11 @@ namespace ATL.AudioData.IO
                     return false;
                 }
 
-                using (GZipStream gzStream = new GZipStream(reader, CompressionMode.Decompress))
-                {
-                    memStream = new MemoryStream();
-                    StreamUtils.CopyStream(gzStream, memStream);
-                    memStream.Seek(0, SeekOrigin.Begin);
-                    usedSource = new BufferedBinaryReader(memStream);
-                }
+                using GZipStream gzStream = new GZipStream(reader, CompressionMode.Decompress);
+                var memStream = new MemoryStream();
+                StreamUtils.CopyStream(gzStream, memStream);
+                memStream.Seek(0, SeekOrigin.Begin);
+                usedSource = new BufferedBinaryReader(memStream);
             }
 
             if (readHeader(usedSource, readTagParams) && gd3TagOffset > VGM_HEADER_SIZE)
@@ -293,7 +287,7 @@ namespace ATL.AudioData.IO
                 readGd3Tag(usedSource, gd3TagOffset);
             }
 
-            return result;
+            return true;
         }
 
         // Write GD3 tag
@@ -306,19 +300,17 @@ namespace ATL.AudioData.IO
         {
             byte[] endString = new byte[2] { 0, 0 };
             int result = 11; // 11 field to write
-            long sizePos;
-            string str;
             Encoding unicodeEncoder = Encoding.Unicode;
 
             w.Write(GD3_SIGNATURE);
             w.Write(0x00000100); // Version number
 
-            sizePos = w.BaseStream.Position;
+            var sizePos = w.BaseStream.Position;
             w.Write(0);
 
             w.Write(unicodeEncoder.GetBytes(tag[Field.TITLE]));
             w.Write(endString); // Strings must be null-terminated
-            str = "";
+            var str = "";
             if (AdditionalFields.ContainsKey("TITLE_J")) str = AdditionalFields["TITLE_J"];
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);

@@ -76,8 +76,8 @@ namespace ATL.AudioData.IO
     	};
 
         // VBR header ID for Xing/FhG
-        public const String VBR_ID_XING = "Xing";                       // Xing VBR ID
-        public const String VBR_ID_FHG = "VBRI";                         // FhG VBR ID
+        public const string VBR_ID_XING = "Xing";                       // Xing VBR ID
+        public const string VBR_ID_FHG = "VBRI";                         // FhG VBR ID
 
         // MPEG version codes
         public const byte MPEG_VERSION_2_5 = 0;                            // MPEG 2.5
@@ -86,7 +86,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_VERSION_1 = 3;                                // MPEG 1
 
         // MPEG version names
-        public static readonly String[] MPEG_VERSION = new String[4] { "MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1" };
+        public static readonly string[] MPEG_VERSION = new string[] { "MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1" };
 
         // MPEG layer codes
         public const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
@@ -95,7 +95,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_LAYER_I = 3;                                 // Layer I
 
         // MPEG layer names
-        public static readonly String[] MPEG_LAYER = new String[4] { "Layer ?", "Layer III", "Layer II", "Layer I" };
+        public static readonly string[] MPEG_LAYER = new string[] { "Layer ?", "Layer III", "Layer II", "Layer I" };
 
         // Channel mode codes
         public const byte MPEG_CM_STEREO = 0;                                // Stereo
@@ -105,7 +105,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
 
         // Channel mode names
-        public static readonly String[] MPEG_CM_MODE = new String[5] { "Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown" };
+        public static readonly string[] MPEG_CM_MODE = new string[] { "Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown" };
 
         // Extension mode codes (for Joint Stereo)
         public const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
@@ -121,7 +121,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
 
         // Emphasis names
-        public static readonly String[] MPEG_EMPHASIS = new String[4] { "None", "50/15 ms", "Unknown", "CCIT J.17" };
+        public static readonly string[] MPEG_EMPHASIS = new string[] { "None", "50/15 ms", "Unknown", "CCIT J.17" };
 
         // Encoder codes
         public const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
@@ -134,7 +134,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
 
         // Encoder names
-        public static readonly String[] MPEG_ENCODER = new String[8] { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
+        public static readonly string[] MPEG_ENCODER = new string[] { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
 
         // Xing/FhG VBR header data
         public sealed class VBRData
@@ -230,7 +230,6 @@ namespace ATL.AudioData.IO
         private VBRData vbrData = new VBRData();
         private FrameHeader HeaderFrame = new FrameHeader();
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
 
@@ -239,14 +238,16 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// VBR header data
         /// </summary>
-        public VBRData VBR { get => vbrData; }
-        public bool IsVBR { get => vbrData.Found; }
-        public double BitRate { get => getBitRate(); }
+        public VBRData VBR => vbrData;
+
+        public bool IsVBR => vbrData.Found;
+        public double BitRate => getBitRate();
         public int BitDepth => -1; // Irrelevant for lossy formats
-        public double Duration { get => getDuration(); }
-        public ChannelsArrangement ChannelsArrangement { get => getChannelsArrangement(HeaderFrame); }
-        public int SampleRate { get => getSampleRate(); }
-        public string FileName { get => filePath; }
+        public double Duration => getDuration();
+        public ChannelsArrangement ChannelsArrangement => getChannelsArrangement(HeaderFrame);
+        public int SampleRate => getSampleRate();
+        public string FileName { get; }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -259,14 +260,12 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get => AudioDataIOFactory.CF_LOSSY;
-        }
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2) || (metaDataType == MetaDataIOFactory.TagType.APE);
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
 
 
@@ -282,7 +281,7 @@ namespace ATL.AudioData.IO
 
         public MPEGaudio(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             audioFormat = format;
             resetData();
         }

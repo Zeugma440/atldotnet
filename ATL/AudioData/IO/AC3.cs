@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -11,66 +11,46 @@ namespace ATL.AudioData.IO
 	class AC3 : IAudioDataIO
     {
         // Standard bitrates (KBit/s)
-        private static readonly int[] BITRATES = new int[19] { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
+        private static readonly int[] BITRATES = new int[] { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
                                                         192, 224, 256, 320, 384, 448, 512, 576, 640 };
 
         // Private declarations 
         private uint sampleRate;
 
-        private double bitrate;
-        private double duration;
         private ChannelsArrangement channelsArrangement;
-
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public bool IsVBR
-        {
-            get { return false; }
-        }
+        /// <inheritdoc/>
+        public bool IsVBR => false;
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get;
         }
-        public int CodecFamily
-        {
-            get { return AudioDataIOFactory.CF_LOSSY; }
-        }
-        public string FileName
-        {
-            get { return filePath; }
-        }
-        public double BitRate
-        {
-            get { return bitrate; }
-        }
-        public double Duration
-        {
-            get { return duration; }
-        }
-        public int SampleRate
-        {
-            get { return (int)this.sampleRate; }
-        }
-
+        /// <inheritdoc/>
+        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+        /// <inheritdoc/>
+        public string FileName { get; }
+        /// <inheritdoc/>
+        public double BitRate { get; private set; }
+        /// <inheritdoc/>
+        public double Duration { get; private set; }
+        /// <inheritdoc/>
+        public int SampleRate => (int)this.sampleRate;
+        /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for lossy formats
-
-        public ChannelsArrangement ChannelsArrangement
+        /// <inheritdoc/>
+        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            get { return channelsArrangement; }
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE };
         }
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.APE;
-        }
-        public long HasEmbeddedID3v2
-        {
-            get { return -2; }
-        }
-
+        /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
+        /// <inheritdoc/>
         public long AudioDataSize { get; set; }
 
 
@@ -79,15 +59,15 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             sampleRate = 0;
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
         }
 
         public AC3(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -104,52 +84,47 @@ namespace ATL.AudioData.IO
         {
             resetData();
 
-            bool result = false;
-
             byte[] buffer = new byte[2];
             source.Seek(0, SeekOrigin.Begin);
             source.Read(buffer, 0, 2);
 
-            if (IsValidHeader(buffer))
+            if (!IsValidHeader(buffer)) return false;
+
+            AudioDataOffset = source.Position - 2;
+            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+
+            source.Seek(2, SeekOrigin.Current);
+            source.Read(buffer, 0, 1);
+
+            sampleRate = (buffer[0] & 0xC0) switch
             {
-                AudioDataOffset = source.Position - 2;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                0 => 48000,
+                0x40 => 44100,
+                0x80 => 32000,
+                _ => 0
+            };
 
-                source.Seek(2, SeekOrigin.Current);
-                source.Read(buffer, 0, 1);
+            BitRate = BITRATES[(buffer[0] & 0x3F) >> 1];
 
-                switch (buffer[0] & 0xC0)
-                {
-                    case 0: sampleRate = 48000; break;
-                    case 0x40: sampleRate = 44100; break;
-                    case 0x80: sampleRate = 32000; break;
-                    default: sampleRate = 0; break;
-                }
+            source.Seek(1, SeekOrigin.Current);
+            source.Read(buffer, 0, 1);
 
-                bitrate = BITRATES[(buffer[0] & 0x3F) >> 1];
+            channelsArrangement = (buffer[0] & 0xE0) switch
+            {
+                0 => DUAL_MONO,
+                0x20 => MONO,
+                0x40 => STEREO,
+                0x60 => ISO_3_0_0,
+                0x80 => ISO_2_1_0,
+                0xA0 => ISO_3_1_0,
+                0xC0 => ISO_2_2_0,
+                0xE0 => ISO_3_2_0,
+                _ => UNKNOWN
+            };
 
-                source.Seek(1, SeekOrigin.Current);
-                source.Read(buffer, 0, 1);
+            Duration = sizeInfo.FileSize * 8.0 / BitRate;
 
-                switch (buffer[0] & 0xE0)
-                {
-                    case 0: channelsArrangement = DUAL_MONO; break;
-                    case 0x20: channelsArrangement = MONO; break;
-                    case 0x40: channelsArrangement = STEREO; break;
-                    case 0x60: channelsArrangement = ISO_3_0_0; break;
-                    case 0x80: channelsArrangement = ISO_2_1_0; break;
-                    case 0xA0: channelsArrangement = ISO_3_1_0; break;
-                    case 0xC0: channelsArrangement = ISO_2_2_0; break;
-                    case 0xE0: channelsArrangement = ISO_3_2_0; break;
-                    default: channelsArrangement = UNKNOWN; break;
-                }
-
-                duration = sizeInfo.FileSize * 8.0 / bitrate;
-
-                result = true;
-            }
-
-            return result;
+            return true;
         }
     }
 }

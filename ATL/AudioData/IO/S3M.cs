@@ -45,11 +45,8 @@ namespace ATL.AudioData.IO
         private byte initialSpeed;
         private byte initialTempo;
         private string trackerName;
-        private double bitrate;
-        private double duration;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
 
@@ -68,12 +65,19 @@ namespace ATL.AudioData.IO
             }
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         public ChannelsArrangement ChannelsArrangement => STEREO;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -109,8 +113,8 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             // Reset variables
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
 
             FPatternTable = new List<byte>();
             FChannelTable = new List<byte>();
@@ -128,7 +132,7 @@ namespace ATL.AudioData.IO
 
         public S3M(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             audioFormat = format;
             resetData();
         }
@@ -456,7 +460,7 @@ namespace ATL.AudioData.IO
 
             // == Computing track properties
 
-            duration = calculateDuration() * 1000.0;
+            Duration = calculateDuration() * 1000.0;
 
             foreach (Instrument i in FInstruments)
             {
@@ -466,7 +470,7 @@ namespace ATL.AudioData.IO
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
 
             tagData.IntegrateValue(Field.COMMENT, comment.ToString());
-            bitrate = sizeInfo.FileSize / duration;
+            BitRate = sizeInfo.FileSize / Duration;
 
             return result;
         }

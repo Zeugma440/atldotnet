@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ATL.AudioData.IO;
 using System.IO;
 using static ATL.ChannelsArrangements;
@@ -89,14 +90,13 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// Indicated whether the given metadata type is supported
+        /// Indicate which metadata types are supported by the present audio format, ordered by most recommended
         /// </summary>
-        /// <param name="metaDataType">Metadata type to be tested (see list in MetaDataIOFactory)</param>
-        /// <returns>True if current file supports the given metadata type; false if not</returns>
-        bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType);
-        
+        /// <returns>Metadata type supported by the present audio format</returns>
+        List<MetaDataIOFactory.TagType> GetSupportedMetas();
+
         /// <summary>
-        /// Reads audio data from the given stream.
+        /// Read audio data from the given stream.
         /// NB1 : Standard metadata (i.e. ID3v2, ID3v1 and APE) have to be read _before_ calling this method, and their size stored in sizeInfo
         /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller
         /// </summary>

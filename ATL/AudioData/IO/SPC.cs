@@ -20,7 +20,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_HEADER = "header";
 
         private static readonly byte[] SPC_FORMAT_TAG = Utils.Latin1Encoding.GetBytes("SNES-SPC700 Sound File Data");
-        private const String XTENDED_TAG = "xid6";
+        private const string XTENDED_TAG = "xid6";
 
 #pragma warning disable S1144 // Unused private types or members should be removed
         private const int REGISTERS_LENGTH = 9;
@@ -82,12 +82,8 @@ namespace ATL.AudioData.IO
 
 
         // Standard fields
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
         // Mapping between SPC extended frame codes and ATL frame codes
         private static readonly IDictionary<byte, Field> extendedFrameMapping = new Dictionary<byte, Field>
@@ -143,7 +139,7 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate => this.sampleRate; // Sample rate (hz)
+        public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
 
@@ -153,18 +149,21 @@ namespace ATL.AudioData.IO
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
 
-        public string FileName => filePath;
+        public string FileName { get; }
 
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
 
         public ChannelsArrangement ChannelsArrangement => STEREO;
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE || metaDataType == MetaDataIOFactory.TagType.APE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -223,16 +222,16 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             // Reset variables
-            sampleRate = 32000; // Seems to be de facto value for all SPC files, even though spec doesn't say anything about it
-            bitrate = 0;
-            duration = SPC_DEFAULT_DURATION;
+            SampleRate = 32000; // Seems to be de facto value for all SPC files, even though spec doesn't say anything about it
+            BitRate = 0;
+            Duration = SPC_DEFAULT_DURATION;
 
             ResetData();
         }
 
         public SPC(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -350,7 +349,7 @@ namespace ATL.AudioData.IO
             SetMetaField(HEADER_SONGLENGTH.ToString(), Utils.Latin1Encoding.GetString(song), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
-            if (songVal > 0) duration = fadeVal + songVal;
+            if (songVal > 0) Duration = fadeVal + songVal;
 
             source.Read(buffer, 0, 32);
             SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
@@ -386,8 +385,6 @@ namespace ATL.AudioData.IO
                 source.Read(buffer, 0, buffer.Length);
                 footer.Size = StreamUtils.DecodeUInt32(buffer);
 
-                byte ID, type;
-                ushort size;
                 string strData = "";
                 int intData = 0;
                 long ticks = 0;
@@ -396,10 +393,10 @@ namespace ATL.AudioData.IO
                 while (source.Position < dataPosition + footer.Size - 4)
                 {
                     source.Read(buffer, 0, 2);
-                    ID = buffer[0];
-                    type = buffer[1];
+                    var ID = buffer[0];
+                    var type = buffer[1];
                     source.Read(buffer, 0, 2);
-                    size = StreamUtils.DecodeUInt16(buffer);
+                    var size = StreamUtils.DecodeUInt16(buffer);
 
                     switch (type)
                     {
@@ -446,7 +443,7 @@ namespace ATL.AudioData.IO
                     SetMetaField(ID.ToString(), strData, readTagParams.ReadAllMetaFrames, ZONE_EXTENDED);
                 }
 
-                if (ticks > 0) duration = Math.Round((double)ticks / XID6_TICKSSEC);
+                if (ticks > 0) Duration = Math.Round((double)ticks / XID6_TICKSSEC);
 
                 if (readTagParams.PrepareForWriting)
                 {
@@ -503,7 +500,7 @@ namespace ATL.AudioData.IO
             }
 
             AudioDataSize = sizeInfo.FileSize - header.Size - footer.Size;
-            bitrate = AudioDataSize * 8 / duration;
+            BitRate = AudioDataSize * 8 / Duration;
 
             return result;
         }

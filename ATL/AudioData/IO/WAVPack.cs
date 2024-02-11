@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,16 +16,7 @@ namespace ATL.AudioData.IO
     {
         private static readonly byte[] WAVPACK_HEADER = Utils.Latin1Encoding.GetBytes("wvpk");
 
-        private ChannelsArrangement channelsArrangement;
-
-        private int bits;
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
-        private int codecFamily;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 #pragma warning disable S4487 // Unread "private" fields should be removed
         private sealed class WavpackHeader3
@@ -139,15 +131,27 @@ namespace ATL.AudioData.IO
         {
             get;
         }
-        public int SampleRate => sampleRate;
+        public int SampleRate { get; private set; }
+
         public bool IsVBR => false;
-        public int CodecFamily => codecFamily;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
-        public int BitDepth => bits;
-        public double Duration => duration;
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.APE;
+        public int CodecFamily { get; private set; }
+
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
+        public int BitDepth { get; private set; }
+
+        public double Duration { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE };
+        }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -156,12 +160,12 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
-            codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+            Duration = 0;
+            BitRate = 0;
+            CodecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
-            bits = -1;
-            sampleRate = 0;
+            BitDepth = -1;
+            SampleRate = 0;
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -169,7 +173,7 @@ namespace ATL.AudioData.IO
 
         public WAVPack(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -215,7 +219,6 @@ namespace ATL.AudioData.IO
             WavPackHeader4 wvh4 = new WavPackHeader4();
             byte[] EncBuf = new byte[4096];
             string encoder;
-            byte encoderbyte;
 
             bool result = false;
 
@@ -238,32 +241,32 @@ namespace ATL.AudioData.IO
             if (WAVPACK_HEADER.SequenceEqual(wvh4.ckID))  // wavpack header found  -- TODO handle exceptions better
             {
                 result = true;
-                channelsArrangement = GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
+                ChannelsArrangement = GuessFromChannelNumber((int)(2 - (wvh4.flags & 4)));
 
                 uint samples = wvh4.total_samples;
-                sampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
-                bits = (int)((wvh4.flags & 3) * 16);
-                if (sampleRate > 14 || sampleRate < 0)
+                SampleRate = (int)((wvh4.flags & (0x1F << 23)) >> 23);
+                BitDepth = (int)((wvh4.flags & 3) * 16);
+                if (SampleRate > 14 || SampleRate < 0)
                 {
-                    sampleRate = 44100;
+                    SampleRate = 44100;
                 }
                 else
                 {
-                    sampleRate = sample_rates[sampleRate];
+                    SampleRate = sample_rates[SampleRate];
                 }
 
                 if (8 == (wvh4.flags & 8))  // hybrid flag
                 {
                     encoderBuilder.Append("hybrid lossy");
-                    codecFamily = AudioDataIOFactory.CF_LOSSY;
+                    CodecFamily = AudioDataIOFactory.CF_LOSSY;
                 }
                 else
                 {
                     encoderBuilder.Append("lossless");
-                    codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+                    CodecFamily = AudioDataIOFactory.CF_LOSSLESS;
                 }
 
-                duration = wvh4.total_samples * 1000.0 / sampleRate;
+                Duration = wvh4.total_samples * 1000.0 / SampleRate;
 
                 long initPos = source.Position;
                 Array.Clear(EncBuf, 0, 4096);
@@ -273,7 +276,7 @@ namespace ATL.AudioData.IO
                 {
                     if (0x65 == EncBuf[i] && 0x02 == EncBuf[i + 1])
                     {
-                        encoderbyte = EncBuf[i + 2];
+                        var encoderbyte = EncBuf[i + 2];
                         switch (encoderbyte)
                         {
                             case 8: encoderBuilder.Append(" (high)"); break;
@@ -287,7 +290,7 @@ namespace ATL.AudioData.IO
                 }
 
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
-                if (duration > 0) bitrate = AudioDataSize * 8.0 / (samples * 1000.0 / sampleRate);
+                if (Duration > 0) BitRate = AudioDataSize * 8.0 / (samples * 1000.0 / SampleRate);
             }
             encoder = encoderBuilder.ToString();
             return result;
@@ -337,9 +340,9 @@ namespace ATL.AudioData.IO
 
                         hasfmt = true;
                         result = true;
-                        channelsArrangement = GuessFromChannelNumber(fmt.wchannels);
-                        sampleRate = (int)fmt.dwsamplespersec;
-                        bitrate = (double)fmt.dwavgbytespersec * 8;
+                        ChannelsArrangement = GuessFromChannelNumber(fmt.wchannels);
+                        SampleRate = (int)fmt.dwsamplespersec;
+                        BitRate = (double)fmt.dwavgbytespersec * 8;
                     }
                     else
                     {
@@ -372,14 +375,14 @@ namespace ATL.AudioData.IO
                             AudioDataOffset = initialPos;
                             AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 
-                            channelsArrangement = GuessFromChannelNumber(2 - (wvh3.flags & 1));
+                            ChannelsArrangement = GuessFromChannelNumber(2 - (wvh3.flags & 1));
 
-                            codecFamily = AudioDataIOFactory.CF_LOSSLESS;
+                            CodecFamily = AudioDataIOFactory.CF_LOSSLESS;
 
                             // Encoder guess
                             if (wvh3.bits > 0)
                             {
-                                bits = wvh3.bits + 3;
+                                BitDepth = wvh3.bits + 3;
                                 if ((wvh3.flags & NEW_HIGH_FLAG_v3) > 0)
                                 {
                                     encoder = "hybrid";
@@ -390,7 +393,7 @@ namespace ATL.AudioData.IO
                                     else
                                     {
                                         encoderBuilder.Append(" lossy");
-                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+                                        CodecFamily = AudioDataIOFactory.CF_LOSSY;
                                     }
 
                                     if ((wvh3.flags & EXTREME_DECORR_v3) > 0)
@@ -401,12 +404,12 @@ namespace ATL.AudioData.IO
                                     if ((wvh3.flags & (HIGH_FLAG_v3 | FAST_FLAG_v3)) == 0)
                                     {
                                         encoder = (wvh3.bits + 3).ToString() + "-bit lossy";
-                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+                                        CodecFamily = AudioDataIOFactory.CF_LOSSY;
                                     }
                                     else
                                     {
                                         encoder = (wvh3.bits + 3).ToString() + "-bit lossy";
-                                        codecFamily = AudioDataIOFactory.CF_LOSSY;
+                                        CodecFamily = AudioDataIOFactory.CF_LOSSY;
 
                                         if ((wvh3.flags & HIGH_FLAG_v3) > 0)
                                         {
@@ -439,9 +442,9 @@ namespace ATL.AudioData.IO
                                 }
                             }
 
-                            if (sampleRate <= 0) sampleRate = 44100;
-                            duration = wvh3.total_samples * 1000.0 / sampleRate;
-                            if (duration > 0) bitrate = 8.0 * AudioDataSize / duration;
+                            if (SampleRate <= 0) SampleRate = 44100;
+                            Duration = wvh3.total_samples * 1000.0 / SampleRate;
+                            if (Duration > 0) BitRate = 8.0 * AudioDataSize / Duration;
                         }
                         break;
                     }

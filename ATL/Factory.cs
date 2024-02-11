@@ -38,8 +38,7 @@ namespace ATL
             {
                 if (!formatListByExt.ContainsKey(ext))
                 {
-                    matchingFormats = new List<Format>();
-                    matchingFormats.Add(f);
+                    matchingFormats = new List<Format> { f };
                     formatListByExt.Add(ext, matchingFormats);
                 }
                 else
@@ -53,8 +52,7 @@ namespace ATL
             {
                 if (!formatListByMime.ContainsKey(mimeType))
                 {
-                    matchingFormats = new List<Format>();
-                    matchingFormats.Add(f);
+                    matchingFormats = new List<Format> { f };
                     formatListByMime.Add(mimeType, matchingFormats);
                 }
                 else

@@ -40,16 +40,12 @@ namespace ATL.AudioData.IO
         private const int PSF_DEFAULT_DURATION = 180000; // 3 minutes
 
         private byte version;
-        private int sampleRate;
-        private double bitrate;
-        private double duration;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
         private readonly Format audioFormat;
 
         // Mapping between PSF frame codes and ATL frame codes
-        private static IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
             { "title", Field.TITLE },
             { "game", Field.ALBUM }, // Small innocent semantic shortcut
@@ -61,7 +57,7 @@ namespace ATL.AudioData.IO
             { "rating", Field.RATING } // Does not belong to the predefined standard PSF tags
         };
         // Frames that are required for playback
-        private static IList<string> playbackFrames = new List<string>
+        private static readonly IList<string> playbackFrames = new List<string>
         {
             "volume",
             "length",
@@ -75,7 +71,8 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // AudioDataIO
-        public int SampleRate => sampleRate;
+        public int SampleRate { get; private set; }
+
         public bool IsVBR => false;
         public Format AudioFormat
         {
@@ -87,12 +84,19 @@ namespace ATL.AudioData.IO
             }
         }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => -1; // Irrelevant for that format
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         public ChannelsArrangement ChannelsArrangement => STEREO;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE;
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -145,10 +149,10 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            sampleRate = 44100; // Seems to be de facto value for all PSF files, even though spec doesn't say anything about it
+            SampleRate = 44100; // Seems to be de facto value for all PSF files, even though spec doesn't say anything about it
             version = 0;
-            bitrate = 0;
-            duration = 0;
+            BitRate = 0;
+            Duration = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -157,7 +161,7 @@ namespace ATL.AudioData.IO
 
         public PSF(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             this.audioFormat = format;
             resetData();
         }
@@ -210,7 +214,7 @@ namespace ATL.AudioData.IO
             long lineEnd;
             bool hasEOL = true;
 
-            if (StreamUtils.FindSequence(source, new byte[1] { LINE_FEED }))
+            if (StreamUtils.FindSequence(source, new byte[] { LINE_FEED }))
             {
                 lineEnd = source.Position;
             }
@@ -243,27 +247,25 @@ namespace ATL.AudioData.IO
             {
                 string s = readPSFLine(source, encoding);
 
-                int equalIndex;
-                string keyStr, valueStr, lowKeyStr;
                 string lastKey = "";
                 string lastValue = "";
                 bool lengthFieldFound = false;
 
                 while (s != "")
                 {
-                    equalIndex = s.IndexOf("=");
+                    var equalIndex = s.IndexOf("=", StringComparison.Ordinal);
                     if (equalIndex != -1)
                     {
-                        keyStr = s.Substring(0, equalIndex).Trim();
-                        lowKeyStr = keyStr.ToLower();
-                        valueStr = s.Substring(equalIndex + 1, s.Length - (equalIndex + 1)).Trim();
+                        var keyStr = s.Substring(0, equalIndex).Trim();
+                        var lowKeyStr = keyStr.ToLower();
+                        var valueStr = s.Substring(equalIndex + 1, s.Length - (equalIndex + 1)).Trim();
 
                         if (lowKeyStr.Equals("utf8") && valueStr.Equals("1")) encoding = Encoding.UTF8;
 
                         if (lowKeyStr.Equals(TAG_LENGTH) || lowKeyStr.Equals(TAG_FADE))
                         {
                             if (lowKeyStr.Equals(TAG_LENGTH)) lengthFieldFound = true;
-                            duration += parsePSFDuration(valueStr);
+                            Duration += parsePSFDuration(valueStr);
                         }
 
                         // PSF specifics : a field appearing more than once is the same field, with values spanning over multiple lines
@@ -284,7 +286,7 @@ namespace ATL.AudioData.IO
                 SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
-                if (!lengthFieldFound) duration = PSF_DEFAULT_DURATION;
+                if (!lengthFieldFound) Duration = PSF_DEFAULT_DURATION;
 
                 tag.size = (int)(source.Position - initialPosition);
                 if (readTagParams.PrepareForWriting)
@@ -307,10 +309,8 @@ namespace ATL.AudioData.IO
             string dStr = "";
             double result = 0;
 
-            int sepIndex;
-
             // decimal
-            sepIndex = durationStr.LastIndexOf(".");
+            var sepIndex = durationStr.LastIndexOf(".");
             if (-1 == sepIndex) sepIndex = durationStr.LastIndexOf(",");
 
             if (-1 != sepIndex)
@@ -392,7 +392,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = sizeInfo.FileSize - tag.size;
 
             version = header.VersionByte;
-            bitrate = AudioDataSize * 8 / duration;
+            BitRate = AudioDataSize * 8 / Duration;
 
             return result;
         }
@@ -489,10 +489,9 @@ namespace ATL.AudioData.IO
                 result.IntegrateValue(b, "");
             }
 
-            string fieldCode;
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                fieldCode = fieldInfo.NativeFieldCode.ToLower();
+                var fieldCode = fieldInfo.NativeFieldCode.ToLower();
                 if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);

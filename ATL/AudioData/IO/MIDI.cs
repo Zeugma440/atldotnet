@@ -283,11 +283,7 @@ namespace ATL.AudioData.IO
 
         private StringBuilder comment;
 
-        private double duration;
-        private double bitrate;
-
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -306,17 +302,23 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_SEQ;
         /// <inheritdoc/>
-        public string FileName => filePath;
+        public string FileName { get; }
+
         /// <inheritdoc/>
-        public double BitRate => bitrate;
+        public double BitRate { get; private set; }
+
         /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for that format
         /// <inheritdoc/>
-        public double Duration => duration;
+        public double Duration { get; private set; }
+
         /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => STEREO;
         /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.NATIVE; // Only for comments
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE }; // Only for comments
+        }
         /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
         /// <inheritdoc/>
@@ -343,8 +345,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         protected void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -358,7 +360,7 @@ namespace ATL.AudioData.IO
         /// <param name="format">Audio format</param>
         public Midi(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -502,8 +504,8 @@ namespace ATL.AudioData.IO
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
             tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
 
-            duration = getDuration();
-            bitrate = sizeInfo.FileSize / duration;
+            Duration = getDuration();
+            BitRate = sizeInfo.FileSize / Duration;
 
             return true;
         }

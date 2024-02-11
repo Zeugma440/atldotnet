@@ -164,10 +164,12 @@ namespace ATL.AudioData.IO
 
         public string FileName { get; }
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
+
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         public long AudioDataOffset { get; set; }

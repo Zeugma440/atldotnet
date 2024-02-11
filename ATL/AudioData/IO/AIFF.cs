@@ -112,9 +112,9 @@ namespace ATL.AudioData.IO
 
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE || metaDataType == MetaDataIOFactory.TagType.ID3V2;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE };
         }
 
         public long AudioDataOffset { get; set; }

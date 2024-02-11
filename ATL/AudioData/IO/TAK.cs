@@ -4,6 +4,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Collections.Generic;
 
 namespace ATL.AudioData.IO
 {
@@ -18,13 +19,10 @@ namespace ATL.AudioData.IO
         private uint bits;
         private uint sampleRate;
 
-        private double bitrate;
-        private double duration;
         private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // Public declarations 
@@ -40,12 +38,19 @@ namespace ATL.AudioData.IO
             get;
         }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
-        public int BitDepth => (bits > 0) ? (int)bits : -1;
-        public double Duration => duration;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
+        public int BitDepth => bits > 0 ? (int)bits : -1;
+        public double Duration { get; private set; }
+
         public ChannelsArrangement ChannelsArrangement => channelsArrangement;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType) => metaDataType == MetaDataIOFactory.TagType.APE;
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE };
+        }
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -54,8 +59,8 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isValid = false;
 
             bits = 0;
@@ -67,7 +72,7 @@ namespace ATL.AudioData.IO
 
         public TAK(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -79,7 +84,7 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio 
             if (isValid)
-                return sizeInfo.FileSize / (duration * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100.0;
+                return sizeInfo.FileSize / (Duration * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100.0;
             else
                 return 0;
         }
@@ -93,13 +98,7 @@ namespace ATL.AudioData.IO
         {
             bool result = false;
             bool doLoop = true;
-            long position;
 
-            ushort readData16;
-            uint readData32;
-
-            uint metaType;
-            uint metaSize;
             long sampleCount = 0;
             int frameSizeType = -1;
             uint formatVersion;
@@ -119,18 +118,18 @@ namespace ATL.AudioData.IO
                 do // Loop metadata
                 {
                     source.Read(buffer, 0, 4);
-                    readData32 = StreamUtils.DecodeUInt32(buffer);
+                    var readData32 = StreamUtils.DecodeUInt32(buffer);
 
-                    metaType = readData32 & 0x7F;
-                    metaSize = readData32 >> 8;
+                    var metaType = readData32 & 0x7F;
+                    var metaSize = readData32 >> 8;
 
-                    position = source.Position;
+                    var position = source.Position;
 
                     if (0 == metaType) doLoop = false; // End of metadata
                     else if (0x01 == metaType) // Stream info
                     {
                         source.Read(buffer, 0, 2);
-                        readData16 = StreamUtils.DecodeUInt16(buffer);
+                        var readData16 = StreamUtils.DecodeUInt16(buffer);
                         frameSizeType = readData16 & 0x003C; // bits 11 to 14
                         source.Read(buffer, 0, 4);
                         readData32 = StreamUtils.DecodeUInt32(buffer);
@@ -145,8 +144,8 @@ namespace ATL.AudioData.IO
 
                         if (sampleCount > 0)
                         {
-                            duration = (double)sampleCount * 1000.0 / sampleRate;
-                            bitrate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / duration); //time to calculate average bitrate
+                            Duration = (double)sampleCount * 1000.0 / sampleRate;
+                            BitRate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
                         }
                     }
                     else if (0x04 == metaType) // Encoder info

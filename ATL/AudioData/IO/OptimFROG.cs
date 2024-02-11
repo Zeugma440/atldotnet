@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
@@ -92,11 +93,10 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => GuessFromChannelNumber(header.ChannelMode + 1);
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
-        {
-            return metaDataType == MetaDataIOFactory.TagType.APE || metaDataType == MetaDataIOFactory.TagType.ID3V1 || metaDataType == MetaDataIOFactory.TagType.ID3V2;
-        }
+        /// <inheritdoc/>
         public long AudioDataOffset { get; set; }
+
+        /// <inheritdoc/>
         public long AudioDataSize { get; set; }
 
 
@@ -154,6 +154,11 @@ namespace ATL.AudioData.IO
         public static bool IsValidHeader(byte[] data)
         {
             return StreamUtils.ArrBeginsWith(data, OFR_SIGNATURE);
+        }
+
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
+        {
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1 };
         }
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)

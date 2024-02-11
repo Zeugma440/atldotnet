@@ -63,31 +63,30 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FLAC_HEADER_ID = { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
-        private readonly string filePath;
         private readonly Format audioFormat;
 
         private readonly FileInfo info = new FileInfo();
 
         private int contents;
 
-        private int bits;
-        private int sampleRate;
         private ushort bitRateNominal;
         private ulong samples;
-        private ChannelsArrangement channelsArrangement;
 
         private AudioDataManager.SizeInfo sizeInfo;
 
 
 
-        public int SampleRate => sampleRate;
-        public ushort BitRateNominal => bitRateNominal;
+        public int SampleRate { get; private set; }
+
         public bool Valid => isValid();
-        public string FileName => filePath;
+        public string FileName { get; }
+
         public double BitRate => getBitRate();
-        public int BitDepth => bits; // Only for embedded FLAC
+        public int BitDepth { get; private set; } // Only for embedded FLACs
+
         public double Duration => getDuration();
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
         public bool IsVBR => contents != CONTENTS_FLAC;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -267,8 +266,8 @@ namespace ATL.AudioData.IO
             public int AudioStreamId;
 
             // Following two properties are mutually exclusive
-            public VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
-            public OpusHeader OpusParameters = new OpusHeader();        // Opus parameter header
+            public readonly VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
+            public readonly OpusHeader OpusParameters = new OpusHeader();        // Opus parameter header
             public FlacHeader FlacParameters;                           // FLAC parameter header
 
             // Total number of samples
@@ -305,9 +304,9 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            sampleRate = 0;
+            SampleRate = 0;
             bitRateNominal = 0;
-            bits = -1;
+            BitDepth = -1;
             samples = 0;
             contents = -1;
             AudioDataOffset = -1;
@@ -318,7 +317,7 @@ namespace ATL.AudioData.IO
 
         public Ogg(string filePath, Format format) : base(true, true, true, true)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             audioFormat = format;
             resetData();
         }
@@ -340,15 +339,13 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
-        public int CodecFamily
-        {
-            get { return (contents == CONTENTS_FLAC) ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY; }
-        }
+        public int CodecFamily => contents == CONTENTS_FLAC ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
 
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
             // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
 
         /// <inheritdoc/>
@@ -688,14 +685,14 @@ namespace ATL.AudioData.IO
 
             if (samples > 0)
             {
-                if (sampleRate > 0)
-                    result = samples * 1000.0 / sampleRate;
+                if (SampleRate > 0)
+                    result = samples * 1000.0 / SampleRate;
                 else
                     result = 0;
             }
-            else if ((bitRateNominal > 0) && (channelsArrangement.NbChannels > 0))
+            else if ((bitRateNominal > 0) && (ChannelsArrangement.NbChannels > 0))
             {
-                result = 1000.0 * sizeInfo.FileSize / bitRateNominal / channelsArrangement.NbChannels / 125.0 * 2;
+                result = 1000.0 * sizeInfo.FileSize / bitRateNominal / ChannelsArrangement.NbChannels / 125.0 * 2;
             }
             else
                 result = 0;
@@ -722,24 +719,24 @@ namespace ATL.AudioData.IO
         /// <returns>True if file data is coherent; false if not</returns>
         private bool isValid()
         {
-            return (channelsArrangement.NbChannels > 0) && (sampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0);
+            return (ChannelsArrangement.NbChannels > 0) && (SampleRate > 0) && (getDuration() > 0.1) && (getBitRate() > 0);
         }
 
         private static ChannelsArrangement getArrangementFromCode(int vorbisCode)
         {
             if (vorbisCode > 8) return new ChannelsArrangement(vorbisCode);
-            else switch (vorbisCode)
-                {
-                    case 1: return MONO;
-                    case 2: return STEREO;
-                    case 3: return ISO_3_0_0;
-                    case 4: return QUAD;
-                    case 5: return ISO_3_2_0;
-                    case 6: return ISO_3_2_1;
-                    case 7: return LRCLFECrLssRss;
-                    case 8: return LRCLFELrRrLssRss;
-                    default: return UNKNOWN;
-                }
+            return vorbisCode switch
+            {
+                1 => MONO,
+                2 => STEREO,
+                3 => ISO_3_0_0,
+                4 => QUAD,
+                5 => ISO_3_2_0,
+                6 => ISO_3_2_1,
+                7 => LRCLFECrLssRss,
+                8 => LRCLFELrRrLssRss,
+                _ => UNKNOWN
+            };
         }
 
         // ---------------------------------------------------------------------------
@@ -762,21 +759,21 @@ namespace ATL.AudioData.IO
             {
                 if (contents.Equals(CONTENTS_VORBIS))
                 {
-                    channelsArrangement = getArrangementFromCode(info.VorbisParameters.ChannelMode);
-                    sampleRate = info.VorbisParameters.SampleRate;
+                    ChannelsArrangement = getArrangementFromCode(info.VorbisParameters.ChannelMode);
+                    SampleRate = info.VorbisParameters.SampleRate;
                     bitRateNominal = (ushort)(info.VorbisParameters.BitRateNominal / 1000); // Integer division
                 }
                 else if (contents.Equals(CONTENTS_OPUS))
                 {
-                    channelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
-                    sampleRate = (int)info.OpusParameters.InputSampleRate;
+                    ChannelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
+                    SampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
                 }
                 else if (contents.Equals(CONTENTS_FLAC))
                 {
-                    channelsArrangement = info.FlacParameters.getChannelsArrangement();
-                    sampleRate = info.FlacParameters.SampleRate;
-                    bits = info.FlacParameters.BitsPerSample;
+                    ChannelsArrangement = info.FlacParameters.getChannelsArrangement();
+                    SampleRate = info.FlacParameters.SampleRate;
+                    BitDepth = info.FlacParameters.BitsPerSample;
                     // No nominal bitrate for FLAC
                 }
 

@@ -3,6 +3,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
+using System.Collections.Generic;
 
 namespace ATL.AudioData.IO
 {
@@ -20,13 +21,9 @@ namespace ATL.AudioData.IO
         private uint sampleRate;
         private uint samplesSize;
 
-        private double bitrate;
-        private double duration;
-        private ChannelsArrangement channelsArrangement;
         private bool isValid;
 
         private SizeInfo sizeInfo;
-        private readonly string filePath;
 
 
         // Public declarations    
@@ -42,15 +39,21 @@ namespace ATL.AudioData.IO
             get;
         }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
-        public string FileName => filePath;
-        public double BitRate => bitrate;
+        public string FileName { get; }
+
+        public double BitRate { get; private set; }
+
         public int BitDepth => (int)bitsPerSample;
-        public double Duration => duration;
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public double Duration { get; private set; }
+
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return (metaDataType == MetaDataIOFactory.TagType.APE) || (metaDataType == MetaDataIOFactory.TagType.ID3V1) || (metaDataType == MetaDataIOFactory.TagType.ID3V2);
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
+
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -59,8 +62,8 @@ namespace ATL.AudioData.IO
 
         private void resetData()
         {
-            duration = 0;
-            bitrate = 0;
+            Duration = 0;
+            BitRate = 0;
             isValid = false;
 
             bitsPerSample = 0;
@@ -73,7 +76,7 @@ namespace ATL.AudioData.IO
 
         public TTA(string filePath, Format format)
         {
-            this.filePath = filePath;
+            this.FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -85,7 +88,7 @@ namespace ATL.AudioData.IO
         {
             // Get compression ratio
             if (isValid)
-                return (double)sizeInfo.FileSize / (samplesSize * (channelsArrangement.NbChannels * bitsPerSample / 8) + 44) * 100;
+                return (double)sizeInfo.FileSize / (samplesSize * (ChannelsArrangement.NbChannels * bitsPerSample / 8) + 44) * 100;
             else
                 return 0;
         }
@@ -114,7 +117,7 @@ namespace ATL.AudioData.IO
 
                 source.Seek(2, SeekOrigin.Current); // audio format
                 source.Read(buffer, 0, 2);
-                channelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
+                ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
                 source.Read(buffer, 0, 2);
                 bitsPerSample = StreamUtils.DecodeUInt16(buffer);
                 source.Read(buffer, 0, 4);
@@ -123,8 +126,8 @@ namespace ATL.AudioData.IO
                 samplesSize = StreamUtils.DecodeUInt32(buffer);
                 source.Seek(4, SeekOrigin.Current); // CRC
 
-                bitrate = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
-                duration = samplesSize * 1000.0 / sampleRate;
+                BitRate = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
+                Duration = samplesSize * 1000.0 / sampleRate;
 
                 result = true;
             }

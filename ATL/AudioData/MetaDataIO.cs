@@ -127,7 +127,7 @@ namespace ATL.AudioData.IO
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
-        public bool Exists => this.tagExists;
+        public bool Exists => tagExists;
 
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
@@ -176,7 +176,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Rating convention to use to format Popularity for the current tagging format
         /// </summary>
-        protected virtual byte ratingConvention => MetaDataIO.RC_ID3v2;
+        protected virtual byte ratingConvention => RC_ID3v2;
 
         /// <summary>
         /// Encode the given DateTime for the current tagging format

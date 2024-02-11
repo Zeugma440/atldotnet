@@ -34,7 +34,6 @@ namespace ATL.AudioData.IO
 
         private FlacHeader header = null;
 
-        private readonly string filePath;
         private AudioDataManager.SizeInfo sizeInfo;
 
         IList<Zone> zones; // TODO - That's one hint of why interactions with VorbisTag need to be redesigned...
@@ -84,7 +83,7 @@ namespace ATL.AudioData.IO
             }
         }
         /// <inheritdoc/>
-        public string FileName => filePath;
+        public string FileName { get; }
 
         /// <inheritdoc/>
         public double BitRate => Math.Round((double)(sizeInfo.FileSize - AudioDataOffset) * 8 / Duration);
@@ -110,10 +109,10 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public long AudioDataSize { get; set; }
 
-        /// <inheritdoc/>
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE || metaDataType == MetaDataIOFactory.TagType.ID3V2; // Native is for VorbisTag
+            // Native is for VorbisTag
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2 };
         }
 
 
@@ -133,7 +132,7 @@ namespace ATL.AudioData.IO
 
         public FLAC(string path, Format format) : base(false, false, false, false)
         {
-            filePath = path;
+            FileName = path;
             AudioFormat = format;
             resetData();
         }

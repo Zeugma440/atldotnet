@@ -14,7 +14,7 @@ namespace ATL.test.IO
         public void TagIO_R_Single_ID3v1()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.GetInstance().TagPriority.Length];
             MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */
@@ -43,7 +43,7 @@ namespace ATL.test.IO
         public void TagIO_R_Multi()
         {
             bool crossreadingDefault = MetaDataIOFactory.GetInstance().CrossReading;
-            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.TAG_TYPE_COUNT];
+            MetaDataIOFactory.TagType[] tagPriorityDefault = new MetaDataIOFactory.TagType[MetaDataIOFactory.GetInstance().TagPriority.Length];
             MetaDataIOFactory.GetInstance().TagPriority.CopyTo(tagPriorityDefault, 0);
 
             /* Set options for Metadata reader behaviour - this only needs to be done once, or not at all if relying on default settings */

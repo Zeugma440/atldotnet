@@ -85,9 +85,9 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        // IAudioDataIO
+        /// <inheritdoc/>
         public bool IsVBR => false;
-
+        /// <inheritdoc/>
         public Format AudioFormat
         {
             get
@@ -100,8 +100,9 @@ namespace ATL.AudioData.IO
                 return f;
             }
         }
+        /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
-
+        /// <inheritdoc/>
         public double BitRate
         {
             get
@@ -119,8 +120,9 @@ namespace ATL.AudioData.IO
                 }
             }
         }
+        /// <inheritdoc/>
         public double Duration => getDuration();
-
+        /// <inheritdoc/>
         public int SampleRate
         {
             get
@@ -134,28 +136,35 @@ namespace ATL.AudioData.IO
                 };
             }
         }
-
+        /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for lossy formats
-
+        /// <inheritdoc/>
         public string FileName { get; }
-
-        public bool IsMetaSupported(MetaDataIOFactory.TagType metaDataType)
+        /// <inheritdoc/>
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
-            return metaDataType == MetaDataIOFactory.TagType.NATIVE;
+            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
+        /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => MONO;
+        /// <inheritdoc/>
+        public long AudioDataOffset { get; set; }
+        /// <inheritdoc/>
+        public long AudioDataSize { get; set; }
+
 
         // MetaDataIO
+        /// <inheritdoc/>
         protected override int getDefaultTagOffset()
         {
             return TO_BUILTIN;
         }
-
+        /// <inheritdoc/>
         protected override MetaDataIOFactory.TagType getImplementedTagType()
         {
             return MetaDataIOFactory.TagType.NATIVE;
         }
-
+        /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;
@@ -164,17 +173,13 @@ namespace ATL.AudioData.IO
 
             return supportedMetaId;
         }
+        /// <inheritdoc/>
         protected override bool isLittleEndian => false;
-
+        /// <inheritdoc/>
         public override string EncodeDate(DateTime date)
         {
             return date.ToString("dd-MMM-yyyy", CultureInfo.InvariantCulture).ToUpper();
         }
-
-        public long AudioDataOffset { get; set; }
-
-        public long AudioDataSize { get; set; }
-
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
