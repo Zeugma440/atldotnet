@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static ATL.AudioData.MetaDataIOFactory;
 
@@ -240,6 +241,33 @@ namespace ATL.AudioData
                 result.Add(tagType);
             }
 
+            return result;
+        }
+
+        /// <summary>
+        /// List the tag types recommended by the format of the current file
+        /// </summary>
+        /// <returns>Tag types recommended by the format of the current file</returns>
+        public ISet<TagType> getRecommendedMetas()
+        {
+            ISet<TagType> result = new HashSet<TagType>();
+            var supportedMetas = audioDataIO.GetSupportedMetas();
+            if (supportedMetas.Count <= 0) return result;
+
+            if (1 == supportedMetas.Count) result.Add(supportedMetas[0]);
+            else
+            {
+                if (audioDataIO is OptimFrog) result.Add(TagType.APE); // TODO this is ugly
+                else
+                {
+                    var id3v2Exists = supportedMetas.Contains(TagType.ID3V2);
+                    foreach (var meta in supportedMetas.Where(meta => meta != TagType.ID3V1))
+                    {
+                        if (meta == TagType.ID3V2 || meta == TagType.NATIVE) result.Add(meta); // Default preference go to these
+                        if (meta == TagType.APE && !id3v2Exists) result.Add(meta); // If no ID3v2 support at all
+                    }
+                }
+            }
             return result;
         }
 

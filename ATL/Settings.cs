@@ -88,12 +88,11 @@ namespace ATL
         /// Tag editing preferences : what tagging systems to use when audio file has no metadata ?
         /// NB1 : If more than one item, _all_ of them will be written
         /// NB2 : If Native tagging is not indicated here, it will _not_ be used
+        /// NB3 : "Recommended" will choose the most compatible metadata formats according to the target audio format
         /// 
-        /// Default : ID3v2 then Native tagging
+        /// Default : Recommended
         /// </summary>
-        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = {
-            MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE
-        };
+        public static MetaDataIOFactory.TagType[] DefaultTagsWhenNoMetadata = { MetaDataIOFactory.TagType.RECOMMENDED };
 
         /// <summary>
         /// If true, file name (without the extension) will go to the Title field if metadata contains no title

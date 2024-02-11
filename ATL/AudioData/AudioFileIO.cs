@@ -122,6 +122,7 @@ namespace ATL.AudioData
         {
             ISet<TagType> result = audioManager.getAvailableMetas();
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
+            ISet<TagType> recommendedMetas = audioManager.getRecommendedMetas();
 
             bool hasNothing = 0 == result.Count;
             if (Settings.EnrichID3v1 && 1 == result.Count && result.First() == TagType.ID3V1) hasNothing = true;
@@ -130,9 +131,10 @@ namespace ATL.AudioData
 
             // File has no existing metadata
             // => Try writing with one of the metas set in the Settings
-            foreach (var i in Settings.DefaultTagsWhenNoMetadata.Where(i => supportedMetas.Contains(i)))
+            foreach (var i in Settings.DefaultTagsWhenNoMetadata)
             {
-                result.Add(i);
+                if (i == TagType.RECOMMENDED) foreach (var reco in recommendedMetas) result.Add(reco);
+                else if (supportedMetas.Contains(i)) result.Add(i);
             }
 
             // File does not support any of the metas we want to write
@@ -193,8 +195,7 @@ namespace ATL.AudioData
 
         private ISet<TagType> getMetasToRemove(TagType tagType)
         {
-            if (TagType.ANY == tagType) return audioManager.getAvailableMetas();
-            return new HashSet<TagType>() { tagType };
+            return TagType.ANY == tagType ? audioManager.getAvailableMetas() : new HashSet<TagType> { tagType };
         }
 
         // ============ FIELD ACCESSORS
