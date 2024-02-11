@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static ATL.AudioData.MetaDataIOFactory;
 
@@ -245,9 +244,9 @@ namespace ATL.AudioData
         }
 
         /// <summary>
-        /// List the tag types recommended by the format of the current file
+        /// List the tag types recommended for the format of the current file
         /// </summary>
-        /// <returns>Tag types recommended by the format of the current file</returns>
+        /// <returns>Tag types recommended for the format of the current file</returns>
         public ISet<TagType> getRecommendedMetas()
         {
             ISet<TagType> result = new HashSet<TagType>();
@@ -420,7 +419,7 @@ namespace ATL.AudioData
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> RemoveTagFromFileAsync(TagType tagType, ProgressManager progressManager = null)
         {
-            bool result = false;
+            bool result;
             LogDelegator.GetLocateDelegate()(fileName);
 
             try
@@ -438,7 +437,7 @@ namespace ATL.AudioData
                     if (null == stream) s.Close();
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Utils.TraceException(e);
                 result = false;
