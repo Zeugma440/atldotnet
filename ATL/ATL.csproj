@@ -30,11 +30,11 @@
     <RepositoryUrl></RepositoryUrl>
     <RepositoryType></RepositoryType>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <InternalsVisibleTo Include="ATL.unit-test" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove="ATL.csproj.vspscc" />
     <None Remove="ATL.nuspec" />
@@ -49,7 +49,9 @@
   <ItemGroup>
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.12" />
+    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.12" >
+      <ExcludeAssets>Runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
