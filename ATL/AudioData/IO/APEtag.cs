@@ -216,6 +216,7 @@ namespace ATL.AudioData.IO
                          *
                          * => Values have to be splitted
                          */
+                        // Using Settings encoding to support rogue APE tags that use exotic charsets (though specs clearly say UTF-8)
                         var strValue =
                             Utils.StripEndingZeroChars(
                                 Settings.DefaultTextEncoding.GetString(source.ReadBytes(frameDataSize)));
@@ -489,6 +490,7 @@ namespace ATL.AudioData.IO
             writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
             writer.Write('\0'); // String has to be null-terminated
 
+            // Using Settings encoding to support rogue APE tags that use exotic charsets (though specs clearly say UTF-8)
             byte[] binaryValue = Settings.DefaultTextEncoding.GetBytes(text);
             writer.Write(binaryValue);
 
