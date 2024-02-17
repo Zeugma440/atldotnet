@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Commons;
 using ATL.Logging;
 using static ATL.TagData;
-using static ATL.AudioData.IO.MPEGaudio;
 
 namespace ATL.AudioData.IO
 {
@@ -55,10 +54,12 @@ namespace ATL.AudioData.IO
         /// ID3v2.2
         /// </summary>
         public const byte TAG_VERSION_2_2 = 2;
+
         /// <summary>
         /// ID3v2.3
         /// </summary>
         public const byte TAG_VERSION_2_3 = 3;
+
         /// <summary>
         /// ID3v2.4
         /// </summary>
@@ -91,6 +92,14 @@ namespace ATL.AudioData.IO
         // ID3v2 tag ID
         private const string ID3V2_ID = "ID3";
 
+        // Mapping between revisions and allowed encodings
+        private static readonly IDictionary<int, ISet<Encoding>> allowedEncodings = new Dictionary<int, ISet<Encoding>>
+            {
+                { TAG_VERSION_2_2, new HashSet<Encoding> { Utils.Latin1Encoding, Encoding.Unicode } },
+                { TAG_VERSION_2_3, new HashSet<Encoding> { Utils.Latin1Encoding, Encoding.Unicode } },
+                { TAG_VERSION_2_4, new HashSet<Encoding> { Utils.Latin1Encoding, Encoding.Unicode, Encoding.UTF8, Encoding.BigEndianUnicode } }
+            };
+
         // List of standard fields
 
 #pragma warning disable S125 // Sections of code should not be commented out
@@ -102,16 +111,16 @@ namespace ATL.AudioData.IO
         };
 
         // Field codes that need to be persisted in a COMMENT field
-        private static readonly ICollection<string> commentsFields = new List<string> { "iTunNORM", "iTunSMPB", "iTunPGAP" };
+        private static readonly ISet<string> commentsFields = new HashSet<string> { "iTunNORM", "iTunSMPB", "iTunPGAP" };
 
         // Fields where text encoding descriptor byte is not required
-        private static readonly ICollection<string> noTextEncodingFields = new List<string> { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
+        private static readonly ISet<string> noTextEncodingFields = new HashSet<string> { "POPM", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB" };
 
         // Fields which ID3v2.4 size descriptor is known to be misencoded by some implementation
-        private static readonly ICollection<string> misencodedSizev4Fields = new List<string> { "CTOC" };
+        private static readonly ISet<string> misencodedSizev4Fields = new HashSet<string> { "CTOC" };
 
         // Fields allowed to have multiple values according to ID3v2.2-3 specs
-        private static readonly ICollection<string> multipleValuev23Fields = new List<string> { "TP1", "TCM", "TXT", "TLA", "TOA", "TOL", "TCOM", "TEXT", "TOLY", "TOPE", "TPE1" };
+        private static readonly ISet<string> multipleValuev23Fields = new HashSet<string> { "TP1", "TCM", "TXT", "TLA", "TOA", "TOL", "TCOM", "TEXT", "TOLY", "TOPE", "TPE1" };
 
         // Note on date field identifiers
         //
@@ -733,8 +742,7 @@ namespace ATL.AudioData.IO
                     break;
             }
 
-            if (TAG_VERSION_2_2 == m_tagVersion) Frame.Flags = 0;
-            else Frame.Flags = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+            Frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
             var dataSize = Frame.Size;
 
@@ -1222,7 +1230,9 @@ namespace ATL.AudioData.IO
             w.Write((byte)0);
 
             Encoding tagEncoding = Settings.DefaultTextEncoding;
-            if (tagEncoding.Equals(Encoding.UTF8) && 3 == Settings.ID3v2_tagSubVersion) tagEncoding = Encoding.Unicode; // UTF-8 isn't available in ID3v2.4 -> fallback to unicode
+
+            // Fallback to Unicode when target encoding isn't supported
+            if (!allowedEncodings[Settings.ID3v2_tagSubVersion].Contains(tagEncoding)) tagEncoding = Encoding.Unicode;
 
             // Flags : keep initial flags unless unsynchronization if forced
             if (Settings.ID3v2_forceUnsynchronization) tagHeader.Flags = (byte)(tagHeader.Flags | FLAG_TAG_UNSYNCHRONIZED);
