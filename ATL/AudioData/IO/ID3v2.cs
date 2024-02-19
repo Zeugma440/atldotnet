@@ -1916,7 +1916,8 @@ namespace ATL.AudioData.IO
             {
                 w.Write(encodeID3v2CharEncoding(tagEncoding));
                 w.Write(tagEncoding.GetBytes(actualFrameCode + '\0')); // Owner
-                
+
+                isExplicitLatin1Encoding = true; // Writing something else than Latin-1 is unsupported for now
                 writeTextEncoding = false;
                 writeNullTermination = true;
             }
